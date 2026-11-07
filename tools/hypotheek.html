@@ -185,7 +185,7 @@ button,.btn{border-radius:8px;font-family:inherit}
 
 <div class="header">
   <div><span class="brand">Hypotheek Tools Suite</span></div>
-  <div class="header-sub">8 tools · CHF/GHF-normen 2026</div>
+  <div class="header-sub">8 tools · CHF/GHF-normen <span class="njJaar">2026</span></div>
 </div>
 
 <div class="tab-bar">
@@ -201,12 +201,15 @@ button,.btn{border-radius:8px;font-family:inherit}
 
 <!-- ══ 0: MAX HYPOTHEEK ══ -->
 <div class="panel active" id="p0">
-  <div class="page-title"><h2>🏠 Maximale Hypotheek Calculator</h2><p>Bereken de maximale hypotheek op basis van CHF/GHF-normen 2026, toetsrente en inkomen.</p></div>
+  <div class="page-title"><h2>🏠 Maximale Hypotheek Calculator</h2><p>Bereken de maximale hypotheek op basis van CHF/GHF-normen <span class="njJaar">2026</span>, toetsrente en inkomen.</p></div>
   <div class="layout">
     <div>
       <div class="card">
         <div class="card-hdr">Inkomen & situatie</div>
         <div class="card-body">
+          <div class="field"><label>Normjaar (financieringslastnormen, alleenstaandenbedrag, NHG-grens)</label>
+            <select class="fi njSel" id="mhNormjaar" onchange="setNormjaar(this.value)"><option value="2026">Normjaar 2026</option><option value="2027">Normjaar 2027</option></select>
+          </div>
           <div class="field"><label>Bruto jaarinkomen 1 <span class="fv" id="mhInk1V">€ 65.000</span></label>
             <input type="range" id="mhInk1" min="20000" max="300000" step="1000" value="65000" oninput="mhSync(1,'r')">
             <div class="slab"><span>€20k</span><span>€160k</span><span>€300k</span></div>
@@ -247,7 +250,7 @@ button,.btn{border-radius:8px;font-family:inherit}
               <option value="1" selected>Eén aanvrager</option>
               <option value="0">Twee aanvragers</option>
             </select>
-            <div style="font-size:11px;color:#5f6b7a;margin-top:3px;">Alleenstaandenbedrag € 17.000 automatisch bij één aanvrager én toetsinkomen &gt; € 30.000 (AOW-tabel: &gt; € 29.000). Met inkomen of geboortedatum van aanvrager 2 geldt: twee aanvragers.</div>
+            <div style="font-size:11px;color:#5f6b7a;margin-top:3px;">Alleenstaandenbedrag <span class="njAlBedrag">€ 17.000</span> automatisch bij één aanvrager én toetsinkomen &gt; <span class="njAlGrens">€ 30.000 (AOW-tabel: &gt; € 29.000)</span>. Met inkomen of geboortedatum van aanvrager 2 geldt: twee aanvragers.</div>
           </div>
           <div class="field"><label>Kredietlimiet / oorspronkelijke kredietsom (€)</label>
             <input type="number" class="fi" id="mhKrediet" value="0" min="0" step="500" placeholder="BKR: doorlopend krediet, persoonlijke lening" oninput="calcMh()">
@@ -334,12 +337,15 @@ button,.btn{border-radius:8px;font-family:inherit}
 
 <!-- ══ 2: NHG CHECK ══ -->
 <div class="panel" id="p2">
-  <div class="page-title"><h2>🛡️ NHG Check 2026</h2><p>NHG-grens 2026: €470.000 (€498.200 met energiebesparende voorzieningen — 106% regeling).</p></div>
+  <div class="page-title"><h2>🛡️ NHG Check <span class="njJaar">2026</span></h2><p>NHG-grens <span class="njJaar">2026</span>: <span class="njNhg">€ 470.000</span> (<span class="njNhgE">€ 498.200</span> met energiebesparende voorzieningen — 106% regeling).</p></div>
   <div class="layout">
     <div>
       <div class="card">
         <div class="card-hdr">Uw situatie</div>
         <div class="card-body">
+          <div class="field"><label>Normjaar (financieringslastnormen, alleenstaandenbedrag, NHG-grens)</label>
+            <select class="fi njSel" id="nhgNormjaar" onchange="setNormjaar(this.value)"><option value="2026">Normjaar 2026</option><option value="2027">Normjaar 2027</option></select>
+          </div>
           <div class="field"><label>Koopprijs woning <span class="fv" id="nhgPrijsV">€ 380.000</span></label>
             <input type="range" id="nhgPrijs" min="50000" max="650000" step="5000" value="380000" oninput="calcNhg()">
             <div class="slab"><span>€50k</span><span>€350k</span><span>€650k</span></div>
@@ -482,6 +488,9 @@ button,.btn{border-radius:8px;font-family:inherit}
   <div class="card" style="margin-bottom:14px;">
     <div class="card-hdr">Kies het energielabel</div>
     <div class="card-body">
+      <div class="field"><label>Normjaar (financieringslastnormen, alleenstaandenbedrag, NHG-grens)</label>
+        <select class="fi njSel" id="elNormjaar" onchange="setNormjaar(this.value)"><option value="2026">Normjaar 2026</option><option value="2027">Normjaar 2027</option></select>
+      </div>
       <div class="el-grid" id="elGrid"></div>
       <div class="field"><label>Bruto gezinsinkomen <span class="fv" id="elInkomenV">€ 80.000</span></label>
         <input type="range" id="elInkomen" min="20000" max="300000" step="2000" value="80000" oninput="calcEl()">
@@ -525,11 +534,31 @@ const FLN2026={
  nietAOW:{min:30000,max:125000,r:"155,165,175,184,193,201,209,216,222,227,232,237;162,173,183,193,202,212,220,227,234,241,246,251;167,179,190,201,211,221,230,238,246,253,259,264;171,183,195,206,216,226,236,246,254,261,268,274;173,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;174,185,196,206,216,226,236,246,255,264,273,281;175,185,196,206,216,226,236,246,255,264,273,281;176,186,196,206,216,226,236,246,255,264,273,281;176,186,196,206,216,226,236,246,255,264,273,281;177,187,197,207,216,226,236,246,255,264,273,281;177,187,197,207,217,226,236,246,255,264,273,281;178,188,198,207,217,227,236,246,255,264,273,281;178,189,199,209,218,227,237,246,255,264,273,281;179,189,199,210,219,228,237,246,255,264,273,281;180,190,200,210,220,229,238,247,255,264,273,281;181,191,201,211,221,230,239,247,256,264,273,281;182,192,202,212,222,231,240,248,257,265,273,281;183,194,204,214,223,232,241,250,258,267,274,282;185,195,205,215,225,234,243,251,260,268,276,283;186,197,207,217,227,236,245,253,262,270,278,285;188,199,209,219,229,238,247,256,264,272,280,287;190,200,211,221,231,241,250,258,266,274,282,289;191,202,213,223,233,243,252,260,269,276,284,292;193,204,215,225,235,245,254,263,271,279,286,293;194,205,216,226,237,246,256,264,273,281,288,295;195,206,217,228,238,248,257,266,275,282,290,297;196,208,219,229,240,249,259,268,276,284,292,299;197,209,220,231,241,251,261,270,278,286,294,301;198,209,221,232,242,252,262,271,279,287,295,302;199,210,222,232,243,253,263,272,281,289,296,303;200,211,222,233,243,254,264,273,281,290,297,304;201,212,223,234,244,254,264,273,282,290,298,305;201,212,223,234,244,254,264,274,282,291,299,306;202,213,224,234,245,255,265,274,283,291,299,306;202,213,224,235,245,255,265,274,283,292,299,307;202,214,225,235,246,256,265,274,284,292,300,307;203,214,225,236,246,256,266,275,284,292,300,308;204,215,225,236,246,256,266,275,284,293,301,308;205,215,226,237,247,257,266,276,284,293,301,308;205,216,226,237,247,257,267,276,285,293,301,309;205,216,227,237,248,258,267,276,285,293,302,309;206,217,227,238,248,258,268,277,286,294,302,310;207,217,228,238,248,258,268,277,286,294,302,310;208,218,228,239,249,259,269,278,286,295,302,310;208,219,229,239,250,259,269,278,287,295,303,310;209,219,230,240,250,260,269,279,287,295,303,310;210,220,230,240,250,260,270,279,288,296,304,311;210,221,231,241,251,261,270,279,288,296,304,311;211,221,232,242,251,261,271,280,288,296,304,312;211,222,232,242,252,261,271,280,289,297,305,312;212,222,233,243,253,262,271,280,289,297,305,312;212,223,234,244,253,263,271,281,289,298,305,313;213,224,234,244,254,263,272,281,290,298,306,313;213,224,235,245,255,264,273,281,290,298,306,313;213,225,235,245,255,265,273,282,291,299,306,314;214,225,236,246,256,265,274,282,291,299,307,314;214,225,237,247,256,266,275,283,291,300,307,315;215,226,237,247,257,267,275,284,292,300,308,315;215,226,237,248,258,267,276,284,292,300,308,315;216,227,237,248,258,267,277,285,293,300,308,315;216,227,238,248,259,268,277,285,293,301,308,316;217,228,238,249,259,268,277,286,294,301,309,316;217,228,239,249,259,269,278,287,294,302,309,317;218,229,239,250,259,269,278,287,295,302,309,317;218,229,240,250,260,269,279,287,295,303,310,317;218,229,240,250,260,270,279,288,296,303,310,317;219,230,241,251,261,270,280,288,296,304,311,318;219,230,241,251,261,271,280,289,297,304,311,318;220,231,241,252,262,271,280,289,297,305,312,319;220,231,242,252,262,272,281,289,298,305,313,319;220,232,242,253,263,272,281,290,298,306,313,320;221,232,243,253,263,273,282,290,299,306,314,320;221,232,243,254,264,273,282,291,299,307,314,321;222,233,244,254,264,274,283,291,299,308,315,321;222,233,244,255,265,274,283,292,300,308,315,322"},
  welAOW:{min:29000,max:110000,r:"185,189,194,197,201,204,207,209,211,213,215,217;192,198,203,208,211,215,218,221,223,225,227,229;199,206,212,217,221,225,228,231,234,237,239,241;205,212,218,224,230,234,238,241,244,247,249,252;209,217,223,229,235,240,245,248,252,255,257,260;212,220,228,234,240,245,251,255,259,262,265,267;216,224,231,239,245,251,256,261,265,269,272,275;218,227,235,243,249,256,261,266,271,275,279,282;219,229,238,246,253,260,266,271,275,280,284,288;220,231,240,249,257,263,270,275,280,284,289,292;221,232,242,251,259,266,273,279,284,289,293,297;222,233,243,252,261,269,276,282,288,293,297,301;223,234,244,253,263,271,279,285,291,296,301,305;224,235,245,255,264,273,281,288,294,300,305,309;225,236,246,256,266,274,283,290,297,303,308,313;227,237,248,258,267,276,284,292,299,306,311,316;228,239,249,259,268,277,286,294,301,308,314,319;229,240,250,260,269,279,287,295,303,309,316,322;231,241,252,261,271,280,289,297,304,311,318,324;231,243,253,263,273,282,290,299,306,313,320,326;233,244,255,265,275,283,292,300,308,315,322,328;234,246,256,267,276,286,294,302,310,317,324,330;236,248,258,268,279,288,297,305,313,320,327,333;239,250,262,272,281,291,300,308,316,323,330,337;242,254,265,275,285,294,304,312,320,327,335,341;245,257,268,279,289,298,307,316,324,332,339,345;248,260,272,283,293,303,311,320,329,336,343,350;250,264,276,286,297,307,316,324,332,340,347,355;252,266,279,290,300,311,320,328,337,344,352,359;253,268,281,294,304,314,324,333,341,348,355,363;254,270,284,296,308,318,328,337,345,353,360,366;255,271,286,299,311,321,331,341,349,357,364,371;256,272,287,301,314,325,335,344,353,361,368,375;257,273,289,304,316,328,338,348,357,365,372,379;258,274,290,305,319,330,341,351,360,368,376,383;258,276,291,307,321,333,344,354,363,372,379,386;259,276,292,308,323,336,346,356,366,375,383,390;259,276,294,309,324,338,349,360,368,378,386,393;260,277,294,310,325,340,352,362,371,380,389,397;260,277,295,311,326,341,354,364,375,383,392,400;261,278,295,312,327,342,356,367,377,386,394,403;262,279,296,313,328,343,357,369,379,389,397,405;262,279,296,313,329,344,358,371,382,391,399,407;263,280,297,314,330,345,359,373,384,394,403,410;264,280,297,314,331,346,360,373,384,395,405,413;265,281,297,314,331,347,361,373,384,395,406,416;265,282,298,314,331,348,361,373,384,395,406,417;266,283,299,315,332,348,361,373,384,395,406,417;267,283,300,316,332,348,361,373,384,395,406,417;268,284,300,316,333,348,361,373,384,395,406,417;269,285,301,317,333,348,361,373,384,395,406,417;271,285,301,317,333,348,361,373,384,395,406,417;272,286,302,318,334,348,361,373,384,395,406,417;272,288,302,319,334,348,361,373,384,395,406,417;273,288,303,319,334,348,361,373,384,395,406,417;274,289,304,319,334,348,361,373,384,395,406,417;275,290,304,319,334,348,361,373,384,395,406,417;276,291,305,319,334,348,361,373,384,395,406,417;277,291,306,320,334,348,361,373,384,395,406,417;277,292,306,320,334,348,361,373,384,395,406,417;277,292,306,320,334,348,361,373,384,395,406,417;277,292,306,321,334,348,361,373,384,395,406,417;278,292,307,321,334,348,361,373,384,395,406,417;278,293,307,321,334,348,361,373,384,395,406,417;278,293,307,321,335,348,361,373,384,395,406,417;278,293,307,321,335,348,361,373,384,395,406,417;279,293,308,321,335,348,361,373,384,395,406,417;279,294,308,322,335,348,361,373,384,395,406,417;279,294,308,322,335,348,361,373,384,395,406,417;280,294,308,322,336,348,361,373,384,395,406,417;280,294,309,322,336,349,361,373,384,395,406,417;280,295,309,323,336,349,361,373,384,395,406,417;281,295,309,323,336,349,361,373,384,395,406,417;281,295,309,323,336,349,361,373,384,395,406,417;281,296,309,323,337,349,362,373,384,395,406,417;282,296,310,323,337,350,362,374,385,395,406,417;282,296,310,324,337,350,362,374,385,395,406,417;282,296,310,324,337,350,362,374,385,395,406,417;283,297,311,324,337,350,363,374,385,396,406,417;283,297,311,325,338,351,363,374,385,396,406,417;283,297,311,325,338,351,363,375,385,396,406,417;284,298,312,325,338,351,363,375,386,396,406,417"},
 };
-Object.keys(FLN2026).forEach(function(k){var t=FLN2026[k];t.rows=t.r.split(';').map(function(s){return s.split(',').map(Number);});});
+/* Financieringslastpercentages 2027 (Wijzigingsregeling hypothecair krediet 2027, Stcrt. 2026, 38415); rijen vanaf € 31.000 (ook AOW). */
+const FLN2027={
+ nietAOW:{min:31000,max:125000,r:"168,178,188,198,207,215,223,229,236,241,246,250;174,186,197,207,216,225,234,241,248,254,259,264;178,190,201,211,221,231,241,250,258,264,270,276;180,190,201,211,221,231,241,250,259,268,278,286;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,190,201,211,221,231,241,250,259,268,278,287;180,191,201,211,221,231,241,250,259,268,278,287;181,191,201,211,221,231,241,250,259,268,278,287;181,191,202,211,221,231,241,250,259,268,278,287;181,192,202,212,221,231,241,250,259,268,278,287;182,192,202,212,222,231,241,250,259,268,278,287;182,193,203,213,222,232,241,250,259,268,278,287;184,194,204,214,224,233,242,251,260,269,278,287;185,196,206,216,226,235,244,253,262,271,279,287;187,197,208,218,228,237,246,255,263,272,281,289;188,199,210,220,230,239,248,257,265,274,282,290;190,201,211,222,232,241,250,259,267,275,284,292;192,203,213,224,234,243,252,261,269,277,286,294;193,204,215,226,236,245,255,263,272,280,287,296;195,206,217,228,238,248,257,266,274,282,289,297;197,208,219,229,240,250,259,268,276,284,292,299;198,209,220,231,242,251,261,270,279,287,294,301;199,211,222,233,243,253,263,272,281,289,296,303;201,212,223,235,245,255,265,274,283,291,299,306;202,213,225,236,246,257,266,276,284,292,300,307;203,215,226,237,248,258,268,277,286,294,302,309;204,215,227,238,249,259,269,278,287,295,303,311;204,216,228,239,249,260,270,279,288,296,304,312;205,217,228,239,250,260,270,280,289,297,305,312;205,217,228,240,250,261,271,280,289,298,306,313;206,217,229,240,251,261,271,280,290,298,306,313;206,217,229,240,251,261,271,281,290,298,306,314;206,218,229,240,251,262,272,281,290,299,307,314;207,218,230,241,252,262,272,281,290,299,307,315;208,219,230,241,252,262,272,282,291,299,307,315;208,219,230,241,252,263,273,282,291,300,308,315;209,220,231,242,252,263,273,282,291,300,308,316;209,220,231,242,253,263,273,283,292,300,308,316;210,221,231,242,253,264,274,283,292,301,309,316;211,221,232,243,253,264,274,283,292,301,309,316;211,222,233,243,254,264,274,284,293,301,309,317;212,223,233,243,254,264,274,284,293,301,310,317;213,223,234,244,254,265,275,284,293,302,310,317;213,224,235,245,255,265,275,284,294,302,310,318;214,225,235,245,255,265,275,285,294,302,310,318;214,225,236,246,256,266,276,285,294,303,311,318;215,226,236,247,256,266,276,285,294,303,311,319;215,226,237,247,257,267,276,286,295,303,311,319;216,227,238,248,258,267,276,286,295,303,312,319;216,227,238,248,258,268,277,286,295,304,312,319;217,228,239,249,259,268,277,286,295,304,312,320;217,228,239,250,259,269,278,287,295,304,312,320;218,229,240,250,260,269,278,287,296,304,312,320;218,229,240,251,261,270,279,288,296,305,313,320;219,230,241,251,261,271,280,288,297,305,313,320;219,230,241,251,262,271,280,289,297,305,313,321;220,231,242,252,262,272,281,289,297,305,313,321;220,231,242,252,262,272,281,290,298,306,314,321;220,232,243,253,263,273,282,290,298,306,314,322;221,232,243,253,263,273,282,291,299,307,314,322;221,233,243,254,264,274,283,291,300,307,315,322;222,233,244,254,264,274,283,292,300,308,315,322;222,233,244,255,265,275,284,293,301,308,316,323;223,234,245,255,265,275,284,293,301,309,316,323;223,234,245,256,266,276,285,294,302,309,317,323;223,235,246,256,266,276,285,294,302,310,317,324;223,235,246,257,267,277,286,294,303,310,318,324;223,235,247,257,267,277,286,295,303,311,318,325;223,236,247,258,268,277,287,295,303,311,319,325;224,236,247,258,268,278,287,296,304,312,319,326;225,236,248,258,269,278,288,296,304,312,320,326"},
+ welAOW:{min:31000,max:110000,r:"196,199,202,205,207,210,212,214,217,218,220,222;209,213,214,219,222,225,228,230,233,235,237,239;214,221,227,232,235,238,241,244,246,249,251,252;218,225,231,237,242,247,251,254,257,260,263,265;221,229,236,242,248,253,257,261,264,267,270,273;224,233,241,247,253,259,264,268,271,275,278,280;226,236,244,252,258,264,269,274,278,281,284,287;227,238,247,255,262,268,274,279,283,287,290,293;228,239,249,258,265,272,278,283,288,292,296,299;229,240,250,260,268,275,282,287,292,297,301,304;230,241,251,261,270,278,285,291,296,301,305,309;231,241,252,262,271,280,287,294,299,304,309,313;231,242,253,263,272,281,289,296,302,308,312,316;232,243,253,263,273,282,290,298,305,311,316,320;233,244,254,264,274,283,291,299,307,313,318,323;233,245,255,265,275,284,292,300,308,315,321,326;234,245,256,266,276,285,294,302,309,316,323,328;234,246,257,267,277,286,295,303,310,317,324,330;235,246,257,268,278,287,296,304,311,318,325,331;236,247,259,269,279,289,298,306,313,321,327,333;238,250,261,271,282,291,300,309,316,324,330,337;242,252,264,274,285,295,304,312,320,328,334,341;245,256,267,278,288,298,308,316,324,331,338,345;249,260,270,281,291,302,311,320,328,336,343,349;252,263,274,284,295,305,315,324,332,340,347,354;255,267,278,288,299,309,319,328,336,345,352,358;258,271,281,292,302,313,323,332,340,348,356,363;259,274,285,296,306,316,326,335,344,352,360,367;261,276,289,299,310,319,330,339,348,356,364,371;262,277,291,303,314,323,333,343,352,360,368,375;264,279,294,306,317,327,336,346,355,364,372,379;265,281,296,309,320,331,340,350,359,367,375,383;266,282,297,312,324,334,344,353,362,371,379,386;267,284,299,314,327,337,347,356,365,374,382,390;267,285,301,315,329,341,350,360,369,377,386,393;267,286,302,317,331,344,353,363,371,380,389,397;267,286,303,319,333,346,357,366,375,383,392,400;268,286,304,320,335,348,360,369,378,386,395,403;268,286,305,321,336,350,362,372,381,389,397,406;268,286,305,322,337,352,365,375,384,393,400,408;268,286,305,323,339,353,367,378,387,396,403,411;269,287,305,323,340,354,368,380,390,398,406,413;269,287,305,323,341,356,369,382,392,401,409,416;269,287,305,323,341,356,370,383,395,403,412,419;269,287,305,323,341,356,371,384,397,406,414,422;270,288,305,323,341,356,371,384,397,408,416,424;270,288,305,323,341,356,371,384,397,409,419,426;271,288,306,323,341,356,371,384,397,409,420,429;272,288,306,323,341,356,371,384,397,409,420,431;273,289,306,324,341,356,371,384,397,409,420,432;275,290,307,324,341,356,371,384,397,409,420,432;276,291,307,325,342,356,371,384,397,409,420,432;277,292,308,325,342,356,371,384,397,409,420,432;278,293,308,325,342,356,371,384,397,409,420,432;279,294,309,325,342,356,371,384,397,409,420,432;280,295,310,325,342,356,371,384,397,409,420,432;281,296,311,326,342,356,371,384,397,409,420,432;282,297,312,326,342,356,371,384,397,409,420,432;282,298,312,327,342,356,371,384,397,409,420,432;283,298,313,327,342,356,371,384,397,409,420,432;283,298,313,328,342,356,371,384,397,409,420,432;283,299,314,328,342,356,371,384,397,409,420,432;284,299,314,328,342,356,371,384,397,409,420,432;284,299,314,329,343,356,371,384,397,409,420,432;285,300,315,329,343,356,371,384,397,409,420,432;285,300,315,330,343,357,371,384,397,409,420,432;286,301,315,330,344,357,371,384,397,409,420,432;286,301,316,330,344,358,371,384,397,409,420,432;287,301,316,331,345,358,371,384,397,409,420,432;287,302,317,331,345,358,371,384,397,409,420,432;288,302,317,331,345,359,372,384,397,409,420,432;288,303,317,332,346,359,372,384,397,409,420,432;289,303,318,332,346,360,372,384,397,409,420,432;289,304,318,333,347,360,373,385,397,409,420,432;290,304,319,333,347,360,373,385,397,409,420,432;290,305,319,333,347,361,373,386,397,409,420,432;291,305,320,334,348,361,374,386,397,409,420,432;291,306,320,334,348,361,374,386,398,409,420,432;292,306,321,335,348,362,375,387,398,409,420,432;292,307,321,335,349,362,375,387,399,409,420,432"}
+};
+[FLN2026,FLN2027].forEach(function(T){Object.keys(T).forEach(function(k){var t=T[k];t.rows=t.r.split(';').map(function(s){return s.split(',').map(Number);});});});
+/* Normjaar (Max. Hypotheek, NHG Check, Energielabel): standaard op datum (vóór 1-1-2027 = 2026), handmatig wijzigbaar */
+var NORM_BY_YEAR={
+  2026:{fln:FLN2026,al:{bedrag:17000,grens:30000,grensAOW:29000},nhg:470000,nhgE:498200,bron:'Tijdelijke regeling hypothecair krediet 2026'},
+  2027:{fln:FLN2027,al:{bedrag:18000,grens:31000,grensAOW:31000},nhg:500000,nhgE:530000,bron:'Wijzigingsregeling hypothecair krediet 2027 (Stcrt. 2026, 38415)'}};
+var NORMJAAR=new Date()>=new Date(2027,0,1)?2027:2026;
+var FLN=NORM_BY_YEAR[NORMJAAR].fln;
+function njSync(){var N=NORM_BY_YEAR[NORMJAAR];FLN=N.fln;var e=function(n){return '€ '+Math.round(n).toLocaleString('nl-NL');};
+  document.querySelectorAll('.njSel').forEach(function(x){x.value=String(NORMJAAR);});
+  document.querySelectorAll('.njJaar').forEach(function(x){x.textContent=NORMJAAR;});
+  document.querySelectorAll('.njAlBedrag').forEach(function(x){x.textContent=e(N.al.bedrag);});
+  document.querySelectorAll('.njAlGrens').forEach(function(x){x.textContent=N.al.grens===N.al.grensAOW?e(N.al.grens)+' (ook AOW-tabel)':e(N.al.grens)+' (AOW-tabel: > '+e(N.al.grensAOW)+')';});
+  document.querySelectorAll('.njNhg').forEach(function(x){x.textContent=e(N.nhg);});
+  document.querySelectorAll('.njNhgE').forEach(function(x){x.textContent=e(N.nhgE);});
+  return N;}
+function setNormjaar(j){j=parseInt(j,10);NORMJAAR=NORM_BY_YEAR[j]?j:2026;njSync();calcMh();calcNhg();calcEl();}
 /* Rentekolom bij toetsrente (in %, afgerond op 3 decimalen) */
 function flnKolom(rente){var m=Math.round((+rente||0)*1000);if(m<=1500)return 0;return Math.min(11,Math.ceil((m-1500)/500));}
 /* Financieringslastpercentage (fractie) bij toetsinkomen, toetsrente en tabel ('nietAOW','welAOW', ...) */
-function flnPct(inkomen,rente,tabel){var t=FLN2026[tabel||'nietAOW'];var rij=Math.floor((+inkomen||0)/1000)*1000;rij=Math.max(t.min,Math.min(t.max,rij));return t.rows[(rij-t.min)/1000][flnKolom(rente)]/1000;}
+function flnPct(inkomen,rente,tabel){var t=FLN[tabel||'nietAOW'];var rij=Math.floor((+inkomen||0)/1000)*1000;rij=Math.max(t.min,Math.min(t.max,rij));return t.rows[(rij-t.min)/1000][flnKolom(rente)]/1000;}
 /* Bruteringsfactor studieschuld (Nibud 2026, blad 'overige parameters'), per rentekolom */
 const FLN2026_BRUTERING_STUDIE=[1.05,1.05,1.10,1.15,1.20,1.20,1.25,1.30,1.30,1.35,1.40,1.40];
 /* Extra bedragen 2026 (blad 'overige parameters') */
@@ -633,10 +662,11 @@ function calcMh(){
   const pens1=mhGetal('mhPens1');
   const personen=[{inkomen:Math.max(0,ink1-alimJaar),pensioen:pens1===null?null:Math.max(0,pens1-alimJaar),geb:mhDatum('mhGeb1')}];
   if(ink2>0||mhDatum('mhGeb2')) personen.push({inkomen:ink2,pensioen:mhGetal('mhPens2'),geb:mhDatum('mhGeb2')});
+  const N=njSync();
   const toets=flnToets(personen,{drempel:drempel,datum:new Date(),rente:toetsRente});
   // Alleenstaandenbedrag (Trhk art. 3 lid 8): alleen bij één aanvrager (afgeleid uit de ingevulde aanvragers) én toetsinkomen > € 30.000 (niet-AOW) resp. > € 29.000 (AOW-tabel)
   const eenAanvrager=document.getElementById('mhAlleen').value==='1'&&personen.length===1;
-  const alleenGrens=toets.bindend.aowTabel?29000:30000;
+  const alleenGrens=toets.bindend.aowTabel?N.al.grensAOW:N.al.grens; // per normjaar (2026: 30.000 / AOW 29.000; 2027: 31.000)
   const alleen=eenAanvrager&&toets.bindend.inkomen>alleenGrens;
   const toetsInkomen=toets.bindend.inkomen;
   const quota=toets.bindend.pct;
@@ -654,15 +684,15 @@ function calcMh(){
   const annFactor=r>0?r/(1-Math.pow(1+r,-m)):1/m;                   // bruto maandlast per € 1 (30 jaar annuïtair)
   const maxHoofdsom=Math.max(0,Math.round((maxMaandlast-verplichtingen)/annFactor));
   const schuldenAftrek=Math.round(verplichtingen/annFactor);
-  const alleenExtra=alleen?FLN2026_EXTRA_ALLEENSTAANDE:0;
+  const alleenExtra=alleen?N.al.bedrag:0;
   const maxMetLabel=maxHoofdsom+labelToeslag+alleenExtra;
-  const nhgGrens=470000;
+  const nhgGrens=N.nhg;
 
   document.getElementById('mhResult').innerHTML=`
     <div class="result-hero">
       <div class="rh-lbl">Maximale hypotheek</div>
       <div class="rh-val">${toets.ontbreekt?'—':fmt(maxMetLabel)}</div>
-      <div class="rh-sub">Toetsinkomen: ${fmt(toetsInkomen)}${alimJaar>0?` (na aftrek ${fmt(alimJaar)} betaalde partneralimentatie)`:''} · Financieringslast: ${fmtPct(quota*100,1)} (${toets.bindend.aowTabel?'AOW-tabel':'tabel niet-AOW'}) · Toetsrente: ${fmtPct(toetsRente,2)}</div>
+      <div class="rh-sub">Toetsinkomen: ${fmt(toetsInkomen)}${alimJaar>0?` (na aftrek ${fmt(alimJaar)} betaalde partneralimentatie)`:''} · Financieringslast: ${fmtPct(quota*100,1)} (${toets.bindend.aowTabel?'AOW-tabel':'tabel niet-AOW'}) · Toetsrente: ${fmtPct(toetsRente,2)} · Normjaar ${NORMJAAR}</div>
     </div>
     <div class="metrics">
       <div class="metric"><div class="m-lbl">Basis maximaal</div><div class="m-val blue">${fmt(maxHoofdsom)}</div></div>
@@ -670,10 +700,10 @@ function calcMh(){
       <div class="metric"><div class="m-lbl">Max. maandlast</div><div class="m-val">${fmt(maxMaandlast)}</div></div>
     </div>
     ${toets.ontbreekt?ri('warn','⚠️','Vul het inkomen vanaf AOW in',flnToetsTekst(toets,fmt)):ri('info','👴','Pensioentoets',flnToetsTekst(toets,fmt))}
-    ${eenAanvrager?ri('info','👤','Alleenstaandenbedrag',alleen?`Eén aanvrager en toetsinkomen ${fmt(toetsInkomen)} &gt; ${fmt(alleenGrens)}: € 17.000 extra (Trhk 2026 art. 3 lid 8).`:`Niet van toepassing: toetsinkomen ${fmt(toetsInkomen)} is niet hoger dan ${fmt(alleenGrens)}.`):''}
-    ${maxMetLabel<=nhgGrens?ri('ok','🛡️','NHG mogelijk (grens €470.000)','Uw maximale hypotheek valt binnen de NHG-grens 2026. NHG geeft rentekorting en bescherming bij gedwongen verkoop.'):ri('info','ℹ️','Buiten NHG-grens','Uw hypotheek overstijgt de NHG-grens van €470.000 (2026). Gewone hypotheek is uitstekend mogelijk.')}
+    ${eenAanvrager?ri('info','👤','Alleenstaandenbedrag',alleen?`Eén aanvrager en toetsinkomen ${fmt(toetsInkomen)} &gt; ${fmt(alleenGrens)}: ${fmt(N.al.bedrag)} extra (Trhk ${NORMJAAR} art. 3 lid 8).`:`Niet van toepassing: toetsinkomen ${fmt(toetsInkomen)} is niet hoger dan ${fmt(alleenGrens)}.`):''}
+    ${maxMetLabel<=nhgGrens?ri('ok','🛡️','NHG mogelijk (grens '+fmt(nhgGrens)+')','Uw maximale hypotheek valt binnen de NHG-grens '+NORMJAAR+'. NHG geeft rentekorting en bescherming bij gedwongen verkoop.'):ri('info','ℹ️','Buiten NHG-grens','Uw hypotheek overstijgt de NHG-grens van '+fmt(nhgGrens)+' ('+NORMJAAR+'). Gewone hypotheek is uitstekend mogelijk.')}
     ${verplichtingen>0?ri('warn','⚠️','Verplichtingen verlagen maximale hypotheek',`Bruto maandlast verplichtingen ${fmt(verplichtingen)}/mnd (krediet 2% × ${fmt(krediet)} = ${fmt(kredietLast)}${duo>0?`; DUO ${fmt(duo)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(duoLast)}`:''}${erfpacht>0?`; erfpachtcanon ${fmt(erfpacht)}`:''}${overigNetto>0?`; overig ${fmt(overigNetto)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(overig)}`:''}) gaat af van de toegestane financieringslast en verlaagt uw max. hypotheek met ca. ${fmt(schuldenAftrek)}. Aflossen (en opzeggen van de kredietlimiet) vóór aanvraag loont.`):''}
-    ${ri('info','ℹ️','Berekening volgens de Tijdelijke regeling hypothecair krediet 2026','Financieringslastpercentage uit de officiële Nibud-tabel 2026 (rij per € 1.000 toetsinkomen, kolom naar toetsrente). Max. hypotheek = (toetsinkomen × percentage ÷ 12 − bruto maandlast verplichtingen) ÷ annuïteitsfactor (toetsrente, 360 mnd), plus het energielabelbedrag'+(alleen?' en € 17.000 voor alleenstaanden':'')+'. Dit is een indicatie; geldverstrekkers kunnen strenger zijn.')}`;
+    ${ri('info','ℹ️','Berekening volgens de '+N.bron,'Financieringslastpercentage uit de officiële Nibud-tabel '+NORMJAAR+' (rij per € 1.000 toetsinkomen, kolom naar toetsrente). Max. hypotheek = (toetsinkomen × percentage ÷ 12 − bruto maandlast verplichtingen) ÷ annuïteitsfactor (toetsrente, 360 mnd), plus het energielabelbedrag'+(alleen?' en '+fmt(N.al.bedrag)+' voor alleenstaanden':'')+'. Dit is een indicatie; geldverstrekkers kunnen strenger zijn.')}`;
 }
 calcMh();
 
@@ -757,10 +787,11 @@ function calcNhg(){
   document.getElementById('nhgPrijsV').textContent=fmt(prijs);
   document.getElementById('nhgHypV').textContent=fmt(hyp);
 
-  // NHG 2026: €470.000, met energie 106% = €498.200
-  const nhgGronds=470000;
-  const grens=energie==='ja'?Math.round(nhgGronds*1.06):nhgGronds;
-  const borgPremie=0.004; // 0,4% 2026 (NHG)
+  // NHG-grens per normjaar: 2026 €470.000 (energie 106% = €498.200); 2027 €500.000 (energie €530.000)
+  const N=njSync();
+  const nhgGronds=N.nhg;
+  const grens=energie==='ja'?N.nhgE:nhgGronds;
+  const borgPremie=0.004; // 0,4% (NHG 2026 en 2027)
   const borgKosten=Math.round(hyp*borgPremie);
   const nhgMogelijk=prijs<=grens&&hyp<=grens&&hyp<=prijs*1.0;
   const renteKorting=0.004;
@@ -777,7 +808,7 @@ function calcNhg(){
       ${nhgMogelijk?'✅ NHG aanvraag mogelijk':'❌ Buiten NHG-grens'}
     </div>
     <div class="metrics">
-      <div class="metric"><div class="m-lbl">NHG-grens 2026</div><div class="m-val blue">${fmt(grens)}</div></div>
+      <div class="metric"><div class="m-lbl">NHG-grens ${NORMJAAR}</div><div class="m-val blue">${fmt(grens)}</div></div>
       <div class="metric"><div class="m-lbl">Borgtochtpremie</div><div class="m-val ${nhgMogelijk?'amber':'red'}">${nhgMogelijk?fmt(borgKosten):'N.v.t.'}</div></div>
       <div class="metric"><div class="m-lbl">LTV ratio</div><div class="m-val ${ltv<=90?'green':ltv<=100?'amber':'red'}">${ltv}%</div></div>
     </div>
@@ -947,12 +978,13 @@ function calcEl(){
   const label=LABELS.find(l=>l.naam===activeLabel)||LABELS[5];
 
   const toetsRente=5.0; // basis toetsrente
-  const quota=flnPct(inkomen,toetsRente,'nietAOW'); // officiële tabel 2026
+  const N=njSync();
+  const quota=flnPct(inkomen,toetsRente,'nietAOW'); // officiële tabel van het normjaar
   const r=toetsRente/100/12;
   const m=360;
   const basisHyp=Math.round((inkomen*quota/12)*(Math.pow(1+r,m)-1)/(r*Math.pow(1+r,m)));
   const metLabel=basisHyp+label.toeslag;
-  const nhgGrens=470000;
+  const nhgGrens=N.nhg;
   const nhgMogelijk=metLabel<=nhgGrens;
 
   document.getElementById('elResult').innerHTML=`
@@ -967,20 +999,20 @@ function calcEl(){
       <div class="metric"><div class="m-lbl">NHG mogelijk?</div><div class="m-val ${nhgMogelijk?'green':'red'}">${nhgMogelijk?'Ja':'Nee'}</div></div>
     </div>
     ${label.toeslag>0
-      ?ri('ok','🌱',label.naam==='Geen'?`Geen geldig energielabel: +${fmt(label.toeslag)} extra leenruimte`:`Label ${label.naam}: +${fmt(label.toeslag)} extra leenruimte`,label.naam==='Geen'?`Voor een woning zonder geldig energielabel geldt in 2026 een extra bedrag van € 10.000 (Nibud-bijlage 2026). NHG-grens 2026: ${fmt(nhgGrens)}.`:`Energiezuinige woningen krijgen een opslag op de maximale hypotheek. NHG-grens 2026: ${fmt(nhgGrens)}.`)
+      ?ri('ok','🌱',label.naam==='Geen'?`Geen geldig energielabel: +${fmt(label.toeslag)} extra leenruimte`:`Label ${label.naam}: +${fmt(label.toeslag)} extra leenruimte`,label.naam==='Geen'?`Voor een woning zonder geldig energielabel geldt in 2026 en 2027 een extra bedrag van € 10.000 (Nibud-bijlage 2026). NHG-grens 2026: ${fmt(nhgGrens)}.`:`Energiezuinige woningen krijgen een opslag op de maximale hypotheek. NHG-grens 2026: ${fmt(nhgGrens)}.`)
       :ri('warn','⚠️',`Label ${label.naam} — geen energielabel-opslag`,`Woningen met label G t/m E komen niet in aanmerking voor de energielabeltoeslag op de maximale hypotheek.`)}
     ${ri('info','🔧',`Extra voor energiebesparende voorzieningen: ${fmt(VERDUURZAMING_2026[label.naam]||0)}`,`Bovenop de labeltoeslag mag bij ${label.naam==='Geen'?'een woning zonder geldig label':'label '+label.naam} nog ${fmt(VERDUURZAMING_2026[label.naam]||0)} extra worden geleend als dat bedrag aan energiebesparende voorzieningen wordt besteed (Trhk 2026). Bij een A++++-woning met energieprestatiegarantie van minimaal 10 jaar is de labeltoeslag € 40.000.`)}
-    ${ri('info','ℹ️','Energielabel verbeteren loont','Een beter label geeft extra leenruimte bij aankoop (Trhk 2026): C/D € 5.000, A/B € 10.000, A+/A++ € 20.000, A+++ € 25.000, A++++ € 30.000; geen geldig label € 10.000. Van D naar B = +€ 5.000. Bovendien verbetering wooncomfort en lagere energierekening.')}`;
+    ${ri('info','ℹ️','Energielabel verbeteren loont','Een beter label geeft extra leenruimte bij aankoop (Trhk 2026 en 2027 gelijk): C/D € 5.000, A/B € 10.000, A+/A++ € 20.000, A+++ € 25.000, A++++ € 30.000; geen geldig label € 10.000. Van D naar B = +€ 5.000. Bovendien verbetering wooncomfort en lagere energierekening.')}`;
 }
 renderElGrid();
 calcEl();
 
 /* ── HYPOTHEEK CHECK ── */
 const HC_ITEMS=[
-  {icon:'💰',ct:'Maximale hypotheek berekend',cs:'Op basis van CHF/GHF-normen 2026 en uw inkomen.'},
+  {icon:'💰',ct:'Maximale hypotheek berekend',cs:'Op basis van CHF/GHF-normen 2026/2027 en uw inkomen.'},
   {icon:'📋',ct:'Hypotheekadvies bij erkend adviseur',cs:'Wft-vergunning vereist. Kosten fiscaal aftrekbaar.'},
   {icon:'🏠',ct:'Taxatierapport aangevraagd',cs:'Verplicht bij hypotheekaanvraag. Kosten ca. €400–700.'},
-  {icon:'🛡️',ct:'NHG-mogelijkheid gecheckt',cs:'Tot €470.000 (2026)? Vraag altijd NHG aan.'},
+  {icon:'🛡️',ct:'NHG-mogelijkheid gecheckt',cs:'Tot €470.000 (2026) resp. €500.000 (2027)? Vraag altijd NHG aan.'},
   {icon:'❤️',ct:'Overlijdensrisicoverzekering (ORV) geregeld',cs:'Geldverstrekker verplicht dit vaak. Partner beschermd.'},
   {icon:'🔑',ct:'Bouwdepot of verbouwingshypotheek',cs:'Bij renovatie: zorg voor bouwdepot in hypotheekofferte.'},
   {icon:'📄',ct:'Koopakte goed doorgelezen',cs:'Ontbindende voorwaarden: financieringsvoorbehoud, bouwkundige keuring.'},
