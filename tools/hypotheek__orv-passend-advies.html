@@ -254,7 +254,7 @@ input:focus,select:focus{border-color:var(--navy);}
         <span class="orv-link-ico">🛡️</span>
         <div>
           <div class="orv-link-titel">Bereken nu de maandpremie voor deze dekking</div>
-          <div class="orv-link-sub">Ga naar de ORV Premiecalculator — AG Prognosetafel 2022 · drie dekkingsvormen</div>
+          <div class="orv-link-sub">Ga naar de ORV Premiecalculator — indicatieve sterftekansen (basis AG Prognosetafel 2022) · drie dekkingsvormen</div>
         </div>
         <span class="orv-link-arrow">→</span>
       </button>
@@ -264,12 +264,20 @@ input:focus,select:focus{border-color:var(--navy);}
 </div>
 
 <script>
-// ANW 2026 bedragen (SVB, per 1-1-2026)
+// ANW 2026 bedragen, bruto per maand per 1-1-2026
+// Bron: Rijksoverheid, "Uitkeringsbedragen per 1 januari 2026" (10-12-2025),
+// https://www.rijksoverheid.nl/documenten/2025/12/10/uitkeringsbedragen-per-1-januari-2026
+// Nabestaandenuitkering € 1.646,72 + vakantie-uitkering € 128,18 = € 1.774,90 (excl. tegemoetkoming Anw € 21,77/mnd).
+// Per 1-7-2026 zijn de bedragen licht verhoogd (minimumloon +1,90%).
+// Inkomensverrekening: 50% van het bruto minimumloon + 1/3 van het meerdere blijft vrij; de rest wordt
+// afgetrokken. Er is GEEN minimumuitkering (behalve voor AWW-gerechtigden van vóór juli 1996):
+// boven een bepaald inkomen vervalt de Anw volledig.
 const ANW = {
   volledig:  1774.90,  // incl. vakantiegeld (€1.646,72 + €128,18)
-  minimum:    710.09,  // minimum na hoge inkomensverrekening
-  grens:     2564.48,  // boven dit bedrag eigen inkomen → alleen minimum
+  minimum:      0,     // geen minimum: uitkering vervalt bij hoog inkomen
+  wml:       2294.40,  // bruto referentieminimummaandloon 1-1-2026
 };
+ANW.grens = ANW.wml*0.5 + ANW.volledig*1.5; // inkomen waarbij de uitkering op € 0 uitkomt (indicatief)
 
 const N = id => parseFloat(document.getElementById(id).value) || 0;
 function fmt(n,dec=0){ const neg=n<0; return (neg?'−\u00A0':'')+'\u00A0€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
@@ -292,7 +300,7 @@ function berekenAnwMaand(){
   if(recht==='geen') return 0;
   if(recht==='deels') return N('anwDeelsBedrag');
   // Volledig: check inkomensverrekening partner
-  const wml50=2294.40*0.50; // 50% WML vrijgesteld
+  const wml50=ANW.wml*0.50; // 50% WML vrijgesteld
   if(partnerMnd<=0) return ANW.volledig;
   if(partnerMnd>=ANW.grens) return ANW.minimum;
   const boven=Math.max(0,partnerMnd-wml50);
@@ -436,7 +444,7 @@ function bereken(){
     <strong>ANW-uitkering 2026 (SVB):</strong>
     Uw partner ${anwRecht==='geen'?'heeft <strong>geen recht</strong> op ANW':anwRecht==='vol'?'heeft vermoedelijk recht op <strong>de volledige ANW</strong>':'heeft recht op een <strong>gedeeltelijke ANW</strong>'}.
     Berekend bedrag: <strong>${fmt(anwMnd,2)}/mnd</strong>.
-    ${kinderen>0?'Kinderen <18 jaar geven recht op ANW — maar let op: bij hoog eigen inkomen (≥ €2.564/mnd) krimpt de uitkering tot het minimum van €710/mnd.':'Zonder kinderen <18 jaar: ANW-recht bestaat <em>alleen</em> bij ≥45% arbeidsongeschiktheid.'}
+    ${kinderen>0?`Kinderen <18 jaar geven recht op ANW — maar let op: eigen arbeidsinkomen boven 50% van het minimumloon (${fmt(ANW.wml*0.5,0)}/mnd) wordt voor 2/3 verrekend; vanaf ca. ${fmt(ANW.grens,0)}/mnd bruto vervalt de ANW (indicatief, bedragen 1-1-2026; controleer bij de SVB).`:'Zonder kinderen <18 jaar: ANW-recht bestaat <em>alleen</em> bij ≥45% arbeidsongeschiktheid.'}
     De ANW eindigt bij hertrouwen, samenwonen, of als het jongste kind 18 jaar wordt.
     Nabestaandenpensioen van werkgever wordt <strong>niet</strong> verrekend met ANW.`;
 

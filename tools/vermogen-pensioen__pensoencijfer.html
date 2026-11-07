@@ -495,14 +495,15 @@ input[type=range]{flex:1;accent-color:var(--k-blue);cursor:pointer}
       <div class="card-body">
         <div class="field">
           <label>Jouw geboortedatum</label>
-          <input type="date" id="gebdatum" max="2000-12-31" min="1940-01-01">
+          <input type="date" id="gebdatum" max="2000-12-31" min="1940-01-01" onchange="toonAowLeeftijd('gebdatum','aowl-info','sl-pen','sv-pen')">
         </div>
         <div class="field">
           <label>Gewenste pensioenleeftijd</label>
           <div class="slider-row">
-            <input type="range" min="60" max="72" value="67" id="sl-pen" oninput="sval('sl-pen','sv-pen',' jaar')">
+            <input type="range" min="60" max="72" value="67" id="sl-pen" oninput="this.dataset.handmatig=1;sval('sl-pen','sv-pen',' jaar')">
             <span class="sv" id="sv-pen">67 jaar</span>
           </div>
+          <p class="hint" id="aowl-info">Je AOW-leeftijd wordt berekend uit je geboortedatum.</p>
         </div>
         <div class="field">
           <label>Heb je een partner?</label>
@@ -544,14 +545,15 @@ input[type=range]{flex:1;accent-color:var(--k-blue);cursor:pointer}
           </div>
           <div class="field">
             <label>Geboortedatum partner</label>
-            <input type="date" id="gebdatumP" max="2000-12-31" min="1940-01-01">
+            <input type="date" id="gebdatumP" max="2000-12-31" min="1940-01-01" onchange="toonAowLeeftijd('gebdatumP','aowl-infoP','sl-penP','sv-penP')">
           </div>
           <div class="field">
             <label>Pensioenleeftijd partner</label>
             <div class="slider-row">
-              <input type="range" min="60" max="72" value="67" id="sl-penP" oninput="sval('sl-penP','sv-penP',' jaar')">
+              <input type="range" min="60" max="72" value="67" id="sl-penP" oninput="this.dataset.handmatig=1;sval('sl-penP','sv-penP',' jaar')">
               <span class="sv" id="sv-penP">67 jaar</span>
             </div>
+            <p class="hint" id="aowl-infoP"></p>
           </div>
         </div>
       </div>
@@ -660,7 +662,7 @@ input[type=range]{flex:1;accent-color:var(--k-blue);cursor:pointer}
           </div>
         </div>
         <div class="callout warn" style="margin-top:1rem">
-          <strong>Wet Toekomst Pensioenen (2023):</strong> Nieuw opgebouwd pensioen is DC. Controleer via je UPO wat gegarandeerd is en wat variabel.
+          <strong>Wet toekomst pensioenen (Wtp):</strong> in werking per 1-7-2023; pensioenregelingen gaan uiterlijk 1-1-2028 over naar het nieuwe stelsel. Nieuwe regelingen zijn premieregelingen (solidaire of flexibele premieregeling); de pensioenuitkomst is daardoor niet meer vooraf gegarandeerd. Controleer via je UPO en je pensioenuitvoerder wat er voor jou geldt.
         </div>
         <div class="callout" style="margin-top:.75rem">
           <strong>AOW: opgebouwd vs. te bereiken.</strong> Als je tot je AOW-leeftijd in Nederland blijft wonen, bouw je elk jaar 2% extra AOW op. Gebruik <em>te bereiken</em> (100%) als je verwacht in Nederland te blijven. Gebruik <em>opgebouwd</em> als je eerder stopt of al lang in het buitenland hebt gewoond.
@@ -900,6 +902,26 @@ var chartInst = null, RD = {};
 var ALL_STEPS = ['step0','step1','step2','step3','step4','step5'];
 
 // ── Helpers ───────────────────────────────────────────────────────────
+// AOW-leeftijd uit geboortedatum (Rijksoverheid/SVB): 67 jaar voor wie 67 wordt t/m 2027;
+// 67 jaar en 3 maanden voor wie die leeftijd in 2028–2031 bereikt (Stcrt. 2025, 38647).
+// Vanaf 2032 nog niet vastgesteld: hier aangenomen 67 jaar en 3 maanden.
+function aowLeeftijdUit(geb) {
+  var g = new Date(geb); if (isNaN(g.getTime())) return null;
+  var d67 = new Date(g); d67.setFullYear(g.getFullYear() + 67);
+  if (d67.getFullYear() <= 2027) return { j: 67, m: 0, datum: d67, voorlopig: false };
+  var d = new Date(g); d.setFullYear(g.getFullYear() + 67); d.setMonth(d.getMonth() + 3);
+  return { j: 67, m: 3, datum: d, voorlopig: d.getFullYear() >= 2032 };
+}
+function toonAowLeeftijd(gebId, infoId, slId, svId) {
+  var info = document.getElementById(infoId); if (!info) return;
+  var a = aowLeeftijdUit(document.getElementById(gebId).value);
+  if (!a) { info.textContent = ''; return; }
+  var dd = ('0' + a.datum.getDate()).slice(-2) + '-' + ('0' + (a.datum.getMonth() + 1)).slice(-2) + '-' + a.datum.getFullYear();
+  info.textContent = 'AOW-leeftijd: ' + a.j + ' jaar' + (a.m ? ' en ' + a.m + ' maanden' : '') + ' (AOW vanaf ' + dd + ')' +
+    (a.voorlopig ? ' — voorlopig: AOW-leeftijd vanaf 2032 nog niet vastgesteld' : '') + '.';
+  var sl = document.getElementById(slId);
+  if (sl && !sl.dataset.handmatig) { sl.value = a.j; sval(slId, svId, ' jaar'); }
+}
 function sval(sliderId, outId, suf) {
   document.getElementById(outId).textContent = document.getElementById(sliderId).value + suf;
 }
@@ -1018,15 +1040,16 @@ function calc() {
   var lsPct  = parseInt(S.ls || '80') / 100;
   var gewenstInk = inkHH * lsPct;
 
-  // AOW 2026
+  // AOW 2026, bruto per maand excl. vakantiegeld, per 1-7-2026 (1-1-2026: € 1.637,57 / € 1.122,12)
+  var AOW_SOLO_2026 = 1662.16, AOW_KOP_2026 = 1139.39;
   var aowVol = S.aow === 'ja';
   var aowPct = aowVol ? 1.0 : iv('sl-aowpct',80)/100;
-  var aowB_solo = 1463 * aowPct;
-  var aowB_kop  = 1022 * aowPct;
+  var aowB_solo = AOW_SOLO_2026 * aowPct;
+  var aowB_kop  = AOW_KOP_2026 * aowPct;
   var aowN = (hasP ? aowB_kop : aowB_solo) * 0.89;
   // Partner AOW: aparte opbouw onbekend → gebruik 100% als conservatieve aanname
   // (gebruiker kan dit aanpassen via eigen aanvullend pensioen veld)
-  var aowNP = hasP ? 1022 * 0.89 : 0;
+  var aowNP = hasP ? AOW_KOP_2026 * 0.89 : 0;
 
   var aanvP  = iv('aanvP') * 0.82;
   var lijfr  = iv('lijfr') * 0.88;
@@ -1510,6 +1533,7 @@ function applyImportP(data, filename) {
   // Fill partner geboortedatum
   if(data.geboortedatum) {
     document.getElementById('gebdatumP').value = data.geboortedatum;
+    toonAowLeeftijd('gebdatumP','aowl-infoP','sl-penP','sv-penP');
   }
   // Fill partner naam (if available from XML)
   if(data.naam) {
@@ -1726,6 +1750,7 @@ function applyImport(data, filename) {
   // ── Fill geboortedatum (XML only)
   if(data.geboortedatum) {
     document.getElementById('gebdatum').value = data.geboortedatum;
+    toonAowLeeftijd('gebdatum','aowl-info','sl-pen','sv-pen');
   }
 
   // ── Fill partner

@@ -307,6 +307,15 @@ function goStep2() {
 
 function fmt(n) { return '\u20AC\u00a0' + Math.round(n).toLocaleString('nl-NL'); }
 
+// AOW-datum uit geboortedatum: 67 jaar voor wie 67 wordt t/m 2027; 67 jaar en 3 maanden
+// voor wie de AOW-leeftijd in 2028–2031 bereikt (Stcrt. 2025, 38647). Na 2031 nog niet vastgesteld (aangenomen 67 + 3 mnd).
+function aowDatumUit(geb) {
+  if (isNaN(geb.getTime())) return null;
+  var d = new Date(geb); d.setFullYear(geb.getFullYear() + 67);
+  if (d.getFullYear() <= 2027) return d;
+  d.setMonth(d.getMonth() + 3);
+  return d;
+}
 function calculate() {
   var gebDate  = new Date(document.getElementById('gebdatum').value);
   var eindDate = new Date(document.getElementById('einddatum').value);
@@ -319,6 +328,9 @@ function calculate() {
   var leeftijdNu    = Math.floor((nu - gebDate) / (365.25*24*3600*1000));
   var jarenTotEind  = Math.max(0, Math.round((eindDate - nu) / (365.25*24*3600*1000)));
   var leeftijdOpEind = leeftijdNu + jarenTotEind;
+  var aowDatum = aowDatumUit(gebDate);
+  var aowBereiktOpEind = !!aowDatum && eindDate >= aowDatum;
+  var aowLeeftTekst = aowDatum && (aowDatum.getMonth() !== gebDate.getMonth()) ? '67 jaar en 3 maanden' : '67 jaar';
 
   var eigenGeld = (yn.yn1==='ja') ? (parseFloat(document.getElementById('yn1-bedrag').value)||0) : 0;
   var erfenis   = (yn.yn2==='ja') ? (parseFloat(document.getElementById('yn2-bedrag').value)||0) : 0;
@@ -337,7 +349,7 @@ function calculate() {
   var score = 5;
   score += (ltv < 50) ? 2 : (ltv <= 75) ? 0 : -2;
   score += (jarenTotEind > 15) ? 1 : (jarenTotEind >= 7) ? 0 : -2;
-  score += (leeftijdOpEind < 57) ? 1 : (leeftijdOpEind <= 67) ? 0 : -2;
+  score += (leeftijdOpEind < 57) ? 1 : (!aowBereiktOpEind) ? 0 : -2;
   score += inkomenOk ? 1 : -1;
   if(eigenGeld > 0) score += 1;
   if(erfenis > 0)   score += 0.5;
@@ -425,9 +437,9 @@ function calculate() {
   }
 
   // 3. Leeftijd op einddatum
-  if(leeftijdOpEind > 67) {
-    crits.push({pos:-1, t:'Je bent op de einddatum ouder dan 67 \u2014 pensioenleeftijd bereikt',
-      b:'Op de einddatum heb je de AOW-leeftijd bereikt. Dat betekent waarschijnlijk een lager inkomen, minder of geen hypotheekrenteaftrek, en een strengere beoordeling bij herfinanciering. Dit heeft een negatief effect op je score.'});
+  if(aowBereiktOpEind) {
+    crits.push({pos:-1, t:'Je hebt op de einddatum de AOW-leeftijd (' + aowLeeftTekst + ') bereikt',
+      b:'Op de einddatum heb je de AOW-leeftijd bereikt (AOW vanaf ' + aowDatum.toLocaleDateString('nl-NL') + '). Dat betekent waarschijnlijk een lager inkomen, minder of geen hypotheekrenteaftrek, en een strengere beoordeling bij herfinanciering. Dit heeft een negatief effect op je score.'});
   } else if(leeftijdOpEind >= 57) {
     crits.push({pos:0, t:'Je bent op de einddatum ouder dan 57',
       b:'Geldverstrekkers beoordelen hypotheekaanvragen van 57-plussers op basis van pensioeninkomen. Dit heeft op zichzelf geen direct effect op je score, maar via de inkomenstoets kan een lager pensioeninkomen de financierbaarheid wel beïnvloeden.'});

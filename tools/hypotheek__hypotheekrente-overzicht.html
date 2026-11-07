@@ -403,13 +403,12 @@ td { padding: 10px 14px; font-size: 14px; border-bottom: 1px solid #E0E6ED; }
   <div id="view-login" style="display:none">
     <div class="login-wrap">
       <div class="card card-standalone">
-        <h2>🔐 Beheerderstoegang</h2>
-        <div class="form-group">
-          <label for="login-pw">Wachtwoord</label>
-          <input type="password" id="login-pw" placeholder="Voer wachtwoord in" onkeydown="if(event.key==='Enter')doLogin()">
-        </div>
-        <button class="btn btn-accent btn-full" onclick="doLogin()">Inloggen →</button>
-        <p class="error-msg" id="login-error"></p>
+        <h2>⚙️ Rentebeheer</h2>
+        <p style="font-size:14px; color:#4A4A4A; line-height:1.6; margin:12px 0 16px;">
+          De rentes, de disclaimer en de lijst geldverstrekkers die u in het beheer invoert, worden <strong>alleen lokaal in deze browser</strong> opgeslagen (op dit apparaat). Ze worden niet naar een server verstuurd en zijn niet zichtbaar voor andere bezoekers of op andere apparaten.
+          Daarom is er geen wachtwoord nodig: er valt niets af te schermen. Wie deze browser gebruikt, kan de gegevens wijzigen; wilt u ze bewaren of overzetten, gebruik dan de export/import.
+        </p>
+        <button class="btn btn-accent btn-full" onclick="openBeheer()">Naar rentebeheer →</button>
         <div style="margin-top:16px; text-align:center;">
           <button class="btn btn-ghost btn-sm" onclick="showConsumer()">← Terug naar overzicht</button>
         </div>
@@ -425,7 +424,7 @@ td { padding: 10px 14px; font-size: 14px; border-bottom: 1px solid #E0E6ED; }
       <h2>⚙️ Rentebeheer</h2>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" style="color:white;border-color:rgba(255,255,255,0.5);" onclick="showConsumer()">← Terug</button>
-        <button class="btn btn-danger btn-sm" onclick="uitloggen()">Uitloggen</button>
+        <button class="btn btn-danger btn-sm" onclick="uitloggen()">Sluiten</button>
       </div>
     </div>
 
@@ -503,21 +502,10 @@ td { padding: 10px 14px; font-size: 14px; border-bottom: 1px solid #E0E6ED; }
 
       <!-- ── TAB: INSTELLINGEN ── -->
       <div id="tab-instellingen" style="display:none">
-        <h3 style="color:#003057; font-size:16px; margin-bottom:16px;">Wachtwoord wijzigen</h3>
-        <div class="form-group" style="max-width:320px;">
-          <label>Huidig wachtwoord</label>
-          <input type="password" id="pw-huidig" placeholder="Huidig wachtwoord">
-        </div>
-        <div class="form-group" style="max-width:320px;">
-          <label>Nieuw wachtwoord</label>
-          <input type="password" id="pw-nieuw" placeholder="Nieuw wachtwoord">
-        </div>
-        <div class="form-group" style="max-width:320px;">
-          <label>Herhaal nieuw wachtwoord</label>
-          <input type="password" id="pw-herhaal" placeholder="Herhaal nieuw wachtwoord">
-        </div>
-        <button class="btn btn-primary" onclick="wijzigWachtwoord()">Wachtwoord wijzigen</button>
-        <p id="pw-msg" style="font-size:13px; margin-top:10px;"></p>
+        <h3 style="color:#003057; font-size:16px; margin-bottom:16px;">Opslag</h3>
+        <p style="font-size:13px; color:#4A4A4A; line-height:1.6;">
+          Alle gegevens in dit beheer staan alleen lokaal in deze browser. Er is geen wachtwoord of beveiliging nodig, omdat niets wordt gedeeld of naar een server verstuurd. Andere bezoekers zien uw rentes dus niet.
+        </p>
 
         <hr style="margin: 24px 0; border-color:#E0E6ED;">
         <h3 style="color:#003057; font-size:16px; margin-bottom:12px;">Disclaimer tekst</h3>
@@ -558,8 +546,6 @@ const STANDAARD_AANBIEDERS = [
 
 function getData()    { return JSON.parse(localStorage.getItem('hrData') || '[]'); }
 function saveData(d)  { localStorage.setItem('hrData', JSON.stringify(d)); }
-function getPw()      { return localStorage.getItem('hrPw') || 'admin123'; }
-function savePw(p)    { localStorage.setItem('hrPw', p); }
 function getDisclaimer() {
   return localStorage.getItem('hrDisclaimer') ||
     '⚠️ Disclaimer: Bovenstaande tarieven zijn indicatief en bijgehouden door onze adviseurs. Rentes kunnen dagelijks wijzigen. Controleer altijd de actuele offerterende direct bij de geldverstrekker. Aan dit overzicht kunnen geen rechten worden ontleend.';
@@ -575,6 +561,7 @@ let invoerRijen = [];   // { naam, rente }
 
 function showConsumer()  { setView('consumer'); renderConsumer(); }
 function showBeheer()    { loggedIn ? setView('beheer') : setView('login'); }
+function openBeheer()    { loggedIn = true; setView('beheer'); }
 function setView(v)      {
   ['consumer','login','beheer'].forEach(id =>
     document.getElementById('view-'+id).style.display = v === id ? '' : 'none'
@@ -585,18 +572,6 @@ function setView(v)      {
 // ═══════════════════════════════════════════════════════
 //  LOGIN
 // ═══════════════════════════════════════════════════════
-
-function doLogin() {
-  const pw = document.getElementById('login-pw').value;
-  if (pw === getPw()) {
-    loggedIn = true;
-    document.getElementById('login-pw').value = '';
-    document.getElementById('login-error').textContent = '';
-    setView('beheer');
-  } else {
-    document.getElementById('login-error').textContent = 'Onjuist wachtwoord. Probeer opnieuw.';
-  }
-}
 
 function uitloggen() { loggedIn = false; showConsumer(); }
 
@@ -895,24 +870,6 @@ function renderInstellingen() {
   document.getElementById('disclaimer-tekst').value = getDisclaimer();
   const standaard = document.getElementById('standaard-lijst');
   standaard.innerHTML = STANDAARD_AANBIEDERS.map(n => `• ${n}<br>`).join('');
-}
-
-function wijzigWachtwoord() {
-  const huidig  = document.getElementById('pw-huidig').value;
-  const nieuw   = document.getElementById('pw-nieuw').value;
-  const herhaal = document.getElementById('pw-herhaal').value;
-  const msg = document.getElementById('pw-msg');
-
-  if (huidig !== getPw()) { msg.style.color='#E74C3C'; msg.textContent='Huidig wachtwoord klopt niet.'; return; }
-  if (nieuw.length < 4)   { msg.style.color='#E74C3C'; msg.textContent='Nieuw wachtwoord te kort (min. 4 tekens).'; return; }
-  if (nieuw !== herhaal)  { msg.style.color='#E74C3C'; msg.textContent='Wachtwoorden komen niet overeen.'; return; }
-
-  savePw(nieuw);
-  msg.style.color = '#27AE60';
-  msg.textContent = '✅ Wachtwoord succesvol gewijzigd!';
-  document.getElementById('pw-huidig').value = '';
-  document.getElementById('pw-nieuw').value  = '';
-  document.getElementById('pw-herhaal').value = '';
 }
 
 function slaDisclaimerOp() {

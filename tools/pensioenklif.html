@@ -518,9 +518,9 @@
     <p><strong>Indicatief rekenmodel.</strong> Deze tool is een hulpmiddel ter ondersteuning van het hypotheekadvies, geen vervanging daarvan. Aan de uitkomsten kunnen geen rechten worden ontleend. Voor een persoonlijk hypotheekadvies dat voldoet aan de AFM Leidraad Hypotheekadvisering 2026 (inclusief kennis-en-ervaring-toets, klantbeeld en geschiktheidstoetsing) raadpleeg een erkend financieel of hypothecair planner.</p>
     <p><strong>Wat de tool wél doet:</strong> berekening van maximale hypotheek op basis van de NIBUD-financieringslastpercentages 2026 (vier tabellen, 4.272 cellen), SVB AOW-tabel 2026, drie pensioenmomenten, tweetrap-mix optimalisatie, verlagingen (DUO, BKR, alimentatie, erfpacht) en verhoging niet-kwetsbare groep volgens de Tijdelijke regeling hypothecair krediet.</p>
     <p><strong>Wat de tool níet doet:</strong> LTV-toets (max 100%/106% marktwaarde), NHG-toets en -premie, maximale aflossingsvrij-grens (50% marktwaarde), geldverstrekker-specifieke acceptatiecriteria, indexatie van inkomens, rentestress-test, risicodekking (ORV/AOV), estate planning. Werkelijke maximale hypotheek kan ook afhangen van energielabel, BKR-status, en kwaliteit van het inkomensbewijs (vast/variabel/ZZP). Geldverstrekkers kunnen strengere óf soepelere acceptatie hanteren.</p>
-    <p><strong>Bron tabellen:</strong> Bijlage Financieringslastnormen 2026 (Ministerie van BZK / NIBUD), SVB AOW-leeftijdstabel 2026.</p>
+    <p><strong>Bron tabellen:</strong> Bijlage Financieringslastnormen 2026 (Ministerie van BZK / NIBUD), AOW-leeftijd: vastgesteld t/m 2031 (67 jaar en 3 maanden voor geboren 1-1-1961 t/m 30-9-1964); voor latere geboortedata een prognose.</p>
     <div class="build-info">
-      Tool versie 7 · Berekend op 13-05-2026 · F23 = 1,0 (tweeverdieners-factor 2026) · IB-tarieven 2026: schijf 1 35,75% / schijf 2 37,56% · Hypotheekrenteaftrek begrensd op 35,75%
+      Tool versie 7 · Berekend op <span id="berekendOpDatum">—</span><script>(function(){var d=new Date(),e=document.getElementById("berekendOpDatum");if(e)e.textContent=("0"+d.getDate()).slice(-2)+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+d.getFullYear();})();</script> · F23 = 1,0 (tweeverdieners-factor 2026) · IB-tarieven 2026: schijf 1 35,75% / schijf 2 37,56% · Hypotheekrenteaftrek begrensd op 35,75%
     </div>
   </div>
 </div>
@@ -671,7 +671,7 @@
         <h3>11. Bronnen</h3>
         <ul class="sources">
           <li><strong>Bijlage Financieringslastnormen 2026</strong> — Ministerie van BZK / NIBUD (4 tabellen, 4.272 cellen embedded)</li>
-          <li><strong>SVB AOW-leeftijdstabel 2026</strong> — 12 cohorten, geboortedata 01-10-1964 t/m 31-12-2000</li>
+          <li><strong>AOW-leeftijd</strong> — vastgesteld t/m geboren 30-09-1964; latere cohorten (t/m 31-12-2000) zijn een prognose op basis van de levensverwachting</li>
           <li><strong>AFM Leidraad Hypotheekadvisering 2026</strong> — kader voor adviespraktijk</li>
           <li><strong>Tijdelijke regeling hypothecair krediet</strong> — verhoging niet-kwetsbare groepen</li>
         </ul>
@@ -720,8 +720,11 @@ function parseFloatNL(v) { return parseFloat(String(v).replace(',', '.')) || 0; 
 let parts = [];
 let nextPartId = 1;
 
-// ============ AOW-tabel (SVB 2026) en datum-helpers ============
+// ============ AOW-tabel en datum-helpers ============
+// Vastgesteld: geboren t/m 31-12-1960: 67 jaar; 1-1-1961 t/m 30-9-1964: 67 jaar en 3 maanden.
+// Geboren vanaf 1-10-1964: nog niet vastgesteld — onderstaande rijen zijn een PROGNOSE (koppeling levensverwachting).
 const AOW_TABLE = [
+  { from: '1961-01-01', to: '1964-09-30', years: 67, months: 3 },
   { from: '1964-10-01', to: '1966-09-30', years: 67, months: 3 },
   { from: '1966-10-01', to: '1970-06-30', years: 67, months: 6 },
   { from: '1970-07-01', to: '1973-03-31', years: 67, months: 9 },
@@ -740,7 +743,7 @@ function calcAOWAge(birthDateStr) {
   const entry = AOW_TABLE.find(e => birthDateStr >= e.from && birthDateStr <= e.to);
   if (entry) return { years: entry.years, months: entry.months };
   const yr = parseInt(birthDateStr.substring(0, 4));
-  if (yr && yr < 1964) return { years: 67, months: 0 };
+  if (yr && yr < 1961) return { years: 67, months: 0 };
   if (yr && yr > 2000) return { years: 70, months: 0 };
   return { years: 67, months: 0 };
 }

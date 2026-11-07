@@ -284,7 +284,7 @@ input.eur{font-variant-numeric:tabular-nums}
   <h3>Zo werkt de tool</h3>
   <p>De toetsing rekent live mee terwijl je typt; er is geen rekenknop. Vul de onderdelen van boven naar beneden in:</p>
   <ol>
-   <li><b>Personalia & toetsdatum</b> — bruto jaarinkomens van cliënt en (eventueel) partner. De AOW-datum wordt automatisch op 67 jaar gezet na invoer van de geboortedatum, maar is aanpasbaar. Vul bij "Inkomen vanaf AOW" het totale verwachte inkomen vanaf dat moment in (AOW + aanvullend pensioen): valt de AOW-datum binnen 10 jaar na de toetsdatum, dan toetst de tool ook dat scenario.</li>
+   <li><b>Personalia & toetsdatum</b> — bruto jaarinkomens van cliënt en (eventueel) partner. De AOW-datum wordt na invoer van de geboortedatum automatisch berekend (67 jaar als u die leeftijd uiterlijk in 2027 bereikt, anders 67 jaar en 3 maanden; vanaf 2032 nog niet vastgesteld), maar is aanpasbaar. Vul bij "Inkomen vanaf AOW" het totale verwachte inkomen vanaf dat moment in (AOW + aanvullend pensioen): valt de AOW-datum binnen 10 jaar na de toetsdatum, dan toetst de tool ook dat scenario.</li>
    <li><b>Woning</b> — marktwaarde ná verbouwing, energielabel (bepaalt de vaste verruiming), eventueel meegefinancierde energiebesparende voorzieningen (EBV, verhoogt het onderpandmaximum tot 106%) en het vinkje "Verduurzaming uit de lijst" (zie het ⓘ-icoontje).</li>
    <li><b>Leningdelen</b> — per deel: aflossingsvorm, bedrag, tot en met welke maand de rente aftrekbaar is, welk bedrag in box 3 valt, rentevastperiode, rente en looptijd. De tool bepaalt hieruit per deel de toetsrente en de gewogen toetsrente van het geheel.</li>
    <li><b>Resultaat</b> — per toetsmoment (aanvang, einde renteaftrek, aflossing van een deel, AOW-datum) zie je de toegestane en berekende maandlast met de ruimte of het tekort. Bij "NIET akkoord" verschijnt automatisch de <b>route naar akkoord</b> met doorgerekende opties die je met één klik kunt toepassen. Onderaan staat steeds de scenario-vergelijking "alles in box 3". Met <b>Toetsrapport afdrukken</b> maak je een leesbaar rapport met toelichting per toetsmoment.</li>
@@ -884,8 +884,11 @@ function syncAlleen(){const p=$("partnerAan").checked;$("partnerBlok").style.dis
   a.closest("label").style.opacity=p?"0.45":"1";}
 $("partnerAan").addEventListener("change",()=>{syncAlleen();bereken();});
 syncAlleen();
-$("c_geb").addEventListener("change",()=>{const d=new Date($("c_geb").value);if(!isNaN(d)){d.setFullYear(d.getFullYear()+67);$("c_aow").value=d.toISOString().slice(0,10);}bereken();});
-$("p_geb").addEventListener("change",()=>{const d=new Date($("p_geb").value);if(!isNaN(d)){d.setFullYear(d.getFullYear()+67);$("p_aow").value=d.toISOString().slice(0,10);}bereken();});
+// AOW-datum uit geboortedatum: 67 jaar voor wie 67 wordt t/m 2027; 67 jaar en 3 maanden voor wie de
+// AOW-leeftijd in 2028–2031 bereikt (Stcrt. 2025, 38647); na 2031 nog niet vastgesteld (aangenomen 67 + 3 mnd).
+function aowDatumUit(geb){const d=new Date(geb);if(isNaN(d))return null;d.setUTCFullYear(d.getUTCFullYear()+67);if(d.getUTCFullYear()>2027)d.setUTCMonth(d.getUTCMonth()+3);return d.toISOString().slice(0,10);}
+$("c_geb").addEventListener("change",()=>{const a=aowDatumUit($("c_geb").value);if(a)$("c_aow").value=a;bereken();});
+$("p_geb").addEventListener("change",()=>{const a=aowDatumUit($("p_geb").value);if(a)$("p_aow").value=a;bereken();});
 document.body.addEventListener("input",e=>{if(e.target.classList&&e.target.classList.contains("eur")&&!e.target.matches(":focus"))fmtEurInput(e.target);bereken();});
 document.body.addEventListener("blur",e=>{if(e.target.classList&&e.target.classList.contains("eur"))fmtEurInput(e.target);},true);
 document.body.addEventListener("change",bereken);

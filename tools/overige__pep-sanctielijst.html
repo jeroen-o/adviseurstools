@@ -11,6 +11,10 @@
         .status-red { padding: 10px; background: #fee; border-left: 4px solid #d9534f; margin-bottom: 5px; }
         .status-green { padding: 10px; background: #efe; border-left: 4px solid #5cb85c; }
         .info { font-size: 0.8em; color: #666; margin-top: 10px; }
+        .avg { font-size: 0.85em; background: #fff8e5; border-left: 4px solid #e0a800; padding: 10px; margin-bottom: 10px; border-radius: 0 5px 5px 0; line-height: 1.45; }
+        .avg label { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; cursor: pointer; }
+        .avg input[type=checkbox] { width: auto; margin: 2px 0 0; }
+        button:disabled { background: #9aa9bb; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -18,7 +22,11 @@
 <div class="card">
     <h3 style="margin-top:0">PEP & Sanctie Check</h3>
     <input type="text" id="nameInp" placeholder="Voornaam Achternaam...">
-    <button onclick="checkName()">Check Database</button>
+    <div class="avg" id="avgMelding">
+        <strong>Privacy (AVG):</strong> De ingevoerde naam wordt verstuurd naar OpenSanctions (externe dienst). Gebruik alleen als u daarvoor een grondslag heeft.
+        <label><input type="checkbox" id="avgAkkoord" onchange="document.getElementById('checkBtn').disabled=!this.checked"> Ik heb een grondslag om deze naam door OpenSanctions te laten controleren.</label>
+    </div>
+    <button id="checkBtn" onclick="checkName()" disabled>Check Database</button>
     <div id="results"></div>
     <div class="info">Bron: OpenSanctions Open Database</div>
 </div>
@@ -28,6 +36,11 @@ async function checkName() {
     const name = document.getElementById('nameInp').value;
     const resDiv = document.getElementById('results');
     if(!name) return;
+    if(!document.getElementById('avgAkkoord').checked) {
+        resDiv.innerHTML = "<p style='color:#b35c00;'>Vink eerst aan dat u een grondslag heeft om de naam naar OpenSanctions te versturen.</p>";
+        return;
+    }
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
     resDiv.innerHTML = "Laden...";
 
@@ -44,9 +57,9 @@ async function checkName() {
             let html = "<p>⚠️ <strong>Mogelijke match gevonden:</strong></p>";
             data.results.forEach(item => {
                 html += `<div class="status-red">
-                    <strong>${item.caption}</strong><br>
-                    Rol: ${item.properties.topics ? item.properties.topics[0] : 'Politiek/Sanctie vermeld'}<br>
-                    Land: ${item.properties.countries ? item.properties.countries[0] : 'Onbekend'}
+                    <strong>${esc(item.caption)}</strong><br>
+                    Rol: ${item.properties.topics ? esc(item.properties.topics[0]) : 'Politiek/Sanctie vermeld'}<br>
+                    Land: ${item.properties.countries ? esc(item.properties.countries[0]) : 'Onbekend'}
                 </div>`;
             });
             resDiv.innerHTML = html;

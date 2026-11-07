@@ -177,11 +177,12 @@ button,.btn{border-radius:3px;border:none;cursor:pointer;font-family:Arial,sans-
           <div class="field"><label>Energielabel woning</label>
             <select class="fi" id="mhLabel" onchange="calcMh()">
               <option value="0">G–E (geen toeslag)</option>
-              <option value="9000">D/C (€9.000 toeslag)</option>
-              <option value="20000" selected>B (€20.000 toeslag)</option>
-              <option value="30000">A (€30.000 toeslag)</option>
-              <option value="40000">A+/A++ (€40.000 toeslag)</option>
-              <option value="50000">A+++/A++++ (€50.000 toeslag)</option>
+              <option value="5000">D/C (€ 5.000 toeslag)</option>
+              <option value="10000" selected>B/A (€ 10.000 toeslag)</option>
+              <option value="20000">A+/A++ (€ 20.000 toeslag)</option>
+              <option value="25000">A+++ (€ 25.000 toeslag)</option>
+              <option value="30000">A++++ (€ 30.000 toeslag)</option>
+              <option value="40000">A++++ met energieprestatiegarantie ≥ 10 jaar (€ 40.000 toeslag)</option>
             </select>
           </div>
           <div class="field"><label>Bestaande schulden (€/mnd)</label>
@@ -574,7 +575,7 @@ function calcNhg(){
   // NHG 2026: €470.000, met energie 106% = €498.200
   const nhgGronds=470000;
   const grens=energie==='ja'?Math.round(nhgGronds*1.06):nhgGronds;
-  const borgPremie=0.006; // 0,6% 2026
+  const borgPremie=0.004; // 0,4% 2026 (NHG)
   const borgKosten=Math.round(hyp*borgPremie);
   const nhgMogelijk=prijs<=grens&&hyp<=grens&&hyp<=prijs*1.0;
   const renteKorting=0.004;
@@ -733,12 +734,18 @@ const LABELS=[
   {naam:'G',kleur:'#b71c1c',toeslag:0,renteKorting:0},
   {naam:'F',kleur:'#e53935',toeslag:0,renteKorting:0},
   {naam:'E',kleur:'#f4511e',toeslag:0,renteKorting:0},
-  {naam:'D',kleur:'#fb8c00',toeslag:9000,renteKorting:0.05},
-  {naam:'C',kleur:'#fdd835',toeslag:9000,renteKorting:0.10},
-  {naam:'B',kleur:'#43a047',toeslag:20000,renteKorting:0.15},
-  {naam:'A',kleur:'#1b5e20',toeslag:30000,renteKorting:0.20},
-  {naam:'A+',kleur:'#004d1a',toeslag:40000,renteKorting:0.25},
+  {naam:'D',kleur:'#fb8c00',toeslag:5000,renteKorting:0.05},
+  {naam:'C',kleur:'#fdd835',toeslag:5000,renteKorting:0.10},
+  {naam:'B',kleur:'#43a047',toeslag:10000,renteKorting:0.15},
+  {naam:'A',kleur:'#1b5e20',toeslag:10000,renteKorting:0.20},
+  {naam:'A+',kleur:'#004d1a',toeslag:20000,renteKorting:0.25},
+  {naam:'A++',kleur:'#004d1a',toeslag:20000,renteKorting:0.25},
+  {naam:'A+++',kleur:'#003312',toeslag:25000,renteKorting:0.25},
+  {naam:'A++++',kleur:'#003312',toeslag:30000,renteKorting:0.25},
 ];
+/* Trhk 2026, bijlage: extra leenruimte bij aankoop per label. A++++ met energieprestatiegarantie (≥ 10 jaar): € 40.000.
+   Extra bedrag voor energiebesparende voorzieningen: E–G € 20.000, C–D € 15.000, A t/m A++ € 10.000 (B ook € 10.000), A+++ en hoger € 0. */
+const VERDUURZAMING_2026={G:20000,F:20000,E:20000,D:15000,C:15000,B:10000,A:10000,'A+':10000,'A++':10000,'A+++':0,'A++++':0};
 let activeLabel='B';
 
 function renderElGrid(){
@@ -776,7 +783,8 @@ function calcEl(){
     ${label.toeslag>0
       ?ri('ok','🌱',`Label ${label.naam}: +${fmt(label.toeslag)} extra leenruimte`,`Energiezuinige woningen krijgen een opslag op de maximale hypotheek. NHG-grens 2026: ${fmt(nhgGrens)}.`)
       :ri('warn','⚠️',`Label ${label.naam} — geen energielabel-opslag`,`Woningen met label G t/m E komen niet in aanmerking voor de energielabeltoeslag op de maximale hypotheek.`)}
-    ${ri('info','ℹ️','Energielabel verbeteren loont','Iedere sprong in energielabel via verduurzaming geeft extra leenruimte. Van D naar B (warmtepomp + isolatie) = +€11.000. Bovendien verbetering wooncomfort en lagere energierekening.')}`;
+    ${ri('info','🔧',`Extra voor energiebesparende voorzieningen: ${fmt(VERDUURZAMING_2026[label.naam]||0)}`,`Bovenop de labeltoeslag mag bij label ${label.naam} nog ${fmt(VERDUURZAMING_2026[label.naam]||0)} extra worden geleend als dat bedrag aan energiebesparende voorzieningen wordt besteed (Trhk 2026). Bij een A++++-woning met energieprestatiegarantie van minimaal 10 jaar is de labeltoeslag € 40.000.`)}
+    ${ri('info','ℹ️','Energielabel verbeteren loont','Een beter label geeft extra leenruimte bij aankoop (Trhk 2026): C/D € 5.000, A/B € 10.000, A+/A++ € 20.000, A+++ € 25.000, A++++ € 30.000. Van D naar B = +€ 5.000. Bovendien verbetering wooncomfort en lagere energierekening.')}`;
 }
 renderElGrid();
 calcEl();
