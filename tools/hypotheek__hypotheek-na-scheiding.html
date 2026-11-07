@@ -421,7 +421,16 @@ function bereken(){
   const TBL_AOW = norm==='beheer'?NHG_BEHEER_5F:FL2026_AOW;
   const TBL_NU  = aowBereikt?TBL_AOW:(norm==='beheer'?(werk?NHG_BEHEER_5B:NHG_BEHEER_5D):FL2026);
   const tblNaam = t=>t===FL2026?'Trhk tabel 1 (niet-AOW)':t===FL2026_AOW?'Trhk tabel 2 (AOW)':t===NHG_BEHEER_5B?'NHG beheer 5b (met werk)':t===NHG_BEHEER_5D?'NHG beheer 5d (zonder werk)':'NHG beheer 5f (AOW)';
-  function toets(ink,tbl){const f=getFLP(ink,N('hyprente'),tbl);const mm=Math.max(0,ink*f/12-verplMaand);return {ink,tbl,flp:f,maxHyp:mm/ann(1,r,360)};}
+  // Alleenstaandenbedrag (Trhk 2026 art. 3 lid 8): de blijver is één aanvrager → € 17.000 extra boven op de maximale hypotheek
+  // (buiten de financieringslast) als het toetsinkomen ná aftrek van betaalde partneralimentatie hoger is dan € 30.000
+  // (bij de AOW-tabel: € 29.000). Per toetsmoment bepaald. Niet bij beheer: de NHG-beheercriteria kennen dit bedrag voor zover bekend niet.
+  const ALLEEN_BEDRAG=17000,ALLEEN_GRENS=30000,ALLEEN_GRENS_AOW=29000;
+  function toets(ink,tbl){const f=getFLP(ink,N('hyprente'),tbl);const mm=Math.max(0,ink*f/12-verplMaand);const maxInk=mm/ann(1,r,360);
+    const grens=tbl===FL2026_AOW?ALLEEN_GRENS_AOW:ALLEEN_GRENS;const alleen=(norm!=='beheer'&&ink>grens)?ALLEEN_BEDRAG:0;
+    return {ink,tbl,flp:f,maxInk,alleen,grens,maxHyp:maxInk+alleen};}
+  const alleenTxt=t=>norm==='beheer'?'niet toegepast — beheer (NHG-beheercriteria). De NHG-beheercriteria kennen dit bedrag voor zover bekend niet'
+    :(t.alleen>0?`van toepassing: één aanvrager en toetsinkomen ${fmt(t.ink)} hoger dan ${fmt(t.grens)}${t.tbl===FL2026_AOW?' (AOW-tabel)':''} → + ${fmt(t.alleen)} buiten de financieringslast`
+    :`niet van toepassing: toetsinkomen ${fmt(t.ink)} niet hoger dan ${fmt(t.grens)}${t.tbl===FL2026_AOW?' (AOW-tabel)':''}`);
   const drempelTxt=drempel>0?`vanaf ${drempel} jaar`:'niet toetsen';
   const pensioenNodig=aowBereikt||pensioentoetsGeldt;
   if(pensioenNodig&&pensioenInk===null){
@@ -442,11 +451,12 @@ function bereken(){
   // Maximale hypotheek o.b.v. annuïtaire last over 30 jaar (laagste van beide toetsen)
   const maxHyp=bindend.maxHyp;
   let pensRegel;
-  if(pensioentoetsGeldt) pensRegel=`Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(tPens.ink)} met ${tblNaam(TBL_AOW)}: max. ${fmt(tPens.maxHyp)} (huidig inkomen: ${fmt(tNu.maxHyp)})${bindend===tPens?' — pensioeninkomen is bepalend':''}`;
+  if(pensioentoetsGeldt) pensRegel=`Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(tPens.ink)} met ${tblNaam(TBL_AOW)}: max. ${fmt(tPens.maxHyp)}${tPens.alleen>0?' incl. alleenstaandenbedrag':''} (huidig inkomen: ${fmt(tNu.maxHyp)}${tNu.alleen>0?' incl. alleenstaandenbedrag':''})${bindend===tPens?' — pensioeninkomen is bepalend':''}`;
   else if(aowBereikt) pensRegel=`Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(tNu.ink)} met ${tblNaam(TBL_AOW)}`;
   else pensRegel=`Pensioentoets (${drempelTxt}): niet van toepassing${geb?'':' (geen geboortedatum ingevuld)'}`;
-  const kanOvernemen=maxHyp>=hs;
-  const kanMetUitkoop=maxHyp>=hypMet;
+  // vergelijking op hele euro's (zoals getoond): hypotheek tot en met het maximum (incl. alleenstaandenbedrag) is akkoord
+  const kanOvernemen=Math.round(maxHyp)>=hs;
+  const kanMetUitkoop=Math.round(maxHyp)>=hypMet;
 
   // NHG check
   const nhgOk=nhg&&hypMet<=470000; // NHG-kostengrens 2026
@@ -462,7 +472,7 @@ function bereken(){
   document.getElementById('hoofd').innerHTML=`
     <div class="hb n"><div class="hbl">Overwaarde</div><div class="hbv">${fmt(overwaarde)}</div><div class="hbs">WOZ − hypotheek</div></div>
     <div class="hb ${uitkoopBedrag>0?'o':'g'}"><div class="hbl">Uitkoop partner</div><div class="hbv">${fmt(uitkoopBedrag)}</div><div class="hbs">${fmtPct(aandeelVertrekkende*100)} × overwaarde</div></div>
-    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,1)} bij ${fmtPct(N('hyprente'),2)} · 30 jr annuïtair · ${norm==='beheer'?'beheer (NHG)':'acceptatie (Trhk)'}</div></div>
+    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,1)} bij ${fmtPct(N('hyprente'),2)} · 30 jr annuïtair · ${norm==='beheer'?'beheer (NHG)':'acceptatie (Trhk)'}${bindend.alleen>0?' · incl. '+fmt(bindend.alleen)+' alleenstaandenbedrag':''}</div></div>
     <div class="hb ${kanOvernemen?'g':'r'}"><div class="hbl">Maandlast na overname</div><div class="hbv">${fmt(ml)}</div><div class="hbs">${kanOvernemen?'✓ Draagbaar':'✗ Te hoog'}</div></div>`;
 
   let html=`<thead><tr><th>Post</th><th>Bedrag</th><th>Toelichting</th></tr></thead><tbody>`;
@@ -478,6 +488,9 @@ function bereken(){
   html+=`<tr class="tot"><td>Nieuwe maandlast (alleen overname)</td><td>${fmt(ml)}</td><td>${fmtPct(N('hyprente'),2)}, ${Math.round(lt/12)} jaar</td></tr>`;
   html+=`<tr class="cat"><td colspan="3">Toetsing</td></tr>`;
   html+=`<tr><td>Toetsnorm</td><td>${norm==='beheer'?'Beheer':'Acceptatie'}</td><td>${tblNaam(bindend.tbl)} · toetsinkomen ${fmt(totaalInk)}${alimentatie>0?' (incl. ontvangen partneralimentatie '+fmt(alimentatie)+'/jr)':''}${alimBetaald>0?' (na aftrek betaalde partneralimentatie '+fmt(alimBetaald)+'/jr, NHG C.7.14.2)':''}</td></tr>`;
+  html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(bindend.maxInk)}</td><td>Financieringslast ${fmtPct(flp*100,1)} van ${fmt(totaalInk)}${verplMaand>0?' na aftrek verplichtingen':''}, 30 jr annuïtair</td></tr>`;
+  html+=`<tr><td>Alleenstaandenbedrag</td><td>${bindend.alleen>0?'+'+fmt(bindend.alleen):'—'}</td><td>Trhk 2026 art. 3 lid 8: ${alleenTxt(bindend)}${pensioentoetsGeldt?` (pensioentoets: ${tPens.alleen>0?'+'+fmt(tPens.alleen):'n.v.t.'}; huidig inkomen: ${tNu.alleen>0?'+'+fmt(tNu.alleen):'n.v.t.'})`:''}.</td></tr>`;
+  html+=`<tr class="tot"><td>Maximale hypotheek</td><td>${fmt(maxHyp)}</td><td>${bindend.alleen>0?'Hypotheek tot dit maximum is akkoord: het alleenstaandenbedrag blijft buiten de financieringslast':''}</td></tr>`;
   html+=`<tr><td>Pensioentoets</td><td>${pensioentoetsGeldt?'van toepassing':(aowBereikt?'AOW bereikt':'n.v.t.')}</td><td>${pensRegel}</td></tr>`;
   if(nhg)html+=`<tr><td>NHG toepasbaar?</td><td>${nhgOk?'✓ Ja':'✗ Boven € 470.000'}</td><td>Borgtochtprovisie 0,4% (2026)</td></tr>`;
   if(verplMaand>0)html+=`<tr><td>Verplichtingen in de toets</td><td>${fmt(verplMaand)}/mnd</td><td>${kredietLimiet>0?'krediet 2% × '+fmt(kredietLimiet)+' = '+fmt(kredietLast)+'; ':''}${duoTermijn>0?'DUO '+fmt(duoTermijn)+' × '+duoFactor.toFixed(2).replace('.',',')+' = '+fmt(duoLast)+'; ':''}${verp>0?'overig '+fmt(verp):''}</td></tr>`;

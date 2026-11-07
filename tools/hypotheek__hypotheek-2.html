@@ -164,7 +164,7 @@ input[type=range]::-webkit-slider-thumb{width:18px;height:18px}
 
 <!-- 0: MAX HYPOTHEEK -->
 <div class="panel active" id="p0">
-  <div class="tool-header"><div class="tool-badge">🏠 Leennormen 2026</div><div class="tool-title">Maximale Hypotheek Calculator</div><div class="tool-desc">Gebaseerd op de financieringslastnormen 2026 (Trhk 2026, bijlage 1, tabel 1) inclusief toetsrente, energielabel-toeslag en tweede inkomen (telt 100% mee).</div></div>
+  <div class="tool-header"><div class="tool-badge">🏠 Leennormen 2026</div><div class="tool-title">Maximale Hypotheek Calculator</div><div class="tool-desc">Gebaseerd op de financieringslastnormen 2026 (Trhk 2026, bijlage 1, tabel 1) inclusief toetsrente, energielabel-toeslag, alleenstaandenbedrag (Trhk art. 3 lid 8) en tweede inkomen (telt 100% mee).</div></div>
   <div class="two-col">
     <div>
       <div class="card"><div class="ch"><span class="ct">Inkomensgegevens</span></div><div class="cb">
@@ -440,7 +440,8 @@ input[type=range]::-webkit-slider-thumb{width:18px;height:18px}
 <div class="panel" id="p15">
   <div class="tool-header"><div class="tool-badge">✅ Acceptatie</div><div class="tool-title">Acceptatienormen Checker</div><div class="tool-desc">Check of uw klant voldoet aan de acceptatiecriteria van de 5 grootste hypotheekverstrekkers in Nederland.</div></div>
   <div class="card" style="margin-bottom:14px;"><div class="ch"><span class="ct">Klantprofiel checker</span></div><div class="cb" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-    <div class="f"><div class="fl">Bruto inkomen</div><input type="number" class="in" id="anInk" value="70000" oninput="calcAn()"></div>
+    <div class="f"><div class="fl">Bruto inkomen (toetsinkomen, na aftrek betaalde partneralimentatie)</div><input type="number" class="in" id="anInk" value="70000" oninput="calcAn()"></div>
+    <div class="f"><div class="fl">Aantal aanvragers</div><select class="se" id="anAanvragers" onchange="calcAn()"><option value="1" selected>Eén aanvrager (alleenstaand)</option><option value="2">Twee aanvragers (inkomen samen)</option></select></div>
     <div class="f"><div class="fl">Gewenste hypotheek</div><input type="number" class="in" id="anHyp" value="350000" oninput="calcAn()"></div>
     <div class="f"><div class="fl">Woningwaarde</div><input type="number" class="in" id="anWaarde" value="390000" oninput="calcAn()"></div>
     <div class="f"><div class="fl">Dienstverband</div><select class="se" id="anDienst" onchange="calcAn()"><option value="vast" selected>Vast</option><option value="flex">Flex</option><option value="zzp">ZZP</option></select></div>
@@ -507,28 +508,43 @@ function calcMh(){
   const sNu=scen(p=>p.aow); // huidige situatie: na AOW alleen pensioeninkomen
   const ptGeldt=pp.some(p=>p.geldt);
   const sPens=ptGeldt?scen(p=>p.aow||p.geldt):null;
-  const maxVoor=sc=>{const qq=GHF.getQ(sc.ink,toetsR,sc.tbl);return sc.ink*qq/12;};
-  const bindend=(sPens&&maxVoor(sPens)<maxVoor(sNu))?sPens:sNu;
-  const toets=bindend.ink; // Trhk 2026: inkomen partner telt volledig mee
-  const q=GHF.getQ(toets,toetsR,bindend.tbl);
-  const pensRegel=ptGeldt?`Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(sPens.ink)} met de ${sPens.tbl===FL2026_AOW?'AOW-tabel (Trhk tabel 2)':'niet-AOW-tabel'}${bindend===sPens?' — pensioeninkomen is bepalend':' — huidig inkomen is bepalend'}.`:(pp.some(p=>p.aow)?`Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(sNu.ink)}.`:`Pensioentoets (${drempelTxt}): niet van toepassing${pp.every(p=>p.lft===null)?' (geen geboortedatum ingevuld)':''}.`);
   const r=toetsR/100/12;
   const af360=(Math.pow(1+r,360)-1)/(r*Math.pow(1+r,360));
   const duoBruto=duo*factorStudie(toetsR);
-  const maxLastBruto=toets*q/12;
-  const maxLast=Math.round(Math.max(0,maxLastBruto-schuld-duoBruto));
+  // Alleenstaandenbedrag (Trhk 2026 art. 3 lid 8): bij één aanvrager (geen inkomen 2) € 17.000 extra boven op de maximale
+  // hypotheek (buiten de financieringslast) als het toetsinkomen ná aftrek van betaalde partneralimentatie hoger is dan
+  // € 30.000 (bij de AOW-tabel: € 29.000). Per scenario (huidig / pensioentoets) bepaald; laagste maximale hypotheek telt.
+  const eenAanvrager=pp.length===1;
+  const maxVoor=sc=>{const qq=GHF.getQ(sc.ink,toetsR,sc.tbl);const lb=sc.ink*qq/12;const ml=Math.round(Math.max(0,lb-schuld-duoBruto));
+    const grens=sc.tbl===FL2026_AOW?29000:30000;const alleen=(eenAanvrager&&sc.ink>grens)?17000:0;
+    return {q:qq,maxLastBruto:lb,maxLast:ml,grens,alleen,maxHyp:Math.max(0,Math.round(ml*af360)+label+alleen)};};
+  const mNu=maxVoor(sNu),mPens=sPens?maxVoor(sPens):null;
+  const bindend=(sPens&&mPens.maxHyp<mNu.maxHyp)?sPens:sNu;
+  const mB=bindend===sPens?mPens:mNu;
+  const toets=bindend.ink; // Trhk 2026: inkomen partner telt volledig mee
+  const q=mB.q;
+  const pensRegel=ptGeldt?`Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(sPens.ink)} met de ${sPens.tbl===FL2026_AOW?'AOW-tabel (Trhk tabel 2)':'niet-AOW-tabel'}${bindend===sPens?' — pensioeninkomen is bepalend':' — huidig inkomen is bepalend'}.`:(pp.some(p=>p.aow)?`Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(sNu.ink)}.`:`Pensioentoets (${drempelTxt}): niet van toepassing${pp.every(p=>p.lft===null)?' (geen geboortedatum ingevuld)':''}.`);
+  const maxLastBruto=mB.maxLastBruto;
+  const maxLast=mB.maxLast;
   const basisZonder=Math.round(maxLastBruto*af360);
   const basisHyp=Math.round(maxLast*af360);
   const schuldenAft=basisZonder-basisHyp;
-  const maxHyp=Math.max(0,basisHyp+label);
+  const alleen=mB.alleen;
+  const maxHyp=mB.maxHyp;
+  const alleenRegel=!eenAanvrager?'Niet van toepassing: twee aanvragers (inkomen 2 ingevuld).'
+    :(alleen>0?`Van toepassing: één aanvrager en toetsinkomen ${fmt(toets)} hoger dan ${fmt(mB.grens)}${bindend.tbl===FL2026_AOW?' (AOW-tabel)':''} → + ${fmt(alleen)} extra boven op de maximale hypotheek, buiten de financieringslast (Trhk 2026 art. 3 lid 8).`
+    :`Niet van toepassing: toetsinkomen ${fmt(toets)} is niet hoger dan ${fmt(mB.grens)}${bindend.tbl===FL2026_AOW?' (AOW-tabel)':''} (Trhk 2026 art. 3 lid 8: € 17.000 bij één aanvrager boven € 30.000, AOW-tabel € 29.000).`)
+    +(eenAanvrager&&sPens?` Pensioentoets: ${mPens.alleen>0?'+ '+fmt(mPens.alleen):'n.v.t.'}; huidig inkomen: ${mNu.alleen>0?'+ '+fmt(mNu.alleen):'n.v.t.'}.`:'');
   const nhg=maxHyp<=470000;
   document.getElementById('mhResult').innerHTML=`
     <div class="rh"><div class="rh-e">Maximale Hypotheek</div><div class="rh-v">${fmt(maxHyp)}</div><div class="rh-c">Toetsinkomen: ${fmt(toets)}${alimJ>0?' (na aftrek '+fmt(alimJ)+' betaalde partneralimentatie)':''} · Woonquota: ${fmtD(q*100,1)}${bindend.tbl===FL2026_AOW?' (AOW-tabel)':''} · Toetsrente: ${fmtD(toetsR,1)}</div></div>
-    <div class="kg">
+    <div class="kg" style="grid-template-columns:repeat(2,1fr);">
       <div class="kp"><div class="kl">Basis max.</div><div class="kv b">${fmt(basisHyp)}</div></div>
       <div class="kp"><div class="kl">Label toeslag</div><div class="kv g">+${fmt(label)}</div></div>
+      <div class="kp"><div class="kl">Alleenstaandenbedrag</div><div class="kv ${alleen>0?'g':''}">${alleen>0?'+'+fmt(alleen):'—'}</div></div>
       <div class="kp"><div class="kl">Max. maandlast</div><div class="kv">${fmt(maxLast)}</div></div>
     </div>
+    ${al(alleen>0?'ok':'in',alleen>0?'💡':'ℹ️','Alleenstaandenbedrag',alleenRegel)}
     ${al(ptGeldt?'wa':'in',ptGeldt?'⚠️':'ℹ️','Pensioentoets',pensRegel)}
     ${nhg?al('ok','🛡️','NHG mogelijk','Maximale hypotheek valt binnen NHG-grens. Adviseer NHG — rentekorting ±0,4% = '+fmt(Math.round(maxHyp*0.004/12))+'/mnd.'):al('in','ℹ️','Buiten NHG-grens','Gewone hypotheek. Geen NHG-borgtochtpremie, maar ook geen korting.')}
     ${schuld>0||duo>0?al('wa','⚠️','Verplichtingen verlagen hypotheek',`Verplichtingen ${fmt(schuld)}/mnd${duo>0?' + studieschuld '+fmt(duo)+' × '+factorStudie(toetsR).toFixed(2).replace('.',',')+' = '+fmt(duoBruto)+'/mnd':''} reduceren de max. hypotheek met ${fmt(schuldenAft)}. Advies: schulden aflossen vóór aanvraag.`):''}`;
@@ -948,8 +964,15 @@ function calcAn(){
   const nhg=document.getElementById('anNhg').value;
   const ltv=Math.round(hyp/waarde*100);
   const q=GHF.getQ(ink,4.2);
-  const maxHyp=Math.round(ink*q/12*(Math.pow(1+4.2/100/12,360)-1)/((4.2/100/12)*Math.pow(1+4.2/100/12,360)));
+  const maxHypInk=Math.round(ink*q/12*(Math.pow(1+4.2/100/12,360)-1)/((4.2/100/12)*Math.pow(1+4.2/100/12,360)));
+  // Alleenstaandenbedrag (Trhk 2026 art. 3 lid 8): € 17.000 extra bij één aanvrager en toetsinkomen > € 30.000 (buiten de financieringslast)
+  const eenAanvrager=(document.getElementById('anAanvragers')||{}).value!=='2';
+  const alleen=(eenAanvrager&&ink>30000)?17000:0;
+  const maxHyp=maxHypInk+alleen;
   const voldoetInk=hyp<=maxHyp;
+  const alleenRegel=!eenAanvrager?'Alleenstaandenbedrag: niet van toepassing (twee aanvragers).'
+    :(alleen>0?`Alleenstaandenbedrag: van toepassing (één aanvrager, toetsinkomen ${fmt(ink)} hoger dan € 30.000) → max. ${fmt(maxHypInk)} + ${fmt(alleen)} buiten de financieringslast (Trhk 2026 art. 3 lid 8).`
+    :`Alleenstaandenbedrag: niet van toepassing (toetsinkomen ${fmt(ink)} niet hoger dan € 30.000).`);
   const voldoetLtv=ltv<=100;
   const voldoetBkr=bkr==='nee';
   const BANKEN=['ING','Rabobank','ABN AMRO','Volksbank','Obvion'];
@@ -971,7 +994,8 @@ function calcAn(){
         <div style="font-size:13px;font-weight:700;color:${s.ok?'var(--green)':'var(--red)'};">${s.ok?'✓ Acceptabel':'✗ Risico'}</div>
       </div>`).join('')}
     </div></div>
-    ${!voldoetBkr?al('er','🚨','BKR registratie blokkeert aanvraag','Negatieve BKR is vrijwel altijd weigergrond. Raadpleeg klant over BKR-zuivering (5 jaar na aflossing).'):!voldoetInk?al('er','⚠️',`Max. hypotheek op inkomen: ${fmt(maxHyp)}`,`Gewenste hypotheek (${fmt(hyp)}) overstijgt maximum. Verlaag wens of zoek goedkopere woning.`):al('ok','✅','Klant voldoet aan basisnormen','Dossier opbouwen voor aanvraag.')}`;
+    ${!voldoetBkr?al('er','🚨','BKR registratie blokkeert aanvraag','Negatieve BKR is vrijwel altijd weigergrond. Raadpleeg klant over BKR-zuivering (5 jaar na aflossing).'):!voldoetInk?al('er','⚠️',`Max. hypotheek op inkomen: ${fmt(maxHyp)}`,`Gewenste hypotheek (${fmt(hyp)}) overstijgt maximum. Verlaag wens of zoek goedkopere woning.`):al('ok','✅','Klant voldoet aan basisnormen',`Max. hypotheek op inkomen: ${fmt(maxHyp)}. Dossier opbouwen voor aanvraag.`)}
+    ${al('in','ℹ️','Alleenstaandenbedrag',alleenRegel)}`;
 }
 calcAn();
 </script>
