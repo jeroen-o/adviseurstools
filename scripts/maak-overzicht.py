@@ -89,6 +89,7 @@ CURATED = {
     'krediet-2': ('Krediet adviseur suite', 'Aflossingstabel, doorlopend en zakelijk krediet', None),
     'lening-vergelijken-en-aanvragen': ('Lening vergelijken', 'Huidige en nieuwe lening vergelijken en aanvraag opstellen', None),
     'toetsinkomen-calculator-kredieten': ('Toetsinkomen kredieten', 'Toetsinkomen en normbedragen voor consumptief krediet', None),
+    'maximaal-krediet-caribisch-nederland': ('Maximaal krediet Caribisch Nederland', 'Bonaire, Sint Eustatius en Saba: AFM-rekenmodel per 1 april 2026 (USD)', None),
     'opstalverzekering': ('Opstalverzekering', 'Herbouwwaarde en premie-indicatie, onderverzekering voorkomen', None),
     'verzekeringscheck': ('Verzekeringscheck', 'Welke verzekeringen passen bij jouw situatie?', None),
     'polischeck': ('Polischeck', 'Polissen uploaden en dekkingshiaten vinden', None),
@@ -117,7 +118,7 @@ CURATED = {
 }
 
 
-EXTRA = {'overige': [('https://pandwise.nl/', 'PandWise')]}
+EXTRA = {'overige': [('https://pandwise.nl/', 'PandWise')], 'krediet': [('../krediet/maximaal-krediet-caribisch-nederland/', 'Maximaal krediet Caribisch Nederland')]}
 UITGELICHT = ['max-hyp-2027', 'pensioenklif', 'max-hyp-box-1-3']
 
 
