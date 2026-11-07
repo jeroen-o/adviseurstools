@@ -99,7 +99,7 @@ details.uitleg .in ul{margin:4px 0 8px;padding-left:20px}
 <header class="hdr"><div class="hdr-in">
   <div><div class="hdr-title">Starterslening check (indicatief)</div>
   <div class="hdr-sub">Tekort · 20%-grens · gemeentelijk maximum · NHG · eerste 3 jaar geen rente en aflossing · inkomenstoets daarna</div></div>
-  <span class="badge">2026</span>
+  <span class="badge" id="njBadge">2026</span>
 </div></header>
 
 <div class="wrap">
@@ -119,7 +119,7 @@ details.uitleg .in ul{margin:4px 0 8px;padding-left:20px}
       </div>
       <div class="row">
         <div class="fl"><label for="kosten">Bijkomende kosten</label><div class="iw"><span class="px">€</span><input class="eur" id="kosten" value="7500"></div><span class="hint">Notaris, advies, taxatie, NHG-provisie, eventueel overdrachtsbelasting.</span></div>
-        <div class="fl"><label for="nhgJaar">NHG-kostengrens</label><select id="nhgJaar"><option value="2026" selected>2026: € 470.000 (met EBV € 498.200)</option><option value="2027">2027: € 500.000 (met EBV € 530.000)</option></select></div>
+        <div class="fl"><label for="nhgJaar">Normjaar (leennormen en NHG-kostengrens)</label><select id="nhgJaar"><option value="2026" selected>Normjaar 2026 · NHG € 470.000 (met EBV € 498.200)</option><option value="2027">Normjaar 2027 · NHG € 500.000 (met EBV € 530.000)</option></select><span class="hint">Standaard op datum: vóór 1-1-2027 normjaar 2026, vanaf 1-1-2027 normjaar 2027. Bepaalt ook de financieringslastpercentages van de inkomenstoets.</span></div>
       </div>
     </div>
   </div>
@@ -202,7 +202,7 @@ details.uitleg .in ul{margin:4px 0 8px;padding-left:20px}
     <li>Na 3 jaar staat de totale schuld (starterslening + combinatielening) nog op het oorspronkelijke bedrag, omdat er geen rente is berekend. Deze tool rekent indicatief met een annuïteit over die schuld in de resterende 27 jaar. De uitvoerder berekent de werkelijke termijn.</li>
     <li>Inkomenstoets (indicatief): toegestane bruto last = toetsinkomen × financieringslastpercentage uit de Tijdelijke regeling hypothecair krediet van het gekozen jaar (2026 of 2027, tabel box 1, geen AOW-leeftijd). Een energielabel- of verduurzamingsbedrag in de eerste hypotheek telt niet mee in de toetslast. Inkomensrij: naastlagere € 1.000. Rentekolom: volgens de kolomgrenzen. Daar gaan de annuïteit van de eerste hypotheek (30 jaar) en de overige verplichtingen vanaf. Wat overblijft, is wat u indicatief op de starterslening kunt betalen. De uitvoerder toetst zelf volgens de NHG-normen en kan anders uitkomen.</li>
   </ul>
-  <p class="src">Bronnen: SVn, Starterslening (<a href="https://www.svn.nl/starterslening" target="_blank" rel="noopener">svn.nl/starterslening</a>) · SVn, Productinformatie Starterslening d.d. 28 juni 2023 (<a href="https://www.svn.nl/media/d2yjh4n4/productinformatie-svn-starterslening.pdf" target="_blank" rel="noopener">svn.nl, pdf</a>) · NHG-kostengrens 2026 € 470.000 / € 498.200 (<a href="https://nhg.nl/media/anipvdmf/nhg_consumenten_brochure_2026_pdf_versie.pdf" target="_blank" rel="noopener">nhg.nl</a>), 2027 € 500.000 / € 530.000 (aangekondigd) · Financieringslastpercentages: Bijlage 1 Trhk 2026, Stcrt. 2025, 36471 (<a href="https://zoek.officielebekendmakingen.nl/stcrt-2025-36471.pdf" target="_blank" rel="noopener">officielebekendmakingen.nl</a>) · Heffingsvrij vermogen 2026: Belastingdienst.</p>
+  <p class="src">Bronnen: SVn, Starterslening (<a href="https://www.svn.nl/starterslening" target="_blank" rel="noopener">svn.nl/starterslening</a>) · SVn, Productinformatie Starterslening d.d. 28 juni 2023 (<a href="https://www.svn.nl/media/d2yjh4n4/productinformatie-svn-starterslening.pdf" target="_blank" rel="noopener">svn.nl, pdf</a>) · NHG-kostengrens 2026 € 470.000 / € 498.200 (<a href="https://nhg.nl/media/anipvdmf/nhg_consumenten_brochure_2026_pdf_versie.pdf" target="_blank" rel="noopener">nhg.nl</a>), 2027 € 500.000 / € 530.000 (aangekondigd) · Financieringslastpercentages: Bijlage 1 Trhk 2026, Stcrt. 2025, 36471 (<a href="https://zoek.officielebekendmakingen.nl/stcrt-2025-36471.pdf" target="_blank" rel="noopener">officielebekendmakingen.nl</a>); normjaar 2027: Wijzigingsregeling hypothecair krediet 2027 (Stcrt. 2026, 38415) · Heffingsvrij vermogen 2026: Belastingdienst.</p>
 </div></details>
 <div class="disc"><strong>Indicatief, geen advies.</strong> Deze check geeft alleen een eerste indruk. Of u een starterslening krijgt en hoeveel, hangt af van de verordening van uw gemeente of provincie, het beschikbare budget, de toewijzing en de beoordeling door de uitvoerder en de geldverstrekker. Rente, kosten en voorwaarden kunnen afwijken. De tool slaat niets op en verstuurt niets.</div>
 </div>
@@ -298,6 +298,7 @@ function bereken(){
   var tekort = Math.max(0, invest - maxHyp - eigen - korting);
   var grond20 = Math.min(basis, markt), max20 = 0.2 * grond20;
   var N = NHG[vS('nhgJaar')], kg = ebv > 0 ? N.ebv : N.g;
+  $('njBadge').textContent = 'Normjaar ' + vS('nhgJaar');
   var nhgRuimte = Math.max(0, kg - maxHyp);
   var gemMax = vE('gemMax');
   var kand = [ ['tekort', tekort], ['20%-grens', max20], ['gemeentelijk maximum', gemMax], ['NHG-ruimte', nhgRuimte] ];
@@ -351,7 +352,7 @@ function bereken(){
   l += '<tr><td>Waarvan rente in maand 37</td><td class="n">' + eurc(renteJ4) + '</td><td class="hint">Over het starterslening-deel meestal aftrekbaar, over de combinatielening niet.</td></tr>';
   $('lasten').innerHTML = l;
 
-  var t = '<div class="tbl-wrap" style="margin-top:12px"><table class="t"><tr><th>Inkomenstoets na 3 jaar (indicatief)</th><th class="n">Bedrag</th></tr>' +
+  var t = '<div class="tbl-wrap" style="margin-top:12px"><table class="t"><tr><th>Inkomenstoets na 3 jaar (indicatief, normjaar ' + F.jaar + ')</th><th class="n">Bedrag</th></tr>' +
     rr('Toetsinkomen ' + eur(ink) + ' → tabel ' + F.jaar + ', rij ' + eur(F.rij) + ', rentekolom ' + KOL[F.kol] + ' → ' + nlNum(F.pct * 100, 1) + '%', toegestaan, '', 2) +
     rr('− Bruto last eerste hypotheek (' + eur(toetsHyp1) + (labelB > 0 ? ' = ' + eur(hyp1) + ' − ' + eur(labelB) + ' energielabel-/verduurzamingsbedrag buiten de toets' : '') + ', annuïtair 30 jaar, ' + pct(rh) + ')', -last1, '', 2) +
     (overig ? rr('− Overige verplichtingen', -overig, '', 2) : '') +
@@ -368,6 +369,8 @@ $('btnPrint').addEventListener('click', function(){
     '<table class="t">' + $('stappen').innerHTML + '</table></div></div><div class="card"><div class="ch">Maandlasten</div><div class="cb"><table class="t">' + $('lasten').innerHTML + '</table>' + $('toets').innerHTML + '</div></div>' +
     '<div class="disc"><strong>Indicatief, geen advies.</strong> Voorwaarden verschillen per gemeente of provincie. Algemene werking volgens SVn (svn.nl/starterslening).</div>');
 });
+/* Normjaar standaard op datum: vóór 1-1-2027 = 2026, vanaf 1-1-2027 = 2027 (handmatig wijzigbaar) */
+$('nhgJaar').value = (new Date() >= new Date(2027, 0, 1)) ? '2027' : '2026';
 initEurFields(bereken);
 bereken();
 </script>
