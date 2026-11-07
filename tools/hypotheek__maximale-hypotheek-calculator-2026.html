@@ -734,7 +734,7 @@ function renderOpbouw(r, gridId, compact=false){
   g.innerHTML = `
     <div class="ob-box navy">
       <div class="ob-lbl">Maximale hypotheek</div>
-      <div class="ob-val">${fmtK(Math.round(r.maxFinal/1000)*1000)}</div>
+      <div class="ob-val">${fmt(Math.floor(r.maxFinal))}</div>
       <div class="ob-sub">${r.nhg&&r.maxFinal<=r.nhgGrens?'✓ Binnen NHG-grens':r.nhg?'⚠ Boven NHG (€ 470.000)':''}</div>
     </div>
     <div class="ob-box gold">
@@ -773,14 +773,14 @@ function bereken(){
     <div class="hoofd-res">
       <div class="hr-main">
         <div class="hr-label">Maximale hypotheek 2026</div>
-        <div class="hr-bedrag">${fmt(Math.round(r.maxFinal/1000)*1000)}</div>
+        <div class="hr-bedrag">${fmt(Math.floor(r.maxFinal))}</div>
         <div class="hr-sub">NIBUD-norm · FLP ${fmtPct(r.flp*100)}${r.aowTabel?' (AOW-tabel)':''} · toetsrente ${fmtPct(r.toetsRente,2)}</div>
         <div class="hr-sub">${r.pensioenRegel}</div>
       </div>
       <div class="hr-sub-vals">
         <div class="hr-sub-val"><div class="hr-sub-lbl">Maandlast</div><div class="hr-sub-num">${fmt(r.maandlastAnn,2)}/mnd</div></div>
         <div class="hr-sub-val"><div class="hr-sub-lbl">Bruto jaarlast</div><div class="hr-sub-num">${fmt(r.maxJaarLast)}</div></div>
-        ${r.verduurzOn&&r.verduurzExtra>0?`<div class="hr-sub-val"><div class="hr-sub-lbl">Incl. verduurzaming</div><div class="hr-sub-num">${fmt(Math.round(r.maxMetVerduurz/1000)*1000)}</div></div>`:''}
+        ${r.verduurzOn&&r.verduurzExtra>0?`<div class="hr-sub-val"><div class="hr-sub-lbl">Incl. verduurzaming</div><div class="hr-sub-num">${fmt(Math.floor(r.maxMetVerduurz))}</div></div>`:''}
         ${r.ink2>0?`<div class="hr-sub-val"><div class="hr-sub-lbl">Toetsinkomen</div><div class="hr-sub-num">${fmt(r.toetsInkomen)}</div></div>`:''}
       </div>
     </div>`;
@@ -804,14 +804,14 @@ function bereken(){
     ${r.erfpMnd>0?`<tr><td>3d. Aftrek erfpachtcanon</td><td class="neg">−${fmt(r.erfpMnd*12)}</td><td style="text-align:right">${fmt(r.erfpMnd,2)}/mnd (aftrekbaar: niet gebruteerd)</td></tr>`:''}
     ${r.overigNetto>0?`<tr><td>3e. Aftrek overige vaste lasten</td><td class="neg">−${fmt(r.overigMnd*12)}</td><td style="text-align:right">${fmt(r.overigNetto,2)}/mnd × factor ${r.studieFactor.toFixed(2).replace('.',',')} = ${fmt(r.overigMnd,2)}/mnd</td></tr>`:''}
     <tr class="totaal"><td>= Beschikbare jaarlijkse hypotheeklast</td><td>${fmt(r.beschikbaarJaar)}</td><td style="text-align:right">${fmt(r.beschikbaarMnd,2)}/mnd</td></tr>
-    <tr><td>4. Max. hypotheek op inkomen</td><td>${fmt(r.maxOpInkomen)}</td><td style="text-align:right">Annuïteitsfactor ${fmtPct(r.annFactor*100*12,3)}/mnd per €100k${r.fiscaal==='deels'&&r.box3Deel>0?' · gemengd box 1/box 3 naar rato van de toetslastruimte'+(r.b3info?' ('+r.b3info+')':''):''}</td></tr>
+    <tr><td>4. Max. hypotheek op inkomen</td><td>${fmt(Math.floor(r.maxOpInkomen))}</td><td style="text-align:right">Annuïteitsfactor ${fmtPct(r.annFactor*100*12,3)}/mnd per €100k${r.fiscaal==='deels'&&r.box3Deel>0?' · gemengd box 1/box 3 naar rato van de toetslastruimte'+(r.b3info?' ('+r.b3info+')':''):''}</td></tr>
     ${r.labelExtra>0?`<tr><td>4b. Energielabel bonus (${r.label})</td><td class="pos">+${fmt(r.labelExtra)}</td><td style="text-align:right">Trhk 2026 energielabelbedrag</td></tr>`:''}
     ${r.alleenstaandExtra>0?`<tr><td>4c. Alleenstaandetoeslag</td><td class="pos">+${fmt(r.alleenstaandExtra)}</td><td style="text-align:right">Trhk 2026 art. 3 lid 8 (één aanvrager, toetsinkomen &gt; ${fmt(r.alleenstaandGrens)})</td></tr>`:''}
     ${r.aantalAanvragers===1&&r.alleenstaandExtra===0?`<tr><td>4c. Alleenstaandenbedrag</td><td>—</td><td style="text-align:right">Niet van toepassing: toetsinkomen niet hoger dan ${fmt(r.alleenstaandGrens)}</td></tr>`:''}
     <tr><td>5. Max. op woningwaarde (100%)</td><td>${fmt(r.maxOpWoning)}</td><td style="text-align:right">${r.maxFinal<r.maxVoorEnergielabel?'⚠ Beperkende factor':'—'}</td></tr>
     ${r.nhg&&r.maxFinal<r.maxVoorEnergielabel?`<tr><td>5b. NHG-grens</td><td>${fmt(r.nhgGrens)}</td><td style="text-align:right">Maximumgrens NHG 2026</td></tr>`:''}
-    <tr class="totaal"><td><strong>= Maximale hypotheek</strong></td><td><strong>${fmt(r.maxFinal)}</strong></td><td style="text-align:right">Maandlast: ${fmt(r.maandlastAnn,2)}/mnd</td></tr>
-    ${r.verduurzOn?`<tr><td>6. Met energiebesparende voorzieningen (label ${LABEL_NAAM[r.label]})</td><td>${fmt(r.maxMetVerduurz)}</td><td style="text-align:right">${r.verduurzExtra>0?'+'+fmt(r.verduurzExtra)+' alleen voor verduurzaming'+(r.nhg?' · NHG max. '+fmt(NHG_GRENS_ENERGIE_2026):''):'Geen extra bedrag voor dit label'}</td></tr>`:''}
+    <tr class="totaal"><td><strong>= Maximale hypotheek</strong></td><td><strong>${fmt(Math.floor(r.maxFinal))}</strong></td><td style="text-align:right">Maandlast: ${fmt(r.maandlastAnn,2)}/mnd</td></tr>
+    ${r.verduurzOn?`<tr><td>6. Met energiebesparende voorzieningen (label ${LABEL_NAAM[r.label]})</td><td>${fmt(Math.floor(r.maxMetVerduurz))}</td><td style="text-align:right">${r.verduurzExtra>0?'+'+fmt(r.verduurzExtra)+' alleen voor verduurzaming'+(r.nhg?' · NHG max. '+fmt(NHG_GRENS_ENERGIE_2026):''):'Geen extra bedrag voor dit label'}</td></tr>`:''}
   </tbody>`;
 
   // ── RVP OPTIMALISATIE ──
@@ -828,7 +828,7 @@ function bereken(){
     return `<div class="rvp-card ${isBest?'best':''} ${isActief?'actief':''}">
       <div class="rvp-lbl">${x.jr} jaar RVP</div>
       <div class="rvp-rente">${x.jr<10?fmtPct(TOETSRENTE_MIN)+' toets':'Werkelijke rente'}</div>
-      <div class="rvp-max">${fmt(Math.round(x.max/1000)*1000)}</div>
+      <div class="rvp-max">${fmt(Math.floor(x.max))}</div>
       ${isBest?'<span class="rvp-badge">Meeste leenruimte</span>':''}
       ${isActief?'<span style="font-size:9.5px;font-weight:700;color:var(--navy);">← uw keuze</span>':''}
     </div>`;
@@ -865,7 +865,7 @@ function tekenGrafiek(r,ink1,ink2,rente,rvp,looptijd,ss,sso,al,as_,wv){
     const inkomens=[30000,40000,50000,60000,70000,80000,90000,100000,120000,150000];
     const maxHyps=inkomens.map(i=>{
       const res=berekenMax(i,ink2,rente,rvp,looptijd,energielabel,ss,sso,al,as_,wv);
-      return res?Math.round(res.maxFinal/1000)*1000:0;
+      return res?Math.floor(res.maxFinal/1000)*1000:0;
     });
     grafObj=new Chart(ctx,{type:'bar',data:{labels:inkomens.map(i=>'€'+(i/1000).toFixed(0)+'k'),datasets:[
       {label:'Max hypotheek',data:maxHyps,backgroundColor:inkomens.map(i=>Math.abs(i-ink1)<5000?'#E5A138':'#003057'),borderRadius:5}
@@ -873,8 +873,8 @@ function tekenGrafiek(r,ink1,ink2,rente,rvp,looptijd,ss,sso,al,as_,wv){
 
   } else if(grafModus==='rente'){
     const rentes=[2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0];
-    const maxRvpKort=rentes.map(re=>{ const res=berekenMax(ink1,ink2,re,5,looptijd,energielabel,ss,sso,al,as_,wv); return res?Math.round(res.maxFinal/1000)*1000:0; });
-    const maxRvpLang=rentes.map(re=>{ const res=berekenMax(ink1,ink2,re,10,looptijd,energielabel,ss,sso,al,as_,wv); return res?Math.round(res.maxFinal/1000)*1000:0; });
+    const maxRvpKort=rentes.map(re=>{ const res=berekenMax(ink1,ink2,re,5,looptijd,energielabel,ss,sso,al,as_,wv); return res?Math.floor(res.maxFinal/1000)*1000:0; });
+    const maxRvpLang=rentes.map(re=>{ const res=berekenMax(ink1,ink2,re,10,looptijd,energielabel,ss,sso,al,as_,wv); return res?Math.floor(res.maxFinal/1000)*1000:0; });
     grafObj=new Chart(ctx,{type:'line',data:{labels:rentes.map(r=>fmtPct(r)),datasets:[
       {label:'RVP 10+ jaar (werkelijke rente als toetsrente)',data:maxRvpLang,borderColor:'#003057',backgroundColor:'rgba(0,48,87,.1)',borderWidth:2.5,fill:true,tension:.3,pointRadius:4},
       {label:'RVP < 10 jaar (toetsrente min. 5%)',data:maxRvpKort,borderColor:'#e5a138',backgroundColor:'rgba(229,161,56,.12)',borderWidth:2,fill:true,tension:.3,pointRadius:4},

@@ -1343,7 +1343,9 @@ const maxHyp = Math.floor(Math.min(maxHypLTI_finaal, maxHypLTV_EBV));
 const gewenstToets = gewenstBedrag > 0 ? gewenstBedrag : maxHyp;
 const ltv = woningWaarde > 0 ? (gewenstToets / woningWaarde) * 100 : 0;
 const lti = toetsinkomen > 0 ? (gewenstToets / toetsinkomen) : 0;
-const benutting = maxHyp > 0 ? (gewenstToets / maxHypLTI_finaal) * 100 : 0;
+// Toets op het afgeronde (getoonde) maximum: een gewenst bedrag gelijk aan het getoonde maximum past altijd
+const maxHypLTI_toets = Math.floor(maxHypLTI_finaal);
+const benutting = maxHyp > 0 ? (gewenstToets / maxHypLTI_toets) * 100 : 0;
 
 // NHG check
 const nhgGrens = (ebv === 'ja') ? NHG_GRENS_2026_EBV : NHG_GRENS_2026;
@@ -1503,7 +1505,7 @@ ${r.totaalVerplichtingenMaand > 0 ? `<tr class="minus"><td>− Verplichtingen (b
 ${r.alleenstaandeOpslag > 0 ? `<tr class="plus"><td>+ Alleenstaandenbedrag (Trhk art. 3 lid 8)</td><td>+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
 ${r.labelOpslag > 0 ? `<tr class="plus"><td>+ Energielabel-opslag (${state.label})</td><td>+${euro(r.labelOpslag)}</td></tr>` : ''}
 ${r.ebvOpslag > 0 ? `<tr class="plus"><td>+ EBV-opslag verduurzaming</td><td>+${euro(r.ebvOpslag)}</td></tr>` : ''}
-<tr class="total-row"><td>Maximale hypotheek LTI</td><td>${euro(r.maxHypLTI_finaal)}</td></tr>
+<tr class="total-row"><td>Maximale hypotheek LTI</td><td>${euro(Math.floor(r.maxHypLTI_finaal))}</td></tr>
 <tr><td>Maximale hypotheek LTV (100% van ${euro(state.woningWaarde || r.maxHyp)})</td><td>${euro(r.maxHypLTV)}</td></tr>
 <tr class="total-row"><td>✅ Definitief maximum (laagste van LTI / LTV)</td><td>${euro(r.maxHyp)}</td></tr>
 </table>
@@ -1714,7 +1716,7 @@ ${r.totaalVerplichtingenMaand > 0 ? `<tr><td class="minus">− Effect verplichti
 ${r.alleenstaandeOpslag > 0 ? `<tr><td class="plus">+ Alleenstaandenbedrag (Trhk 2026 art. 3 lid 8, inkomen > ${euro(r.isAowTabel?29000:30000)})</td><td class="td-right plus">+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
 ${r.labelOpslag > 0 ? `<tr><td class="plus">+ Energielabel-opslag bij aankoop (label ${state.label})</td><td class="td-right plus">+${euro(r.labelOpslag)}</td></tr>` : ''}
 ${r.ebvOpslag > 0 ? `<tr><td class="plus">+ EBV-opslag verduurzaming (label ${state.label})</td><td class="td-right plus">+${euro(r.ebvOpslag)}</td></tr>` : ''}
-<tr class="total-row"><td>Maximale hypotheek LTI (na alle correcties)</td><td class="td-right">${euro(r.maxHypLTI_finaal)}</td></tr>
+<tr class="total-row"><td>Maximale hypotheek LTI (na alle correcties)</td><td class="td-right">${euro(Math.floor(r.maxHypLTI_finaal))}</td></tr>
 <tr><td>Maximale hypotheek LTV (${euro(state.woningWaarde || r.maxHyp)} × 100%)</td><td class="td-right">${euro(r.maxHypLTV)}</td></tr>
 <tr class="total-row"><td>✅ Definitief maximum (laagste van LTI / LTV)</td><td class="td-right">${euro(r.maxHyp)}</td></tr>
 </table>

@@ -494,6 +494,19 @@ input[type=range]{accent-color:var(--navy);}
                 <option value="zakelijk">Zakelijk krediet (Qredits)</option>
               </select>
             </div>
+            <div class="f">
+              <label class="fl">Energielabel woning (aankoop, alleen bij hypotheek)</label>
+              <select class="sel" id="zzpLabel" onchange="calcZzp()">
+                <option value="EFG" selected>E, F of G (€ 0)</option>
+                <option value="CD">C of D (+ € 5.000)</option>
+                <option value="AB">A of B (+ € 10.000)</option>
+                <option value="A+_A++">A+ of A++ (+ € 20.000)</option>
+                <option value="A+++">A+++ (+ € 25.000)</option>
+                <option value="A++++">A++++ (+ € 30.000)</option>
+                <option value="A++++_EPG">A++++ met energieprestatiegarantie (+ € 40.000)</option>
+                <option value="GEEN">Geen geldig energielabel (+ € 10.000)</option>
+              </select>
+            </div>
             <div class="f"><label class="fl">KvK-jaren (inschrijving)</label><input class="inp" type="number" id="zzpJarenInschr" value="5" step="1" oninput="calcZzp()"></div>
           </div>
         </div>
@@ -1141,7 +1154,10 @@ function calcZzp(){
   const af=(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n));
   // Financieringslastpercentage: officiële tabel 2026 (niet-AOW, box 1), kolom bij toetsrente 5,0%; per toetsinkomen opgezocht
   const q=flnPct(toetsInk,toetsrente*100,'nietAOW');
-  const mh=ink=>Math.round(ink*flnPct(ink,toetsrente*100,'nietAOW')/12*af);
+  // Energielabelbedrag bij aankoop (Trhk 2026, overige parameters): bovenop de inkomenstoets, telt niet mee in de maandlast
+  const zzpLbl=(document.getElementById('zzpLabel')||{}).value||'EFG';
+  const labelExtra=FLN2026_LABEL_AANKOOP[zzpLbl]||0;
+  const mh=ink=>Math.floor(ink*flnPct(ink,toetsrente*100,'nietAOW')/12*af)+labelExtra;
   const maxHyp=mh(toetsInk);
   
   // Persoonlijke lening
@@ -1167,7 +1183,7 @@ function calcZzp(){
       <div class="kpi"><div class="kpi-lbl">3-jr gemiddelde winst</div><div class="kpi-v b">${fmt(gem3)}</div></div>
       <div class="kpi"><div class="kpi-lbl">Laagste jaar</div><div class="kpi-v a">${fmt(laagste)}</div></div>
       <div class="kpi"><div class="kpi-lbl">Toetsinkomen</div><div class="kpi-v o">${fmt(toetsInk)}</div><div class="kpi-sub">Basis voor alle berekeningen</div></div>
-      <div class="kpi"><div class="kpi-lbl">${doel==='hypotheek'?'Max hypotheek':'Max lening'}</div><div class="kpi-v g">${doel==='hypotheek'?fmt(maxHyp):fmt(maxPersLening)}</div><div class="kpi-sub">${doel==='hypotheek'?'Trhk 2026 · '+fmtPct(q*100,1)+' · 5%':'7% / 4 jr'}</div></div>
+      <div class="kpi"><div class="kpi-lbl">${doel==='hypotheek'?'Max hypotheek':'Max lening'}</div><div class="kpi-v g">${doel==='hypotheek'?fmt(maxHyp):fmt(maxPersLening)}</div><div class="kpi-sub">${doel==='hypotheek'?'Trhk 2026 · '+fmtPct(q*100,1)+' · 5%'+(labelExtra>0?' · incl. label +'+fmt(labelExtra):''):'7% / 4 jr'}</div></div>
     </div>`;
     
     out+=`<div class="section-title">Methodiek per geldverstrekker</div>
@@ -1197,7 +1213,7 @@ function calcZzp(){
     else if(trend<0) out+=alertBlock('wa','⚠️','Dalende winst',`${Math.round(trend)}% daling over 3 jaar. Onderbouw met orderportefeuille en prognose om vertrouwen te wekken.`);
     else if(trend>20) out+=alertBlock('ok','✅','Sterke stijgende trend',`+${Math.round(trend)}% over 3 jaar is gunstig. Florius en Munt kunnen soepeler zijn met laatste-jaarsmethode.`);
     
-    if(doel==='hypotheek') out+=alertBlock('in','🏠','Toetsingsregels 2026 ZZP (Trhk/Nibud)',`Toetsrente minimaal 5,0% · Financieringslastpercentage volgens de officiële tabel 2026: ${fmtPct(q*100,1)} bij een toetsinkomen van ${fmt(toetsInk)} · Max. hypotheek zonder financiële verplichtingen en zonder energielabel- of alleenstaandenbedrag · Conservatieve indicatie: de voorzichtigheid zit alleen in het toetsinkomen (afslag per geldverstrekker), niet in het percentage · NHG-grens 2026 €470.000 (€498.200 bij energiemaatregelen 106%). Tweede inkomen 100% telt mee.`);
+    if(doel==='hypotheek') out+=alertBlock('in','🏠','Toetsingsregels 2026 ZZP (Trhk/Nibud)',`Toetsrente minimaal 5,0% · Financieringslastpercentage volgens de officiële tabel 2026: ${fmtPct(q*100,1)} bij een toetsinkomen van ${fmt(toetsInk)} · Max. hypotheek zonder financiële verplichtingen en zonder alleenstaandenbedrag${labelExtra>0?' · inclusief energielabelbedrag '+fmt(labelExtra)+' (buiten de inkomenstoets)':' · energielabel E, F of G: geen energielabelbedrag'} · Conservatieve indicatie: de voorzichtigheid zit alleen in het toetsinkomen (afslag per geldverstrekker), niet in het percentage · NHG-grens 2026 €470.000 (€498.200 bij energiemaatregelen 106%). Tweede inkomen 100% telt mee.`);
     out+=alertBlock('in','💡','Vergelijk geldverstrekkers actief','Verschil in methodiek tussen banken kan tienduizenden euro\'s schelen. ING/Rabo conservatief, Florius soepeler, Munt/BLG speciaal voor korter zelfstandigen.');
     out+=alertBlock('wa','⚠️','Inkomensverklaring Ondernemer (IVO)','De meeste geldverstrekkers accepteren inmiddels alleen nog IVO 3.0 van een erkend expert (ca. €400-€650). Let op geldigheidsduur (meestal 6 maanden).');
   }
