@@ -443,14 +443,14 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
           <div class="field" style="flex:1;min-width:160px">
             <select id="f-energielabel" onchange="recalcWoning()">
               <option value="">Onbekend</option>
-              <option value="NOM">🌿 Energieneutraal / NOM (+€25.000)</option>
+              <option value="NOM">🌿 A++++ / NOM (+€30.000)</option>
               <option value="APP">A+++ (+€25.000)</option>
-              <option value="APP2">A++ (+€10.000)</option>
-              <option value="AP">A+ (+€5.000)</option>
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-              <option value="D">D</option>
+              <option value="APP2">A++ (+€20.000)</option>
+              <option value="AP">A+ (+€20.000)</option>
+              <option value="A">A (+€10.000)</option>
+              <option value="B">B (+€10.000)</option>
+              <option value="C">C (+€5.000)</option>
+              <option value="D">D (+€5.000)</option>
               <option value="EFG">E / F / G</option>
             </select>
           </div>
@@ -1159,14 +1159,20 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
                     <label>Stelsel</label>
                     <select id="v1-duo-stelsel" onchange="updateVerpl()">
                       <option value="">Geen</option>
-                      <option value="nieuw">Nieuw (2015+) — 0,45%/mnd</option>
-                      <option value="oud">Oud (voor 2015) — 0,75%/mnd</option>
+                      <option value="nieuw">Nieuw (2015+, SF35)</option>
+                      <option value="oud">Oud (voor 2015, SF15)</option>
                     </select>
                   </div>
                   <div class="field">
                     <label>Schuld</label>
                     <div class="input-prefix"><span>€</span>
                       <input type="text" id="v1-duo-schuld" placeholder="0" oninput="updateVerpl()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Werkelijke maandtermijn DUO</label>
+                    <div class="input-prefix"><span>€</span>
+                      <input type="text" id="v1-duo-termijn" placeholder="0" oninput="updateVerpl()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
                     </div>
                   </div>
                 </div>
@@ -1240,8 +1246,8 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
                     <label>Stelsel</label>
                     <select id="v2-duo-stelsel" onchange="updateVerpl()">
                       <option value="">Geen</option>
-                      <option value="nieuw">Nieuw (2015+)</option>
-                      <option value="oud">Oud (voor 2015)</option>
+                      <option value="nieuw">Nieuw (2015+, SF35)</option>
+                      <option value="oud">Oud (voor 2015, SF15)</option>
                     </select>
                   </div>
                   <div class="field">
@@ -1250,7 +1256,14 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
                       <input type="text" id="v2-duo-schuld" placeholder="0" oninput="updateVerpl()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
                     </div>
                   </div>
+                  <div class="field">
+                    <label>Werkelijke maandtermijn DUO</label>
+                    <div class="input-prefix"><span>€</span>
+                      <input type="text" id="v2-duo-termijn" placeholder="0" oninput="updateVerpl()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
+                    </div>
+                  </div>
                 </div>
+                <div id="v2-duo-norm" class="fs-11 mt-8" style="color:var(--navy)"></div>
               </div>
               <div style="background:var(--gray-light);border-radius:var(--radius);padding:12px">
                 <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px">Krediet / leningen</div>
@@ -1662,8 +1675,8 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
         <div class="toggle-wrap mt-8">
           <input type="checkbox" id="niet-kwetsbaar" onchange="recalcToets()" style="accent-color:var(--navy)">
           <div>
-            <div class="toggle-label">Niet-kwetsbare groep (+€17.000)</div>
-            <div class="toggle-sub">Aantoonbaar geen persoonlijk onvermijdbare uitgaven</div>
+            <div class="toggle-label">Alleenstaande (+€17.000)</div>
+            <div class="toggle-sub">Trhk 2026 art. 3 lid 8: één aanvrager, toetsinkomen &gt; €30.000 (AOW: &gt; €29.000)</div>
           </div>
         </div>
         <div id="energie-opslag-info" style="display:none" class="info-box info-green fs-11 mt-8"></div>
@@ -1706,7 +1719,7 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
       <div class="card-body">
 
         <div style="font-size:12px;color:var(--text-mid);margin-bottom:16px;padding:10px 14px;background:var(--navy-xlight);border-radius:var(--radius);border-left:3px solid var(--navy);line-height:1.7">
-          <strong>NHG 2026:</strong> Grens €470.000 (€560.000 bij energieverbeterende maatregelen).
+          <strong>NHG 2026:</strong> Grens €470.000 (€498.200 bij energiebesparende voorzieningen).
           NHG hanteert eigen acceptatienormen die soms afwijken van de GHF. Borgtochtprovisie: 0,4%.
           De <strong>Woonlastenfaciliteit</strong> biedt aanvullende betalingsregeling bij betalingsproblemen.
         </div>
@@ -2025,146 +2038,6 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
   <!-- AOV ANALYSE -->
   <div class="card" id="aov-analyse-card">
     <div class="card-header">
-      <div class="card-title">🩺 AOV-analyse — Arbeidsongeschiktheid</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span id="aov-status-badge" class="badge" style="display:none"></span>
-        <button class="btn btn-sm btn-secondary" onclick="toggleCard('aov-body')">Details ▾</button>
-      </div>
-    </div>
-    <div id="aov-body" class="collapsible">
-      <div class="card-body">
-
-        <div style="font-size:12px;color:var(--text-mid);margin-bottom:16px;padding:10px 14px;background:var(--navy-xlight);border-radius:var(--radius);border-left:3px solid var(--navy);line-height:1.7">
-          <strong>Wft / AFM verplichting:</strong> De adviseur inventariseert het arbeidsongeschiktheidsrisico en bespreekt of de bestaande dekking (WIA + eventuele AOV) voldoende is om de hypotheeklasten te kunnen dragen.
-          <br><strong>WIA 2026:</strong> Bij ≥35% AO: WGA of IVA. WIA-uitkering max. 70% van (gemaximeerd) dagloon. Eigen risico werkgever 2 jaar (Ziektewet).
-        </div>
-
-        <!-- Invoer per aanvrager -->
-        <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Gegevens bij arbeidsongeschiktheid</div>
-        <div class="grid-2" style="gap:16px;margin-bottom:16px">
-
-          <!-- Aanvrager 1 -->
-          <div style="padding:14px;background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border)">
-            <div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:10px" id="aov-label-a1">Aanvrager 1</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <div class="field">
-                <label>Dienstverband <span class="sub">voor WIA-berekening</span></label>
-                <select id="aov-contract1" onchange="berekenAOV()" style="background:white">
-                  <option value="loondienst">Loondienst</option>
-                  <option value="zzp">ZZP / Zelfstandige</option>
-                  <option value="dga">DGA</option>
-                  <option value="deels">Deels loondienst / deels ZZP</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Bruto jaarsalaris <span class="sub">(voor WIA-berekening)</span></label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="aov-salaris1" placeholder="auto uit inkomen" oninput="berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-              <div class="field">
-                <label>AOV-dekking /mnd <span class="sub">(bruto uitkering bij AO)</span></label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="f-aov1" placeholder="0" oninput="recalcWoonlast();berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-              <div class="field">
-                <label>AOV-premie /mnd</label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="aov-premie1" placeholder="bijv. 80" oninput="berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-              <div class="field">
-                <label>Eigen-risicoperiode <span class="sub">(maanden vóór uitkering)</span></label>
-                <select id="aov-eigen-risico1" onchange="berekenAOV()" style="background:white">
-                  <option value="24">24 mnd (Ziektewet loondienst)</option>
-                  <option value="12">12 mnd</option>
-                  <option value="6">6 mnd</option>
-                  <option value="3">3 mnd</option>
-                  <option value="1">1 mnd</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Spaarbuffer beschikbaar</label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="aov-buffer1" placeholder="bijv. 25.000" oninput="berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Aanvrager 2 -->
-          <div id="aov-a2-blok" style="display:none;padding:14px;background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border)">
-            <div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:10px" id="aov-label-a2">Aanvrager 2</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <div class="field">
-                <label>Dienstverband</label>
-                <select id="aov-contract2" onchange="berekenAOV()" style="background:white">
-                  <option value="loondienst">Loondienst</option>
-                  <option value="zzp">ZZP / Zelfstandige</option>
-                  <option value="dga">DGA</option>
-                  <option value="deels">Deels loondienst / deels ZZP</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Bruto jaarsalaris</label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="aov-salaris2" placeholder="auto uit inkomen" oninput="berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-              <div class="field">
-                <label>AOV-dekking /mnd <span class="sub">(bruto uitkering bij AO)</span></label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="f-aov2" placeholder="0" oninput="recalcWoonlast();berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-              <div class="field">
-                <label>AOV-premie /mnd</label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="aov-premie2" placeholder="bijv. 60" oninput="berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-              <div class="field">
-                <label>Eigen-risicoperiode</label>
-                <select id="aov-eigen-risico2" onchange="berekenAOV()" style="background:white">
-                  <option value="24">24 mnd (Ziektewet loondienst)</option>
-                  <option value="12">12 mnd</option>
-                  <option value="6">6 mnd</option>
-                  <option value="3">3 mnd</option>
-                  <option value="1">1 mnd</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Spaarbuffer beschikbaar</label>
-                <div class="input-prefix"><span>€</span>
-                  <input type="text" id="aov-buffer2" placeholder="bijv. 15.000" oninput="berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Analyse resultaten -->
-        <div id="aov-resultaat" style="display:none">
-          <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Analyse arbeidsongeschiktheidsrisico</div>
-          <div id="aov-scenario-kaarten" style="margin-bottom:16px"></div>
-          <div id="aov-gap-tabel" style="margin-bottom:16px"></div>
-          <div id="aov-eigen-risico-blok" style="margin-bottom:16px"></div>
-          <div id="aov-oordeel" style="margin-bottom:12px"></div>
-        </div>
-
-        <!-- Adviesnotitie -->
-        <div class="field mt-8">
-          <label>Adviesnotitie AOV <span class="sub">(verplicht vastleggen, art. 4:23 Wft)</span></label>
-          <textarea id="f-aov-advies" rows="3" placeholder="Bijv: Bij volledige AO van aanvrager 1 (WIA-uitkering 70% = €58.000/jr) is er een maandelijks tekort van €820 t.o.v. bruto hypotheeklast. De huidige AOV dekt dit gat. Klant is gewezen op het AO-risico en akkoord met huidige dekking."></textarea>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- AOV ANALYSE -->
-  <div class="card" id="aov-analyse-card">
-    <div class="card-header">
       <div class="card-title">🏥 AOV-analyse — arbeidsongeschiktheid</div>
       <button class="btn btn-sm btn-secondary" onclick="toggleCard('aov-body')">Details ▾</button>
     </div>
@@ -2173,7 +2046,7 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
 
         <div style="font-size:12px;color:var(--text-mid);margin-bottom:16px;padding:10px 14px;background:var(--navy-xlight);border-radius:var(--radius);border-left:3px solid var(--navy);line-height:1.7">
           <strong>AFM-verplichting:</strong> Bij hypotheekadvies moet de adviseur het risico van arbeidsongeschiktheid inventariseren.
-          WIA-uitkering (Wet Inkomen naar Arbeidsvermogen) bedraagt bij volledige AO ca. 70% van het dagloon, max. €63.200/jr (2026).
+          WIA-uitkering (Wet Inkomen naar Arbeidsvermogen) bedraagt bij volledige AO ca. 70% van het dagloon; dagloon max. €79.409/jr (maximumdagloon €304,25, 2026).
           Het verschil tussen WIA-uitkering en woonlasten bepaalt de benodigde AOV-dekking.
         </div>
 
@@ -2195,7 +2068,7 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
                 </select>
               </div>
               <div class="field">
-                <label>WIA-dagloon (bruto) <span class="sub">auto: uit inkomen, max €63.200</span></label>
+                <label>WIA-dagloon (bruto) <span class="sub">auto: uit inkomen, max €79.409</span></label>
                 <div class="input-prefix"><span>€</span>
                   <input type="text" id="aov-dagloon1" placeholder="auto berekend" oninput="this.dataset.manual='1';berekenAOV()" onblur="fmtEuro(this)" onfocus="clearFmt(this)">
                 </div>
@@ -2465,8 +2338,7 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
             <table class="data-table">
               <tr><td>RVP < 10 jaar</td><td class="num">min. 5,00%</td></tr>
               <tr><td>RVP ≥ 10 jaar</td><td class="num">werkelijke rente</td></tr>
-              <tr><td>DUO oud stelsel</td><td class="num">0,75% van schuld/jr</td></tr>
-              <tr><td>DUO nieuw stelsel</td><td class="num">0,45% van schuld/jr</td></tr>
+              <tr><td>DUO studieschuld</td><td class="num">termijn/mnd × factor 1,05–1,40</td></tr>
               <tr><td>Doorlopend krediet</td><td class="num">2% van limiet/mnd</td></tr>
             </table>
           </div>
@@ -2661,107 +2533,72 @@ var G = {
   ghfStatus:null, maxHyp:0, tmoView:'jaar', icKoper:1
 };
 
-// ── CHF 2026 TABELLEN ──
-// ── GHF 2026 WOONQUOTA MATRIX (niet-AOW) ──
-// Kolommen: toetsrente 2,0% | 2,5% | 3,0% | 3,5% | 4,0% | 4,5% | ≥5,0%
-// Rij:  [ink_van, ink_tot, 2.0%, 2.5%, 3.0%, 3.5%, 4.0%, 4.5%, 5.0%]
-// Bron: GHF normentabel 2026
-var GHF_MATRIX_NIET_AOW = [
-  [     0, 20000    , 0.0100, 0.0100, 0.0100, 0.0100, 0.0100, 0.0100, 0.0100],
-  [ 20001, 22000    , 0.0650, 0.0700, 0.0750, 0.0800, 0.0850, 0.0950, 0.1000],
-  [ 22001, 24000    , 0.0850, 0.0900, 0.0950, 0.1000, 0.1050, 0.1150, 0.1200],
-  [ 24001, 26000    , 0.1000, 0.1050, 0.1100, 0.1150, 0.1200, 0.1300, 0.1350],
-  [ 26001, 28000    , 0.1050, 0.1100, 0.1150, 0.1200, 0.1250, 0.1350, 0.1400],
-  [ 28001, 30000    , 0.1100, 0.1150, 0.1200, 0.1250, 0.1300, 0.1400, 0.1450],
-  [ 30001, 32000    , 0.1150, 0.1200, 0.1250, 0.1300, 0.1350, 0.1450, 0.1500],
-  [ 32001, 34000    , 0.1220, 0.1270, 0.1320, 0.1370, 0.1420, 0.1520, 0.1570],
-  [ 34001, 36000    , 0.1280, 0.1330, 0.1380, 0.1430, 0.1480, 0.1580, 0.1630],
-  [ 36001, 38000    , 0.1350, 0.1400, 0.1450, 0.1500, 0.1550, 0.1650, 0.1700],
-  [ 38001, 40000    , 0.1420, 0.1470, 0.1520, 0.1570, 0.1620, 0.1720, 0.1770],
-  [ 40001, 43000    , 0.1380, 0.1480, 0.1530, 0.1580, 0.1680, 0.1780, 0.1830],
-  [ 43001, 46000    , 0.1450, 0.1550, 0.1600, 0.1650, 0.1750, 0.1850, 0.1900],
-  [ 46001, 49000    , 0.1510, 0.1610, 0.1660, 0.1710, 0.1810, 0.1910, 0.1960],
-  [ 49001, 52000    , 0.1550, 0.1650, 0.1700, 0.1750, 0.1850, 0.1950, 0.2000],
-  [ 52001, 56000    , 0.1610, 0.1710, 0.1760, 0.1810, 0.1910, 0.2010, 0.2060],
-  [ 56001, 60000    , 0.1670, 0.1770, 0.1820, 0.1870, 0.1970, 0.2070, 0.2120],
-  [ 60001, 65000    , 0.1730, 0.1830, 0.1880, 0.1930, 0.2030, 0.2130, 0.2180],
-  [ 65001, 70000    , 0.1790, 0.1890, 0.1940, 0.1990, 0.2090, 0.2190, 0.2240],
-  [ 70001, 75000    , 0.1780, 0.1880, 0.1980, 0.2030, 0.2130, 0.2230, 0.2280],
-  [ 75001, 80000    , 0.1820, 0.1920, 0.2020, 0.2070, 0.2170, 0.2270, 0.2320],
-  [ 80001, 90000    , 0.1870, 0.1970, 0.2070, 0.2120, 0.2220, 0.2320, 0.2370],
-  [ 90001, 100000   , 0.1920, 0.2020, 0.2120, 0.2170, 0.2270, 0.2370, 0.2420],
-  [100001, 110000   , 0.1920, 0.2020, 0.2120, 0.2220, 0.2320, 0.2420, 0.2470],
-  [110001, 125000   , 0.1970, 0.2070, 0.2170, 0.2270, 0.2370, 0.2470, 0.2520],
-  [125001, 150000   , 0.2020, 0.2120, 0.2220, 0.2320, 0.2420, 0.2520, 0.2570],
-  [150001, 200000   , 0.2130, 0.2230, 0.2330, 0.2430, 0.2530, 0.2630, 0.2680],
-  [200001, 250000   , 0.2150, 0.2250, 0.2350, 0.2450, 0.2550, 0.2650, 0.2750],
-  [250001, 300000   , 0.2200, 0.2300, 0.2400, 0.2500, 0.2600, 0.2700, 0.2800],
-  [300001, 99999999 , 0.2270, 0.2370, 0.2470, 0.2570, 0.2670, 0.2770, 0.2870]
-];
+// ── FINANCIERINGSLASTPERCENTAGES 2026 ──
+// Bron: Bijlage 1 Tijdelijke regeling hypothecair krediet, vastgesteld bij de Wijzigingsregeling
+// hypothecair krediet 2026 (Stcrt. 2025, 36471; in werking 1-1-2026). Box 1 (rente aftrekbaar).
+// n = niet-AOW (vanaf € 30.000), a = AOW-leeftijd (vanaf € 29.000); rijen per € 1.000;
+// 12 rentekolommen: ≤1,500% · ≤2,000% · … · ≤6,500% · >6,500%.
+// Toetsinkomen tussen twee rijen: rij van het naastlagere inkomen (conservatief).
+var FLP_2026 = {"n":{"s":30000,"r":[[15.5,16.5,17.5,18.4,19.3,20.1,20.9,21.6,22.2,22.7,23.2,23.7],[16.2,17.3,18.3,19.3,20.2,21.2,22.0,22.7,23.4,24.1,24.6,25.1],[16.7,17.9,19.0,20.1,21.1,22.1,23.0,23.8,24.6,25.3,25.9,26.4],[17.1,18.3,19.5,20.6,21.6,22.6,23.6,24.6,25.4,26.1,26.8,27.4],[17.3,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.5,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.7,18.7,19.7,20.7,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.7,18.7,19.7,20.7,21.7,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.8,18.8,19.8,20.7,21.7,22.7,23.6,24.6,25.5,26.4,27.3,28.1],[17.8,18.9,19.9,20.9,21.8,22.7,23.7,24.6,25.5,26.4,27.3,28.1],[17.9,18.9,19.9,21.0,21.9,22.8,23.7,24.6,25.5,26.4,27.3,28.1],[18.0,19.0,20.0,21.0,22.0,22.9,23.8,24.7,25.5,26.4,27.3,28.1],[18.1,19.1,20.1,21.1,22.1,23.0,23.9,24.7,25.6,26.4,27.3,28.1],[18.2,19.2,20.2,21.2,22.2,23.1,24.0,24.8,25.7,26.5,27.3,28.1],[18.3,19.4,20.4,21.4,22.3,23.2,24.1,25.0,25.8,26.7,27.4,28.2],[18.5,19.5,20.5,21.5,22.5,23.4,24.3,25.1,26.0,26.8,27.6,28.3],[18.6,19.7,20.7,21.7,22.7,23.6,24.5,25.3,26.2,27.0,27.8,28.5],[18.8,19.9,20.9,21.9,22.9,23.8,24.7,25.6,26.4,27.2,28.0,28.7],[19.0,20.0,21.1,22.1,23.1,24.1,25.0,25.8,26.6,27.4,28.2,28.9],[19.1,20.2,21.3,22.3,23.3,24.3,25.2,26.0,26.9,27.6,28.4,29.2],[19.3,20.4,21.5,22.5,23.5,24.5,25.4,26.3,27.1,27.9,28.6,29.3],[19.4,20.5,21.6,22.6,23.7,24.6,25.6,26.4,27.3,28.1,28.8,29.5],[19.5,20.6,21.7,22.8,23.8,24.8,25.7,26.6,27.5,28.2,29.0,29.7],[19.6,20.8,21.9,22.9,24.0,24.9,25.9,26.8,27.6,28.4,29.2,29.9],[19.7,20.9,22.0,23.1,24.1,25.1,26.1,27.0,27.8,28.6,29.4,30.1],[19.8,20.9,22.1,23.2,24.2,25.2,26.2,27.1,27.9,28.7,29.5,30.2],[19.9,21.0,22.2,23.2,24.3,25.3,26.3,27.2,28.1,28.9,29.6,30.3],[20.0,21.1,22.2,23.3,24.3,25.4,26.4,27.3,28.1,29.0,29.7,30.4],[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.3,28.2,29.0,29.8,30.5],[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.4,28.2,29.1,29.9,30.6],[20.2,21.3,22.4,23.4,24.5,25.5,26.5,27.4,28.3,29.1,29.9,30.6],[20.2,21.3,22.4,23.5,24.5,25.5,26.5,27.4,28.3,29.2,29.9,30.7],[20.2,21.4,22.5,23.5,24.6,25.6,26.5,27.4,28.4,29.2,30.0,30.7],[20.3,21.4,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.2,30.0,30.8],[20.4,21.5,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.3,30.1,30.8],[20.5,21.5,22.6,23.7,24.7,25.7,26.6,27.6,28.4,29.3,30.1,30.8],[20.5,21.6,22.6,23.7,24.7,25.7,26.7,27.6,28.5,29.3,30.1,30.9],[20.5,21.6,22.7,23.7,24.8,25.8,26.7,27.6,28.5,29.3,30.2,30.9],[20.6,21.7,22.7,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[20.7,21.7,22.8,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[20.8,21.8,22.8,23.9,24.9,25.9,26.9,27.8,28.6,29.5,30.2,31.0],[20.8,21.9,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.3,31.0],[20.9,21.9,23.0,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0],[21.0,22.0,23.0,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.4,31.1],[21.0,22.1,23.1,24.1,25.1,26.1,27.0,27.9,28.8,29.6,30.4,31.1],[21.1,22.1,23.2,24.2,25.1,26.1,27.1,28.0,28.8,29.6,30.4,31.2],[21.1,22.2,23.2,24.2,25.2,26.1,27.1,28.0,28.9,29.7,30.5,31.2],[21.2,22.2,23.3,24.3,25.3,26.2,27.1,28.0,28.9,29.7,30.5,31.2],[21.2,22.3,23.4,24.4,25.3,26.3,27.1,28.1,28.9,29.8,30.5,31.3],[21.3,22.4,23.4,24.4,25.4,26.3,27.2,28.1,29.0,29.8,30.6,31.3],[21.3,22.4,23.5,24.5,25.5,26.4,27.3,28.1,29.0,29.8,30.6,31.3],[21.3,22.5,23.5,24.5,25.5,26.5,27.3,28.2,29.1,29.9,30.6,31.4],[21.4,22.5,23.6,24.6,25.6,26.5,27.4,28.2,29.1,29.9,30.7,31.4],[21.4,22.5,23.7,24.7,25.6,26.6,27.5,28.3,29.1,30.0,30.7,31.5],[21.5,22.6,23.7,24.7,25.7,26.7,27.5,28.4,29.2,30.0,30.8,31.5],[21.5,22.6,23.7,24.8,25.8,26.7,27.6,28.4,29.2,30.0,30.8,31.5],[21.6,22.7,23.7,24.8,25.8,26.7,27.7,28.5,29.3,30.0,30.8,31.5],[21.6,22.7,23.8,24.8,25.9,26.8,27.7,28.5,29.3,30.1,30.8,31.6],[21.7,22.8,23.8,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.9,31.6],[21.7,22.8,23.9,24.9,25.9,26.9,27.8,28.7,29.4,30.2,30.9,31.7],[21.8,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.2,30.9,31.7],[21.8,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0,31.7],[21.8,22.9,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.3,31.0,31.7],[21.9,23.0,24.1,25.1,26.1,27.0,28.0,28.8,29.6,30.4,31.1,31.8],[21.9,23.0,24.1,25.1,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8],[22.0,23.1,24.1,25.2,26.2,27.1,28.0,28.9,29.7,30.5,31.2,31.9],[22.0,23.1,24.2,25.2,26.2,27.2,28.1,28.9,29.8,30.5,31.3,31.9],[22.0,23.2,24.2,25.3,26.3,27.2,28.1,29.0,29.8,30.6,31.3,32.0],[22.1,23.2,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.4,32.0],[22.1,23.2,24.3,25.4,26.4,27.3,28.2,29.1,29.9,30.7,31.4,32.1],[22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],[22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]]},"a":{"s":29000,"r":[[18.5,18.9,19.4,19.7,20.1,20.4,20.7,20.9,21.1,21.3,21.5,21.7],[19.2,19.8,20.3,20.8,21.1,21.5,21.8,22.1,22.3,22.5,22.7,22.9],[19.9,20.6,21.2,21.7,22.1,22.5,22.8,23.1,23.4,23.7,23.9,24.1],[20.5,21.2,21.8,22.4,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2],[20.9,21.7,22.3,22.9,23.5,24.0,24.5,24.8,25.2,25.5,25.7,26.0],[21.2,22.0,22.8,23.4,24.0,24.5,25.1,25.5,25.9,26.2,26.5,26.7],[21.6,22.4,23.1,23.9,24.5,25.1,25.6,26.1,26.5,26.9,27.2,27.5],[21.8,22.7,23.5,24.3,24.9,25.6,26.1,26.6,27.1,27.5,27.9,28.2],[21.9,22.9,23.8,24.6,25.3,26.0,26.6,27.1,27.5,28.0,28.4,28.8],[22.0,23.1,24.0,24.9,25.7,26.3,27.0,27.5,28.0,28.4,28.9,29.2],[22.1,23.2,24.2,25.1,25.9,26.6,27.3,27.9,28.4,28.9,29.3,29.7],[22.2,23.3,24.3,25.2,26.1,26.9,27.6,28.2,28.8,29.3,29.7,30.1],[22.3,23.4,24.4,25.3,26.3,27.1,27.9,28.5,29.1,29.6,30.1,30.5],[22.4,23.5,24.5,25.5,26.4,27.3,28.1,28.8,29.4,30.0,30.5,30.9],[22.5,23.6,24.6,25.6,26.6,27.4,28.3,29.0,29.7,30.3,30.8,31.3],[22.7,23.7,24.8,25.8,26.7,27.6,28.4,29.2,29.9,30.6,31.1,31.6],[22.8,23.9,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.8,31.4,31.9],[22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,30.9,31.6,32.2],[23.1,24.1,25.2,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8,32.4],[23.1,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.3,32.0,32.6],[23.3,24.4,25.5,26.5,27.5,28.3,29.2,30.0,30.8,31.5,32.2,32.8],[23.4,24.6,25.6,26.7,27.6,28.6,29.4,30.2,31.0,31.7,32.4,33.0],[23.6,24.8,25.8,26.8,27.9,28.8,29.7,30.5,31.3,32.0,32.7,33.3],[23.9,25.0,26.2,27.2,28.1,29.1,30.0,30.8,31.6,32.3,33.0,33.7],[24.2,25.4,26.5,27.5,28.5,29.4,30.4,31.2,32.0,32.7,33.5,34.1],[24.5,25.7,26.8,27.9,28.9,29.8,30.7,31.6,32.4,33.2,33.9,34.5],[24.8,26.0,27.2,28.3,29.3,30.3,31.1,32.0,32.9,33.6,34.3,35.0],[25.0,26.4,27.6,28.6,29.7,30.7,31.6,32.4,33.2,34.0,34.7,35.5],[25.2,26.6,27.9,29.0,30.0,31.1,32.0,32.8,33.7,34.4,35.2,35.9],[25.3,26.8,28.1,29.4,30.4,31.4,32.4,33.3,34.1,34.8,35.5,36.3],[25.4,27.0,28.4,29.6,30.8,31.8,32.8,33.7,34.5,35.3,36.0,36.6],[25.5,27.1,28.6,29.9,31.1,32.1,33.1,34.1,34.9,35.7,36.4,37.1],[25.6,27.2,28.7,30.1,31.4,32.5,33.5,34.4,35.3,36.1,36.8,37.5],[25.7,27.3,28.9,30.4,31.6,32.8,33.8,34.8,35.7,36.5,37.2,37.9],[25.8,27.4,29.0,30.5,31.9,33.0,34.1,35.1,36.0,36.8,37.6,38.3],[25.8,27.6,29.1,30.7,32.1,33.3,34.4,35.4,36.3,37.2,37.9,38.6],[25.9,27.6,29.2,30.8,32.3,33.6,34.6,35.6,36.6,37.5,38.3,39.0],[25.9,27.6,29.4,30.9,32.4,33.8,34.9,36.0,36.8,37.8,38.6,39.3],[26.0,27.7,29.4,31.0,32.5,34.0,35.2,36.2,37.1,38.0,38.9,39.7],[26.0,27.7,29.5,31.1,32.6,34.1,35.4,36.4,37.5,38.3,39.2,40.0],[26.1,27.8,29.5,31.2,32.7,34.2,35.6,36.7,37.7,38.6,39.4,40.3],[26.2,27.9,29.6,31.3,32.8,34.3,35.7,36.9,37.9,38.9,39.7,40.5],[26.2,27.9,29.6,31.3,32.9,34.4,35.8,37.1,38.2,39.1,39.9,40.7],[26.3,28.0,29.7,31.4,33.0,34.5,35.9,37.3,38.4,39.4,40.3,41.0],[26.4,28.0,29.7,31.4,33.1,34.6,36.0,37.3,38.4,39.5,40.5,41.3],[26.5,28.1,29.7,31.4,33.1,34.7,36.1,37.3,38.4,39.5,40.6,41.6],[26.5,28.2,29.8,31.4,33.1,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.6,28.3,29.9,31.5,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.7,28.3,30.0,31.6,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.8,28.4,30.0,31.6,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.9,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.1,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.2,28.6,30.2,31.8,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.2,28.8,30.2,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.3,28.8,30.3,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.4,28.9,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.5,29.0,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.6,29.1,30.5,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.1,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.2,30.6,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.2,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.3,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.9,29.3,30.8,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[28.0,29.4,30.8,32.2,33.6,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[28.0,29.4,30.9,32.2,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.0,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.1,29.6,30.9,32.3,33.7,34.9,36.2,37.3,38.4,39.5,40.6,41.7],[28.2,29.6,31.0,32.3,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[28.3,29.7,31.1,32.4,33.7,35.0,36.3,37.4,38.5,39.6,40.6,41.7],[28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.4,38.5,39.6,40.6,41.7],[28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.5,38.5,39.6,40.6,41.7],[28.4,29.8,31.2,32.5,33.8,35.1,36.3,37.5,38.6,39.6,40.6,41.7]]}};
+var FLP_RENTE_GRENZEN = [0.015,0.020,0.025,0.030,0.035,0.040,0.045,0.050,0.055,0.060,0.065,Infinity];
 
-// ── GHF 2026 WOONQUOTA MATRIX (AOW-leeftijd) ──
-// Kolommen: toetsrente 2,0% | 2,5% | 3,0% | 3,5% | 4,0% | 4,5% | ≥5,0%
-var GHF_MATRIX_WELAOW = [
-  [     0, 20000    , 0.0100, 0.0100, 0.0100, 0.0100, 0.0100, 0.0100, 0.0100],
-  [ 20001, 22000    , 0.0400, 0.0420, 0.0450, 0.0480, 0.0520, 0.0560, 0.0600],
-  [ 22001, 24000    , 0.0450, 0.0470, 0.0500, 0.0530, 0.0570, 0.0610, 0.0650],
-  [ 24001, 26000    , 0.0500, 0.0520, 0.0550, 0.0580, 0.0620, 0.0660, 0.0700],
-  [ 26001, 28000    , 0.0550, 0.0570, 0.0600, 0.0630, 0.0670, 0.0710, 0.0750],
-  [ 28001, 30000    , 0.0600, 0.0620, 0.0650, 0.0680, 0.0720, 0.0760, 0.0800],
-  [ 30001, 32000    , 0.0650, 0.0670, 0.0700, 0.0730, 0.0770, 0.0810, 0.0850],
-  [ 32001, 34000    , 0.0700, 0.0720, 0.0750, 0.0780, 0.0820, 0.0860, 0.0900],
-  [ 34001, 36000    , 0.0750, 0.0770, 0.0800, 0.0830, 0.0870, 0.0910, 0.0950],
-  [ 36001, 38000    , 0.0800, 0.0820, 0.0850, 0.0880, 0.0920, 0.0960, 0.1000],
-  [ 38001, 40000    , 0.0850, 0.0870, 0.0900, 0.0930, 0.0970, 0.1010, 0.1050],
-  [ 40001, 43000    , 0.0850, 0.0880, 0.0920, 0.0960, 0.1000, 0.1050, 0.1100],
-  [ 43001, 50000    , 0.0900, 0.0930, 0.0970, 0.1010, 0.1050, 0.1100, 0.1150],
-  [ 50001, 60000    , 0.0950, 0.0980, 0.1020, 0.1060, 0.1100, 0.1150, 0.1200],
-  [ 60001, 80000    , 0.1000, 0.1030, 0.1070, 0.1110, 0.1150, 0.1200, 0.1250],
-  [ 80001, 99999999 , 0.1000, 0.1050, 0.1100, 0.1150, 0.1200, 0.1250, 0.1300]
-];
+// Afgeleide overzichtstabellen [van, tot, % bij toetsrente 5,000%] (voor weergave/beheer-vergelijking)
+function _flpOverzicht(t) {
+  var T = FLP_2026[t], rows = [[0, T.s-1, T.r[0][7]/100]];
+  T.r.forEach(function(r, i) {
+    var van = T.s + i*1000;
+    rows.push([van, i === T.r.length-1 ? 99999999 : van+999, r[7]/100]);
+  });
+  return rows;
+}
+var CHF_NIET_AOW = _flpOverzicht('n');
+var CHF_WELAOW   = _flpOverzicht('a');
 
-// Behoud oude tabellen als fallback (5%-kolom)
-var CHF_NIET_AOW = GHF_MATRIX_NIET_AOW.map(function(r){ return [r[0],r[1],r[8]]; });
-var CHF_WELAOW   = GHF_MATRIX_WELAOW.map(function(r){ return [r[0],r[1],r[8]]; });
-
-// ── WOONQUOTA OPZOEKEN UIT MATRIX ──
-// Rente-kolommen: index 2=2.0%, 3=2.5%, 4=3.0%, 5=3.5%, 6=4.0%, 7=4.5%, 8=5.0%
-var GHF_RENTE_STAPPEN = [0.020, 0.025, 0.030, 0.035, 0.040, 0.045, 0.050];
-
+// ── WOONQUOTA (financieringslastpercentage) OPZOEKEN ──
 function chfWoonquota(tbl, inkomen, trParam) {
-  // tbl is ignored — we use the full matrix based on which table was requested
-  // Determine which matrix to use based on whether tbl matches AOW
-  var matrix = (tbl === CHF_WELAOW || tbl === GHF_MATRIX_WELAOW)
-    ? GHF_MATRIX_WELAOW : GHF_MATRIX_NIET_AOW;
+  var T = (tbl === CHF_WELAOW) ? FLP_2026.a : FLP_2026.n;
+  var i = Math.floor(((inkomen||0) - T.s) / 1000);
+  i = Math.max(0, Math.min(T.r.length-1, i));
+  var k = 0;
+  while(k < FLP_RENTE_GRENZEN.length-1 && trParam > FLP_RENTE_GRENZEN[k] + 1e-9) k++;
+  return T.r[i][k] / 100;
+}
 
-  var row = matrix.find(function(r){ return inkomen >= r[0] && inkomen <= r[1]; });
-  if(!row) row = matrix[matrix.length-1];
+// ── TOETSRENTE (AFM 2026): RVP < 10 jaar → max(rente, 5%); RVP ≥ 10 jaar → werkelijke rente ──
+// Bij meerdere leningdelen: hoogste toetsrente (conservatief)
+function toetsrenteHyp(parts) {
+  var tr = 0;
+  (parts||[]).forEach(function(p){
+    if(!(p.rente > 0)) return;
+    var r = p.rente/100;
+    tr = Math.max(tr, p.rvp >= 10 ? r : Math.max(r, 0.05));
+  });
+  return tr > 0 ? tr : 0.05;
+}
 
-  // Clamp toetsrente to table range
-  var tr = Math.max(0.020, Math.min(trParam, 0.050));
+// ── BRUTERINGSFACTOR STUDIESCHULD (Trhk 2026, art. 3a) ──
+var BRUT_STUDIE = [[0.015,1.05],[0.020,1.05],[0.025,1.10],[0.030,1.15],[0.035,1.20],[0.040,1.20],[0.045,1.25],[0.050,1.30],[0.055,1.30],[0.060,1.35],[0.065,1.40],[Infinity,1.40]];
+function brutFactorStudie(tr) {
+  for(var i=0;i<BRUT_STUDIE.length;i++){ if(tr <= BRUT_STUDIE[i][0] + 1e-9) return BRUT_STUDIE[i][1]; }
+  return 1.40;
+}
 
-  // Find surrounding columns for interpolation
-  var lo = GHF_RENTE_STAPPEN[0], hi = GHF_RENTE_STAPPEN[GHF_RENTE_STAPPEN.length-1];
-  var loIdx = 2, hiIdx = 8;
-  for(var i = 0; i < GHF_RENTE_STAPPEN.length-1; i++) {
-    if(tr >= GHF_RENTE_STAPPEN[i] && tr <= GHF_RENTE_STAPPEN[i+1]) {
-      lo = GHF_RENTE_STAPPEN[i];   loIdx = i+2;
-      hi = GHF_RENTE_STAPPEN[i+1]; hiIdx = i+3;
-      break;
-    }
-  }
-
-  // Linear interpolatie tussen de twee omringende kolommen
-  if(hi === lo) return row[loIdx];
-  var f = (tr - lo) / (hi - lo);
-  var pLo = row[loIdx], pHi = row[hiIdx];
-  var p = pLo + f * (pHi - pLo);
-
-  return Math.min(Math.max(p, 0.01), 0.38);
+// ── AOW-LEEFTIJD (SVB): 67 jaar voor wie die in 2026–2027 bereikt; 67 jaar en 3 maanden in 2028–2031 ──
+// Na 2031 nog niet vastgesteld: 67 jaar en 3 maanden als ondergrens gebruikt.
+function aowDatumVan(geb) {
+  var d67 = new Date(geb.getFullYear()+67, geb.getMonth(), geb.getDate());
+  if(d67.getFullYear() <= 2027) return d67;
+  return new Date(geb.getFullYear()+67, geb.getMonth()+3, geb.getDate());
+}
+// AOW-tabel volgt de aanvrager met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
+function bepaalIsAOW() {
+  var heeft2 = G.a2Inkomen > 0 || !!v('a2-gbd');
+  if(!heeft2) return !!G.a1IsAOW;
+  return (G.a2Inkomen > G.a1Inkomen) ? !!G.a2IsAOW : !!G.a1IsAOW;
 }
 
 // ── FISCAAL 2026 ──
-var HILLEN = 1 - 8/30; // 73.33%
+var HILLEN = 0.71867; // Wet Hillen 2026: 71,867% (versnelde afbouw)
 
 function ewf2026(woz) {
   if(!woz || woz <= 12500) return 0;
@@ -2773,7 +2610,7 @@ function ewf2026(woz) {
 }
 
 function margTarief(inkomen) {
-  return inkomen > 38441 ? 0.3756 : 0.3575;
+  return inkomen > 38883 ? 0.3756 : 0.3575; // 2026: schijf 1 t/m € 38.883; aftrek max. 37,56%
 }
 
 function nettoMaandlast(bruto, renteMndBox1, ewfMnd, inkomen, mesFractie) {
@@ -2783,7 +2620,7 @@ function nettoMaandlast(bruto, renteMndBox1, ewfMnd, inkomen, mesFractie) {
   var t = margTarief(inkomen);
   // Alleen het MES-deel heeft renteaftrek
   var renteMet    = renteMndBox1 * mf;      // met aftrek
-  var aftrek      = renteMet * 0.3575;
+  var aftrek      = renteMet * t;           // 35,75% of max. 37,56% (2026)
   // EWF en Hillen ook alleen over het MES-deel
   var ewfKost     = ewfMnd * t;
   var hillen      = Math.max(0, (ewfMnd - renteMet) * HILLEN * t);
@@ -2791,9 +2628,11 @@ function nettoMaandlast(bruto, renteMndBox1, ewfMnd, inkomen, mesFractie) {
 }
 
 // ── ENERGIEOPSLAG CHF 2026 ──
+// Trhk 2026: E-G € 0, C-D € 5.000, A-B € 10.000, A+/A++ € 20.000, A+++ € 25.000, A++++ € 30.000
+// (A++++ met energieprestatiegarantie ≥ 10 jr: € 40.000 — hier niet als aparte keuze; conservatief € 30.000)
 var ENERGIE_OPSLAG = {
-  'NOM':25000,'APP':25000,'APP2':10000,'AP':5000,
-  'A':0,'B':0,'C':0,'D':0,'EFG':0,'':0
+  'NOM':30000,'APP':25000,'APP2':20000,'AP':20000,
+  'A':10000,'B':10000,'C':5000,'D':5000,'EFG':0,'':0
 };
 
 // ── FORMAT HELPERS ──
@@ -3231,20 +3070,24 @@ function berekenLeeftijd(nr) {
   if(t.getMonth() < b.getMonth() || (t.getMonth()===b.getMonth()&&t.getDate()<b.getDate())) leeftijd--;
   if(nr===1) G.a1Leeftijd=leeftijd; else G.a2Leeftijd=leeftijd;
 
-  var aowJaar = b.getFullYear() + 67;
+  var aowD = aowDatumVan(b);
+  var aowJaar = aowD.getFullYear();
   var jarenTot = aowJaar - t.getFullYear();
-  var aowDatumStr = b.getDate()+'-'+(b.getMonth()+1)+'-'+aowJaar;
+  var aowDatumStr = aowD.getDate()+'-'+(aowD.getMonth()+1)+'-'+aowJaar;
+  var heeftAOW = t >= aowD;
+  if(nr===1) { G.a1IsAOW=heeftAOW; G.a1AowLeeftijd=(aowD.getMonth()!==b.getMonth())?67.25:67; }
+  else       { G.a2IsAOW=heeftAOW; G.a2AowLeeftijd=(aowD.getMonth()!==b.getMonth())?67.25:67; }
   var infoEl = $('a'+nr+'-leeftijd-info');
   if(infoEl) {
     var txt = leeftijd + ' jaar';
     if(leeftijd <= 35) txt += ' \u2014 mogelijk startersvrijstelling OVB';
-    if(leeftijd >= 67) txt += ' \u2014 AOW-leeftijd bereikt';
+    if(heeftAOW) txt += ' \u2014 AOW-leeftijd bereikt';
     else txt += ' \u2014 AOW: ' + aowDatumStr + ' (over ~' + jarenTot + ' jaar)';
     infoEl.textContent = txt;
   }
   var aowDatum = $('a'+nr+'-aow-datum'); if(aowDatum) aowDatum.textContent = aowDatumStr;
   var aowBlok = $('a'+nr+'-aow-blok'); if(aowBlok) aowBlok.style.display = jarenTot <= 30 ? '' : 'none';
-  G.isAOW = (G.a1Leeftijd>=67)||(G.a2Leeftijd>=67);
+  G.isAOW = bepaalIsAOW();
   berekenOVB(); recalcWoning(); updateVerpl();
   if($('panel-toets')&&$('panel-toets').classList.contains('active')) berekenPensioenScenario();
 }
@@ -3280,13 +3123,24 @@ function recalcInkomen() {
 }
 
 // ── VERPLICHTINGEN ──
+// Trhk 2026 art. 3a: werkelijke maandtermijn (rente + aflossing) × bruteringsfactor naar toetsrente.
+// Alleen saldo bekend: indicatieve termijn = annuïteit over 35 jr (nieuw, SF35) of 15 jr (oud, SF15) tegen 2,5%.
 function duoNorm(nr) {
-  var stelsel=v('v'+nr+'-duo-stelsel'); if(!stelsel) return 0;
-  var schuld=$n('v'+nr+'-duo-schuld'); if(!schuld) return 0;
-  var norm=Math.round(schuld*(stelsel==='oud'?0.0075:0.0045));
   var inf=$('v'+nr+'-duo-norm');
-  if(inf) inf.textContent='Normmaandlast: '+fe(norm)+'/mnd \u2014 '+(stelsel==='oud'?'oud (0,75%)':'nieuw (0,45%)');
-  return norm;
+  var stelsel=v('v'+nr+'-duo-stelsel');
+  var schuld=$n('v'+nr+'-duo-schuld');
+  var termijn=$n('v'+nr+'-duo-termijn');
+  var geschat=false;
+  if(!(termijn>0) && stelsel && schuld>0) {
+    var rm=0.025/12, n=(stelsel==='oud'?15:35)*12;
+    termijn=schuld*rm/(1-Math.pow(1+rm,-n)); geschat=true;
+  }
+  if(!(termijn>0)) { if(inf) inf.textContent=''; return 0; }
+  var tr=toetsrenteHyp(typeof getPartsData==='function'?getPartsData():[]);
+  var f=brutFactorStudie(tr);
+  var last=Math.round(termijn*f);
+  if(inf) inf.textContent='Toetslast: '+fe(Math.round(termijn))+'/mnd'+(geschat?' (geschat uit saldo)':'')+' \u00d7 '+f.toFixed(2).replace('.',',')+' (toetsrente '+(tr*100).toFixed(2).replace('.',',')+'%) = '+fe(last)+'/mnd';
+  return last;
 }
 
 function kredietNorm(nr) {
@@ -3299,8 +3153,8 @@ function kredietNorm(nr) {
   if(isDoorl && limiet>0) {
     var norm=Math.round(limiet*0.02);
     var inf=$('v'+nr+'-krediet-norm');
-    if(inf) inf.textContent='CHF-norm: 2% van limiet '+fe(limiet)+' = '+fe(norm)+'/mnd';
-    return mnd>0?mnd:norm;
+    if(inf) inf.textContent='Toetslast: 2% van limiet '+fe(limiet)+' = '+fe(norm)+'/mnd (ook als de werkelijke aflossing lager is)';
+    return Math.max(norm, mnd||0);
   }
   var inf=$('v'+nr+'-krediet-norm');
   if(inf) inf.textContent=mnd>0?fe(mnd)+'/mnd (werkelijk)':'';
@@ -3324,6 +3178,7 @@ function updateVerpl() {
   set('res-toetsinkomen', G.toetsinkomen>0?fe(G.toetsinkomen)+'/jr':'—');
   set('res-verpl-totaal', vT>0?fe(vT)+'/mnd':'—');
   set('res-netto-beschikbaar', vT>0?fe(Math.max(0,G.toetsinkomen/12-vT))+'/mnd':'—');
+  G.isAOW = bepaalIsAOW();
   set('res-aow-status', G.isAOW?'\u26a0\ufe0f AOW-tabel van toepassing':'Niet-AOW tabel');
   berekenBuffer(); recalcToets();
 }
@@ -3518,16 +3373,15 @@ function recalcMaandlasten() {
   }
   set('res-ewf-mnd', fe(Math.round(ewfMnd)));
   var ewfSub=$('res-ewf-sub'); if(ewfSub) ewfSub.textContent=fe(Math.round(ewf2026(woz)))+'/jaar';
-  set('res-aftrek-mnd', fe(Math.round(renteMndBox1*0.3575)));
-
   // Fiscale toelichting
   var t=margTarief(ink);
+  set('res-aftrek-mnd', fe(Math.round(renteMndBox1*t)));
   var fiscEl=$('fiscaal-toelichting');
   if(fiscEl) {
     var box3info = totBrutoBox3 > 0
       ? '<br><span style="color:var(--orange);font-weight:700">\u2295 Box 3 deel '+fe(Math.round(totBrutoBox3))+'/mnd \u2014 geen renteaftrek (bruto = netto voor dit deel)</span>'
       : '';
-    fiscEl.innerHTML='<strong>Fiscale berekening 2026:</strong> Bruto box 1 '+fe(Math.round(totBrutoBox1))+' − renteaftrek '+fe(Math.round(renteMndBox1*0.3575))+' (35,75%) + EWF '+fe(Math.round(ewfMnd*t))+' ('+fmtPct(t)+')'+((ewfMnd>renteMndBox1)?' − Wet Hillen '+fe(Math.round(Math.max(0,(ewfMnd-renteMndBox1)*HILLEN*t))):'')+box3info+' = <strong>netto '+fe(Math.round(netto))+'/mnd</strong>';
+    fiscEl.innerHTML='<strong>Fiscale berekening 2026:</strong> Bruto box 1 '+fe(Math.round(totBrutoBox1))+' − renteaftrek '+fe(Math.round(renteMndBox1*t))+' ('+fmtPct(t)+') + EWF '+fe(Math.round(ewfMnd*t))+' ('+fmtPct(t)+')'+((ewfMnd>renteMndBox1)?' − Wet Hillen '+fe(Math.round(Math.max(0,(ewfMnd-renteMndBox1)*HILLEN*t))):'')+box3info+' = <strong>netto '+fe(Math.round(netto))+'/mnd</strong>';
   }
 
   // Breakdown
@@ -3757,7 +3611,7 @@ function berekenPensioenScenario() {
       '</div>' +
       '<div style="padding:10px;background:var(--navy-xlight);border-radius:var(--radius);text-align:center;border:1px solid var(--border)">' +
         '<div style="font-size:9px;color:var(--navy);text-transform:uppercase;font-weight:700;margin-bottom:4px">LTV op pensioen</div>' +
-        '<div style="font-size:18px;font-weight:900;color:'+(ltvOp&<vOp>100?'var(--red)':ltvOp&<vOp>80?'var(--orange)':'var(--green)')+';font-family:Lexend,sans-serif">'+(ltvOp!==null?(ltvOp.toFixed(1).replace('.',',')+'%'):'—')+'</div>' +
+        '<div style="font-size:18px;font-weight:900;color:'+(ltvOp&&ltvOp>100?'var(--red)':ltvOp&&ltvOp>80?'var(--orange)':'var(--green)')+';font-family:Lexend,sans-serif">'+(ltvOp!==null?(ltvOp.toFixed(1).replace('.',',')+'%'):'—')+'</div>' +
         '<div style="font-size:10px;color:var(--text-mid)">van woningwaarde</div>' +
       '</div>' +
       '<div style="padding:10px;background:var(--navy-xlight);border-radius:var(--radius);text-align:center;border:1px solid var(--border)">' +
@@ -3820,12 +3674,7 @@ function berekenPensioenScenario() {
   var chfEl = $('pensioen-chf-toets');
   if(chfEl && inkPens > 0) {
     var tbl    = G.isAOW || (pDat1&&pDat1<=now) ? CHF_WELAOW : CHF_WELAOW;
-    var tr     = 0.05;
-    if(parts.length) {
-      var rentes = parts.filter(function(p){return p.rente>0;}).map(function(p){return p.rente/100;});
-      if(rentes.length && Math.max.apply(null,parts.map(function(p){return p.rvp;}))<10) tr=0.05;
-      else if(rentes.length) tr = Math.max(0.05, Math.min.apply(null,rentes));
-    }
+    var tr     = toetsrenteHyp(parts);
     var pct   = chfWoonquota(tbl, inkPens, tr);
     var maxMnd= (inkPens * pct) / 12;
     var r12   = tr/12, n=resteertMnd;
@@ -4169,7 +4018,7 @@ function _orvKaart(label, val, bg) {
 
 // ════════════════════════════════════════
 // NHG BORGTOCHTBEREKENING 2026
-// Grens €470k (€560k energiemaatregelen)
+// Grens €470.000 (€498.200 met energiebesparende voorzieningen)
 // ════════════════════════════════════════
 
 // NHG acceptatienormen 2026 — woonquota tabel
@@ -4196,7 +4045,7 @@ var NHG_NORM = [
 
 // NHG-grens 2026
 var NHG_GRENS         = 470000;   // regulier
-var NHG_GRENS_ENERGIE = 560000;   // bij energieverbeterende maatregelen (art. 9 NHG)
+var NHG_GRENS_ENERGIE = 498200;   // 2026: bij energiebesparende voorzieningen (106% van € 470.000)
 var NHG_PROVISIE      = 0.004;    // 0,4% van leensom
 var NHG_RENTE_KORTING = 0.003;    // gemiddeld 0,3% rentekorting (indicatief)
 
@@ -4286,7 +4135,7 @@ function berekenNHG() {
       norm: verduurz > 0 ? 'Grens: ' + fe(NHG_GRENS_ENERGIE) : '—',
       ok: true,
       toelichting: verduurz > 0
-        ? 'Verhoogde grens €560k van toepassing (art. 9 NHG Voorwaarden 2026)'
+        ? 'Verhoogde grens €498.200 van toepassing (NHG Voorwaarden & Normen 2026)'
         : 'Standaard NHG-grens €470k'
     }
   ];
@@ -4306,11 +4155,7 @@ function berekenNHG() {
   // ── NHG vs CHF vergelijking ──
   var vsEl = $('nhg-vs-chf');
   if(vsEl && toetsink > 0) {
-    var tr = 0.05;
-    if(parts.length) {
-      var rvpMax = Math.max.apply(null, parts.map(function(p){return p.rvp;}));
-      if(rvpMax >= 10) tr = Math.max(0.05, Math.min.apply(null, parts.filter(function(p){return p.rente>0;}).map(function(p){return p.rente/100;})));
-    }
+    var tr = toetsrenteHyp(parts);
     // CHF max
     var chfPct  = chfWoonquota(G.isAOW?CHF_WELAOW:CHF_NIET_AOW, toetsink, tr);
     var chfMnd  = toetsink * chfPct / 12;
@@ -4478,236 +4323,6 @@ function berekenOverwaarde2() {
 }
 
 
-// ════════════════════════════════════════
-// AOV ANALYSE — ARBEIDSONGESCHIKTHEID
-// WIA 2026 / Wft art. 4:23 / AFM §6
-// ════════════════════════════════════════
-
-// WIA 2026 parameters
-var WIA_MAX_DAGLOON_JR = 66956; // max dagloon 2026 × 261 werkdagen
-var WIA_PERCENTAGE     = 0.70;  // WIA WGA volledig AO: 70% van (gemaximeerd) dagloon
-
-function berekenAOV() {
-  var n1  = v('a1-naam') || 'Aanvrager 1';
-  var n2  = v('a2-naam') || '';
-  var ink1 = G.a1Inkomen;
-  var ink2 = G.a2Inkomen;
-
-  // Labels
-  var lbl1 = $('aov-label-a1'); if(lbl1) lbl1.textContent = n1;
-  var lbl2 = $('aov-label-a2'); if(lbl2) lbl2.textContent = n2;
-  var blok2 = $('aov-a2-blok'); if(blok2) blok2.style.display = n2 ? '' : 'none';
-
-  // Auto-vul salaris vanuit inkomen indien leeg
-  ['1','2'].forEach(function(nr) {
-    var salEl = $('aov-salaris'+nr);
-    var inkNr = nr==='1' ? ink1 : ink2;
-    if(salEl && !salEl.dataset.manual && inkNr > 0 && !parseNum(salEl.value)) {
-      salEl.value = '€ ' + Math.round(inkNr).toLocaleString('nl-NL') + ',-';
-    }
-  });
-
-  var brutoMnd = G.lastBruto;
-  if(!ink1 || !brutoMnd) {
-    var res = $('aov-resultaat'); if(res) res.style.display = 'none';
-    return;
-  }
-  var res = $('aov-resultaat'); if(res) res.style.display = '';
-
-  // ── Helper: analyseer AO-scenario per aanvrager ──
-  function analyseAO(naam, inkJaar, contract, aovDekking, eigRisico, buffer) {
-    var salaris = inkJaar;
-
-    // WIA-uitkering berekening
-    var wiaUitkering = 0, wiaLabel = '';
-    if(contract === 'zzp' || contract === 'dga') {
-      // ZZP/DGA: geen WIA tenzij vrijwillig verzekerd
-      wiaUitkering = 0;
-      wiaLabel = 'ZZP/DGA — geen WIA (tenzij vrijwillig verzekerd bij UWV)';
-    } else {
-      // Loondienst: WIA 70% van gemaximeerd dagloon
-      var grondslag = Math.min(salaris, WIA_MAX_DAGLOON_JR);
-      wiaUitkering = Math.round(grondslag * WIA_PERCENTAGE);
-      wiaLabel = 'WIA 70% van ' + (salaris > WIA_MAX_DAGLOON_JR ? 'max dagloon ' + fe(WIA_MAX_DAGLOON_JR) : 'dagloon') + ' = ' + fe(wiaUitkering) + '/jr';
-    }
-
-    // Totaal inkomen bij volledige AO
-    var inkBijAO = wiaUitkering + aovDekking * 12;
-    var inkDaling = Math.max(0, inkJaar - inkBijAO);
-    var inkDalingPct = inkJaar > 0 ? Math.round(inkDaling / inkJaar * 100) : 0;
-
-    // Maandlastcapaciteit bij AO-inkomen
-    var brutoWoonlast = brutoMnd * 12; // jaarbasis
-    var tekort = Math.max(0, brutoWoonlast - inkBijAO);
-    var tekortMnd = Math.round(tekort / 12);
-
-    // Benodigde AOV-aanvulling (maandelijks)
-    var benodigdAOV = tekortMnd > 0 ? tekortMnd : 0;
-    // Aanbevolen is 80% van netto inkomen, maar minimaal woonlasten gedekt
-    var aanbevolen80 = Math.max(0, Math.round(salaris * 0.80 / 12) - Math.round(wiaUitkering / 12));
-    var aanbevolenDekking = Math.max(benodigdAOV, aanbevolen80);
-
-    // Eigen-risicogap
-    var eigRisicoMnd = parseInt(eigRisico) || 24;
-    var bufferGap = tekortMnd * eigRisicoMnd;
-    var bufferDekt = (buffer || 0) >= bufferGap;
-
-    var gedektMnd = aovDekking;
-    var dekkingOk = gedektMnd >= aanbevolenDekking && (contract !== 'zzp' || gedektMnd > 0);
-
-    return {
-      naam, inkJaar, contract, wiaUitkering, wiaLabel,
-      aovDekking, inkBijAO, inkDaling, inkDalingPct,
-      brutoWoonlast, tekort, tekortMnd,
-      benodigdAOV, aanbevolen80, aanbevolenDekking,
-      eigRisicoMnd, bufferGap, buffer: buffer||0, bufferDekt,
-      gedektMnd, dekkingOk
-    };
-  }
-
-  var aanvr = [
-    {nr:'1', naam:n1, ink:ink1},
-    {nr:'2', naam:n2, ink:ink2}
-  ].filter(function(a){ return a.naam && a.ink > 0; });
-
-  var scenarios = aanvr.map(function(a) {
-    return analyseAO(
-      a.naam, a.ink,
-      v('aov-contract'+a.nr),
-      $n('f-aov'+a.nr) * 12,    // mnd → jaar
-      v('aov-eigen-risico'+a.nr),
-      $n('aov-buffer'+a.nr)
-    );
-  });
-
-  // ── Render scenario kaarten ──
-  var kaartEl = $('aov-scenario-kaarten');
-  if(kaartEl) {
-    kaartEl.innerHTML = scenarios.map(function(sc) {
-      var statusKleur = sc.dekkingOk ? 'var(--green)'
-        : sc.gedektMnd > 0 ? 'var(--orange)' : 'var(--red)';
-      var statusTxt = sc.dekkingOk ? '✓ Voldoende gedekt'
-        : sc.gedektMnd > 0 ? '⚠ Gedeeltelijk gedekt'
-        : sc.contract === 'zzp' ? '✗ ZZP — geen WIA, geen AOV' : '✗ Onvoldoende dekking';
-
-      return '<div style="padding:14px;background:#fff;border-radius:var(--radius-lg);border:1.5px solid ' +
-        (sc.dekkingOk ? '#86efac' : sc.gedektMnd > 0 ? '#fcd34d' : '#fca5a5') +
-        ';margin-bottom:10px">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-          '<div style="font-size:13px;font-weight:800;color:var(--navy)">🩺 ' + sc.naam + '</div>' +
-          '<div style="font-size:12px;font-weight:700;color:' + statusKleur + '">' + statusTxt + '</div>' +
-        '</div>' +
-
-        // 4-koloms overview
-        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">' +
-          _aovKaart('Huidig inkomen', fe(sc.inkJaar) + '/jr', '#fff') +
-          _aovKaart('WIA-uitkering', sc.wiaUitkering > 0 ? fe(sc.wiaUitkering) + '/jr' : 'Geen', sc.wiaUitkering > 0 ? '#fff' : '#fef2f2') +
-          _aovKaart('AOV-dekking', sc.aovDekking > 0 ? fe(sc.aovDekking) + '/jr' : 'Niet ingevuld', sc.aovDekking > 0 ? '#fff' : '#fff3e0') +
-          _aovKaart('= Inkomen bij AO', fe(sc.inkBijAO) + '/jr', sc.inkBijAO >= sc.brutoWoonlast ? '#dcfce7' : '#fef2f2') +
-        '</div>' +
-
-        // Detailrijen
-        '<div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-            '<div style="font-size:12px;line-height:2">' +
-              '<div>Inkomensdaling: <strong style="color:var(--red)">' + fe(sc.inkDaling) + '/jr (−' + sc.inkDalingPct + '%)</strong></div>' +
-              '<div>Hypotheeklast (bruto): <strong>' + fe(sc.brutoWoonlast) + '/jr</strong></div>' +
-              '<div>Tekort t.o.v. woonlasten: <strong style="color:' + (sc.tekortMnd > 0 ? 'var(--red)' : 'var(--green)') + '">' +
-                (sc.tekortMnd > 0 ? fe(sc.tekortMnd) + '/mnd' : 'Geen — inkomen dekt woonlasten') +
-              '</strong></div>' +
-            '</div>' +
-            '<div style="font-size:12px;line-height:2">' +
-              '<div>Aanbevolen AOV-dekking: <strong>' + fe(sc.aanbevolenDekking) + '/mnd</strong></div>' +
-              '<div>Huidige AOV-dekking: <strong style="color:' + (sc.gedektMnd >= sc.aanbevolenDekking ? 'var(--green)' : sc.gedektMnd > 0 ? 'var(--orange)' : 'var(--red)') + '">' +
-                (sc.gedektMnd > 0 ? fe(sc.gedektMnd) + '/mnd' : 'Niet ingevuld') +
-              '</strong></div>' +
-              (sc.gedektMnd > 0 && sc.gedektMnd < sc.aanbevolenDekking ?
-                '<div style="color:var(--red);font-weight:700">Gat: ' + fe(sc.aanbevolenDekking - sc.gedektMnd) + '/mnd</div>' : '') +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-
-        // WIA toelichting
-        '<div style="padding:8px 10px;background:var(--navy-xlight);border-radius:var(--radius);font-size:11px;color:var(--text-mid);margin-bottom:8px">' +
-          '<strong>WIA:</strong> ' + sc.wiaLabel +
-          (sc.contract === 'zzp' ? '<br>⚠️ Als ZZP-er heeft u geen recht op WIA. Overweeg een vrijwillige verzekering bij UWV of een particuliere AOV.' : '') +
-          (sc.contract === 'dga' ? '<br>⚠️ Als DGA bent u mogelijk niet WIA-verzekerd. Controleer of u bent aangemeld bij UWV.' : '') +
-        '</div>' +
-
-        // Eigen-risicogap
-        (sc.tekortMnd > 0 ?
-          '<div style="padding:8px 10px;background:' + (sc.bufferDekt ? '#dcfce7' : '#fff3cd') + ';border-radius:var(--radius);font-size:11px;border:1px solid ' + (sc.bufferDekt ? '#86efac' : '#fcd34d') + '">' +
-          '<strong>Eigen-risicoperiode ' + sc.eigRisicoMnd + ' mnd:</strong> Buffer benodigd: ' + fe(sc.bufferGap) + ' — ' +
-          'Beschikbaar: ' + fe(sc.buffer) + ' — ' +
-          (sc.bufferDekt ? '✓ Buffer voldoende' : '⚠ Buffer onvoldoende (tekort ' + fe(sc.bufferGap - sc.buffer) + ')') +
-          '</div>' : '') +
-      '</div>';
-    }).join('');
-  }
-
-  // ── Gecombineerde situatie ──
-  var gapEl = $('aov-gap-tabel');
-  if(gapEl && scenarios.length) {
-    var totInkBijAO = scenarios.reduce(function(s,sc){ return s+sc.inkBijAO; },0);
-    var totBrutoJaar = brutoMnd * 12;
-    var gecombTekort = Math.max(0, totBrutoJaar - totInkBijAO);
-
-    gapEl.innerHTML =
-      '<div style="padding:12px 14px;background:var(--navy);border-radius:var(--radius-lg);color:#fff">' +
-        '<div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;font-weight:700;margin-bottom:8px">Gecombineerde situatie bij AO van één aanvrager</div>' +
-        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">' +
-          '<div><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px">Min. inkomen bij AO</div>' +
-          '<div style="font-size:16px;font-weight:800;font-family:Lexend,sans-serif">' +
-            fe(Math.min.apply(null, scenarios.map(function(sc){ return sc.inkBijAO; }))) + '/jr' +
-          '</div><div style="font-size:10px;color:rgba(255,255,255,.5)">slechtste scenario</div></div>' +
-          '<div><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px">Hypotheeklast</div>' +
-          '<div style="font-size:16px;font-weight:800;font-family:Lexend,sans-serif">' + fe(Math.round(totBrutoJaar)) + '/jr</div></div>' +
-          '<div><div style="font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px">Maandgap slechtste</div>' +
-          '<div style="font-size:16px;font-weight:800;font-family:Lexend,sans-serif;color:' +
-            (gecombTekort > 0 ? '#fca5a5' : '#6ee7b7') + '">' +
-            (gecombTekort > 0 ? '+' + fe(Math.round(gecombTekort/12)) + '/mnd tekort' : '✓ Gedekt') +
-          '</div></div>' +
-        '</div>' +
-      '</div>';
-  }
-
-  // ── Totaaloordeel ──
-  var oordeelEl  = $('aov-oordeel');
-  var statusBadge = $('aov-status-badge');
-  if(oordeelEl && scenarios.length) {
-    var allesOk  = scenarios.every(function(sc){ return sc.dekkingOk; });
-    var geenAOV  = scenarios.every(function(sc){ return sc.gedektMnd === 0; });
-    var zzpZonder = scenarios.some(function(sc){ return (sc.contract==='zzp'||sc.contract==='dga') && sc.gedektMnd === 0; });
-
-    var kleur  = allesOk ? 'var(--green)' : geenAOV ? 'var(--red)' : 'var(--orange)';
-    var bg     = allesOk ? '#dcfce7' : geenAOV ? '#fef2f2' : '#fff3cd';
-    var border = allesOk ? '#86efac' : geenAOV ? '#fca5a5' : '#fcd34d';
-    var icoon  = allesOk ? '✅' : geenAOV ? '🔴' : '⚠️';
-    var verdict = allesOk ? 'AO-risico voldoende afgedekt'
-                : geenAOV ? 'Geen AOV — AO-risico ongedekt'
-                : 'Gedeeltelijk gedekt — bespreek lacunes';
-
-    if(statusBadge) {
-      statusBadge.style.display = '';
-      statusBadge.textContent = icoon + ' ' + verdict;
-      statusBadge.className = 'badge ' + (allesOk ? 'badge-green' : geenAOV ? 'badge-red' : 'badge-orange');
-    }
-
-    oordeelEl.innerHTML =
-      '<div style="padding:12px 14px;border-radius:var(--radius-lg);background:' + bg + ';border:1.5px solid ' + border + '">' +
-      '<div style="font-weight:800;font-size:13px;color:' + kleur + ';margin-bottom:6px">' + icoon + ' ' + verdict + '</div>' +
-      '<div style="font-size:12px;line-height:2;color:var(--text)">' +
-      scenarios.map(function(sc) {
-        return (sc.dekkingOk ? '✓ ' : '✗ ') + sc.naam + ': ' +
-          (sc.contract === 'zzp' || sc.contract === 'dga' ? 'ZZP/DGA — ' : '') +
-          'aanbevolen ' + fe(sc.aanbevolenDekking) + '/mnd' +
-          (sc.gedektMnd > 0 ? ' — huidig ' + fe(sc.gedektMnd) + '/mnd' + (sc.dekkingOk ? ' ✓' : ' ⚠') : ' — geen AOV ✗');
-      }).join('<br>') +
-      (zzpZonder ? '<br><span style="color:var(--red)">⚠️ ZZP-er(s) zonder AOV hebben geen vangnet bij AO — sterk adviseren te regelen.</span>' : '') +
-      '</div></div>';
-  }
-}
-
 function _aovKaart(label, val, bg) {
   return '<div style="padding:8px;background:' + bg + ';border-radius:var(--radius);border:1px solid var(--border)">' +
     '<div style="font-size:9px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:3px">' + label + '</div>' +
@@ -4723,7 +4338,7 @@ function _aovKaart(label, val, bg) {
 
 // WIA 2026 parameters
 var WIA_PERC         = 0.70;    // 70% van dagloon bij volledige AO (IVA/WGA-volledig)
-var WIA_MAX_DAGLOON  = 63200;   // max dagloon 2026 (afgerond)
+var WIA_MAX_DAGLOON  = 79409;   // max. (premie)dagloon 2026 op jaarbasis: € 304,25 × 261 = € 79.409 (1-1-2026; per 1-7-2026 € 309,91/dag)
 var WIA_WACHTTIJD    = 24;      // maanden ziekengeld voor WIA-keuring
 var ZW_PERC          = 0.70;    // ziektewet: 70% gedurende wachttijd (loondienst)
 
@@ -4782,7 +4397,7 @@ function berekenAOV() {
     // Aanbevolen dekking
     var maxLooptijd = getPartsData().length
       ? Math.max.apply(null, getPartsData().map(function(p){return p.looptijd;})) : 30;
-    var jarTotPens = G.a1Leeftijd > 0 ? Math.max(0, 67 - (nr==1?G.a1Leeftijd:G.a2Leeftijd)) : maxLooptijd;
+    var jarTotPens = G.a1Leeftijd > 0 ? Math.max(0, Math.floor((nr==1?(G.a1AowLeeftijd||67):(G.a2AowLeeftijd||67)) - (nr==1?G.a1Leeftijd:G.a2Leeftijd))) : maxLooptijd;
     var r = 0.02;
     var nJaar = Math.min(jarTotPens, maxLooptijd);
     var benodigdKap = totaalTekort > 0 && nJaar > 0
@@ -4983,7 +4598,7 @@ function vulTMOtabel(parts, ink, woz, ewfJaar) {
     var rBox1=parts.filter(function(p){return p.box==='box1'&&p.aftrekjaren>=yearNum;}).reduce(function(s,p){return s+mlOp(p,m).rente;},0);
     var brutoBox1=parts.filter(function(p){return p.box==='box1';}).reduce(function(s,p){return s+mlOp(p,m).bruto;},0);
     var brutoBox3=parts.filter(function(p){return p.box==='box3';}).reduce(function(s,p){return s+mlOp(p,m).bruto;},0);
-    var aftrek=rBox1*0.3575*mesFractie;
+    var aftrek=rBox1*margTarief(ink)*mesFractie;
     var netto=nettoMaandlast(brutoBox1, rBox1, ewfMnd, ink, mesFractie) + brutoBox3;
     var lbl=isJaar?('Jaar '+yearNum):('Mnd '+m);
     var isAf=tS<1;
@@ -5047,25 +4662,23 @@ function recalcWoonlast() {
 function recalcToets() {
   var ink=G.toetsinkomen||G.a1Inkomen;
   if(!ink) { updateGHFstatus('warn'); return; }
+  G.isAOW=bepaalIsAOW();
   var isAOW=G.isAOW;
   var tbl=isAOW?CHF_WELAOW:CHF_NIET_AOW;
   var parts=getPartsData();
-  var tr=0.05;
-  if(parts.length) {
-    var maxRvp=Math.max.apply(null,parts.map(function(p){return p.rvp;}));
-    if(maxRvp>=10) {
-      var rentes=parts.filter(function(p){return p.rente>0;}).map(function(p){return p.rente/100;});
-      if(rentes.length) tr=Math.max(0.05,Math.min.apply(null,rentes));
-    }
-  }
+  var tr=toetsrenteHyp(parts);
+  // studieschuld-factor hangt af van de toetsrente: opnieuw bepalen
+  G.verpl1.duo=duoNorm(1); G.verpl2.duo=duoNorm(2);
   var pct=chfWoonquota(tbl,ink,tr);
   var maxMnd=(ink*pct)/12;
   var r=tr/12, n=360;
   var maxHyp=r===0?maxMnd*n:maxMnd*(1-Math.pow(1+r,-n))/r;
   var energieOpslag=ENERGIE_OPSLAG[v('f-energielabel')]||0;
-  var nkOpslag=$('niet-kwetsbaar')&&$('niet-kwetsbaar').checked?17000:0;
+  // Alleenstaandenbedrag € 17.000 (art. 3 lid 8 Trhk 2026): alleen zonder partnerinkomen en toetsinkomen > € 30.000 (AOW: > € 29.000)
+  var nkOpslag=($('niet-kwetsbaar')&&$('niet-kwetsbaar').checked&&!(G.a2Inkomen>0)&&ink>(isAOW?29000:30000))?17000:0;
   maxHyp+=energieOpslag+nkOpslag;
-  var vT=G.verpl1.duo+G.verpl1.krediet+G.verpl1.alimBet+G.verpl1.overig+G.verpl2.duo+G.verpl2.krediet+G.verpl2.alimBet+G.verpl2.overig;
+  // Partneralimentatie zit al in het toetsinkomen (in mindering gebracht) en telt hier niet nog eens als last
+  var vT=G.verpl1.duo+G.verpl1.krediet+G.verpl1.overig+G.verpl2.duo+G.verpl2.krediet+G.verpl2.overig;
   var beschikbaar=Math.max(0,maxMnd-vT);
   var maxHypNa=r===0?beschikbaar*n:beschikbaar*(1-Math.pow(1+r,-n))/r+energieOpslag+nkOpslag;
   G.maxHyp=maxHypNa;
@@ -5422,17 +5035,17 @@ function vulRapport() {
     SH(5,'Maandlasten — bruto & netto (fiscaal 2026)',true)+
     '<div class="rapport-grid">'+
       Tabel(R('Bruto maandlast',fe(Math.round(G.lastBruto))+'/mnd')+
-        R('Renteaftrek voordeel',fe(Math.round(renteMndBox1*0.3575))+'/mnd (35,75%)')+
+        R('Renteaftrek voordeel',fe(Math.round(renteMndBox1*t))+'/mnd ('+fmtPct(t)+')')+
         R('Eigenwoningforfait',fe(Math.round(ewfMnd))+'/mnd ('+fe(Math.round(ewfJaar))+'/jr)')+
-        R('Wet Hillen 2026',hillenVan+' (73,33%)')+
+        R('Wet Hillen 2026',hillenVan+' (71,867%)')+
         (mf<1?R('Bijleenregeling (MES)',fmtPct(mf)+' renteaftrek-gerechtigd'):'')+
         '<tr class="total-row"><td>Netto maandlast</td><td>'+fe(Math.round(G.lastNetto))+'/mnd</td></tr>'
       )+
       '<div style="padding:12px;background:var(--navy-xlight);border-radius:var(--radius);font-size:11px;line-height:1.9">'+
         '<strong>Fiscale grondslag 2026:</strong><br>'+
-        'Renteaftrek gemaximeerd op 35,75% (schijf 1)<br>'+
+        'Renteaftrek: 35,75% (schijf 1) of max. 37,56% (2026)<br>'+
         'EWF '+fmtPct(woz>0?ewfJaar/woz:0)+' van WOZ '+fe(woz)+'<br>'+
-        'Wet Hillen 2026: 73,33% afbouw (jaar 8 van 30)<br>'+
+        'Wet Hillen 2026: 71,867% (versnelde afbouw)<br>'+
         'Marginaal tarief: '+fmtPct(t)+'<br>'+
         (mf<1?'Bijleenregeling: MES = '+fmtPct(mf)+' van hypotheek<br>':'')+
         ($n('f-ewr')>0?'EWR bijleenregeling: '+fe($n('f-ewr'))+' (art. 3.119aa IB 2001)<br>':'')+
@@ -5478,7 +5091,7 @@ function vulRapport() {
       ($n('f-ewr')>0?R('Eigenwoningreserve (EWR)',fe($n('f-ewr'))+' — bijleenregeling van toepassing (art. 3.119aa IB 2001)'):'')+
       (mf<1?R('MES (renteaftrek deel)',fmtPct(mf)+' van '+fe(G.hypotheek)+' = '+fe(Math.round(G.hypotheek*mf))):'')+
       (G.overwaarde>0?R('Overwaarde (doorstromer)',fe(G.overwaarde)):'')+
-      R('Wet Hillen','73,33% van forfait-voordeel (2026 — jaar 8/30)')
+      R('Wet Hillen','71,867% van forfait-voordeel (2026, versnelde afbouw)')
     )+'</div>';
 
   // ── Sectie 9: Pensioenscenario ──
@@ -5583,7 +5196,7 @@ function vulRapport() {
 
 // ── OPSLAAN / LADEN ──
 function slaOp() {
-  var EURO=new Set(['f-koopsom','f-woz','f-woningwaarde-na','f-verbouwing','f-verduurzaming','f-verkoop','f-restschuld','f-verkoopkosten','f-verkoop2','f-restschuld2','f-verkoopkosten2','f-ewr','f-ob-bedrag','i-notaris','i-advies','i-taxatie','i-nhg','i-garantie','i-makelaar','i-keuring','i-overige','em-input','em2-input','a1-inkomen','a2-inkomen','a1-inkomen-aow','a2-inkomen-aow','v1-duo-schuld','v1-krediet-mnd','v1-krediet-limiet','v1-alim-betalen','v1-alim-ontv','v1-overig','v2-duo-schuld','v2-krediet-mnd','v2-krediet-limiet','v2-alim-betalen','v2-alim-ontv','v2-overig','f-orv1','f-orv2','f-orv1-dekking','f-orv2-dekking','f-nbp1','f-nbp2','f-anw1-bedrag','f-anw2-bedrag','f-ww1','f-ww2','f-aov1','f-aov2','aov-dekking1','aov-dekking2','aov-dagloon1','aov-dagloon2','aov-buffer1','aov-buffer2','aov-salaris1','aov-salaris2','aov-premie1','aov-premie2','aov-buffer1','aov-buffer2','f-mlvz1','f-mlvz2','f-opstal','f-vve','f-buffer','f-vermogen','os-bedrag','os-boete']);
+  var EURO=new Set(['f-koopsom','f-woz','f-woningwaarde-na','f-verbouwing','f-verduurzaming','f-verkoop','f-restschuld','f-verkoopkosten','f-verkoop2','f-restschuld2','f-verkoopkosten2','f-ewr','f-ob-bedrag','i-notaris','i-advies','i-taxatie','i-nhg','i-garantie','i-makelaar','i-keuring','i-overige','em-input','em2-input','a1-inkomen','a2-inkomen','a1-inkomen-aow','a2-inkomen-aow','v1-duo-schuld','v1-duo-termijn','v1-krediet-mnd','v1-krediet-limiet','v1-alim-betalen','v1-alim-ontv','v1-overig','v2-duo-schuld','v2-duo-termijn','v2-krediet-mnd','v2-krediet-limiet','v2-alim-betalen','v2-alim-ontv','v2-overig','f-orv1','f-orv2','f-orv1-dekking','f-orv2-dekking','f-nbp1','f-nbp2','f-anw1-bedrag','f-anw2-bedrag','f-ww1','f-ww2','f-aov1','f-aov2','aov-dekking1','aov-dekking2','aov-dagloon1','aov-dagloon2','aov-buffer1','aov-buffer2','aov-salaris1','aov-salaris2','aov-premie1','aov-premie2','aov-buffer1','aov-buffer2','f-mlvz1','f-mlvz2','f-opstal','f-vve','f-buffer','f-vermogen','os-bedrag','os-boete']);
   var data={versie:'2026.2',datum:new Date().toISOString(),velden:{},radios:{},leningdelen:[]};
   document.querySelectorAll('input[id],select[id],textarea[id]').forEach(function(el) {
     if(!el.id||el.id.startsWith('file-')||el.type==='file') return;
@@ -5612,7 +5225,7 @@ function laadDossier() { var f=$('file-upload'); if(f) f.click(); }
 function laadJSON(input) {
   var file=(input instanceof File)?input:(input&&input.files?input.files[0]:null);
   if(!file) return;
-  var EURO=new Set(['f-koopsom','f-woz','f-woningwaarde-na','f-verbouwing','f-verduurzaming','f-verkoop','f-restschuld','f-verkoopkosten','f-verkoop2','f-restschuld2','f-verkoopkosten2','f-ewr','f-ob-bedrag','i-notaris','i-advies','i-taxatie','i-nhg','i-garantie','i-makelaar','i-keuring','i-overige','em-input','em2-input','a1-inkomen','a2-inkomen','a1-inkomen-aow','a2-inkomen-aow','v1-duo-schuld','v1-krediet-mnd','v1-krediet-limiet','v1-alim-betalen','v1-alim-ontv','v1-overig','v2-duo-schuld','v2-krediet-mnd','v2-krediet-limiet','v2-alim-betalen','v2-alim-ontv','v2-overig','f-orv1','f-orv2','f-orv1-dekking','f-orv2-dekking','f-nbp1','f-nbp2','f-anw1-bedrag','f-anw2-bedrag','f-ww1','f-ww2','f-aov1','f-aov2','aov-salaris1','aov-salaris2','aov-premie1','aov-premie2','aov-buffer1','aov-buffer2','f-mlvz1','f-mlvz2','f-opstal','f-vve','f-buffer','f-vermogen','os-bedrag','os-boete']);
+  var EURO=new Set(['f-koopsom','f-woz','f-woningwaarde-na','f-verbouwing','f-verduurzaming','f-verkoop','f-restschuld','f-verkoopkosten','f-verkoop2','f-restschuld2','f-verkoopkosten2','f-ewr','f-ob-bedrag','i-notaris','i-advies','i-taxatie','i-nhg','i-garantie','i-makelaar','i-keuring','i-overige','em-input','em2-input','a1-inkomen','a2-inkomen','a1-inkomen-aow','a2-inkomen-aow','v1-duo-schuld','v1-duo-termijn','v1-krediet-mnd','v1-krediet-limiet','v1-alim-betalen','v1-alim-ontv','v1-overig','v2-duo-schuld','v2-duo-termijn','v2-krediet-mnd','v2-krediet-limiet','v2-alim-betalen','v2-alim-ontv','v2-overig','f-orv1','f-orv2','f-orv1-dekking','f-orv2-dekking','f-nbp1','f-nbp2','f-anw1-bedrag','f-anw2-bedrag','f-ww1','f-ww2','f-aov1','f-aov2','aov-salaris1','aov-salaris2','aov-premie1','aov-premie2','aov-buffer1','aov-buffer2','f-mlvz1','f-mlvz2','f-opstal','f-vve','f-buffer','f-vermogen','os-bedrag','os-boete']);
   var reader=new FileReader();
   reader.onload=function(e) {
     try {

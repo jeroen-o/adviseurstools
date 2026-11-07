@@ -177,7 +177,7 @@ canvas{width:100%!important;}
           <div class="iw"><span class="pre">€</span>
             <input type="number" id="ink2" value="0" min="0" step="1000" oninput="liveUpdate()">
           </div>
-          <span class="hint">0 = alleenstaand · partner: 90% wordt meegenomen</span>
+          <span class="hint">0 = alleenstaand · partnerinkomen telt 100% mee</span>
         </div>
         <div class="field">
           <label>Type inkomen</label>
@@ -263,21 +263,21 @@ canvas{width:100%!important;}
           <div class="iw"><span class="pre">€</span>
             <input type="number" id="studieschuld" value="0" min="0" step="1000" oninput="liveUpdate()">
           </div>
-          <span class="hint">Telt mee als 0,65% van oorspronkelijk leenbedrag per jaar (DUO: 0,75% voor OV-leners)</span>
+          <span class="hint">Alleen gebruikt als de maandtermijn hieronder leeg is: dan indicatieve termijn (annuïteit 35 jaar tegen 2,5%)</span>
         </div>
         <div class="field">
-          <label>Oorspronkelijke studieschuld</label>
+          <label>Werkelijke DUO-maandtermijn</label>
           <div class="iw"><span class="pre">€</span>
-            <input type="number" id="studieOor" value="0" min="0" step="1000" oninput="liveUpdate()">
+            <input type="number" id="studieTermijn" value="0" min="0" step="1" oninput="liveUpdate()">
           </div>
-          <span class="hint">NIBUD gebruikt 0,65% × oorspronkelijk bedrag als toetslast</span>
+          <span class="hint">Trhk 2026: termijn × bruteringsfactor naar toetsrente (1,05–1,40; bij 4,5% = 1,25)</span>
         </div>
         <div class="field">
-          <label>Andere leningen (bijv. autolening)</label>
+          <label>Kredieten (kredietlimiet / oorspronkelijke kredietsom)</label>
           <div class="iw"><span class="pre">€</span>
             <input type="number" id="andereLening" value="0" min="0" step="500" oninput="liveUpdate()">
           </div>
-          <span class="hint">2% per jaar van openstaand saldo telt mee als last</span>
+          <span class="hint">2% van de limiet per maand telt mee als bruto maandlast</span>
         </div>
 
         <div class="sdiv s3" style="margin-top:4px;">Overige factoren</div>
@@ -288,15 +288,15 @@ canvas{width:100%!important;}
             <option value="0">Nee</option>
             <option value="17000">Ja — +€ 17.000 extra leenruimte</option>
           </select>
-          <span class="hint">Alleenstaanden mogen €17.000 extra lenen (NIBUD 2026)</span>
+          <span class="hint">Alleenstaanden mogen € 17.000 extra lenen bij toetsinkomen > € 30.000 (Trhk 2026)</span>
         </div>
         <div class="field">
           <label>NHG gewenst</label>
           <select id="nhg">
-            <option value="1">Ja — grens €435.000 (2026)</option>
+            <option value="1">Ja — grens € 470.000 (2026)</option>
             <option value="0" selected>Nee — boven NHG-grens</option>
           </select>
-          <span class="hint">Bij NHG: lagere rente, borgtochtprovisie 0,6%</span>
+          <span class="hint">Bij NHG: lagere rente, borgtochtprovisie 0,4% (met energiebesparende voorzieningen grens € 498.200)</span>
         </div>
         <div class="field">
           <label>WOZ-waarde / koopprijs woning</label>
@@ -375,36 +375,21 @@ canvas{width:100%!important;}
 </div>
 
 <script>
-// ── NIBUD FINANCIERINGSLASTPERCENTAGES 2026 ───────────────────────────────
-// Bron: NIBUD Advies Hypotheeknormen 2026 (sept 2025) — Tijdelijke Regeling Hypothecair Krediet 2026
-// Tabel voor NIET-AOW-gerechtigden, annuïtair, box-1-aftrekbaar deel (35,75%)
-// Kolommen: rente 1.5% t/m 9.0% in stappen van 0.5%
-// Nieuwe afronding 2026: 0,1% ipv 0,5% — hier gepresenteerd op 0,5%-stap niveau (conservatief)
-const NIBUD_R = [1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0];
-// Gecalibreerd op NIBUD 2026 definitief (factor 0.938 t.o.v. 2025-basis)
-// Kalibratiebenchmark: 2×€37k, rente 4%, RVP 10jr, label C → max €321.461 (bron: VCN, jan 2026)
-// Afronding 0,1% conform nieuw NIBUD-advies 2026 (voorheen 0,5%)
-const NIBUD_T = [
-  // [inkomen, [flp per rentekolom 1.5% t/m 9.0%]]
-  [20000,  [ 9.5, 9.5, 9.0, 8.5, 8.0, 8.0, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5]],
-  [24000,  [11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3]],
-  [28000,  [15.5,15.5,15.0,14.5,14.1,13.6,13.1,12.7,12.2,12.2,11.7,11.7,11.3,11.3,11.3,11.3]],
-  [32000,  [18.3,18.3,17.8,17.4,16.9,16.4,15.9,15.5,15.0,14.5,14.1,13.6,13.1,12.7,12.7,12.2]],
-  [36000,  [20.6,20.6,20.2,19.7,19.2,18.8,18.3,17.8,17.4,16.9,16.4,15.9,15.5,15.0,14.5,14.5]],
-  [40000,  [22.5,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2,18.8,18.3,17.8,17.4,16.9,16.4,15.9]],
-  [44000,  [23.9,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2,18.8,18.3,17.8,17.4]],
-  [48000,  [24.9,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2,18.8,18.3]],
-  [52000,  [25.8,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2]],
-  [56000,  [26.3,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7]],
-  [60000,  [26.7,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2]],
-  [65000,  [27.2,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6]],
-  [70000,  [27.7,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1]],
-  [80000,  [28.1,28.1,27.7,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1]],
-  [90000,  [28.6,28.6,28.1,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5]],
-  [100000, [29.1,29.1,28.6,28.6,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0]],
-  [115000, [29.5,29.5,29.1,29.1,28.6,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5]],
-  [130000, [30.0,30.0,29.5,29.5,29.1,28.6,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9]],
-];
+// ── FINANCIERINGSLASTPERCENTAGES 2026 ───────────────────────────────────
+// Bron: Bijlage 1 Tijdelijke regeling hypothecair krediet, zoals vastgesteld bij de
+// Wijzigingsregeling hypothecair krediet 2026 (Stcrt. 2025, 36471; in werking 1-1-2026).
+// Tabel: niet-AOW-gerechtigden, hypotheekrente aftrekbaar (box 1). Afronding 0,1%.
+// s = laagste toetsinkomen; rijen per € 1.000 (t/m € 125.000; daarboven laatste rij);
+// 12 rentekolommen: ≤1,500% · ≤2,000% · … · ≤6,500% · >6,500%.
+// Toetsinkomen tussen twee rijen: rij van het naastlagere inkomen (conservatief).
+const FLP_2026 = {"s":30000,"r":[[15.5,16.5,17.5,18.4,19.3,20.1,20.9,21.6,22.2,22.7,23.2,23.7],[16.2,17.3,18.3,19.3,20.2,21.2,22.0,22.7,23.4,24.1,24.6,25.1],[16.7,17.9,19.0,20.1,21.1,22.1,23.0,23.8,24.6,25.3,25.9,26.4],[17.1,18.3,19.5,20.6,21.6,22.6,23.6,24.6,25.4,26.1,26.8,27.4],[17.3,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.5,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.7,18.7,19.7,20.7,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.7,18.7,19.7,20.7,21.7,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.8,18.8,19.8,20.7,21.7,22.7,23.6,24.6,25.5,26.4,27.3,28.1],[17.8,18.9,19.9,20.9,21.8,22.7,23.7,24.6,25.5,26.4,27.3,28.1],[17.9,18.9,19.9,21.0,21.9,22.8,23.7,24.6,25.5,26.4,27.3,28.1],[18.0,19.0,20.0,21.0,22.0,22.9,23.8,24.7,25.5,26.4,27.3,28.1],[18.1,19.1,20.1,21.1,22.1,23.0,23.9,24.7,25.6,26.4,27.3,28.1],[18.2,19.2,20.2,21.2,22.2,23.1,24.0,24.8,25.7,26.5,27.3,28.1],[18.3,19.4,20.4,21.4,22.3,23.2,24.1,25.0,25.8,26.7,27.4,28.2],[18.5,19.5,20.5,21.5,22.5,23.4,24.3,25.1,26.0,26.8,27.6,28.3],[18.6,19.7,20.7,21.7,22.7,23.6,24.5,25.3,26.2,27.0,27.8,28.5],[18.8,19.9,20.9,21.9,22.9,23.8,24.7,25.6,26.4,27.2,28.0,28.7],[19.0,20.0,21.1,22.1,23.1,24.1,25.0,25.8,26.6,27.4,28.2,28.9],[19.1,20.2,21.3,22.3,23.3,24.3,25.2,26.0,26.9,27.6,28.4,29.2],[19.3,20.4,21.5,22.5,23.5,24.5,25.4,26.3,27.1,27.9,28.6,29.3],[19.4,20.5,21.6,22.6,23.7,24.6,25.6,26.4,27.3,28.1,28.8,29.5],[19.5,20.6,21.7,22.8,23.8,24.8,25.7,26.6,27.5,28.2,29.0,29.7],[19.6,20.8,21.9,22.9,24.0,24.9,25.9,26.8,27.6,28.4,29.2,29.9],[19.7,20.9,22.0,23.1,24.1,25.1,26.1,27.0,27.8,28.6,29.4,30.1],[19.8,20.9,22.1,23.2,24.2,25.2,26.2,27.1,27.9,28.7,29.5,30.2],[19.9,21.0,22.2,23.2,24.3,25.3,26.3,27.2,28.1,28.9,29.6,30.3],[20.0,21.1,22.2,23.3,24.3,25.4,26.4,27.3,28.1,29.0,29.7,30.4],[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.3,28.2,29.0,29.8,30.5],[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.4,28.2,29.1,29.9,30.6],[20.2,21.3,22.4,23.4,24.5,25.5,26.5,27.4,28.3,29.1,29.9,30.6],[20.2,21.3,22.4,23.5,24.5,25.5,26.5,27.4,28.3,29.2,29.9,30.7],[20.2,21.4,22.5,23.5,24.6,25.6,26.5,27.4,28.4,29.2,30.0,30.7],[20.3,21.4,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.2,30.0,30.8],[20.4,21.5,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.3,30.1,30.8],[20.5,21.5,22.6,23.7,24.7,25.7,26.6,27.6,28.4,29.3,30.1,30.8],[20.5,21.6,22.6,23.7,24.7,25.7,26.7,27.6,28.5,29.3,30.1,30.9],[20.5,21.6,22.7,23.7,24.8,25.8,26.7,27.6,28.5,29.3,30.2,30.9],[20.6,21.7,22.7,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[20.7,21.7,22.8,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[20.8,21.8,22.8,23.9,24.9,25.9,26.9,27.8,28.6,29.5,30.2,31.0],[20.8,21.9,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.3,31.0],[20.9,21.9,23.0,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0],[21.0,22.0,23.0,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.4,31.1],[21.0,22.1,23.1,24.1,25.1,26.1,27.0,27.9,28.8,29.6,30.4,31.1],[21.1,22.1,23.2,24.2,25.1,26.1,27.1,28.0,28.8,29.6,30.4,31.2],[21.1,22.2,23.2,24.2,25.2,26.1,27.1,28.0,28.9,29.7,30.5,31.2],[21.2,22.2,23.3,24.3,25.3,26.2,27.1,28.0,28.9,29.7,30.5,31.2],[21.2,22.3,23.4,24.4,25.3,26.3,27.1,28.1,28.9,29.8,30.5,31.3],[21.3,22.4,23.4,24.4,25.4,26.3,27.2,28.1,29.0,29.8,30.6,31.3],[21.3,22.4,23.5,24.5,25.5,26.4,27.3,28.1,29.0,29.8,30.6,31.3],[21.3,22.5,23.5,24.5,25.5,26.5,27.3,28.2,29.1,29.9,30.6,31.4],[21.4,22.5,23.6,24.6,25.6,26.5,27.4,28.2,29.1,29.9,30.7,31.4],[21.4,22.5,23.7,24.7,25.6,26.6,27.5,28.3,29.1,30.0,30.7,31.5],[21.5,22.6,23.7,24.7,25.7,26.7,27.5,28.4,29.2,30.0,30.8,31.5],[21.5,22.6,23.7,24.8,25.8,26.7,27.6,28.4,29.2,30.0,30.8,31.5],[21.6,22.7,23.7,24.8,25.8,26.7,27.7,28.5,29.3,30.0,30.8,31.5],[21.6,22.7,23.8,24.8,25.9,26.8,27.7,28.5,29.3,30.1,30.8,31.6],[21.7,22.8,23.8,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.9,31.6],[21.7,22.8,23.9,24.9,25.9,26.9,27.8,28.7,29.4,30.2,30.9,31.7],[21.8,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.2,30.9,31.7],[21.8,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0,31.7],[21.8,22.9,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.3,31.0,31.7],[21.9,23.0,24.1,25.1,26.1,27.0,28.0,28.8,29.6,30.4,31.1,31.8],[21.9,23.0,24.1,25.1,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8],[22.0,23.1,24.1,25.2,26.2,27.1,28.0,28.9,29.7,30.5,31.2,31.9],[22.0,23.1,24.2,25.2,26.2,27.2,28.1,28.9,29.8,30.5,31.3,31.9],[22.0,23.2,24.2,25.3,26.3,27.2,28.1,29.0,29.8,30.6,31.3,32.0],[22.1,23.2,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.4,32.0],[22.1,23.2,24.3,25.4,26.4,27.3,28.2,29.1,29.9,30.7,31.4,32.1],[22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],[22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]]};
+const FLP_RG = [1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,Infinity];
+// Bruteringsfactor studieschuld (Trhk 2026, art. 3a) naar toetsrente
+const BRUT_STUDIE = [[1.5,1.05],[2.0,1.05],[2.5,1.10],[3.0,1.15],[3.5,1.20],[4.0,1.20],[4.5,1.25],[5.0,1.30],[5.5,1.30],[6.0,1.35],[6.5,1.40],[Infinity,1.40]];
+// Indicatieve DUO-termijn als alleen het saldo bekend is: annuïteit 35 jaar (SF35) tegen 2,5%
+const DUO_SCHATTING_RENTE = 2.5, DUO_SCHATTING_JAAR = 35;
+const NHG_GRENS_2026 = 470000;          // NHG-kostengrens 2026
+const NHG_GRENS_ENERGIE_2026 = 498200;  // met energiebesparende voorzieningen
 
 // Energielabel extra bedragen 2026
 const LABEL_EXTRA = {
@@ -438,7 +423,7 @@ function liveUpdate(){
     ? `<span style="color:var(--orange);font-weight:700;">⚠ RVP <10jr → toetsrente: ${fmtPct(toets,1)} (AFM-minimum)</span>`
     : `<span style="color:var(--green);font-weight:700;">✓ RVP ≥10jr → werkelijke rente ${fmtPct(r,2)} als toetsrente</span>`;
   // Live preview
-  const res = berekenMax(N('ink1'), N('ink2'), r, rvp, N('looptijd')||30, energielabel, N('studieschuld'), N('studieOor'), N('andereLening'), parseInt(document.getElementById('alleenstaand').value||0), N('woningWaarde'));
+  const res = berekenMax(N('ink1'), N('ink2'), r, rvp, N('looptijd')||30, energielabel, N('studieschuld'), N('studieTermijn'), N('andereLening'), parseInt(document.getElementById('alleenstaand').value||0), N('woningWaarde'));
   const lc = document.getElementById('liveCard');
   if(res){ lc.style.display='block'; renderOpbouw(res, 'liveGrid', true); }
   const ink1h = document.getElementById('ink1Hint');
@@ -453,13 +438,18 @@ function berekenAnnuiteit(rPct, looptijdJaar){
 }
 
 function getFLP(inkomen, rente){
-  let row = NIBUD_T[0];
-  for(const r of NIBUD_T){ if(inkomen >= r[0]) row = r; }
-  const ri = Math.max(0,Math.min(NIBUD_R.length-1, Math.round((Math.max(1.5,Math.min(9.0,rente))-1.5)/0.5)));
-  return row[1][ri]/100;
+  let i = Math.floor((inkomen - FLP_2026.s)/1000);
+  i = Math.max(0, Math.min(FLP_2026.r.length-1, i));
+  let k = FLP_RG.findIndex(g => rente <= g + 1e-9);
+  if(k<0) k = FLP_RG.length-1;
+  return FLP_2026.r[i][k]/100;
+}
+function getBruteringStudie(toetsrente){
+  for(const [g,f] of BRUT_STUDIE){ if(toetsrente <= g + 1e-9) return f; }
+  return 1.40;
 }
 
-function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschuld, studieOor, andereLening, alleenstaandExtra, woningWaarde){
+function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschuld, studieTermijn, andereLening, alleenstaandExtra, woningWaarde){
   if(ink1<=0) return null;
   // Toetsrente
   const toetsRente = rvpJaar < 10 ? Math.max(TOETSRENTE_MIN, rente) : rente;
@@ -467,18 +457,28 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const inkomensTypeFactor = parseFloat(document.getElementById('inkomensType').value||1);
   const i1 = ink1 * inkomensTypeFactor;
   const i2 = Math.max(0, ink2 * inkomensTypeFactor);
-  // Tweeverdieners: 100% hoogste + 90% laagste
+  // Tweeverdieners: beide inkomens 100% (gezamenlijk toetsinkomen, Trhk 2026)
   const hoogste = Math.max(i1, i2);
   const laagste = Math.min(i1, i2);
-  const toetsInkomen = hoogste + laagste * 0.90;
+  const toetsInkomen = hoogste + laagste;
   // FLP
   const flp = getFLP(toetsInkomen, toetsRente);
   const maxJaarLast = toetsInkomen * flp;
   // Aftrek verplichtingen
-  const studieLastJaar = (studieOor||studieschuld) > 0 ? Math.max(studieOor, studieschuld) * 0.0065 : 0;
-  const andereLastJaar = andereLening * 0.02;
+  // Studieschuld (Trhk 2026 art. 3a): werkelijke maandtermijn × bruteringsfactor (toetsrente).
+  // Alleen saldo bekend → indicatieve termijn (annuïteit 35 jr tegen 2,5%).
+  const studieGeschat = !(studieTermijn > 0) && studieschuld > 0;
+  const studieTermijnMnd = studieTermijn > 0 ? studieTermijn : (studieschuld > 0 ? studieschuld * berekenAnnuiteit(DUO_SCHATTING_RENTE, DUO_SCHATTING_JAAR) : 0);
+  const studieFactor = getBruteringStudie(toetsRente);
+  const studieLastMnd = studieTermijnMnd * studieFactor;
+  // Consumptief krediet: 2% van de (oorspronkelijke) kredietlimiet PER MAAND als bruto last
+  const andereLastMnd = andereLening * 0.02;
+  const studieLastJaar = studieLastMnd * 12;
+  const andereLastJaar = andereLastMnd * 12;
   const beschikbaarJaar = Math.max(0, maxJaarLast - studieLastJaar - andereLastJaar);
   const beschikbaarMnd = beschikbaarJaar / 12;
+  // Alleenstaandenbedrag € 17.000 alleen zonder partnerinkomen en bij toetsinkomen > € 30.000 (art. 3 lid 8)
+  if(i2 > 0 || toetsInkomen <= 30000) alleenstaandExtra = 0;
   // Max hypotheek op inkomen
   const annFactor = berekenAnnuiteit(toetsRente, looptijdJaar);
   const maxOpInkomen = beschikbaarMnd / annFactor;
@@ -488,7 +488,7 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const maxVoorEnergielabel = maxOpInkomen + labelExtra + alleenstaandExtra;
   // NHG grens
   const nhg = document.getElementById('nhg').value==='1';
-  const nhgGrens = 435000;
+  const nhgGrens = NHG_GRENS_2026;
   const maxOpWoning = woningWaarde * 1.00; // max 100% van woningwaarde
   const maxFinal = Math.min(maxVoorEnergielabel, maxOpWoning);
   const maxNhgGegeven = nhg ? Math.min(maxFinal, nhgGrens) : maxFinal;
@@ -497,6 +497,7 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const maandlastRente = maxNhgGegeven * rente/100/12;
   return {
     toetsInkomen, toetsRente, flp, maxJaarLast, studieLastJaar, andereLastJaar,
+    studieTermijnMnd, studieFactor, studieLastMnd, studieGeschat, andereLastMnd,
     beschikbaarJaar, beschikbaarMnd, annFactor, maxOpInkomen, labelExtra,
     alleenstaandExtra, maxVoorEnergielabel, maxOpWoning, maxFinal: maxNhgGegeven,
     maandlastAnn, maandlastRente, ink1:i1, ink2:i2, hoogste, laagste,
@@ -510,7 +511,7 @@ function renderOpbouw(r, gridId, compact=false){
     <div class="ob-box navy">
       <div class="ob-lbl">Maximale hypotheek</div>
       <div class="ob-val">${fmtK(Math.round(r.maxFinal/1000)*1000)}</div>
-      <div class="ob-sub">${r.nhg&&r.maxFinal<=r.nhgGrens?'✓ Binnen NHG-grens':r.nhg?'⚠ Boven NHG (€435k)':''}</div>
+      <div class="ob-sub">${r.nhg&&r.maxFinal<=r.nhgGrens?'✓ Binnen NHG-grens':r.nhg?'⚠ Boven NHG (€ 470.000)':''}</div>
     </div>
     <div class="ob-box gold">
       <div class="ob-lbl">Toetsinkomen</div>
@@ -534,13 +535,13 @@ function bereken(){
   const ink1=N('ink1'), ink2=N('ink2'), rente=N('rente');
   const rvp=parseInt(document.getElementById('rvp').value);
   const looptijd=parseInt(document.getElementById('looptijd').value)||30;
-  const studieschuld=N('studieschuld'), studieOor=N('studieOor');
+  const studieschuld=N('studieschuld'), studieTermijn=N('studieTermijn');
   const andereLening=N('andereLening');
   const alleenstaandExtra=parseInt(document.getElementById('alleenstaand').value||0);
   const woningWaarde=N('woningWaarde');
 
   if(ink1<=0){alert('Vul een inkomen in.'); return;}
-  const r = berekenMax(ink1, ink2, rente, rvp, looptijd, energielabel, studieschuld, studieOor, andereLening, alleenstaandExtra, woningWaarde);
+  const r = berekenMax(ink1, ink2, rente, rvp, looptijd, energielabel, studieschuld, studieTermijn, andereLening, alleenstaandExtra, woningWaarde);
   if(!r) return;
 
   // ── HOOFD RESULTAAT ──
@@ -561,21 +562,21 @@ function bereken(){
   renderOpbouw(r, 'opbouwGrid');
 
   // ── STAP TABEL ──
-  const ink2Meegenomen = r.laagste * 0.90;
+  const ink2Meegenomen = r.laagste;
   document.getElementById('stapTbl').innerHTML = `<thead><tr>
     <th>Stap</th><th style="text-align:right">Bedrag/jaar</th><th style="text-align:right">Toelichting</th>
   </tr></thead><tbody>
     <tr><td>1. Inkomen 1 (u)</td><td>${fmt(r.hoogste)}</td><td style="text-align:right">100% wordt meegenomen</td></tr>
-    ${ink2>0?`<tr><td>1b. Inkomen 2 (partner, 90%)</td><td class="pos">+${fmt(ink2Meegenomen)}</td><td style="text-align:right">90% van ${fmt(r.laagste)}</td></tr>`:''}
+    ${ink2>0?`<tr><td>1b. Inkomen 2 (partner, 100%)</td><td class="pos">+${fmt(ink2Meegenomen)}</td><td style="text-align:right">100% van ${fmt(r.laagste)}</td></tr>`:''}
     <tr class="totaal"><td>= Toetsinkomen</td><td>${fmt(r.toetsInkomen)}</td><td style="text-align:right">Basis voor NIBUD-norm</td></tr>
     <tr><td>2. FLP (financieringslast%)</td><td>${fmtPct(r.flp*100)}</td><td style="text-align:right">Bij toetsrente ${fmtPct(r.toetsRente,2)}</td></tr>
     <tr><td>= Max. bruto jaarlijkse hypotheeklast</td><td>${fmt(r.maxJaarLast)}</td><td style="text-align:right">${fmt(r.toetsInkomen)} × ${fmtPct(r.flp*100)}</td></tr>
-    ${r.studieLastJaar>0?`<tr><td>3a. Aftrek studieschuld</td><td class="neg">−${fmt(r.studieLastJaar)}</td><td style="text-align:right">0,65% van €${Math.max(r.beschikbaarJaar,N('studieschuld')).toLocaleString('nl-NL')}</td></tr>`:''}
-    ${r.andereLastJaar>0?`<tr><td>3b. Aftrek andere lening</td><td class="neg">−${fmt(r.andereLastJaar)}</td><td style="text-align:right">2% van ${fmt(N('andereLening'))}</td></tr>`:''}
+    ${r.studieLastJaar>0?`<tr><td>3a. Aftrek studieschuld</td><td class="neg">−${fmt(r.studieLastJaar)}</td><td style="text-align:right">${fmt(r.studieTermijnMnd,2)}/mnd${r.studieGeschat?' (geschat)':''} × factor ${r.studieFactor.toFixed(2).replace('.',',')} = ${fmt(r.studieLastMnd,2)}/mnd</td></tr>`:''}
+    ${r.andereLastJaar>0?`<tr><td>3b. Aftrek kredieten</td><td class="neg">−${fmt(r.andereLastJaar)}</td><td style="text-align:right">2% van ${fmt(N('andereLening'))} = ${fmt(r.andereLastMnd,2)}/mnd</td></tr>`:''}
     <tr class="totaal"><td>= Beschikbare jaarlijkse hypotheeklast</td><td>${fmt(r.beschikbaarJaar)}</td><td style="text-align:right">${fmt(r.beschikbaarMnd,2)}/mnd</td></tr>
     <tr><td>4. Max. hypotheek op inkomen</td><td>${fmt(r.maxOpInkomen)}</td><td style="text-align:right">Annuïteitsfactor ${fmtPct(r.annFactor*100*12,3)}/mnd per €100k</td></tr>
-    ${r.labelExtra>0?`<tr><td>4b. Energielabel bonus (${r.label})</td><td class="pos">+${fmt(r.labelExtra)}</td><td style="text-align:right">NIBUD 2026 energietoeslag</td></tr>`:''}
-    ${r.alleenstaandExtra>0?`<tr><td>4c. Alleenstaandetoeslag</td><td class="pos">+${fmt(r.alleenstaandExtra)}</td><td style="text-align:right">NIBUD 2026 standaard</td></tr>`:''}
+    ${r.labelExtra>0?`<tr><td>4b. Energielabel bonus (${r.label})</td><td class="pos">+${fmt(r.labelExtra)}</td><td style="text-align:right">Trhk 2026 energielabelbedrag</td></tr>`:''}
+    ${r.alleenstaandExtra>0?`<tr><td>4c. Alleenstaandetoeslag</td><td class="pos">+${fmt(r.alleenstaandExtra)}</td><td style="text-align:right">Trhk 2026 art. 3 lid 8 (toetsinkomen &gt; € 30.000)</td></tr>`:''}
     <tr><td>5. Max. op woningwaarde (100%)</td><td>${fmt(r.maxOpWoning)}</td><td style="text-align:right">${r.maxFinal<r.maxVoorEnergielabel?'⚠ Beperkende factor':'—'}</td></tr>
     ${r.nhg&&r.maxFinal<r.maxVoorEnergielabel?`<tr><td>5b. NHG-grens</td><td>${fmt(r.nhgGrens)}</td><td style="text-align:right">Maximumgrens NHG 2026</td></tr>`:''}
     <tr class="totaal"><td><strong>= Maximale hypotheek</strong></td><td><strong>${fmt(r.maxFinal)}</strong></td><td style="text-align:right">Maandlast: ${fmt(r.maandlastAnn,2)}/mnd</td></tr>
@@ -585,7 +586,7 @@ function bereken(){
   const rvpOpties=[{jr:1,r:null},{jr:2,r:null},{jr:5,r:null},{jr:10,r:null},{jr:15,r:null},{jr:20,r:null},{jr:30,r:null}];
   const maxPerRvp = rvpOpties.map(o=>{
     const toets = o.jr<10 ? Math.max(TOETSRENTE_MIN,rente) : rente;
-    const res2 = berekenMax(ink1,ink2,rente,o.jr,looptijd,energielabel,studieschuld,studieOor,andereLening,alleenstaandExtra,woningWaarde);
+    const res2 = berekenMax(ink1,ink2,rente,o.jr,looptijd,energielabel,studieschuld,studieTermijn,andereLening,alleenstaandExtra,woningWaarde);
     return {jr:o.jr, toets, max:res2?res2.maxFinal:0};
   });
   const maxMax = Math.max(...maxPerRvp.map(x=>x.max));
@@ -607,14 +608,14 @@ function bereken(){
   if(rvp<10) punten.push({ico:'⚠️',txt:`<strong>RVP korter dan 10 jaar → toetsrente 5,0%</strong>. Uw werkelijke rente is ${fmtPct(rente,2)} maar er wordt getoetst op ${fmtPct(TOETSRENTE_MIN,1)}. Overweeg een RVP van 10 jaar: dan geldt uw werkelijke rente als toetsrente, wat mogelijk meer leenruimte geeft.`});
   if(r.maxFinal<r.maxVoorEnergielabel) punten.push({ico:'🏠',txt:`<strong>Woningwaarde beperkt uw hypotheek.</strong> Op basis van inkomen kunt u ${fmt(r.maxVoorEnergielabel)} lenen, maar de woningwaarde (${fmt(r.woningWaarde)}) stelt de grens op ${fmt(r.maxOpWoning)}. Een hogere woningprijs biedt meer leenruimte.`});
   if(r.labelExtra===0&&r.label==='EFG') punten.push({ico:'💚',txt:`<strong>Energielabel verbetert leenruimte.</strong> Bij label C/D kunt u €5.000 extra lenen; bij A/B zelfs €10.000. Dit bedrag is geoormerkt voor verduurzaming.`});
-  if(r.studieLastJaar>0) punten.push({ico:'📚',txt:`<strong>Studieschuld vermindert leenruimte met ${fmt(r.studieLastJaar)}/jaar.</strong> Let op: ook als u de schuld niet heeft opgegeven, zijn banken verplicht dit bij DUO te controleren.`});
-  if(ink2>0) punten.push({ico:'👥',txt:`<strong>Partner telt mee voor 90%:</strong> ${fmt(r.laagste)} × 90% = ${fmt(r.laagste*0.9)} extra inkomen. Het gezamenlijk toetsinkomen is ${fmt(r.toetsInkomen)}.`});
+  if(r.studieLastJaar>0) punten.push({ico:'📚',txt:`<strong>Studieschuld telt mee als bruto last van ${fmt(r.studieLastMnd,2)}/mnd (${fmt(r.studieLastJaar)}/jaar).</strong>${r.studieGeschat?' De termijn is geschat op basis van het saldo; vul de werkelijke DUO-termijn in voor een nauwkeurige toets.':''} Let op: ook als u de schuld niet heeft opgegeven, zijn banken verplicht dit bij DUO te controleren.`});
+  if(ink2>0) punten.push({ico:'👥',txt:`<strong>Partner telt mee voor 100%:</strong> ${fmt(r.laagste)} wordt volledig bij het toetsinkomen opgeteld. Het gezamenlijk toetsinkomen is ${fmt(r.toetsInkomen)}.`});
   if(N('alleenstaand')===0&&ink2===0) punten.push({ico:'💡',txt:`<strong>Alleenstaand?</strong> Bij NIBUD kunt u als alleenstaande €17.000 extra lenen (selecteer bovenaan). Vraag uw adviseur of u hiervoor in aanmerking komt.`});
   punten.push({ico:'📌',txt:`<strong>Let op:</strong> dit is een indicatieve berekening op basis van NIBUD-normen 2026. Geldverstrekkers hanteren eigen acceptatiecriteria die kunnen afwijken. Voor een bindende uitkomst raadpleegt u een hypotheekadviseur.`});
   adv.innerHTML=`<h3>🧑‍💼 Aandachtspunten & tips</h3>${punten.map(p=>`<div class="ap"><span class="ai">${p.ico}</span><span>${p.txt}</span></div>`).join('')}`;
 
   ['resCard','stapCard','grafCard','rvpCard','adviesCard'].forEach(id=>document.getElementById(id).classList.add('vis'));
-  tekenGrafiek(r, ink1, ink2, rente, rvp, looptijd, studieschuld, studieOor, andereLening, alleenstaandExtra, woningWaarde);
+  tekenGrafiek(r, ink1, ink2, rente, rvp, looptijd, studieschuld, studieTermijn, andereLening, alleenstaandExtra, woningWaarde);
   document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
