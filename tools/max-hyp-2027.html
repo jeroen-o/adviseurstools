@@ -798,6 +798,21 @@
       var grens = aow ? alleenstaandeNorm.grensAOW : alleenstaandeNorm.grens;
       return inkObj.bedrag > grens ? alleenstaandeNorm.bedrag : 0;
     }
+    // Vrijgesteld bedrag V op een moment (Trhk art. 3 lid 4/5/8 en art. 4): het deel van de hypotheek tot
+    // energielabelbedrag + verduurzamingsbedrag + alleenstaandenbedrag blijft buiten de financieringslast.
+    // Methode: V wordt (gemaximeerd op de restschuld) naar rato van de restschuld van de leningdelen in mindering
+    // gebracht; de toetslast van elk deel wordt dus vermenigvuldigd met (1 − V/restschuld totaal).
+    // Beheer (NHG-beheercriteria): geen vrijstelling — daar is geen regel voor gevonden, toets ongewijzigd.
+    function vrijstellingOp(inkObj){
+      if(woonquoteNorm === "beheer") return 0;
+      return labelExtra + verduurzamingExtra + alleenstaandeOp(inkObj);
+    }
+    function vrijstellingFactor(delenArr, m, V){
+      var totRest = 0;
+      delenArr.forEach(function(d){ var r = restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); if(r>0) totRest += r; });
+      var Vm = Math.min(V, totRest);
+      return {Vm:Vm, factor: totRest>0 ? (1 - Vm/totRest) : 1};
+    }
     // Maandlast van één leningdeel voor de toetsing — normaliter 30-jaars annuïteit,
     // tenzij het een aflossingsvrij deel betreft met een expliciet afwijkend "Type toets aflossingsvrij".
     function maandlastVoorToets(d, rest, iMaand){
@@ -817,14 +832,16 @@
         var inkObj = toetsinkomenOp(datumOpMoment);
         var toetsinkomen = inkObj.bedrag;
         var tb = bepaalTabellen(inkObj, datumOpMoment);
+        var vf = vrijstellingFactor(delenArr, m, vrijstellingOp(inkObj));
         var lastAftrekbaar=0, lastNietAftrekbaar=0, berekendeLast=0;
         delenArr.forEach(function(d){
           var rest = restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
           if(rest<=0) return;
           var renteDeel = toetsrenteDeel(d, normrente);
           var iMaand = (renteDeel/100)/12;
-          var maandlastDeel = maandlastVoorToets(d, rest, iMaand);
-          berekendeLast += maandlastDeel;
+          var maandlastVol = maandlastVoorToets(d, rest, iMaand);
+          berekendeLast += maandlastVol;
+          var maandlastDeel = maandlastVol * vf.factor;
           var aftrekGeldigNu = m < d.aftrekbaarTm;
           var box3Aandeel = d.bedrag>0 ? Math.min(1,(d.box3||0)/d.bedrag) : 0;
           var aftrekbaarAandeel = aftrekGeldigNu ? (1-box3Aandeel) : 0;
@@ -848,6 +865,7 @@
       var toetsinkomen = inkObj.bedrag;
 
       var tb = bepaalTabellen(inkObj, datumOpMoment);
+      var vf = vrijstellingFactor(delenState, m, vrijstellingOp(inkObj));
 
       // Last splitsen in aftrekbaar (box1) en niet-aftrekbaar (box3 + na einde renteaftrek) per deel,
       // en de niet-aftrekbare last bruteren via de verhouding tussen de box1- en box3-woonquote (GHF/TRHK-methodiek).
@@ -859,8 +877,9 @@
         var renteDeel = toetsrenteDeel(d, normrente);
         var iMaand = (renteDeel/100)/12;
         // elk deel wordt als 30-jaars annuïteit getoetst, tenzij "Type toets aflossingsvrij" anders aangeeft
-        var maandlastDeel = maandlastVoorToets(d, rest, iMaand);
-        berekendeLast += maandlastDeel;
+        var maandlastVol = maandlastVoorToets(d, rest, iMaand);
+        berekendeLast += maandlastVol;
+        var maandlastDeel = maandlastVol * vf.factor; // vrijgesteld deel (V) naar rato buiten de financieringslast
 
         var aftrekGeldigNu = m < d.aftrekbaarTm;
         var box3Aandeel = d.bedrag>0 ? Math.min(1, (d.box3||0)/d.bedrag) : 0;
@@ -881,7 +900,8 @@
       return {
         m:m, datum:datumOpMoment, toetsinkomen:toetsinkomen, onvolledig:inkObj.onvolledig,
         woonquote: pctAftrek, maxMaandlast:maxMaandlast, berekendeLast:berekendeLast, lastGebruteerd:lastGebruteerd,
-        gebruteerd: lastNietAftrekbaar > 0.5, ruimte:ruimte, aowTabel: tb.aow, verplLast: verplLast
+        gebruteerd: lastNietAftrekbaar > 0.5, ruimte:ruimte, aowTabel: tb.aow, verplLast: verplLast,
+        vrijgesteld: vf.Vm
       };
     });
 
@@ -898,7 +918,8 @@
     var iGew = (gewogenToetsrente/100)/12;
     var maxOpBasisInkomen = maxMaandlastAanvang * annuiteitFactor(iGew, 360);
     var alleenstaandeExtra = alleenstaandeOp(inkAanvang);
-    var extraBuitenToetsing = labelExtra + verduurzamingExtra + alleenstaandeExtra;
+    // Beheer: V niet optellen (NHG-beheercriteria houden deze bedragen voor zover bekend niet buiten de financieringslast) — consistent met de toets per moment
+    var extraBuitenToetsing = vrijstellingOp(inkAanvang);
     var hoofdsomTotaal = totBedrag;
     var maxOpBasisMarktwaarde = ltvMax;
     var maximaleHypotheek = Math.min(maxOpBasisInkomen + extraBuitenToetsing, maxOpBasisMarktwaarde) ;
@@ -910,7 +931,8 @@
       : (!alleenstaandeToggle.checked ? "Uitgezet: geen alleenstaandenbedrag meegenomen."
         : (alleenstaandeExtra > 0 ? "Van toepassing: toetsinkomen " + fmtEUR(inkAanvang.bedrag) + " is hoger dan " + fmtEUR(aGrens) + " → + " + fmtEUR(alleenstaandeExtra) + " buiten de toetsing."
           : "Niet van toepassing: toetsinkomen " + fmtEUR(inkAanvang.bedrag) + " is niet hoger dan " + fmtEUR(aGrens) + "."))
-      + (jaar === "2027" ? " Normjaar 2027: € 18.000 boven € 31.000 (Stcrt. 2026, 38415)." : " Normjaar 2026: € 17.000 boven € 30.000 (AOW: € 29.000).");
+      + (jaar === "2027" ? " Normjaar 2027: € 18.000 boven € 31.000 (Stcrt. 2026, 38415)." : " Normjaar 2026: € 17.000 boven € 30.000 (AOW: € 29.000).")
+      + (woonquoteNorm === "beheer" && !partnerAanwezig ? " Let op: bij beheer (NHG-beheercriteria) wordt dit bedrag niet buiten de toetsing gehouden." : "");
     document.getElementById("verplHint").textContent = verplNominaal > 0
       ? "Bruto maandlast verplichtingen bij aanvang: " + fmtEUR(verplLastAanvang) + " (studieschuld × " + (heeftAftrekAanvang ? BRUTERING_STUDIE[bandIdx].toLocaleString("nl-NL",{minimumFractionDigits:2}) : "1,00") + ", krediet 2% van " + fmtEUR(verpl.krediet) + ", alimentatie en erfpacht nominaal). Dit bedrag gaat op elk toetsmoment af van de toegestane financieringslast."
       : "De bruto maandlast van de verplichtingen gaat af van de toegestane financieringslast, op elk toetsmoment.";
@@ -923,13 +945,14 @@
       var tb = bepaalTabellen(inkObj, datumOpMoment);
       var pctNietAftrek = interpolatePercentage(tb.tables, tb.tabN, toetsinkomen, bandIdx);
       var maxMaandlast = toetsinkomen*(pctNietAftrek/100)/12 - verplichtingenLast(verpl, bandIdx, false);
+      var vf = vrijstellingFactor(delenState, m, vrijstellingOp(inkObj));
       var berekendeLast = 0;
       delenState.forEach(function(d){
         var rest = restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
         if(rest<=0) return;
         var renteDeel = toetsrenteDeel(d, normrente);
         var iMaand = (renteDeel/100)/12;
-        berekendeLast += maandlastVoorToets(d, rest, iMaand);
+        berekendeLast += maandlastVoorToets(d, rest, iMaand) * vf.factor;
       });
       return {maxMaandlast:maxMaandlast, berekendeLast:berekendeLast, ruimte:maxMaandlast-berekendeLast};
     });
@@ -950,25 +973,31 @@
     verdictBox.innerHTML = "<div class='verdict " + (akkoord?"ok":"bad") + "'>" + (akkoord?"AKKOORD":"NIET AKKOORD") + "</div>";
 
     var table = document.getElementById("resultTable");
-    var heeftGebruteerd = rows.some(function(r){ return r.gebruteerd; });
+    var heeftVrijstelling = rows.some(function(r){ return r.vrijgesteld > 0.5; });
+    var heeftGebruteerd = rows.some(function(r){ return r.gebruteerd; }) || heeftVrijstelling;
     var head = "<thead><tr><th>Toetsmoment</th><th>Toetsinkomen</th><th>Woonquote</th><th>Max. maandlast</th><th>Berekende maandlast</th>" +
-      (heeftGebruteerd ? "<th>Gebruteerde last</th>" : "") + "<th>Ruimte</th></tr></thead>";
+      "<th>Vrijgesteld bedrag</th>" +
+      (heeftGebruteerd ? "<th>Toetslast</th>" : "") + "<th>Ruimte</th></tr></thead>";
     var body = "<tbody>" + rows.map(function(r,idx){
       var label = idx===0 ? "Bij aanvang" : "Na " + r.m + " maanden";
-      var krap = r.ruimte < 0;
+      var krap = r.ruimte < -0.5; // zelfde tolerantie als het AKKOORD-oordeel
       return "<tr class='"+(krap?"krap":"")+"'>" +
         "<td>"+label+(r.aowTabel?" <span class='hint' style='display:inline;'>(AOW-tabel)</span>":"")+(r.onvolledig?" <span style='color:#C23B3B;font-size:.72rem;'>(pensioeninkomen ontbreekt)</span>":"")+"</td>" +
         "<td>"+fmtEUR(r.toetsinkomen)+"</td>" +
         "<td>"+fmtPct1(r.woonquote)+"</td>" +
         "<td>"+fmtEUR(r.maxMaandlast)+"</td>" +
-        "<td>"+fmtEUR(r.berekendeLast)+(r.gebruteerd?" <span class='hint' style='display:inline;'>(nominaal)</span>":"")+"</td>" +
-        (heeftGebruteerd ? "<td>"+(r.gebruteerd?fmtEUR(r.lastGebruteerd):"—")+"</td>" : "") +
-        "<td class='"+(krap?"ruimte-neg":"ruimte-pos")+"'>"+(r.ruimte<0?"−":"")+fmtEUR(Math.abs(r.ruimte))+"</td>" +
+        "<td>"+fmtEUR(r.berekendeLast)+(r.gebruteerd||r.vrijgesteld>0.5?" <span class='hint' style='display:inline;'>(nominaal, alle delen)</span>":"")+"</td>" +
+        "<td>"+(woonquoteNorm==="beheer" ? "n.v.t. (beheer)" : fmtEUR(r.vrijgesteld))+"</td>" +
+        (heeftGebruteerd ? "<td>"+fmtEUR(r.lastGebruteerd)+"</td>" : "") +
+        "<td class='"+(krap?"ruimte-neg":"ruimte-pos")+"'>"+(krap?"−":"")+fmtEUR(Math.abs(r.ruimte))+"</td>" +
       "</tr>";
     }).join("") + "</tbody>";
     table.innerHTML = head + body;
-    document.getElementById("bruteringHint").textContent = (heeftGebruteerd
-      ? "De \"Gebruteerde last\" bruteert het niet-aftrekbare deel van de maandlast (box 3 en/of verstreken renteaftrek) met de verhouding tussen de box 1- en box 3-woonquote; de Ruimte is Max. maandlast minus de gebruteerde last. "
+    document.getElementById("bruteringHint").textContent = (woonquoteNorm === "beheer"
+      ? "Vrijgesteld bedrag: bij toetsing volgens de NHG-beheercriteria worden energielabel-, verduurzamings- en alleenstaandenbedrag niet buiten de financieringslast gehouden (geen regel daarvoor in de beheercriteria gevonden); de volledige maandlast wordt getoetst. "
+      : "Vrijgesteld bedrag (Trhk art. 3 lid 4, 5 en 8, art. 4): het deel van de hypotheek tot het energielabelbedrag" + (labelExtra>0?" ("+fmtEUR(labelExtra)+")":"") + ", het verduurzamingsbedrag" + (verduurzamingExtra>0?" ("+fmtEUR(verduurzamingExtra)+")":"") + " en het alleenstaandenbedrag (indien op dat moment van toepassing) blijft buiten de financieringslast. Dit bedrag (maximaal de restschuld) wordt naar rato van de restschuld van de leningdelen in mindering gebracht op de toetslast. ")
+      + (heeftGebruteerd
+      ? "De \"Toetslast\" is de maandlast na aftrek van het vrijgestelde deel, waarbij het niet-aftrekbare deel (box 3 en/of verstreken renteaftrek) is gebruteerd met de verhouding tussen de box 1- en box 3-woonquote; de Ruimte is Max. maandlast minus de toetslast. "
       : "") + (verplNominaal > 0 ? "Max. maandlast is na aftrek van de financiële verplichtingen (" + fmtEUR(rows[0].verplLast) + " per maand bij aanvang). " : "")
       + (partnerAanwezig && woonquoteNorm !== "beheer" ? "Tabelkeuze (Trhk art. 3 lid 7): heeft één van beiden de AOW-leeftijd bereikt, dan geldt de tabel van de persoon met het hoogste toetsinkomen." : "");
 
@@ -976,11 +1005,14 @@
     var extraTekstResultaat =
       "<br><br><strong>Maximaal op basis van inkomen:</strong> " + fmtEUR(maxOpBasisInkomen) + "   " +
       "<strong>Maximaal op basis van marktwaarde (incl. EBV):</strong> " + fmtEUR(maxOpBasisMarktwaarde) + "   " +
-      "<strong>Maximale hypotheek:</strong> " + fmtEUR(maximaleHypotheek);
+      "<strong>Maximale hypotheek:</strong> " + fmtEUR(maximaleHypotheek) +
+      ((woonquoteNorm === "beheer" && (labelExtra + verduurzamingExtra + alleenstaandeExtra) > 0)
+        ? "<br><span class='hint' style='display:inline;'>Beheer: energielabel-, verduurzamings- en alleenstaandenbedrag (samen " + fmtEUR(labelExtra + verduurzamingExtra + alleenstaandeExtra) + ") zijn niet opgeteld. De NHG-beheercriteria houden deze bedragen voor zover bekend niet buiten de financieringslast; de acceptatienorm (Trhk) doet dat wel.</span>"
+        : "");
 
     var hoofdsomStatus = akkoord
       ? "✔ De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " is AKKOORD over alle getoetste momenten."
-      : "✘ De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " is NIET AKKOORD. Op het krapste moment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + ") ontstaat een tekort van " + fmtEUR(krapsteMoment.ruimte) + " ten opzichte van de toegestane maandlast.";
+      : "✘ De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " is NIET AKKOORD. Op het krapste moment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + ") ontstaat een tekort van " + fmtEUR(Math.abs(krapsteMoment.ruimte)) + " ten opzichte van de toegestane maandlast.";
 
     var scenarioHtml = "<strong>Scenario-vergelijking — zelfde constructie geheel in box 3:</strong> " +
       "maximaal op basis van inkomen " + fmtEUR(box3MaxHyp) + " (" + (box3MaxHyp<maxOpBasisInkomen?"−"+fmtEUR(maxOpBasisInkomen-box3MaxHyp):"+"+fmtEUR(box3MaxHyp-maxOpBasisInkomen)) + " t.o.v. de huidige constructie) · " +
