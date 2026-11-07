@@ -57,8 +57,7 @@ CURATED = {
     'hypotheek-uit-koopovereenkomst': ('Hypotheek uit koopovereenkomst', 'Financieringsopzet op basis van de koopovereenkomst', A),
     'koopakte-uitlezen': ('Koopakte uitlezen', 'Gegevens uit een koopovereenkomst (PDF) automatisch uitlezen', A),
     'netto-gelijkblijvende-lasten': ('Netto gelijkblijvende lasten', 'Leningdelen zo kiezen dat de netto last gelijk blijft', R),
-    'boeteberekening': ('Boeteberekening oversluiten', 'Boete bij oversluiten of vervroegd aflossen per leningdeel, inclusief rentemiddeling', R),
-    'boeterente-calculator': ('Boeterente', 'Vergoeding bij vervroegd aflossen volgens de AFM-leidraad', R),
+    'boeteberekening': ('Boeterente berekenen', 'Boete bij oversluiten of vervroegd aflossen (AFM-leidraad), met rentemiddeling en brief aan de bank', R),
     'hypotheekoversluit-calculator': ('Oversluiten', 'Is oversluiten financieel verstandig? In drie stappen', R),
     'netto-maandlasten': ('Netto maandlasten', 'Bruto-netto met renteaftrek, eigenwoningforfait en erfpacht', R),
     'kosten-hypotheek-over-de-looptijd': ('Kosten over de looptijd', 'Totale rente en netto kosten per aflosvorm', R),
@@ -66,7 +65,6 @@ CURATED = {
     'hypotheekrente-overzicht': ('Hypotheekrente-overzicht', 'Rentetabel om zelf bij te houden en te vergelijken', R),
     'hypotheek-bespaarcheck': ('Bespaarcheck', 'Huidige rente versus markt: oversluiten of middelen', R),
     'extra-aflossen-calculator': ('Extra aflossen', 'Effect van extra aflossen op maandlast en looptijd', R),
-    'boeterenteberekening-afm': ('Boeterente (AFM-leidraad)', 'Contante-waardemethode volgens de AFM-leidraad', R),
     'rentemix-optimizer': ('Rentemix optimizer', 'Verdeling over leningdelen voor een gewenste gewogen rente', R),
     'box-3-calculator': ('Box 3', 'Heffing 2026 met forfaitaire rendementen en heffingsvrij vermogen', F),
     'schenkinsvrijstelling': ('Schenkingsvrijstelling', 'Vrijstellingen en schenkbelasting 2026', F),
@@ -119,7 +117,7 @@ CURATED = {
 }
 
 
-EXTRA = {'hypotheek': [('../hypotheek/boeteberekening/', 'Boeteberekening oversluiten')], 'overige': [('https://pandwise.nl/', 'PandWise')], 'krediet': [('../krediet/maximaal-krediet-caribisch-nederland/', 'Maximaal krediet Caribisch Nederland')]}
+EXTRA = {'hypotheek': [('../hypotheek/boeteberekening/', 'Boeterente berekenen')], 'overige': [('https://pandwise.nl/', 'PandWise')], 'krediet': [('../krediet/maximaal-krediet-caribisch-nederland/', 'Maximaal krediet Caribisch Nederland')]}
 UITGELICHT = ['max-hyp-2027', 'pensioenklif', 'max-hyp-box-1-3']
 
 
