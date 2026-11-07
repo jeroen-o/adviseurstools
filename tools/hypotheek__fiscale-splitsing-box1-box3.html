@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiscale splitsing box 1 en box 3</title>
+<meta name="description" content="Splits de financieringsbehoefte in een maximaal box 1-deel (eigenwoningschuld), een verplicht box 3-deel en een overgangsrechtelijk deel. Indicatief, geen advies.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="basecss">
+:root{
+  --navy:#003057;--navy2:#0b4a7d;--gold:#e5a138;--gold-dk:#b97c14;--gold-lt:#fdf5e7;
+  --bg:#f4f7f9;--white:#fff;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;
+  --green:#1a7f4b;--grlt:#e8f6ee;--red:#b42318;--redlt:#fdecea;--orange:#b45309;--orlt:#fef3c7;
+  --shadow:0 2px 14px rgba(0,48,87,.08);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Montserrat,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55}
+.hdr{background:var(--navy);color:#fff;padding:16px}
+.hdr-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hdr-title{font-size:20px;font-weight:700;color:#fff;line-height:1.25}
+.hdr-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:2px}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.sticky{position:sticky;top:12px}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.ch .chs{font-weight:500;font-size:11.5px;color:rgba(255,255,255,.75)}
+.cb{padding:16px 18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.r3{grid-template-columns:1fr 1fr 1fr}
+.row.r1{grid-template-columns:1fr}
+.sep{grid-column:1/-1;font-size:10.5px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.09em;padding-bottom:4px;border-bottom:1px solid var(--border);margin:4px 0 10px}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0}
+label,.lbl{font-size:12.5px;font-weight:600;color:var(--navy)}
+.hint{font-size:11px;color:var(--muted);line-height:1.4}
+.iw{position:relative}
+.iw .px,.iw .sx{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--muted);pointer-events:none}
+.iw .px{left:10px}.iw .sx{right:10px}
+input,select{width:100%;min-height:40px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:15px;color:var(--text);background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48,87,.12)}
+.iw input.eur{padding-left:26px}
+.iw input.pct{padding-right:30px}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.chk input{width:18px;height:18px;min-height:0;margin:2px 0 0;flex-shrink:0;accent-color:var(--navy)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+.btn:hover{background:var(--navy2)}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#f0f4f8;border-radius:10px;padding:12px 14px;border-left:4px solid var(--navy)}
+.kpi.g{border-left-color:var(--gold)}.kpi.ok{border-left-color:var(--green)}.kpi.bad{border-left-color:var(--red)}
+.kpi .kl{overflow-wrap:anywhere;hyphens:auto;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi .kv{font-size:21px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:3px;word-break:break-word}
+.kpi .ks{font-size:11px;color:var(--muted);margin-top:2px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+table.t td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;white-space:nowrap}
+table.t tr.tot td{font-weight:700;background:#eef3f8;color:var(--navy);border-top:2px solid var(--border)}
+table.t tr.sub td{background:#f8fafb;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
+.note{border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;line-height:1.6;margin:10px 0}
+.note.info{background:#eef4fa;border-left:4px solid var(--navy)}
+.note.warn{background:var(--orlt);border-left:4px solid var(--orange)}
+.note.bad{background:var(--redlt);border-left:4px solid var(--red)}
+.note.ok{background:var(--grlt);border-left:4px solid var(--green)}
+.note.gold{background:var(--gold-lt);border-left:4px solid var(--gold)}
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.pill.b1{background:#dbe8f5;color:var(--navy)}.pill.b3{background:var(--orlt);color:var(--orange)}.pill.ov{background:var(--grlt);color:var(--green)}.pill.no{background:var(--redlt);color:var(--red)}
+.bar{display:flex;height:26px;border-radius:6px;overflow:hidden;background:#e3e9ef;margin:4px 0 8px}
+.bar div{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;background:var(--c)}
+details.uitleg{border:1px solid var(--border);border-radius:10px;background:#fff}
+details.uitleg summary{cursor:pointer;padding:12px 16px;font-weight:700;color:var(--navy);font-size:14px}
+details.uitleg .in{padding:0 16px 14px;font-size:13px;line-height:1.65}
+details.uitleg .in h4{margin:12px 0 4px;font-size:13px;color:var(--navy)}
+details.uitleg .in ul{margin:4px 0 8px;padding-left:20px}
+.src{font-size:11.5px;color:var(--muted);word-break:break-word}
+.src a{color:var(--navy2)}
+.disc{background:var(--navy);color:#fff;border-radius:12px;padding:14px 18px;font-size:12.5px;line-height:1.6}
+.disc strong{color:var(--gold)}
+.muted{color:var(--muted)}
+.kopers{display:flex;flex-direction:column;gap:12px}
+.koper{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fbfcfd}
+.koper h4{margin:0 0 8px;font-size:13.5px;color:var(--navy);display:flex;justify-content:space-between;align-items:center}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.sticky{position:static}}
+@media(max-width:560px){.row,.row.r3{grid-template-columns:1fr}.hdr-title{font-size:17px}.badge{margin-left:0}.kpi .kv{font-size:19px}.cb{padding:14px}}
+@media print{.noprint{display:none!important}body{background:#fff}.card{box-shadow:none}}
+.bar .b1n{background:#003057}.bar .b1o{background:#1a7f4b}.bar .b3{background:#e5a138;color:#003057}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="hdr-in">
+  <div><div class="hdr-title">Fiscale splitsing financieringsbehoefte: box 1 en box 3</div>
+  <div class="hdr-sub">Eigenwoningschuld · eigenwoningreserve · overgangsrecht 2013 · meegefinancierde kosten</div></div>
+  <span class="badge">Wet IB 2001 · 2026</span>
+</div></header>
+
+<div class="wrap">
+<div class="grid">
+<div class="col">
+
+  <div class="card">
+    <div class="ch">1. Aankoop en verwervingskosten <span class="chs">kunnen in box 1</span></div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="koopsom">Koopsom woning</label><div class="iw"><span class="px">€</span><input class="eur" id="koopsom" value="400000"></div></div>
+        <div class="fl"><label for="marktwaarde">Marktwaarde (taxatie)</label><div class="iw"><span class="px">€</span><input class="eur" id="marktwaarde" value="400000"></div><span class="hint">Alleen voor de signalering van de leencapaciteit (LTV).</span></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="ovb">Overdrachtsbelasting</label><div class="iw"><span class="px">€</span><input class="eur" id="ovb" value="8000"></div></div>
+        <div class="fl"><label for="notarisLev">Notaris leveringsakte + kadaster</label><div class="iw"><span class="px">€</span><input class="eur" id="notarisLev" value="1200"></div></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="makelaar">Aankoopmakelaar</label><div class="iw"><span class="px">€</span><input class="eur" id="makelaar" value="3500"></div></div>
+        <div class="fl"><label for="keuring">Bouwkundige keuring</label><div class="iw"><span class="px">€</span><input class="eur" id="keuring" value="450"></div></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="verbouwing">Verbouwing / verbetering / EBV</label><div class="iw"><span class="px">€</span><input class="eur" id="verbouwing" value="15000"></div><span class="hint">Verbetering of onderhoud van de eigen woning.</span></div>
+        <div class="fl"><label for="overigVerw">Overige verwervingskosten</label><div class="iw"><span class="px">€</span><input class="eur" id="overigVerw" value="0"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">2. Financieringskosten <span class="chs">aftrekbaar · naar rato in de eigenwoningschuld</span></div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="advies">Advies en bemiddeling hypotheek</label><div class="iw"><span class="px">€</span><input class="eur" id="advies" value="2800"></div></div>
+        <div class="fl"><label for="taxatie">Taxatie (nodig voor de lening)</label><div class="iw"><span class="px">€</span><input class="eur" id="taxatie" value="750"></div></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="notarisHyp">Notaris hypotheekakte</label><div class="iw"><span class="px">€</span><input class="eur" id="notarisHyp" value="900"></div></div>
+        <div class="fl"><label for="nhg">NHG-borgtochtprovisie</label><div class="iw"><span class="px">€</span><input class="eur" id="nhg" value="0"></div><span class="hint">2026: 0,4% van het leenbedrag.</span></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="overigFin">Overige financieringskosten</label><div class="iw"><span class="px">€</span><input class="eur" id="overigFin" value="0"></div><span class="hint">Bijv. afsluit- of bereidstellingsprovisie.</span></div>
+        <div class="fl" style="justify-content:center"><label class="chk"><input type="checkbox" id="finMee" checked> Financieringskosten meefinancieren</label><span class="hint">Uit: eerst betaald uit eigen middelen.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">3. Posten die altijd in box 3 vallen</div>
+    <div class="cb">
+      <div class="row r3">
+        <div class="fl"><label for="bankgarantie">Kosten bankgarantie</label><div class="iw"><span class="px">€</span><input class="eur" id="bankgarantie" value="0"></div></div>
+        <div class="fl"><label for="roerend">Roerende zaken / inventaris</label><div class="iw"><span class="px">€</span><input class="eur" id="roerend" value="0"></div></div>
+        <div class="fl"><label for="consumptief">Consumptief deel</label><div class="iw"><span class="px">€</span><input class="eur" id="consumptief" value="0"></div></div>
+      </div>
+      <p class="hint" style="margin:0">Een consumptief deel (vrij besteedbaar, auto, vakantie, aflossen van een krediet) is nooit eigenwoningschuld. Kosten van een bankgarantie zijn geen verwervingskosten van de woning en geen kosten van de eigenwoninglening. Deze tool rekent ze daarom in box 3.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">4. Fiscale historie</div>
+    <div class="cb">
+      <div class="row r1">
+        <div class="fl"><label for="ewrModus">Eigenwoningreserve (EWR, art. 3.119aa)</label>
+          <select id="ewrModus"><option value="geen">Geen (starter, of geen overwaarde)</option><option value="bedrag">Bedrag bekend</option><option value="bereken" selected>Berekenen uit de verkoop van de vorige woning</option></select></div>
+      </div>
+      <div class="row" id="ewrBedragRij">
+        <div class="fl"><label for="ewr">Eigenwoningreserve</label><div class="iw"><span class="px">€</span><input class="eur" id="ewr" value="0"></div></div>
+      </div>
+      <div id="ewrBerekenRij">
+        <div class="row r3">
+          <div class="fl"><label for="verkoopprijs">Verkoopprijs vorige woning</label><div class="iw"><span class="px">€</span><input class="eur" id="verkoopprijs" value="350000"></div></div>
+          <div class="fl"><label for="verkoopkosten">Verkoopkosten</label><div class="iw"><span class="px">€</span><input class="eur" id="verkoopkosten" value="4000"></div><span class="hint">Makelaar, notaris doorhaling e.d.</span></div>
+          <div class="fl"><label for="ewsOud">Eigenwoningschuld vorige woning</label><div class="iw"><span class="px">€</span><input class="eur" id="ewsOud" value="250000"></div></div>
+        </div>
+      </div>
+      <div class="row r1"><label class="chk"><input type="checkbox" id="ewrVervallen"> De EWR is vervallen: de vorige woning is verkocht vóór 1 januari van het derde kalenderjaar vóór dit jaar (termijn verlopen)</label></div>
+      <div class="sep">Overgangsrecht (eigenwoningschuld op 31-12-2012)</div>
+      <div class="row">
+        <div class="fl"><label for="bews">Bestaande eigenwoningschuld (BEWS)</label><div class="iw"><span class="px">€</span><input class="eur" id="bews" value="180000"></div><span class="hint">Saldo onder overgangsrecht direct vóór de aflossing bij verkoop (na aflossingen sinds 2013).</span></div>
+        <div class="fl" style="justify-content:center"><label class="chk"><input type="checkbox" id="bewsTermijn" checked> De nieuwe schuld ontstaat uiterlijk in het kalenderjaar ná het jaar waarin de oude schuld is afgelost</label></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">5. Eigen middelen</div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="eigen">Eigen geld dat wordt ingebracht</label><div class="iw"><span class="px">€</span><input class="eur" id="eigen" value="96000"></div><span class="hint">Inclusief eventueel ingebrachte overwaarde.</span></div>
+        <div class="fl"><span class="lbl">Toerekening</span><span class="hint">Eigen geld gaat eerst naar de box 3-posten (stap 3). Daarna, als u de financieringskosten niet meefinanciert, naar die kosten. De rest gaat naar de verwervingskosten. Voor de klant is dat meestal de gunstigste volgorde.</span></div>
+      </div>
+      <div class="btns noprint">
+        <button class="btn sec" type="button" id="btnVoorbeeld">Voorbeeld Belastingdienst laden</button>
+        <button class="btn sec" type="button" id="btnStarter">Voorbeeld starter laden</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="col sticky" id="resultaat">
+  <div class="card">
+    <div class="ch">Resultaat <span class="chs" id="resSub"></span></div>
+    <div class="cb">
+      <div class="kpis" id="kpis"></div>
+      <div class="legend"><span style="--c:#003057">Box 1, nieuw regime</span><span style="--c:#1a7f4b">Box 1, overgangsrecht</span><span style="--c:#e5a138">Box 3</span></div>
+      <div class="bar" id="bar"></div>
+      <div id="meldingen"></div>
+      <div class="tbl-wrap"><table class="t" id="stappen"></table></div>
+      <div class="btns noprint" style="margin-top:14px"><button class="btn gold" type="button" id="btnPrint">Afdrukken / PDF</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch">Posten in de financieringsopzet</div>
+    <div class="cb"><div class="tbl-wrap"><table class="t" id="posten"></table></div></div>
+  </div>
+</div>
+</div>
+
+<div style="margin-top:18px;display:flex;flex-direction:column;gap:14px">
+<details class="uitleg" open><summary>Toelichting en rekenregels</summary><div class="in">
+  <h4>1. Maximale eigenwoningschuld (art. 3.119a Wet IB 2001)</h4>
+  <p>Een eigenwoningschuld is een schuld die u aangaat om de eigen woning te kopen, te verbeteren of te onderhouden (verwervingsschuld). Voor schulden die na 2012 zijn aangegaan moet die schuld in maximaal 360 maanden ten minste annuïtair worden afgelost (aflossingseis). De verwervingskosten zijn de koopsom plus de kosten koper (overdrachtsbelasting, notaris levering, makelaar, keuring) en de verbouwing.</p>
+  <p><strong>Maximale eigenwoningschuld = verwervingskosten − eigenwoningreserve</strong>. Het deel van de lening dat voor de verwerving wordt gebruikt, telt mee tot dit maximum. Wat erboven uitkomt, valt in box 3.</p>
+  <h4>2. Eigenwoningreserve (art. 3.119aa)</h4>
+  <p>EWR = verkoopprijs − verkoopkosten − eigenwoningschuld van de vorige woning (niet negatief). De EWR verlaagt de maximale eigenwoningschuld van de nieuwe woning, <em>ook als u de overwaarde niet inbrengt</em> (bijleenregeling). De EWR vervalt aan het einde van het derde kalenderjaar na het jaar van verkoop. Een restschuld is geen negatieve EWR.</p>
+  <h4>3. Meegefinancierde financieringskosten (art. 3.119a lid 2 onderdeel c)</h4>
+  <p>De schuld voor financieringskosten hoort naar rato bij de eigenwoningschuld. Volgens het standpunt van de Kennisgroep (KG:051:2024:12) gaat dat zo:</p>
+  <p><strong>Toe te rekenen financieringskosten = eigenwoningschuld (zonder kosten) ÷ (totale lening − lening voor financieringskosten) × meegefinancierde kosten.</strong> De aftrekbare financieringskosten zijn het deel dat bij de eigenwoningschuld hoort: kosten × eigenwoningschuld ÷ totale lening. U trekt ze af in het jaar van betaling.</p>
+  <p>Het Belastingdienst-voorbeeld (knop "Voorbeeld Belastingdienst"): koopsom € 220.000, kosten € 15.000, EWR € 75.000, lening € 240.000 waarvan € 6.000 financieringskosten. Uitkomst: eigenwoningschuld € 164.103 en box 3 € 75.897.</p>
+  <h4>4. Overgangsrecht (art. 10bis.1, Wet IB 2001; regime vóór 2013)</h4>
+  <p>Een eigenwoningschuld die op 31-12-2012 bestond (BEWS), valt niet onder de aflossingseis. Wordt die schuld bij verkoop afgelost en ontstaat uiterlijk in het volgende kalenderjaar een nieuwe eigenwoningschuld? Dan houdt de nieuwe schuld het overgangsrecht tot het bedrag van de afgeloste BEWS (art. 10bis.1 lid 3). Aflossingen sinds 2013 verlagen de BEWS. Het deel van de eigenwoningschuld boven de BEWS valt onder het nieuwe regime en moet ten minste annuïtair in 360 maanden worden afgelost. De renteaftrek voor de BEWS eindigt uiterlijk op 31-12-2043, dertig jaar na 1-1-2014.</p>
+  <h4>Wat deze tool niet doet</h4>
+  <ul>
+    <li>Geen rekening met een restschuld van een vorige woning (art. 3.120a), met verbouwingsdepots die niet volledig worden besteed of met de 30-jaarstermijn per leningdeel.</li>
+    <li>Partners: de EWR en BEWS zijn persoonlijk. Bij een fiscaal partner kunt u ze samen invullen; het effect op de verdeling tussen partners rekent de tool niet uit.</li>
+    <li>Waarde-ondergrens of LTV-normen uit de Tijdelijke regeling hypothecair krediet (100% van de marktwaarde, of 106% met energiebesparende voorzieningen) worden alleen gesignaleerd.</li>
+  </ul>
+  <p class="src">Bronnen: Wet IB 2001 art. 3.119a, 3.119aa, 3.120, 10bis.1 (<a href="https://wetten.overheid.nl/BWBR0011353/2026-01-01" target="_blank" rel="noopener">wetten.overheid.nl</a>) · Belastingdienst, "Financieringskosten hypotheek en de eigenwoningschuld" (<a href="https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/woning/eigen-woning/u-verkoopt-een-huis/bijleenregeling/eigenwoningschuld/financieringskosten-meefinancieren" target="_blank" rel="noopener">belastingdienst.nl</a>) · Kennisgroep KG:051:2024:12, bijgewerkt 26-05-2026 (<a href="https://kennisgroepen.belastingdienst.nl/publicaties/kg051202412-toerekening-van-de-schuld-ter-betaling-van-de-financieringskosten/" target="_blank" rel="noopener">kennisgroepen.belastingdienst.nl</a>) · Belastingdienst, aftrekbare financieringskosten 2026 (<a href="https://www.belastingdienst.nl/data/online_aangifte/va2026/contextafhankelijkehelp/nlw/va/welke_financieringskosten_zijn_aftrekbaar.htm" target="_blank" rel="noopener">belastingdienst.nl</a>) · Overgangsrecht: Stcrt. 2013, 18554.</p>
+</div></details>
+<div class="disc"><strong>Indicatief, geen advies.</strong> Deze berekening is een hulpmiddel en gaat uit van de ingevulde gegevens en de wet zoals die op 1-1-2026 geldt. Aan de uitkomst kunt u geen rechten ontlenen. De fiscale kwalificatie hangt af van de feitelijke besteding, de aktes en de persoonlijke situatie (partners, eerdere woningen, restschuld). Laat de splitsing controleren voordat u een hypotheek aanvraagt. De tool slaat niets op en verstuurt niets.</div>
+</div>
+</div>
+<script>
+/* ---- gedeelde hulpfuncties (NL-notatie, invoer, print) ---- */
+function nlNum(n, d){ d = (d == null) ? 0 : d; if(!isFinite(n)) n = 0;
+  return Number(n).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function eur(n, d){ d = (d == null) ? 0 : d; var r = Number(n)||0; if(Math.abs(r) < 0.5/Math.pow(10,d)) r = 0;
+  return (r < 0 ? '− ' : '') + '€ ' + nlNum(Math.abs(r), d); }
+function eurc(n){ return eur(n, 2); }
+function pct(n, d){ return nlNum(n, d == null ? 2 : d) + '%'; }
+function parseEUR(s){ if(s == null) return 0; s = String(s).replace(/[\s €]/g,'');
+  if(s === '' || s === '-') return 0; s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function parseDec(s){ if(s == null) return 0; s = String(s).replace(/[\s %]/g,'');
+  if(s === '') return 0; if(s.indexOf(',') >= 0) s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function $(id){ return document.getElementById(id); }
+function vE(id){ var el = $(id); return el ? parseEUR(el.value) : 0; }
+function vD(id){ var el = $(id); return el ? parseDec(el.value) : 0; }
+function vC(id){ var el = $(id); return !!(el && el.checked); }
+function vS(id){ var el = $(id); return el ? el.value : ''; }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function floorEur(x){ return Math.floor(x + 1e-7); }
+/* euro-velden: duizendtalscheiding tijdens het typen, cursor blijft op zijn plek */
+function formatEurField(el){
+  var raw = el.value, pos = el.selectionStart == null ? raw.length : el.selectionStart;
+  var before = raw.slice(0, pos).replace(/[^0-9,]/g,'').length;
+  var neg = /^\s*-/.test(raw) && el.dataset.neg === '1';
+  var clean = raw.replace(/[^0-9,]/g,''); var parts = clean.split(',');
+  var ip = parts[0].replace(/^0+(?=\d)/,''); var dp = parts.length > 1 ? ',' + parts.slice(1).join('').slice(0,2) : '';
+  var fm = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  var out = (neg ? '-' : '') + fm + dp; el.value = out;
+  if(document.activeElement === el){ var cnt = 0, i = 0;
+    for(; i < out.length && cnt < before; i++){ if(/[0-9,]/.test(out[i])) cnt++; }
+    try{ el.setSelectionRange(i + (neg && before === 0 ? 1 : 0), i + (neg && before === 0 ? 1 : 0)); }catch(e){} }
+}
+function initEurFields(cb){
+  document.querySelectorAll('input.eur').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    formatEurField(el);
+    el.addEventListener('input', function(){ formatEurField(el); cb(); });
+  });
+  document.querySelectorAll('input.pct,input.num').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    el.addEventListener('input', cb);
+    el.addEventListener('blur', function(){ if(el.value !== '' && el.classList.contains('pct')){ var d = el.dataset.dec ? +el.dataset.dec : 2; el.value = nlNum(parseDec(el.value), d); } });
+  });
+  document.querySelectorAll('select,input[type=checkbox],input[type=month],input[type=date],input[type=radio]').forEach(function(el){
+    el.addEventListener('change', cb); el.addEventListener('input', cb);
+  });
+}
+function setEur(id, n){ var el = $(id); if(el){ el.value = n === '' ? '' : String(Math.round(n)); formatEurField(el); } }
+/* printen: werkt ook binnen een iframe (nieuw venster); valt terug op window.print */
+function printRapport(titel, inhoudHtml){
+  var css = document.getElementById('basecss') ? document.getElementById('basecss').textContent : '';
+  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>' + esc(titel) + '</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+    '<style>' + css + 'body{background:#fff;padding:18px}.noprint{display:none!important}.card{box-shadow:none;break-inside:avoid;margin-bottom:12px}.kpis{grid-template-columns:repeat(3,1fr)}@page{margin:14mm}</style></head><body>' +
+    '<div class="hdr" style="border-radius:10px;margin-bottom:14px"><div class="hdr-in"><div><div class="hdr-title">' + esc(titel) + '</div><div class="hdr-sub">Afgedrukt op ' + new Date().toLocaleDateString('nl-NL') + ' · indicatief, geen advies</div></div></div></div>' +
+    inhoudHtml + '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script></body></html>';
+  var w = null; try{ w = window.open('', '_blank'); }catch(e){ w = null; }
+  if(w && w.document){ w.document.open(); w.document.write(html); w.document.close(); }
+  else { window.print(); }
+}
+
+function bereken(){
+  var modus = vS('ewrModus');
+  $('ewrBedragRij').style.display = modus === 'bedrag' ? '' : 'none';
+  $('ewrBerekenRij').style.display = modus === 'bereken' ? '' : 'none';
+
+  var koopsom = vE('koopsom'), mw = vE('marktwaarde');
+  var verwPosten = [
+    ['Koopsom', koopsom], ['Overdrachtsbelasting', vE('ovb')], ['Notaris leveringsakte + kadaster', vE('notarisLev')],
+    ['Aankoopmakelaar', vE('makelaar')], ['Bouwkundige keuring', vE('keuring')], ['Verbouwing / verbetering / EBV', vE('verbouwing')],
+    ['Overige verwervingskosten', vE('overigVerw')] ];
+  var finPosten = [ ['Advies en bemiddeling', vE('advies')], ['Taxatie', vE('taxatie')], ['Notaris hypotheekakte', vE('notarisHyp')],
+    ['NHG-borgtochtprovisie', vE('nhg')], ['Overige financieringskosten', vE('overigFin')] ];
+  var b3Posten = [ ['Kosten bankgarantie', vE('bankgarantie')], ['Roerende zaken / inventaris', vE('roerend')], ['Consumptief deel', vE('consumptief')] ];
+  function som(a){ return a.reduce(function(s,p){ return s + p[1]; }, 0); }
+  var V = som(verwPosten), F = som(finPosten), C = som(b3Posten);
+  var behoefte = V + F + C;
+
+  // EWR
+  var ewr = 0, ewrBruto = 0;
+  if(modus === 'bedrag') ewrBruto = vE('ewr');
+  if(modus === 'bereken') ewrBruto = Math.max(0, vE('verkoopprijs') - vE('verkoopkosten') - vE('ewsOud'));
+  var vervallen = vC('ewrVervallen') && modus !== 'geen';
+  ewr = vervallen ? 0 : ewrBruto;
+
+  // eigen middelen toerekenen
+  var E = vE('eigen'), finMee = vC('finMee');
+  var eC = Math.min(E, C); var rest = E - eC;
+  var eF = 0, eV = 0;
+  if(!finMee){ eF = Math.min(rest, F); rest -= eF; }
+  eV = Math.min(rest, V); rest -= eV;
+  if(finMee){ eF = Math.min(rest, F); rest -= eF; }
+  var overschot = rest;
+  var LC = C - eC, LF = F - eF, LV = V - eV;
+  var L = LC + LF + LV;
+
+  var M = Math.max(0, V - ewr);
+  var ewsBasis = Math.min(LV, M);
+  var noemer = L - LF;
+  var fEws = (LF > 0 && noemer > 0) ? ewsBasis / noemer * LF : 0;
+  if(fEws > LF) fEws = LF;
+  var ews = ewsBasis + fEws;
+  var box3 = Math.max(0, L - ews);
+  var aftrekFin = L > 0 ? F * ews / L : 0;
+  var bews = vE('bews'), bewsOk = vC('bewsTermijn');
+  var ovr = (bews > 0 && bewsOk) ? Math.min(ews, bews) : 0;
+  var nieuw = ews - ovr;
+
+  $('resSub').textContent = 'lening ' + eur(L);
+  var k = '';
+  k += kpi('Financieringsbehoefte', eur(behoefte), 'verwerving + kosten + box 3-posten', '');
+  k += kpi('Lening na eigen geld', eur(L), 'eigen geld ' + eur(E - overschot), '');
+  k += kpi('Maximaal box 1-deel', eur(ews), 'eigenwoningschuld', 'ok');
+  k += kpi('Verplicht box 3-deel', eur(box3), 'geen renteaftrek', box3 > 0.5 ? 'g' : '');
+  k += kpi('Overgangsrechtelijk deel', eur(ovr), 'binnen box 1, geen aflossingseis', '');
+  k += kpi('Box 1, nieuw regime', eur(nieuw), 'aflossingseis: annuïtair, 360 mnd', '');
+  $('kpis').innerHTML = k;
+
+  var tot = Math.max(L, 1);
+  function seg(cls, val, lbl){ var w = val / tot * 100; return w > 0.05 ? '<div class="' + cls + '" style="width:' + w + '%" title="' + lbl + ': ' + eur(val) + '">' + (w > 14 ? eur(val) : '') + '</div>' : ''; }
+  $('bar').innerHTML = L > 0 ? seg('b1n', nieuw, 'Box 1 nieuw regime') + seg('b1o', ovr, 'Box 1 overgangsrecht') + seg('b3', box3, 'Box 3') : '';
+
+  var m = '';
+  if(L <= 0) m += '<div class="note ok">Met de ingevulde eigen middelen is geen lening nodig.</div>';
+  if(overschot > 0.5) m += '<div class="note info">Er is ' + eur(overschot) + ' meer eigen geld ingevuld dan nodig.</div>';
+  if(ewr > 0 && E < ewr) m += '<div class="note warn"><strong>Bijleenregeling:</strong> de eigenwoningreserve van ' + eur(ewr) + ' verlaagt de maximale eigenwoningschuld, ook als u de overwaarde niet inbrengt. U brengt nu ' + eur(E) + ' in. Leent u meer, dan valt dat deel in box 3.</div>';
+  if(vervallen && ewrBruto > 0) m += '<div class="note info">De EWR van ' + eur(ewrBruto) + ' is vervallen (termijn van 3 kalenderjaren verlopen) en telt niet mee.</div>';
+  if(bews > 0 && !bewsOk) m += '<div class="note warn">De nieuwe schuld ontstaat te laat. Het overgangsrecht voor de BEWS is dan vervallen en de hele eigenwoningschuld valt onder de aflossingseis.</div>';
+  if(bews > ews && bewsOk && ews > 0) m += '<div class="note info">De BEWS (' + eur(bews) + ') is hoger dan de nieuwe eigenwoningschuld. Het overgangsrecht geldt alleen tot ' + eur(ews) + '. Het verschil gaat definitief verloren.</div>';
+  if(LC > 0.5) m += '<div class="note gold">' + eur(LC) + ' van de lening is voor posten die altijd in box 3 vallen: bankgarantie, roerende zaken en het consumptieve deel.</div>';
+  if(mw > 0){ var ltv = L / mw * 100; var grens = vE('verbouwing') > 0 ? 106 : 100;
+    if(ltv > grens + 0.001) m += '<div class="note bad">De lening is ' + pct(ltv,1) + ' van de marktwaarde. Dat is meer dan de LTV-grens van ' + grens + '% (Trhk art. 5; 106% alleen met energiebesparende voorzieningen). Controleer of de financiering haalbaar is.</div>'; }
+  $('meldingen').innerHTML = m;
+
+  var s = '<tr><th>Rekenstap</th><th class="n">Bedrag</th></tr>';
+  s += r('Verwervingskosten (koopsom + kosten koper + verbouwing)', V);
+  s += r('− Eigenwoningreserve' + (vervallen && ewrBruto > 0 ? ' (vervallen)' : ''), -ewr);
+  s += r('= Maximale eigenwoningschuld zonder financieringskosten', M, 'tot');
+  s += r('Lening voor verwervingskosten (na eigen geld)', LV);
+  s += r('Eigenwoningschuld zonder kosten (laagste van beide)', ewsBasis);
+  s += r('Lening voor financieringskosten', LF);
+  if(LF > 0) s += '<tr><td colspan="2" class="hint">Toerekening: ' + eur(ewsBasis) + ' ÷ (' + eur(L) + ' − ' + eur(LF) + ') × ' + eur(LF) + ' = ' + eur(fEws) + '</td></tr>';
+  s += r('+ Meegefinancierde kosten in de eigenwoningschuld', fEws);
+  s += r('= Maximaal box 1-deel (eigenwoningschuld)', ews, 'tot');
+  s += r('Totale lening', L);
+  s += r('− Eigenwoningschuld', -ews);
+  s += r('= Verplicht box 3-deel', box3, 'tot');
+  s += r('Waarvan overgangsrecht (min. van BEWS en eigenwoningschuld)', ovr);
+  s += r('Box 1 onder het nieuwe regime (aflossingseis)', nieuw);
+  s += r('Aftrekbare financieringskosten in het jaar van betaling', aftrekFin);
+  if(F - aftrekFin > 0.5) s += r('Niet aftrekbaar deel financieringskosten', F - aftrekFin);
+  $('stappen').innerHTML = s;
+
+  var p = '<tr><th>Post</th><th>Fiscaal</th><th class="n">Bedrag</th></tr>';
+  p += '<tr class="sub"><td colspan="3">Verwerving</td></tr>';
+  verwPosten.forEach(function(x){ if(x[1]) p += '<tr><td>' + x[0] + '</td><td><span class="pill b1">box 1 mogelijk</span></td><td class="n">' + eur(x[1]) + '</td></tr>'; });
+  p += '<tr class="sub"><td colspan="3">Financieringskosten</td></tr>';
+  finPosten.forEach(function(x){ if(x[1]) p += '<tr><td>' + x[0] + '</td><td><span class="pill ov">aftrekbaar (naar rato)</span></td><td class="n">' + eur(x[1]) + '</td></tr>'; });
+  if(C > 0){ p += '<tr class="sub"><td colspan="3">Box 3</td></tr>';
+    b3Posten.forEach(function(x){ if(x[1]) p += '<tr><td>' + x[0] + '</td><td><span class="pill b3">box 3</span></td><td class="n">' + eur(x[1]) + '</td></tr>'; }); }
+  p += '<tr class="tot"><td colspan="2">Totale financieringsbehoefte</td><td class="n">' + eur(behoefte) + '</td></tr>';
+  p += '<tr><td colspan="2">− Eigen middelen (ingezet)</td><td class="n">' + eur(-(E - overschot)) + '</td></tr>';
+  p += '<tr class="tot"><td colspan="2">Lening</td><td class="n">' + eur(L) + '</td></tr>';
+  $('posten').innerHTML = p;
+}
+function kpi(l, v, s, c){ return '<div class="kpi ' + c + '"><div class="kl">' + l + '</div><div class="kv">' + v + '</div><div class="ks">' + s + '</div></div>'; }
+function r(l, v, c){ return '<tr' + (c ? ' class="' + c + '"' : '') + '><td>' + l + '</td><td class="n">' + eur(v) + '</td></tr>'; }
+
+function laad(o){ Object.keys(o).forEach(function(k){ var el = $(k); if(!el) return;
+  if(el.type === 'checkbox') el.checked = o[k]; else if(el.tagName === 'SELECT') el.value = o[k]; else { el.value = String(o[k]); if(el.classList.contains('eur')) formatEurField(el); } }); bereken(); }
+$('btnVoorbeeld').addEventListener('click', function(){
+  laad({koopsom:220000, marktwaarde:0, ovb:15000, notarisLev:0, makelaar:0, keuring:0, verbouwing:0, overigVerw:0,
+    advies:6000, taxatie:0, notarisHyp:0, nhg:0, overigFin:0, finMee:true, bankgarantie:0, roerend:0, consumptief:0,
+    ewrModus:'bedrag', ewr:75000, ewrVervallen:false, bews:0, bewsTermijn:true, eigen:1000});
+});
+$('btnStarter').addEventListener('click', function(){
+  laad({koopsom:350000, marktwaarde:350000, ovb:0, notarisLev:1200, makelaar:0, keuring:450, verbouwing:0, overigVerw:0,
+    advies:2800, taxatie:750, notarisHyp:900, nhg:0, overigFin:0, finMee:true, bankgarantie:300, roerend:0, consumptief:10000,
+    ewrModus:'geen', ewr:0, ewrVervallen:false, bews:0, bewsTermijn:true, eigen:0});
+});
+$('btnPrint').addEventListener('click', function(){
+  printRapport('Fiscale splitsing box 1 en box 3', '<div class="card"><div class="ch">Resultaat</div><div class="cb">' + $('kpis').outerHTML + $('meldingen').outerHTML +
+    '<table class="t">' + $('stappen').innerHTML + '</table></div></div><div class="card"><div class="ch">Posten</div><div class="cb"><table class="t">' + $('posten').innerHTML + '</table></div></div>' +
+    '<div class="disc"><strong>Indicatief, geen advies.</strong> Grondslag: Wet IB 2001 art. 3.119a, 3.119aa en 10bis.1, en KG:051:2024:12.</div>');
+});
+initEurFields(bereken);
+bereken();
+</script>
+</body>
+</html>

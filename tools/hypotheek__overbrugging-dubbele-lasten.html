@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overbrugging en dubbele lasten</title>
+<meta name="description" content="Bereken het overbruggingskrediet (overwaarde maal het percentage van de geldverstrekker, maximaal 36 maanden) en de bruto en netto dubbele woonlasten tijdens de verkoopperiode, met renteaftrek voor de oude woning. Indicatief, geen advies.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="basecss">
+:root{
+  --navy:#003057;--navy2:#0b4a7d;--gold:#e5a138;--gold-dk:#b97c14;--gold-lt:#fdf5e7;
+  --bg:#f4f7f9;--white:#fff;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;
+  --green:#1a7f4b;--grlt:#e8f6ee;--red:#b42318;--redlt:#fdecea;--orange:#b45309;--orlt:#fef3c7;
+  --shadow:0 2px 14px rgba(0,48,87,.08);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Montserrat,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55}
+.hdr{background:var(--navy);color:#fff;padding:16px}
+.hdr-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hdr-title{font-size:20px;font-weight:700;color:#fff;line-height:1.25}
+.hdr-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:2px}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.sticky{position:sticky;top:12px}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.ch .chs{font-weight:500;font-size:11.5px;color:rgba(255,255,255,.75)}
+.cb{padding:16px 18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.r3{grid-template-columns:1fr 1fr 1fr}
+.row.r1{grid-template-columns:1fr}
+.sep{grid-column:1/-1;font-size:10.5px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.09em;padding-bottom:4px;border-bottom:1px solid var(--border);margin:4px 0 10px}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0}
+label,.lbl{font-size:12.5px;font-weight:600;color:var(--navy)}
+.hint{font-size:11px;color:var(--muted);line-height:1.4}
+.iw{position:relative}
+.iw .px,.iw .sx{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--muted);pointer-events:none}
+.iw .px{left:10px}.iw .sx{right:10px}
+input,select{width:100%;min-height:40px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:15px;color:var(--text);background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48,87,.12)}
+.iw input.eur{padding-left:26px}
+.iw input.pct{padding-right:30px}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.chk input{width:18px;height:18px;min-height:0;margin:2px 0 0;flex-shrink:0;accent-color:var(--navy)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+.btn:hover{background:var(--navy2)}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#f0f4f8;border-radius:10px;padding:12px 14px;border-left:4px solid var(--navy)}
+.kpi.g{border-left-color:var(--gold)}.kpi.ok{border-left-color:var(--green)}.kpi.bad{border-left-color:var(--red)}
+.kpi .kl{overflow-wrap:anywhere;hyphens:auto;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi .kv{font-size:21px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:3px;word-break:break-word}
+.kpi .ks{font-size:11px;color:var(--muted);margin-top:2px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+table.t td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;white-space:nowrap}
+table.t tr.tot td{font-weight:700;background:#eef3f8;color:var(--navy);border-top:2px solid var(--border)}
+table.t tr.sub td{background:#f8fafb;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
+.note{border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;line-height:1.6;margin:10px 0}
+.note.info{background:#eef4fa;border-left:4px solid var(--navy)}
+.note.warn{background:var(--orlt);border-left:4px solid var(--orange)}
+.note.bad{background:var(--redlt);border-left:4px solid var(--red)}
+.note.ok{background:var(--grlt);border-left:4px solid var(--green)}
+.note.gold{background:var(--gold-lt);border-left:4px solid var(--gold)}
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.pill.b1{background:#dbe8f5;color:var(--navy)}.pill.b3{background:var(--orlt);color:var(--orange)}.pill.ov{background:var(--grlt);color:var(--green)}.pill.no{background:var(--redlt);color:var(--red)}
+.bar{display:flex;height:26px;border-radius:6px;overflow:hidden;background:#e3e9ef;margin:4px 0 8px}
+.bar div{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;background:var(--c)}
+details.uitleg{border:1px solid var(--border);border-radius:10px;background:#fff}
+details.uitleg summary{cursor:pointer;padding:12px 16px;font-weight:700;color:var(--navy);font-size:14px}
+details.uitleg .in{padding:0 16px 14px;font-size:13px;line-height:1.65}
+details.uitleg .in h4{margin:12px 0 4px;font-size:13px;color:var(--navy)}
+details.uitleg .in ul{margin:4px 0 8px;padding-left:20px}
+.src{font-size:11.5px;color:var(--muted);word-break:break-word}
+.src a{color:var(--navy2)}
+.disc{background:var(--navy);color:#fff;border-radius:12px;padding:14px 18px;font-size:12.5px;line-height:1.6}
+.disc strong{color:var(--gold)}
+.muted{color:var(--muted)}
+.kopers{display:flex;flex-direction:column;gap:12px}
+.koper{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fbfcfd}
+.koper h4{margin:0 0 8px;font-size:13.5px;color:var(--navy);display:flex;justify-content:space-between;align-items:center}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.sticky{position:static}}
+@media(max-width:560px){.row,.row.r3{grid-template-columns:1fr}.hdr-title{font-size:17px}.badge{margin-left:0}.kpi .kv{font-size:19px}.cb{padding:14px}}
+@media print{.noprint{display:none!important}body{background:#fff}.card{box-shadow:none}}
+table.t td.neg{color:var(--green)}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="hdr-in">
+  <div><div class="hdr-title">Overbrugging met netto dubbele lasten</div>
+  <div class="hdr-sub">Overbruggingskrediet · bruto en netto lasten oude en nieuwe woning · renteaftrek tot en met 3 kalenderjaren na leegstand</div></div>
+  <span class="badge">2026</span>
+</div></header>
+
+<div class="wrap">
+<div class="grid">
+<div class="col">
+  <div class="card">
+    <div class="ch">1. Oude woning en overbruggingskrediet</div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="waardeOud">Marktwaarde of verwachte verkoopprijs</label><div class="iw"><span class="px">€</span><input class="eur" id="waardeOud" value="425000"></div><span class="hint">Volgens taxatie of verkoopovereenkomst.</span></div>
+        <div class="fl"><label for="hypOud">Alle hypotheken op de oude woning</label><div class="iw"><span class="px">€</span><input class="eur" id="hypOud" value="210000"></div><span class="hint">Totaal van alle leningdelen en inschrijvingen op het onderpand.</span></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="methode">Berekening maximaal krediet</label>
+          <select id="methode"><option value="ow" selected>Percentage van de overwaarde</option><option value="mw">Percentage van de marktwaarde min de hypotheken</option></select></div>
+        <div class="fl"><label for="pctOb">Percentage geldverstrekker</label><div class="iw"><input class="pct" id="pctOb" value="90"><span class="sx">%</span></div><span class="hint">Vaak 80–90%. Zie het acceptatiebeleid van de geldverstrekker.</span></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="nodigOb">Benodigd overbruggingsbedrag</label><div class="iw"><span class="px">€</span><input class="eur" id="nodigOb" value=""></div><span class="hint">Leeg laten = het maximale krediet.</span></div>
+        <div class="fl"><label for="renteOb">Rente overbruggingskrediet</label><div class="iw"><input class="pct" id="renteOb" value="4,50"><span class="sx">%</span></div></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="rvpOb">Rentevast</label><select id="rvpOb"><option value="var">Variabel</option><option value="1">1 jaar vast</option><option value="2" selected>2 jaar vast</option><option value="3">3 jaar vast</option></select></div>
+        <div class="fl"><label for="maxLt">Maximale looptijd krediet</label><select id="maxLt"><option value="12">12 maanden</option><option value="24" selected>24 maanden</option><option value="36">36 maanden</option></select><span class="hint">Volgens de geldverstrekker. Wettelijk geen vast maximum; in de markt maximaal 36 maanden.</span></div>
+      </div>
+      <div class="row r1"><label class="chk"><input type="checkbox" id="obAftrek" checked> Rente over het overbruggingskrediet is aftrekbaar (onderdeel van de eigenwoningschuld van de nieuwe woning)</label></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">2. Lasten oude woning <span class="chs">tijdens leegstand en te koop</span></div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="renteOud">Gemiddelde rente oude hypotheek</label><div class="iw"><input class="pct" id="renteOud" value="2,10"><span class="sx">%</span></div></div>
+        <div class="fl"><label for="aflOud">Aflossing per maand (oude hypotheek)</label><div class="iw"><span class="px">€</span><input class="eur" id="aflOud" value="450"></div></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="box1Oud">Waarvan eigenwoningschuld (box 1)</label><div class="iw"><span class="px">€</span><input class="eur" id="box1Oud" value=""></div><span class="hint">Leeg = de hele hypotheek.</span></div>
+        <div class="fl"><label for="vasteOud">Overige vaste lasten oude woning p/m</label><div class="iw"><span class="px">€</span><input class="eur" id="vasteOud" value="250"></div><span class="hint">Energie, verzekering, gemeentelijke lasten, VvE. Niet aftrekbaar.</span></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="leegVanaf">Oude woning leeg en te koop vanaf</label><input type="month" id="leegVanaf" value="2026-12"></div>
+        <div class="fl"><span class="lbl">Renteaftrek oude woning tot en met</span><div id="aftrekTm" style="font-weight:700;color:var(--navy);padding-top:8px"></div><span class="hint">31 december van het derde jaar na het jaar waarin de woning leeg kwam te staan.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">3. Nieuwe woning</div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="hypNieuw">Hypotheek nieuwe woning (zonder overbrugging)</label><div class="iw"><span class="px">€</span><input class="eur" id="hypNieuw" value="380000"></div></div>
+        <div class="fl"><label for="renteNieuw">Rente nieuwe hypotheek</label><div class="iw"><input class="pct" id="renteNieuw" value="3,90"><span class="sx">%</span></div></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="vormNieuw">Aflosvorm</label><select id="vormNieuw"><option value="ann" selected>Annuïtair, 30 jaar</option><option value="lin">Lineair, 30 jaar</option><option value="afv">Aflossingsvrij</option></select></div>
+        <div class="fl"><label for="box1Nieuw">Waarvan eigenwoningschuld (box 1)</label><div class="iw"><span class="px">€</span><input class="eur" id="box1Nieuw" value=""></div><span class="hint">Leeg = de hele hypotheek.</span></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="wozNieuw">WOZ-waarde nieuwe woning</label><div class="iw"><span class="px">€</span><input class="eur" id="wozNieuw" value="500000"></div><span class="hint">Voor het eigenwoningforfait (0,35% in 2026).</span></div>
+        <div class="fl"><label for="startNieuw">Dubbele lasten vanaf (transport nieuwe woning)</label><input type="month" id="startNieuw" value="2026-12"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">4. Fiscaal en verkoopperiode</div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="tarief">Aftrektarief</label>
+          <select id="tarief"><option value="37.56" selected>37,56% (maximaal aftrektarief 2026)</option><option value="35.75">35,75% (eerste schijf 2026)</option><option value="17.85">17,85% (eerste schijf 2026, AOW-leeftijd)</option><option value="38.16">38,16% (2027, voorstel)</option></select></div>
+        <div class="fl"><label for="periode">Verwachte verkoopperiode</label><div class="iw"><input class="num" id="periode" value="6"><span class="sx">mnd</span></div><span class="hint">Van het begin van de dubbele lasten tot de levering van de oude woning.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="col sticky">
+  <div class="card">
+    <div class="ch">Resultaat <span class="chs" id="resSub"></span></div>
+    <div class="cb">
+      <div class="kpis" id="kpis"></div>
+      <div id="meldingen"></div>
+      <div class="tbl-wrap"><table class="t" id="maand"></table></div>
+      <div class="btns noprint" style="margin-top:14px"><button class="btn gold" type="button" id="btnPrint">Afdrukken / PDF</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch">Scenario's verkooptermijn <span class="chs">netto dubbele lasten, totaal</span></div>
+    <div class="cb"><div class="tbl-wrap"><table class="t" id="scen"></table></div></div>
+  </div>
+</div>
+</div>
+
+<div style="margin-top:18px;display:flex;flex-direction:column;gap:14px">
+<details class="uitleg" open><summary>Toelichting en rekenregels</summary><div class="in">
+  <h4>Overbruggingskrediet</h4>
+  <p>Overwaarde = marktwaarde of verwachte verkoopprijs − <strong>alle</strong> hypotheken op de oude woning. Het maximale krediet is het percentage van de geldverstrekker × de overwaarde (of: percentage × marktwaarde − hypotheken) en is nooit hoger dan de overwaarde. Het krediet is aflossingsvrij. U lost het af uit de verkoopopbrengst. De looptijd hangt af van de geldverstrekker. In de markt is die 12 tot 24 maanden, steeds vaker maximaal 36 maanden, bijvoorbeeld bij nieuwbouw. Duurt de verkoop langer, dan moet het krediet worden verlengd of afgelost.</p>
+  <h4>Dubbele lasten en renteaftrek</h4>
+  <ul>
+    <li><strong>Oude woning</strong> (art. 3.111 lid 2 Wet IB 2001): blijft een eigen woning als die leeg staat en te koop wordt aangeboden, en in het jaar van verhuizing of in een van de 3 jaren daarvoor uw hoofdverblijf was. Dat geldt in het jaar waarin de woning leeg kwam te staan en de <strong>3 kalenderjaren daarna</strong>. Voorbeeld van de Belastingdienst: leeg vanaf 1 mei 2023, dan aftrek tot en met 31 december 2026. Het eigenwoningforfait van de leegstaande woning is in die periode € 0.</li>
+    <li><strong>Nieuwe woning</strong>: renteaftrek vanaf de verwerving. Woont u er nog niet, dan geldt art. 3.111 lid 3 (leeg of in aanbouw, u gaat er binnen 3 jaar wonen). Deze tool rekent het eigenwoningforfait van 0,35% van de WOZ-waarde mee in de netto last van de nieuwe woning.</li>
+    <li><strong>Overbruggingskrediet</strong>: als het krediet wordt gebruikt voor de aankoop van de nieuwe woning, hoort het in de regel bij de eigenwoningschuld van die woning. Laat de fiscale kwalificatie, de aflossingseis en de eigenwoningreserve bij verkoop controleren. U kunt de aftrek in de tool uitzetten.</li>
+  </ul>
+  <p><strong>Netto dubbele lasten</strong> per maand = (rente + aflossing + vaste lasten oude woning) + rente overbrugging − aftrektarief × (rente box 1-deel oude woning, zolang de aftrekperiode loopt, + rente overbrugging als die aftrekbaar is). De lasten van de nieuwe woning staan apart vermeld: die betaalt u ook na de verkoop.</p>
+  <h4>Vereenvoudigingen</h4>
+  <ul><li>Rente per maand = schuld × jaarrente ÷ 12. De schuld van de oude hypotheek daalt met de ingevulde aflossing.</li>
+  <li>Geen Wet Hillen en geen begrenzing van het forfait. De gekozen aftrekmaatregel geldt voor alle aftrekbare rente.</li>
+  <li>Na de verkoop ontstaat mogelijk een eigenwoningreserve. Zie de tool "Fiscale splitsing box 1 en box 3".</li></ul>
+  <p class="src">Bronnen: Belastingdienst, "Vorige woning staat te koop" (<a href="https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/woning/tijdelijk_2_woningen/vorige_woning_nog_niet_verkocht/vorige_woning_staat_te_koop" target="_blank" rel="noopener">belastingdienst.nl</a>) · Belastingdienst, "Tijdelijk 2 woningen" (<a href="https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/woning/tijdelijk_2_woningen/tijdelijk_2_woningen" target="_blank" rel="noopener">belastingdienst.nl</a>) · Wet IB 2001 art. 3.111 lid 2 en 3 (<a href="https://wetten.overheid.nl/BWBR0011353/2026-01-01" target="_blank" rel="noopener">wetten.overheid.nl</a>) · Tarieven 2026: Belastingdienst, voorlopige aanslag 2026. 2027: Fiscale sleuteltabel 2027 (voorstel).</p>
+</div></details>
+<div class="disc"><strong>Indicatief, geen advies.</strong> De werkelijke voorwaarden van het overbruggingskrediet (percentage, looptijd, rente, kosten) verschillen per geldverstrekker. De fiscale gevolgen hangen af van uw persoonlijke situatie. Aan de uitkomst kunt u geen rechten ontlenen. De tool slaat niets op en verstuurt niets.</div>
+</div>
+</div>
+<script>
+/* ---- gedeelde hulpfuncties (NL-notatie, invoer, print) ---- */
+function nlNum(n, d){ d = (d == null) ? 0 : d; if(!isFinite(n)) n = 0;
+  return Number(n).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function eur(n, d){ d = (d == null) ? 0 : d; var r = Number(n)||0; if(Math.abs(r) < 0.5/Math.pow(10,d)) r = 0;
+  return (r < 0 ? '− ' : '') + '€ ' + nlNum(Math.abs(r), d); }
+function eurc(n){ return eur(n, 2); }
+function pct(n, d){ return nlNum(n, d == null ? 2 : d) + '%'; }
+function parseEUR(s){ if(s == null) return 0; s = String(s).replace(/[\s €]/g,'');
+  if(s === '' || s === '-') return 0; s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function parseDec(s){ if(s == null) return 0; s = String(s).replace(/[\s %]/g,'');
+  if(s === '') return 0; if(s.indexOf(',') >= 0) s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function $(id){ return document.getElementById(id); }
+function vE(id){ var el = $(id); return el ? parseEUR(el.value) : 0; }
+function vD(id){ var el = $(id); return el ? parseDec(el.value) : 0; }
+function vC(id){ var el = $(id); return !!(el && el.checked); }
+function vS(id){ var el = $(id); return el ? el.value : ''; }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function floorEur(x){ return Math.floor(x + 1e-7); }
+/* euro-velden: duizendtalscheiding tijdens het typen, cursor blijft op zijn plek */
+function formatEurField(el){
+  var raw = el.value, pos = el.selectionStart == null ? raw.length : el.selectionStart;
+  var before = raw.slice(0, pos).replace(/[^0-9,]/g,'').length;
+  var neg = /^\s*-/.test(raw) && el.dataset.neg === '1';
+  var clean = raw.replace(/[^0-9,]/g,''); var parts = clean.split(',');
+  var ip = parts[0].replace(/^0+(?=\d)/,''); var dp = parts.length > 1 ? ',' + parts.slice(1).join('').slice(0,2) : '';
+  var fm = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  var out = (neg ? '-' : '') + fm + dp; el.value = out;
+  if(document.activeElement === el){ var cnt = 0, i = 0;
+    for(; i < out.length && cnt < before; i++){ if(/[0-9,]/.test(out[i])) cnt++; }
+    try{ el.setSelectionRange(i + (neg && before === 0 ? 1 : 0), i + (neg && before === 0 ? 1 : 0)); }catch(e){} }
+}
+function initEurFields(cb){
+  document.querySelectorAll('input.eur').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    formatEurField(el);
+    el.addEventListener('input', function(){ formatEurField(el); cb(); });
+  });
+  document.querySelectorAll('input.pct,input.num').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    el.addEventListener('input', cb);
+    el.addEventListener('blur', function(){ if(el.value !== '' && el.classList.contains('pct')){ var d = el.dataset.dec ? +el.dataset.dec : 2; el.value = nlNum(parseDec(el.value), d); } });
+  });
+  document.querySelectorAll('select,input[type=checkbox],input[type=month],input[type=date],input[type=radio]').forEach(function(el){
+    el.addEventListener('change', cb); el.addEventListener('input', cb);
+  });
+}
+function setEur(id, n){ var el = $(id); if(el){ el.value = n === '' ? '' : String(Math.round(n)); formatEurField(el); } }
+/* printen: werkt ook binnen een iframe (nieuw venster); valt terug op window.print */
+function printRapport(titel, inhoudHtml){
+  var css = document.getElementById('basecss') ? document.getElementById('basecss').textContent : '';
+  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>' + esc(titel) + '</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+    '<style>' + css + 'body{background:#fff;padding:18px}.noprint{display:none!important}.card{box-shadow:none;break-inside:avoid;margin-bottom:12px}.kpis{grid-template-columns:repeat(3,1fr)}@page{margin:14mm}</style></head><body>' +
+    '<div class="hdr" style="border-radius:10px;margin-bottom:14px"><div class="hdr-in"><div><div class="hdr-title">' + esc(titel) + '</div><div class="hdr-sub">Afgedrukt op ' + new Date().toLocaleDateString('nl-NL') + ' · indicatief, geen advies</div></div></div></div>' +
+    inhoudHtml + '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script></body></html>';
+  var w = null; try{ w = window.open('', '_blank'); }catch(e){ w = null; }
+  if(w && w.document){ w.document.open(); w.document.write(html); w.document.close(); }
+  else { window.print(); }
+}
+
+function maandIndex(s){ var m = /^(\d{4})-(\d{2})$/.exec(s || ''); return m ? (+m[1]) * 12 + (+m[2] - 1) : null; }
+function maandNaam(idx){ var j = Math.floor(idx / 12), m = idx % 12; return ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'][m] + ' ' + j; }
+function annuiteit(L, r, n){ var i = r / 100 / 12; if(L <= 0) return 0; if(i === 0) return L / n; return L * i / (1 - Math.pow(1 + i, -n)); }
+
+function simuleer(P, n){
+  var res = {rijen:[], totBrutoDub:0, totNettoDub:0, totNettoNieuw:0, totAftrekOud:0, maandenZonderAftrek:0, maandenBovenLt:0};
+  var schuldOud = P.hypOud, box1Oud = P.box1Oud, schuldNieuw = P.hypNieuw, box1Nieuw = P.box1Nieuw;
+  var annN = annuiteit(P.hypNieuw, P.renteNieuw, 360), linAfl = P.hypNieuw / 360;
+  for(var m = 0; m < n; m++){
+    var idx = P.start + m;
+    var renteOud = schuldOud * P.renteOud / 100 / 12;
+    var renteOudBox1 = schuldOud > 0 ? renteOud * Math.min(1, box1Oud / schuldOud) : 0;
+    var afl = Math.min(P.aflOud, schuldOud);
+    var aftrekOk = idx <= P.aftrekEindIdx;
+    var renteOb = P.ob * P.renteOb / 100 / 12;
+    var brutoOud = renteOud + afl + P.vasteOud;
+    var voordeelOud = aftrekOk ? P.tarief * renteOudBox1 : 0;
+    var voordeelOb = P.obAftrek ? P.tarief * renteOb : 0;
+    var brutoDub = brutoOud + renteOb, nettoDub = brutoDub - voordeelOud - voordeelOb;
+    // nieuwe woning
+    var renteN = schuldNieuw * P.renteNieuw / 100 / 12, aflN = 0;
+    if(P.vorm === 'ann') aflN = annN - renteN; else if(P.vorm === 'lin') aflN = linAfl;
+    aflN = Math.min(aflN, schuldNieuw);
+    var renteNBox1 = schuldNieuw > 0 ? renteN * Math.min(1, box1Nieuw / schuldNieuw) : 0;
+    var ewf = P.woz * 0.0035 / 12;
+    var brutoN = renteN + aflN, nettoN = brutoN - P.tarief * Math.max(0, renteNBox1 - ewf);
+    res.rijen.push({idx:idx, renteOud:renteOud, afl:afl, vaste:P.vasteOud, renteOb:renteOb, voordeelOud:voordeelOud, voordeelOb:voordeelOb, brutoDub:brutoDub, nettoDub:nettoDub, brutoN:brutoN, nettoN:nettoN, aftrekOk:aftrekOk});
+    res.totBrutoDub += brutoDub; res.totNettoDub += nettoDub; res.totNettoNieuw += nettoN; res.totAftrekOud += voordeelOud;
+    if(!aftrekOk) res.maandenZonderAftrek++;
+    if(m >= P.maxLt) res.maandenBovenLt++;
+    var aflBox1 = schuldOud > 0 ? afl * Math.min(1, box1Oud / schuldOud) : 0;
+    schuldOud -= afl; box1Oud = Math.max(0, box1Oud - aflBox1);
+    var aflNBox1 = schuldNieuw > 0 ? aflN * Math.min(1, box1Nieuw / schuldNieuw) : 0;
+    schuldNieuw -= aflN; box1Nieuw = Math.max(0, box1Nieuw - aflNBox1);
+  }
+  return res;
+}
+
+function bereken(){
+  var waarde = vE('waardeOud'), hyp = vE('hypOud'), pctOb = vD('pctOb') / 100;
+  var overwaarde = Math.max(0, waarde - hyp);
+  var maxOb = vS('methode') === 'ow' ? overwaarde * pctOb : Math.max(0, waarde * pctOb - hyp);
+  maxOb = Math.min(maxOb, overwaarde);
+  var nodigRaw = $('nodigOb').value.trim(), nodig = nodigRaw === '' ? maxOb : vE('nodigOb');
+  var ob = Math.min(nodig, maxOb);
+  var leegIdx = maandIndex(vS('leegVanaf')), startIdx = maandIndex(vS('startNieuw'));
+  if(leegIdx == null) leegIdx = startIdx; if(startIdx == null) startIdx = leegIdx;
+  if(leegIdx == null){ var d = new Date(); leegIdx = startIdx = d.getFullYear() * 12 + d.getMonth(); }
+  var eindJaar = Math.floor(leegIdx / 12) + 3, aftrekEindIdx = eindJaar * 12 + 11;
+  $('aftrekTm').textContent = '31 december ' + eindJaar;
+  var box1OudRaw = $('box1Oud').value.trim(), box1NieuwRaw = $('box1Nieuw').value.trim();
+  var P = { hypOud:hyp, box1Oud: box1OudRaw === '' ? hyp : Math.min(vE('box1Oud'), hyp), renteOud:vD('renteOud'), aflOud:vE('aflOud'), vasteOud:vE('vasteOud'),
+    ob:ob, renteOb:vD('renteOb'), obAftrek:vC('obAftrek'), maxLt:+vS('maxLt'),
+    hypNieuw:vE('hypNieuw'), box1Nieuw: box1NieuwRaw === '' ? vE('hypNieuw') : Math.min(vE('box1Nieuw'), vE('hypNieuw')), renteNieuw:vD('renteNieuw'), vorm:vS('vormNieuw'), woz:vE('wozNieuw'),
+    tarief:(+vS('tarief')) / 100, start:Math.max(startIdx, 0), leegIdx:leegIdx, aftrekEindIdx:aftrekEindIdx };
+  var n = Math.round(clamp(vD('periode'), 0, 60));
+  var R = simuleer(P, n);
+  var eerste = n > 0 ? R.rijen[0] : simuleer(P, 1).rijen[0];
+
+  $('resSub').textContent = n + ' maanden';
+  $('kpis').innerHTML =
+    kpi('Maximaal overbruggingskrediet', eur(maxOb), 'overwaarde ' + eur(overwaarde), '') +
+    kpi('Overbrugging in de berekening', eur(ob), 'rente ' + eurc(ob * P.renteOb / 1200) + ' p/m', '') +
+    kpi('Netto dubbele lasten p/m', eur(eerste.nettoDub), 'eerste maand · bruto ' + eur(eerste.brutoDub), 'g') +
+    kpi('Totaal netto dubbele lasten', eur(R.totNettoDub), 'over ' + n + ' maanden · bruto ' + eur(R.totBrutoDub), 'bad') +
+    kpi('Netto last nieuwe woning p/m', eur(eerste.nettoN), 'bruto ' + eur(eerste.brutoN), '') +
+    kpi('Totaal netto alle woonlasten', eur(R.totNettoDub + R.totNettoNieuw), 'oud + overbrugging + nieuw, ' + n + ' mnd', '');
+
+  var m = '';
+  if(nodigRaw !== '' && nodig > maxOb + 0.5) m += '<div class="note bad">Het benodigde bedrag (' + eur(nodig) + ') is hoger dan het maximale overbruggingskrediet (' + eur(maxOb) + '). Er is ' + eur(nodig - maxOb) + ' extra eigen geld of een andere oplossing nodig.</div>';
+  if(n > P.maxLt) m += '<div class="note warn">De verkoopperiode (' + n + ' mnd) is langer dan de looptijd van het krediet (' + P.maxLt + ' mnd). Na ' + P.maxLt + ' maanden moet het krediet worden afgelost of verlengd. De tool rekent de rente door, zodat u ziet wat het kost.</div>';
+  if(R.maandenZonderAftrek > 0) m += '<div class="note warn">In ' + R.maandenZonderAftrek + ' van de ' + n + ' maanden valt de oude woning buiten de aftrekperiode (na 31-12-' + eindJaar + '). Over die maanden is de rente niet aftrekbaar en valt de woning in box 3.</div>';
+  if(leegIdx > startIdx) m += '<div class="note info">U woont tot ' + maandNaam(leegIdx) + ' nog in de oude woning (hoofdverblijf, art. 3.111 lid 1). De nieuwe woning is in die maanden een eigen woning op grond van art. 3.111 lid 3. Het eigenwoningforfait van de oude woning over die maanden telt de tool niet mee.</div>';
+  if(P.renteOb > 0 && ob > 0) m += '<div class="note info">Overbrugging: ' + ({'var':'variabele rente','1':'1 jaar vast','2':'2 jaar vast','3':'3 jaar vast'})[vS('rvpOb')] + ', aflossingsvrij, af te lossen uit de verkoopopbrengst.</div>';
+  $('meldingen').innerHTML = m;
+
+  var t = '<tr><th>Maand</th><th class="n">Bruto oud</th><th class="n">Rente overbr.</th><th class="n">Fiscaal voordeel</th><th class="n">Netto dubbel</th><th class="n">Netto nieuw</th></tr>';
+  R.rijen.forEach(function(x){ t += '<tr><td>' + maandNaam(x.idx) + (x.aftrekOk ? '' : ' <span class="pill no">geen aftrek</span>') + '</td><td class="n">' + eur(x.renteOud + x.afl + x.vaste) + '</td><td class="n">' + eur(x.renteOb) + '</td><td class="n neg">' + eur(-(x.voordeelOud + x.voordeelOb)) + '</td><td class="n"><strong>' + eur(x.nettoDub) + '</strong></td><td class="n">' + eur(x.nettoN) + '</td></tr>'; });
+  t += '<tr class="tot"><td>Totaal ' + n + ' mnd</td><td class="n">' + eur(R.rijen.reduce(function(s,x){return s + x.renteOud + x.afl + x.vaste;},0)) + '</td><td class="n">' + eur(R.rijen.reduce(function(s,x){return s + x.renteOb;},0)) + '</td><td class="n">' + eur(-R.rijen.reduce(function(s,x){return s + x.voordeelOud + x.voordeelOb;},0)) + '</td><td class="n">' + eur(R.totNettoDub) + '</td><td class="n">' + eur(R.totNettoNieuw) + '</td></tr>';
+  $('maand').innerHTML = t;
+  $('maand').parentNode.style.maxHeight = '420px';
+
+  var sc = '<tr><th class="n">Verkoop na</th><th class="n">Bruto dubbel</th><th class="n">Netto dubbel</th><th>Opmerking</th></tr>';
+  [3, 6, 9, 12, 18, 24, 36].forEach(function(k){ var S = simuleer(P, k);
+    var opm = []; if(k > P.maxLt) opm.push('langer dan de looptijd van het krediet'); if(S.maandenZonderAftrek > 0) opm.push(S.maandenZonderAftrek + ' mnd zonder aftrek');
+    sc += '<tr' + (k === n ? ' class="tot"' : '') + '><td class="n">' + k + ' mnd</td><td class="n">' + eur(S.totBrutoDub) + '</td><td class="n">' + eur(S.totNettoDub) + '</td><td class="hint">' + (opm.join('; ') || '–') + '</td></tr>'; });
+  $('scen').innerHTML = sc;
+}
+function kpi(l, v, s, c){ return '<div class="kpi ' + c + '"><div class="kl">' + l + '</div><div class="kv">' + v + '</div><div class="ks">' + s + '</div></div>'; }
+$('btnPrint').addEventListener('click', function(){
+  printRapport('Overbrugging en dubbele lasten', '<div class="card"><div class="ch">Resultaat</div><div class="cb">' + $('kpis').outerHTML + $('meldingen').outerHTML + '</div></div>' +
+    '<div class="card"><div class="ch">Scenario\'s verkooptermijn</div><div class="cb"><table class="t">' + $('scen').innerHTML + '</table></div></div>' +
+    '<div class="card"><div class="ch">Per maand</div><div class="cb"><table class="t">' + $('maand').innerHTML + '</table></div></div>' +
+    '<div class="disc"><strong>Indicatief, geen advies.</strong> Renteaftrek oude woning tot en met 3 kalenderjaren na het jaar van leegstand (art. 3.111 lid 2 Wet IB 2001).</div>');
+});
+initEurFields(bereken);
+bereken();
+</script>
+</body>
+</html>

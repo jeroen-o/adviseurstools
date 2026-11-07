@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overdrachtsbelasting meerdere kopers</title>
+<meta name="description" content="Bereken de overdrachtsbelasting per koper (1 tot 4 kopers) met eigendomsaandeel, startersvrijstelling, hoofdverblijf en de grondslag (hoogste van koopsom en waarde). Tarieven 2026 en voorstel 2027. Indicatief, geen advies.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="basecss">
+:root{
+  --navy:#003057;--navy2:#0b4a7d;--gold:#e5a138;--gold-dk:#b97c14;--gold-lt:#fdf5e7;
+  --bg:#f4f7f9;--white:#fff;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;
+  --green:#1a7f4b;--grlt:#e8f6ee;--red:#b42318;--redlt:#fdecea;--orange:#b45309;--orlt:#fef3c7;
+  --shadow:0 2px 14px rgba(0,48,87,.08);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Montserrat,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55}
+.hdr{background:var(--navy);color:#fff;padding:16px}
+.hdr-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hdr-title{font-size:20px;font-weight:700;color:#fff;line-height:1.25}
+.hdr-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:2px}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.sticky{position:sticky;top:12px}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.ch .chs{font-weight:500;font-size:11.5px;color:rgba(255,255,255,.75)}
+.cb{padding:16px 18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.r3{grid-template-columns:1fr 1fr 1fr}
+.row.r1{grid-template-columns:1fr}
+.sep{grid-column:1/-1;font-size:10.5px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.09em;padding-bottom:4px;border-bottom:1px solid var(--border);margin:4px 0 10px}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0}
+label,.lbl{font-size:12.5px;font-weight:600;color:var(--navy)}
+.hint{font-size:11px;color:var(--muted);line-height:1.4}
+.iw{position:relative}
+.iw .px,.iw .sx{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--muted);pointer-events:none}
+.iw .px{left:10px}.iw .sx{right:10px}
+input,select{width:100%;min-height:40px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:15px;color:var(--text);background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48,87,.12)}
+.iw input.eur{padding-left:26px}
+.iw input.pct{padding-right:30px}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.chk input{width:18px;height:18px;min-height:0;margin:2px 0 0;flex-shrink:0;accent-color:var(--navy)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+.btn:hover{background:var(--navy2)}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#f0f4f8;border-radius:10px;padding:12px 14px;border-left:4px solid var(--navy)}
+.kpi.g{border-left-color:var(--gold)}.kpi.ok{border-left-color:var(--green)}.kpi.bad{border-left-color:var(--red)}
+.kpi .kl{overflow-wrap:anywhere;hyphens:auto;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi .kv{font-size:21px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:3px;word-break:break-word}
+.kpi .ks{font-size:11px;color:var(--muted);margin-top:2px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+table.t td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;white-space:nowrap}
+table.t tr.tot td{font-weight:700;background:#eef3f8;color:var(--navy);border-top:2px solid var(--border)}
+table.t tr.sub td{background:#f8fafb;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
+.note{border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;line-height:1.6;margin:10px 0}
+.note.info{background:#eef4fa;border-left:4px solid var(--navy)}
+.note.warn{background:var(--orlt);border-left:4px solid var(--orange)}
+.note.bad{background:var(--redlt);border-left:4px solid var(--red)}
+.note.ok{background:var(--grlt);border-left:4px solid var(--green)}
+.note.gold{background:var(--gold-lt);border-left:4px solid var(--gold)}
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.pill.b1{background:#dbe8f5;color:var(--navy)}.pill.b3{background:var(--orlt);color:var(--orange)}.pill.ov{background:var(--grlt);color:var(--green)}.pill.no{background:var(--redlt);color:var(--red)}
+.bar{display:flex;height:26px;border-radius:6px;overflow:hidden;background:#e3e9ef;margin:4px 0 8px}
+.bar div{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;background:var(--c)}
+details.uitleg{border:1px solid var(--border);border-radius:10px;background:#fff}
+details.uitleg summary{cursor:pointer;padding:12px 16px;font-weight:700;color:var(--navy);font-size:14px}
+details.uitleg .in{padding:0 16px 14px;font-size:13px;line-height:1.65}
+details.uitleg .in h4{margin:12px 0 4px;font-size:13px;color:var(--navy)}
+details.uitleg .in ul{margin:4px 0 8px;padding-left:20px}
+.src{font-size:11.5px;color:var(--muted);word-break:break-word}
+.src a{color:var(--navy2)}
+.disc{background:var(--navy);color:#fff;border-radius:12px;padding:14px 18px;font-size:12.5px;line-height:1.6}
+.disc strong{color:var(--gold)}
+.muted{color:var(--muted)}
+.kopers{display:flex;flex-direction:column;gap:12px}
+.koper{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fbfcfd}
+.koper h4{margin:0 0 8px;font-size:13.5px;color:var(--navy);display:flex;justify-content:space-between;align-items:center}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.sticky{position:static}}
+@media(max-width:560px){.row,.row.r3{grid-template-columns:1fr}.hdr-title{font-size:17px}.badge{margin-left:0}.kpi .kv{font-size:19px}.cb{padding:14px}}
+@media print{.noprint{display:none!important}body{background:#fff}.card{box-shadow:none}}
+.koper .row{margin-bottom:8px}
+.uitk{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="hdr-in">
+  <div><div class="hdr-title">Overdrachtsbelasting voor meerdere kopers</div>
+  <div class="hdr-sub">Per koper over het eigen aandeel · startersvrijstelling · 2% / 8% / 10,4% · grondslag koopsom of waarde</div></div>
+  <span class="badge" id="badge">OVB 2026</span>
+</div></header>
+
+<div class="wrap">
+<div class="grid">
+<div class="col">
+  <div class="card">
+    <div class="ch">1. Object en waarde</div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="jaar">Peiljaar (datum notariële akte)</label>
+          <select id="jaar"><option value="2026" selected>2026 (definitief)</option><option value="2027">2027 (voorstel Belastingplan 2027)</option></select></div>
+        <div class="fl"><label for="soort">Soort verkrijging</label>
+          <select id="soort"><option value="woning" selected>Bestaande woning</option><option value="nieuwbouw">Nieuwbouwwoning met btw</option><option value="overig">Geen woning (bedrijfspand, grond, garagebox los)</option></select></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="koopsom">Koopsom (tegenprestatie)</label><div class="iw"><span class="px">€</span><input class="eur" id="koopsom" value="450000"></div></div>
+        <div class="fl"><label for="wev">Waarde in het economisch verkeer</label><div class="iw"><span class="px">€</span><input class="eur" id="wev" value=""></div><span class="hint">Bijv. de getaxeerde marktwaarde. Leeg laten als die gelijk is aan de koopsom.</span></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="canon">Gekapitaliseerde erfpachtcanon</label><div class="iw"><span class="px">€</span><input class="eur" id="canon" value="0"></div><span class="hint">Alleen bij erfpacht. Telt mee in de waarde en in de startersgrens.</span></div>
+        <div class="fl" id="nbRij" style="display:none"><label for="nbDeel">Deel waarover wél OVB verschuldigd is</label><div class="iw"><span class="px">€</span><input class="eur" id="nbDeel" value="0"></div><span class="hint">Meestal € 0. Bijvoorbeeld grond die u apart en zonder btw koopt.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">2. Kopers <span class="chs" id="aandeelSom"></span></div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="aantal">Aantal kopers</label><select id="aantal"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></div>
+        <div class="fl" style="justify-content:flex-end"><button class="btn sec noprint" type="button" id="btnGelijk">Aandelen gelijk verdelen</button></div>
+      </div>
+      <div class="kopers" id="kopers"></div>
+    </div>
+  </div>
+</div>
+
+<div class="col sticky">
+  <div class="card">
+    <div class="ch">Resultaat <span class="chs" id="resSub"></span></div>
+    <div class="cb">
+      <div class="kpis" id="kpis"></div>
+      <div id="meldingen"></div>
+      <div class="tbl-wrap"><table class="t" id="tabel"></table></div>
+      <div class="btns noprint" style="margin-top:14px"><button class="btn gold" type="button" id="btnPrint">Afdrukken / PDF</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch">Tarieven en grenzen <span class="chs" id="parSub"></span></div>
+    <div class="cb"><div class="tbl-wrap"><table class="t" id="params"></table></div></div>
+  </div>
+</div>
+</div>
+
+<div style="margin-top:18px;display:flex;flex-direction:column;gap:14px">
+<details class="uitleg" open><summary>Toelichting en rekenregels</summary><div class="in">
+  <h4>Grondslag (Wet BRV art. 9)</h4>
+  <p>De belasting wordt geheven over de waarde in het economisch verkeer, maar ten minste over de koopsom. De tool gebruikt dus <strong>het hoogste van koopsom en waarde</strong>, plus de gekapitaliseerde canon bij erfpacht. Elke koper betaalt over zijn eigen aandeel. Wettelijk is elke koper een afzonderlijke verkrijger, dus de draagplicht volgt het aandeel. Als de kopers onderling iets anders afspreken, staat dat los van de heffing.</p>
+  <h4>Tarieven (Wet BRV art. 14)</h4>
+  <ul>
+    <li><strong>2%</strong>: woning die de koper als hoofdverblijf gaat gebruiken, voor het verkregen aandeel.</li>
+    <li><strong>8%</strong> in 2026 (voorstel 2027: <strong>7%</strong>): woning die niet het hoofdverblijf van die koper wordt (beleggen, tweede woning, verhuur).</li>
+    <li><strong>10,4%</strong>: overige onroerende zaken.</li>
+  </ul>
+  <h4>Startersvrijstelling (Wet BRV art. 15 lid 1 onderdeel p)</h4>
+  <p>Per koper is <strong>0%</strong> mogelijk als die koper 18 jaar of ouder en jonger dan 35 is op de dag van de akte (dus 18 t/m 34 jaar). De koper mag de vrijstelling niet eerder hebben gebruikt en moet de woning duurzaam als hoofdverblijf gaan gebruiken. Daarnaast moet de <strong>waarde van de hele woning</strong> (niet het aandeel) binnen de grens blijven: € 555.000 in 2026, voorstel 2027 € 615.000. Dat is een harde grens: één euro erboven betekent 2% over het hele aandeel. Wie alleen aan de voorwaarden voldoet, krijgt de vrijstelling voor zijn eigen aandeel. De andere koper betaalt 2% of 8%. Een koper kan ook kiezen voor 2% en de vrijstelling bewaren voor later.</p>
+  <h4>Nieuwbouw</h4>
+  <p>Bij een nieuwbouwwoning waarover btw wordt betaald, geldt de samenloopvrijstelling (art. 15 lid 1 onderdeel a Wet BRV). Er is dan meestal geen overdrachtsbelasting verschuldigd. Vul alleen een deel in als er wel OVB wordt geheven, bijvoorbeeld over grond die u zonder btw koopt.</p>
+  <h4>Afronding</h4>
+  <p>De te betalen overdrachtsbelasting wordt per koper <strong>naar beneden afgerond op hele euro's</strong>. De oude afronding van de maatstaf op € 50 is per 1-3-2023 vervallen. Bron: Besluit van 9 januari 2023, nr. 2023-1, Stcrt. 2023, 1102. Volgens de toelichting geldt de afronding op hele euro's naar beneden, net als bij andere belastingmiddelen.</p>
+  <p class="src">Bronnen: Wet op belastingen van rechtsverkeer art. 9, 14 en 15 (<a href="https://wetten.overheid.nl/BWBR0002740/2026-01-01" target="_blank" rel="noopener">wetten.overheid.nl</a>) · Belastingdienst, "Wanneer kunt u de startersvrijstelling krijgen" (<a href="https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/woning/overdrachtsbelasting/startersvrijstelling" target="_blank" rel="noopener">belastingdienst.nl</a>), met het voorbeeld van twee kopers van een woning van € 600.000 · Rijksoverheid, vrijstelling overdrachtsbelasting (<a href="https://www.rijksoverheid.nl/vraag-en-antwoord/huis-kopen/vrijstelling-overdrachtsbelasting" target="_blank" rel="noopener">rijksoverheid.nl</a>) · Tarieven 2026 en 7% in 2027: SRA, jan. en sep. 2026 (<a href="https://www.sra.nl/nieuws/004501/2026/01/overdrachtsbelasting-drie-tarieven-en-hogere-startersvrijstelling-in-2026" target="_blank" rel="noopener">sra.nl</a>) · Afronding: <a href="https://zoek.officielebekendmakingen.nl/stcrt-2023-1102.html" target="_blank" rel="noopener">Stcrt. 2023, 1102</a>.</p>
+</div></details>
+<div class="disc"><strong>Indicatief, geen advies.</strong> De notaris stelt de verschuldigde overdrachtsbelasting vast op basis van de akte. Of iets een woning is, wat de waarde in het economisch verkeer is en of iemand de woning duurzaam als hoofdverblijf gaat gebruiken, hangt af van de feiten. De bedragen voor 2027 zijn een wetsvoorstel en kunnen nog wijzigen. De tool slaat niets op en verstuurt niets.</div>
+</div>
+</div>
+<script>
+/* ---- gedeelde hulpfuncties (NL-notatie, invoer, print) ---- */
+function nlNum(n, d){ d = (d == null) ? 0 : d; if(!isFinite(n)) n = 0;
+  return Number(n).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function eur(n, d){ d = (d == null) ? 0 : d; var r = Number(n)||0; if(Math.abs(r) < 0.5/Math.pow(10,d)) r = 0;
+  return (r < 0 ? '− ' : '') + '€ ' + nlNum(Math.abs(r), d); }
+function eurc(n){ return eur(n, 2); }
+function pct(n, d){ return nlNum(n, d == null ? 2 : d) + '%'; }
+function parseEUR(s){ if(s == null) return 0; s = String(s).replace(/[\s €]/g,'');
+  if(s === '' || s === '-') return 0; s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function parseDec(s){ if(s == null) return 0; s = String(s).replace(/[\s %]/g,'');
+  if(s === '') return 0; if(s.indexOf(',') >= 0) s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function $(id){ return document.getElementById(id); }
+function vE(id){ var el = $(id); return el ? parseEUR(el.value) : 0; }
+function vD(id){ var el = $(id); return el ? parseDec(el.value) : 0; }
+function vC(id){ var el = $(id); return !!(el && el.checked); }
+function vS(id){ var el = $(id); return el ? el.value : ''; }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function floorEur(x){ return Math.floor(x + 1e-7); }
+/* euro-velden: duizendtalscheiding tijdens het typen, cursor blijft op zijn plek */
+function formatEurField(el){
+  var raw = el.value, pos = el.selectionStart == null ? raw.length : el.selectionStart;
+  var before = raw.slice(0, pos).replace(/[^0-9,]/g,'').length;
+  var neg = /^\s*-/.test(raw) && el.dataset.neg === '1';
+  var clean = raw.replace(/[^0-9,]/g,''); var parts = clean.split(',');
+  var ip = parts[0].replace(/^0+(?=\d)/,''); var dp = parts.length > 1 ? ',' + parts.slice(1).join('').slice(0,2) : '';
+  var fm = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  var out = (neg ? '-' : '') + fm + dp; el.value = out;
+  if(document.activeElement === el){ var cnt = 0, i = 0;
+    for(; i < out.length && cnt < before; i++){ if(/[0-9,]/.test(out[i])) cnt++; }
+    try{ el.setSelectionRange(i + (neg && before === 0 ? 1 : 0), i + (neg && before === 0 ? 1 : 0)); }catch(e){} }
+}
+function initEurFields(cb){
+  document.querySelectorAll('input.eur').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    formatEurField(el);
+    el.addEventListener('input', function(){ formatEurField(el); cb(); });
+  });
+  document.querySelectorAll('input.pct,input.num').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    el.addEventListener('input', cb);
+    el.addEventListener('blur', function(){ if(el.value !== '' && el.classList.contains('pct')){ var d = el.dataset.dec ? +el.dataset.dec : 2; el.value = nlNum(parseDec(el.value), d); } });
+  });
+  document.querySelectorAll('select,input[type=checkbox],input[type=month],input[type=date],input[type=radio]').forEach(function(el){
+    el.addEventListener('change', cb); el.addEventListener('input', cb);
+  });
+}
+function setEur(id, n){ var el = $(id); if(el){ el.value = n === '' ? '' : String(Math.round(n)); formatEurField(el); } }
+/* printen: werkt ook binnen een iframe (nieuw venster); valt terug op window.print */
+function printRapport(titel, inhoudHtml){
+  var css = document.getElementById('basecss') ? document.getElementById('basecss').textContent : '';
+  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>' + esc(titel) + '</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+    '<style>' + css + 'body{background:#fff;padding:18px}.noprint{display:none!important}.card{box-shadow:none;break-inside:avoid;margin-bottom:12px}.kpis{grid-template-columns:repeat(3,1fr)}@page{margin:14mm}</style></head><body>' +
+    '<div class="hdr" style="border-radius:10px;margin-bottom:14px"><div class="hdr-in"><div><div class="hdr-title">' + esc(titel) + '</div><div class="hdr-sub">Afgedrukt op ' + new Date().toLocaleDateString('nl-NL') + ' · indicatief, geen advies</div></div></div></div>' +
+    inhoudHtml + '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script></body></html>';
+  var w = null; try{ w = window.open('', '_blank'); }catch(e){ w = null; }
+  if(w && w.document){ w.document.open(); w.document.write(html); w.document.close(); }
+  else { window.print(); }
+}
+
+var PAR = {
+  '2026': {hv:2, nhv:8, overig:10.4, grens:555000, status:'definitief'},
+  '2027': {hv:2, nhv:7, overig:10.4, grens:615000, status:'voorstel Belastingplan 2027 (nog niet aangenomen)'}
+};
+var kopersState = [
+  {aandeel:50, leeftijd:29, gebruikt:false, hv:true, opt:false},
+  {aandeel:50, leeftijd:41, gebruikt:false, hv:true, opt:false},
+  {aandeel:0, leeftijd:30, gebruikt:false, hv:true, opt:false},
+  {aandeel:0, leeftijd:30, gebruikt:false, hv:true, opt:false}
+];
+function leesKopers(){
+  var n = +vS('aantal');
+  for(var i = 0; i < n; i++){ if(!$('a' + i)) continue;
+    kopersState[i] = {aandeel:vD('a' + i), leeftijd:vD('l' + i), gebruikt:vC('g' + i), hv:vC('h' + i), opt:vC('o' + i)}; }
+}
+function tekenKopers(){
+  var n = +vS('aantal'), h = '';
+  for(var i = 0; i < n; i++){ var k = kopersState[i];
+    h += '<div class="koper"><h4>Koper ' + (i + 1) + '<span class="uitk" id="u' + i + '"></span></h4>' +
+      '<div class="row"><div class="fl"><label for="a' + i + '">Eigendomsaandeel</label><div class="iw"><input class="pct num" id="a' + i + '" value="' + nlNum(k.aandeel, 2).replace(/,00$/,'') + '"><span class="sx">%</span></div></div>' +
+      '<div class="fl"><label for="l' + i + '">Leeftijd op de dag van de akte</label><div class="iw"><input class="num" id="l' + i + '" value="' + k.leeftijd + '"><span class="sx">jaar</span></div></div></div>' +
+      '<div class="row r1" style="gap:6px">' +
+      '<label class="chk"><input type="checkbox" id="h' + i + '"' + (k.hv ? ' checked' : '') + '> Gaat de woning (duurzaam) als hoofdverblijf gebruiken</label>' +
+      '<label class="chk"><input type="checkbox" id="g' + i + '"' + (k.gebruikt ? ' checked' : '') + '> Heeft de startersvrijstelling al eerder gebruikt</label>' +
+      '<label class="chk"><input type="checkbox" id="o' + i + '"' + (k.opt ? ' checked' : '') + '> Kiest bewust voor 2% (vrijstelling bewaren)</label></div></div>'; }
+  $('kopers').innerHTML = h;
+  for(var j = 0; j < n; j++){ ['a','l'].forEach(function(p){ var el = $(p + j); el.setAttribute('inputmode','decimal'); el.addEventListener('input', bereken); });
+    ['h','g','o'].forEach(function(p){ $(p + j).addEventListener('change', bereken); }); }
+}
+function bereken(){
+  leesKopers();
+  var jaar = vS('jaar'), P = PAR[jaar], soort = vS('soort');
+  $('badge').textContent = 'OVB ' + jaar + (jaar === '2027' ? ' (voorstel)' : '');
+  $('nbRij').style.display = soort === 'nieuwbouw' ? '' : 'none';
+  var koopsom = vE('koopsom'), wevRaw = $('wev').value.trim(), wev = wevRaw === '' ? 0 : vE('wev'), canon = vE('canon');
+  var basis = Math.max(koopsom, wev);
+  var waarde = basis + canon;                // waarde hele woning (startersgrens)
+  var grondslag = soort === 'nieuwbouw' ? vE('nbDeel') : waarde;
+  var n = +vS('aantal'), somA = 0;
+  for(var i = 0; i < n; i++) somA += kopersState[i].aandeel;
+  $('aandeelSom').textContent = 'totaal aandelen ' + nlNum(somA, 2) + '%';
+
+  var rows = [], tot = 0, totExact = 0;
+  for(var j = 0; j < n; j++){ var k = kopersState[j];
+    var deel = grondslag * k.aandeel / 100, tarief, reden;
+    if(soort === 'overig'){ tarief = P.overig; reden = 'geen woning: algemeen tarief'; }
+    else if(!k.hv){ tarief = P.nhv; reden = 'woning, geen hoofdverblijf van deze koper'; }
+    else {
+      var leeftijdOk = k.leeftijd >= 18 && k.leeftijd < 35, grensOk = waarde <= P.grens;
+      if(leeftijdOk && grensOk && !k.gebruikt && !k.opt){ tarief = 0; reden = 'startersvrijstelling (18 t/m 34 jaar, woningwaarde ≤ ' + eur(P.grens) + ')'; }
+      else { tarief = P.hv; var w = [];
+        if(!leeftijdOk) w.push(k.leeftijd < 18 ? 'jonger dan 18' : '35 jaar of ouder');
+        if(!grensOk) w.push('woningwaarde ' + eur(waarde) + ' boven de grens van ' + eur(P.grens));
+        if(k.gebruikt) w.push('vrijstelling al eerder gebruikt');
+        if(k.opt) w.push('kiest voor 2% en bewaart de vrijstelling');
+        reden = 'hoofdverblijf, 2%' + (w.length ? ' (geen vrijstelling: ' + w.join('; ') + ')' : ''); }
+    }
+    if(soort === 'nieuwbouw' && grondslag === 0){ reden = 'nieuwbouw met btw: samenloopvrijstelling'; }
+    var exact = deel * tarief / 100, afgerond = floorEur(exact);
+    tot += afgerond; totExact += exact;
+    rows.push({i:j, deel:deel, tarief:tarief, reden:reden, exact:exact, af:afgerond, aandeel:k.aandeel});
+    var u = $('u' + j); if(u) u.textContent = (tarief === 0 ? '0%' : nlNum(tarief, 1) + '%') + ' · ' + eur(afgerond);
+  }
+  $('resSub').textContent = 'peiljaar ' + jaar;
+  var eff = grondslag > 0 ? tot / grondslag * 100 : 0;
+  $('kpis').innerHTML = kpi('Totaal overdrachtsbelasting', eur(tot), 'som per koper, afgerond', 'g') +
+    kpi('Grondslag', eur(grondslag), soort === 'nieuwbouw' ? 'deel zonder btw' : (basis > koopsom ? 'waarde > koopsom' : 'koopsom'), '') +
+    kpi('Gemiddeld tarief', pct(eff, 2), 'over de hele grondslag', '');
+
+  var m = '';
+  if(Math.abs(somA - 100) > 0.001) m += '<div class="note bad">De eigendomsaandelen tellen op tot ' + nlNum(somA, 2) + '% in plaats van 100%. Pas ze aan.</div>';
+  if(wev > koopsom) m += '<div class="note warn">De waarde in het economisch verkeer (' + eur(wev) + ') is hoger dan de koopsom (' + eur(koopsom) + '). De belasting wordt over de waarde geheven (art. 9 Wet BRV). Die waarde geldt ook voor de startersgrens.</div>';
+  if(wev > 0 && wev < koopsom) m += '<div class="note info">De waarde is lager dan de koopsom. De grondslag is dan ten minste de koopsom.</div>';
+  if(soort !== 'overig' && waarde > P.grens && waarde <= P.grens * 1.03) m += '<div class="note warn">De woningwaarde ligt net boven de startersgrens van ' + eur(P.grens) + '. Dat is een harde grens: er geldt geen vrijstelling over een deel.</div>';
+  if(jaar === '2027') m += '<div class="note gold">Peiljaar 2027 rekent met het voorstel uit het Belastingplan 2027: 7% voor een woning die geen hoofdverblijf is, en een startersgrens van € 615.000. Dat voorstel is nog niet aangenomen.</div>';
+  if(canon > 0) m += '<div class="note info">De gekapitaliseerde erfpachtcanon (' + eur(canon) + ') is opgeteld bij de waarde.</div>';
+  $('meldingen').innerHTML = m;
+
+  var t = '<tr><th>Koper</th><th class="n">Aandeel</th><th class="n">Grondslag</th><th class="n">Tarief</th><th class="n">OVB</th></tr>';
+  rows.forEach(function(x){ t += '<tr><td><strong>Koper ' + (x.i + 1) + '</strong><div class="hint">' + x.reden + '</div></td><td class="n">' + nlNum(x.aandeel, 2) + '%</td><td class="n">' + eur(x.deel) + '</td><td class="n">' + (x.tarief === 0 ? '0%' : nlNum(x.tarief, 1) + '%') + '</td><td class="n">' + eur(x.af) +
+    (Math.abs(x.exact - x.af) > 0.004 ? '<div class="hint">exact ' + eurc(x.exact) + '</div>' : '') + '</td></tr>'; });
+  t += '<tr class="tot"><td colspan="4">Totaal (per koper naar beneden afgerond op hele euro\'s)</td><td class="n">' + eur(tot) + '</td></tr>';
+  $('tabel').innerHTML = t;
+
+  $('parSub').textContent = jaar + ' · ' + P.status;
+  $('params').innerHTML = '<tr><th>Parameter</th><th class="n">' + jaar + '</th></tr>' +
+    '<tr><td>Woning, hoofdverblijf</td><td class="n">' + nlNum(P.hv, 1) + '%</td></tr>' +
+    '<tr><td>Woning, geen hoofdverblijf</td><td class="n">' + nlNum(P.nhv, 1) + '%</td></tr>' +
+    '<tr><td>Overige onroerende zaken</td><td class="n">' + nlNum(P.overig, 1) + '%</td></tr>' +
+    '<tr><td>Startersvrijstelling: leeftijd</td><td class="n">18 t/m 34 jaar</td></tr>' +
+    '<tr><td>Startersvrijstelling: woningwaarde t/m</td><td class="n">' + eur(P.grens) + '</td></tr>';
+}
+function kpi(l, v, s, c){ return '<div class="kpi ' + c + '"><div class="kl">' + l + '</div><div class="kv">' + v + '</div><div class="ks">' + s + '</div></div>'; }
+$('aantal').addEventListener('change', function(){ leesKopersVoorWissel(); tekenKopers(); bereken(); });
+var vorigAantal = +vS('aantal');
+function leesKopersVoorWissel(){ var nOud = vorigAantal; for(var i = 0; i < nOud; i++){ if($('a' + i)) kopersState[i] = {aandeel:vD('a' + i), leeftijd:vD('l' + i), gebruikt:vC('g' + i), hv:vC('h' + i), opt:vC('o' + i)}; }
+  vorigAantal = +vS('aantal'); verdeel(); }
+function verdeel(){ var n = +vS('aantal'), a = Math.floor(10000 / n) / 100;
+  for(var i = 0; i < n; i++) kopersState[i].aandeel = (i === n - 1) ? Math.round((100 - a * (n - 1)) * 100) / 100 : a; }
+$('btnGelijk').addEventListener('click', function(){ leesKopers(); verdeel(); tekenKopers(); bereken(); });
+$('btnPrint').addEventListener('click', function(){
+  printRapport('Overdrachtsbelasting meerdere kopers', '<div class="card"><div class="ch">Resultaat · peiljaar ' + esc(vS('jaar')) + '</div><div class="cb">' + $('kpis').outerHTML + $('meldingen').outerHTML +
+    '<table class="t">' + $('tabel').innerHTML + '</table></div></div><div class="card"><div class="ch">Tarieven</div><div class="cb"><table class="t">' + $('params').innerHTML + '</table></div></div>' +
+    '<div class="disc"><strong>Indicatief, geen advies.</strong> Grondslag: Wet BRV art. 9, 14 en 15. Afronding: Stcrt. 2023, 1102.</div>');
+});
+tekenKopers();
+initEurFields(bereken);
+bereken();
+</script>
+</body>
+</html>
