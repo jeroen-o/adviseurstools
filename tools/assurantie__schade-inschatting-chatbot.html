@@ -198,7 +198,7 @@
   <div class="header-icon">🛡️</div>
   <div class="header-text">
     <h1>Schade-inschatting Assistent</h1>
-
+    <p>Regelgebaseerde inschatting — werkt volledig in je browser</p>
   </div>
   <button class="new-chat-btn" onclick="resetChat()">↺ Nieuw gesprek</button>
 </div>
@@ -236,24 +236,691 @@
 </div>
 
 <script>
-const SYSTEM = `Je bent een deskundige Nederlandse schade-inschatting assistent gespecialiseerd in schadeverzekeringen. Je helpt particulieren begrijpen of hun schade vermoedelijk gedekt is.
-
-Geef ALTIJD een gestructureerd antwoord:
-1. Korte samenvatting van wat er is gebeurd
-2. Dekkingsinschatting: gebruik ✅ Waarschijnlijk gedekt / ⚠️ Twijfelachtig / ❌ Waarschijnlijk niet gedekt
-3. Eigen risico impact: is het financieel slim om te melden?
-4. Premie/no-claim risico: wat kan melden kosten op lange termijn?
-5. Concrete aanbeveling
-6. Eventuele vervolgvragen als je meer info nodig hebt
-
-Wees praktisch en eerlijk. Gebruik geen vakjargon. Sluit altijd af met een korte disclaimer.
-Antwoord altijd in het Nederlands.`;
+/*
+  Schade-inschatting Assistent — regelgebaseerd, volledig in de browser.
+  Geen externe API's. Herkent schadetype, object, bedrag en details uit de tekst
+  en bouwt een gestructureerd antwoord:
+  samenvatting → dekkingsinschatting (✅/⚠️/❌) → welke verzekering → aandachtspunten
+  → melden of niet (eigen risico / no-claim) → vervolgstappen → vervolgvragen → disclaimer.
+*/
 
 let conversation = [];
 let loading = false;
+let ctx = newCtx();
 
+function newCtx() {
+  return { type: null, amount: null, er: null, f: {}, objects: new Set(), age: null, wind: null, yn: null, turns: 0 };
+}
 
+const DISCLAIMER = '*Indicatieve inschatting op basis van gangbare Nederlandse polisvoorwaarden. Jouw eigen polisvoorwaarden zijn altijd leidend; neem bij twijfel contact op met je verzekeraar of adviseur.*';
 
+/* ---------- Hulpfuncties ---------- */
+const eurFmt = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function eur(n) { return eurFmt.format(n).replace(/ /g, ' '); }
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function parseNum(raw, suffix) {
+  let s = raw.replace(/\s/g, '');
+  let n;
+  if (/k|duizend/i.test(suffix || '')) {
+    n = parseFloat(s.replace(/\./g, '').replace(',', '.')) * 1000;
+  } else if (/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(s) || /,\d{1,2}$/.test(s)) {
+    n = parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  } else if (/^\d+\.\d{1,2}$/.test(s)) {
+    n = parseFloat(s);
+  } else {
+    n = parseFloat(s.replace(/[.,]/g, ''));
+  }
+  return isFinite(n) ? n : null;
+}
+
+// Zoekt bedragen; onderscheidt het eigen risico van het schadebedrag.
+function parseAmounts(text) {
+  const res = { amount: null, er: null };
+  const t = text.replace(/,-/g, '');
+  const re = /(?:€|\beur(?:o)?\b\.?)\s*(\d{1,3}(?:[.\s]\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(k\b|duizend)?|(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)\s*(euro\b|eur\b|k\b|duizend)|(?:schade|kosten?|bedrag|ongeveer|rond|circa|ca\.?|±|zo'?n|plusminus|tussen de)\s*(?:van\s*|is\s*|bedraagt\s*|wordt\s*|ongeveer\s*)?(\d{1,3}(?:\.\d{3})+|\d{2,6})\b(?!\s*(?:jaar|jr|km|m2|m²|maanden|weken|dagen|uur|mm|%))/gi;
+  let m;
+  while ((m = re.exec(t)) !== null) {
+    const raw = m[1] || m[3] || m[5];
+    const suf = m[2] || m[4] || '';
+    const n = parseNum(raw, suf);
+    if (n == null || n <= 0) continue;
+    const before = t.slice(Math.max(0, m.index - 25), m.index).toLowerCase();
+    if (/eigen\s*risico/.test(before) || /eigen\s*risico/.test(m[0].toLowerCase())) { res.er = n; continue; }
+    if (res.amount == null || n > res.amount) res.amount = n;
+  }
+  const erm = t.match(/eigen\s*risico\s*(?:van|is|bedraagt|:)?\s*(?:€\s*)?(\d[\d.]*)/i);
+  if (erm) { const n = parseNum(erm[1]); if (n != null) res.er = n; }
+  if (/geen eigen risico|eigen risico (?:is )?(?:€\s*)?0\b/i.test(t)) res.er = 0;
+  return res;
+}
+
+/* ---------- Herkenning ---------- */
+const R = {
+  vehicle: /\bauto\b|\bauto's\b|\bwagen\b|bumper|\bmotor(fiets)?\b|scooter|\bbus(je)?\b|vrachtwagen|voertuig|parkeer|portier|\blak\b|kenteken|zijspiegel|motorkap|\bvelg/,
+  crashStrong: /aanrijd|aangereden|gebotst|botsing|kop-staart|achterop (ge)?reden|parkeerschade|blikschade|ingereden|geschampt|tegenaan gereden|achteruit (in)?gereden|achteruitrijden/,
+  crashSoft: /gereden|deuk|kras|geraakt|beschadigd|schade|kapot|ingedeukt|eraf/,
+  autoGlas: /voorruit|autoruit|achterruit|zijruit|sterretje|ster in|steenslag/,
+  brand: /brand|\bvuur\b|vlam|rookschade|\brook\b|\broet\b|geschroeid|schroei|kortsluiting|frituur|kaars|afgebrand|smeul|bliksem|ontploft|explosie|\bgesmolten\b/,
+  fiets: /fiets|e-bike|ebike|bakfiets|mountainbike/,
+  diefstal: /inbraak|ingebroken|inbreker|gestolen|diefstal|gejat|beroofd|beroving|zakkenroller|weggenomen|gepikt|ontvreemd|overval/,
+  verlies: /\bkwijt(geraakt|gemaakt)?\b|verloren|laten liggen|vergeten mee te nemen|zoekgeraakt/,
+  storm: /storm|windkracht|harde wind|wind\b|orkaan|hagel|dakpan|omgewaaid|weggewaaid|waaide|boom (is |viel )?(om|op)|omgevallen boom|tak (op|door)/,
+  neerslag: /hoosbui|wolkbreuk|hevige (regen|neerslag)|regenval|wateroverlast|overstroming|overstroomd|ondergelopen|onder ?gelopen|kelder (staat |stond )?(onder|vol)|dijk|rivier|grondwater|neerslag|stortbui|regenwater/,
+  schimmel: /schimmel|vochtplek|vochtig|condens|optrekkend vocht|zwarte plekken/,
+  ongedierte: /ongedierte|muizen|\bmuis\b|ratten|\brat\b|houtworm|boktor|motten|mieren|kakkerlak|marter|wespen|knaagd|bedwants|zilvervis/,
+  lekkage: /\blek\b|lekt|lekte|lekkage|leiding|waterschade|\bwater\b|wasmachine|vaatwasser|\bcv\b|cv-ketel|boiler|radiator|\bkraan|afvoer|verstopt|verstopping|douche|aquarium|waterbed|gesprongen|kitvoeg|wc\b|toilet/,
+  glas: /\bruit|\bglas\b|glasbreuk|dubbel glas|raam (is )?(kapot|gebroken|gebarsten|gesprongen)|ingegooid|spiegel/,
+  derde: /van (een |de |mijn |m'n |zijn |haar |onze )?(vriend|vriendin|vriendje|vriendinnetje|buurman|buurvrouw|buren|buurjongen|buurmeisje|collega|klasgenoot|kennis|oom|tante|opa|oma|schoonouders|ander|iemand|gastgezin|logeeradres)|andermans|bij (de |mijn )?(buren|vriend|vrienden|iemand)|\bbuurman\b|\bbuurvrouw\b|\bburen\b|van de school|van het werk|van mijn werkgever|(de|het) (spullen|telefoon|fiets|laptop|auto) van|geleend|te leen|gehuurde|huurauto|bij een vriend|derde|iemand anders/,
+  gezinslid: /van (mijn|onze|m'n) (eigen )?(broer|zus|vader|moeder|man|vrouw|partner|vriend(in)? waar ik mee samenwoon|huisgeno)|huisgeno/,
+  elektronica: /telefoon|mobiel(tje)?\b|smartphone|iphone|samsung|laptop|tablet|ipad|televisie|\btv\b|camera|koptelefoon|airpods|playstation|console|computer|monitor|beeldscherm|\bscherm/,
+  val: /gevallen|laten vallen|liet vallen|vallen|valt|omgestoten|omgegooid|omgevallen|gebroken|\bstuk\b|kapot|gebarsten|gescheurd|\bvlek|beschadigd|in het water|in de wc|nat geworden|overspanning/,
+  slijtage: /slijtage|versleten|verouderd|achterstallig|onderhoud|roest|verrot|houtrot|ouderdom|vergaan/
+};
+
+const F = {
+  plots: /plotseling|ineens|opeens|gesprongen|kapotte? leiding|leiding (is )?(kapot|gebarsten|gesprongen)|gebarsten|lek geslagen|knapte|losgeschoten|slang (is )?(los|gescheurd)|onverwacht|vanochtend|vannacht|gisteren/,
+  geleidelijk: /geleidelijk|langzaam|al (weken|maanden|jaren|een tijd|een tijdje|lange tijd)|langere tijd|lange tijd|steeds erger|slijtage|versleten|verouder|achterstallig|slecht onderhouden|onderhoud|roest|verrot|houtrot|kitvoeg|kit (is )?los|voegen/,
+  laat: /(maanden|jaar|jaren) geleden|vorig jaar|vorige zomer/,
+  opzet: /expres|opzettelijk|met opzet|uit woede|bewust kapot|moedwillig|vandalisme door mij/,
+  grof: /dronken|alcohol|onder invloed|onbeheerd|zonder toezicht|liet .{0,30} aan( staan)?|liep weg van/,
+  braak: /braakspor|opengebroken|ingebroken|ingeslagen|geforceerd|forceer|opengebroken|slot (is )?(kapot|geforceerd|uitgeboord)|deur (is )?opengebroken|raam (is )?ingeslagen|inbraak/,
+  geenBraak: /geen (braak)?sporen|zonder (braak|sporen)|deur (stond |was )?open|raam (stond |was )?open|niet (afgesloten|op slot)|achterdeur open|sleutel (zat |in het slot)/,
+  buiten: /onderweg|op straat|in de trein|in de bus|op vakantie|op het werk|op school|in de stad|buitenshuis|buiten de deur|op het strand|in het zwembad|festival|kroeg|café|restaurant|sportschool|uit mijn tas|uit mijn zak|in de auto/,
+  huur: /huurwoning|huur ik|huurder|huurhuis|ik huur|we huren|wij huren|verhuurder|woningcorporatie|huisbaas/,
+  koop: /koopwoning|eigen huis|huiseigenaar|koophuis|mijn huis is van mij/,
+  vve: /appartement|flat|\bvve\b|portiek/,
+  allrisk: /all ?-?risk|allrisk|volledig casco|vol casco|uitgebreide dekking|all-in/,
+  beperkt: /beperkt casco|\bwa ?\+|\bwa-plus|\bwa plus|\bwa extra\b/,
+  wa: /alleen (een )?wa\b|\bwa-verzekering|\bwa verzekering|\bwa\b(?! ?\+| plus| extra)/,
+  eigenSchuld: /achteruit|ik reed (tegen|op|achter)|ik ben (tegen|op|achterop)|tegenaan gereden|mijn (eigen )?schuld|niet (goed )?opgelet|niet goed gekeken|ik heb .{0,40}(geraakt|aangereden|geschampt|geramd)|ingereden op|tegen .{0,30}(aan )?gereden|ik raakte|ik schampte|verkeerd ingeschat/,
+  anderSchuld: /aangereden door|werd aangereden|is aangereden door|tegenpartij|achterop (ge)?reden (door|op mij)|op mij ingereden|op mijn auto ingereden|voorrang genomen|geen voorrang|(hij|zij|ze|die) (reed|is) (tegen|op|achterop)|schuld van de ander|zijn schuld|haar schuld|schadeformulier ingevuld|gegevens uitgewisseld|briefje (achtergelaten|onder de ruitenwisser)|kenteken (genoteerd|bekend)/,
+  onbekend: /doorgereden|doorgereden|onbekende dader|dader onbekend|geen briefje|niemand gezien|weet niet wie|geen idee wie|dader is onbekend|aanrijding met onbekende/,
+  parkeer: /parkeerplaats|geparkeerd|parkeergarage|stond stil|stond geparkeerd|op straat geparkeerd/,
+  slot: /op slot|aan (een |de )?(paal|hek|rek|fietsenrek)|kettingslot|ringslot|beugelslot|vastgezet|twee sloten|dubbel slot|art-slot|art slot/,
+  geenSlot: /niet op slot|zonder slot|niet vastgezet|slot vergeten/,
+  fietsverz: /fietsverzekering|fiets (is )?verzekerd|fiets.{0,20}verzekering|via de winkel verzekerd|anwb fiets|enra/,
+  berging: /berging|schuur|garage|fietsenhok|fietsenkelder|kelderbox/,
+  kind: /\bzoon\b|dochter|\bkind\b|kinderen|kleinkind|zoontje|dochtertje|\bpeuter|\bkleuter/,
+  opzicht: /geleend|leende|te leen|in bruikleen|mocht .{0,30}(gebruiken|lenen)|in (zijn|haar|z'n) hand|vasthield|vast hield|gaf .{0,20}(aan|mee)|op .{0,25}passen|gehuurd|huurauto|in bewaring|laten vallen|liet vallen|uit (zijn|haar|z'n) handen/,
+  geenOpzicht: /uit (de |zijn |haar )?hand(en)? (geslagen|gestoten)|omgestoten|tegenaan (gelopen|gebotst)|bal (tegen|op|door)|stootte .{0,20}om|gooide .{0,20}om|niet vastgehouden/,
+  defect: /doet het niet meer|kapot gegaan uit zichzelf|defect|stuk gegaan zonder|ging zomaar|eigen gebrek|fabrieksfout|garantie/,
+  overspanning: /overspanning|bliksem|blikseminslag|inductie|stroomstoring/,
+  bonnen: /\bbon(nen)?\b|factu(u)?r|aankoopbewijs|kassabon/,
+  aangifte: /aangifte (gedaan|gedaan bij|is gedaan)|aangifte gedaan|heb aangifte/,
+  primaireDijk: /dijkdoorbraak|dijk (is )?doorgebroken|zee|rivier (is )?(buiten|over)|buiten de oevers|primaire/,
+  grondwater: /grondwater|opstijgend water|via de vloer omhoog|kruipruimte/,
+  dak: /\bdak\b|dakgoot|dakkapel|plat dak/,
+  frituur: /frituur|pan op het vuur|olie|kookplaat|fornuis/,
+  schroei: /schroei|zengen|gezengd|geschroeid|sigaret|smelt|gesmolten|brandplek|brandvlek|strijkijzer/,
+  boom: /boom|tak/,
+  buren: /buren|buurman|buurvrouw|benedenburen|bovenburen|onderburen/
+};
+
+function detectType(t) {
+  const isVehicle = R.vehicle.test(t);
+  if ((R.glas.test(t) || R.autoGlas.test(t)) && R.autoGlas.test(t) && !R.crashStrong.test(t)) return 'glas';
+  if (R.crashStrong.test(t) && (isVehicle || /aanrijd|botsing|gebotst|kop-staart|achterop/.test(t))) return 'aanrijding';
+  if (isVehicle && R.crashSoft.test(t) && !R.diefstal.test(t) && !R.brand.test(t) && !R.storm.test(t) && !R.neerslag.test(t) && !R.ongedierte.test(t)) return 'aanrijding';
+  if (R.brand.test(t) && !/brandweer kwam (voor|vanwege) water/.test(t)) return 'brand';
+  if (R.fiets.test(t)) return 'fiets';
+  if (R.diefstal.test(t) || R.verlies.test(t)) return 'inbraak';
+  if (R.storm.test(t)) return 'storm';
+  if (R.neerslag.test(t)) return 'neerslag';
+  if (R.schimmel.test(t)) return 'schimmel';
+  if (R.ongedierte.test(t)) return 'ongedierte';
+  if (R.lekkage.test(t)) return 'lekkage';
+  if (R.glas.test(t)) return 'glas';
+  if (R.derde.test(t) && (R.val.test(t) || R.elektronica.test(t) || /schade|beschadigd|kapot|stuk/.test(t))) return 'avp';
+  if (R.elektronica.test(t)) return 'elektronica';
+  if (R.slijtage.test(t)) return 'slijtage';
+  if (R.val.test(t) && (OBJ.inboedel.test(t) || /vaas|bril|servies|beeld|spiegel|lamp|\bbord|meubel|tafel|stoel|horloge|sieraad|instrument|gitaar|piano|kunst|schilderij/.test(t))) return 'val';
+  return null;
+}
+
+const OBJ = {
+  auto: R.vehicle,
+  derde: R.derde,
+  woning: /vloer|ondervloer|\bmuur|muren|wand|plafond|\bdak\b|leiding|kozijn|keuken|badkamer|tegels|parket|laminaat|fundering|schuur|schutting|gevel|\btrap\b|voordeur|achterdeur|cv-ketel|\bcv\b|dakpan|dakgoot|\bhuis\b|woning|kelder|zolder/,
+  inboedel: /spullen|meubel|\bbank\b|kleding|kleren|laptop|telefoon|\btv\b|televisie|sieraden|tapijt|vloerkleed|gordijn|apparat|elektronica|matras|\bbed\b|\bkast|computer|tablet|camera|wasmachine|vaatwasser|koelkast|boeken|inboedel|inventaris|fiets/
+};
+
+function updateCtxFromText(text) {
+  const t = text.toLowerCase();
+  const prevType = ctx.type;
+  let type = detectType(t);
+  const am = parseAmounts(text);
+  // Zwakke typen (bijv. 'buurman' + 'schade') mogen een lopende casus niet overschrijven
+  // als het bericht duidelijk een aanvulling is.
+  const WEAK = ['avp', 'val', 'elektronica', 'slijtage'];
+  if (type && prevType && type !== prevType && WEAK.includes(type)) {
+    const prevRe = { aanrijding: R.vehicle, inbraak: R.diefstal, avp: R.derde }[prevType] || R[prevType];
+    const words = t.split(/\s+/).length;
+    if (words < 6 || (prevRe && prevRe.test(t)) || F.wa.test(t) || F.allrisk.test(t) || F.beperkt.test(t) || /eigen risico/.test(t)) type = null;
+  }
+  let isNew = false;
+
+  if (type && prevType && type !== prevType && !(prevType === 'lekkage' && type === 'schimmel')) {
+    // nieuwe situatie: begin met een schone lei
+    const keepEr = ctx.er;
+    ctx = newCtx();
+    ctx.er = keepEr;
+    isNew = true;
+  }
+  if (type) ctx.type = type;
+
+  // ja/nee op de vorige vraag
+  const yes = /^\s*(ja|jazeker|klopt|yes|jep|jawel|zeker|inderdaad|correct)\b/i.test(text);
+  const no = /^\s*(nee|neen|nope|nein|niet|helaas niet)\b/i.test(text);
+  if (ctx.yn && (yes || no)) {
+    const set = yes ? ctx.yn.yes : ctx.yn.no;
+    (set || []).forEach(k => { ctx.f[k] = true; });
+    ((yes ? ctx.yn.no : ctx.yn.yes) || []).forEach(k => { delete ctx.f[k]; });
+  }
+
+  let hits = 0;
+  for (const k in F) if (F[k].test(t)) { ctx.f[k] = true; hits++; }
+  // tegengestelde signalen: laatste bericht wint
+  if (F.geenBraak.test(t) && !/ingebroken|ingeslagen|opengebroken/.test(t)) delete ctx.f.braak;
+  if (F.geenSlot.test(t)) delete ctx.f.slot;
+  if (F.eigenSchuld.test(t) && !F.anderSchuld.test(t)) delete ctx.f.anderSchuld;
+  if (F.anderSchuld.test(t)) { delete ctx.f.onbekend; if (!F.eigenSchuld.test(t)) delete ctx.f.eigenSchuld; }
+  if (F.geenOpzicht.test(t)) delete ctx.f.opzicht;
+  if (F.plots.test(t) && !F.geleidelijk.test(t)) delete ctx.f.geleidelijk;
+  if (F.allrisk.test(t)) { delete ctx.f.wa; delete ctx.f.beperkt; }
+  else if (F.beperkt.test(t)) { delete ctx.f.wa; delete ctx.f.allrisk; }
+  else if (F.wa.test(t)) { delete ctx.f.allrisk; delete ctx.f.beperkt; }
+  if (/fiets.{0,25}(gevallen|schade|kapot|beschadigd|aangereden)|gevallen met (de|mijn) fiets/.test(t) && !R.diefstal.test(t)) ctx.f.fietsSchade = true;
+  if (R.verlies.test(t) && !R.diefstal.test(t)) ctx.f.verlies = true;
+  if (R.gezinslid.test(t)) ctx.f.gezinslid = true;
+  if (R.elektronica.test(t)) ctx.f.elektronica = true;
+  if (/telefoon|mobiel|smartphone|iphone|samsung/.test(t)) ctx.f.telefoon = true;
+  if (/laptop|computer/.test(t)) ctx.f.laptop = true;
+  if (/sieraden|ketting|ring\b|horloge|goud/.test(t)) ctx.f.sieraden = true;
+  if (/wasmachine|vaatwasser|droger|koelkast|aquarium|waterbed/.test(t)) ctx.f.apparaat = true;
+  if (/leiding|kraan|radiator|\bcv\b|cv-ketel|boiler/.test(t)) ctx.f.leiding = true;
+
+  for (const k in OBJ) if (OBJ[k].test(t)) ctx.objects.add(k);
+  const age = t.match(/(\d{1,2})\s*(?:jaar|jr)(?:\s*oud)?\b/);
+  if (age && ctx.f.kind) ctx.age = parseInt(age[1], 10);
+  const wk = t.match(/windkracht\s*(\d{1,2})/);
+  if (wk) ctx.wind = parseInt(wk[1], 10);
+  if (am.amount != null) ctx.amount = am.amount;
+  if (am.er != null) ctx.er = am.er;
+
+  ctx.turns++;
+  const signal = !!(type || am.amount != null || am.er != null || (ctx.yn && (yes || no)) || hits || age || wk);
+  return { type, isNew, prevType, amountNew: am.amount, erNew: am.er, yesno: yes || no, signal };
+}
+
+/* ---------- Gedeelde tekstblokken ---------- */
+function amtTxt() { return ctx.amount != null ? ` Geschatte schade: **${eur(ctx.amount)}**.` : ''; }
+
+function meldWoon(verz, opts = {}) {
+  const a = ctx.amount, er = ctx.er;
+  const erDefault = opts.erDefault || 'vaak € 0 tot € 250';
+  if (a == null) {
+    return `Noem een schatting van het schadebedrag, dan reken ik het voor je na. Bij een ${verz} geldt ${er != null ? 'jouw eigen risico van ' + eur(er) : 'een eigen risico van ' + erDefault}. Woonverzekeringen kennen geen no-claimkorting: melden kost je dus meestal geen premie, al kunnen veel kleine claims bij verlenging wel meewegen.`;
+  }
+  if (er != null) {
+    const net = a - er;
+    if (net <= 0) return `**Niet melden.** Het schadebedrag (${eur(a)}) valt binnen je eigen risico van ${eur(er)}; je krijgt dan niets vergoed.`;
+    if (net < 100) return `**Twijfelgeval.** Na aftrek van je eigen risico (${eur(er)}) blijft er hooguit ${eur(net)} over. Melden mag, maar levert weinig op.`;
+    return `**Ja, melden.** Na aftrek van je eigen risico (${eur(er)}) ontvang je bij dekking naar verwachting maximaal **${eur(net)}**. Er is geen no-claimkorting bij een ${verz}, dus melden kost je in principe geen premie.`;
+  }
+  if (a <= 250) return `**Twijfelgeval.** ${eur(a)} ligt rond het gebruikelijke eigen risico (${erDefault}). Check eerst je eigen risico op je polisblad: is dat € 0, dan is melden zinvol.`;
+  return `**Ja, melden is waarschijnlijk verstandig.** ${eur(a)} ligt ruim boven het gebruikelijke eigen risico (${erDefault}). Een ${verz} kent geen no-claimkorting, dus melden kost je meestal geen premie.`;
+}
+
+function meldAuto(opts = {}) {
+  const a = ctx.amount, er = ctx.er;
+  if (opts.tegenpartij) {
+    return `**Ja, altijd melden.** Als de tegenpartij aansprakelijk is, wordt de schade verhaald op diens WA-verzekering. Jouw no-claim en eigen risico blijven dan normaal gesproken buiten schot.`;
+  }
+  const nc = 'Een schade op je autoverzekering laat je meestal enkele treden op de no-claimladder terugvallen (vaak 5 treden of meer). Dat kost je, afhankelijk van je premie, al snel enkele honderden euro\'s extra verspreid over 3 à 5 jaar.';
+  if (a == null) return `**Afweging eigen risico vs. no-claim.** ${nc} Vraag je verzekeraar om een no-claimberekening en vergelijk die met het schadebedrag${er != null ? ' minus je eigen risico (' + eur(er) + ')' : ''}. Noem een bedrag, dan geef ik een indicatie.`;
+  const net = er != null ? a - er : a;
+  if (er != null && net <= 0) return `**Niet melden.** De schade (${eur(a)}) valt binnen je eigen risico van ${eur(er)}.`;
+  if (a < 500) return `**Waarschijnlijk zelf betalen.** Bij ${eur(a)} is de no-claimschade vaak groter dan de vergoeding${er != null ? ' (je ontvangt na eigen risico maximaal ' + eur(net) + ')' : ''}. ${nc} Meld het wel ter kennisgeving, zodat je later alsnog kunt claimen.`;
+  if (a <= 1500) return `**Reken het na.** Bij ${eur(a)}${er != null ? ' (na eigen risico maximaal ' + eur(net) + ')' : ''} kan zelf betalen goedkoper zijn. ${nc} Veel verzekeraars laten je een betaalde schade binnen 6 tot 12 maanden terugkopen, zodat je de no-claim behoudt.`;
+  return `**Melden is waarschijnlijk verstandig.** Bij ${eur(a)}${er != null ? ' (na eigen risico maximaal ' + eur(net) + ')' : ''} weegt de vergoeding meestal op tegen het no-claimverlies. Laat voor de zekerheid een no-claimberekening maken.`;
+}
+
+const STEP = {
+  foto: 'Maak foto\'s en/of video van de schade en de oorzaak, vóórdat je iets opruimt of repareert.',
+  bonnen: 'Verzamel aankoopbonnen, facturen, garantiebewijzen of bankafschriften (bewijs van aankoop en waarde).',
+  beperken: 'Beperk verdere schade (bijvoorbeeld water afsluiten, ventileren, afdekken). Redelijke kosten hiervoor worden meestal vergoed.',
+  termijn: 'Meld de schade zo snel mogelijk bij je verzekeraar; veel polissen noemen een termijn van enkele dagen tot weken. Te laat melden kan leiden tot (gedeeltelijke) afwijzing.',
+  bewaren: 'Gooi beschadigde spullen nog niet weg; de verzekeraar of expert wil ze mogelijk zien.',
+  offerte: 'Vraag een herstelofferte of reparatiefactuur op als onderbouwing van het bedrag.',
+  aangifte: 'Doe aangifte bij de politie (online of op het bureau); zonder proces-verbaal wordt diefstal meestal niet vergoed.'
+};
+
+/* ---------- Beoordeling per categorie ---------- */
+const CATS = {
+  lekkage: { label: 'Lekkage / waterschade', emoji: '💧', assess() {
+    const f = ctx.f; const r = base('Waterschade door lekkage');
+    const src = f.apparaat ? 'een apparaat (zoals wasmachine of vaatwasser)' : f.leiding ? 'een leiding of installatie' : f.dak ? 'het dak' : null;
+    r.summary = `Er is waterschade ontstaan door lekkage${src ? ' uit ' + src : ''}.${amtTxt()}`;
+    if (f.opzet) r.v.push(['no', '**Waarschijnlijk niet gedekt.** Opzettelijk veroorzaakte schade is altijd uitgesloten.']);
+    else if (f.geleidelijk) r.v.push(['no', '**Waarschijnlijk niet gedekt.** Schade die geleidelijk ontstaat (langzaam lekken, slechte kitvoegen, slijtage of achterstallig onderhoud) is bij vrijwel alle verzekeraars uitgesloten.']);
+    else if (f.dak) r.v.push(['warn', '**Twijfelachtig.** Een lekkend dak wordt alleen vergoed als het lek plotseling ontstaat (bijv. door storm of hevige neerslag). Bij slijtage of slecht onderhoud volgt meestal een afwijzing.']);
+    else if (f.plots || f.leiding || f.apparaat) r.v.push(['ok', '**Waarschijnlijk gedekt.** Water dat plotseling en onvoorzien uit een leiding, installatie of aangesloten apparaat stroomt, valt onder de standaarddekking van woonverzekeringen.']);
+    else r.v.push(['warn', '**Hangt af van de oorzaak.** Plotseling ontstane lekkage is meestal gedekt; geleidelijk ontstane lekkage meestal niet.']);
+    // verzekering
+    if (f.huur) r.ins.push('**Inboedelverzekering** voor je spullen en zelf aangebrachte vloeren/keuken (huurdersbelang). Schade aan het gebouw zelf (muren, plafond, leidingen) is voor de **opstalverzekering van de verhuurder**: meld het ook direct bij je verhuurder.');
+    else {
+      r.ins.push('**Opstalverzekering** voor schade aan de woning zelf: vloer, ondervloer, muren, plafond en vaste installaties.');
+      r.ins.push('**Inboedelverzekering** voor beschadigde spullen (meubels, vloerkleden, elektronica).');
+      if (f.vve) r.ins.push('Woon je in een appartement? Dan valt gebouwschade vaak onder de **opstalverzekering van de VvE**.');
+    }
+    if (f.buren) r.ins.push('Is er ook schade bij de buren? Zij melden dat in de regel bij hun **eigen** opstal-/inboedelverzekering. Jouw **aansprakelijkheidsverzekering (AVP)** komt pas in beeld als je echt iets te verwijten valt.');
+    r.pts.push('Het kapotte apparaat of onderdeel zelf (bijv. de wasmachine, een kraan of slang) wordt meestal **niet** vergoed; alleen de gevolgschade.');
+    r.pts.push('Opsporings- en breekkosten om het lek te vinden worden vaak wel vergoed via de opstalverzekering.');
+    r.pts.push('Uitsluitingen: geleidelijk ontstane schade, slijtage, achterstallig onderhoud, kitvoegen, grondwater en opzet.');
+    if (f.laat) r.pts.push('Je noemt dat het al langer geleden is: de verzekeraar kan dan vragen waarom niet eerder is gemeld en of de schade inmiddels groter is geworden.');
+    r.meld.push(meldWoon(f.huur ? 'inboedelverzekering' : 'woonverzekering'));
+    r.steps.push('Sluit de hoofdkraan of de watertoevoer van het apparaat af.', STEP.foto, STEP.beperken, 'Laat de oorzaak vaststellen door een installateur en bewaar het defecte onderdeel.', STEP.offerte, STEP.termijn);
+    if (!f.plots && !f.geleidelijk) r.q.push('Is de lekkage plotseling ontstaan (bijv. een gesprongen leiding of losgeschoten slang), of druppelde het al langere tijd?'), r.ynSet({ yes: ['plots'], no: ['geleidelijk'] });
+    if (!f.huur && !f.koop) r.q.push('Is het een koop- of huurwoning?');
+    if (ctx.amount == null) r.q.push('Wat is ongeveer het schadebedrag?');
+    return r;
+  }},
+
+  storm: { label: 'Stormschade', emoji: '🌬️', assess() {
+    const f = ctx.f; const r = base('Stormschade');
+    r.summary = `Er is schade ontstaan door storm of harde wind${ctx.wind ? ' (windkracht ' + ctx.wind + ')' : ''}${f.boom ? ', mogelijk door een omgevallen boom of tak' : ''}.${amtTxt()}`;
+    if (f.opzet) r.v.push(['no', '**Niet gedekt.** Opzet is altijd uitgesloten.']);
+    else if (f.geleidelijk) r.v.push(['warn', '**Twijfelachtig.** Storm is gedekt, maar als het dak of de constructie al slecht onderhouden was, kan de verzekeraar (een deel van) de schade afwijzen.']);
+    else if (ctx.wind != null && ctx.wind < 7) r.v.push(['warn', '**Twijfelachtig.** De meeste verzekeraars spreken pas van storm vanaf windkracht 7 (windsnelheid van minimaal 14 m/s). Bij lagere windkracht kijkt de verzekeraar of er sprake was van slecht onderhoud.']);
+    else if (ctx.wind != null) r.v.push(['ok', '**Waarschijnlijk gedekt.** Bij windkracht 7 of hoger is stormschade gedekt onder de standaard woonverzekering.']);
+    else r.v.push(['ok', '**Waarschijnlijk gedekt**, mits er sprake was van storm (meestal vanaf windkracht 7). Stormschade aan woning en inboedel valt onder de standaarddekking.']);
+    if (ctx.objects.has('auto')) r.ins.push('**Autoverzekering (beperkt casco of all-risk)** voor schade aan je auto door storm of een omgewaaide boom. Met alleen WA ben je hiervoor niet verzekerd.');
+    r.ins.push('**Opstalverzekering** voor dak, gevel, kozijnen, schuur en vaste onderdelen van de woning.');
+    r.ins.push('**Inboedelverzekering** voor spullen binnen; spullen buiten (tuinmeubels, trampoline) zijn vaak beperkt of niet verzekerd.');
+    r.pts.push('Schuttingen, erfafscheidingen en tuinhuisjes zijn vaak beperkt verzekerd of hebben een apart maximum.');
+    r.pts.push('Kwam een boom van de buren om? Dan is dat meestal geen aansprakelijkheid van de buren, tenzij de boom aantoonbaar ziek of slecht onderhouden was.');
+    r.pts.push('Uitsluitingen: slijtage en achterstallig onderhoud (bijv. losliggende dakpannen die al lang los zaten).');
+    r.meld.push(meldWoon('woonverzekering'));
+    r.steps.push(STEP.foto, 'Dek het dak of de opening tijdelijk af (noodreparatie) om regenschade te voorkomen; bewaar de bon.', 'Noteer datum en tijd van de storm; het KNMI-weerbericht helpt als bewijs van de windkracht.', STEP.offerte, STEP.termijn);
+    if (ctx.wind == null) r.q.push('Weet je hoe hard het waaide (windkracht) en wanneer het gebeurde?');
+    if (ctx.amount == null) r.q.push('Wat is ongeveer het schadebedrag?');
+    return r;
+  }},
+
+  brand: { label: 'Brand / rook', emoji: '🔥', assess() {
+    const f = ctx.f; const r = base('Brand- of rookschade');
+    r.summary = `Er is schade door ${f.schroei ? 'schroeien of smelten' : f.overspanning ? 'blikseminslag of overspanning' : 'brand en/of rook'}${f.frituur ? ' in de keuken' : ''}.${amtTxt()}`;
+    if (f.opzet) r.v.push(['no', '**Niet gedekt.** Opzettelijk gestichte brand is uitgesloten (en strafbaar).']);
+    else if (f.schroei && !/vlam|vuur|brand\b/.test(f._raw || '')) r.v.push(['warn', '**Twijfelachtig.** Schroeien, zengen of smelten (zoals een sigaret- of strijkijzerplek) is verzekeringstechnisch geen brand. Dit is alleen gedekt met een all-risk/uitgebreide dekking.']);
+    else if (ctx.objects.has('auto')) r.v.push(['ok', '**Waarschijnlijk gedekt** met een beperkt casco- of all-risk autoverzekering. Met alleen WA is brand aan je eigen auto niet verzekerd.']);
+    else r.v.push(['ok', '**Waarschijnlijk gedekt.** Brand-, rook- en roetschade door een plotselinge brand valt onder de standaarddekking van opstal- en inboedelverzekeringen.']);
+    if (f.grof) r.v.push(['warn', '**Let op eigen schuld:** bij grove nalatigheid (bijv. frituurpan of kaars onbeheerd, onder invloed) kan de verzekeraar de uitkering beperken. Meestal wordt brandschade toch vergoed, maar dit wordt wel onderzocht.']);
+    if (!ctx.objects.has('auto')) {
+      r.ins.push('**Opstalverzekering** voor schade aan de woning: keuken (vast), muren, plafond, installaties.');
+      r.ins.push('**Inboedelverzekering** voor spullen, kleding en meubels, inclusief rook- en roetschade.');
+      if (f.huur) r.ins.push('Huur je? De opstal is van de verhuurder; meld het ook bij hem/haar.');
+    } else r.ins.push('**Autoverzekering (beperkt casco / all-risk).**');
+    r.pts.push('Ook schoonmaakkosten (roet, rookgeur) en eventuele tijdelijke huisvesting zijn vaak meeverzekerd.');
+    r.pts.push('Bij brand komt vaak een schade-expert. Je mag zelf ook een contra-expert inschakelen; de kosten daarvan worden bij een gedekte schade meestal vergoed.');
+    r.pts.push('Uitsluitingen: opzet, schroei-/smeltschade zonder vlammen (tenzij all-risk) en ernstige eigen schuld.');
+    r.meld.push(meldWoon('woonverzekering'));
+    r.steps.push('Zorg eerst voor ieders veiligheid; bel bij brand altijd 112.', STEP.foto, STEP.bewaren, STEP.beperken, STEP.bonnen, STEP.termijn);
+    if (ctx.amount == null) r.q.push('Wat is ongeveer het schadebedrag (gebouw en spullen apart, als je dat weet)?');
+    if (!f.huur && !f.koop && !ctx.objects.has('auto')) r.q.push('Is het een koop- of huurwoning?');
+    return r;
+  }},
+
+  inbraak: { label: 'Inbraak / diefstal', emoji: '🔓', assess() {
+    const f = ctx.f; const r = base(f.verlies ? 'Verlies van spullen' : 'Inbraak of diefstal');
+    const isAuto = ctx.objects.has('auto');
+    r.summary = f.verlies ? `Je bent spullen kwijtgeraakt of verloren.${amtTxt()}` : `Er zijn spullen gestolen${isAuto ? ' (uit of van de auto)' : f.buiten ? ' buitenshuis' : f.braak ? ' bij een inbraak' : ''}.${amtTxt()}`;
+    if (f.verlies) r.v.push(['no', '**Waarschijnlijk niet gedekt.** Verlies of laten liggen valt niet onder een standaard inboedelverzekering. Alleen een aparte kostbaarhedenverzekering of reisverzekering vergoedt dit soms.']);
+    else if (isAuto && /auto (is )?gestolen|auto.{0,15}gestolen/.test(f._raw || '')) r.v.push(['ok', '**Waarschijnlijk gedekt** bij een beperkt casco- of all-risk autoverzekering. Met alleen WA niet.']);
+    else if (isAuto) r.v.push(['warn', '**Twijfelachtig.** Spullen uit de auto zijn meestal niet of slechts beperkt verzekerd (soms via inboedel-buitenhuis of reisverzekering), en alleen bij braak. Schade aan de auto zelf (ingeslagen ruit) valt onder beperkt casco/all-risk.']);
+    else if (f.buiten) r.v.push(['warn', '**Twijfelachtig.** Diefstal buitenshuis (op straat, op het werk, op vakantie) is alleen gedekt met een buitenhuisdekking, kostbaarhedenverzekering of reisverzekering.']);
+    else if (f.geenBraak) r.v.push(['warn', '**Twijfelachtig.** Zonder braaksporen (bijv. een open deur of raam) wordt diefstal vaak niet of slechts beperkt vergoed. Sommige polissen dekken het wel, maar met lagere maxima.']);
+    else if (f.braak) r.v.push(['ok', '**Waarschijnlijk gedekt.** Diefstal na inbraak met zichtbare braaksporen valt onder de inboedelverzekering; braakschade aan deuren en ramen onder de opstalverzekering.']);
+    else r.v.push(['warn', '**Waarschijnlijk gedekt als er braaksporen zijn.** Zonder sporen van braak wordt het lastiger.']);
+    if (!f.verlies) {
+      r.ins.push(isAuto ? '**Autoverzekering (beperkt casco / all-risk)** voor de auto en ruitschade; **inboedel/reisverzekering** soms voor spullen.' : '**Inboedelverzekering** voor de gestolen spullen.');
+      if (!isAuto) r.ins.push('**Opstalverzekering** voor braakschade aan deuren, sloten en ramen (bij huur: verhuurder of huurdersbelang).');
+    }
+    if (f.sieraden) r.pts.push('Sieraden en horloges hebben vaak een apart maximum (bijv. enkele duizenden euro\'s). Kijk in je polis wat het maximum is.');
+    if (f.laptop || f.telefoon) r.pts.push('Elektronica wordt vaak na enkele jaren op dagwaarde vergoed in plaats van nieuwwaarde.');
+    r.pts.push('Je moet het bezit en de waarde kunnen aantonen; zonder bonnen of foto\'s wordt het lastiger.');
+    r.pts.push('Uitsluitingen: geen braaksporen, onbeheerd achtergelaten spullen, verlies en opzet.');
+    r.meld.push(meldWoon(isAuto ? 'verzekering' : 'inboedelverzekering'));
+    if (!f.verlies) r.steps.push(f.aangifte ? 'Je hebt al aangifte gedaan: houd het proces-verbaalnummer bij de hand.' : STEP.aangifte);
+    r.steps.push(STEP.foto, STEP.bonnen, 'Maak een lijst van alle gestolen spullen met (geschatte) aankoopdatum en -prijs.', 'Laat sloten zo nodig direct vervangen en bewaar de factuur.', STEP.termijn);
+    if (!f.braak && !f.geenBraak && !f.buiten && !f.verlies && !isAuto) r.q.push('Zijn er braaksporen (geforceerde deur, ingeslagen ruit)?'), r.ynSet({ yes: ['braak'], no: ['geenBraak'] });
+    if (ctx.amount == null) r.q.push('Wat is de geschatte waarde van de gestolen spullen?');
+    return r;
+  }},
+
+  glas: { label: 'Glasbreuk', emoji: '🪟', assess() {
+    const f = ctx.f; const r = base('Glasschade');
+    const isAuto = R.autoGlas.test(f._raw || '') || ctx.objects.has('auto');
+    r.summary = isAuto ? `Er is schade aan een autoruit.${amtTxt()}` : `Er is glas gebroken in of aan de woning.${amtTxt()}`;
+    if (f.opzet) r.v.push(['no', '**Niet gedekt.** Opzettelijk gebroken glas is uitgesloten.']);
+    else if (isAuto) {
+      if (f.wa) r.v.push(['no', '**Niet gedekt.** Met alleen een WA-verzekering is ruitschade aan je eigen auto niet verzekerd.']);
+      else r.v.push(['ok', '**Waarschijnlijk gedekt** met beperkt casco (WA+) of all-risk. Ruitschade kost meestal geen no-claim; een sterretje repareren is vaak zelfs zonder eigen risico.']);
+    } else if (f.geleidelijk || /condens tussen|beslagen tussen/.test(f._raw || '')) r.v.push(['no', '**Waarschijnlijk niet gedekt.** Lekke of beslagen dubbele beglazing (condens tussen het glas) is slijtage.']);
+    else r.v.push(['ok', '**Waarschijnlijk gedekt.** Breuk van ruiten in de woning valt meestal onder de opstalverzekering of een aparte glasverzekering.']);
+    if (isAuto) r.ins.push('**Autoverzekering (beperkt casco / all-risk).** Ga bij voorkeur naar een hersteller die je verzekeraar aanwijst; dan regelt die de afhandeling.');
+    else {
+      r.ins.push(f.huur ? 'Bij huur: vaak de **verhuurder** of je **inboedelverzekering** (glas als huurdersbelang); check je huurcontract.' : '**Opstalverzekering** (glas is meestal meeverzekerd) of een losse **glasverzekering**.');
+      r.ins.push('Glazen tafelbladen en losse spiegels vallen onder de **inboedelverzekering** (vaak alleen met all-risk).');
+    }
+    r.pts.push('Gebroken door de buren of een voorbijganger? Dan kun je de schade ook op hun aansprakelijkheidsverzekering verhalen.');
+    r.pts.push('Uitsluitingen: opzet, condens tussen dubbel glas, krassen en glas in kassen of serres (vaak beperkt).');
+    r.meld.push(isAuto ? 'Ruitschade heeft bij de meeste verzekeraars **geen invloed op je no-claim**; melden is dus meestal verstandig. Check wel of je eigen risico (vaak € 0 – € 150 bij een aangewezen hersteller) lager is dan de kosten.' : meldWoon('opstal-/glasverzekering', { erDefault: 'vaak € 0' }));
+    r.steps.push(STEP.foto, 'Laat het gat tijdelijk dichtmaken (noodvoorziening) en bewaar de bon.', STEP.offerte, STEP.termijn);
+    if (ctx.amount == null && !isAuto) r.q.push('Wat kost vervanging ongeveer?');
+    if (isAuto && !f.allrisk && !f.beperkt && !f.wa) r.q.push('Heb je WA, beperkt casco (WA+) of all-risk?');
+    return r;
+  }},
+
+  aanrijding: { label: 'Aanrijding / autoschade', emoji: '🚗', assess() {
+    const f = ctx.f; const r = base('Autoschade');
+    const raw = f._raw || '';
+    let rol = f.eigenSchuld ? 'eigen' : f.anderSchuld ? 'ander' : f.onbekend ? 'onbekend' : (f.parkeer ? 'parkeer' : null);
+    const fietser = R.fiets.test(raw);
+    r.summary = rol === 'eigen' ? `Je hebt (vermoedelijk) zelf schade veroorzaakt aan een ander voertuig of object.${amtTxt()}`
+      : rol === 'ander' ? `Je bent aangereden door een ander die (vermoedelijk) aansprakelijk is.${amtTxt()}`
+      : rol === 'onbekend' ? `Je auto is beschadigd door een onbekende die is doorgereden.${amtTxt()}`
+      : rol === 'parkeer' ? `Je auto is beschadigd terwijl hij geparkeerd stond.${amtTxt()}`
+      : `Er is schade door een aanrijding.${amtTxt()}`;
+    const dek = f.allrisk ? 'allrisk' : f.beperkt ? 'beperkt' : f.wa ? 'wa' : null;
+    const eigenAuto = () => {
+      if (dek === 'allrisk') r.v.push(['ok', '**Eigen autoschade: waarschijnlijk gedekt** via je all-risk (volledig casco), minus eigen risico. Dit kost meestal wel no-claim.']);
+      else if (dek) r.v.push(['no', '**Eigen autoschade: niet gedekt.** Met WA of beperkt casco (WA+) wordt schade aan je eigen auto na een aanrijding niet vergoed.']);
+      else r.v.push(['warn', '**Eigen autoschade: alleen gedekt met all-risk** (volledig casco). Met WA of WA+ betaal je dit zelf.']);
+    };
+    if (f.opzet) r.v.push(['no', '**Niet gedekt.** Opzettelijke schade is uitgesloten.']);
+    if (f.grof && /dronken|alcohol|onder invloed/.test(raw)) r.v.push(['no', '**Rijden onder invloed:** je eigen schade wordt dan niet vergoed en de verzekeraar verhaalt de schade aan de ander vaak op jou.']);
+    if (rol === 'eigen') {
+      r.v.push(['ok', '**Schade aan de ander: gedekt** via je verplichte WA-verzekering (dit kost wel no-claim).']);
+      eigenAuto();
+      r.ins.push('**WA-autoverzekering** voor de schade aan de tegenpartij.', '**All-risk (volledig casco)** voor je eigen schade, als je die hebt.');
+      r.pts.push('Je kunt de schade van de ander ook zelf betalen om je no-claim te sparen. Doe dat alleen in overleg en meld het wel ter kennisgeving bij je verzekeraar.');
+    } else if (rol === 'ander') {
+      r.v.push(['ok', '**Waarschijnlijk gedekt via de WA-verzekering van de tegenpartij.** Jouw no-claim blijft dan intact.']);
+      r.ins.push('**WA-verzekering van de tegenpartij.** Je eigen verzekeraar (of rechtsbijstand) kan helpen met verhalen.');
+      r.pts.push('Erkent de tegenpartij de schuld niet? Dan helpen het schadeformulier, foto\'s en getuigen. Met all-risk kun je ook eerst via je eigen verzekering claimen; zij verhalen het daarna.');
+    } else if (rol === 'onbekend' || rol === 'parkeer') {
+      if (dek === 'allrisk') r.v.push(['warn', '**Gedekt via je all-risk**, maar omdat de schade niet te verhalen is, kost dit bij de meeste verzekeraars no-claim en betaal je je eigen risico.']);
+      else if (dek) r.v.push(['no', '**Waarschijnlijk niet gedekt.** Met WA of beperkt casco wordt schade door een onbekende dader niet vergoed. Het Waarborgfonds Motorverkeer vergoedt bij een onbekende dader in principe alleen letselschade.']);
+      else r.v.push(['warn', '**Hangt af van je dekking en of de dader bekend is.** Is de dader bekend, dan betaalt diens WA. Is de dader onbekend, dan is het alleen gedekt met all-risk (meestal met no-claimverlies).']);
+      r.ins.push('**WA van de dader** als die bekend is (briefje, getuigen, camerabeelden); anders alleen **je eigen all-risk**.');
+      r.pts.push('Vraag op de parkeerplaats of bij de winkel naar camerabeelden en kijk of er een briefje is achtergelaten.');
+    } else {
+      r.v.push(['warn', '**Hangt af van wie de schuld heeft en je dekking.** Heeft de ander schuld, dan betaalt diens WA. Ben je zelf schuldig, dan dekt je WA de schade van de ander en alleen all-risk je eigen schade.']);
+      r.ins.push('**WA-verzekering** (van jou of de tegenpartij) en eventueel **all-risk** voor eigen schade.');
+    }
+    if (fietser) r.pts.push('Is er een fietser of voetganger bij betrokken? Als zwakkere verkeersdeelnemer krijgt die vrijwel altijd minimaal 50% vergoed van de automobilist (art. 185 WVW).');
+    r.pts.push('Uitsluitingen: opzet, rijden onder invloed, rijden zonder geldig rijbewijs en een niet-gemachtigde bestuurder.');
+    r.meld.push(meldAuto({ tegenpartij: rol === 'ander' }));
+    r.steps.push('Vul samen met de tegenpartij een Europees Schadeformulier in (papier of de app) en noteer kenteken en verzekeraar.', STEP.foto, 'Noteer namen en telefoonnummers van getuigen.', rol === 'onbekend' || rol === 'parkeer' ? 'Doe bij doorrijden aangifte bij de politie (doorrijden na een ongeval is strafbaar).' : 'Laat de schade taxeren bij een (door de verzekeraar aangewezen) schadehersteller.', STEP.termijn);
+    if (!rol) r.q.push('Wie had er schuld: jij, de ander, of is de dader onbekend?');
+    if (rol === 'parkeer') r.q.push('Is de dader bekend (briefje, getuigen, camerabeelden)?'), r.ynSet({ yes: ['anderSchuld'], no: ['onbekend'] });
+    if (!dek && rol !== 'ander') r.q.push('Heb je WA, beperkt casco (WA+) of all-risk?');
+    if (ctx.amount == null) r.q.push('Wat is ongeveer het schadebedrag (bijv. uit een offerte)?');
+    return r;
+  }},
+
+  avp: { label: 'Schade aan spullen van een ander (AVP)', emoji: '🤝', assess() {
+    const f = ctx.f; const r = base('Schade aan spullen van een ander');
+    const wie = f.kind ? (/zoon/.test(f._raw || '') ? 'je zoon' : /dochter/.test(f._raw || '') ? 'je dochter' : 'je kind') : 'jij';
+    const item = f.telefoon ? 'een telefoon' : f.laptop ? 'een laptop' : f.elektronica ? 'een apparaat' : 'spullen';
+    r.summary = `${wie.charAt(0).toUpperCase() + wie.slice(1)} heeft schade veroorzaakt aan ${item} van iemand anders.${amtTxt()}`;
+    if (f.opzet) r.v.push(['no', '**Niet gedekt.** Opzettelijk toegebrachte schade is uitgesloten (bij kinderen kijkt de verzekeraar wel naar leeftijd en toerekenbaarheid).']);
+    else if (f.gezinslid) r.v.push(['no', '**Niet gedekt.** Schade aan spullen van gezinsleden of huisgenoten is uitgesloten op de aansprakelijkheidsverzekering.']);
+    else if (f.opzicht) r.v.push(['warn', '**Twijfelachtig (opzichtclausule).** Had ' + wie + ' het voorwerp zelf in handen of geleend, dan geldt de opzichtclausule. Veel moderne AVP-polissen dekken dit tot een maximum (vaak € 12.500 of lager) met een eigen risico; oudere polissen sluiten het helemaal uit.']);
+    else r.v.push(['ok', '**Waarschijnlijk gedekt** via je aansprakelijkheidsverzekering (AVP), mits ' + wie + ' aansprakelijk is (iets te verwijten valt).']);
+    r.ins.push('**Aansprakelijkheidsverzekering particulieren (AVP)**' + (f.kind ? ' met **gezinsdekking**: inwonende kinderen zijn meeverzekerd.' : '.'));
+    if (f.kind) {
+      if (ctx.age != null && ctx.age < 14) r.pts.push(`Je kind is ${ctx.age} jaar: onder de 14 zijn de **ouders** aansprakelijk, en dat valt onder je gezins-AVP.`);
+      else if (ctx.age != null) r.pts.push(`Je kind is ${ctx.age} jaar: vanaf 14 is het kind zelf aansprakelijk, maar als het thuis woont is het meeverzekerd op de gezins-AVP.`);
+      else r.pts.push('Leeftijd maakt uit: onder de 14 zijn de ouders aansprakelijk; vanaf 14 het kind zelf. In beide gevallen dekt een gezins-AVP dit meestal.');
+    }
+    r.pts.push('De AVP vergoedt de **dagwaarde** (of de reparatiekosten als die lager zijn), niet de nieuwprijs.');
+    r.pts.push('Er moet sprake zijn van aansprakelijkheid: een puur ongelukje waar niemand iets aan kon doen, hoeft niet vergoed te worden. Bij een "vriendendienst" kan de vergoeding lager uitvallen.');
+    r.pts.push('Uitsluitingen: opzet, schade aan spullen van huisgenoten, en vaak spullen die je in bruikleen of in bewaring had (opzicht).');
+    r.meld.push(ctx.amount == null
+      ? 'Een AVP kent **geen no-claimkorting**; het eigen risico is vaak € 0 (bij opzicht soms € 100 – € 250). Melden is dus meestal verstandig, tenzij het bedrag heel klein is. Noem een bedrag, dan reken ik het na.'
+      : (ctx.er != null && ctx.amount <= ctx.er ? `**Niet melden:** ${eur(ctx.amount)} valt binnen het eigen risico van ${eur(ctx.er)}.` : `**Melden is waarschijnlijk zinvol.** Een AVP kent geen no-claimkorting; bij ${eur(ctx.amount)} weegt het eigen risico (vaak € 0, bij opzicht soms € 100 – € 250) meestal niet op tegen de vergoeding.`));
+    r.steps.push('Erken niet zomaar aansprakelijkheid en beloof niets; laat de verzekeraar de schuldvraag beoordelen.', 'Laat de benadeelde een reparatieofferte of aankoopbon aanleveren (inclusief aankoopdatum).', STEP.foto, 'Leg schriftelijk vast hoe het gebeurde (wie, wat, waar, wanneer), eventueel met getuigen.', STEP.termijn);
+    if (f.kind && ctx.age == null) r.q.push('Hoe oud is je kind?');
+    if (!f.opzicht && !F.geenOpzicht.test(f._raw || '')) r.q.push('Had je kind het voorwerp zelf in handen of geleend, of werd het bijvoorbeeld per ongeluk omgestoten?'), r.ynSet({ yes: ['opzicht'], no: [] });
+    else if (f.opzicht) r.q.push('Had je kind het voorwerp geleend of in handen? Of werd het bijvoorbeeld uit de hand van de eigenaar gestoten? (Bij dat laatste geldt de opzichtclausule niet.)');
+    if (ctx.amount == null) r.q.push('Wat kost reparatie of vervanging, en hoe oud is het voorwerp?');
+    return r;
+  }},
+
+  fiets: { label: 'Fiets', emoji: '🚲', assess() {
+    const f = ctx.f; const r = base(f.fietsSchade ? 'Schade aan de fiets' : 'Fietsdiefstal');
+    const ebike = /e-bike|ebike|elektrische fiets/.test(f._raw || '');
+    if (f.fietsSchade) {
+      r.summary = `Je ${ebike ? 'e-bike' : 'fiets'} is beschadigd.${amtTxt()}`;
+      if (f.anderSchuld) r.v.push(['ok', '**Waarschijnlijk vergoed via de aansprakelijkheidsverzekering van de veroorzaker** (bij een auto: diens WA).']);
+      else r.v.push(['warn', '**Alleen gedekt met een fietsverzekering met schadedekking (all-risk).** De inboedelverzekering dekt schade aan je fiets door een val meestal niet.']);
+      r.ins.push('**Fietsverzekering (all-risk/casco)**, of de **AVP/WA van de veroorzaker**.');
+    } else {
+      r.summary = `Je ${ebike ? 'e-bike' : 'fiets'} is gestolen${f.berging ? ' uit een berging of schuur' : f.slot ? ' terwijl hij op slot stond' : ''}.${amtTxt()}`;
+      if (!f.slot && f.geenSlot) r.v.push(['no', '**Niet gedekt.** Een fiets die niet op slot stond, wordt vrijwel nooit vergoed.']);
+      else if (f.fietsverz && f.slot) r.v.push(['ok', '**Waarschijnlijk gedekt** via je fietsverzekering, mits het slot aan de eisen voldoet (vaak ART-goedgekeurd, bij e-bikes soms 2 sloten) en je beide sleutels kunt inleveren.']);
+      else if (f.berging && f.braak) r.v.push(['ok', '**Waarschijnlijk gedekt** via de inboedelverzekering: diefstal uit een afgesloten berging met braaksporen valt meestal onder de inboedeldekking (vaak tot een maximum).']);
+      else r.v.push(['warn', '**Twijfelachtig.** Diefstal op straat is alleen gedekt met een **aparte fietsverzekering**. De inboedelverzekering vergoedt alleen diefstal uit een afgesloten ruimte met braaksporen.']);
+      r.ins.push('**Fietsverzekering** (diefstaldekking) of **inboedelverzekering** bij diefstal uit een afgesloten berging met braak.');
+      r.pts.push('Je moet meestal beide originele sleutels inleveren en het framenummer weten.');
+      r.pts.push('Veel fietsverzekeringen vergoeden de eerste jaren nieuwwaarde en daarna een aflopend percentage.');
+      r.steps.push(STEP.aangifte + ' Vermeld het framenummer.');
+    }
+    r.pts.push('Uitsluitingen: niet op slot, geen goedgekeurd slot, sleutel in het slot, slijtage en opzet.');
+    r.meld.push(meldWoon('fietsverzekering', { erDefault: 'vaak € 0 tot € 100' }));
+    r.steps.push('Zoek de aankoopfactuur, het framenummer en het slotcertificaat op.', STEP.foto, STEP.termijn);
+    if (!f.fietsSchade && !f.fietsverz) r.q.push('Heb je een aparte fietsverzekering, of is de fiets alleen via je inboedel verzekerd?');
+    if (!f.fietsSchade && !f.slot && !f.geenSlot) r.q.push('Stond de fiets op slot (welk slot)?'), r.ynSet({ yes: ['slot'], no: ['geenSlot'] });
+    if (ctx.amount == null) r.q.push('Wat is de (dag)waarde of aankoopprijs van de fiets en hoe oud is hij?');
+    return r;
+  }},
+
+  elektronica: { label: 'Telefoon / laptop / elektronica', emoji: '📱', assess() {
+    const f = ctx.f; const r = base('Schade aan eigen elektronica');
+    const item = f.telefoon ? 'telefoon' : f.laptop ? 'laptop' : 'apparaat';
+    r.summary = `Je eigen ${item} is beschadigd${f.buiten ? ' buitenshuis' : ''}${f.defect ? ' of defect geraakt' : ''}.${amtTxt()}`;
+    if (f.overspanning) r.v.push(['ok', '**Waarschijnlijk gedekt.** Schade door blikseminslag of overspanning/inductie valt meestal onder de inboedelverzekering.']);
+    else if (f.defect) r.v.push(['no', '**Niet gedekt.** Een apparaat dat uit zichzelf kapotgaat (eigen gebrek) valt niet onder de inboedelverzekering. Kijk naar garantie of je recht op een deugdelijk product (wettelijke garantie bij de verkoper).']);
+    else if (f.allrisk && !f.buiten) r.v.push(['ok', '**Waarschijnlijk gedekt** via je all-risk inboedelverzekering (plotselinge, onvoorziene schade thuis).']);
+    else if (f.buiten) r.v.push(['warn', '**Twijfelachtig.** Schade buitenshuis is alleen gedekt met een buitenhuisdekking, kostbaarheden-/gadgetverzekering of soms je reisverzekering.']);
+    else r.v.push(['warn', '**Alleen gedekt met all-risk.** Een standaard inboedelverzekering dekt eigen ongelukjes (laten vallen, drankje eroverheen) meestal niet; een all-risk of uitgebreide dekking wel.']);
+    r.ins.push('**Inboedelverzekering (all-risk)** thuis; **gadget-/kostbaarhedenverzekering** of **buitenhuisdekking** onderweg.');
+    r.pts.push('Elektronica wordt vaak na 1 à 3 jaar op dagwaarde vergoed.');
+    r.pts.push('Check ook een eventuele telefoonverzekering via je provider of creditcard.');
+    r.pts.push('Uitsluitingen: slijtage, eigen gebrek, krassen die de werking niet beïnvloeden, onbeheerd achterlaten en opzet.');
+    r.meld.push(meldWoon('inboedelverzekering'));
+    r.steps.push(STEP.foto, STEP.bonnen, 'Vraag een reparatieofferte of verklaring "niet te repareren" bij een reparateur.', STEP.termijn);
+    if (!f.allrisk && !f.overspanning && !f.defect) r.q.push('Heb je een all-risk inboedelverzekering of een aparte gadgetverzekering?'), r.ynSet({ yes: ['allrisk'], no: [] });
+    if (!f.buiten && !f.defect && !f.overspanning) r.q.push('Gebeurde het thuis of buitenshuis?');
+    if (ctx.amount == null) r.q.push(`Wat kost reparatie of vervanging, en hoe oud is je ${item}?`);
+    return r;
+  }},
+
+  val: { label: 'Val / breuk eigen spullen', emoji: '🏺', assess() {
+    const f = ctx.f; const r = base('Breuk of schade aan eigen spullen');
+    r.summary = `Een van je eigen spullen is gevallen, gebroken of beschadigd${f.buiten ? ' buitenshuis' : ''}.${amtTxt()}`;
+    if (f.opzet) r.v.push(['no', '**Niet gedekt.** Opzettelijke schade is uitgesloten.']);
+    else if (f.geleidelijk) r.v.push(['no', '**Niet gedekt.** Slijtage of geleidelijke achteruitgang is uitgesloten.']);
+    else if (f.allrisk && !f.buiten) r.v.push(['ok', '**Waarschijnlijk gedekt** via je all-risk inboedelverzekering (plotselinge en onvoorziene schade).']);
+    else r.v.push(['warn', '**Alleen gedekt met all-risk.** Eigen ongelukjes (iets laten vallen of omstoten) worden door een standaard inboedelverzekering meestal niet vergoed.']);
+    r.ins.push('**Inboedelverzekering met all-risk / uitgebreide dekking.**');
+    r.pts.push('Ook bij all-risk geldt vaak een apart eigen risico (bijv. € 100 – € 150) voor deze schades.');
+    r.pts.push('Uitsluitingen: slijtage, krassen en deuken die de werking niet beïnvloeden, breekbare voorwerpen buitenshuis en opzet.');
+    r.meld.push(meldWoon('inboedelverzekering', { erDefault: 'vaak € 0 tot € 150 (bij all-risk)' }));
+    r.steps.push(STEP.foto, STEP.bewaren, STEP.bonnen, STEP.termijn);
+    if (!f.allrisk) r.q.push('Heb je een all-risk inboedelverzekering?'), r.ynSet({ yes: ['allrisk'], no: [] });
+    r.q.push('Is het van jou zelf, of van iemand anders? (Bij spullen van een ander kijken we naar je aansprakelijkheidsverzekering.)');
+    if (ctx.amount == null) r.q.push('Wat kost reparatie of vervanging?');
+    return r;
+  }},
+
+  neerslag: { label: 'Neerslag / overstroming', emoji: '🌧️', assess() {
+    const f = ctx.f; const r = base('Schade door neerslag of overstroming');
+    r.summary = `Er is waterschade door ${f.primaireDijk ? 'een overstroming' : f.grondwater ? 'grondwater' : 'hevige regen of wateroverlast'}.${amtTxt()}`;
+    if (f.grondwater) r.v.push(['no', '**Waarschijnlijk niet gedekt.** Schade door grondwater (opstijgend water via vloer of kruipruimte) is meestal uitgesloten.']);
+    else if (f.primaireDijk) r.v.push(['warn', '**Twijfelachtig.** Overstroming door het bezwijken van een primaire waterkering (grote rivieren- en zeedijken) is doorgaans uitgesloten; daarvoor kan de overheid een tegemoetkoming geven (Wet tegemoetkoming schade). Overstroming door een secundaire (regionale) kering dekken veel verzekeraars tegenwoordig wel.']);
+    else if (f.geleidelijk) r.v.push(['warn', '**Twijfelachtig.** Regenwater dat binnenkomt door slecht onderhoud (verstopte dakgoot, lekke kit) wordt meestal niet vergoed.']);
+    else r.v.push(['ok', '**Waarschijnlijk gedekt.** Schade door hevige neerslag (vaak minimaal 40 mm in 24 uur) die via het dak of via de straat (maaiveld) binnenstroomt, valt bij de meeste woonverzekeringen onder de dekking.']);
+    r.ins.push('**Opstalverzekering** voor de woning, **inboedelverzekering** voor spullen; bij een auto: **beperkt casco / all-risk**.');
+    r.pts.push('De verzekeraar toetst vaak aan KNMI-gegevens over de neerslag in jouw regio.');
+    r.pts.push('Spullen in de kelder of op de grond in een schuur zijn soms beperkt verzekerd.');
+    r.pts.push('Uitsluitingen: grondwater, slijtage/achterstallig onderhoud, en vaak overstroming door primaire waterkeringen.');
+    r.meld.push(meldWoon('woonverzekering'));
+    r.steps.push(STEP.beperken, STEP.foto, 'Noteer datum en tijdstip van de bui of overstroming.', STEP.bewaren, STEP.termijn);
+    if (!f.grondwater && !f.primaireDijk) r.q.push('Kwam het water via het dak, via de straat naar binnen, of omhoog via de vloer (grondwater)?');
+    if (ctx.amount == null) r.q.push('Wat is ongeveer het schadebedrag?');
+    return r;
+  }},
+
+  schimmel: { label: 'Schimmel / vocht', emoji: '🍄', assess() {
+    const f = ctx.f; const r = base('Schimmel- of vochtschade');
+    r.summary = `Er is schimmel of vochtschade ontstaan.${amtTxt()}`;
+    if (f.plots && !f.geleidelijk) r.v.push(['warn', '**Twijfelachtig.** Schimmel is alleen gedekt als het een direct gevolg is van een gedekte gebeurtenis (bijv. een recente plotselinge lekkage) en je de schade snel hebt gemeld en beperkt.']);
+    else r.v.push(['no', '**Waarschijnlijk niet gedekt.** Schimmel en vocht ontstaan meestal geleidelijk (slechte ventilatie, condens, optrekkend vocht, lekkage over langere tijd) en zijn daarom uitgesloten.']);
+    r.ins.push(f.huur ? 'Bij huur is de **verhuurder** verantwoordelijk voor bouwkundige vochtproblemen; meld het schriftelijk.' : 'Alleen via **opstal/inboedel** als het een gevolg is van een gedekte lekkage; anders eigen kosten (onderhoud).');
+    r.pts.push('Uitsluitingen: geleidelijk ontstaan, onvoldoende ventilatie, constructiefouten en achterstallig onderhoud.');
+    r.meld.push('Melden heeft alleen zin als er een duidelijke, plotselinge oorzaak is (zoals een gesprongen leiding). Anders kun je beter investeren in het oplossen van de oorzaak.');
+    r.steps.push(STEP.foto, 'Laat de oorzaak onderzoeken (vochtmeting, lekdetectie).', 'Ventileer en droog de ruimte; verwijder schimmel veilig.', f.huur ? 'Meld het schriftelijk bij je verhuurder.' : STEP.termijn);
+    r.q.push('Is er een duidelijke oorzaak, zoals een recente lekkage? En sinds wanneer zie je de schimmel?');
+    return r;
+  }},
+
+  ongedierte: { label: 'Ongedierte', emoji: '🐭', assess() {
+    const f = ctx.f; const r = base('Schade door ongedierte');
+    const marter = /marter/.test(f._raw || '');
+    r.summary = `Er is schade door ongedierte of dieren${marter ? ' (marter)' : ''}.${amtTxt()}`;
+    if (marter && ctx.objects.has('auto')) r.v.push(['warn', '**Twijfelachtig.** Marterschade aan de auto (doorgebeten kabels) wordt door sommige casco-verzekeringen vergoed; met alleen WA niet.']);
+    else r.v.push(['no', '**Waarschijnlijk niet gedekt.** Schade door ongedierte (muizen, ratten, houtworm, motten, insecten) is bij vrijwel alle woonverzekeringen uitgesloten; het geldt als onderhoud.']);
+    r.ins.push(marter ? '**Beperkt casco / all-risk** (afhankelijk van de voorwaarden).' : 'Meestal geen; bestrijding is voor eigen rekening (bij huur vaak de verhuurder of samen).');
+    r.pts.push('Uitzondering: soms is gevolgschade gedekt, bijvoorbeeld brand door doorgeknaagde kabels.');
+    r.meld.push('Melden heeft meestal weinig zin, behalve bij gevolgschade (zoals brand of lekkage) of marterschade met casco.');
+    r.steps.push('Schakel een ongediertebestrijder in (kosten zijn meestal voor eigen rekening).', STEP.foto, f.huur ? 'Meld het bij je verhuurder.' : 'Check of er gevolgschade is die wel gedekt kan zijn.');
+    return r;
+  }},
+
+  slijtage: { label: 'Slijtage / achterstallig onderhoud', emoji: '🔧', assess() {
+    const r = base('Slijtage of achterstallig onderhoud');
+    r.summary = `Je beschrijft schade die lijkt te komen door slijtage, ouderdom of achterstallig onderhoud.${amtTxt()}`;
+    r.v.push(['no', '**Waarschijnlijk niet gedekt.** Verzekeringen dekken plotselinge en onvoorziene schade. Slijtage, ouderdom, roest, houtrot en achterstallig onderhoud zijn standaard uitgesloten.']);
+    r.ins.push('Geen; dit valt onder onderhoud. Bij huur kan de **verhuurder** verantwoordelijk zijn.');
+    r.pts.push('Is er door de slijtage plotseling extra schade ontstaan (bijv. een leiding die springt)? Dan kan die gevolgschade soms wel gedekt zijn, maar het versleten onderdeel zelf niet.');
+    r.meld.push('Melden heeft meestal geen zin, tenzij er sprake is van plotselinge gevolgschade.');
+    r.steps.push(STEP.foto, 'Laat een vakman de oorzaak beoordelen en een offerte voor herstel maken.');
+    r.q.push('Is er naast de slijtage ook plotseling schade ontstaan (bijvoorbeeld lekkage of breuk)?');
+    return r;
+  }}
+};
+
+function base(title) {
+  const r = { title, summary: '', v: [], ins: [], pts: [], meld: [], steps: [], q: [], yn: null };
+  r.ynSet = (o) => { if (!r.yn) r.yn = o; };
+  return r;
+}
+
+/* ---------- Antwoord samenstellen ---------- */
+const ICON = { ok: '✅', warn: '⚠️', no: '❌' };
+function bullets(arr) { return arr.map(s => '• ' + s).join('\n'); }
+
+function compose(r, intro) {
+  const out = [];
+  if (intro) out.push(intro);
+  out.push(`**${r.title}**\n${r.summary}`);
+  r.v.forEach(([k, txt]) => out.push(`${ICON[k]} ${txt}`));
+  if (r.ins.length) out.push('**Welke verzekering?**\n' + bullets(r.ins));
+  if (r.pts.length) out.push('**Aandachtspunten**\n' + bullets(r.pts));
+  if (r.meld.length) out.push('**Melden of niet?**\n' + r.meld.join('\n'));
+  if (r.steps.length) out.push('**Vervolgstappen**\n' + bullets([...new Set(r.steps)]));
+  if (r.q.length) out.push('**Om de inschatting scherper te maken:**\n' + bullets(r.q));
+  out.push(DISCLAIMER);
+  return out.join('\n\n');
+}
+
+const CHOICES = [
+  ['lekkage', '💧 Lekkage / waterschade', 'Het gaat om lekkage of waterschade in huis'],
+  ['storm', '🌬️ Storm', 'Het gaat om stormschade'],
+  ['brand', '🔥 Brand / rook', 'Het gaat om brand- of rookschade'],
+  ['inbraak', '🔓 Inbraak / diefstal', 'Het gaat om inbraak of diefstal'],
+  ['glas', '🪟 Glasbreuk', 'Het gaat om glasbreuk (een ruit is kapot)'],
+  ['aanrijding', '🚗 Aanrijding / auto', 'Het gaat om een aanrijding met de auto'],
+  ['avp', '🤝 Spullen van een ander', 'Ik heb schade veroorzaakt aan spullen van iemand anders'],
+  ['fiets', '🚲 Fiets', 'Het gaat om mijn fiets'],
+  ['elektronica', '📱 Telefoon / laptop', 'Mijn eigen telefoon of laptop is kapot'],
+  ['val', '🏺 Eigen spullen gebroken', 'Er is iets van mijzelf gevallen en gebroken'],
+  ['neerslag', '🌧️ Regen / overstroming', 'Het gaat om wateroverlast door hevige regen'],
+  ['schimmel', '🍄 Schimmel / vocht', 'Het gaat om schimmel of vocht'],
+  ['ongedierte', '🐭 Ongedierte / slijtage', 'Het gaat om schade door ongedierte of slijtage']
+];
+
+function choiceButtons() {
+  return '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">' +
+    CHOICES.map((c, i) => `<button class="qp-btn" onclick="sendChoice(${i})">${c[1]}</button>`).join('') + '</div>';
+}
+
+function sendChoice(i) {
+  if (loading) return;
+  document.getElementById('userInput').value = CHOICES[i][2];
+  sendMessage();
+}
+
+function respond(text) {
+  const t = text.toLowerCase().trim();
+  const info = updateCtxFromText(text);
+  ctx.f._raw = ((ctx.f._raw || '') + ' ' + t).trim();
+
+  // begroeting / bedankt zonder inhoud
+  if (!info.type && /^(hoi|hallo|hey|goedemorgen|goedemiddag|goedenavond|dag|hi)\b[\s!.,]*$/.test(t)) {
+    return { text: 'Hallo! Beschrijf kort wat er is gebeurd: **wat** is er beschadigd, **hoe** is het ontstaan en **wat** is ongeveer de schade? Je kunt ook hieronder een categorie kiezen.\n\n' + DISCLAIMER, buttons: true };
+  }
+  if (!info.type && /^(dank|bedankt|thanks|top|super|fijn|ok(é|ay)?|prima|duidelijk)\b/.test(t) && !info.amountNew) {
+    return { text: 'Graag gedaan! Heb je nog een vraag over deze schade of een andere situatie? Beschrijf het gerust.\n\n' + DISCLAIMER };
+  }
+
+  if (!ctx.type) {
+    let intro = 'Ik kan nog niet goed bepalen om welk type schade het gaat.';
+    if (ctx.amount != null) intro += ` Ik heb het schadebedrag van **${eur(ctx.amount)}** genoteerd.`;
+    const q = [
+      'Wat is er precies beschadigd of verdwenen (bijv. vloer, auto, telefoon, fiets, spullen van iemand anders)?',
+      'Hoe is de schade ontstaan (lekkage, storm, brand, inbraak, aanrijding, laten vallen...)?',
+      'Is het van jou zelf of van iemand anders?',
+      'Wanneer is het gebeurd en wat is ongeveer het schadebedrag?'
+    ];
+    return { text: `${intro}\n\n**Kun je iets meer vertellen?**\n${bullets(q)}\n\nOf kies hieronder het type schade dat het best past.\n\n${DISCLAIMER}`, buttons: true };
+  }
+
+  const cat = CATS[ctx.type];
+  if (!info.signal) {
+    return { text: `Ik kon in je laatste bericht geen nieuwe informatie over de schade herkennen. We hadden het over **${cat.label}**${ctx.amount != null ? ' (geschatte schade ' + eur(ctx.amount) + ')' : ''}.\n\n**Wil je iets aanvullen?**\n${bullets(['Hoe is de schade precies ontstaan?', 'Wat is ongeveer het schadebedrag of je eigen risico?', 'Welke dekking heb je (bijv. all-risk, WA, gezinsdekking)?'])}\n\nGaat het om een andere schade? Kies dan hieronder een type of klik op "Nieuw gesprek".\n\n${DISCLAIMER}`, buttons: true };
+  }
+  const r = cat.assess();
+  ctx.yn = r.yn;
+
+  let intro = '';
+  if (info.isNew) intro = `Dit lijkt een nieuwe situatie (${cat.label}); ik start een nieuwe inschatting.`;
+  else if (!info.type && conversation.length > 1) {
+    const bits = [];
+    if (info.amountNew != null) bits.push(`schadebedrag ${eur(info.amountNew)}`);
+    if (info.erNew != null) bits.push(`eigen risico ${eur(info.erNew)}`);
+    intro = `Bedankt voor de aanvulling${bits.length ? ' (' + bits.join(', ') + ')' : ''}. Hier is de bijgewerkte inschatting voor **${cat.label}**.`;
+  }
+  return { text: compose(r, intro) };
+}
+
+/* ---------- UI ---------- */
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 130) + 'px';
@@ -299,7 +966,7 @@ function fmt(t) {
     .split('\n\n').map(p => p.trim() ? `<p>${p.replace(/\n/g,'<br>')}</p>` : '').join('');
 }
 
-async function sendMessage() {
+function sendMessage() {
   if (loading) return;
   const inp = document.getElementById('userInput');
   const text = inp.value.trim();
@@ -308,54 +975,33 @@ async function sendMessage() {
   document.getElementById('quickPrompts').style.display = 'none';
   inp.value = ''; inp.style.height = 'auto';
 
-  addMsg('user', `<p>${text.replace(/</g,'<').replace(/\n/g,'<br>')}</p>`);
-
-  const userMsg = text;
-  conversation.push({ role: 'user', content: userMsg });
+  addMsg('user', `<p>${escapeHtml(text).replace(/\n/g,'<br>')}</p>`);
+  conversation.push({ role: 'user', content: text });
 
   loading = true;
   document.getElementById('sendBtn').disabled = true;
   showTyping();
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: SYSTEM,
-        messages: conversation
-      })
-    });
-    const data = await res.json();
-    removeTyping();
-
-    if (data.error) {
-      addMsg('assistant', `<p>⚠️ Fout: ${data.error.message}</p>`);
-      conversation.pop();
-    } else {
-      const reply = data.content[0].text;
-      conversation.push({ role: 'assistant', content: reply });
-      conversation[conversation.length - 2].content = text;
-      addMsg('assistant', fmt(reply));
+  const delay = 500 + Math.floor(Math.random() * 300);
+  setTimeout(() => {
+    let reply;
+    try {
+      reply = respond(text);
+    } catch (e) {
+      console.warn(e);
+      reply = { text: 'Er ging iets mis bij het verwerken van je bericht. Probeer het anders te formuleren of kies hieronder een type schade.\n\n' + DISCLAIMER, buttons: true };
     }
-  } catch(e) {
     removeTyping();
-    addMsg('assistant', '<p>⚠️ Verbinding mislukt. Probeer opnieuw.</p>');
-    conversation.pop();
-  }
-
-  loading = false;
-  document.getElementById('sendBtn').disabled = false;
+    conversation.push({ role: 'assistant', content: reply.text });
+    addMsg('assistant', fmt(reply.text) + (reply.buttons ? choiceButtons() : ''));
+    loading = false;
+    document.getElementById('sendBtn').disabled = false;
+  }, delay);
 }
 
 function resetChat() {
   conversation = [];
+  ctx = newCtx();
   document.getElementById('messages').innerHTML = `
     <div class="msg assistant">
       <div class="msg-avatar">🛡️</div>
