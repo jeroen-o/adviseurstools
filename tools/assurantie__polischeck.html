@@ -595,7 +595,7 @@
     <div class="logo-mark">📋</div>
     <div>
       <div class="logo-text">Polischeck</div>
-      <div class="logo-sub">Dekkingsanalyse op basis van AI</div>
+      <div class="logo-sub">Automatische dekkingsanalyse op basis van trefwoorden</div>
     </div>
   </div>
   <div class="header-right">Upload · Analyseer · Verbeter</div>
@@ -605,7 +605,7 @@
 
   <div class="hero">
     <h2>Analyseer uw polisbladen<br><em style="font-weight:400; color:var(--forest)">in één klik</em></h2>
-    <p>Upload één of meerdere PDF polisdocumenten. De AI analyseert de dekking, signaleert hiaten en vergelijkt met uw gewenste profiel.</p>
+    <p>Upload één of meerdere polisdocumenten (PDF of tekstbestand). Een automatische analyse op basis van trefwoorden herkent de polissen, signaleert hiaten en vergelijkt met uw gewenste profiel — volledig in uw browser, er wordt niets verstuurd.</p>
   </div>
 
   <div class="layout">
@@ -620,9 +620,9 @@
           ondragover="event.preventDefault(); this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
           ondrop="handleDrop(event)">
-          <input type="file" id="fileInput" accept=".pdf" multiple onchange="handleFiles(this.files)">
+          <input type="file" id="fileInput" accept=".pdf,.txt,application/pdf,text/plain" multiple onchange="handleFiles(this.files)">
           <span class="upload-icon">📄</span>
-          <h3>Sleep PDF's hierheen of klik om te uploaden</h3>
+          <h3>Sleep PDF's (of .txt) hierheen of klik om te uploaden</h3>
           <p>Polisbladen, verzekeringsoverzichten, voorwaarden — meerdere bestanden mogelijk</p>
         </div>
 
@@ -709,7 +709,7 @@
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 let uploadedFiles = [];
 let extractedTexts = [];
@@ -723,7 +723,8 @@ function handleDrop(e) {
 
 function handleFiles(files) {
   Array.from(files).forEach(f => {
-    if (f.type === 'application/pdf' && !uploadedFiles.find(x => x.name === f.name)) {
+    const ok = f.type === 'application/pdf' || f.type === 'text/plain' || /\.(pdf|txt)$/i.test(f.name);
+    if (ok && !uploadedFiles.find(x => x.name === f.name)) {
       uploadedFiles.push(f);
       renderFileItem(f, 'Gereed om te lezen', 'ok');
     }
@@ -765,6 +766,8 @@ function updateAnalyseBtn() {
 
 // ─── PDF.js extraction ───────────────────────────────────
 async function extractPdfText(file) {
+  if (file.type === 'text/plain' || /\.txt$/i.test(file.name)) return (await file.text()).substring(0, 18000);
+  if (!window.pdfjsLib) throw new Error('PDF-lezer kon niet worden geladen');
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   let text = '';
@@ -785,7 +788,7 @@ async function startAnalysis() {
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span> Bezig met analyseren…';
 
-  showProgress(0, 'PDFs inlezen…');
+  showProgress(0, 'Documenten inlezen…');
 
   // Extract all PDFs
   extractedTexts = [];
@@ -795,23 +798,23 @@ async function startAnalysis() {
     try {
       const txt = await extractPdfText(f);
       extractedTexts.push({ name: f.name, text: txt });
-      renderFileItem(f, `${txt.length.toLocaleString()} tekens gelezen`, 'ok');
+      renderFileItem(f, `${txt.length.toLocaleString('nl-NL')} tekens gelezen`, 'ok');
     } catch(e) {
       renderFileItem(f, 'Leesbaar mislukt', 'err');
     }
-    showProgress(Math.round(((i+1)/uploadedFiles.length)*40), `PDF ${i+1}/${uploadedFiles.length} ingelezen`);
+    showProgress(Math.round(((i+1)/uploadedFiles.length)*40), `Document ${i+1}/${uploadedFiles.length} ingelezen`);
   }
 
   showProgress(45, 'Profiel ophalen…');
   const profile = buildProfile();
 
-  showProgress(55, 'AI analyseert uw polissen…');
+  showProgress(55, 'Polissen worden automatisch geanalyseerd…');
 
   // Show skeleton
   showSkeleton();
 
   try {
-    const analysis = await callAI(extractedTexts, profile);
+    const analysis = await analyseLocal(extractedTexts, profile);
     showProgress(95, 'Resultaten verwerken…');
     renderResults(analysis);
     showProgress(100, 'Klaar!');
@@ -830,6 +833,8 @@ function buildProfile() {
   const gezin = document.getElementById('gezin').value;
   const werk = document.getElementById('werk').value;
   const bijz = document.getElementById('bijzonderheden').value;
+  const gewenstIds = ['woonhuis','inboedel','aansprakelijkheid','rechtsbijstand','reis','auto','inkomen']
+    .filter(id => document.getElementById('chk_'+id)?.checked);
   const gewenst = ['woonhuis','inboedel','aansprakelijkheid','rechtsbijstand','reis','auto','inkomen']
     .filter(id => document.getElementById('chk_'+id)?.checked)
     .map(id => ({
@@ -837,90 +842,500 @@ function buildProfile() {
       aansprakelijkheid: 'Aansprakelijkheidsverzekering (AVP)', rechtsbijstand: 'Rechtsbijstandverzekering',
       reis: 'Reisverzekering', auto: 'Autoverzekering', inkomen: 'Inkomensbescherming / AOV'
     }[id]));
-  return { woonsituatie, gezin, werk, bijz, gewenst };
+  return { woonsituatie, gezin, werk, bijz, gewenst, gewenstIds };
 }
 
-// ─── AI call ─────────────────────────────────────────────
-async function callAI(docs, profile) {
-  const docSection = docs.map((d,i) =>
-    `=== DOCUMENT ${i+1}: ${d.name} ===\n${d.text}`
-  ).join('\n\n');
+// ─── Automatische analyse (trefwoorden, volledig in de browser) ───
+// Geen externe API: alle herkenning gebeurt met vaste regels op de ingelezen tekst.
 
-  const prompt = `Je bent een expert verzekeringsadviseur. Analyseer de volgende polisdocumenten grondig.
-
-KLANTPROFIEL:
-- Woonsituatie: ${profile.woonsituatie}
-- Gezin: ${profile.gezin}
-- Werk: ${profile.werk}
-- Bijzonderheden: ${profile.bijz || 'geen'}
-- Gewenste minimale dekkingen: ${profile.gewenst.join(', ')}
-
-POLISDOCUMENTEN:
-${docSection}
-
-Geef een GESTRUCTUREERDE analyse in het volgende JSON-formaat (antwoord ALLEEN met JSON, geen uitleg eromheen):
-
-{
-  "samenvatting": "2-3 zinnen overall beoordeling",
-  "gevonden_polissen": [
-    {
-      "naam": "naam van polis",
-      "verzekeraar": "naam verzekeraar of Onbekend",
-      "type": "type verzekering",
-      "status": "ok|aandacht|probleem",
-      "dekking_samenvatting": "korte samenvatting van de dekking",
-      "eigen_risico": "bedrag of Niet gevonden",
-      "aandachtspunten": ["punt 1", "punt 2"]
-    }
-  ],
-  "dekkingscheck": [
-    {
-      "categorie": "naam dekking",
-      "status": "gedekt|niet_gedekt|onbekend",
-      "toelichting": "korte toelichting"
-    }
-  ],
-  "hiaten": [
-    {
-      "onderwerp": "naam van het hiaat",
-      "ernst": "hoog|midden|laag",
-      "uitleg": "waarom dit een risico is voor dit profiel"
-    }
-  ],
-  "aanbevelingen": [
-    {
-      "prioriteit": "urgent|aanbevolen|optioneel",
-      "actie": "concrete actie",
-      "reden": "korte toelichting"
-    }
-  ],
-  "score_gedekt": 0,
-  "score_hiaten": 0,
-  "score_aanbevelingen": 0
+const EUR_FMT0 = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const EUR_FMT2 = new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function fmtEUR(n) {
+  if (n == null || isNaN(n)) return '';
+  return (Number.isInteger(n) ? EUR_FMT0 : EUR_FMT2).format(n).replace(/ /g, ' ');
 }
 
-score_gedekt = aantal gedekte categorieën, score_hiaten = aantal gevonden hiaten, score_aanbevelingen = aantal aanbevelingen.
-Wees eerlijk en concreet. Als iets niet uit de documenten blijkt, zeg dat dan.`;
+// Tekst normaliseren: kleine letters, zonder accenten, één spatie.
+function normText(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[‘’]/g, "'").replace(/[ \t ]+/g, ' ');
+}
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2500,
-      messages: [{ role: 'user', content: prompt }]
-    })
+// Bedrag in NL-notatie ("1.250.000,00", "385,-", "2,5 miljoen") → getal
+const AMT = '([0-9]{1,3}(?:\\.[0-9]{3})+(?:,[0-9]{1,2}|,-)?|[0-9]+(?:,[0-9]{1,2}|,-)?)(\\s*miljoen)?';
+function parseAmount(numStr, miljoen) {
+  if (!numStr) return null;
+  let s = numStr.replace(/,-$/, '').replace(/\./g, '').replace(',', '.');
+  let n = parseFloat(s);
+  if (isNaN(n)) return null;
+  if (miljoen) n *= 1e6;
+  return Math.round(n * 100) / 100;
+}
+
+function wordRe(pat) { return new RegExp('(?:^|[^a-z0-9])(?:' + pat + ')(?=$|[^a-z0-9])', 'g'); }
+function has(t, re) { re.lastIndex = 0; return re.test(t); }
+function firstIndex(t, re) { re.lastIndex = 0; const m = re.exec(t); return m ? m.index : -1; }
+
+// ─── Verzekeraars ───
+const VERZEKERAARS = [
+  ['Centraal Beheer', 'centraal beheer'], ['Interpolis', 'interpolis'],
+  ['Nationale-Nederlanden', 'nationale[- ]nederlanden'], ['Univé', 'unive'],
+  ['a.s.r.', 'a\\.s\\.r\\.?|asr'], ['Allianz Direct', 'allianz direct'], ['Allianz', 'allianz'],
+  ['FBTO', 'fbto'], ['Ohra', 'ohra'], ['Aegon', 'aegon'], ['InShared', 'inshared'],
+  ['ZLM', 'zlm'], ['Reaal', 'reaal'], ['Klaverblad', 'klaverblad'], ['Ditzo', 'ditzo'],
+  ['Zilveren Kruis', 'zilveren kruis'], ['VGZ', 'vgz'], ['CZ', 'cz'], ['Menzis', 'menzis'],
+  ['ONVZ', 'onvz'], ['DSW', 'dsw'], ['Zorg en Zekerheid', 'zorg en zekerheid'], ['Anderzorg', 'anderzorg'],
+  ['DAS', 'das(?: rechtsbijstand)?'], ['ARAG', 'arag'], ['Achmea Rechtsbijstand', 'achmea rechtsbijstand'],
+  ['ANWB', 'anwb'], ['Unigarant', 'unigarant'], ['De Goudse', 'de goudse|goudse verzekeringen'],
+  ['NH1816', 'nh1816|nh 1816'], ['Avéro Achmea', 'avero(?: achmea)?'], ['Promovendum', 'promovendum'],
+  ['Bovemij', 'bovemij'], ['Zevenwouden', 'zevenwouden'], ['Hollandse Zekerheid', 'hollandse zekerheid'],
+  ['Dazure', 'dazure'], ['Polis Direct', 'polis direct'], ['Movir', 'movir'], ['Scildon', 'scildon'],
+  ['DELA', 'dela'], ['Monuta', 'monuta'], ['Yarden', 'yarden'], ['Lancyr', 'lancyr'],
+  ['Callas', 'callas'],
+  // Holdings: alleen als niets specifiekers gevonden is (staan vaak in de kleine lettertjes)
+  ['Achmea', 'achmea', true], ['Vivat', 'vivat', true],
+].map(([naam, pat, fallback]) => ({ naam, re: wordRe(pat), fallback: !!fallback }));
+
+function findVerzekeraar(t) {
+  let best = null;
+  for (const v of VERZEKERAARS) {
+    const i = firstIndex(t, v.re);
+    if (i < 0) continue;
+    const rank = (v.fallback ? 1e9 : 0) + i;
+    if (!best || rank < best.rank) best = { naam: v.naam, rank };
+  }
+  return best ? best.naam : 'Onbekend';
+}
+
+// ─── Verzekeringstypen ───
+// kw: [regex-patroon, gewicht]; een type telt als herkend bij score ≥ 4 (twijfel bij 2–3).
+const TYPES = {
+  woonhuis: { label: 'Woonhuisverzekering (opstal)', groep: 'Wonen', kw: [['woonhuisverzekering|opstalverzekering', 5], ['opstal', 2], ['woonhuis', 2], ['herbouwwaarde', 2], ['funderingen?|dakbedekking', 1]] },
+  inboedel: { label: 'Inboedelverzekering', groep: 'Wonen', kw: [['inboedelverzekering', 5], ['inboedel', 2], ['inboedelwaardemeter', 2], ['lijfsieraden|audiovisuele apparatuur', 1]] },
+  avp: { label: 'Aansprakelijkheidsverzekering (AVP)', groep: 'Aansprakelijkheid',
+    exclude: /aansprakelijkheid(?:sverzekering)?(?: voor)? motorrijtuigen|wettelijke aansprakelijkheid(?: motorrijtuigen)?|\bwam\b|wa[- ]verzekering|beroepsaansprakelijkheid|bedrijfsaansprakelijkheid/g,
+    kw: [['aansprakelijkheidsverzekering (?:voor )?particulieren', 6], ['particuliere aansprakelijkheid', 5], ['avp', 4], ['aansprakelijkheidsverzekering', 2], ['aansprakelijk(?:heid)?', 1]] },
+  rechtsbijstand: { label: 'Rechtsbijstandverzekering', groep: 'Juridisch', kw: [['rechtsbijstandverzekering', 5], ['rechtsbijstand', 3], ['juridische (?:hulp|bijstand)', 1]] },
+  reis: { label: 'Reisverzekering', groep: 'Reizen', kw: [['reisverzekering', 5], ['doorlopende reis', 4], ['bagage', 1], ['buitenland', 1], ['wintersport', 1]] },
+  annulering: { label: 'Annuleringsverzekering', groep: 'Reizen', kw: [['annuleringsverzekering', 5], ['annulering', 2]] },
+  auto: { label: 'Autoverzekering', groep: 'Mobiliteit', kw: [['autoverzekering', 5], ['motorrijtuig(?:en)?', 2], ['kenteken', 2], ['beperkt casco|volledig casco|casco', 2], ['schadevrije jaren|no[- ]claim|bonus[- ]malus', 2], ['personenauto', 2], ['wa[- ]verzekering|wa \\+|wa-plus', 2]] },
+  fiets: { label: 'Fietsverzekering', groep: 'Mobiliteit', kw: [['fietsverzekering|e-bike verzekering', 5], ['fietsdiefstal', 2]] },
+  orv: { label: 'Overlijdensrisicoverzekering (ORV)', groep: 'Leven', kw: [['overlijdensrisicoverzekering', 6], ['overlijdensrisico', 4], ['orv', 4], ['uitkering bij overlijden', 2]] },
+  uitvaart: { label: 'Uitvaartverzekering', groep: 'Leven', kw: [['uitvaartverzekering', 6], ['uitvaart', 3], ['natura', 1]] },
+  aov: { label: 'Arbeidsongeschiktheids-/inkomensverzekering', groep: 'Inkomen', kw: [['arbeidsongeschiktheidsverzekering', 6], ['aov', 4], ['inkomensverzekering|woonlastenverzekering|wia[- ]?(?:hiaat|gat)verzekering|wga[- ]?(?:hiaat|gat)', 5], ['arbeidsongeschikt(?:heid)?', 2], ['wia', 1]] },
+  ongevallen: { label: 'Ongevallenverzekering', groep: 'Leven', kw: [['ongevallenverzekering', 5], ['blijvende invaliditeit', 2]] },
+  zorg: { label: 'Zorgverzekering', groep: 'Zorg', kw: [['zorgverzekering', 4], ['basisverzekering', 3], ['zorgverzekeringswet', 3], ['aanvullende (?:zorg)?verzekering', 2], ['tandarts', 1], ['fysiotherapie', 1]] },
+};
+for (const k in TYPES) TYPES[k].kw = TYPES[k].kw.map(([p, w]) => [wordRe(p), w]);
+
+// Profiel-checkbox → type
+const PROFIEL_TYPE = { woonhuis: 'woonhuis', inboedel: 'inboedel', aansprakelijkheid: 'avp', rechtsbijstand: 'rechtsbijstand', reis: 'reis', auto: 'auto', inkomen: 'aov' };
+
+function scoreTypes(t) {
+  const res = {};
+  for (const [key, def] of Object.entries(TYPES)) {
+    const tt = def.exclude ? t.replace(def.exclude, ' ') : t;
+    let score = 0, anchor = -1;
+    for (const [re, w] of def.kw) {
+      re.lastIndex = 0;
+      let n = 0, m;
+      while ((m = re.exec(tt)) && n < 2) { if (anchor < 0 || m.index < anchor) anchor = m.index; n++; }
+      score += n * w;
+    }
+    if (score > 0) res[key] = { score, anchor };
+  }
+  return res;
+}
+
+// ─── Bedragen bij trefwoorden ───
+function eigenRisicoMatches(t) {
+  const out = [];
+  const reEur = new RegExp("eigen risico(?:'s)?[^€0-9\\n]{0,60}?(?:€|eur(?:o)?\\.?)\\s*" + AMT, 'g');
+  const reEuro = new RegExp("eigen risico(?:'s)?[^€0-9\\n]{0,60}?" + AMT + '\\s*(?:euro|eur)(?![a-z])', 'g');
+  const reDagen = /eigen risico(?:termijn|periode)?[^0-9\n]{0,40}?([0-9]{1,3})\s*(dagen|maanden|jaar)/g;
+  let m;
+  while ((m = reEur.exec(t))) { const v = parseAmount(m[1], m[2]); if (v != null) out.push({ i: m.index, txt: fmtEUR(v) }); }
+  while ((m = reEuro.exec(t))) { const v = parseAmount(m[1], m[2]); if (v != null) out.push({ i: m.index, txt: fmtEUR(v) }); }
+  while ((m = reDagen.exec(t))) out.push({ i: m.index, txt: m[1] + ' ' + m[2], termijn: true });
+  const reGeen = /geen eigen risico|eigen risico:? (?:nvt|n\.v\.t\.|geen)/g;
+  while ((m = reGeen.exec(t))) out.push({ i: m.index, txt: 'Geen' });
+  return out.sort((a, b) => a.i - b.i);
+}
+
+function eigenRisicoFor(matches, anchor, multi, typeKey) {
+  let list = matches.filter(m => typeKey === 'aov' ? true : !m.termijn);
+  if (!list.length) return 'Niet gevonden';
+  if (multi) {
+    const after = list.filter(m => m.i >= anchor);
+    return (after[0] || list[list.length - 1]).txt;
+  }
+  const uniq = [...new Set(list.map(m => m.txt))].slice(0, 3);
+  return uniq.join(' / ');
+}
+
+function findAmountAfter(t, labelPat, from) {
+  const re = new RegExp('(?:' + labelPat + ')[^€0-9\\n]{0,50}?€\\s*' + AMT, 'g');
+  re.lastIndex = 0;
+  let m, first = null;
+  while ((m = re.exec(t))) {
+    const v = parseAmount(m[1], m[2]);
+    if (v == null) continue;
+    if (from == null || m.index >= from) return v;
+    if (first == null) first = v;
+  }
+  return first;
+}
+
+function findPastEndDate(t) {
+  const re = /(?:einddatum|vervaldatum|geldig tot|looptijd tot|eindigt op)[^0-9\n]{0,20}([0-9]{1,2})[-\/.]([0-9]{1,2})[-\/.]([0-9]{4})/g;
+  let m;
+  const now = new Date();
+  while ((m = re.exec(t))) {
+    const d = new Date(+m[3], +m[2] - 1, +m[1]);
+    if (!isNaN(d) && d < now) return `${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}-${m[3]}`;
+  }
+  return null;
+}
+
+// ─── Dekkingsdetails per type ───
+// Retourneert { details: [], issues: [{tekst, sev:'aandacht'|'probleem', hiaat?}] }
+function detailsFor(key, t, ctx) {
+  const d = [], issues = [];
+  const add = (tekst, sev = 'aandacht', hiaat) => issues.push({ tekst, sev, hiaat });
+  const bijz = ctx.bijz;
+
+  function dekkingsgraad() {
+    if (has(t, wordRe('all[ -]?risk'))) return 'All risk';
+    if (has(t, wordRe('extra uitgebreid'))) return 'Extra uitgebreid';
+    if (has(t, wordRe('uitgebreid|uitgebreide dekking'))) return 'Uitgebreid';
+    if (has(t, wordRe('basisdekking|basis dekking|beperkte dekking'))) return 'Basis';
+    return null;
+  }
+  const garantie = has(t, /garantie tegen onderverzekering|onderverzekeringsgarantie|geen beroep op onderverzekering|afstand van (?:het beroep op )?onderverzekering|inboedelwaardemeter|herbouwwaardemeter|waardemeter/g);
+
+  if (key === 'woonhuis' || key === 'inboedel') {
+    const g = dekkingsgraad();
+    if (g) d.push('Dekking: ' + g);
+    if (g === 'Basis') add('Basisdekking: o.a. lekkage, inbraakschade en eigen gebrek zijn vaak beperkt gedekt', 'aandacht',
+      { ernst: 'midden', onderwerp: `${TYPES[key].label}: alleen basisdekking`, uitleg: 'Bij een basisdekking zijn veelvoorkomende schades (waterschade, inbraak, plotselinge schade) beperkt of niet verzekerd.', actie: `Overweeg (extra) uitgebreide of all-risk dekking voor de ${key === 'woonhuis' ? 'woonhuis' : 'inboedel'}verzekering` });
+    if (!g) add('Dekkingsgraad (basis / uitgebreid / all risk) niet gevonden in de tekst');
+    if (garantie) d.push('Garantie tegen onderverzekering');
+    else add('Garantie tegen onderverzekering niet gevonden — controleer of het verzekerd bedrag actueel is', 'aandacht',
+      { ernst: 'laag', onderwerp: `${TYPES[key].label}: geen garantie tegen onderverzekering gevonden`, uitleg: 'Zonder deze garantie kan bij een te laag verzekerd bedrag slechts een deel van de schade worden vergoed.', actie: key === 'woonhuis' ? 'Laat de herbouwwaarde (opnieuw) vaststellen of vraag naar garantie tegen onderverzekering' : 'Vul de inboedelwaardemeter in of vraag naar garantie tegen onderverzekering' });
+    const lbl = key === 'woonhuis' ? 'herbouwwaarde|verzekerd bedrag|verzekerde som|verzekerd tot' : 'verzekerd bedrag|verzekerde som|inboedelwaarde|verzekerd tot';
+    const vb = findAmountAfter(t, lbl);
+    if (vb) d.push((key === 'woonhuis' && has(t, /herbouwwaarde/g) ? 'Herbouwwaarde/verzekerd bedrag ' : 'Verzekerd bedrag ') + fmtEUR(vb));
+    if (key === 'woonhuis') {
+      if (has(t, /(?:glasdekking|glasverzekering|glasbreuk|glas(?: is)? meeverzekerd|inclusief glas|glas: ja)/g)) d.push('Glas meeverzekerd');
+      else if (has(t, /(?:glas niet meeverzekerd|exclusief glas|zonder glas|glas: nee|geen glasdekking)/g)) add('Glas lijkt niet meeverzekerd');
+      else add('Glasdekking niet gevonden in de tekst');
+    }
+    if (key === 'woonhuis' && /zonnepane/.test(bijz) && !has(t, /zonnepane/g)) add('Zonnepanelen genoemd in profiel, maar niet in de polistekst gevonden');
+    if (key === 'inboedel') {
+      if (has(t, /lijfsieraden|sieraden|kostbaarheden|kunst|verzamelingen/g)) d.push('Sieraden/kostbaarheden genoemd');
+      if (/waardevol|sieraden|kunst|verzamel|horloge|antiek/.test(bijz) && !has(t, /lijfsieraden|sieraden|kostbaarheden|kunst|verzamelingen|antiek/g))
+        add('Waardevolle spullen in profiel, maar geen dekking voor kostbaarheden/sieraden gevonden', 'aandacht',
+          { ernst: 'midden', onderwerp: 'Kostbaarheden mogelijk onvoldoende verzekerd', uitleg: 'Inboedelpolissen hebben vaak lage maxima voor sieraden, kunst en verzamelingen.', actie: 'Controleer de maxima voor kostbaarheden of verzeker ze apart (kostbaarhedenverzekering)' });
+      if (has(t, /buitenshuis/g)) d.push('Dekking buitenshuis genoemd');
+    }
+  }
+
+  if (key === 'avp') {
+    const vb = findAmountAfter(t, 'verzekerd bedrag|verzekerde som|maximaal|dekking tot|per gebeurtenis') ||
+      (() => { const m = new RegExp('€\\s*' + AMT + '\\s*per (?:gebeurtenis|aanspraak)').exec(t); return m ? parseAmount(m[1], m[2]) : null; })();
+    if (vb) d.push('Verzekerd bedrag ' + fmtEUR(vb) + ' per gebeurtenis');
+    if (vb && vb < 1000000) add('Verzekerd bedrag ligt onder € 1.000.000; gangbaar is € 1.250.000 – € 2.500.000');
+    const alleen = has(t, /alleenstaande|eenpersoons|1-persoons/g);
+    const gezin = has(t, /gezinsdekking|meerpersoons|gezin met|samenwonend|met partner|gezinssamenstelling:? (?:gezin|met)/g);
+    if (alleen) d.push('Dekking voor alleenstaande');
+    else if (gezin) d.push('Gezinsdekking');
+    if (ctx.profile.gezin !== 'alleenstaand' && alleen && !gezin)
+      add('Polis lijkt alleen de verzekeringnemer te dekken, terwijl u een partner/gezin hebt', 'probleem',
+        { ernst: 'hoog', onderwerp: 'AVP dekt mogelijk niet het hele gezin', uitleg: 'Partner en/of kinderen zijn bij een alleenstaande-dekking niet verzekerd voor schade die zij anderen toebrengen.', actie: 'Wijzig de AVP naar een gezinsdekking' });
+    if (/hond|kat|paard|huisdier/.test(bijz)) {
+      if (has(t, /huisdier|dieren|hond/g)) d.push('Schade door (huis)dieren genoemd');
+      else add('Huisdier in profiel: dekking voor schade door dieren niet gevonden in de tekst');
+    }
+  }
+
+  if (key === 'rechtsbijstand') {
+    const mods = [['verkeer', 'Verkeer'], ['wonen', 'Wonen'], ['werk|inkomen|arbeid', 'Werk & inkomen'], ['consument', 'Consument'], ['fiscaal|belasting', 'Fiscaal'], ['familie|echtscheiding|personen- en familierecht', 'Familierecht'], ['letsel|personenschade', 'Letsel']]
+      .filter(([p]) => has(t, wordRe(p))).map(([, l]) => l);
+    if (mods.length) d.push('Modules/onderwerpen: ' + mods.join(', '));
+    const w = /wachttijd[^0-9\n]{0,30}([0-9]{1,2})\s*(maanden|dagen)/.exec(t);
+    if (w) d.push(`Wachttijd ${w[1]} ${w[2]}`);
+    const dr = findAmountAfter(t, 'minimum(?:belang)?|drempel(?:bedrag)?|financieel belang');
+    if (dr) d.push('Minimaal belang ' + fmtEUR(dr));
+    if (ctx.profile.werk === 'zzp' && !has(t, /zakelijk|ondernem|bedrijf/g))
+      add('Particuliere rechtsbijstand dekt meestal geen zakelijke geschillen (zzp)');
+  }
+
+  if (key === 'reis') {
+    const wereld = has(t, /werelddekking|hele wereld|wereldwijd|werelddelen|gebied:? wereld/g);
+    const europa = has(t, /europa|europese landen/g);
+    if (wereld) d.push('Werelddekking');
+    else if (europa) { d.push('Dekking Europa'); add('Alleen Europa-dekking gevonden; reizen buiten Europa zijn mogelijk niet gedekt', 'aandacht',
+      { ernst: 'laag', onderwerp: 'Reisverzekering alleen Europa', uitleg: 'Bij reizen buiten Europa vervalt de dekking voor bagage, hulpverlening en extra kosten.', actie: 'Breid de reisverzekering uit naar werelddekking als u buiten Europa reist' }); }
+    else add('Dekkingsgebied (Europa/wereld) niet gevonden');
+    if (has(t, /doorlopend/g)) d.push('Doorlopend');
+    else if (has(t, /kortlopend|eenmalig/g)) d.push('Kortlopend');
+    if (has(t, /geneeskundige kosten|medische kosten/g)) d.push('Medische kosten');
+    if (has(t, /annulering/g)) d.push('Annulering genoemd');
+    if (/wintersport|skie/.test(bijz) && !has(t, /wintersport/g)) add('Wintersport in profiel, maar niet in de polistekst gevonden');
+  }
+
+  if (key === 'auto') {
+    let vorm = null;
+    if (has(t, /all ?risk|volledig casco|\bvolledige? cascodekking/g)) vorm = 'Allrisk (volledig casco)';
+    else if (has(t, /beperkt casco|wa ?\+|wa-plus|wa plus/g)) vorm = 'WA + beperkt casco';
+    else if (has(t, /\bwa\b|wettelijke aansprakelijkheid|wa-verzekering/g)) vorm = 'WA';
+    if (vorm) d.push('Dekking: ' + vorm); else add('Dekkingsvorm (WA / beperkt casco / allrisk) niet gevonden');
+    const sv = /([0-9]{1,2})\s*schadevrije jaren|schadevrije jaren[^0-9\n]{0,20}([0-9]{1,2})/.exec(t);
+    if (sv) d.push(`${sv[1] || sv[2]} schadevrije jaren`);
+    if (has(t, /pechhulp|hulpverlening/g)) d.push('Pechhulp/hulpverlening');
+    if (has(t, /schadeverzekering (?:voor )?inzittenden|\bsvi\b|ongevallen(?:verzekering)? (?:voor )?inzittenden|\bovi\b/g)) d.push('Verzekering inzittenden');
+    else add('Geen schadeverzekering inzittenden gevonden', 'aandacht',
+      { ernst: 'laag', onderwerp: 'Geen schadeverzekering inzittenden', uitleg: 'Letselschade van de bestuurder zelf is via WA niet gedekt.', actie: 'Overweeg een schadeverzekering inzittenden (SVI) bij de autoverzekering' });
+    if (/zakelijk/.test(bijz) && !has(t, /zakelijk gebruik|zakelijke ritten/g)) add('Zakelijk gebruik in profiel: controleer of dit op de autopolis is toegestaan');
+  }
+
+  if (key === 'orv') {
+    const vb = findAmountAfter(t, 'verzekerd bedrag|verzekerd kapitaal|uitkering|verzekerde som');
+    if (vb) d.push('Verzekerd bedrag ' + fmtEUR(vb));
+    const vorm = has(t, /annuitair/g) ? 'annuïtair dalend' : has(t, /lineair/g) ? 'lineair dalend' : has(t, /dalend/g) ? 'dalend' : has(t, /gelijkblijvend|gelijk blijvend/g) ? 'gelijkblijvend' : null;
+    if (vorm) d.push('Vorm: ' + vorm);
+    if (ctx.profile.woonsituatie === 'koopwoning' && !has(t, /hypothe/g)) add('Niet duidelijk of de ORV aan de hypotheek is gekoppeld');
+  }
+
+  if (key === 'aov') {
+    if (has(t, /woonlastenverzekering/g)) { d.push('Woonlastenverzekering'); if (ctx.profile.werk === 'zzp') add('Woonlastenverzekering dekt alleen woonlasten, geen volledig inkomen'); }
+    if (has(t, /wia[- ]?(?:hiaat|gat)|wga[- ]?(?:hiaat|gat)/g)) d.push('Aanvulling op WIA');
+    const w = /(?:wachttijd|eigen risico(?:termijn|periode)?)[^0-9\n]{0,30}([0-9]{1,3})\s*(dagen|maanden|jaar)/.exec(t);
+    if (w) d.push(`Wachttijd ${w[1]} ${w[2]}`);
+    const vb = findAmountAfter(t, 'verzekerd (?:jaar)?bedrag|verzekerde (?:jaar)?uitkering|uitkering per jaar|jaarrente|verzekerd inkomen');
+    if (vb) d.push('Verzekerde uitkering ' + fmtEUR(vb));
+    const e = /eindleeftijd[^0-9\n]{0,20}([0-9]{2})|tot (?:de )?(?:leeftijd van )?([0-9]{2}) jaar/.exec(t);
+    if (e) d.push(`Eindleeftijd ${e[1] || e[2]} jaar`);
+    if (has(t, /beroepsarbeidsongeschikt|eigen beroep/g)) d.push('Criterium: eigen beroep');
+    else if (has(t, /passende arbeid/g)) d.push('Criterium: passende arbeid');
+    else if (has(t, /gangbare arbeid/g)) { d.push('Criterium: gangbare arbeid'); add('Gangbare-arbeidcriterium: uitkering alleen als u vrijwel geen werk meer kunt doen'); }
+  }
+
+  if (key === 'zorg') {
+    if (has(t, /basisverzekering/g)) d.push('Basisverzekering');
+    if (has(t, /aanvullende (?:zorg)?verzekering|aanvullend pakket/g)) d.push('Aanvullende verzekering');
+    if (has(t, /tandarts/g)) d.push('Tandarts genoemd');
+    if (has(t, /vrijwillig eigen risico/g)) d.push('Vrijwillig eigen risico');
+  }
+
+  if (key === 'uitvaart') {
+    if (has(t, /natura/g)) d.push('Naturapolis'); else if (has(t, /kapitaal/g)) d.push('Kapitaalpolis');
+    const vb = findAmountAfter(t, 'verzekerd bedrag|verzekerd kapitaal|verzekerde som');
+    if (vb) d.push('Verzekerd bedrag ' + fmtEUR(vb));
+  }
+
+  if (['annulering', 'fiets', 'ongevallen'].includes(key)) {
+    const vb = findAmountAfter(t, 'verzekerd bedrag|verzekerde som|maximaal|dekking tot');
+    if (vb) d.push('Verzekerd bedrag ' + fmtEUR(vb));
+  }
+
+  const premie = new RegExp('premie[^€\\n]{0,40}?€\\s*' + AMT + '\\s*(per maand|per jaar|p\\/m|p\\/j|per kwartaal)?').exec(t);
+  if (premie && ctx.single) { const v = parseAmount(premie[1], premie[2]); if (v) d.push('Premie ' + fmtEUR(v) + (premie[3] ? ' ' + premie[3].replace('p/m', 'per maand').replace('p/j', 'per jaar') : '')); }
+
+  return { details: d, issues };
+}
+
+// ─── Hoofdfunctie: zelfde JSON-structuur als voorheen ───
+async function analyseLocal(docs, profile) {
+  await new Promise(r => setTimeout(r, 600)); // korte pauze zodat de laad-UI zichtbaar blijft
+
+  const bijz = normText(profile.bijz);
+  const polissen = [];
+  const found = {};   // type → aantal documenten (zeker)
+  const twijfel = {}; // type → documentnamen (twijfel)
+  const hiaten = [], aanbevelingen = [];
+  const seen = new Set();
+  const addHiaat = (h, prio) => {
+    if (seen.has(h.onderwerp)) return; seen.add(h.onderwerp);
+    hiaten.push({ onderwerp: h.onderwerp, ernst: h.ernst, uitleg: h.uitleg });
+    if (h.actie) aanbevelingen.push({ prioriteit: prio || ({ hoog: 'urgent', midden: 'aanbevolen', laag: 'optioneel' })[h.ernst], actie: h.actie, reden: h.uitleg });
+  };
+  const addAanbeveling = (a) => { if (seen.has('a:' + a.actie)) return; seen.add('a:' + a.actie); aanbevelingen.push(a); };
+
+  docs.forEach(doc => {
+    const t = normText(doc.text);
+    if (t.replace(/\s/g, '').length < 50) {
+      polissen.push({ naam: doc.name, verzekeraar: 'Onbekend', type: 'Niet herkend', status: 'probleem',
+        dekking_samenvatting: 'Er is (vrijwel) geen tekst uit dit document gelezen.',
+        eigen_risico: 'Niet gevonden', aandachtspunten: ['Mogelijk een gescand document (afbeelding) zonder tekstlaag; voer de gegevens handmatig na.'] });
+      return;
+    }
+    const scores = scoreTypes(t);
+    const zeker = Object.entries(scores).filter(([, s]) => s.score >= 4).sort((a, b) => b[1].score - a[1].score);
+    Object.entries(scores).filter(([, s]) => s.score >= 2 && s.score < 4).forEach(([k]) => { (twijfel[k] = twijfel[k] || []).push(doc.name); });
+    const verzekeraar = findVerzekeraar(t);
+    const erMatches = eigenRisicoMatches(t);
+    const einde = findPastEndDate(t);
+
+    if (!zeker.length) {
+      polissen.push({ naam: doc.name, verzekeraar, type: 'Niet herkend', status: 'aandacht',
+        dekking_samenvatting: 'Het verzekeringstype kon niet automatisch worden herkend aan de hand van trefwoorden.',
+        eigen_risico: eigenRisicoFor(erMatches, 0, false, ''), aandachtspunten: ['Controleer dit document handmatig.'] });
+      return;
+    }
+
+    const multi = zeker.length > 1;
+    // Bij meerdere dekkingen in één document: elk onderdeel analyseren op het eigen tekstdeel
+    // (van het eerste trefwoord tot het begin van het volgende onderdeel).
+    const anchors = zeker.map(([, s]) => s.anchor).sort((a, b) => a - b);
+    const segmentFor = anchor => {
+      if (!multi) return t;
+      const next = anchors.find(a => a > anchor);
+      const seg = t.slice(anchor, next == null ? t.length : next);
+      return seg.length >= 80 ? seg : t;
+    };
+    zeker.forEach(([key, s]) => {
+      found[key] = (found[key] || 0) + 1;
+      const def = TYPES[key];
+      const seg = segmentFor(s.anchor);
+      const { details, issues } = detailsFor(key, seg, { bijz, profile, single: !multi });
+      if (einde) issues.push({ tekst: `Einddatum ${einde} ligt in het verleden — controleer of de polis nog loopt`, sev: 'aandacht' });
+      if (multi) issues.push({ tekst: `Onderdeel van een document met meerdere dekkingen (${zeker.map(([k]) => TYPES[k].label.split(' (')[0]).join(', ')}); bedragen kunnen bij een ander onderdeel horen`, sev: 'info' });
+      issues.forEach(i => { if (i.hiaat) addHiaat(i.hiaat); });
+      const status = issues.some(i => i.sev === 'probleem') ? 'probleem' : issues.some(i => i.sev === 'aandacht') ? 'aandacht' : 'ok';
+      polissen.push({
+        naam: `${def.label} — ${doc.name}`,
+        verzekeraar,
+        type: def.groep,
+        status,
+        dekking_samenvatting: details.length ? details.join('; ') + '.' : 'Polis herkend; geen specifieke dekkingsdetails gevonden in de tekst.',
+        eigen_risico: seg !== t ? eigenRisicoFor(eigenRisicoMatches(seg), 0, false, key) : eigenRisicoFor(erMatches, s.anchor, multi, key),
+        aandachtspunten: issues.map(i => i.tekst),
+      });
+    });
   });
 
-  const data = await response.json();
-  if (data.error) throw new Error(data.error.message);
+  const heeft = k => !!found[k];
+  const p = profile;
+  const ids = p.gewenstIds || [];
+  const koop = p.woonsituatie === 'koopwoning', huur = p.woonsituatie === 'huurwoning', vve = p.woonsituatie === 'appartement';
+  const partner = p.gezin !== 'alleenstaand', kinderen = p.gezin === 'gezin_kinderen';
+  const allText = normText(docs.map(d => d.text).join(' '));
 
-  const raw = data.content[0].text.replace(/```json|```/g, '').trim();
-  return JSON.parse(raw);
+  // ─── Dekkingscheck ───
+  const dekkingscheck = [];
+  const checkTypes = [...new Set([
+    ...ids.map(id => PROFIEL_TYPE[id]),
+    ...(koop ? ['woonhuis'] : []),
+    ...(p.werk === 'zzp' ? ['aov'] : []),
+    ...(koop && partner ? ['orv'] : []),
+    ...Object.keys(found),
+  ])];
+  checkTypes.forEach(k => {
+    const label = TYPES[k].label;
+    if (heeft(k)) {
+      let toel = `Aangetroffen in ${found[k]} document(en).`;
+      if (k === 'woonhuis' && huur) toel += ' Let op: als huurder is opstal normaal voor de verhuurder.';
+      dekkingscheck.push({ categorie: label, status: 'gedekt', toelichting: toel });
+    } else if (k === 'woonhuis' && huur) {
+      dekkingscheck.push({ categorie: label, status: 'onbekend', toelichting: 'Niet nodig bij een huurwoning: de verhuurder verzekert het gebouw.' });
+    } else if (k === 'woonhuis' && vve) {
+      dekkingscheck.push({ categorie: label, status: 'onbekend', toelichting: 'Bij een appartement loopt de opstalverzekering meestal via de VvE.' });
+    } else if (k === 'aov' && p.werk === 'gepensioneerd') {
+      dekkingscheck.push({ categorie: label, status: 'onbekend', toelichting: 'Na pensionering meestal niet meer relevant.' });
+    } else if (twijfel[k]) {
+      dekkingscheck.push({ categorie: label, status: 'onbekend', toelichting: `Mogelijk genoemd in ${twijfel[k].join(', ')}, maar niet eenduidig herkend.` });
+    } else {
+      dekkingscheck.push({ categorie: label, status: 'niet_gedekt', toelichting: 'Niet aangetroffen in de geüploade documenten.' });
+    }
+  });
+  const status = k => (dekkingscheck.find(d => d.categorie === TYPES[k].label) || {}).status;
+  const ontbreekt = k => status(k) === 'niet_gedekt' || (status(k) === 'onbekend' && twijfel[k] && !heeft(k));
+  const nietGevondenTxt = k => twijfel[k] ? ' (mogelijk wel genoemd, maar niet eenduidig herkend)' : '';
+
+  // ─── Hiaten op basis van profiel ───
+  if (koop && ontbreekt('woonhuis')) addHiaat({ ernst: 'hoog', onderwerp: 'Geen woonhuis-/opstalverzekering' + nietGevondenTxt('woonhuis'),
+    uitleg: 'Als huiseigenaar draagt u zelf het risico op schade aan de woning (brand, storm, lekkage). Bij een hypotheek is een opstalverzekering bovendien vrijwel altijd verplicht.',
+    actie: 'Sluit een woonhuisverzekering af op basis van de herbouwwaarde' });
+  if (vve && ids.includes('woonhuis') && !heeft('woonhuis')) addAanbeveling({ prioriteit: 'optioneel', actie: 'Vraag de opstalpolis van de VvE op en controleer de dekking', reden: 'Bij een appartement is de opstal meestal collectief via de VvE verzekerd.' });
+  if (huur && heeft('woonhuis')) addAanbeveling({ prioriteit: 'aanbevolen', actie: 'Controleer of de woonhuisverzekering nodig is', reden: 'Als huurder is het gebouw normaal verzekerd door de verhuurder; mogelijk betaalt u dubbel.' });
+
+  if (ids.includes('inboedel') && ontbreekt('inboedel')) addHiaat({ ernst: p.werk === 'student' ? 'laag' : 'midden', onderwerp: 'Geen inboedelverzekering' + nietGevondenTxt('inboedel'),
+    uitleg: p.werk === 'student' ? 'Uw spullen zijn niet verzekerd tegen brand, diefstal of waterschade; soms bent u als (uitwonend) student nog meeverzekerd via uw ouders.' : 'Uw spullen zijn niet verzekerd tegen brand, inbraak, diefstal of waterschade.',
+    actie: p.werk === 'student' ? 'Controleer of u via de inboedelverzekering van uw ouders bent meeverzekerd' : 'Sluit een inboedelverzekering af en bepaal de waarde met een inboedelwaardemeter' });
+
+  if ((ids.includes('aansprakelijkheid') || kinderen) && ontbreekt('avp')) addHiaat({ ernst: (kinderen || partner) ? 'hoog' : 'midden', onderwerp: 'Geen aansprakelijkheidsverzekering (AVP)' + nietGevondenTxt('avp'),
+    uitleg: kinderen ? 'Met kinderen is de kans op schade aan anderen groter; ouders zijn aansprakelijk voor kinderen tot 14 jaar. Schade kan oplopen tot tonnen.' : 'Schade die u per ongeluk aan anderen toebrengt, kan oplopen tot hoge bedragen; een AVP kost weinig.',
+    actie: partner ? 'Sluit een AVP met gezinsdekking af' : 'Sluit een AVP af' });
+
+  if (ids.includes('rechtsbijstand') && ontbreekt('rechtsbijstand')) addHiaat({ ernst: p.werk === 'zzp' ? 'midden' : 'laag', onderwerp: 'Geen rechtsbijstandverzekering' + nietGevondenTxt('rechtsbijstand'),
+    uitleg: 'Juridische kosten bij conflicten (werk, wonen, verkeer, aankopen) komen volledig voor eigen rekening.',
+    actie: 'Overweeg een rechtsbijstandverzekering met de modules die bij uw situatie passen' });
+
+  if (ids.includes('reis') && ontbreekt('reis')) addHiaat({ ernst: 'laag', onderwerp: 'Geen reisverzekering' + nietGevondenTxt('reis'),
+    uitleg: 'De zorgverzekering dekt medische kosten in het buitenland vaak maar tot het Nederlandse tarief; bagage, repatriëring en extra kosten zijn niet gedekt.',
+    actie: 'Overweeg een (doorlopende) reisverzekering' });
+
+  if (ids.includes('auto') && ontbreekt('auto')) addHiaat({ ernst: 'hoog', onderwerp: 'Geen autoverzekering' + nietGevondenTxt('auto'),
+    uitleg: 'Een WA-verzekering is wettelijk verplicht voor elk motorrijtuig met kenteken; zonder verzekering riskeert u boetes en volledige aansprakelijkheid.',
+    actie: 'Controleer of de autopolis elders loopt of sluit minimaal een WA-verzekering af' });
+
+  if (ontbreekt('aov') || (ids.includes('inkomen') && !heeft('aov') && p.werk !== 'gepensioneerd')) {
+    if (p.werk === 'zzp') addHiaat({ ernst: 'hoog', onderwerp: 'Geen arbeidsongeschiktheidsverzekering (zzp)' + nietGevondenTxt('aov'),
+      uitleg: 'Als zzp\'er heeft u geen WIA-uitkering via een werkgever. Bij langdurige ziekte valt uw inkomen grotendeels of volledig weg.',
+      actie: 'Vraag een offerte aan voor een AOV of een alternatief (broodfonds, schenkkring, basis-AOV)' });
+    else if (p.werk === 'loondienst' && ids.includes('inkomen')) addHiaat({ ernst: 'midden', onderwerp: 'Geen aanvulling op de WIA' + nietGevondenTxt('aov'),
+      uitleg: 'Bij (gedeeltelijke) arbeidsongeschiktheid kan het inkomen flink dalen (WIA-/WGA-gat), vooral boven het maximumdagloon.',
+      actie: 'Controleer bij uw werkgever of er een WIA-excedent- of WGA-hiaatverzekering is' });
+    else if (p.werk === 'student' && ids.includes('inkomen')) addHiaat({ ernst: 'laag', onderwerp: 'Geen inkomensbescherming', uitleg: 'Als student is inkomensbescherming meestal nog beperkt relevant.', actie: 'Heroverweeg inkomensbescherming bij uw eerste baan of start als zelfstandige' });
+  }
+
+  if (koop && partner && ontbreekt('orv')) addHiaat({ ernst: kinderen ? 'hoog' : 'midden', onderwerp: 'Geen overlijdensrisicoverzekering (ORV)' + nietGevondenTxt('orv'),
+    uitleg: `Bij een koopwoning met hypotheek en ${kinderen ? 'kinderen' : 'een partner'} kan de achterblijvende partner bij overlijden de woonlasten mogelijk niet alleen dragen.`,
+    actie: 'Laat berekenen welke ORV-dekking nodig is om de hypotheek betaalbaar te houden' });
+  else if (!koop && kinderen && !heeft('orv') && !twijfel.orv) addAanbeveling({ prioriteit: 'optioneel', actie: 'Overweeg een overlijdensrisicoverzekering', reden: 'Met kinderen kan een ORV het gezinsinkomen bij overlijden deels opvangen, ook zonder koopwoning.' });
+
+  if (p.werk === 'zzp' && !/bedrijfsaansprakelijkheid|beroepsaansprakelijkheid|\bavb\b|\bbav\b/.test(allText)) addHiaat({ ernst: 'midden', onderwerp: 'Geen zakelijke aansprakelijkheidsverzekering (AVB/BAV)',
+    uitleg: 'Een particuliere AVP dekt geen schade die u veroorzaakt tijdens uw werk als zelfstandige.',
+    actie: 'Overweeg een bedrijfs- of beroepsaansprakelijkheidsverzekering' });
+
+  if (/hond|kat|paard|huisdier/.test(bijz) && !heeft('avp')) addAanbeveling({ prioriteit: 'aanbevolen', actie: 'Zorg dat schade door uw huisdier verzekerd is', reden: 'Schade door huisdieren valt onder de AVP; zonder AVP bent u daarvoor zelf aansprakelijk.' });
+  if (/waardevol|sieraden|kunst|verzamel|horloge|antiek/.test(bijz) && !heeft('inboedel')) addAanbeveling({ prioriteit: 'aanbevolen', actie: 'Verzeker waardevolle spullen (inboedel of kostbaarhedenverzekering)', reden: 'In het profiel zijn waardevolle spullen genoemd, maar er is geen inboedelverzekering gevonden.' });
+
+  // Dubbele dekking
+  Object.entries(found).filter(([k, n]) => n > 1 && k !== 'zorg').forEach(([k, n]) => addAanbeveling({ prioriteit: 'aanbevolen',
+    actie: `Controleer op dubbele dekking: ${TYPES[k].label}`, reden: `Dit type is in ${n} documenten aangetroffen; mogelijk betaalt u twee keer voor dezelfde dekking.` }));
+
+  if (!Object.keys(found).length) addAanbeveling({ prioriteit: 'urgent', actie: 'Controleer de geüploade documenten', reden: 'Er is geen enkele polis herkend. Mogelijk zijn de documenten gescand zonder tekstlaag of betreft het geen polisbladen.' });
+  else if (!heeft('zorg')) addAanbeveling({ prioriteit: 'optioneel', actie: 'Neem ook uw zorgpolis mee in de check', reden: 'Er is geen zorgverzekering aangetroffen; deze is wettelijk verplicht en relevant voor o.a. dekking in het buitenland.' });
+
+  const ernstOrder = { hoog: 0, midden: 1, laag: 2 }, prioOrder = { urgent: 0, aanbevolen: 1, optioneel: 2 };
+  hiaten.sort((a, b) => ernstOrder[a.ernst] - ernstOrder[b.ernst]);
+  aanbevelingen.sort((a, b) => prioOrder[a.prioriteit] - prioOrder[b.prioriteit]);
+
+  // ─── Samenvatting ───
+  const typesTxt = Object.keys(found).map(k => TYPES[k].label.split(' (')[0].toLowerCase());
+  const gedekt = dekkingscheck.filter(d => d.status === 'gedekt').length;
+  const relevant = dekkingscheck.filter(d => !(d.status === 'onbekend' && !twijfel[Object.keys(TYPES).find(k => TYPES[k].label === d.categorie)])).length;
+  const hoog = hiaten.filter(h => h.ernst === 'hoog');
+  let samenvatting = typesTxt.length
+    ? `In ${docs.length} document(en) ${typesTxt.length === 1 ? 'is 1 verzekeringstype' : 'zijn ' + typesTxt.length + ' verzekeringstypen'} herkend: ${typesTxt.join(', ')}. `
+    : `In de ${docs.length} geüploade document(en) is geen verzekeringstype herkend. `;
+  samenvatting += `Van de ${relevant} voor uw profiel relevante dekkingen ${gedekt === 1 ? 'is er 1' : 'zijn er ' + gedekt} aangetroffen. `;
+  samenvatting += hiaten.length
+    ? `Er ${hiaten.length === 1 ? 'is 1 hiaat' : 'zijn ' + hiaten.length + ' hiaten'} gesignaleerd${hoog.length ? `, waarvan ${hoog.length} met hoog risico (${hoog.map(h => h.onderwerp.toLowerCase()).join('; ')})` : ''}.`
+    : 'Er zijn op basis van de herkende trefwoorden geen duidelijke hiaten gevonden.';
+
+  return {
+    samenvatting,
+    gevonden_polissen: polissen,
+    dekkingscheck,
+    hiaten,
+    aanbevelingen,
+    score_gedekt: gedekt,
+    score_hiaten: hiaten.length,
+    score_aanbevelingen: aanbevelingen.length,
+  };
 }
 
 // ─── Render results ───────────────────────────────────────
@@ -954,7 +1369,7 @@ function renderResults(data) {
   container.appendChild(scoreRow);
 
   // Samenvatting
-  addSection(container, '📊', 'blue', 'Samenvatting', 'Algemeen', `<p>${escHtml(data.samenvatting)}</p>`, true);
+  addSection(container, '📊', 'blue', 'Samenvatting', 'Algemeen', `<p>${escHtml(data.samenvatting)}</p><p style="margin-top:8px; font-size:12px; color:var(--ink-muted);">Deze automatische analyse op basis van trefwoorden is indicatief; de polisvoorwaarden zijn leidend.</p>`, true);
 
   // Gevonden polissen
   if (data.gevonden_polissen?.length) {
@@ -1021,7 +1436,7 @@ function renderResults(data) {
   // Disclaimer
   const disc = document.createElement('div');
   disc.className = 'disclaimer-box';
-  disc.textContent = '⚠️ Dit is een oriënterende analyse op basis van de aangeleverde documenten. De AI kan fouten maken of onvolledige informatie extraheren. Raadpleeg altijd uw verzekeringsadviseur of de polisvoorwaarden voor definitieve zekerheid over uw dekking.';
+  disc.textContent = '⚠️ Dit is een oriënterende analyse op basis van de aangeleverde documenten. De herkenning gebeurt automatisch op basis van trefwoorden en kan dekkingen missen of verkeerd interpreteren; de analyse is indicatief en de polisvoorwaarden zijn leidend. Raadpleeg altijd uw verzekeringsadviseur of de polisvoorwaarden voor definitieve zekerheid over uw dekking.';
   container.appendChild(disc);
 }
 
@@ -1082,7 +1497,7 @@ function hideProgress() {
 }
 
 function escHtml(s) {
-  return String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 </script>
 </body>
