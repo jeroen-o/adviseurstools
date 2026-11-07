@@ -483,122 +483,559 @@ function berekenAdvies(form) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// API
+// DOCUMENT TEMPLATES (deterministisch, volledig lokaal — geen externe API)
 // ═══════════════════════════════════════════════════════════════════
-async function callClaude(prompt) {
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, messages: [{ role: "user", content: prompt }] }),
+const DOC_DISCLAIMER = "Model/concept — laat dit document controleren door een notaris of jurist voordat het wordt ondertekend.";
+const DOC_SCHEIDER = "\n\n════════════════════════════════════════════════════════════\n\n";
+
+function dNum(v) {
+  if (v === null || v === undefined || v === "") return 0;
+  const n = parseFloat(String(v).replace(",", "."));
+  return isNaN(n) ? 0 : n;
+}
+function dEur(v) {
+  return "€ " + dNum(v).toLocaleString("nl-NL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function dPct(v) {
+  return dNum(v).toLocaleString("nl-NL", { maximumFractionDigits: 2 }) + "%";
+}
+function dDatum(iso) {
+  if (!iso) return "……………………";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return d.toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+}
+function dVandaag() {
+  return new Date().toLocaleDateString("nl-NL", { day: "numeric", month: "long", year: "numeric" });
+}
+function dPlaats(adres) {
+  if (!adres) return "……………………";
+  const delen = String(adres).split(",");
+  let laatste = delen[delen.length - 1].trim();
+  laatste = laatste.replace(/^\d{4}\s?[A-Za-z]{2}\s*/, "").trim();
+  if (!laatste || delen.length < 2) return "……………………";
+  return laatste.toLowerCase().split(" ").map(w => w.split("-").map(x => x ? x.charAt(0).toUpperCase() + x.slice(1) : x).join("-")).join(" ");
+}
+const D_RELATIE = {
+  ongehuwd: "ongehuwd samenwonen en geen samenlevingscontract hebben gesloten",
+  samenwoners_contract: "ongehuwd samenwonen en een samenlevingscontract hebben gesloten",
+  gehuwd_koude: "met elkaar gehuwd zijn onder huwelijkse voorwaarden met uitsluiting van iedere gemeenschap van goederen (koude uitsluiting)",
+  gehuwd_beperkt: "met elkaar gehuwd zijn in beperkte gemeenschap van goederen (wettelijk stelsel per 1 januari 2018)",
+  gehuwd_gemeen: "met elkaar gehuwd zijn in algehele gemeenschap van goederen",
+  geregistreerd: "een geregistreerd partnerschap met elkaar zijn aangegaan",
+};
+const D_SOORT = { "annuïtair": "annuïtaire lening", lineair: "lineaire lening", aflossingsvrij: "aflossingsvrije lening" };
+
+function dPartijen(form) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  const regel = (n, geb, bsn, nr) =>
+    `${nr}. ${n}, geboren op ${dDatum(geb)}, BSN ${bsn || "……………………"}, wonende te ……………………,\n   hierna te noemen: "${n}";`;
+  return `DE ONDERGETEKENDEN:\n\n${regel(n1, form.geb1, form.bsn1, 1)}\n\n${regel(n2, form.geb2, form.bsn2, 2).replace(/;$/, ",")}\n\nhierna gezamenlijk te noemen: "Partijen" en ieder afzonderlijk: "Partij".`;
+}
+
+function dOndertekening(form) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  return `ONDERTEKENING
+
+Aldus overeengekomen en in tweevoud opgemaakt en ondertekend,
+
+te ${dPlaats(form.adres)}, op ${dVandaag()}.
+
+
+______________________________          ______________________________
+${n1.padEnd(40, " ")}${n2}
+(handtekening)                          (handtekening)
+
+Plaats: ……………………                         Plaats: ……………………
+Datum:  ……………………                         Datum:  ……………………`;
+}
+
+// Maakt een artikel-teller zodat de nummering altijd doorloopt
+function dArtikelen() {
+  let nr = 0;
+  const out = [];
+  const sleutels = {};
+  return {
+    add(titel, tekst, sleutel) { nr += 1; if (sleutel) sleutels[sleutel] = nr; out.push(`Artikel ${nr} — ${titel}\n\n${tekst.trim()}`); return nr; },
+    // {{art:sleutel}} wordt vervangen door het definitieve artikelnummer
+    text() { return out.join("\n\n\n").replace(/\{\{art:(\w+)\}\}/g, (m, k) => sleutels[k] ? String(sleutels[k]) : "…"); },
+  };
+}
+
+function dLeningData(form) {
+  const ld = (form.leningdelen || []).map((l, i) => {
+    const bedrag = dNum(l.bedrag);
+    let p1 = l.draag1 === "" || l.draag1 === undefined ? NaN : dNum(l.draag1);
+    let p2 = l.draag2 === "" || l.draag2 === undefined ? NaN : dNum(l.draag2);
+    if (isNaN(p1) && isNaN(p2)) { p1 = 50; p2 = 50; }
+    else if (isNaN(p1)) p1 = 100 - p2;
+    else if (isNaN(p2)) p2 = 100 - p1;
+    return { nr: i + 1, bedrag, soort: l.soort, recht: l.recht, p1, p2, b1: bedrag * p1 / 100, b2: bedrag * p2 / 100 };
   });
-  const d = await r.json();
-  return d.content?.[0]?.text || "Fout bij genereren.";
+  const H = ld.reduce((s, l) => s + l.bedrag, 0);
+  const D1 = ld.reduce((s, l) => s + l.b1, 0);
+  const D2 = ld.reduce((s, l) => s + l.b2, 0);
+  return { ld, H, D1, D2 };
 }
 
-function buildDraagplichtPrompt(form) {
+function dLeningTabel(form, data) {
   const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
-  return `Stel een professionele, juridisch correcte DRAAGPLICHTOVEREENKOMST op in het Nederlands voor een hypotheekadviseur. Gebruik een gestructureerde modelopbouw met genummerde artikelen.
-
-PARTIJEN:
-- ${n1}, geboortedatum: ${form.geb1 || "..."}, BSN: ${form.bsn1 || "..."}
-- ${n2}, geboortedatum: ${form.geb2 || "..."}, BSN: ${form.bsn2 || "..."}
-- Relatievorm: ${form.relatievorm}
-- Adres woning: ${form.adres}
-- Koopsom: € ${parseFloat(form.aankoopprijs || 0).toLocaleString("nl-NL")}
-- Verwervingskosten: € ${parseFloat(form.verwervingskosten || 0).toLocaleString("nl-NL")}
-
-EIGENDOMSVERDELING: ${n1} ${form.eigendom1}% / ${n2} ${form.eigendom2}%
-
-EIGEN MIDDELEN:
-- ${n1}: € ${parseFloat(form.eigenVermogen1 || 0).toLocaleString("nl-NL")}
-- ${n2}: € ${parseFloat(form.eigenVermogen2 || 0).toLocaleString("nl-NL")}
-
-LENINGDELEN (geldverstrekker: ${form.geldverstrekker || "..."}):
-${form.leningdelen.map((l, i) => `  Leningdeel ${i+1}: € ${parseFloat(l.bedrag || 0).toLocaleString("nl-NL")} — ${l.soort} — ${l.recht === "oud" ? `Overgangsrecht (art. 10bis.1 Wet IB 2001)` : "Nieuw recht"} — Draagplicht: ${n1} ${l.draag1}% / ${n2} ${l.draag2}%`).join("\n")}
-
-${form.bews1 > 0 || form.bews2 > 0 ? `OVERGANGSRECHT:\n- ${n1}: BEWS € ${parseFloat(form.bews1||0).toLocaleString("nl-NL")}, nog ${form.jaren1||0} renteaftrekjaren\n- ${n2}: BEWS € ${parseFloat(form.bews2||0).toLocaleString("nl-NL")}, nog ${form.jaren2||0} renteaftrekjaren\n- Kan-bepaling overgangsrecht gezamenlijk toepassen: ${form.kanBepaling ? "JA" : "NEE"}` : ""}
-
-${form.bijzonderheden ? `BIJZONDERHEDEN: ${form.bijzonderheden}` : ""}
-
-Datum: ${new Date().toLocaleDateString("nl-NL")}
-
-Structuur van de overeenkomst (verplicht):
-1. Partijen en doel
-2. Artikel 1 — Uitgangspunten (aankoop/kosten, financiering)
-3. Artikel 2 — Overeenkomst inzake de draagplicht (per leningdeel, met tabel)
-4. Artikel 3 — Aflossingen: maak EXPLICIET onderscheid tussen:
-   a) Verplichte maandelijkse aflossing op gezamenlijk leningdeel → geen automatisch vergoedingsrecht (tenzij teruggevorderd binnen 1 jaar na kalenderjaar)
-   b) Extra (niet-verplichte) aflossing op gezamenlijk leningdeel → wél vergoedingsrecht
-   c) Aflossing op leningdeel waarvoor ander draagplichtig is → altijd vergoedingsrecht
-5. Artikel 4 — Hoofdelijke aansprakelijkheid
-6. Artikel 5 — Civiele gevolgen
-7. Artikel 6 — Fiscale gevolgen (inclusief uitsluiting menging fiscaal verleden)
-8. Artikel 7 — Toepasselijk recht
-9. Ondertekeningsblok
-
-Gebruik professionele juridische taal. Vermeld expliciet dat de overeenkomst de hoofdelijke aansprakelijkheid richting de geldverstrekker NIET wijzigt. Sluit menging fiscaal verleden expliciet uit.`;
+  const rijen = data.ld.map(l =>
+    `Leningdeel ${l.nr}: ${dEur(l.bedrag)}
+   Aflossingsvorm: ${D_SOORT[l.soort] || l.soort}
+   Fiscaal regime: ${l.recht === "oud" ? "overgangsrecht (box 1, art. 10bis.1 Wet IB 2001)" : "nieuw recht (box 1, aflossingseis art. 3.119a Wet IB 2001)"}
+   Draagplicht:    ${n1} ${dPct(l.p1)} (${dEur(l.b1)}) / ${n2} ${dPct(l.p2)} (${dEur(l.b2)})`);
+  return rijen.join("\n\n") +
+    `\n\nTotaal hypothecaire geldlening: ${dEur(data.H)}\n   Totale draagplicht ${n1}: ${dEur(data.D1)}${data.H > 0 ? ` (${dPct(data.D1 / data.H * 100)})` : ""}\n   Totale draagplicht ${n2}: ${dEur(data.D2)}${data.H > 0 ? ` (${dPct(data.D2 / data.H * 100)})` : ""}`;
 }
 
-function buildVergoedingsrechtenPrompt(form) {
-  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
-  return `Stel een professionele OVEREENKOMST VERGOEDINGSRECHTEN op in het Nederlands.
-
-PARTIJEN:
-- ${n1} (BSN: ${form.bsn1 || "..."})
-- ${n2} (BSN: ${form.bsn2 || "..."})
-- Adres woning: ${form.adres}
-- Koopsom: € ${parseFloat(form.aankoopprijs || 0).toLocaleString("nl-NL")}
-
-EIGEN MIDDELEN:
-- ${n1}: € ${parseFloat(form.eigenVermogen1 || 0).toLocaleString("nl-NL")}
-- ${n2}: € ${parseFloat(form.eigenVermogen2 || 0).toLocaleString("nl-NL")}
-
-EIGENDOMSVERDELING: ${n1} ${form.eigendom1}% / ${n2} ${form.eigendom2}%
-
-${form.bijzonderheden ? `BIJZONDERHEDEN: ${form.bijzonderheden}` : ""}
-
-Datum: ${new Date().toLocaleDateString("nl-NL")}
-
-Verplichte onderdelen:
-1. Partijen en doel
-2. Artikel 1 — Vergoedingsrecht wegens inbreng eigen middelen bij aankoop (nominaal of naar rato waardestijging)
-3. Artikel 2 — Vergoedingsrecht wegens aflossingen uit privévermogen
-4. Artikel 3 — Vergoedingsrecht wegens verbouwingen/investeringen
-5. Artikel 4 — Opeisbaarheid (bij verkoop, verdeling of overlijden)
-6. Artikel 5 — Waarderingsbasis (nominaal tenzij anders overeengekomen)
-7. Artikel 6 — Gevolgen huwelijk/geregistreerd partnerschap
-8. Ondertekeningsblok
-
-Gebruik professionele juridische taal. Vermeld dat de overeenkomst eigendomsverhoudingen niet automatisch wijzigt.`;
+function dWaarderingTekst(form) {
+  const basis = form.waarderingsBasis || "nominaal";
+  if (basis === "proportioneel") {
+    return `De vordering wordt berekend volgens de beleggingsleer (vergelijk art. 1:87 lid 2 BW): de vordering deelt naar evenredigheid mee in de waardeverandering van de woning. De vordering bedraagt: het ingebrachte bedrag × (de waarde van de woning op het moment van opeisbaarheid ÷ de verkrijgingsprijs van de woning inclusief verwervingskosten). Partijen komen overeen dat de vordering bij waardedaling niet lager wordt dan het nominaal ingebrachte bedrag (bodemclausule), tenzij Partijen schriftelijk anders overeenkomen.`;
+  }
+  if (basis === "overleg") {
+    return `Partijen hebben de waarderingsbasis van de vordering nog niet vastgesteld. Zij verplichten zich deze uiterlijk bij het passeren van de notariële akte schriftelijk vast te leggen (nominaal of volgens de beleggingsleer). Totdat dit is gebeurd, geldt de vordering als een nominale vordering. [NADER IN TE VULLEN IN OVERLEG MET DE NOTARIS]`;
+  }
+  return `De vordering is nominaal: zij is gelijk aan het ingebrachte bedrag, zonder vermeerdering met rente of waardestijging en zonder vermindering bij waardedaling van de woning.`;
 }
 
-function buildScheidingPrompt(form) {
+function dVergoedingsBerekening(form) {
   const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
-  return `Stel een DRAAGPLICHTOVEREENKOMST BIJ RELATIEBEËINDIGING op in het Nederlands. Dit is een tijdelijke overeenkomst voor de periode tot verkoop of overname van de woning.
+  const ev1 = dNum(form.eigenVermogen1), ev2 = dNum(form.eigenVermogen2);
+  const e1 = form.eigendom1 === "" ? 50 : dNum(form.eigendom1);
+  const tot = ev1 + ev2;
+  const toerekening1 = tot * e1 / 100;
+  const surplus1 = ev1 - toerekening1;
+  if (tot <= 0 || Math.abs(surplus1) < 0.005) return { tot, ev1, ev2, crediteur: null, debiteur: null, bedrag: 0 };
+  return surplus1 > 0
+    ? { tot, ev1, ev2, crediteur: n1, debiteur: n2, bedrag: surplus1 }
+    : { tot, ev1, ev2, crediteur: n2, debiteur: n1, bedrag: -surplus1 };
+}
 
-PARTIJEN:
-- ${n1} (BSN: ${form.bsn1 || "..."})
-- ${n2} (BSN: ${form.bsn2 || "..."})
-- Adres woning: ${form.adres}
+// ── DRAAGPLICHTOVEREENKOMST ──────────────────────────────────────────
+function genereerDraagplicht(form, opties = {}) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  const data = dLeningData(form);
+  const e1 = form.eigendom1 === "" ? 50 : dNum(form.eigendom1);
+  const e2 = form.eigendom2 === "" ? 100 - e1 : dNum(form.eigendom2);
+  const koop = dNum(form.aankoopprijs), kk = dNum(form.verwervingskosten);
+  const K = koop + kk;
+  const ev1 = dNum(form.eigenVermogen1), ev2 = dNum(form.eigenVermogen2);
+  const samenwoners = form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract";
+  const geldv = form.geldverstrekker || "……………………";
+  const heeftOud = data.ld.some(l => l.recht === "oud");
+  const bews1 = dNum(form.bews1), bews2 = dNum(form.bews2);
+  const art = dArtikelen();
 
-LENINGDELEN:
-${form.leningdelen.map((l, i) => `  Leningdeel ${i+1}: € ${parseFloat(l.bedrag || 0).toLocaleString("nl-NL")} — Draagplicht: ${n1} ${l.draag1}% / ${n2} ${l.draag2}%`).join("\n")}
+  const overw = [
+    `Partijen ${D_RELATIE[form.relatievorm] || "samenwonen"};`,
+    `Partijen de woning gelegen aan ${form.adres || "……………………"} (hierna: "de Woning") ${form.context === "oversluiting" ? "in eigendom hebben" : "in eigendom (zullen) verkrijgen"}, ieder voor een onverdeeld aandeel: ${n1} ${dPct(e1)} en ${n2} ${dPct(e2)};`,
+    `de koopsom van de Woning ${dEur(koop)} bedraagt en de verwervingskosten ${dEur(kk)}, zodat de totale verwervingskosten ${dEur(K)} bedragen;`,
+    `Partijen voor de financiering van de Woning gezamenlijk een hypothecaire geldlening (hierna: "de Lening") aangaan bij ${geldv} (hierna: "de Geldverstrekker") ter grootte van in totaal ${dEur(data.H)}, verdeeld over ${data.ld.length} leningde${data.ld.length === 1 ? "el" : "len"};`,
+    `Partijen jegens de Geldverstrekker ieder hoofdelijk aansprakelijk zijn voor de volledige Lening;`,
+  ];
+  if (ev1 > 0 || ev2 > 0) overw.push(`Partijen eigen middelen inbrengen in de financiering van de Woning: ${n1} ${dEur(ev1)} en ${n2} ${dEur(ev2)};`);
+  if (form.ewv1 || form.ewv2) overw.push(`${[form.ewv1 ? n1 : null, form.ewv2 ? n2 : null].filter(Boolean).join(" en ")} een eigenwoningverleden ${form.ewv1 && form.ewv2 ? "hebben" : "heeft"}, dat fiscaal bij de betreffende Partij moet blijven;`);
+  overw.push(`Partijen in hun onderlinge verhouding (interne verhouding) willen vastleggen in welke mate ieder van hen de Lening en de daarmee samenhangende lasten draagt, zoals bedoeld in art. 6:10 BW, en welke gevolgen dit heeft voor aflossingen, renteaftrek en de verdeling bij beëindiging van de relatie;`);
+  const overwTekst = "OVERWEGENDE DAT:\n\n" + overw.map((t, i) => `${String.fromCharCode(97 + i)}. ${t}`).join("\n") + "\n\nVERKLAREN TE ZIJN OVEREENGEKOMEN ALS VOLGT:";
 
-${form.bijzonderheden ? `BIJZONDERHEDEN: ${form.bijzonderheden}` : ""}
+  art.add("Definities", `In deze overeenkomst wordt verstaan onder:
+a. Woning: de onroerende zaak gelegen aan ${form.adres || "……………………"}, met aanhorigheden;
+b. Lening: de door Partijen bij de Geldverstrekker aangegane hypothecaire geldlening, met de leningdelen zoals omschreven in artikel 4;
+c. Draagplicht: de mate waarin een Partij in de onderlinge verhouding tussen Partijen de schuld uit hoofde van een leningdeel, inclusief rente en aflossing, voor haar rekening neemt;
+d. Hypotheeklasten: de periodiek verschuldigde rente en verplichte aflossing op de Lening;
+e. Eigen middelen: vermogen van een Partij dat niet uit de Lening afkomstig is, zoals spaargeld, een schenking, een erfenis of de overwaarde van een vorige woning.`);
 
-Datum: ${new Date().toLocaleDateString("nl-NL")}
+  art.add("Uitgangspunten: aankoop, kosten en financiering", `1. Partijen gaan bij het sluiten van deze overeenkomst uit van de volgende gegevens:
 
-Verplichte onderdelen:
-1. Partijen en context (relatiebeëindiging)
-2. Artikel 1 — Looptijd overeenkomst (tot verkoop/overname)
-3. Artikel 2 — Tijdelijke draagplicht per leningdeel
-4. Artikel 3 — Betalingsafspraken hypotheeklasten tijdens looptijd
-5. Artikel 4 — Verrekenafspraken bij te veel/te weinig betalen
-6. Artikel 5 — Hoofdelijke aansprakelijkheid (ongewijzigd)
-7. Artikel 6 — Gevolgen verkoop of overname
-8. Ondertekeningsblok
+   Koopsom Woning:                 ${dEur(koop)}
+   Verwervingskosten:              ${dEur(kk)}
+   Totale verwervingskosten:       ${dEur(K)}
 
-Benadruk dat de geldverstrekker beide partners kan blijven aanspreken.`;
+   Eigen middelen ${n1}:${" ".repeat(Math.max(1, 17 - n1.length))}${dEur(ev1)}
+   Eigen middelen ${n2}:${" ".repeat(Math.max(1, 17 - n2.length))}${dEur(ev2)}
+   Hypothecaire geldlening:        ${dEur(data.H)}
+   Geldverstrekker:                ${geldv}
+
+2. Indien de definitieve bedragen in de leveringsakte of de hypotheekakte afwijken van de bedragen in lid 1, gelden de bedragen uit die akten en wordt de draagplicht per leningdeel naar de in artikel 4 genoemde percentages toegepast.${K > 0 && Math.abs(K - ev1 - ev2 - data.H) > 1 ? `
+
+3. Partijen constateren dat de som van de eigen middelen en de Lening (${dEur(ev1 + ev2 + data.H)}) afwijkt van de totale verwervingskosten (${dEur(K)}). Het verschil van ${dEur(Math.abs(K - ev1 - ev2 - data.H))} dient vóór ondertekening te worden verklaard en zo nodig in deze overeenkomst te worden verwerkt.` : ""}`);
+
+  art.add("Eigendomsverhouding", `1. De Woning komt Partijen in eigendom toe in de volgende verhouding:
+   ${n1}: ${dPct(e1)} onverdeeld aandeel;
+   ${n2}: ${dPct(e2)} onverdeeld aandeel.
+
+2. Deze eigendomsverhouding volgt uit de leveringsakte en wordt door deze overeenkomst niet gewijzigd. Een wijziging van de eigendomsverhouding is uitsluitend mogelijk bij notariële akte.
+
+3. Partijen zijn zich ervan bewust dat de draagplicht in beginsel de eigendomsverhouding volgt. Een afwijking daarvan wordt toegelicht in artikel {{art:fiscaal}}.`);
+
+  const oudRegels = heeftOud
+    ? `\n\n3. De leningdelen onder het overgangsrecht (art. 10bis.1 Wet IB 2001) worden ${form.kanBepaling
+        ? "op grond van de door Partijen gekozen kan-bepaling (art. 10bis.1 lid 3 Wet IB 2001) gezamenlijk toegepast, naar rato van het schuldaandeel van ieder van hen. Partijen verklaren uitdrukkelijk dat zij zijn gewezen op het definitieve en onomkeerbare karakter van deze keuze."
+        : `uitsluitend toegerekend aan de Partij die over de bestaande eigenwoningschuld (BEWS) beschikt${bews1 > 0 || bews2 > 0 ? ` (${[bews1 > 0 ? `${n1}: BEWS ${dEur(bews1)}` : null, bews2 > 0 ? `${n2}: BEWS ${dEur(bews2)}` : null].filter(Boolean).join("; ")})` : ""}. De kan-bepaling wordt niet toegepast.`}`
+    : "";
+  const afvrijNieuw = data.ld.filter(l => l.soort === "aflossingsvrij" && l.recht === "nieuw").map(l => l.nr);
+  const afvrijTekst = afvrijNieuw.length
+    ? `\n\n${heeftOud ? "4" : "3"}. Partijen zijn erop gewezen dat leningde${afvrijNieuw.length === 1 ? "el" : "len"} ${afvrijNieuw.join(", ")} aflossingsvrij ${afvrijNieuw.length === 1 ? "is" : "zijn"} en onder het nieuwe recht ${afvrijNieuw.length === 1 ? "valt" : "vallen"}; de rente daarover is niet aftrekbaar in box 1 en de schuld valt in box 3.`
+    : "";
+  art.add("Draagplicht per leningdeel", `1. Partijen komen overeen dat ieder van hen in hun onderlinge verhouding de Lening draagt als volgt:
+
+${dLeningTabel(form, data)}
+
+2. De draagplicht van een Partij omvat het genoemde deel van de hoofdsom en van de daarover verschuldigde rente, boeten en kosten van het betreffende leningdeel.${oudRegels}${afvrijTekst}`);
+
+  art.add("Betaling van de hypotheeklasten en verrekening", `1. Ieder van Partijen voldoet de Hypotheeklasten van ieder leningdeel naar rato van de voor dat leningdeel geldende draagplicht.
+
+2. Indien de Hypotheeklasten feitelijk van een gezamenlijke rekening of door één Partij worden voldaan, wordt de bijdrage van ieder van Partijen geacht te zijn gedaan naar rato van de draagplicht, tenzij een Partij binnen twaalf maanden na afloop van het kalenderjaar schriftelijk verrekening vordert van hetgeen zij meer heeft betaald dan waartoe zij gehouden was.
+
+3. Partijen houden een overzicht bij van de betalingen per leningdeel en bewaren de jaaroverzichten van de Geldverstrekker. Bijkomende kosten (zoals opstalverzekering, onderhoud en zakelijke lasten) worden gedragen naar rato van de eigendomsverhouding, tenzij Partijen schriftelijk anders overeenkomen.`, "betaling");
+
+  art.add("Aflossingen", `Partijen maken onderscheid tussen de volgende aflossingen:
+
+a. Verplichte periodieke aflossing op een leningdeel waarvoor beide Partijen draagplichtig zijn: deze geldt als voldaan naar rato van de draagplicht en geeft geen vergoedingsrecht, tenzij binnen twaalf maanden na afloop van het kalenderjaar schriftelijk verrekening is gevorderd (artikel {{art:betaling}} lid 2).
+
+b. Extra (niet-verplichte) aflossing op een leningdeel waarvoor beide Partijen draagplichtig zijn: de Partij die uit eigen middelen meer aflost dan haar aandeel in de draagplicht, verkrijgt een vergoedingsrecht op de andere Partij ter grootte van het deel van de aflossing dat aan de draagplicht van die andere Partij ten goede komt.
+
+c. Aflossing op een leningdeel waarvoor uitsluitend de andere Partij draagplichtig is: deze geeft de aflossende Partij altijd een vergoedingsrecht ter grootte van het volledige aflossingsbedrag.
+
+Een vergoedingsrecht als bedoeld onder b en c wordt opeisbaar bij verkoop of verdeling van de Woning, beëindiging van de relatie of overlijden, en wordt gewaardeerd overeenkomstig artikel {{art:eigenmiddelen}} lid 3. Partijen leggen iedere extra aflossing schriftelijk vast met datum, bedrag en leningdeel.`);
+
+  const verg = dVergoedingsBerekening(form);
+  art.add("Eigen middelen en vergoedingsrechten", `1. De door Partijen ingebrachte eigen middelen bedragen: ${n1} ${dEur(ev1)} en ${n2} ${dEur(ev2)}.
+
+2. ${verg.crediteur
+      ? `Naar de eigendomsverhouding komt van de totale inbreng (${dEur(verg.tot)}) een deel ten goede aan het aandeel van de andere Partij. ${verg.crediteur} heeft daardoor een vergoedingsrecht op ${verg.debiteur} van (indicatief) ${dEur(verg.bedrag)}.`
+      : `Uit de inbreng van eigen middelen ontstaat naar de eigendomsverhouding geen vergoedingsrecht tussen Partijen.`}
+
+3. Waarderingsbasis: ${dWaarderingTekst(form)}
+
+4. ${opties.metVergoedingsovereenkomst ? "De vergoedingsrechten worden nader uitgewerkt in de afzonderlijke Overeenkomst vergoedingsrechten die Partijen gelijktijdig met deze overeenkomst sluiten. Bij strijdigheid gaat die overeenkomst voor wat betreft de vergoedingsrechten." : "Indien sprake is van een vergoedingsrecht, adviseren Partijen dit nader vast te leggen in een afzonderlijke overeenkomst vergoedingsrechten of in een notariële akte."}`, "eigenmiddelen");
+
+  art.add("Hoofdelijke aansprakelijkheid", `1. Deze overeenkomst heeft uitsluitend werking tussen Partijen. Zij laat de hoofdelijke aansprakelijkheid van ieder van Partijen jegens de Geldverstrekker voor de volledige Lening onverlet; de Geldverstrekker is niet aan deze overeenkomst gebonden.
+
+2. Indien een Partij door de Geldverstrekker wordt aangesproken voor meer dan haar draagplicht, heeft zij voor het meerdere regres op de andere Partij (art. 6:10 BW). De andere Partij vergoedt dit bedrag op eerste verzoek.`);
+
+  // Fiscaal + afwijking eigendom/draagplicht
+  const pD1 = data.H > 0 ? data.D1 / data.H * 100 : e1;
+  const afwijking = Math.abs(pD1 - e1) > 0.5;
+  let afwijkTekst;
+  if (afwijking) {
+    afwijkTekst = `3. De totale draagplicht van ${n1} (${dPct(pD1)}) en ${n2} (${dPct(100 - pD1)}) wijkt af van de eigendomsverhouding (${dPct(e1)} / ${dPct(e2)}). Partijen zijn erop gewezen dat:
+   a. een Partij alleen rente kan aftrekken voor zover zij draagplichtig is én de schuld is aangegaan voor de verwerving van haar eigen aandeel in de Woning (art. 3.119a Wet IB 2001); draagplicht boven het eigen aandeel kan tot een box 3-schuld zonder renteaftrek leiden;
+   b. een afwijking zonder zakelijke rechtvaardiging kan leiden tot een schenking (art. 1 lid 1 Successiewet 1956) en daarmee tot schenkbelasting;
+   c. de zakelijke rechtvaardiging voor de afwijking is: ${[(Math.abs(ev1 - ev2) > 500) ? "ongelijke inbreng van eigen middelen" : null, (form.ewv1 || form.ewv2) ? "het eigenwoningverleden van Partijen" : null, heeftOud ? "toerekening van het overgangsrecht aan de rechthebbende Partij" : null].filter(Boolean).join(", ") || "[TOELICHTING IN TE VULLEN — bespreek met de notaris]"}.`;
+  } else {
+    afwijkTekst = `3. De totale draagplicht van ieder van Partijen sluit aan bij de eigendomsverhouding. Partijen zijn erop gewezen dat een latere afwijking van de eigendomsverhouding gevolgen kan hebben voor de renteaftrek en kan worden aangemerkt als schenking.`;
+  }
+  art.add("Fiscale gevolgen", `1. Ieder van Partijen trekt de rente op de Lening als aftrekbare kosten eigen woning af voor zover zij draagplichtig is en voor zover de schuld kwalificeert als eigenwoningschuld (art. 3.119a Wet IB 2001). De draagplicht volgt in beginsel de eigendomsverhouding.
+
+2. Het fiscale eigenwoningverleden van iedere Partij (eigenwoningreserve, resterende renteaftrekjaren, aflossingsstand en bestaande eigenwoningschuld) blijft bij die Partij. Deze overeenkomst strekt er uitdrukkelijk niet toe dat het fiscale verleden van Partijen wordt gemengd of uitgeruild.${form.ewv1 || form.ewv2 ? `
+${form.ewv1 ? `   ${n1}: EWR ${dEur(form.ewr1)}, BEWS ${dEur(form.bews1)}, resterende renteaftrekjaren ${form.jaren1 || "…"}, bijleenstand ${dEur(form.afsstand1)}.\n` : ""}${form.ewv2 ? `   ${n2}: EWR ${dEur(form.ewr2)}, BEWS ${dEur(form.bews2)}, resterende renteaftrekjaren ${form.jaren2 || "…"}, bijleenstand ${dEur(form.afsstand2)}.` : ""}`.replace(/\n$/, "") : ""}
+
+${afwijkTekst}
+
+4. Indien Partijen fiscale partners zijn, kunnen zij de aftrek en de bijtelling van het eigenwoningforfait onderling verdelen in hun aangifte; dit laat de draagplicht volgens deze overeenkomst onverlet.`, "fiscaal");
+
+  art.add("Verkoop van de Woning", `1. Bij verkoop van de Woning wordt de verkoopopbrengst, na aftrek van de verkoopkosten, allereerst aangewend tot aflossing van de Lening.
+
+2. Ieder van Partijen draagt de aflossing van de leningdelen naar rato van haar draagplicht. Het restant van de opbrengst komt aan Partijen toe naar de eigendomsverhouding, vermeerderd of verminderd met de over en weer bestaande vergoedingsrechten en verrekeningen.
+
+3. Een eventuele restschuld wordt door Partijen gedragen naar rato van hun draagplicht per leningdeel.`);
+
+  art.add("Wijziging en evaluatie", `1. Wijzigingen van deze overeenkomst zijn alleen geldig indien zij schriftelijk zijn overeengekomen en door beide Partijen zijn ondertekend.
+
+2. Partijen evalueren deze overeenkomst in ieder geval bij: (a) een wijziging, verhoging of oversluiting van de Lening; (b) een extra aflossing; (c) een verbouwing of investering in de Woning; (d) verkoop of aankoop van een woning; (e) het aangaan van een huwelijk of geregistreerd partnerschap; en verder ten minste eens per vijf jaar.
+
+3. ${samenwoners
+      ? `Partijen zijn erop gewezen dat bij het aangaan van een huwelijk of geregistreerd partnerschap in gemeenschap van goederen deze overeenkomst haar werking verliest: de leningdelen en het fiscale eigenwoningverleden kunnen dan mengen en er ontstaat een nieuw toetsmoment voor de renteaftrek. Partijen laten zich in dat geval vooraf adviseren over huwelijkse of partnerschapsvoorwaarden.${form.trouwenPlannen ? " Partijen hebben aangegeven trouwplannen te hebben." : ""}`
+      : `Bij een wijziging van het huwelijksgoederenregime of de partnerschapsvoorwaarden wordt deze overeenkomst opnieuw beoordeeld.`}`);
+
+  art.add("Beëindiging van de relatie en overlijden", `1. Bij beëindiging van de relatie blijft deze overeenkomst van kracht totdat de Woning is verkocht of door één van Partijen is overgenomen en die Partij door de Geldverstrekker is ontslagen uit de hoofdelijke aansprakelijkheid. Partijen kunnen voor die periode aanvullende afspraken maken.
+
+2. Bij overname van de Woning door één Partij neemt die Partij de draagplicht van de andere Partij over en spant zij zich in om de andere Partij uit de hoofdelijke aansprakelijkheid te laten ontslaan. Vergoedingsrechten worden op dat moment afgerekend.
+
+3. Bij overlijden van een Partij gelden de rechten en verplichtingen uit deze overeenkomst voor en tegen haar erfgenamen. Partijen zijn erop gewezen dat een overlijdensrisicoverzekering en een testament of verblijvingsbeding nodig kunnen zijn om de achterblijvende Partij in staat te stellen de Lening te blijven dragen.`);
+
+  if (samenwoners && (ev1 > 0 || ev2 > 0)) {
+    art.add("Erkenning en verjaring", `1. Iedere Partij erkent hierbij de vorderingen en vergoedingsrechten van de andere Partij die uit deze overeenkomst voortvloeien. Deze erkenning stuit de verjaring (art. 3:318 BW).
+
+2. Partijen zijn erop gewezen dat een vordering in beginsel verjaart vijf jaar nadat zij opeisbaar is geworden (art. 3:307 en 3:308 BW) en dat bij ongehuwd samenwonen geen verlenging van de verjaring geldt zoals tussen echtgenoten (art. 3:321 BW). Zij herhalen de erkenning daarom ten minste eens per vier jaar schriftelijk, of laten een anti-verjaringsbeding in een notariële akte opnemen.`);
+  }
+
+  if (form.bijzonderheden && form.bijzonderheden.trim()) {
+    art.add("Bijzondere afspraken", form.bijzonderheden.trim());
+  }
+
+  art.add("Geschillen", `1. Partijen trachten geschillen over deze overeenkomst eerst in onderling overleg op te lossen, zo nodig met behulp van een door hen gezamenlijk aan te wijzen mediator.
+
+2. Indien een geschil niet binnen drie maanden na een schriftelijke melding is opgelost, kan ieder van Partijen het geschil voorleggen aan de bevoegde rechter van de rechtbank in het arrondissement waarin de Woning is gelegen.`);
+
+  art.add("Slotbepalingen", `1. Op deze overeenkomst is Nederlands recht van toepassing.
+
+2. Indien een bepaling van deze overeenkomst nietig is of wordt vernietigd, blijven de overige bepalingen van kracht. Partijen vervangen de betreffende bepaling door een geldige bepaling die zoveel mogelijk aansluit bij de bedoeling van Partijen.
+
+3. Partijen verklaren dat zij de inhoud en de gevolgen van deze overeenkomst begrijpen, dat zij de gelegenheid hebben gehad zich onafhankelijk te laten adviseren en dat zij deze overeenkomst vrijwillig aangaan.
+
+4. Deze overeenkomst treedt in werking op de dag van ondertekening${form.context === "aankoop" ? ", en heeft terugwerkende kracht tot de datum van het passeren van de hypotheekakte indien deze eerder ligt" : ""}.`);
+
+  return `${DOC_DISCLAIMER}
+
+DRAAGPLICHTOVEREENKOMST
+inzake de financiering van de woning aan ${form.adres || "……………………"}
+
+
+${dPartijen(form)}
+
+
+${overwTekst}
+
+
+${art.text()}
+
+
+${dOndertekening(form)}`;
+}
+
+// ── OVEREENKOMST VERGOEDINGSRECHTEN ──────────────────────────────────
+function genereerVergoedingsrechten(form) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  const e1 = form.eigendom1 === "" ? 50 : dNum(form.eigendom1);
+  const e2 = form.eigendom2 === "" ? 100 - e1 : dNum(form.eigendom2);
+  const koop = dNum(form.aankoopprijs), kk = dNum(form.verwervingskosten);
+  const verg = dVergoedingsBerekening(form);
+  const samenwoners = form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract";
+  const basis = form.waarderingsBasis || "nominaal";
+  const art = dArtikelen();
+
+  const overw = [
+    `Partijen ${D_RELATIE[form.relatievorm] || "samenwonen"};`,
+    `Partijen gezamenlijk eigenaar zijn of worden van de woning gelegen aan ${form.adres || "……………………"} (hierna: "de Woning"), ieder voor een onverdeeld aandeel: ${n1} ${dPct(e1)} en ${n2} ${dPct(e2)};`,
+    `de koopsom van de Woning ${dEur(koop)} bedraagt, vermeerderd met verwervingskosten van ${dEur(kk)}, in totaal ${dEur(koop + kk)};`,
+    `Partijen in ongelijke mate eigen middelen (kunnen) inbrengen, (extra) aflossingen (kunnen) doen of investeringen in de Woning (kunnen) doen;`,
+    `Partijen de daaruit voortvloeiende onderlinge aanspraken bewijsbaar willen vastleggen, zonder daarmee de eigendomsverhouding te wijzigen;`,
+  ];
+  const overwTekst = "OVERWEGENDE DAT:\n\n" + overw.map((t, i) => `${String.fromCharCode(97 + i)}. ${t}`).join("\n") + "\n\nVERKLAREN TE ZIJN OVEREENGEKOMEN ALS VOLGT:";
+
+  art.add("Definities", `In deze overeenkomst wordt verstaan onder:
+a. Woning: de onroerende zaak gelegen aan ${form.adres || "……………………"};
+b. Vergoedingsrecht: de vordering van een Partij op de andere Partij die ontstaat doordat middelen van de eerste Partij ten goede zijn gekomen aan het aandeel van de andere Partij in de Woning of aan de schuld waarvoor de andere Partij draagplichtig is;
+c. Verkrijgingsprijs: de koopsom van de Woning vermeerderd met de verwervingskosten, zijnde ${dEur(koop + kk)};
+d. Opeisbaarheidsmoment: het moment als bedoeld in artikel 8.`);
+
+  art.add("Eigendomsverhouding", `De Woning komt Partijen in eigendom toe voor: ${n1} ${dPct(e1)} en ${n2} ${dPct(e2)}. Deze overeenkomst wijzigt de eigendomsverhouding niet en heeft uitsluitend betrekking op de interne vermogensverhouding tussen Partijen. Zij heeft geen werking jegens derden.`);
+
+  art.add("Inbreng van eigen middelen bij aankoop", `1. Bij de verkrijging van de Woning brengen Partijen de volgende eigen middelen in:
+   ${n1}: ${dEur(verg.ev1)}
+   ${n2}: ${dEur(verg.ev2)}
+   Totaal: ${dEur(verg.tot)}
+
+2. Naar de eigendomsverhouding komt van de totale inbreng ${dEur(verg.tot * e1 / 100)} toe aan het aandeel van ${n1} en ${dEur(verg.tot * e2 / 100)} aan het aandeel van ${n2}.
+
+3. ${verg.crediteur
+      ? `${verg.crediteur} heeft derhalve een vergoedingsrecht op ${verg.debiteur} ten bedrage van ${dEur(verg.bedrag)} (nominaal), te waarderen overeenkomstig artikel 4.`
+      : `Uit de inbreng van eigen middelen ontstaat op dit moment geen vergoedingsrecht tussen Partijen.`}
+
+4. Partijen bewaren bewijsstukken van de inbreng (bankafschriften, schenkingsakte, verklaring van erfrecht, afrekening vorige woning) bij deze overeenkomst.`);
+
+  art.add("Waarderingsbasis", `1. ${dWaarderingTekst(form)}${basis === "proportioneel" ? `
+
+2. Rekenvoorbeeld: bij een verkrijgingsprijs van ${dEur(koop + kk)} en een inbreng van ${dEur(verg.bedrag || 10000)} bedraagt de vordering bij een woningwaarde van ${dEur((koop + kk) * 1.2)} (20% waardestijging): ${dEur((verg.bedrag || 10000) * 1.2)}.` : ""}
+
+${basis === "proportioneel" ? "3" : "2"}. Over een vergoedingsrecht is geen rente verschuldigd, tenzij het vergoedingsrecht na het opeisbaarheidsmoment niet binnen drie maanden wordt voldaan; vanaf dat moment is de wettelijke rente verschuldigd (art. 6:119 BW).`);
+
+  art.add("Aflossingen uit privévermogen", `1. Een verplichte periodieke aflossing op een leningdeel waarvoor beide Partijen draagplichtig zijn, geeft geen vergoedingsrecht, tenzij binnen twaalf maanden na afloop van het kalenderjaar schriftelijk verrekening is gevorderd.
+
+2. Een extra (niet-verplichte) aflossing uit privévermogen van een Partij op een leningdeel waarvoor beide Partijen draagplichtig zijn, geeft die Partij een vergoedingsrecht op de andere Partij ter grootte van het deel van de aflossing dat overeenkomt met de draagplicht van die andere Partij.
+
+3. Een aflossing op een leningdeel waarvoor uitsluitend de andere Partij draagplichtig is, geeft altijd een vergoedingsrecht ter grootte van het volledige aflossingsbedrag.
+
+4. Vergoedingsrechten uit aflossingen worden gewaardeerd overeenkomstig artikel 4, waarbij de waarde van de Woning op de datum van aflossing in de plaats treedt van de verkrijgingsprijs.`);
+
+  art.add("Verbouwingen en investeringen", `1. Een Partij die uit privévermogen een verbouwing, verbetering of andere investering in de Woning financiert, verkrijgt een vergoedingsrecht op de andere Partij ter grootte van het deel van de investering dat overeenkomt met het eigendomsaandeel van die andere Partij.
+
+2. Gewoon onderhoud en kleine herstellingen geven geen vergoedingsrecht.
+
+3. Partijen leggen iedere investering waaruit een vergoedingsrecht ontstaat schriftelijk vast in een door beiden ondertekende bijlage bij deze overeenkomst, met datum, omschrijving, bedrag en de betalende Partij.`);
+
+  art.add("Administratie", `Partijen houden een door beiden ondertekend overzicht bij van alle vergoedingsrechten (bijlage 1). Iedere aanvulling wordt binnen drie maanden na de betreffende betaling opgenomen.`);
+
+  art.add("Opeisbaarheid", `1. Vergoedingsrechten zijn opeisbaar bij het eerste van de volgende momenten:
+   a. de levering van de Woning aan een derde;
+   b. de verdeling van de Woning tussen Partijen, of de overname door één van Partijen;
+   c. de beëindiging van de relatie, mits de Woning binnen twaalf maanden daarna is verkocht of verdeeld, en anders twaalf maanden na beëindiging;
+   d. het overlijden van een van Partijen.
+
+2. Vergoedingsrechten worden bij verkoop voldaan uit de netto-verkoopopbrengst, voordat het restant tussen Partijen naar de eigendomsverhouding wordt verdeeld.
+
+3. Partijen kunnen schriftelijk een betalingsregeling overeenkomen.`);
+
+  if (samenwoners) {
+    art.add("Erkenning en verjaring", `1. Iedere Partij erkent hierbij de in deze overeenkomst en in bijlage 1 vastgelegde vergoedingsrechten van de andere Partij. Deze erkenning stuit de verjaring (art. 3:318 BW).
+
+2. Partijen zijn erop gewezen dat tussen ongehuwd samenwonenden geen verlenging van de verjaring geldt (art. 3:321 BW) en dat een vordering in beginsel na vijf jaar verjaart (art. 3:307 BW). Partijen herhalen de erkenning daarom ten minste eens per vier jaar schriftelijk, of laten een anti-verjaringsbeding opnemen in een notariële akte.`);
+  }
+
+  art.add("Gevolgen van huwelijk of geregistreerd partnerschap", `1. Indien Partijen met elkaar in het huwelijk treden of een geregistreerd partnerschap aangaan, blijven de op dat moment bestaande vergoedingsrechten bestaan, tenzij in huwelijkse of partnerschapsvoorwaarden anders wordt bepaald.
+
+2. Bij een huwelijk of partnerschap in gemeenschap van goederen kunnen de Woning en de vergoedingsrechten in de gemeenschap vallen. Partijen laten zich daarom vooraf door een notaris adviseren over het vastleggen van deze vergoedingsrechten in huwelijkse of partnerschapsvoorwaarden.`);
+
+  art.add("Fiscale aspecten", `1. Het afzien van een vergoedingsrecht, of het niet vastleggen daarvan, kan worden aangemerkt als een schenking aan de andere Partij (art. 1 lid 1 Successiewet 1956), waarover schenkbelasting verschuldigd kan zijn.
+
+2. Een vergoedingsrecht is voor de crediteur een bezitting en voor de debiteur een schuld in box 3, tenzij de wet anders bepaalt. Partijen laten zich hierover zo nodig door een fiscalist adviseren.`);
+
+  art.add("Overlijden", `Bij overlijden van een van Partijen vallen de vergoedingsrechten van en tegen de overledene in diens nalatenschap. Partijen zijn erop gewezen dat een testament of verblijvingsbeding gewenst kan zijn om de positie van de achterblijvende Partij te regelen.`);
+
+  if (form.bijzonderheden && form.bijzonderheden.trim()) {
+    art.add("Bijzondere afspraken", form.bijzonderheden.trim());
+  }
+
+  art.add("Wijziging en evaluatie", `Wijzigingen van deze overeenkomst zijn alleen geldig indien schriftelijk overeengekomen en door beide Partijen ondertekend. Partijen evalueren deze overeenkomst bij iedere wijziging van de financiering, iedere extra aflossing of investering, een wijziging van de relatievorm en verder ten minste eens per vijf jaar.`);
+
+  art.add("Geschillen", `Partijen trachten geschillen eerst in onderling overleg of met behulp van een mediator op te lossen. Indien dat niet binnen drie maanden lukt, kan ieder van Partijen het geschil voorleggen aan de bevoegde rechter van de rechtbank in het arrondissement waarin de Woning is gelegen.`);
+
+  art.add("Slotbepalingen", `1. Op deze overeenkomst is Nederlands recht van toepassing.
+
+2. Indien een bepaling nietig is of wordt vernietigd, blijven de overige bepalingen van kracht en vervangen Partijen de bepaling door een geldige bepaling die zoveel mogelijk aansluit bij hun bedoeling.
+
+3. Partijen verklaren dat zij de inhoud en gevolgen van deze overeenkomst begrijpen en haar vrijwillig aangaan.`);
+
+  return `${DOC_DISCLAIMER}
+
+OVEREENKOMST VERGOEDINGSRECHTEN
+inzake de woning aan ${form.adres || "……………………"}
+
+
+${dPartijen(form)}
+
+
+${overwTekst}
+
+
+${art.text()}
+
+
+${dOndertekening(form)}
+
+
+BIJLAGE 1 — OVERZICHT VERGOEDINGSRECHTEN
+
+Datum        | Omschrijving                     | Betalende Partij | Bedrag       | Paraaf beiden
+-------------|----------------------------------|------------------|--------------|--------------
+__-__-____   | Inbreng eigen middelen aankoop   | ${n1.slice(0, 16).padEnd(16)} | ${dEur(verg.ev1).padEnd(12)} |
+__-__-____   | Inbreng eigen middelen aankoop   | ${n2.slice(0, 16).padEnd(16)} | ${dEur(verg.ev2).padEnd(12)} |
+             |                                  |                  |              |`;
+}
+
+// ── DRAAGPLICHTOVEREENKOMST BIJ RELATIEBEËINDIGING ───────────────────
+function genereerScheiding(form) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  const data = dLeningData(form);
+  const e1 = form.eigendom1 === "" ? 50 : dNum(form.eigendom1);
+  const e2 = form.eigendom2 === "" ? 100 - e1 : dNum(form.eigendom2);
+  const ev1 = dNum(form.eigenVermogen1), ev2 = dNum(form.eigenVermogen2);
+  const geldv = form.geldverstrekker || "……………………";
+  const gehuwd = ["gehuwd_koude", "gehuwd_beperkt", "gehuwd_gemeen", "geregistreerd"].includes(form.relatievorm);
+  const art = dArtikelen();
+
+  const overw = [
+    `Partijen ${D_RELATIE[form.relatievorm] || "samenwonen"};`,
+    `Partijen hebben besloten hun relatie te beëindigen${gehuwd ? " en de ontbinding van hun huwelijk of geregistreerd partnerschap (zullen) verzoeken" : ""};`,
+    `Partijen gezamenlijk eigenaar zijn van de woning gelegen aan ${form.adres || "……………………"} (hierna: "de Woning"), ieder voor een onverdeeld aandeel: ${n1} ${dPct(e1)} en ${n2} ${dPct(e2)};`,
+    `op de Woning een hypothecaire geldlening rust bij ${geldv} (hierna: "de Geldverstrekker") van in totaal ${dEur(data.H)} (hierna: "de Lening"), waarvoor Partijen hoofdelijk aansprakelijk zijn;`,
+    `Partijen voor de periode tot de verkoop of overname van de Woning tijdelijke afspraken willen maken over de draagplicht en de betaling van de lasten;`,
+  ];
+  const overwTekst = "OVERWEGENDE DAT:\n\n" + overw.map((t, i) => `${String.fromCharCode(97 + i)}. ${t}`).join("\n") + "\n\nVERKLAREN TE ZIJN OVEREENGEKOMEN ALS VOLGT:";
+
+  art.add("Looptijd", `1. Deze overeenkomst geldt vanaf de dag van ondertekening tot het eerste van de volgende momenten:
+   a. de levering van de Woning aan een derde en de aflossing van de Lening;
+   b. de levering van het aandeel van de ene Partij aan de andere Partij (overname), mits de vertrekkende Partij door de Geldverstrekker uit de hoofdelijke aansprakelijkheid is ontslagen;
+   c. een andere datum die Partijen schriftelijk overeenkomen.
+
+2. Partijen streven ernaar de Woning uiterlijk op ……………………… te verkopen of te laten overnemen. [DATUM IN TE VULLEN]`);
+
+  art.add("Tijdelijke draagplicht per leningdeel", `1. Gedurende de looptijd van deze overeenkomst draagt ieder van Partijen de Lening in hun onderlinge verhouding als volgt:
+
+${dLeningTabel(form, data)}
+
+2. Deze tijdelijke draagplicht vervangt voor de looptijd eerdere afspraken over de draagplicht, voor zover daarmee strijdig.`);
+
+  art.add("Betalingsafspraken hypotheeklasten", `1. Gedurende de looptijd worden de rente en verplichte aflossing op de Lening voldaan door: ……………………… [NAAM IN TE VULLEN] / beide Partijen naar rato van de draagplicht.
+
+2. De Partij die de Woning blijft bewonen (……………………… [NAAM IN TE VULLEN]) draagt de gebruikslasten (energie, water, gemeentelijke heffingen voor gebruikers) en het gewone onderhoud.
+
+3. De eigenaarslasten (opstalverzekering, onroerendezaakbelasting eigenarendeel, waterschapslasten gebouwd, groot onderhoud) worden gedragen naar rato van de eigendomsverhouding.
+
+4. Iedere Partij verplicht zich de Geldverstrekker tijdig te betalen. Een Partij die een betalingsachterstand dreigt, meldt dit onmiddellijk aan de andere Partij.`);
+
+  art.add("Verrekening", `1. Indien een Partij gedurende de looptijd meer betaalt dan waartoe zij op grond van artikel 2 en 3 gehouden is, heeft zij voor het meerdere een vordering op de andere Partij.
+
+2. Indien de bewonende Partij een gebruiksvergoeding verschuldigd is voor het gebruik van het aandeel van de andere Partij, bedraagt deze ……………………… per maand [IN TE VULLEN of: "Partijen komen overeen dat geen gebruiksvergoeding verschuldigd is"].
+
+3. Over en weer bestaande vorderingen worden verrekend bij de verkoop of overname van de Woning, uit de netto-opbrengst of bij de afrekening van de overnamesom.`);
+
+  art.add("Hoofdelijke aansprakelijkheid", `1. Deze overeenkomst werkt uitsluitend tussen Partijen. De Geldverstrekker kan ieder van Partijen voor de volledige Lening blijven aanspreken, zolang de Lening op beider naam staat en geen ontslag uit de hoofdelijke aansprakelijkheid is verleend.
+
+2. Een Partij die door de Geldverstrekker wordt aangesproken voor meer dan haar draagplicht, heeft voor het meerdere regres op de andere Partij (art. 6:10 BW).`);
+
+  art.add("Fiscale gevolgen", `1. De renteaftrek volgt de draagplicht, voor zover de schuld kwalificeert als eigenwoningschuld. Partijen zijn erop gewezen dat de Woning voor de vertrekkende Partij onder voorwaarden nog ten hoogste twee jaar na het verlaten als eigen woning kan gelden (art. 3.111 lid 3 Wet IB 2001), en dat de renteaftrek daarna voor die Partij vervalt.
+
+2. Een afwijking van de draagplicht ten opzichte van de eigendomsverhouding zonder zakelijke rechtvaardiging kan als schenking worden aangemerkt. Tijdelijke afspraken in het kader van de beëindiging van de relatie worden geacht zakelijk te zijn, mits zij worden verrekend overeenkomstig artikel 4.
+
+3. Het fiscale eigenwoningverleden van iedere Partij blijft bij die Partij. Bij verkoop kan voor iedere Partij een eigenwoningreserve ontstaan.`);
+
+  art.add("Verkoop of overname", `1. Bij verkoop wordt de netto-opbrengst eerst aangewend tot aflossing van de Lening. Het restant wordt verdeeld naar de eigendomsverhouding, vermeerderd of verminderd met de vorderingen uit artikel 4 en de vergoedingsrechten uit artikel 8.
+
+2. Een restschuld wordt gedragen naar rato van de draagplicht per leningdeel. Partijen maken over de aflossing daarvan nadere schriftelijke afspraken.
+
+3. Bij overname door één Partij wordt de overnamesom bepaald op basis van een door Partijen gezamenlijk aangewezen gecertificeerd taxateur. De overnemende Partij draagt zorg voor ontslag van de vertrekkende Partij uit de hoofdelijke aansprakelijkheid; lukt dit niet binnen ……… maanden, dan wordt de Woning verkocht.`);
+
+  art.add("Eigen middelen en vergoedingsrechten", `1. De bij de aankoop ingebrachte eigen middelen bedroegen: ${n1} ${dEur(ev1)} en ${n2} ${dEur(ev2)}.
+
+2. Waarderingsbasis van vergoedingsrechten: ${dWaarderingTekst(form)}
+
+3. Bestaande vergoedingsrechten worden afgerekend bij verkoop of overname, voordat het restant naar de eigendomsverhouding wordt verdeeld.`);
+
+  art.add("Overlijden", `Bij overlijden van een van Partijen gedurende de looptijd gelden de rechten en verplichtingen uit deze overeenkomst voor en tegen diens erfgenamen.`);
+
+  if (form.bijzonderheden && form.bijzonderheden.trim()) {
+    art.add("Bijzondere afspraken", form.bijzonderheden.trim());
+  }
+
+  art.add("Geschillen", `Partijen trachten geschillen eerst met behulp van een mediator op te lossen. Indien dat niet binnen twee maanden lukt, kan ieder van Partijen het geschil voorleggen aan de bevoegde rechter van de rechtbank in het arrondissement waarin de Woning is gelegen.`);
+
+  art.add("Slotbepalingen", `1. Op deze overeenkomst is Nederlands recht van toepassing.
+
+2. Wijzigingen zijn alleen geldig indien schriftelijk overeengekomen en door beide Partijen ondertekend.
+
+3. Indien een bepaling nietig is of wordt vernietigd, blijven de overige bepalingen van kracht.
+
+4. Partijen verklaren dat zij de inhoud en gevolgen van deze overeenkomst begrijpen, dat zij zich onafhankelijk hebben kunnen laten adviseren en dat zij haar vrijwillig aangaan.${gehuwd ? "\n\n5. Deze overeenkomst kan worden opgenomen in of gevoegd bij het echtscheidings- of ontbindingsconvenant." : ""}`);
+
+  return `${DOC_DISCLAIMER}
+
+DRAAGPLICHTOVEREENKOMST BIJ RELATIEBEËINDIGING
+tijdelijke afspraken tot verkoop of overname van de woning aan ${form.adres || "……………………"}
+
+
+${dPartijen(form)}
+
+
+${overwTekst}
+
+
+${art.text()}
+
+
+${dOndertekening(form)}`;
+}
+
+function genereerDocument(docType, form) {
+  if (docType === "vergoedingsrechten") return genereerVergoedingsrechten(form);
+  if (docType === "scheiding") return genereerScheiding(form);
+  if (docType === "beide") return genereerDraagplicht(form, { metVergoedingsovereenkomst: true }) + DOC_SCHEIDER + genereerVergoedingsrechten(form);
+  return genereerDraagplicht(form);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1227,9 +1664,9 @@ function ResultaatPanel({ form, advies, setTab }) {
         <div style={{ color: C.goldLight, fontWeight: 700, fontSize: 15, marginBottom: 16, fontFamily: fam.sans }}>Aanbevolen vervolgstappen</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
           {[
-            { icon: "📝", label: "Adviesrapport tekst", sub: "Selecteer de juiste paragraaf", tab: 3 },
-            { icon: "📄", label: "Documenten genereren", sub: "Draagplicht- en/of vergoedingsovereenkomst", tab: 4 },
-            { icon: "✅", label: "Dossier checklist", sub: "Controleer volledigheid dossier", tab: 5 },
+            { icon: "📝", label: "Adviesrapport tekst", sub: "Selecteer de juiste paragraaf", tab: 2 },
+            { icon: "📄", label: "Documenten opstellen", sub: "Draagplicht- en/of vergoedingsovereenkomst", tab: 3 },
+            { icon: "✅", label: "Dossier checklist", sub: "Controleer volledigheid dossier", tab: 4 },
           ].map((a, i) => (
             <button key={i} onClick={() => setTab(a.tab)} style={{ background: C.navyMid, border: `1px solid ${C.navyLight}`, borderRadius: 10, padding: 16, cursor: "pointer", textAlign: "left" }}>
               <div style={{ fontSize: 22, marginBottom: 6 }}>{a.icon}</div>
@@ -1335,19 +1772,35 @@ function DocumentenTab({ form }) {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const generate = async () => {
+  const generate = () => {
     setLoading(true);
     setResult("");
     try {
-      let prompt;
-      if (docType === "draagplicht") prompt = buildDraagplichtPrompt(form);
-      else if (docType === "vergoedingsrechten") prompt = buildVergoedingsrechtenPrompt(form);
-      else if (docType === "scheiding") prompt = buildScheidingPrompt(form);
-      else prompt = buildDraagplichtPrompt(form) + "\n\n---\n\nStel daarna ook een aparte OVEREENKOMST VERGOEDINGSRECHTEN op:\n\n" + buildVergoedingsrechtenPrompt(form);
-      const r = await callClaude(prompt);
-      setResult(r);
-    } catch (e) { setResult("Fout: " + e.message); }
+      setResult(genereerDocument(docType, form || {}));
+    } catch (e) { setResult("Fout bij opstellen van het document: " + e.message); }
     setLoading(false);
+  };
+
+  const docTitel = () => (types.find(t => t.value === docType)?.label || "document");
+
+  const printDoc = () => {
+    const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const w = window.open("", "_blank");
+    if (!w) { alert("Het printvenster is geblokkeerd. Sta pop-ups toe of gebruik 'Kopieer'."); return; }
+    w.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>${esc(docTitel())} — concept</title><style>body{font-family:Georgia,"Times New Roman",serif;margin:2cm;color:#111}pre{white-space:pre-wrap;font-family:inherit;font-size:11pt;line-height:1.6}</style></head><body><pre>${esc(result)}</pre></body></html>`);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 250);
+  };
+
+  const downloadDoc = () => {
+    const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${docTitel().toLowerCase().replace(/[^a-z0-9]+/g, "-")}-concept.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const types = [
@@ -1362,18 +1815,18 @@ function DocumentenTab({ form }) {
       <div style={{ background: C.navy, borderRadius: 16, padding: 24, marginBottom: 24, display: "flex", alignItems: "center", gap: 18 }}>
         <div style={{ fontSize: 32 }}>📄</div>
         <div>
-          <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: fam.sans }}>AI Generator</div>
-          <div style={{ color: C.white, fontSize: 19, fontWeight: 700, fontFamily: fam.serif }}>Documenten Genereren</div>
-          <div style={{ color: C.textLight, fontSize: 12.5, marginTop: 2, fontFamily: fam.sans }}>Op basis van de ingevulde gegevens — altijd ter beoordeling door notaris/jurist</div>
+          <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: fam.sans }}>Modeldocumenten</div>
+          <div style={{ color: C.white, fontSize: 19, fontWeight: 700, fontFamily: fam.serif }}>Documenten opstellen</div>
+          <div style={{ color: C.textLight, fontSize: 12.5, marginTop: 2, fontFamily: fam.sans }}>Vaste modelteksten aangevuld met de ingevulde gegevens — altijd ter beoordeling door notaris/jurist</div>
         </div>
       </div>
 
       {!form?.naam1 && (
-        <InfoBox type="warn">Vul eerst de wizard in (tabblad Analyse) om de gegevens te gebruiken voor het genereren. U kunt ook direct genereren met een generieke opzet.</InfoBox>
+        <InfoBox type="warn">Vul eerst de wizard in (tabblad Analyse) om de gegevens in het document te verwerken. U kunt ook direct een document opstellen met de standaardgegevens.</InfoBox>
       )}
 
       <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 18 }}>
-        <SectionH>Kies het te genereren document</SectionH>
+        <SectionH>Kies het op te stellen document</SectionH>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
           {types.map(t => (
             <div key={t.value} onClick={() => setDocType(t.value)} style={{ border: `2px solid ${docType === t.value ? C.navy : C.border}`, borderRadius: 10, padding: 14, cursor: "pointer", background: docType === t.value ? C.navyGlass : C.white, transition: "all 0.15s" }}>
@@ -1384,7 +1837,7 @@ function DocumentenTab({ form }) {
           ))}
         </div>
         <button onClick={generate} disabled={loading} style={{ ...btnGold, opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", gap: 8 }}>
-          {loading ? "⏳ Genereren..." : "✨ Genereer document"}
+          {loading ? "⏳ Bezig..." : "📄 Stel modeldocument op"}
         </button>
       </div>
 
@@ -1395,6 +1848,8 @@ function DocumentenTab({ form }) {
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={{ background: C.orangeLight, color: C.orange, padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: fam.sans }}>CONCEPT</span>
               <CopyBtn text={result} />
+              <button onClick={printDoc} style={{ ...btnSm, background: C.grayLight, border: `1px solid ${C.border}` }} title="Afdrukken in nieuw venster">🖨️ Afdrukken</button>
+              <button onClick={downloadDoc} style={{ ...btnSm, background: C.grayLight, border: `1px solid ${C.border}` }} title="Download als tekstbestand">⬇️ Download</button>
             </div>
           </div>
           <div style={{ background: C.cream, border: `1px solid ${C.border}`, borderRadius: 10, padding: "20px 24px", fontSize: 13, lineHeight: 2, color: C.text, whiteSpace: "pre-wrap", fontFamily: fam.serif, maxHeight: 600, overflowY: "auto" }}>
