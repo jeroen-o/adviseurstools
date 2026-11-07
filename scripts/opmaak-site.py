@@ -242,7 +242,10 @@ if OUDE_FOOTER is None:
         if 'class="sitefoot"' in lees(f):
             m = re.search(r'<details><summary>Volledige disclaimer</summary><div class="fdetails">(.*?)</div></details>', lees(f), re.S)
             if m:
-                OUDE_FOOTER = '<footer class="notice"><div class="wrap"><h2>x</h2>' + m.group(1) + '</div></div></footer>'
+                body = m.group(1)
+                while body.count('</div>') > body.count('<div') and body.rstrip().endswith('</div>'):
+                    body = body.rstrip()[:-len('</div>')]   # overtollige sluit-tags van eerdere runs opruimen
+                OUDE_FOOTER = '<footer class="notice"><div class="wrap"><h2>x</h2>' + body + '</div></footer>'
                 break
 n = 0
 for f in sorted(glob.glob(os.path.join(ROOT, '**', 'index.html'), recursive=True)):
