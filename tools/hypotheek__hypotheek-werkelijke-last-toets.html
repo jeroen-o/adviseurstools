@@ -230,6 +230,8 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
         <div class="number-grp" data-prefix="€"><input type="number" id="ink1" value="55000" min="0" step="500"></div>
         <label style="margin-top:10px">Inkomen vanaf AOW <span class="hint">AOW + pensioen, per jaar</span></label>
         <div class="number-grp" data-prefix="€"><input type="number" id="pens1" value="" min="0" step="500" placeholder="nodig bij pensioentoets"></div>
+        <label style="margin-top:10px">Inkomen bij vervroegd pensioen vóór AOW <span class="hint">optioneel, per jaar</span></label>
+        <div class="number-grp" data-prefix="€"><input type="number" id="pre1" value="" min="0" step="500" placeholder="alleen bij (pre)pensioen vóór de AOW-datum"></div>
         <div class="av-status" id="status1"></div>
       </div>
       <div class="aanvrager">
@@ -240,6 +242,8 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
         <div class="number-grp" data-prefix="€"><input type="number" id="ink2" value="35000" min="0" step="500"></div>
         <label style="margin-top:10px">Inkomen vanaf AOW <span class="hint">AOW + pensioen, per jaar</span></label>
         <div class="number-grp" data-prefix="€"><input type="number" id="pens2" value="" min="0" step="500" placeholder="nodig bij pensioentoets"></div>
+        <label style="margin-top:10px">Inkomen bij vervroegd pensioen vóór AOW <span class="hint">optioneel, per jaar</span></label>
+        <div class="number-grp" data-prefix="€"><input type="number" id="pre2" value="" min="0" step="500" placeholder="alleen bij (pre)pensioen vóór de AOW-datum"></div>
         <div class="av-status" id="status2"></div>
       </div>
     </div>
@@ -270,7 +274,7 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
         </select>
       </div>
     </div>
-    <div class="info"><strong>Toetsinkomen 2026:</strong> hoogste + 100% laagste. <strong>Tabelkeuze:</strong> beide AOW → AOW-tabel; één of geen AOW → niet-AOW-tabel. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0. <strong>Pensioentoets:</strong> vanaf de gekozen leeftijd (en vóór de AOW-datum) wordt per persoon óók getoetst op het inkomen vanaf AOW met de AOW-tabel (advies: Trhk welAOW; beheer: NHG 5e/5f, box 3: 5k/5l); de laagste uitkomst telt. Is de AOW-leeftijd al bereikt, vul dan bij toetsinkomen het AOW-/pensioeninkomen in.</div>
+    <div class="info"><strong>Toetsinkomen 2026:</strong> hoogste + 100% laagste. <strong>Tabelkeuze advies (Trhk art. 3 lid 7):</strong> heeft één aanvrager de AOW-leeftijd bereikt, dan volgt de tabel de aanvrager met het hoogste toetsinkomen; beiden AOW → AOW-tabel. <strong>Beheer (NHG):</strong> paar-AOW-tabel alleen als beiden AOW hebben. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0. <strong>Pensioentoets:</strong> vanaf de gekozen leeftijd (en vóór de AOW-datum) wordt per persoon óók getoetst op het inkomen vanaf AOW met de AOW-tabel (advies: Trhk welAOW; beheer: NHG 5e/5f, box 3: 5k/5l); de laagste uitkomst telt. Is de AOW-leeftijd al bereikt, vul dan bij toetsinkomen het AOW-/pensioeninkomen in.</div>
   </div>
 
   <div class="card">
@@ -326,7 +330,7 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
         <div class="number-grp" data-prefix="€"><input type="number" id="alim" value="0" min="0" step="10"></div>
       </div>
       <div>
-        <label>Overige verplichtingen /mnd</label>
+        <label>Overige verplichtingen /mnd <span class="hint">bruto: niet-aftrekbare netto lasten × bruteringsfactor</span></label>
         <div class="number-grp" data-prefix="€"><input type="number" id="ovv" value="0" min="0" step="10"></div>
       </div>
     </div>
@@ -717,6 +721,10 @@ function bereken(){
   const pensRaw1 = document.getElementById('pens1').value, pensRaw2 = document.getElementById('pens2').value;
   const pens1 = pensRaw1 === '' ? null : (+pensRaw1 || 0);
   const pens2 = pensRaw2 === '' ? null : (+pensRaw2 || 0);
+  /* Optioneel: inkomen in de periode tussen vervroegd pensioen (prepensioen) en de AOW-datum */
+  const preRaw1 = (document.getElementById('pre1')||{}).value||'', preRaw2 = (document.getElementById('pre2')||{}).value||'';
+  const pre1 = preRaw1 === '' ? null : (+preRaw1 || 0);
+  const pre2 = preRaw2 === '' ? null : (+preRaw2 || 0);
 
   const erfpacht = +document.getElementById('erfpacht').value || 0;
   const inleg    = +document.getElementById('inleg').value || 0;
@@ -736,10 +744,9 @@ function bereken(){
   const isAlleenstaand = ink2 === 0;
   const beideAOW = (av1?.isAOW) && (!isAlleenstaand && av2?.isAOW);
   const oneAOW   = (av1?.isAOW || av2?.isAOW) && !beideAOW;
-  /* Tabelkeuze CHF/GHF advies: bij alleenstaand → AOW-status av1; bij paar → beide AOW.
-     Bron: Nibud Advies hypotheeknormen 2026 §2.2.5 (aparte AOW-tabel voor AOW-gerechtigden;
-     bij paar geldt dat beiden AOW ontvangen). */
-  const tabelAOW = isAlleenstaand ? !!av1?.isAOW : beideAOW;
+  /* Tabelkeuze CHF/GHF advies (Trhk art. 3 lid 7): bij alleenstaand → AOW-status av1; bij paar → de tabel
+     van de aanvrager met het hoogste toetsinkomen (heeft die de AOW-leeftijd bereikt: AOW-tabel). */
+  const tabelAOW = isAlleenstaand ? !!av1?.isAOW : (ink1 >= ink2 ? !!av1?.isAOW : !!av2?.isAOW);
 
   /* Toetsinkomen */
   const toetsInkomen = ink1 + ink2;
@@ -754,6 +761,8 @@ function bereken(){
   /* Inkomen en tabelkeuze in het pensioenscenario (moment waarop de betrokkene(n) AOW ontvangen) */
   const pensInk = pensScenario ? ((pt1 ? pens1 : ink1) + (isAlleenstaand ? 0 : (pt2 ? pens2 : ink2))) : 0;
   const pensAlleAOW = isAlleenstaand ? true : ((pt1 || !!av1?.isAOW) && (pt2 || !!av2?.isAOW));
+  /* Advies (Trhk art. 3 lid 7) in het pensioenscenario: tabel van de aanvrager met het hoogste inkomen in dat scenario */
+  const pensAdvAOW = isAlleenstaand ? true : (((pt1 ? pens1 : ink1) >= (pt2 ? pens2 : ink2)) ? (pt1 || !!av1?.isAOW) : (pt2 || !!av2?.isAOW));
 
   /* Gewogen rente en RVP */
   const totaalHoofdsom = leningdelen.reduce((s,d) => s + (d.hoofdsom>0 ? d.hoofdsom : 0), 0);
@@ -807,13 +816,24 @@ function bereken(){
   /* Pensioentoets advies: Trhk welAOW-tabel (box 1) / box3 welAOW, op het inkomen vanaf AOW */
   let pensAdv = null;
   if (pensScenario){
-    const tP1 = pensAlleAOW ? CHF_WELAOW : CHF_NIETAOW, tP3 = pensAlleAOW ? CHF_B3_WELAOW : CHF_B3_NIETAOW;
+    const tP1 = pensAdvAOW ? CHF_WELAOW : CHF_NIETAOW, tP3 = pensAdvAOW ? CHF_B3_WELAOW : CHF_B3_NIETAOW;
     const b1 = lookupFLpct(tP1, pensInk, toetsrenteAdv), b3 = lookupFLpct(tP3, pensInk, toetsrenteAdv);
     const fl = aandeelBox1*b1 + aandeelBox3*b3;
-    pensAdv = {b1, b3, fl, jaar: pensInk*fl, naam: pensAlleAOW ? 'CHF welAOW' : 'CHF nietAOW (niet iedereen AOW)'};
+    pensAdv = {b1, b3, fl, jaar: pensInk*fl, naam: pensAdvAOW ? 'CHF welAOW' + (pensAlleAOW ? '' : ' (aanvrager met hoogste inkomen AOW, art. 3 lid 7)') : 'CHF nietAOW (aanvrager met hoogste inkomen nog geen AOW, art. 3 lid 7)'};
+  }
+  /* Pensioentoets: extra toetsmoment in de periode vervroegd pensioen → AOW (als ingevuld); de laagste uitkomst telt */
+  const heeftPre = pensScenario && ((pt1 && pre1 !== null) || (!isAlleenstaand && pt2 && pre2 !== null));
+  const q1 = (pt1 && pre1 !== null) ? pre1 : ink1, q2 = isAlleenstaand ? 0 : ((pt2 && pre2 !== null) ? pre2 : ink2);
+  const preInk = q1 + q2;
+  let pensInkAdv = pensInk;
+  if (heeftPre){
+    const preAOW = isAlleenstaand ? false : (q1 >= q2 ? !!av1?.isAOW : !!av2?.isAOW); // art. 3 lid 7; vervroegd gepensioneerde heeft nog geen AOW
+    const b1 = lookupFLpct(preAOW ? CHF_WELAOW : CHF_NIETAOW, preInk, toetsrenteAdv), b3 = lookupFLpct(preAOW ? CHF_B3_WELAOW : CHF_B3_NIETAOW, preInk, toetsrenteAdv);
+    const fl = aandeelBox1*b1 + aandeelBox3*b3;
+    if (preInk*fl < pensAdv.jaar){ pensAdv = {b1, b3, fl, jaar: preInk*fl, naam: (preAOW ? 'CHF welAOW' : 'CHF nietAOW') + ' — periode vervroegd pensioen vóór AOW'}; pensInkAdv = preInk; }
   }
   const advPens = !!(pensAdv && pensAdv.jaar < toetsInkomen * flCurAdv);
-  const toetsInkomenAdv = advPens ? pensInk : toetsInkomen;
+  const toetsInkomenAdv = advPens ? pensInkAdv : toetsInkomen;
   const flBox1Adv = advPens ? pensAdv.b1 : flCurB1Adv;
   const flBox3Adv = advPens ? pensAdv.b3 : flCurB3Adv;
   const flAdv = advPens ? pensAdv.fl : flCurAdv;
@@ -865,8 +885,21 @@ function bereken(){
     const fl = aandeelBox1*b1 + aandeelBox3*b3;
     pensBh = {b1, b3, fl, jaar: pensInk*fl, naam, t1: tP1};
   }
+  let pensInkBh = pensInk;
+  if (heeftPre){
+    /* Beheer, periode vervroegd pensioen: zonder werk-tabellen voor wie geen arbeidsinkomen meer heeft */
+    const zw1 = (pt1 && pre1 !== null) || !!av1?.isAOW || beheerSituatie === 'zonderwerk';
+    const zw2 = isAlleenstaand ? true : ((pt2 && pre2 !== null) || !!av2?.isAOW || beheerSituatie === 'zonderwerk');
+    let tP1, tP3, naam;
+    if (isAlleenstaand){ tP1 = NHG_ALLEEN_ZW_REG; tP3 = NHG_ALLEEN_ZW_B3; naam = 'Alleenstaand zonder werk (5d / box 3: 5j)'; }
+    else if (zw1 && zw2){ tP1 = NHG_PAAR_ZW_REG; tP3 = NHG_PAAR_ZW_B3; naam = 'Paar zonder werk (5c / box 3: 5i)'; }
+    else { tP1 = CHF_NIETAOW; tP3 = CHF_B3_NIETAOW; naam = 'Paar met werk (5a / box 3: 5g)'; }
+    const b1 = lookupFLpct(tP1, preInk, toetsrenteBh), b3 = lookupFLpct(tP3, preInk, toetsrenteBh);
+    const fl = aandeelBox1*b1 + aandeelBox3*b3;
+    if (preInk*fl < pensBh.jaar){ pensBh = {b1, b3, fl, jaar: preInk*fl, naam: naam + ' — periode vervroegd pensioen vóór AOW', t1: tP1}; pensInkBh = preInk; }
+  }
   const bhPens = !!(pensBh && pensBh.jaar < toetsInkomen * flCurBh);
-  const toetsInkomenBh = bhPens ? pensInk : toetsInkomen;
+  const toetsInkomenBh = bhPens ? pensInkBh : toetsInkomen;
   const flBox1Bh = bhPens ? pensBh.b1 : flCurB1Bh;
   const flBox3Bh = bhPens ? pensBh.b3 : flCurB3Bh;
   const flBh = bhPens ? pensBh.fl : flCurBh;
@@ -905,14 +938,14 @@ function bereken(){
   if (pensioenDrempel === 0) pensStatus = 'niet toetsen (uitgeschakeld)';
   else if (!pensioentoetsGeldt) pensStatus = 'niet van toepassing';
   else if (pensOnvolledig) pensStatus = 'van toepassing — inkomen vanaf AOW ontbreekt';
-  else pensStatus = `van toepassing — getoetst op ${fmt(pensInk)} (inkomen vanaf AOW)`;
+  else pensStatus = `van toepassing — getoetst op ${fmt(pensInk)} (inkomen vanaf AOW)` + (heeftPre ? ` en ${fmt(preInk)} (periode vervroegd pensioen)` : '');
   if (pensOnvolledig){
     const w = `<div class="status bad" style="margin-top:10px"><h3>${pensTxt}: vul inkomen vanaf AOW in</h3><p>De pensioentoets is van toepassing (${pt1?'aanvrager 1':''}${pt1&&pt2?' en ':''}${pt2?'aanvrager 2':''}), maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. De uitkomst hieronder is alleen op het huidige inkomen gebaseerd en is daarom <b>onvolledig</b>.</p></div>`;
     document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', w);
     document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', w);
   } else if (pensScenario){
-    const wa = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met AOW-tabel (${pensAdv.naam}). ${advPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
-    const wb = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met AOW-tabel (${pensBh.naam}). ${bhPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
+    const wa = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met de AOW-tabel${heeftPre?` en op ${fmt(preInk)} in de periode vervroegd pensioen vóór AOW`:''}; laagste: ${fmt(pensInkAdv)} (${pensAdv.naam}). ${advPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
+    const wb = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met de AOW-tabel${heeftPre?` en op ${fmt(preInk)} in de periode vervroegd pensioen vóór AOW`:''}; laagste: ${fmt(pensInkBh)} (${pensBh.naam}). ${bhPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
     document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', wa);
     document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', wb);
   }
@@ -931,7 +964,7 @@ function bereken(){
 
   /* Tabellen advies */
   document.getElementById('adviesMaxTable').innerHTML = `
-    <tr><td>Gezamenlijk toetsinkomen${advPens?' (inkomen vanaf AOW — pensioentoets)':''}</td><td class="num">${fmt(toetsInkomenAdv)}</td></tr>
+    <tr><td>Gezamenlijk toetsinkomen${advPens?(pensInkAdv===pensInk?' (inkomen vanaf AOW — pensioentoets)':' (periode vervroegd pensioen vóór AOW — pensioentoets)'):''}</td><td class="num">${fmt(toetsInkomenAdv)}</td></tr>
     <tr><td>FL% box 1 (${pctStr(aandeelBox1*100)} aandeel)</td><td class="num">${(flBox1Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>FL% box 3 (${pctStr(aandeelBox3*100)} aandeel)</td><td class="num">${(flBox3Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>Effectief gewogen FL%</td><td class="num"><b>${(flAdv*100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></td></tr>
@@ -946,7 +979,7 @@ function bereken(){
     <tr class="highlight"><td>Beschikbaar voor hypotheek­last (per maand)</td><td class="num">${fmt(beschikbaarAdv)}</td></tr>
   `;
   document.getElementById('adviesParamTable').innerHTML = `
-    <tr><td>Gebruikte tabel</td><td class="num">${advPens ? pensAdv.naam + ' (pensioentoets)' : (tabelAOW?'CHF welAOW':'CHF nietAOW') + ((oneAOW && !isAlleenstaand)?' (één AOW → niet-AOW-tabel)':'')}</td></tr>
+    <tr><td>Gebruikte tabel</td><td class="num">${advPens ? pensAdv.naam + ' (pensioentoets)' : (tabelAOW?'CHF welAOW':'CHF nietAOW') + ((oneAOW && !isAlleenstaand)?(tabelAOW?' (één AOW, met hoogste inkomen → AOW-tabel, art. 3 lid 7)':' (één AOW, niet met hoogste inkomen → niet-AOW-tabel, art. 3 lid 7)'):'')}</td></tr>
     <tr><td>${pensTxt}</td><td class="num">${pensStatus}</td></tr>
     <tr><td>Gewogen debetrente</td><td class="num">${fmtD2(wgRente)}%</td></tr>
     <tr><td>Gewogen rentevaste periode</td><td class="num">${fmtD2(wgRvp)} jr</td></tr>
@@ -961,7 +994,7 @@ function bereken(){
     <tr><td><b>Minimale beheerlast</b><div class="tiny">alle leningdelen fictief aflossingsvrij</div></td><td class="num">${fmt(minimaalTot)}</td><td class="num">${pctStr(benutBhMin)}</td><td class="num">${fmt(ruimteBhMin)}</td></tr>
   `;
   document.getElementById('beheerMaxTable').innerHTML = `
-    <tr><td>Gezamenlijk toetsinkomen${bhPens?' (inkomen vanaf AOW — pensioentoets)':''}</td><td class="num">${fmt(toetsInkomenBh)}</td></tr>
+    <tr><td>Gezamenlijk toetsinkomen${bhPens?(pensInkBh===pensInk?' (inkomen vanaf AOW — pensioentoets)':' (periode vervroegd pensioen vóór AOW — pensioentoets)'):''}</td><td class="num">${fmt(toetsInkomenBh)}</td></tr>
     <tr><td>FL% box 1 (${pctStr(aandeelBox1*100)} aandeel)</td><td class="num">${(flBox1Bh*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>FL% box 3 (${pctStr(aandeelBox3*100)} aandeel)</td><td class="num">${(flBox3Bh*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>Effectief gewogen FL%</td><td class="num"><b>${(flBh*100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></td></tr>
@@ -1047,7 +1080,7 @@ function renderAanvragerStatus(elId, av, num, drempel){
    6. Event wiring
    ============================================================= */
 function wireInputs(){
-  ['ink1','ink2','gb1','gb2','kinderen','rente3jr','pens1','pens2','pensioenDrempel','beheerSituatie',
+  ['ink1','ink2','gb1','gb2','kinderen','rente3jr','pens1','pens2','pre1','pre2','pensioenDrempel','beheerSituatie',
    'erfpacht','inleg','dkLimiet','aflK','duoTerm','lease','alim','ovv']
     .forEach(id => {
       const el = document.getElementById(id);

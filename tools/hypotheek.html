@@ -179,21 +179,23 @@ button,.btn{border-radius:3px;border:none;cursor:pointer;font-family:Arial,sans-
           </div>
           <div class="field"><label>Energielabel woning</label>
             <select class="fi" id="mhLabel" onchange="calcMh()">
-              <option value="0">G–E (geen toeslag)</option>
+              <option value="0" selected>E, F of G (€ 0)</option>
               <option value="5000">D/C (€ 5.000 toeslag)</option>
-              <option value="10000" selected>B/A (€ 10.000 toeslag)</option>
+              <option value="10000">B/A (€ 10.000 toeslag)</option>
               <option value="20000">A+/A++ (€ 20.000 toeslag)</option>
               <option value="25000">A+++ (€ 25.000 toeslag)</option>
               <option value="30000">A++++ (€ 30.000 toeslag)</option>
               <option value="40000">A++++ met energieprestatiegarantie ≥ 10 jaar (€ 40.000 toeslag)</option>
               <option value="10000">Geen geldig energielabel (€ 10.000)</option>
             </select>
+            <div style="font-size:11px;color:#888;margin-top:3px;">Alleen een geregistreerd, definitief label telt; zonder geldig label geldt € 10.000.</div>
           </div>
-          <div class="field"><label>Huishouden</label>
+          <div class="field"><label>Aantal aanvragers</label>
             <select class="fi" id="mhAlleen" onchange="calcMh()">
-              <option value="1" selected>Alleenstaand (één aanvrager, + € 17.000)</option>
+              <option value="1" selected>Eén aanvrager</option>
               <option value="0">Twee aanvragers</option>
             </select>
+            <div style="font-size:11px;color:#888;margin-top:3px;">Alleenstaandenbedrag € 17.000 automatisch bij één aanvrager én toetsinkomen &gt; € 30.000 (AOW-tabel: &gt; € 29.000). Met inkomen of geboortedatum van aanvrager 2 geldt: twee aanvragers.</div>
           </div>
           <div class="field"><label>Kredietlimiet / oorspronkelijke kredietsom (€)</label>
             <input type="number" class="fi" id="mhKrediet" value="0" min="0" step="500" placeholder="BKR: doorlopend krediet, persoonlijke lening" oninput="calcMh()">
@@ -201,8 +203,14 @@ button,.btn{border-radius:3px;border:none;cursor:pointer;font-family:Arial,sans-
           <div class="field"><label>Studieschuld: maandtermijn DUO (€/mnd)</label>
             <input type="number" class="fi" id="mhDuo" value="0" min="0" step="10" oninput="calcMh()">
           </div>
-          <div class="field"><label>Overige verplichtingen (€/mnd)</label>
-            <input type="number" class="fi" id="mhOverig" value="0" min="0" step="10" placeholder="bijv. partneralimentatie, private lease" oninput="calcMh()">
+          <div class="field"><label>Te betalen partneralimentatie (€/mnd)</label>
+            <input type="number" class="fi" id="mhAlim" value="0" min="0" step="10" placeholder="aftrekbaar: niet gebruteerd" oninput="calcMh()">
+          </div>
+          <div class="field"><label>Erfpachtcanon (€/mnd)</label>
+            <input type="number" class="fi" id="mhErfpacht" value="0" min="0" step="10" placeholder="aftrekbaar: niet gebruteerd" oninput="calcMh()">
+          </div>
+          <div class="field"><label>Overige niet-aftrekbare vaste lasten (netto €/mnd)</label>
+            <input type="number" class="fi" id="mhOverig" value="0" min="0" step="10" placeholder="wordt gebruteerd met de studieschuldfactor" oninput="calcMh()">
           </div>
           <div class="field"><label>Pensioentoets vanaf leeftijd</label>
             <select class="fi" id="mhPensioenDrempel" onchange="calcMh()">
@@ -548,9 +556,10 @@ function calcMh(){
   const labelToeslag=parseInt(document.getElementById('mhLabel').value)||0;
   const krediet=parseFloat(document.getElementById('mhKrediet').value)||0;
   const duo=parseFloat(document.getElementById('mhDuo').value)||0;
-  const overig=parseFloat(document.getElementById('mhOverig').value)||0;
+  const overigNetto=parseFloat(document.getElementById('mhOverig').value)||0;
+  const alim=parseFloat(document.getElementById('mhAlim').value)||0;
+  const erfpacht=parseFloat(document.getElementById('mhErfpacht').value)||0;
   const drempel=parseInt(document.getElementById('mhPensioenDrempel').value)||0;
-  const alleen=document.getElementById('mhAlleen').value==='1'&&ink2===0;
 
   document.getElementById('mhInk1V').textContent=fmt(ink1);
   document.getElementById('mhInk2V').textContent=fmt(ink2);
@@ -562,6 +571,10 @@ function calcMh(){
   const personen=[{inkomen:ink1,pensioen:mhGetal('mhPens1'),geb:mhDatum('mhGeb1')}];
   if(ink2>0||mhDatum('mhGeb2')) personen.push({inkomen:ink2,pensioen:mhGetal('mhPens2'),geb:mhDatum('mhGeb2')});
   const toets=flnToets(personen,{drempel:drempel,datum:new Date(),rente:toetsRente});
+  // Alleenstaandenbedrag (Trhk art. 3 lid 8): alleen bij één aanvrager (afgeleid uit de ingevulde aanvragers) én toetsinkomen > € 30.000 (niet-AOW) resp. > € 29.000 (AOW-tabel)
+  const eenAanvrager=document.getElementById('mhAlleen').value==='1'&&personen.length===1;
+  const alleenGrens=toets.bindend.aowTabel?29000:30000;
+  const alleen=eenAanvrager&&toets.bindend.inkomen>alleenGrens;
   const toetsInkomen=toets.bindend.inkomen;
   const quota=toets.bindend.pct;
   const maxMaandlast=toets.bindend.maxLast;
@@ -570,7 +583,8 @@ function calcMh(){
   const kredietLast=krediet*0.02;                                   // 2% van limiet/kredietsom per maand
   const brutering=FLN2026_BRUTERING_STUDIE[flnKolom(toetsRente)];
   const duoLast=duo*brutering;                                       // DUO-termijn × bruteringsfactor
-  const verplichtingen=kredietLast+duoLast+overig;
+  const overig=overigNetto*brutering;                                // overige niet-aftrekbare lasten: zelfde bruteringsfactor
+  const verplichtingen=kredietLast+duoLast+alim+erfpacht+overig;     // partneralimentatie en erfpachtcanon zijn aftrekbaar: niet bruteren
 
   const r=toetsRente/100/12;
   const m=360;
@@ -593,8 +607,9 @@ function calcMh(){
       <div class="metric"><div class="m-lbl">Max. maandlast</div><div class="m-val">${fmt(maxMaandlast)}</div></div>
     </div>
     ${toets.ontbreekt?ri('warn','⚠️','Vul het inkomen vanaf AOW in',flnToetsTekst(toets,fmt)):ri('info','👴','Pensioentoets',flnToetsTekst(toets,fmt))}
+    ${eenAanvrager?ri('info','👤','Alleenstaandenbedrag',alleen?`Eén aanvrager en toetsinkomen ${fmt(toetsInkomen)} &gt; ${fmt(alleenGrens)}: € 17.000 extra (Trhk 2026 art. 3 lid 8).`:`Niet van toepassing: toetsinkomen ${fmt(toetsInkomen)} is niet hoger dan ${fmt(alleenGrens)}.`):''}
     ${maxMetLabel<=nhgGrens?ri('ok','🛡️','NHG mogelijk (grens €470.000)','Uw maximale hypotheek valt binnen de NHG-grens 2026. NHG geeft rentekorting en bescherming bij gedwongen verkoop.'):ri('info','ℹ️','Buiten NHG-grens','Uw hypotheek overstijgt de NHG-grens van €470.000 (2026). Gewone hypotheek is uitstekend mogelijk.')}
-    ${verplichtingen>0?ri('warn','⚠️','Verplichtingen verlagen maximale hypotheek',`Bruto maandlast verplichtingen ${fmt(verplichtingen)}/mnd (krediet 2% × ${fmt(krediet)} = ${fmt(kredietLast)}${duo>0?`; DUO ${fmt(duo)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(duoLast)}`:''}${overig>0?`; overig ${fmt(overig)}`:''}) gaat af van de toegestane financieringslast en verlaagt uw max. hypotheek met ca. ${fmt(schuldenAftrek)}. Aflossen (en opzeggen van de kredietlimiet) vóór aanvraag loont.`):''}
+    ${verplichtingen>0?ri('warn','⚠️','Verplichtingen verlagen maximale hypotheek',`Bruto maandlast verplichtingen ${fmt(verplichtingen)}/mnd (krediet 2% × ${fmt(krediet)} = ${fmt(kredietLast)}${duo>0?`; DUO ${fmt(duo)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(duoLast)}`:''}${alim>0?`; partneralimentatie ${fmt(alim)}`:''}${erfpacht>0?`; erfpachtcanon ${fmt(erfpacht)}`:''}${overigNetto>0?`; overig ${fmt(overigNetto)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(overig)}`:''}) gaat af van de toegestane financieringslast en verlaagt uw max. hypotheek met ca. ${fmt(schuldenAftrek)}. Aflossen (en opzeggen van de kredietlimiet) vóór aanvraag loont.`):''}
     ${ri('info','ℹ️','Berekening volgens de Tijdelijke regeling hypothecair krediet 2026','Financieringslastpercentage uit de officiële Nibud-tabel 2026 (rij per € 1.000 toetsinkomen, kolom naar toetsrente). Max. hypotheek = (toetsinkomen × percentage ÷ 12 − bruto maandlast verplichtingen) ÷ annuïteitsfactor (toetsrente, 360 mnd), plus het energielabelbedrag'+(alleen?' en € 17.000 voor alleenstaanden':'')+'. Dit is een indicatie; geldverstrekkers kunnen strenger zijn.')}`;
 }
 calcMh();
@@ -854,7 +869,7 @@ const LABELS=[
 /* Trhk 2026, bijlage: extra leenruimte bij aankoop per label. A++++ met energieprestatiegarantie (≥ 10 jaar): € 40.000.
    Extra bedrag voor energiebesparende voorzieningen: E–G € 20.000, C–D € 15.000, A t/m A++ € 10.000 (B ook € 10.000), A+++ en hoger € 0. */
 const VERDUURZAMING_2026={G:20000,F:20000,E:20000,D:15000,C:15000,B:10000,A:10000,'A+':10000,'A++':10000,'A+++':0,'A++++':0,Geen:10000}; // 'Geen' = geen geldig label: € 10.000 (Nibud 2026, blad 'overige parameters')
-let activeLabel='B';
+let activeLabel='E'; // standaard E/F/G: nooit standaard extra leenruimte
 
 function renderElGrid(){
   document.getElementById('elGrid').innerHTML=LABELS.map(l=>`
@@ -907,7 +922,7 @@ const HC_ITEMS=[
   {icon:'🔑',ct:'Bouwdepot of verbouwingshypotheek',cs:'Bij renovatie: zorg voor bouwdepot in hypotheekofferte.'},
   {icon:'📄',ct:'Koopakte goed doorgelezen',cs:'Ontbindende voorwaarden: financieringsvoorbehoud, bouwkundige keuring.'},
   {icon:'🏗️',ct:'Bouwkundige keuring gedaan',cs:'Essentieel voor woningen ouder dan 10 jaar. Kosten ca. €300–500.'},
-  {icon:'💳',ct:'Overdrachtsbelasting gereserveerd',cs:'0% (starters ≤35 jr, koopsom ≤€555k), anders 2%.'},
+  {icon:'💳',ct:'Overdrachtsbelasting gereserveerd',cs:'0% (starters 18 t/m 34 jaar, eenmalig, woningwaarde ≤ € 555.000), anders 2% (geen hoofdverblijf: 8%).'},
   {icon:'📊',ct:'Energielabel gecheckt en impact berekend',cs:'Beïnvloedt maximale hypotheek, NHG-grens en maandlasten.'},
   {icon:'🔒',ct:'Rentevaste periode bewust gekozen',cs:'Korter = meer renterisico. Langer = meer zekerheid.'},
   {icon:'🌿',ct:'Duurzaamheidsscan woning',cs:'Verduurzaming meefinancieren kan — plan dit vooraf.'},
