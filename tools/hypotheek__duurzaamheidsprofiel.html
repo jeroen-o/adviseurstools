@@ -59,6 +59,9 @@ tr.tot td{font-weight:800;background:var(--gold-lt);color:var(--navy)}
 .ok{color:var(--green);font-weight:700}.nok{color:var(--red);font-weight:700}
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--grlt);color:var(--green)}
 .tag.n{background:#eef1f5;color:var(--muted)}
+.zoekrij{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:12px;align-items:end}
+#z_msg.ok{color:var(--green);font-weight:600}#z_msg.fout{color:var(--red);font-weight:600}
+@media (max-width:820px){.zoekrij{grid-template-columns:1fr 1fr}}
 @media (max-width:820px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -66,6 +69,15 @@ tr.tot td{font-weight:800;background:var(--gold-lt);color:var(--navy)}
 <div class="hdr"><div class="hdr-in"><div><div class="hdr-title">Duurzaamheidsprofiel woning</div><div class="hdr-sub">Hoe scoort de woning, welke maatregelen leveren het meest op, wat kost het en hoe financier je het — met rapport voor de klant</div></div><span class="badge">Indicatief</span></div></div>
 <div class="wrap">
   <div class="note"><b>Zo werkt het.</b> Vul de woningkenmerken en de huidige situatie in. De tool schat het energieverbruik (of gebruik het werkelijke verbruik), berekent per maatregel kosten, besparing, terugverdientijd en CO₂-reductie, toont het indicatieve energielabel na verduurzaming en de financieringsruimte in de hypotheek. Alles rekent in je browser; er wordt niets opgeslagen of verzonden.</div>
+  <div class="card" id="zoekkaart"><div class="ch"><span class="nr">⌕</span> Zoek de woning</div><div class="cb">
+    <div class="zoekrij">
+      <div class="fl"><label for="z_pc">Postcode</label><input id="z_pc" placeholder="1234 AB" maxlength="7" autocomplete="postal-code"></div>
+      <div class="fl"><label for="z_nr">Huisnummer</label><input id="z_nr" inputmode="numeric" placeholder="12"></div>
+      <div class="fl"><label for="z_toev">Toevoeging</label><input id="z_toev" placeholder="A / 2 / bis" maxlength="6"></div>
+      <div class="fl"><label>&nbsp;</label><button class="btn" id="z_btn" type="button">Woning ophalen</button></div>
+    </div>
+    <div class="hint" id="z_msg" style="margin-top:8px">Vult adres, bouwjaar, woonoppervlakte en woningtype automatisch in uit de Basisregistratie Adressen en Gebouwen (BAG, via PDOK). Alleen postcode en huisnummer worden opgevraagd.</div>
+  </div></div>
   <div class="grid">
     <div>
       <div class="card"><div class="ch"><span class="nr">1</span> Woning</div><div class="cb">
@@ -80,7 +92,7 @@ tr.tot td{font-weight:800;background:var(--gold-lt);color:var(--navy)}
         </div>
         <div class="row">
           <div class="fl"><label for="opp">Woonoppervlakte</label><div class="iw pct"><input id="opp" class="num" inputmode="numeric" value="110"><span class="sx">m²</span></div></div>
-          <div class="fl"><label for="label">Huidig energielabel</label><select id="label"></select><span class="hint">Geregistreerd label (EP-online). Onbekend? Kies het label dat past bij het bouwjaar.</span></div>
+          <div class="fl"><label for="label">Huidig energielabel</label><select id="label"></select><span class="hint">Het geregistreerde label staat op <a href="https://www.ep-online.nl/" target="_blank" rel="noopener">ep-online.nl</a>. Niet ingevuld? Dan schatten we het label op bouwjaar.</span></div>
         </div>
         <div class="checkrow" id="vveRow" style="display:none;margin-top:4px"><label style="display:flex;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="vve" style="width:18px;min-height:18px"> De woning hoort bij een VvE</label></div>
       </div></div>
@@ -130,7 +142,11 @@ tr.tot td{font-weight:800;background:var(--gold-lt);color:var(--navy)}
         </div>
         <div class="row">
           <div class="fl"><label for="woonduur">Verwachte woonduur</label><div class="iw pct"><input id="woonduur" class="num" inputmode="numeric" value="10"><span class="sx">jaar</span></div></div>
+          <div class="fl"><label for="normjaar">Normjaar</label><select id="normjaar"><option value="2026">2026</option><option value="2027">2027</option></select></div>
+        </div>
+        <div class="row">
           <div class="fl"><label for="moment">Moment</label><select id="moment"><option value="aankoop" selected>Bij aankoop / oversluiten</option><option value="bestaand">Bestaande hypotheek (verhogen)</option></select></div>
+          <div class="fl"></div>
         </div>
       </div></div>
     </div>
@@ -199,11 +215,15 @@ var MAATR=[
  {k:'wp', n:'Volledige warmtepomp (all-electric)', kost:function(w){return w.opp>150?15000:12500;}, nvt:function(s){return s.verw==='wp'||s.verw==='sv';}},
  {k:'pv', n:'Zonnepanelen', kost:function(w,aant){return aant*380;}, nvt:function(s,w){return w.type==='app';}, panelen:true}
 ];
+var NORM={'2026':{nhg:470000,nhgE:498200},'2027':{nhg:500000,nhgE:530000}};
+function normJaar(){return $('normjaar').value;}
 var STAAT={}; // per maatregel: {aan, kost, sub, panelen, handKost}
 (function init(){
   var l=$('label');LABELS.slice().reverse().forEach(function(x){l.innerHTML+='<option value="'+x+'">'+x+'</option>';});l.innerHTML+='<option value="?">Onbekend (schatting op bouwjaar)</option>';
   l.value='?';
   var d=new Date();$('datum').value=d.toISOString().slice(0,10);
+  $('normjaar').value=d>=new Date(2027,0,1)?'2027':'2026';
+  $('z_btn').addEventListener('click',zoekWoning);['z_pc','z_nr','z_toev'].forEach(function(k){$(k).addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();zoekWoning();}});});
   document.querySelectorAll('.num').forEach(function(el){el.addEventListener('blur',function(){if(el.value!=='')el.value=nf(num(el.id));});});
   document.querySelectorAll('.dec').forEach(function(el){el.addEventListener('blur',function(){if(el.value!=='')el.value=nf(num(el.id),2);});});
   ['s_dak','s_gevel','s_vloer','s_glas'].forEach(function(k){$(k).addEventListener('change',function(){$(k).dataset.hand='1';});});
@@ -216,6 +236,63 @@ var STAAT={}; // per maatregel: {aan, kost, sub, panelen, handKost}
   setTimeout(reken,0);
 })();
 
+// ── Woning ophalen uit de BAG (PDOK, openbaar, zonder sleutel) ──
+var PDOK_LS='https://api.pdok.nl/bzk/locatieserver/search/v3_1/free',PDOK_BAG='https://api.pdok.nl/kadaster/bag/ogc/v2/collections/';
+function jget(u){return fetch(u,{headers:{Accept:'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});}
+function zmsg(t,c){var e=$('z_msg');e.textContent=t;e.className='hint'+(c?' '+c:'');}
+function ringVan(g){return g.type==='Polygon'?g.coordinates[0]:g.coordinates[0][0];}
+function zoekWoning(){
+  var pc=$('z_pc').value.replace(/\s/g,'').toUpperCase(),nr=parseInt($('z_nr').value,10),toev=$('z_toev').value.replace(/[\s-]/g,'').toUpperCase();
+  if(!/^\d{4}[A-Z]{2}$/.test(pc)||!(nr>0)){zmsg('Vul een geldige postcode (1234 AB) en een huisnummer in.','fout');return;}
+  $('z_btn').disabled=true;zmsg('Bezig met ophalen…');
+  var q=PDOK_LS+'?fq=postcode:'+pc+'&fq=huisnummer:'+nr+'&fq=type:adres&rows=20&fl=weergavenaam,adresseerbaarobject_id,huisletter,huisnummertoevoeging,straatnaam,huisnummer,postcode,woonplaatsnaam';
+  var adres,vo,pand;
+  jget(q).then(function(d){
+    var docs=d.response.docs;if(!docs.length)throw new Error('Adres niet gevonden.');
+    var m=docs.filter(function(x){var t=((x.huisletter||'')+(x.huisnummertoevoeging||'')).toUpperCase();return t===toev;});
+    if(!m.length){if(toev)throw new Error('Toevoeging niet gevonden. Mogelijk: '+docs.map(function(x){return (x.huisletter||'')+(x.huisnummertoevoeging?(x.huisletter?'-':'')+x.huisnummertoevoeging:'')||'(geen)';}).join(', '));m=docs;}
+    adres=m[0];
+    return jget(PDOK_BAG+'verblijfsobject/items?identificatie='+adres.adresseerbaarobject_id+'&f=json');
+  }).then(function(d){
+    vo=d.features[0];if(!vo)throw new Error('Geen BAG-gegevens gevonden.');
+    if(String(vo.properties.gebruiksdoel||'').indexOf('woon')<0)throw new Error('Dit adres heeft geen woonfunctie ('+vo.properties.gebruiksdoel+').');
+    return jget(vo.properties['pand.href'][0]+'?f=json');
+  }).then(function(p){
+    pand=p;var R=ringVan(pand.geometry),lat0=R[0][1],kx=111320*Math.cos(lat0*Math.PI/180),ky=110540;
+    var xs=R.map(function(c){return c[0];}),ys=R.map(function(c){return c[1];}),dd=0.0006;
+    var bb=(Math.min.apply(0,xs)-dd)+','+(Math.min.apply(0,ys)-dd/1.6)+','+(Math.max.apply(0,xs)+dd)+','+(Math.max.apply(0,ys)+dd/1.6);
+    var aantal=pand.properties.aantal_verblijfsobjecten||1;
+    var woonTel=aantal>1?Promise.all((pand.properties['verblijfsobject.href']||[]).slice(0,12).map(function(h){return jget(h+'?f=json').then(function(v){return String(v.properties.gebruiksdoel||'').indexOf('woon')>=0?1:0;}).catch(function(){return 1;});})).then(function(a){return a.reduce(function(x,y){return x+y;},0);}):Promise.resolve(1);
+    return Promise.all([jget(PDOK_BAG+'pand/items?bbox='+bb+'&f=json&limit=200'),woonTel]).then(function(res){
+      var fs=res[0].features,woon=res[1];
+      function P(r){return r.map(function(c){return [(c[0]-R[0][0])*kx,(c[1]-R[0][1])*ky];});}
+      function segd(p,a,b){var dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy,t=L?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L)):0;return Math.hypot(a[0]+t*dx-p[0],a[1]+t*dy-p[1]);}
+      function gedeeld(r1,r2){var L=0;for(var i=0;i<r2.length-1;i++){var a=r2[i],b=r2[i+1],len=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(2,Math.floor(len/0.5));for(var k=0;k<n;k++){var p=[a[0]+(b[0]-a[0])*(k+.5)/n,a[1]+(b[1]-a[1])*(k+.5)/n],m=1e9;for(var j=0;j<r1.length-1;j++)m=Math.min(m,segd(p,r1[j],r1[j+1]));if(m<0.3)L+=len/n;}}return L;}
+      var me=P(R),id=pand.properties.identificatie;
+      var anderen=fs.filter(function(f){return f.properties.identificatie!==id&&f.geometry;}).map(function(f){return {id:f.properties.identificatie,r:P(ringVan(f.geometry)),p:f.properties};});
+      var buren=anderen.filter(function(o){return (o.p.aantal_verblijfsobjecten||0)>0&&gedeeld(me,o.r)>=2;});
+      var type;
+      if(woon>1)type='app';
+      else if(!buren.length)type='vrij';
+      else if(buren.length>=2)type='tussen';
+      else{var nn=anderen.filter(function(o){return o.id!==buren[0].id&&(o.p.aantal_verblijfsobjecten||0)>0&&gedeeld(buren[0].r,o.r)>=2;});type=nn.length>=2||(nn.length===1&&nn[0].id!==id)?'hoek':'2o1';}
+      return type;
+    });
+  }).then(function(type){
+    var bj=pand.properties.bouwjaar,opp=vo.properties.oppervlakte;
+    $('adres').value=adres.weergavenaam;
+    if(bj>1000&&bj<2100)$('bouwjaar').value=bj;
+    if(opp>0)$('opp').value=nf(opp);
+    $('type').value=type;$('label').value='?';
+    ['s_dak','s_gevel','s_vloer','s_glas'].forEach(function(k){delete $(k).dataset.hand;});
+    voorinstelling();
+    if(type==='app')$('vve').checked=true;
+    var TN={app:'appartement',tussen:'tussenwoning',hoek:'hoekwoning','2o1':'twee-onder-een-kap',vrij:'vrijstaand'};
+    zmsg('Gevonden: '+adres.weergavenaam+' · bouwjaar '+bj+' · '+nf(opp)+' m² · '+TN[type]+' (afgeleid uit de ligging). Controleer de gegevens en vul het energielabel in als je dat weet.','ok');
+    reken();
+  }).catch(function(e){zmsg((e&&e.message&&e.message.indexOf('HTTP')<0&&e.message!=='Failed to fetch')?e.message:'Ophalen lukt nu niet. Vul de woninggegevens hieronder handmatig in.','fout');})
+  .then(function(){$('z_btn').disabled=false;});
+}
 function woning(){
   var type=$('type').value,opp=Math.max(20,num('opp')),bj=bouwjaar(),bouw=bj<1946?0:bj<1965?1:bj<1975?2:bj<1992?3:bj<2006?4:bj<2015?5:6;
   var grond=opp/VERD[type];
@@ -381,7 +458,7 @@ function reken(){
   var woonduur=Math.max(1,num('woonduur')),opbrengst=t.besp*woonduur-t.netto;
   var f='<tr><th colspan="2">Financiering</th></tr>';
   f+='<tr><td>Te financieren</td><td class="n">'+eur(fin)+'</td></tr>';
-  if(mom==='aankoop')f+='<tr><td>Extra leenruimte energiebesparende voorzieningen<div class="hint">Trhk 2026/2027, '+(R.lblGeschat?'geen geregistreerd label':'label '+R.lbl)+', buiten de inkomenstoets</div></td><td class="n">'+eur(vb)+'</td></tr>';
+  if(mom==='aankoop')f+='<tr><td>Extra leenruimte energiebesparende voorzieningen<div class="hint">Trhk '+normJaar()+', '+(R.lblGeschat?'geen geregistreerd label':'label '+R.lbl)+', buiten de inkomenstoets</div></td><td class="n">'+eur(vb)+'</td></tr>';
   else f+='<tr><td>Bestaande hypotheek verhogen<div class="hint">Volledige inkomenstoets; energiebespaarbudget alleen bij aankoop/oversluiten</div></td><td class="n">toets nodig</td></tr>';
   f+='<tr><td>Bruto maandlast ('+nf(rente,2)+'%, '+nf(lt)+' jaar)</td><td class="n">'+eur(bruto)+'</td></tr>';
   f+='<tr><td>Netto maandlast (1e jaar)</td><td class="n">'+eur(netto)+'</td></tr>';
@@ -396,7 +473,7 @@ function reken(){
   if(STAAT.wp.aan&&!R.rij.find(function(x){return x.k==='wp';}).nvt&&(R.s.dak<2||R.s.gevel<2||R.s.glas<2))a.push('Een volledige warmtepomp werkt alleen goed in een goed geïsoleerde woning (lage-temperatuurverwarming). Isoleer eerst dak, gevel en glas.');
   if(R.w.vve)a.push('De woning hoort bij een VvE: dak, gevel, vloer en collectieve installaties regelt de VvE. Zelfstandig kun je vooral glas, ventilatie en eigen installaties aanpakken.');
   if(R.tot.sub===0)a.push('Er is geen subsidie ingevuld. Controleer de ISDE-subsidie voor isolatie, warmtepomp en zonneboiler bij RVO, en eventuele gemeentelijke regelingen.');
-  a.push('Met NHG geldt bij energiebesparende voorzieningen een kostengrens van € 498.200 (2026) / € 530.000 (2027). Vraag bij de geldverstrekker naar duurzaamheidskorting op de rente.');
+  var NJ=NORM[normJaar()];a.push('Met NHG geldt in '+normJaar()+' een kostengrens van '+eur(NJ.nhg)+', met energiebesparende voorzieningen '+eur(NJ.nhgE)+'. Vraag bij de geldverstrekker naar duurzaamheidskorting op de rente.');
   $('aandacht').innerHTML='<b>Aandachtspunten</b><ul style="margin:6px 0 0;padding-left:18px">'+a.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
   LAATST.fin={fin:fin,vb:vb,bruto:bruto,netto:netto,saldo:saldo,woonduur:woonduur,opbrengst:opbrengst,rente:rente,lt:lt,mom:mom,aandacht:a};
 }
@@ -411,7 +488,7 @@ function rapport(){
   var rijen=R.rij.slice().sort(function(a,b){var o={mogelijk:0,aanwezig:1,niet:2};return (o[a.status]-o[b.status])||((a.tvt||1e9)-(b.tvt||1e9));});
   var ICON={mogelijk:'#3a9b3a',aanwezig:'#0b4a7d',niet:'#9aa3ad'};
   function st(x){return '<span style="color:'+ICON[x]+';font-weight:700;white-space:nowrap">'+STATUS_IC[x]+' '+STATUS_TXT[x].replace('Waarschijnlijk ','')+'</span>';}
-  var css='@page{size:A4;margin:16mm 14mm 18mm}body{font-family:Montserrat,Arial,sans-serif;color:#1d2632;margin:0;font-size:12.5px;line-height:1.55}.pg{max-width:780px;margin:0 auto;padding:10px 0;break-after:page}.pg:last-child{break-after:auto}h1{font-size:26px;color:#003057;margin:0 0 2px;line-height:1.15}.sub{font-size:19px;color:#003057;font-weight:400;margin:0 0 14px}.sub b{color:#2e8b3d}h3{font-size:15px;color:#003057;margin:18px 0 6px}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px dashed #c9d2dc;padding:5px 6px;text-align:left;vertical-align:top}th{font-size:11.5px;color:#003057;border-bottom:2px solid #003057}td.n{text-align:right;white-space:nowrap}tr.tot td{font-weight:700;border-top:2px solid #003057}.lbl{display:inline-block;min-width:40px;text-align:center;padding:2px 8px;border-radius:5px;font-weight:800;color:#fff}.box{background:linear-gradient(90deg,#f3f7ee,#e4f0d4);border-radius:10px;padding:14px 16px;margin:10px 0 14px;display:grid;grid-template-columns:1fr 2fr;gap:14px}.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.kp div{border:1px solid #dde3ea;border-left:4px solid #e5a138;border-radius:8px;padding:7px 10px}.kp b{display:block;font-size:16px;color:#003057}.sm{font-size:10.5px;color:#5f6b7a}.ic{display:grid;grid-template-columns:44px 1fr;gap:12px;margin:12px 0;align-items:start}.ic i{display:flex;width:40px;height:40px;border-radius:50%;background:#7cb342;color:#fff;align-items:center;justify-content:center;font-style:normal;font-weight:800}.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.tl{display:flex;justify-content:space-around;text-align:center;margin:16px 0}.tl b{display:block;font-size:22px;color:#003057}.vve{background:#f1f6ea;border-radius:10px;padding:14px 16px;margin-top:16px}.voet{display:flex;justify-content:space-between;border-top:1px dashed #9aa3ad;margin-top:20px;padding-top:6px;font-size:10px;color:#5f6b7a}.lt td{text-align:center}.lt td:first-child{text-align:left;color:#fff;font-weight:800}';
+  var css='@page{size:A4;margin:16mm 14mm 18mm}body{font-family:Montserrat,Arial,sans-serif;color:#1d2632;margin:0;font-size:12.5px;line-height:1.55}.pg{max-width:780px;margin:0 auto;padding:10px 0;break-after:page}.pg:last-child{break-after:auto}h1{font-size:26px;color:#003057;margin:0 0 2px;line-height:1.15}.sub{font-size:19px;color:#003057;font-weight:400;margin:0 0 14px}.sub b{color:#2e8b3d}h3{font-size:15px;color:#003057;margin:18px 0 6px}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px dashed #c9d2dc;padding:5px 6px;text-align:left;vertical-align:top}th{font-size:11.5px;color:#003057;border-bottom:2px solid #003057}td.n{text-align:right;white-space:nowrap}tr.tot td{font-weight:700;border-top:2px solid #003057}.lbl{display:inline-block;min-width:40px;text-align:center;padding:2px 8px;border-radius:5px;font-weight:800;color:#fff}.box{background:linear-gradient(90deg,#f3f7ee,#e4f0d4);border-radius:10px;padding:14px 16px;margin:10px 0 14px;display:grid;grid-template-columns:1fr 2fr;gap:14px}.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.kp div{border:1px solid #dde3ea;border-left:4px solid #e5a138;border-radius:8px;padding:7px 10px}.kp b{display:block;font-size:16px;color:#003057}.sm{font-size:10.5px;color:#5f6b7a}.ic{display:grid;grid-template-columns:44px 1fr;gap:12px;margin:12px 0;align-items:start}.ic i{display:flex;width:40px;height:40px;border-radius:50%;background:#7cb342;color:#fff;align-items:center;justify-content:center;font-style:normal;font-weight:800}.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.tl{display:flex;justify-content:space-around;text-align:center;margin:16px 0}.tl b{display:block;font-size:22px;color:#003057}.vve{background:#f1f6ea;border-radius:10px;padding:14px 16px;margin-top:16px}.voet{display:flex;justify-content:space-between;border-top:1px dashed #9aa3ad;padding-top:5px;font-size:10px;color:#5f6b7a;background:#fff}.lt td{text-align:center}.lt td:first-child{text-align:left;color:#fff;font-weight:800}';
   var voet='<div class="voet"><span>'+esc(adres||'Woning')+'</span><span>Duurzaamheidsprofiel · Adviseurstools.nl</span><span>'+esc(datum)+'</span></div>';
   var h='<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Duurzaamheidsprofiel '+esc(adres||'woning')+'</title><style>'+css+'</style></head><body>';
   // 1. Inleiding
@@ -421,7 +498,7 @@ function rapport(){
   h+='<p>Financieren hoeft geen drempel te zijn. Voor energiebesparende voorzieningen mag je bij aankoop of oversluiten extra lenen bovenop je inkomensnorm, afhankelijk van het energielabel, en in totaal tot 106% van de woningwaarde. Daarnaast zijn er groene leningen en subsidies.</p>';
   h+='<h3>Nederland gaat van het gas af</h3><p>Nederland stapt over van aardgas op duurzame energie. Rond 2030 moet een flink deel van de woningen van het aardgas af zijn, in 2050 alle woningen. Wie nu stappen zet, verlaagt zijn energierekening, woont comfortabeler en is minder afhankelijk van schommelende energieprijzen.</p>';
   h+='<div class="tl"><div><b>2015</b>Klimaatakkoord Parijs</div><div><b>2030</b>flink deel van de woningen<br>van het aardgas af</div><div><b>2050</b>geen aardgas meer<br>in woningen</div></div>';
-  h+='<p>Je ontvangt dit profiel van je financieel adviseur. Een installateur of energieadviseur vertelt je welke technische maatregelen precies zinvol zijn; je adviseur helpt je met de beste manier van financieren: via de hypotheek, een groene lening of met eigen geld.</p>'+voet+'</div>';
+  h+='<p>Je ontvangt dit profiel van je financieel adviseur. Een installateur of energieadviseur vertelt je welke technische maatregelen precies zinvol zijn; je adviseur helpt je met de beste manier van financieren: via de hypotheek, een groene lening of met eigen geld.</p>'+'</div>';
   // 2. Hypotheek
   h+='<div class="pg"><h1>Er is meer mogelijk met je hypotheek</h1><div class="sub">Tot <b>€ 20.000</b> extra voor energiebesparende maatregelen</div>';
   h+='<p>Wie investeert in verduurzaming, mag daarvoor extra lenen bovenop de inkomensnorm. Hoeveel hangt af van het energielabel van de woning (zie de tabel verderop): hoe slechter het label, hoe meer ruimte. In totaal mag de hypotheek dan tot 106% van de woningwaarde gaan. Denk aan isolatie, HR++ glas, zonnepanelen en een (hybride) warmtepomp. Neem het mee in de hypotheek als je een woning koopt of oversluit.</p>';
@@ -429,7 +506,7 @@ function rapport(){
   h+='<div class="ic"><i>%</i><div><b>Lagere maandlasten</b><br>De besparing op de energierekening is vaak hoger dan de extra hypotheeklasten. Voor deze woning: zie de financiering hieronder.</div></div>';
   h+='<div class="ic"><i>☼</i><div><b>Meer comfort</b><br>Een goed geïsoleerde woning heeft minder tocht, een gelijkmatiger temperatuur en minder geluid van buiten.</div></div>';
   h+='<div class="two"><div><h3>Extra lenen bij aankoop van een zuinige woning</h3><p>Koop je een woning met een gunstig label, dan mag je ook daarvoor extra lenen: van € 5.000 bij label C/D tot € 40.000 bij A++++ met energieprestatiegarantie (zie de tabel).</p></div><div><h3>Geen verhuisplannen?</h3><p>De extra ruimte voor verduurzamen geldt vooral bij een nieuwe hypotheek. Wil je binnen je huidige hypotheek bijlenen, dan gelden de regels van je geldverstrekker en een volledige inkomenstoets. Vraag je adviseur wat mogelijk is.</p></div></div>';
-  h+='<h3>Financiering van de maatregelen in dit profiel</h3><table><tr><td>Te financieren (na eigen geld)</td><td class="n">'+eur(F.fin)+'</td></tr>'+(F.mom==='aankoop'?'<tr><td>Extra leenruimte energiebesparende voorzieningen ('+vbLabel+')</td><td class="n">'+eur(F.vb)+'</td></tr>':'<tr><td>Verhogen bestaande hypotheek</td><td class="n">inkomenstoets</td></tr>')+'<tr><td>Bruto maandlast ('+nf(F.rente,2)+'%, '+nf(F.lt)+' jaar)</td><td class="n">'+eur(F.bruto)+'</td></tr><tr><td>Netto maandlast (1e jaar)</td><td class="n">'+eur(F.netto)+'</td></tr><tr><td>Besparing op energie per maand</td><td class="n">'+eur(t.besp/12)+'</td></tr><tr class="tot"><td>Woonlasten per saldo</td><td class="n">'+eur(Math.abs(F.saldo))+(F.saldo>=0?' lager':' hoger')+' per maand</td></tr></table>'+voet+'</div>';
+  h+='<h3>Financiering van de maatregelen in dit profiel</h3><table><tr><td>Te financieren (na eigen geld)</td><td class="n">'+eur(F.fin)+'</td></tr>'+(F.mom==='aankoop'?'<tr><td>Extra leenruimte energiebesparende voorzieningen ('+vbLabel+')</td><td class="n">'+eur(F.vb)+'</td></tr>':'<tr><td>Verhogen bestaande hypotheek</td><td class="n">inkomenstoets</td></tr>')+'<tr><td>Bruto maandlast ('+nf(F.rente,2)+'%, '+nf(F.lt)+' jaar)</td><td class="n">'+eur(F.bruto)+'</td></tr><tr><td>Netto maandlast (1e jaar)</td><td class="n">'+eur(F.netto)+'</td></tr><tr><td>Besparing op energie per maand</td><td class="n">'+eur(t.besp/12)+'</td></tr><tr class="tot"><td>Woonlasten per saldo</td><td class="n">'+eur(Math.abs(F.saldo))+(F.saldo>=0?' lager':' hoger')+' per maand</td></tr></table>'+'</div>';
   // 3. Woning en maatregelen
   h+='<div class="pg"><h1>Het energielabel van de woning</h1><div class="sub">Welke stappen zet jij met een extra budget?</div>';
   h+='<div class="box"><div><b>Woninggegevens</b><br>'+esc(adres||'—')+'<br><span class="sm">Bouwjaar</span><br><b>'+R.w.bj+'</b><br><span class="sm">Woonoppervlakte</span><br><b>'+nf(R.w.opp)+' m²</b><br><span class="sm">Type woning</span><br><b>'+TYPE[R.w.type]+'</b></div><div><span class="sm">Energielabel</span><br>'+lblHtml(R.lbl)+(R.lblGeschat?' <span class="sm">geschat op bouwjaar</span>':'')+' &nbsp;→&nbsp; '+lblHtml(R.lblNa)+' <span class="sm">na de geselecteerde maatregelen (indicatief)</span><p class="sm" style="margin-top:8px">Het energielabel loopt van A++++ (zeer zuinig) tot G. Alleen een geregistreerd label telt; controleer het label van deze woning op energielabel.nl.'+(R.w.vve?' <b>Deze woning hoort bij een VvE:</b> sommige maatregelen kun je niet zelfstandig uitvoeren (zie de laatste pagina).':'')+'</p><p class="sm">Huidige situatie: dak '+ST[R.s.dak]+', gevel '+ST[R.s.gevel]+', vloer '+ST[R.s.vloer]+', '+GL[R.s.glas]+', '+VW[R.s.verw]+(R.s.pv?', '+nf(R.s.pv)+' zonnepanelen':'')+'.</p></div></div>';
@@ -445,7 +522,7 @@ function rapport(){
   h+='<p class="sm"><sup>1</sup> Exclusief het tegelijk vervangen van de cv-ketel (ca. € 2.100 extra). <sup>2</sup> Hoger bedrag tot en met 2026 met salderen; vanaf 1 januari 2027 vervalt de salderingsregeling en levert teruggeleverde stroom alleen de terugleververgoeding op.</p>';
   h+='<h3>Rendement en toelichting</h3><p>Het rendement is de jaarlijkse besparing gedeeld door de netto investering. Is dat percentage hoger dan de rente op je lening, dan houd je geld over. Gerekend is met een gasprijs van € '+nf(R.pg,2)+' per m³ en een stroomprijs van € '+nf(R.ps,2)+' per kWh; stijgen de prijzen, dan verdien je de investering sneller terug. Gasverbruik: '+nf(Math.round(R.gas))+' m³ per jaar'+(R.gasGeschat?' (geschat op bouwjaar, type en oppervlakte)':'')+', na de maatregelen ca. '+nf(Math.round(R.gasNa))+' m³. Energiekosten nu ca. '+eur(R.kostenVoor)+' per jaar, daarna ca. '+eur(R.kostenNa)+'. CO₂-reductie ca. '+nf(Math.round(t.co2))+' kg per jaar. Ook een zuiniger ventilatiesysteem, HR++ kozijnen en deuren of warmteterugwinning op ventilatielucht kunnen besparen; die staan niet in dit overzicht.</p>';
   if($('toel').value.trim())h+='<h3>Advies van je adviseur</h3><p>'+esc($('toel').value).replace(/\n/g,'<br>')+'</p>';
-  h+=voet+'</div>';
+  h+='</div>';
   // 4. Zonder hypotheek
   h+='<div class="pg"><h1>Verduurzamen zonder hypotheek?</h1><div class="sub">Je kunt ook <b>groen lenen</b></div>';
   h+='<h3>Energiebespaarlening van het Nationaal Warmtefonds</h3><p>Een lening speciaal voor maatregelen die je woning zuiniger maken, met een vaste rente, zonder afsluitkosten en boetevrij extra aflossen. De rente is fiscaal aftrekbaar als je aan de voorwaarden voldoet; bij een lager inkomen kan lenen tegen 0% rente. Bedragen, looptijden en voorwaarden staan op warmtefonds.nl.</p>';
@@ -456,10 +533,10 @@ function rapport(){
   h+='<div class="ic"><i>☀</i><div><b>Geen btw op zonnepanelen</b><br>Op zonnepanelen op of bij een woning, inclusief installatie, geldt het btw-nultarief.</div></div>';
   h+='<div class="ic"><i>€</i><div><b>Subsidie voor isolatie</b><br>Via de Investeringssubsidie duurzame energie en energiebesparing (ISDE) is subsidie mogelijk voor spouwmuur-, vloer- en dakisolatie en HR++ glas. Het bedrag hangt af van de maatregel en de oppervlakte; zie rvo.nl/isde.</div></div>';
   h+='<div class="ic"><i>♨</i><div><b>Subsidie voor een warmtepomp</b><br>Ook voor een (hybride) warmtepomp is ISDE-subsidie mogelijk; de hoogte hangt af van het type en het vermogen.</div></div>';
-  h+='<div class="ic"><i>9%</i><div><b>Verlaagd btw-tarief op arbeid</b><br>Voor woningen ouder dan 2 jaar geldt 9% btw op het arbeidsloon voor het aanbrengen van isolatie en isolatieglas; materialen blijven 21%.</div></div>'+voet+'</div>';
+  h+='<div class="ic"><i>9%</i><div><b>Verlaagd btw-tarief op arbeid</b><br>Voor woningen ouder dan 2 jaar geldt 9% btw op het arbeidsloon voor het aanbrengen van isolatie en isolatieglas; materialen blijven 21%.</div></div>'+'</div>';
   // 6. Labeltabel + VvE
   var LT=[['E F G','#d7261e','€ 20.000','€ 0'],['C D','#f39200','€ 15.000','€ 5.000'],['A B','#e8c800','€ 10.000','€ 10.000'],['A+ A++','#3cae49','€ 10.000','€ 20.000'],['A+++','#14964a','€ 0','€ 25.000'],['A++++','#008a3e','€ 0','€ 30.000'],['A++++ met energieprestatiegarantie','#006b30','€ 0','€ 40.000'],['Geen geldig label','#8a94a3','€ 10.000','€ 0']];
-  h+='<div class="pg"><h1>Energielabel maakt meer mogelijk</h1><div class="sub">Voor verduurzaming of aankoop van een zuinige woning</div><p>Hoeveel je extra mag lenen boven de inkomensnorm, volgens de Tijdelijke regeling hypothecair krediet 2026/2027. Voor verduurzamen is er meer ruimte bij een ongunstig label, voor aankoop juist bij een zuinig label. De hypotheek blijft begrensd op 106% van de woningwaarde.</p>';
+  h+='<div class="pg"><h1>Energielabel maakt meer mogelijk</h1><div class="sub">Voor verduurzaming of aankoop van een zuinige woning</div><p>Hoeveel je extra mag lenen boven de inkomensnorm, volgens de Tijdelijke regeling hypothecair krediet '+normJaar()+' (bedragen 2026 en 2027 gelijk). Voor verduurzamen is er meer ruimte bij een ongunstig label, voor aankoop juist bij een zuinig label. De hypotheek blijft begrensd op 106% van de woningwaarde.</p>';
   h+='<table class="lt"><tr><th>Energielabel woning</th><th style="text-align:center">Extra voor energiebesparende voorzieningen</th><th style="text-align:center">Extra bij aankoop (t.o.v. label E, F of G)</th></tr>'+LT.map(function(r){return '<tr><td style="background:'+r[1]+'">'+r[0]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join('')+'</table>';
   h+='<h3>Aandachtspunten</h3><ul>'+F.aandacht.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
   if(R.w.type==='app')h+='<div class="vve"><h3 style="margin-top:0">VvE? Pak verduurzaming samen aan</h3><p>Bij een appartement in een VvE kun je sommige maatregelen zelf nemen, maar de grote klussen (dak, gevel, vloer, collectieve installaties) beslist en regelt de VvE. Breng als vereniging eerst in kaart welke maatregelen mogelijk zijn en regel daarna de financiering; een procesbegeleider helpt bij de uitvoering.</p><p>Financieringsmogelijkheden voor een VvE: het reservefonds, de VvE-Energiebespaarlening van het Nationaal Warmtefonds en de subsidieregeling verduurzaming voor verenigingen van eigenaars (SVVE).</p></div>';
