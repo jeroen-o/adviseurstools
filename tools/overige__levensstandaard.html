@@ -278,7 +278,7 @@
   .prog-fill.red { background: var(--red); }
   .prog-fill.teal { background: var(--teal); }
 
-  /* ── AI ADVICE ── */
+  /* ── PERSOONLIJK ADVIES ── */
   .ai-box {
     background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
     border-radius: var(--radius);
@@ -781,12 +781,12 @@
 
     <div class="ai-box" id="aiAdviceBox">
       <div class="ai-header">
-        <div class="ai-badge">AI Analyse</div>
+        <div class="ai-badge">Advies op maat</div>
         <div class="ai-title">Persoonlijk advies wordt geladen…</div>
       </div>
       <div class="ai-loading" id="aiLoading">
         <div class="spinner"></div>
-        <span>Claude analyseert uw situatie…</span>
+        <span>Uw situatie wordt geanalyseerd…</span>
       </div>
       <div class="ai-text" id="aiText" style="display:none;"></div>
     </div>
@@ -1366,7 +1366,7 @@ function zorgScenario() {
 }
 
 // ═══════════════════════════════════════════════════
-//  ACTIEPLAN + AI ADVIES
+//  ACTIEPLAN + PERSOONLIJK ADVIES
 // ═══════════════════════════════════════════════════
 function renderActieplan() {
   const acties = buildActies();
@@ -1406,42 +1406,113 @@ function buildActies() {
   return acties;
 }
 
-async function loadAiAdvice() {
-  renderActieplan();
+// Persoonlijk advies: volledig lokaal en regelgebaseerd (geen externe API).
+let adviceTimer = null;
 
-  const naam1 = data.naam1 || 'Partner 1';
-  const naam2 = data.naam2 || 'Partner 2';
-  const prompt = `Je bent een vriendelijke maar eerlijke Nederlandse financieel adviseur. Geef persoonlijk, concreet advies (max 200 woorden) op basis van deze situatie:
+function buildPersoonlijkAdvies(d) {
+  const naam1 = d.naam1 || 'Partner 1';
+  const naam2 = d.naam2 || 'Partner 2';
+  const buffer = d.totaal_uit > 0 ? d.buffer_mnd : 99;
+  const jarenMin = Math.min(d.jaren1, d.jaren2);
+  const jarenMax = Math.max(d.jaren1, d.jaren2);
+  const tips = [];
 
-Stel: ${naam1} (${data.leeftijd1}jr) en ${naam2} (${data.leeftijd2}jr)
-Gezamenlijk inkomen: ${fmt(data.totaal_ink)}/mnd
-Totale uitgaven: ${fmt(data.totaal_uit)}/mnd  
-Maandsaldo: ${fmt(data.saldo)}
-Spaarbuffer: ${data.buffer_mnd.toFixed(1)} maanden
-Pensioen gap: ${data.pensioen_gap > 0 ? fmt(data.pensioen_gap)+'/mnd tekort' : 'geen tekort'}
-Welzijn score: ${data.score}/100
+  // Grootste aanpasbare uitgavenposten (woonlasten en kinderopvang zijn lastig snel te verlagen)
+  const posten = [
+    ['boodschappen', d.boodschappen], ['auto/transport', d.auto], ['vakantie', d.vakantie],
+    ['uit eten', d.uiteten], ['vrije tijd', d.vrijetijd], ['kleding', d.kleding],
+    ['abonnementen', d.abonnementen], ['energie', d.energie], ['verzekeringen', d.verzekering],
+    ['overige uitgaven', d.overig_uit]
+  ].filter(x => x[1] > 0).sort((a,b) => b[1]-a[1]).slice(0,3);
+  const postTekst = posten.map(x => `${x[0]} (${fmt(x[1])})`).join(', ').replace(/, ([^,]*)$/, ' en $1');
 
-Geef 3-4 concrete, persoonlijke aanbevelingen. Spreek hen direct aan (jullie/u). Wees positief maar eerlijk. Geen opsomming — schrijf in vloeiende tekst.`;
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const d = await resp.json();
-    const txt = d.content?.[0]?.text || '';
-    document.getElementById('aiLoading').style.display = 'none';
-    document.getElementById('aiText').style.display = 'block';
-    document.getElementById('aiText').textContent = txt;
-    document.querySelector('#aiAdviceBox .ai-title').textContent = `Persoonlijk advies voor ${naam1} & ${naam2}`;
-  } catch(e) {
-    document.getElementById('aiLoading').innerHTML = '<span style="color:rgba(255,255,255,0.5);font-size:13px">AI advies tijdelijk niet beschikbaar. Bekijk de acties hieronder.</span>';
+  // 1. Maandsaldo
+  if (d.saldo < 0) {
+    tips.push(`Jullie geven nu ${fmt(Math.abs(d.saldo))} per maand meer uit dan er binnenkomt. Dat is de eerste prioriteit.` +
+      (posten.length ? ` De grootste aanpasbare posten zijn ${postTekst}; kijk daar als eerste waar het minder kan.` : ''));
+  } else if (d.saldo < 250) {
+    tips.push(`Er blijft maandelijks maar ${fmt(d.saldo)} over, weinig ruimte voor tegenvallers.` +
+      (posten.length ? ` Een kritische blik op ${postTekst} kan al snel wat extra lucht geven.` : ''));
   }
+
+  // 2. Buffer
+  if (buffer < 3) {
+    const doel3 = d.totaal_uit * 3, doel6 = d.totaal_uit * 6;
+    const nodig = Math.max(0, doel3 - d.spaar);
+    let t = `Jullie buffer van ${buffer.toFixed(1).replace('.',',')} maand is te klein; streef naar 3 tot 6 maanden uitgaven, oftewel ${fmt(doel3)} tot ${fmt(doel6)}.`;
+    if (d.saldo > 0) t += ` Door ${fmt(Math.min(d.saldo, Math.ceil(nodig/12/10)*10))} per maand automatisch opzij te zetten, komen jullie stap voor stap richting dat doel.`;
+    else t += ' Zodra het maandbudget sluit, gaat elk overschot eerst naar deze buffer.';
+    tips.push(t);
+  } else if (buffer < 6) {
+    tips.push(`Met ${buffer.toFixed(1).replace('.',',')} maand buffer zitten jullie boven het minimum. Bouw rustig door naar 6 maanden (${fmt(d.totaal_uit*6)}) voor extra zekerheid.`);
+  }
+
+  // 3. Pensioen
+  if (d.pensioen_gap > 0) {
+    let t = `Na pensionering ontstaat naar verwachting een tekort van ${fmt(d.pensioen_gap)} per maand. Check eerst jullie actuele opbouw op mijnpensioenoverzicht.nl.`;
+    if (jarenMin <= 10) t += ` Met nog ${jarenMin} jaar tot de AOW is de tijd beperkt: benut de fiscale jaarruimte voor een lijfrente en bespreek de opties met een adviseur.`;
+    else t += ` Met nog ${jarenMin} tot ${jarenMax} jaar te gaan helpt al een bescheiden maandelijkse inleg in een lijfrente of bankspaarrekening, dankzij de lange looptijd.`;
+    tips.push(t);
+  }
+
+  // 4. Schulden
+  if (d.schulden > 5000) {
+    tips.push(`Los de schulden van ${fmt(d.schulden)} gericht af, te beginnen bij de leningen met de hoogste rente.`);
+  }
+
+  // 5. AOW-planning
+  if (jarenMin <= 10 && d.pensioen_gap <= 0) {
+    const wie = d.jaren1 <= d.jaren2 ? naam1 : naam2;
+    tips.push(`${wie} bereikt over ${jarenMin} jaar de AOW-leeftijd. Maak tijdig een plan: wanneer stoppen jullie, hoe valt het inkomen daarna uit en welke keuzes (hoog-laag, uitruil) passen erbij?`);
+  }
+
+  // 6. Goede situatie: behouden en doelen
+  if (d.score >= 70 && d.saldo > 0 && buffer >= 6) {
+    tips.push(`Jullie financiën staan er sterk voor, met ${fmt(d.saldo)} per maand over. Houd dit vast en geef het overschot een doel, zoals beleggen voor de lange termijn, extra aflossen of eerder stoppen met werken.`);
+  } else if (d.saldo >= 250 && buffer >= 3 && d.pensioen_gap <= 0) {
+    tips.push(`Het maandelijks overschot van ${fmt(d.saldo)} biedt ruimte. Leg vast waar het naartoe gaat, zodat het niet ongemerkt verdwijnt.`);
+  }
+
+  // Aanvullen tot minimaal 3 aanbevelingen
+  const extra = [
+    'Loop jaarlijks jullie verzekeringen en abonnementen door; vaak valt er zonder veel moeite iets te besparen.',
+    'Plan één keer per jaar een financieel overleg samen om saldo, buffer en pensioen opnieuw te bekijken.',
+    'Controleer jaarlijks jullie pensioenopbouw op mijnpensioenoverzicht.nl.'
+  ];
+  for (const e of extra) { if (tips.length >= 3) break; if (!tips.some(t => t.includes('mijnpensioenoverzicht') && e.includes('mijnpensioenoverzicht'))) tips.push(e); }
+
+  const toon = d.score >= 70 ? 'Jullie staan er goed voor.' : d.score >= 50 ? 'Er is een goede basis, met een paar duidelijke verbeterpunten.' : 'Er is werk aan de winkel, maar met de juiste stappen is er veel te winnen.';
+  const aanhef = `Beste ${naam1} en ${naam2}, met een gezamenlijk inkomen van ${fmt(d.totaal_ink)} en uitgaven van ${fmt(d.totaal_uit)} per maand scoren jullie ${d.score}/100. ${toon}`;
+  return { titel: `Persoonlijk advies voor ${naam1} & ${naam2}`, alineas: [aanhef, ...tips.slice(0,4)] };
+}
+
+function loadAiAdvice() {
+  renderActieplan();
+  const box = document.getElementById('aiAdviceBox');
+  const loading = document.getElementById('aiLoading');
+  const textEl = document.getElementById('aiText');
+  box.querySelector('.ai-title').textContent = 'Persoonlijk advies wordt opgesteld…';
+  textEl.style.display = 'none';
+  loading.style.display = 'flex';
+  if (adviceTimer) clearTimeout(adviceTimer);
+  adviceTimer = setTimeout(() => {
+    adviceTimer = null;
+    const advies = buildPersoonlijkAdvies(data);
+    textEl.innerHTML = '';
+    advies.alineas.forEach((a, i) => {
+      const p = document.createElement('p');
+      p.textContent = a;
+      if (i < advies.alineas.length - 1) p.style.marginBottom = '10px';
+      textEl.appendChild(p);
+    });
+    const disc = document.createElement('p');
+    disc.textContent = 'Dit advies is indicatief, automatisch opgesteld op basis van uw invoer en geen persoonlijk financieel advies.';
+    disc.style.cssText = 'margin-top:14px;font-size:11px;color:rgba(255,255,255,0.5);font-style:italic';
+    textEl.appendChild(disc);
+    loading.style.display = 'none';
+    textEl.style.display = 'block';
+    box.querySelector('.ai-title').textContent = advies.titel;
+  }, 700);
 }
 
 function restartTool() {
