@@ -57,6 +57,7 @@ CURATED = {
     'hypotheek-uit-koopovereenkomst': ('Hypotheek uit koopovereenkomst', 'Financieringsopzet op basis van de koopovereenkomst', A),
     'koopakte-uitlezen': ('Koopakte uitlezen', 'Gegevens uit een koopovereenkomst (PDF) automatisch uitlezen', A),
     'netto-gelijkblijvende-lasten': ('Netto gelijkblijvende lasten', 'Leningdelen zo kiezen dat de netto last gelijk blijft', R),
+    'duurzaamheidsprofiel': ('Duurzaamheidsprofiel woning', 'Verduurzamingsmaatregelen, besparing, terugverdientijd, label en financiering, met rapport', R),
     'boeteberekening': ('Boeterente berekenen', 'Boete bij oversluiten of vervroegd aflossen (AFM-leidraad), met rentemiddeling en brief aan de bank', R),
     'hypotheekoversluit-calculator': ('Oversluiten', 'Is oversluiten financieel verstandig? In drie stappen', R),
     'netto-maandlasten': ('Netto maandlasten', 'Bruto-netto met renteaftrek, eigenwoningforfait en erfpacht', R),
@@ -117,7 +118,7 @@ CURATED = {
 }
 
 
-EXTRA = {'hypotheek': [('../hypotheek/boeteberekening/', 'Boeterente berekenen')], 'overige': [('https://pandwise.nl/', 'PandWise')], 'krediet': [('../krediet/maximaal-krediet-caribisch-nederland/', 'Maximaal krediet Caribisch Nederland')]}
+EXTRA = {'hypotheek': [('../hypotheek/boeteberekening/', 'Boeterente berekenen'), ('../hypotheek/duurzaamheidsprofiel/', 'Duurzaamheidsprofiel woning')], 'overige': [('https://pandwise.nl/', 'PandWise')], 'krediet': [('../krediet/maximaal-krediet-caribisch-nederland/', 'Maximaal krediet Caribisch Nederland')]}
 UITGELICHT = ['max-hyp-2027', 'pensioenklif', 'max-hyp-box-1-3']
 
 
