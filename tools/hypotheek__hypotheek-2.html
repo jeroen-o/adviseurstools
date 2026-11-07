@@ -135,11 +135,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
         <div class="f"><div class="fl">Vast bruto maandsalaris</div><input type="number" class="in" id="tiSalaris" value="5000" oninput="calcTi()"></div>
         <div class="f"><div class="fl">Vakantiegeld (8% of anders)</div><select class="se" id="tiVak" onchange="calcTi()"><option value="0.08" selected>8% automatisch</option><option value="0">Niet van toepassing</option></select></div>
         <div class="f"><div class="fl">13e maand / eindejaarsuitkering</div><input type="number" class="in" id="ti13" value="0" placeholder="jaarlijks bedrag" oninput="calcTi()"></div>
-        <div class="f"><div class="fl">Vaste bonus / winstdeling (jr)</div><input type="number" class="in" id="tiBonus" value="0" oninput="calcTi()"></div>
-        <div class="f"><div class="fl">Overwerk (gemiddeld/mnd, 3 jr)</div><input type="number" class="in" id="tiOverwerk" value="0" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Vaste / structurele bonus of winstdeling (jr, werkgeversverklaring)</div><input type="number" class="in" id="tiBonus" value="0" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Structureel overwerk (gemiddeld/mnd)</div><input type="number" class="in" id="tiOverwerk" value="0" oninput="calcTi()"></div>
         <div class="f"><div class="fl">Alimentatie ontvangen (jr)</div><input type="number" class="in" id="tiAlim" value="0" oninput="calcTi()"></div>
-        <div class="f"><div class="fl">Freelance / extra inkomen</div><input type="number" class="in" id="tiFreelance" value="0" placeholder="Gemiddeld 3 jaar" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Freelance / winst uit onderneming (jr)</div><input type="number" class="in" id="tiFreelance" value="0" placeholder="Gemiddelde 3 jaar; laatste jaar als dat lager is" oninput="calcTi()"></div>
         <div class="f"><div class="fl">Dienstverband</div><select class="se" id="tiDienst" onchange="calcTi()"><option value="vast" selected>Vast</option><option value="flex">Flexibel / tijdelijk</option><option value="zzp">ZZP (3-jr gem.)</option></select></div>
+        <div class="f" style="background:var(--bg2);border:1px dashed var(--border);border-radius:8px;padding:8px 10px;"><label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;cursor:pointer;"><input type="checkbox" id="tiBeleid" onchange="calcTi()" style="margin-top:2px;"> <span><strong>Beleid geldverstrekker (optioneel)</strong> — bonus, overwerk en freelance-inkomen voor 50%, flex −10%, zzp −15%. Dit volgt níet uit de Tijdelijke regeling hypothecair krediet of de Gedragscode; standaard uit.</span></label></div>
       </div></div>
     </div>
     <div class="rs" id="tiResult"></div>
@@ -192,7 +193,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
         <div class="f"><div class="fl">Koopsom woning <span class="fv" id="stKoopV">€ 320.000</span></div><input type="range" id="stKoop" min="50000" max="700000" step="5000" value="320000" oninput="calcSt()"><div class="slab"><span>€50k</span><span>€700k</span></div></div>
         <div class="f"><div class="fl">Eerste koopwoning?</div><select class="se" id="stEerste" onchange="calcSt()"><option value="ja" selected>Ja</option><option value="nee">Nee</option></select></div>
         <div class="f"><div class="fl">Gemeente starterslening?</div><select class="se" id="stGem" onchange="calcSt()"><option value="ja" selected>Ja, aanvragen</option><option value="nee">Nee / niet beschikbaar</option></select></div>
-        <div class="f"><div class="fl">Max. toetsinkomen (SVn)</div><input type="number" class="in" id="stSvnInk" value="50000" oninput="calcSt()"></div>
+        <div class="f"><div class="fl">Meerwerk / verbouwing</div><input type="number" class="in" id="stMeer" value="0" oninput="calcSt()"></div>
+        <div class="f"><div class="fl">Energiebesparende voorzieningen (EBV)</div><input type="number" class="in" id="stEbv" value="0" oninput="calcSt()"></div>
+        <div class="f"><div class="fl">Maximale starterslening gemeente (voorbeeld)</div><input type="number" class="in" id="stGemMax" value="50000" oninput="calcSt()"></div>
+        <div class="f"><div class="fl">Koopsomgrens gemeente (voorbeeld; 0 = geen)</div><input type="number" class="in" id="stGemKoop" value="355000" oninput="calcSt()"></div>
+        <div class="f"><div class="fl">Toetsinkomen klant / inkomensgrens gemeente (voorbeeld; 0 = geen)</div><div style="display:flex;gap:6px;"><input type="number" class="in" id="stInk" value="45000" oninput="calcSt()"><input type="number" class="in" id="stSvnInk" value="0" oninput="calcSt()"></div></div>
       </div></div>
     </div>
     <div class="rs" id="stResult"></div>
@@ -474,17 +479,26 @@ function calcTi(){
   const alim=parseFloat(document.getElementById('tiAlim').value)||0;
   const free=parseFloat(document.getElementById('tiFreelance').value)||0;
   const dienst=document.getElementById('tiDienst').value;
+  const beleid=document.getElementById('tiBeleid').checked;
   const jaarsalaris=sal*12*(1+vak);
-  const totaal=jaarsalaris+x13+bonus*0.5+ow*12*0.5+alim+free*0.5;
-  const toets=dienst==='flex'?Math.round(totaal*0.9):dienst==='zzp'?Math.round(totaal*0.85):Math.round(totaal);
+  // Normatief (Trhk/Gedragscode): structurele inkomensbestanddelen volledig; optioneel eigen beleid geldverstrekker
+  const fVar=beleid?0.5:1;
+  const variabel=bonus*fVar+ow*12*fVar;
+  const totaal=jaarsalaris+x13+variabel+alim+free*fVar;
+  const afslag=beleid?(dienst==='flex'?0.9:dienst==='zzp'?0.85:1):1;
+  const toets=Math.round(totaal*afslag);
+  const dienstTxt=dienst==='flex'
+    ?'Flex/tijdelijk: toetsinkomen via werkgeversverklaring met intentieverklaring, inkomensbepaling loondienst (UWV-gegevens) of Perspectiefverklaring.'
+    :'ZZP: gemiddelde nettowinst over de laatste 3 jaar (ook verlies), maar niet meer dan het laatste jaar. Bewaar de aangiften en jaarcijfers.';
   document.getElementById('tiResult').innerHTML=`
-    <div class="rh"><div class="rh-e">Toetsinkomen Hypotheek</div><div class="rh-v">${fmt(toets)}</div><div class="rh-c">Bruto jaarsalaris: ${fmt(jaarsalaris)} · Inclusief toeslagen</div></div>
+    <div class="rh"><div class="rh-e">Toetsinkomen Hypotheek</div><div class="rh-v">${fmt(toets)}</div><div class="rh-c">Bruto jaarsalaris: ${fmt(jaarsalaris)} · ${beleid?'inclusief optioneel beleid geldverstrekker':'normatief, zonder eigen afslagen'}</div></div>
     <div class="kg">
       <div class="kp"><div class="kl">Basis salaris</div><div class="kv b">${fmt(jaarsalaris)}</div></div>
-      <div class="kp"><div class="kl">Variabele comp.</div><div class="kv">${fmt(bonus*0.5+ow*12*0.5)}</div></div>
+      <div class="kp"><div class="kl">Variabele comp.${beleid?' (50%)':''}</div><div class="kv">${fmt(variabel)}</div></div>
       <div class="kp"><div class="kl">Toetsinkomen</div><div class="kv g">${fmt(toets)}</div></div>
     </div>
-    ${dienst!=='vast'?al('wa','⚠️',dienst==='flex'?'Flex: 10% afslag':'ZZP: 15% afslag + 3-jaarsgemiddelde vereist','Geldverstrekkers passen een afslag toe op variabel/ZZP-inkomen. Bewaar 3 jaar belastingaangiften.'):al('ok','✅','Vast inkomen — optimale situatie','Alle inkomenscomponenten worden volledig meegenomen door geldverstrekkers.')}`;
+    ${beleid?al('wa','⚠️','Beleid geldverstrekker (optioneel) toegepast',(dienst==='flex'?'Flex: 10% afslag. ':dienst==='zzp'?'ZZP: 15% afslag. ':'')+'Variabele delen voor 50%. Dit is acceptatiebeleid van een individuele geldverstrekker, geen wettelijke norm.'):''}
+    ${dienst!=='vast'?al('in','ℹ️',dienst==='flex'?'Flexibel inkomen':'Inkomen uit onderneming',dienstTxt):al('ok','✅','Vast inkomen','Structurele inkomensbestanddelen uit de werkgeversverklaring tellen volledig mee.')}`;
 }
 calcTi();
 
@@ -554,20 +568,37 @@ function calcSt(){
   const koop=parseInt(document.getElementById('stKoop').value)||320000;
   const eerste=document.getElementById('stEerste').value;
   const gem=document.getElementById('stGem').value;
-  const svnInk=parseInt(document.getElementById('stSvnInk').value)||50000;
+  const meer=parseFloat(document.getElementById('stMeer').value)||0;
+  const ebv=parseFloat(document.getElementById('stEbv').value)||0;
+  const gemMax=parseFloat(document.getElementById('stGemMax').value)||0;
+  const gemKoop=parseFloat(document.getElementById('stGemKoop').value)||0;
+  const ink=parseFloat(document.getElementById('stInk').value)||0;
+  const inkGrens=parseFloat(document.getElementById('stSvnInk').value)||0;
   document.getElementById('stKoopV').textContent=fmt(koop);
-  const ovbVrij=eerste==='ja'&&lft1>=18&&lft1<35&&koop<=555000;
-  const ovb=ovbVrij?0:Math.round(koop*0.02);
-  const svnMax=koop<=355000&&svnInk<=50000;
+  // OVB per koper (bij twee kopers 50/50 aangenomen); 18 t/m 34 jaar, woningwaarde <= € 555.000; naar beneden afgerond op hele euro's
+  const kopers=lft2>0?[lft1,lft2]:[lft1];
+  const aandeel=1/kopers.length;
+  const vrij=l=>eerste==='ja'&&l>=18&&l<35&&koop<=555000;
+  const ovb=kopers.reduce((t,l)=>t+(vrij(l)?0:Math.floor(koop*aandeel*0.02)),0);
+  const ovbVol=Math.floor(koop*0.02);
+  const ovbVrij=kopers.every(vrij), ovbDeels=!ovbVrij&&kopers.some(vrij);
+  // Starterslening (indicatief): max. 20% van (koopsom + meerwerk + EBV), begrensd door de gemeentelijke regeling
+  const grondslagSL=koop+meer+ebv;
+  const sl20=Math.round(grondslagSL*0.20);
+  const koopOk=!gemKoop||grondslagSL<=gemKoop;
+  const inkOk=!inkGrens||ink<=inkGrens;
+  const svnMax=gem==='ja'&&koopOk&&inkOk;
+  const slMax=svnMax?Math.min(sl20,gemMax||sl20):0;
   document.getElementById('stResult').innerHTML=`
-    <div class="rh"><div class="rh-e">Startersvoordeel</div><div class="rh-v">${fmt(ovb===0?0:ovb)}</div><div class="rh-c">${ovbVrij?'0% OVB — starter vrijgesteld':'2% OVB van toepassing'}</div></div>
+    <div class="rh"><div class="rh-e">Startersvoordeel OVB</div><div class="rh-v">${fmt(ovbVol-ovb)}</div><div class="rh-c">${ovbVrij?'0% OVB — starter vrijgesteld':ovbDeels?'Deels vrijgesteld (per koper over eigen aandeel)':'2% OVB van toepassing'} · te betalen ${fmt(ovb)}</div></div>
     <div class="kg">
-      <div class="kp"><div class="kl">OVB (2%)</div><div class="kv ${ovbVrij?'g':'r'}">${ovbVrij?'Vrijgesteld':fmt(Math.round(koop*0.02))}</div></div>
-      <div class="kp"><div class="kl">Starterslening SVn</div><div class="kv ${svnMax?'g':'r'}">${svnMax?'Mogelijk':'Niet van toepassing'}</div></div>
+      <div class="kp"><div class="kl">OVB te betalen</div><div class="kv ${ovbVrij?'g':'r'}">${ovbVrij?'Vrijgesteld':fmt(ovb)}</div></div>
+      <div class="kp"><div class="kl">Starterslening max. (indicatief)</div><div class="kv ${svnMax?'g':'r'}">${svnMax?fmt(slMax):'Niet van toepassing'}</div></div>
       <div class="kp"><div class="kl">Koopsom ≤ €555k</div><div class="kv ${koop<=555000?'g':'r'}">${koop<=555000?'✓':'✗'}</div></div>
     </div>
-    ${!ovbVrij&&eerste==='ja'?al('er','🚨','Leeftijd of prijs overschreden','OVB-vrijstelling geldt voor 18–35 jaar én woningwaarde ≤ € 555.000 (2026).'):ovbVrij?al('ok','✅',`OVB-besparing: ${fmt(Math.round(koop*0.02))}`,'0% OVB van toepassing — besparing t.o.v. 2% tarief.'):al('in','ℹ️','Niet eerste woning','2% OVB van toepassing.')}
-    ${gem==='ja'&&svnMax?al('ok','💡','Starterslening aanvraagbaar via SVn','Gemeente biedt starterslening. Klant voldoet aan inkomensnorm. Maximaal te lenen afhankelijk van gemeente.'):''}`;
+    ${ovbDeels?al('in','ℹ️','Starter + doorstromer',`OVB per koper over het eigen aandeel (50/50 aangenomen): alleen de koper van 18 t/m 34 jaar is vrijgesteld; de ander betaalt 2% over zijn aandeel (${fmt(ovb)}).`):''}
+    ${!ovbVrij&&!ovbDeels&&eerste==='ja'?al('er','🚨','Leeftijd of prijs overschreden','OVB-vrijstelling geldt voor 18 t/m 34 jaar (35 nog niet bereikt) én woningwaarde ≤ € 555.000 (2026).'):ovbVrij?al('ok','✅',`OVB-besparing: ${fmt(ovbVol)}`,'0% OVB van toepassing — besparing t.o.v. 2% tarief.'):!ovbDeels?al('in','ℹ️','Niet eerste woning','2% OVB van toepassing.'):''}
+    ${gem==='ja'?al(svnMax?'ok':'wa',svnMax?'💡':'⚠️',svnMax?'Starterslening indicatief mogelijk':'Starterslening: buiten de ingevulde gemeentelijke voorwaarden',`Maximaal 20% van koopsom + meerwerk + EBV (${fmt(grondslagSL)}) = ${fmt(sl20)}${gemMax?', begrensd op het gemeentelijke maximum van '+fmt(gemMax):''}. Koopsom- en inkomensgrens zijn voorbeeldwaarden: gebruik de regeling van de betreffende gemeente.`):''}`;
 }
 calcSt();
 
@@ -581,15 +612,17 @@ function calcWq(){
   const erf=parseFloat(document.getElementById('wqErfpacht').value)||0;
   const totWoon=hyp+vve+serv+erf;
   const q_bruto=Math.round(totWoon*12/ink*100);
-  const hra=Math.round(Math.max(0,hyp*12-ewf*12)*0.3575);
+  // erfpachtcanon is aftrekbaar als kosten eigen woning (art. 3.120 Wet IB 2001)
+  const hra=Math.round(Math.max(0,(hyp+erf)*12-ewf*12)*0.3575);
+  const nettoHyp=Math.round(hyp-hra/12);
   const netto=Math.round(totWoon-hra/12);
   const q_netto=Math.round(netto*12/ink*100);
   const norm=GHF.getQ(ink)*100;
   document.getElementById('wqResult').innerHTML=`
-    <div class="rh"><div class="rh-e">Bruto Woonquote</div><div class="rh-v">${q_bruto}%</div><div class="rh-c">Netto: ${q_netto}% · GHF-norm: ${fmtD(norm,1)}</div></div>
+    <div class="rh"><div class="rh-e">Bruto Woonquote</div><div class="rh-v">${q_bruto}%</div><div class="rh-c">Netto: ${q_netto}% · GHF-norm: ${fmtD(norm,1)} · netto hypotheeklasten ${fmt(nettoHyp)}/mnd excl. VvE/service/erfpacht; energie en onderhoud niet meegenomen</div></div>
     <div class="kg">
-      <div class="kp"><div class="kl">Bruto woonlast</div><div class="kv">${fmt(totWoon)}/mnd</div></div>
-      <div class="kp"><div class="kl">Netto woonlast</div><div class="kv g">${fmt(netto)}/mnd</div></div>
+      <div class="kp"><div class="kl">Bruto hypotheeklast + overige</div><div class="kv">${fmt(totWoon)}/mnd</div></div>
+      <div class="kp"><div class="kl">Netto hypotheeklast + overige</div><div class="kv g">${fmt(netto)}/mnd</div></div>
       <div class="kp"><div class="kl">GHF-norm</div><div class="kv ${q_bruto<=norm?'g':'r'}">${fmtD(norm,1)}</div></div>
     </div>
     ${al(q_bruto<=norm?'ok':'er',q_bruto<=norm?'✅':'⚠️',q_bruto<=norm?'Binnen GHF-norm':'Boven GHF-norm',`Bruto woonquote ${q_bruto}% ${q_bruto<=norm?'≤':'>'} GHF-norm ${fmtD(norm,1)}. ${q_bruto>norm?'Klant kan minder lenen dan gewenst. Zoek naar goedkopere woning of verhoog inkomen.':''}`)}`;

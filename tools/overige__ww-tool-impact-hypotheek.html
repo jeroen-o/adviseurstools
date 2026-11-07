@@ -162,6 +162,15 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
           <div class="card-h"><div class="card-t">Loongegevens</div></div>
           <div class="card-b">
             <div class="f">
+              <label class="fl">Arbeidsrelatie</label>
+              <select class="sel" id="wwArbrel" onchange="calc()">
+                <option value="werknemer" selected>Werknemer in loondienst</option>
+                <option value="dga">DGA (directeur-grootaandeelhouder)</option>
+                <option value="zelfstandig">Zelfstandige / ondernemer</option>
+              </select>
+              <div class="help">Een DGA wordt bij werkloosheid als ondernemer gezien: niet verzekerd voor de WW, dus WW = € 0.</div>
+            </div>
+            <div class="f">
               <label class="fl">Bruto maandsalaris <span class="fl-aux" id="wwSalV">€ 4.000</span></label>
               <input class="inp" type="number" id="wwSal" value="4000" min="0" step="100" oninput="calc()">
               <div class="help">SV-loon per maand inclusief vakantietoeslag en vaste toeslagen.</div>
@@ -324,6 +333,8 @@ function calc(){
   const jareneis = document.getElementById('wwJaren').checked;
   const reden = document.getElementById('wwReden').value;
   const lhk = document.getElementById('wwLhk').value === 'ja';
+  const arbrel = document.getElementById('wwArbrel').value;
+  const ondernemer = arbrel !== 'werknemer';
   
   document.getElementById('wwSalV').textContent = fmt(bruto);
   
@@ -340,7 +351,10 @@ function calc(){
   // Duur
   let duur = 0;
   let duurStatus = '';
-  if(!wekeneis){
+  if(ondernemer){
+    duur = 0;
+    duurStatus = arbrel==='dga' ? 'DGA: geen WW (ondernemer)' : 'Zelfstandige: geen WW';
+  } else if(!wekeneis){
     duur = 0;
     duurStatus = 'Geen recht op WW';
   } else {
@@ -372,7 +386,15 @@ function calc(){
   // Output TAB 0
   let out0 = '';
   
-  if(verwijtbaar){
+  if(ondernemer){
+    out0 += `<div class="hero" style="background:linear-gradient(135deg,#7a1e15,#c0392b);">
+      <div class="hero-lbl">${arbrel==='dga'?'Directeur-grootaandeelhouder':'Zelfstandige / ondernemer'}</div>
+      <div class="hero-v">WW-uitkering € 0</div>
+      <div class="hero-c">${arbrel==='dga'?'Een DGA geldt als ondernemer en is niet verzekerd voor de WW.':'Zelfstandigen zijn niet verzekerd voor de WW.'} Het resterende inkomen bij werkloosheid is € 0.</div>
+    </div>`;
+    out0 += alertBlock('wa','⚠️','Werkloosheidsrisico zelf afdekken',
+      'Reken bij de betaalbaarheid met € 0 inkomen uit WW. Een buffer of een woonlastenverzekering voor ondernemers kan het risico (deels) opvangen.');
+  } else if(verwijtbaar){
     out0 += `<div class="hero" style="background:linear-gradient(135deg,#7a1e15,#c0392b);">
       <div class="hero-lbl">Verwijtbare werkloosheid</div>
       <div class="hero-v">Geen recht op WW</div>

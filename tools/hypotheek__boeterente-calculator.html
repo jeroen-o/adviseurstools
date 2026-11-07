@@ -449,6 +449,14 @@ select{padding:0 12px;cursor:pointer;}
           </div>
           <span style="font-size:11px;color:var(--muted);margin-top:2px;">Actuele rente ≈ restant RVP (naast-betere rente)</span>
         </div>
+        <div class="field">
+          <label>Datum vergelijkingsrente</label>
+          <div class="iw">
+            <span class="pre" style="font-size:11px;">📅</span>
+            <input type="date" id="vglDatum" value="2026-05-01" oninput="updateDatums()">
+          </div>
+          <span id="vglDatumTxt" style="font-size:11px;color:var(--muted);margin-top:2px;">Rente die geldt op de aflosdatum, of hooguit 5 werkdagen daarvoor (AFM-leidraad)</span>
+        </div>
 
         <!-- Rente indicator -->
         <div class="field s2 rente-indicator nul" id="renteIndicator" style="margin-top:0;">
@@ -939,7 +947,24 @@ function datumNaarMnd(datumStr){
   return Math.max(1, totaalMnd);
 }
 
+function werkdagenTussen(van, tot){
+  // aantal werkdagen (ma-vr) van 'van' (exclusief) tot en met 'tot'
+  let n=0; const d=new Date(van.getTime());
+  while(d<tot){ d.setDate(d.getDate()+1); const w=d.getDay(); if(w!==0&&w!==6) n++; }
+  return n;
+}
+function checkVglDatum(){
+  const el=document.getElementById('vglDatumTxt'); if(!el) return;
+  const a=document.getElementById('berekenDatum').value, r=document.getElementById('vglDatum').value;
+  if(!a||!r){ el.textContent='Rente die geldt op de aflosdatum, of hooguit 5 werkdagen daarvoor (AFM-leidraad)'; el.style.color='var(--muted)'; return; }
+  const da=new Date(a+'T00:00:00'), dr=new Date(r+'T00:00:00');
+  if(dr>da){ el.textContent='⚠️ Rentedatum ligt na de aflosdatum: gebruik de rente die geldt op de aflosdatum.'; el.style.color='var(--red)'; return; }
+  const wd=werkdagenTussen(dr,da);
+  if(wd>5){ el.textContent='⚠️ Vergelijkingsrente is '+wd+' werkdagen ouder dan de aflosdatum. De AFM-leidraad vraagt de rente op de aflosdatum of hooguit 5 werkdagen daarvoor.'; el.style.color='var(--red)'; }
+  else { el.textContent='✓ Rentedatum binnen 5 werkdagen vóór de aflosdatum ('+wd+' werkdag'+(wd===1?'':'en')+').'; el.style.color='var(--green)'; }
+}
 function updateDatums(){
+  checkVglDatum();
   const rvpMnd = datumNaarMnd(document.getElementById('rvpDatum').value);
   const ltMnd  = datumNaarMnd(document.getElementById('looptijdDatum').value);
   const rvpEl  = document.getElementById('rvpJrTxt');

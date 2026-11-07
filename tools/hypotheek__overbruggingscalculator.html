@@ -122,8 +122,8 @@ input:focus,select:focus{border-color:var(--navy);}
         </div>
         <div class="fl">
           <label>Verwachte overbruggingsperiode</label>
-          <div class="iw"><span class="sx">mnd</span><input type="number" id="periodeM" value="4" class="sr" step="1" min="1" max="24"></div>
-          <span class="hint">Gemiddeld 3-6 maanden tot verkoop</span>
+          <div class="iw"><span class="sx">mnd</span><input type="number" id="periodeM" value="4" class="sr" step="1" min="1" max="36"></div>
+          <span class="hint">Gemiddeld 3-6 maanden tot verkoop; looptijd overbrugging maximaal 36 maanden</span>
         </div>
         <div class="fl">
           <label>Looptijd nieuwe hypotheek</label>
@@ -132,6 +132,31 @@ input:focus,select:focus{border-color:var(--navy);}
             <option value="25">25 jaar</option>
             <option value="20">20 jaar</option>
           </select>
+        </div>
+        <div class="fl">
+          <label>Rentevaste periode overbrugging</label>
+          <select id="rvpOverbr">
+            <option value="0" selected>Variabel</option>
+            <option value="12">1 jaar vast</option>
+            <option value="24">2 jaar vast</option>
+            <option value="36">3 jaar vast</option>
+          </select>
+        </div>
+        <div class="sep" style="grid-column:1/-1;margin-top:4px;">Fiscaal (netto dubbele lasten)</div>
+        <div class="fl">
+          <label>Aftrektarief hypotheekrente</label>
+          <div class="iw"><span class="sx">%</span><input type="number" id="aftrekPct" value="37.56" step="0.01" class="sr" min="0" max="37.56"></div>
+          <span class="hint">2026: 35,75% (schijf 1) of maximaal 37,56%</span>
+        </div>
+        <div class="fl">
+          <label>Start overbrugging / oude woning leeg en te koop sinds</label>
+          <input type="month" id="startLeeg" value="2026-11">
+          <span class="hint">Renteaftrek oude woning t/m 31 december van het 3e jaar na het jaar waarin de woning leeg kwam te staan (art. 3.111 lid 2 Wet IB 2001); eigenwoningforfait oude woning dan € 0</span>
+        </div>
+        <div class="fl">
+          <label>WOZ-waarde nieuwe woning</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="wozNieuw" placeholder="leeg = koopsom" step="5000"></div>
+          <span class="hint">Eigenwoningforfait 2026: 0,35%</span>
         </div>
       </div>
       <button class="btn" onclick="bereken()">🌉 Bereken overbrugging</button>
@@ -153,8 +178,9 @@ input:focus,select:focus{border-color:var(--navy);}
     <div class="cb">
       <div class="uitleg">
         <strong>Overbruggingshypotheek</strong> = een tijdelijke lening op de (verwachte) overwaarde van uw huidige woning, zodat u de nieuwe woning kunt kopen vóór uw oude woning verkocht is.<br><br>
-        <strong>Hoe werkt het:</strong> De bank leent u tijdelijk (max 1-2 jaar) de overwaarde van uw huidige woning. Zodra de oude woning verkocht is, lost u de overbrugging direct af.<br><br>
+        <strong>Hoe werkt het:</strong> De bank leent u tijdelijk (doorgaans maximaal 24 tot 36 maanden) de overwaarde van uw huidige woning. Zodra de oude woning verkocht is, lost u de overbrugging direct af.<br><br>
         <strong>Let op:</strong> U betaalt tijdelijk <em>drie</em> hypotheeklasten: (1) rente overbrugging, (2) nieuwe hypotheek, (3) oude hypotheek. Zorg dat u dit kunt dragen. Banken toetsen dit op uw inkomen.<br><br>
+        <strong>Fiscaal:</strong> de rente op de overbruggingslening is aftrekbaar als onderdeel van de eigenwoningschuld van de nieuwe woning. De oude woning blijft eigen woning zolang zij leeg staat en te koop wordt aangeboden, tot en met het 3e kalenderjaar na het jaar waarin zij leeg kwam te staan (art. 3.111 lid 2 Wet IB 2001); in die periode is de rente aftrekbaar en is het eigenwoningforfait voor de oude woning € 0. Bij tijdelijke verhuur vervalt de aftrek.<br><br>
         <strong>Risico:</strong> Als de verkoopprijs lager uitvalt dan verwacht, kan de overwaarde onvoldoende zijn om de overbrugging volledig af te lossen.
       </div>
     </div>
@@ -188,26 +214,45 @@ function bereken(){
   const mlNieuw=ann(hyN,rN,ltN*12);
   const mlOud=hyH*rH/12; // alleen rente (aflvr periode)
   const totaalDubbel=renteOverbr+mlNieuw+mlOud;
-  const totaalNormaal=mlNieuw+mlOud;
   const totaalOverbKosten=renteOverbr*per;
-
+  // Netto: aftrek rente overbrugging + rente nieuwe hypotheek (maand 1) + rente oude woning zolang die leeg en te koop staat (max. 3 kalenderjaren na jaar leegstand)
+  const tarief=Math.min(37.56,N('aftrekPct'))/100;
+  const sv=(document.getElementById('startLeeg').value||'2026-11').split('-');
+  const sj=parseInt(sv[0])||2026, sm=parseInt(sv[1])||11;
+  const mndAftrekOud=Math.max(0,(sj+3-sj)*12+(12-sm)+1); // t/m december jaar+3
+  const mndOudAftrek=Math.min(per,mndAftrekOud);
+  const wozN=N('wozNieuw')||ksN;
+  const ewfNieuw=wozN*0.0035/12;
+  const renteNieuw1=hyN*rN/12;
+  const voordeelMet=Math.max(0,(renteOverbr+renteNieuw1+mlOud-ewfNieuw)*tarief);
+  const voordeelZonderOud=Math.max(0,(renteOverbr+renteNieuw1-ewfNieuw)*tarief);
+  const nettoDubbel=totaalDubbel-voordeelMet;
+  const nettoTotaal=mndOudAftrek*nettoDubbel+(per-mndOudAftrek)*(totaalDubbel-voordeelZonderOud);
+  const nettoNa=mlNieuw-Math.max(0,(renteNieuw1-ewfNieuw)*tarief);
+  const rvp=parseInt(document.getElementById('rvpOverbr').value)||0;
+  const rvpTxt=rvp?(rvp/12)+' jaar vast':'variabel';
+  const eindAftrek='31-12-'+(sj+3);
   document.getElementById('hoofd').innerHTML=`
-    <div class="hb n"><div class="hbl">Maximale overbrugging</div><div class="hbv">${fmt(maxOverbr)}</div><div class="hbs">${fmtPct(overbPct*100)} van overwaarde</div></div>
-    <div class="hb r"><div class="hbl">Dubbele maandlasten</div><div class="hbv">${fmt(totaalDubbel)}</div><div class="hbs">Overbr + nieuw + oud</div></div>
-    <div class="hb o"><div class="hbl">Totale overbr-kosten</div><div class="hbv">${fmt(totaalOverbKosten)}</div><div class="hbs">${per} mnd × ${fmt(renteOverbr)}</div></div>
-    <div class="hb g"><div class="hbl">Normaal na verkoop</div><div class="hbv">${fmt(mlNieuw)}</div><div class="hbs">Alleen nieuwe hypotheek</div></div>`;
-
+    <div class="hb n"><div class="hbl">Maximale overbrugging</div><div class="hbv">${fmt(maxOverbr)}</div><div class="hbs">${fmtPct(overbPct*100)} van overwaarde · ${rvpTxt}</div></div>
+    <div class="hb r"><div class="hbl">Dubbele maandlasten</div><div class="hbv">${fmt(totaalDubbel)}</div><div class="hbs">Bruto · netto ${fmt(nettoDubbel)}</div></div>
+    <div class="hb o"><div class="hbl">Totale overbr-kosten</div><div class="hbv">${fmt(totaalOverbKosten)}</div><div class="hbs">${per} mnd × ${fmt(renteOverbr)} bruto</div></div>
+    <div class="hb g"><div class="hbl">Normaal na verkoop</div><div class="hbv">${fmt(mlNieuw)}</div><div class="hbs">Bruto · netto ${fmt(nettoNa)}</div></div>`;
   let html=`<thead><tr><th>Post</th><th>Per maand</th></tr></thead><tbody>`;
   html+=`<tr class="cat"><td colspan="2">Tijdens overbrugging (${per} mnd)</td></tr>`;
-  html+=`<tr><td>Rente overbruggingshypotheek (${fmtPct(rO*100)} × ${fmt(maxOverbr)})</td><td>${fmt(renteOverbr)}</td></tr>`;
+  html+=`<tr><td>Rente overbruggingshypotheek (${fmtPct(rO*100)} × ${fmt(maxOverbr)}, ${rvpTxt})</td><td>${fmt(renteOverbr)}</td></tr>`;
   html+=`<tr><td>Nieuwe hypotheek</td><td>${fmt(mlNieuw)}</td></tr>`;
   html+=`<tr><td>Bestaande hypotheek (rente)</td><td>${fmt(mlOud)}</td></tr>`;
-  html+=`<tr class="tot"><td><strong>Totale maandlasten tijdelijk</strong></td><td><strong>${fmt(totaalDubbel)}</strong></td></tr>`;
+  html+=`<tr class="tot"><td><strong>Totale bruto maandlasten tijdelijk</strong></td><td><strong>${fmt(totaalDubbel)}</strong></td></tr>`;
+  html+=`<tr><td>Eigenwoningforfait nieuwe woning (0,35% × ${fmt(wozN)}); oude woning leeg en te koop: € 0</td><td>${fmt(ewfNieuw)}</td></tr>`;
+  html+=`<tr><td>Belastingvoordeel (${fmtPct(tarief*100)}) op rente overbrugging, nieuwe en oude hypotheek</td><td>− ${fmt(voordeelMet).trim()}</td></tr>`;
+  html+=`<tr class="tot"><td><strong>Netto dubbele maandlasten</strong> (aftrek oude woning t/m ${eindAftrek}${per>mndOudAftrek?'; daarna '+fmt(totaalDubbel-voordeelZonderOud).trim()+' p/m':''})</td><td><strong>${fmt(nettoDubbel)}</strong></td></tr>`;
+  html+=`<tr><td>Netto totaal over de hele overbruggingsperiode</td><td>${fmt(nettoTotaal)}</td></tr>`;
   html+=`<tr class="cat"><td colspan="2">Na verkoop oude woning</td></tr>`;
   html+=`<tr><td>Nieuwe hypotheek (alleen)</td><td>${fmt(mlNieuw)}</td></tr>`;
-  html+=`<tr class="tot"><td><strong>Maandlasten structureel</strong></td><td><strong>${fmt(mlNieuw)}</strong></td></tr>`;
+  html+=`<tr class="tot"><td><strong>Maandlasten structureel (bruto / netto)</strong></td><td><strong>${fmt(mlNieuw)} / ${fmt(nettoNa).trim()}</strong></td></tr>`;
+  if(per>36) html+=`<tr><td colspan="2" style="color:var(--red);">⚠ Overbruggingsperiode langer dan 36 maanden: buiten de gangbare maximale looptijd.</td></tr>`;
+  if(rvp&&per>rvp) html+=`<tr><td colspan="2" style="color:var(--orange);">⚠ De overbruggingsperiode (${per} mnd) is langer dan de rentevaste periode (${rvp} mnd): rekening houden met renteherziening.</td></tr>`;
   document.getElementById('tbl').innerHTML=html+`</tbody>`;
-
   // Scenario's
   const scens=[
     {lbl:'Optimistisch',pct:105,cls:''},

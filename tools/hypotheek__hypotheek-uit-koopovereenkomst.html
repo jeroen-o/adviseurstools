@@ -267,7 +267,7 @@ h1,h2,h3{font-family:'Fraunces',serif;font-weight:600}
         </div>
         <div class="field">
           <label>Naam koper 2 (optioneel)</label>
-          <input type="text" id="f-naam2" placeholder="Voornaam Achternaam">
+          <input type="text" id="f-naam2" placeholder="Voornaam Achternaam" oninput="recalc()">
         </div>
       </div>
       <div class="field-group">
@@ -288,6 +288,28 @@ h1,h2,h3{font-family:'Fraunces',serif;font-weight:600}
         <div class="field">
           <label>Leeftijd koper 2 (optioneel)</label>
           <input type="number" id="f-leeftijd2" placeholder="bijv. 34" min="18" max="80" oninput="recalc()">
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label style="font-weight:400;font-size:12px"><input type="checkbox" id="f-eerder1" onchange="recalc()"> Koper 1 heeft de startersvrijstelling al eerder gebruikt</label>
+        </div>
+        <div class="field">
+          <label style="font-weight:400;font-size:12px"><input type="checkbox" id="f-eerder2" onchange="recalc()"> Koper 2 heeft de startersvrijstelling al eerder gebruikt</label>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label>Eigendomsaandeel koper 1 (%)
+            <span style="font-size:11px;color:var(--gray-400);font-weight:400;margin-left:4px">(koper 2 = rest; standaard 50/50)</span>
+          </label>
+          <input type="number" id="f-aandeel1" placeholder="50" min="0" max="100" step="1" oninput="recalc()">
+        </div>
+        <div class="field">
+          <label>Waarde in het economisch verkeer
+            <span style="font-size:11px;color:var(--gray-400);font-weight:400;margin-left:4px">(marktwaarde; standaard = koopsom)</span>
+          </label>
+          <input type="text" id="f-wev" placeholder="leeg = koopsom" oninput="recalc()">
         </div>
       </div>
       <div class="field" style="margin-top:4px">
@@ -924,9 +946,10 @@ function buildSummary(found){
 
 function resetAll(){
   // Reset alle velden
-  ['f-adres','f-koopsom','f-woz','f-verbouwing','f-woningwaarde','f-naam1','f-naam2','f-adres-koper1','f-adres-koper2','f-leeftijd1','f-leeftijd2'].forEach(id=>{
+  ['f-adres','f-koopsom','f-woz','f-verbouwing','f-woningwaarde','f-naam1','f-naam2','f-adres-koper1','f-adres-koper2','f-leeftijd1','f-leeftijd2','f-aandeel1','f-wev'].forEach(id=>{
     const el=document.getElementById(id);if(el){el.value='';el.classList.remove('auto-filled');}
   });
+  ['f-eerder1','f-eerder2'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
   koopsomVal=0;ovbModeVal='auto';gebruikVal='eigen';wozManual=false;
   // Reset checkboxes
   ['c-nhg','c-overige'].forEach(id=>{
@@ -938,7 +961,7 @@ function resetAll(){
   // Reset invoervelden
   const defaults={'i-notaris':'1.400','i-advies':'3.500','i-taxatie':'700','i-garantie':'','i-makelaar':'','i-keuring':'500','i-bied':'995','i-verhuis':'1.000','i-overige':''};
   Object.entries(defaults).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.value=val;});
-  document.getElementById('overige-input').value='';
+  const ovInp=document.getElementById('overige-input'); if(ovInp) ovInp.value='';
   document.getElementById('em-slider').value=0;
   document.getElementById('em-input').value='';
   // Reset OVB buttons
@@ -1463,20 +1486,47 @@ function recalc(){
   const l1=parseInt(document.getElementById('f-leeftijd1').value)||null;
   const l2=parseInt(document.getElementById('f-leeftijd2').value)||null;
 
-  // ── OVB ──
-  let autoRate, autoLabel, autoColor;
-  if(gebruikVal==='belegging'){autoRate=0.08;autoColor='var(--red)';autoLabel='8% — belegging of tweede woning';}
-  else if(l1!==null&&l1<=35&&(l2===null||l2<=35)&&koopsom<=555000){autoRate=0;autoColor='var(--green)';autoLabel='0% — startersvrijstelling van toepassing';}
-  else if(l1!==null&&l1>35){autoRate=0.02;autoColor='var(--orange)';autoLabel='2% — koper is '+l1+' jaar (ouder dan 35)';}
-  else if(koopsom>555000){autoRate=0.02;autoColor='var(--orange)';autoLabel='2% — koopsom boven € 555.000';}
-  else{autoRate=0.02;autoColor='var(--orange)';autoLabel='2% — eigen bewoning';}
+  // ── OVB (2026) ──
+  // Grondslag: de hoogste van koopsom en waarde in het economisch verkeer (art. 9 Wet BRV).
+  // Startersvrijstelling: per verkrijger 18 t/m 34 jaar (18 jaar bereikt, 35 nog niet), niet eerder gebruikt,
+  // woning als hoofdverblijf en woningwaarde (grondslag) <= € 555.000; per koper over het eigen aandeel.
+  // Afronding: te betalen OVB naar beneden op hele euro's (Besluit 9-1-2023, nr. 2023-1, Stcrt. 2023, 1102, toelichting).
+  const wevIn=parseNum(document.getElementById('f-wev')?.value||'');
+  const grondslag=Math.max(koopsom, wevIn||0);
+  const naam2=(document.getElementById('f-naam2')?.value||'').trim();
+  const heeftKoper2 = l2!==null || naam2!=='';
+  let aandeel1 = heeftKoper2 ? parseFloat(document.getElementById('f-aandeel1')?.value) : 100;
+  if(isNaN(aandeel1)) aandeel1 = heeftKoper2 ? 50 : 100;
+  aandeel1=Math.min(100,Math.max(0,aandeel1));
+  const kopers=[{nr:1,l:l1,aandeel:aandeel1/100,eerder:isOn('f-eerder1')}];
+  if(heeftKoper2) kopers.push({nr:2,l:l2,aandeel:(100-aandeel1)/100,eerder:isOn('f-eerder2')});
+  const isStarter=k=>k.l!==null&&k.l>=18&&k.l<35&&!k.eerder&&grondslag<=555000;
+  const redenGeen=k=>k.l===null?'leeftijd onbekend':k.l>=35?k.l+' jaar (35 of ouder)':k.l<18?'jonger dan 18':k.eerder?'vrijstelling al eerder gebruikt':grondslag>555000?'woningwaarde boven € 555.000':'';
+  let autoRate, autoLabel, autoColor, autoBedrag=0;
+  const delen=[];
+  if(gebruikVal==='belegging'){
+    autoRate=0.08;autoColor='var(--red)';autoLabel='8% — geen hoofdverblijf (belegging of tweede woning)';
+    autoBedrag=Math.floor(grondslag*0.08);
+  } else {
+    kopers.forEach(k=>{
+      const st=isStarter(k), t=st?0:0.02;
+      const b=Math.floor(grondslag*k.aandeel*t);
+      autoBedrag+=b;
+      delen.push('koper '+k.nr+' ('+Math.round(k.aandeel*100)+'%): '+(st?'0% startersvrijstelling':'2%'+(redenGeen(k)?' — '+redenGeen(k):''))+' = '+fmtEuro(b));
+    });
+    autoRate=grondslag>0?autoBedrag/grondslag:0.02;
+    const alleStarter=kopers.every(isStarter), geenStarter=!kopers.some(isStarter);
+    autoColor=alleStarter?'var(--green)':'var(--orange)';
+    autoLabel=(alleStarter?'0% — startersvrijstelling van toepassing':geenStarter?'2% — eigen bewoning':'Gemengd: starter + doorstromer')+' · '+delen.join(' · ');
+  }
+  if(wevIn>koopsom) autoLabel+=' · Let op: grondslag = waarde in het economisch verkeer ('+fmtEuro(wevIn)+'), hoger dan de koopsom';
 
   let ovbBedrag, ovbColor=autoColor;
   const manualEl=document.getElementById('ovb-manual');
   if(ovbModeVal==='0'){ovbBedrag=0;ovbColor='var(--green)';}
-  else if(ovbModeVal==='2'){ovbBedrag=Math.round(koopsom*0.02);ovbColor='var(--orange)';}
+  else if(ovbModeVal==='2'){ovbBedrag=Math.floor(grondslag*0.02);ovbColor='var(--orange)';}
   else if(ovbModeVal==='manual'){ovbBedrag=parseNum(manualEl.value);ovbColor='var(--navy)';}
-  else{ovbBedrag=Math.round(koopsom*autoRate);}
+  else{ovbBedrag=autoBedrag;}
 
   const ovbLabelTxt = ovbModeVal==='auto' ? autoLabel
     : ovbModeVal==='0' ? '0% — startersvrijstelling'

@@ -634,7 +634,9 @@ function bereken(){
     for(const d of delen){const rs=restSchuld(d,m);d.box===3?s3+=rs:s1+=rs;ml+=maandlastD(d,m);}
 
     const isBday=m>0&&dt.getMonth()===geb.getMonth()&&dt.getDate()===1;
-    data.push({m,dt,age,ageYr:Math.floor(age),isAOW,pen,norm,isBday,
+    // Informatief: einde rentevaste periode van een leningdeel in deze maand
+    const rvpEind=delen.map((d,i)=>(d.rvpDatum&&d.rvpDatum.getFullYear()===dt.getFullYear()&&d.rvpDatum.getMonth()===dt.getMonth())?'leningdeel '+(i+1):null).filter(Boolean);
+    data.push({m,dt,age,ageYr:Math.floor(age),isAOW,pen,norm,isBday,rvpEind,
       effTr,usesContract,mnd:Math.round(mnd),maxH,maxH30,
       schuld:Math.round(s1+s3),s3:Math.round(s3),ml:Math.round(ml)});
   }
@@ -748,7 +750,8 @@ function renderTable(){
       :`${(d.effTr*100).toFixed(2).replace('.',',')}%`;
     const ms=d.schuld>0?(marge>=0?'<span class="pos">+'+E(marge)+'</span>':'<span class="neg">▼'+E(-marge)+'</span>'):'—';
     const dtStr=d.dt.toLocaleDateString('nl-NL',{month:'short',year:'numeric'});
-    const bdayFlag=d.isBday?` <span title="Verjaardag: ${d.ageYr} jaar" style="font-size:13px">🚩</span>`:'';
+    const bdayFlag=(d.isBday?` <span title="Verjaardag: ${d.ageYr} jaar" style="font-size:13px">🚩</span>`:'')+
+      (d.rvpEind&&d.rvpEind.length?` <span title="Einde rentevaste periode (informatief): ${d.rvpEind.join(', ')}" style="font-size:11px;color:var(--orange,#c60)">🔒 einde RVP</span>`:'');
     tr.innerHTML=
       `<td>${d.m}</td><td>${dtStr}${bdayFlag}</td><td>${d.ageYr} jr</td><td>${nm}</td>`+
       `<td>${rBadge}</td>`+

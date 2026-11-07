@@ -119,19 +119,41 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
         <div class="fl">
           <label>Type koper</label>
           <select id="koperType" onchange="update()">
-            <option value="starter">Starter (18 t/m 34 jaar, zelf bewonen: OVB 0%)</option>
+            <option value="starter">Starter (18 t/m 34 jaar, zelf bewonen: OVB 0%) — ook starter + doorstromer</option>
             <option value="doorstromer" selected>Doorstromer (hoofdverblijf, OVB 2%)</option>
             <option value="belegger">Belegger / verhuurder / 2e woning (OVB 8%)</option>
             <option value="nietwoning">Geen woning (bedrijfspand, grond; OVB 10,4%)</option>
             <option value="nvt">Nieuwbouw (geen OVB)</option>
           </select>
-          <span class="sub">Starters 18 t/m 34 jaar, woningwaarde ≤ € 555.000: OVB 0%</span>
+          <span class="sub">Starters 18 t/m 34 jaar, woningwaarde ≤ € 555.000: OVB 0%. Bij twee kopers wordt per koper over het eigen aandeel getoetst.</span>
         </div>
         <div class="fl">
           <label>Leeftijd (voor OVB startersvrijstelling)</label>
           <div class="iw"><span class="sx">jr</span>
             <input type="number" id="leeftijd" value="31" class="sr" step="1" min="18" max="70" oninput="update()">
           </div>
+          <label style="font-weight:400;font-size:12px;margin-top:4px"><input type="checkbox" id="eerder1" onchange="update()"> Koper 1 heeft de startersvrijstelling al eerder gebruikt</label>
+        </div>
+        <div class="fl">
+          <label>Leeftijd koper 2 (optioneel)</label>
+          <div class="iw"><span class="sx">jr</span>
+            <input type="number" id="leeftijd2" placeholder="leeg = één koper" class="sr" step="1" min="18" max="90" oninput="update()">
+          </div>
+          <label style="font-weight:400;font-size:12px;margin-top:4px"><input type="checkbox" id="eerder2" onchange="update()"> Koper 2 heeft de startersvrijstelling al eerder gebruikt</label>
+        </div>
+        <div class="fl">
+          <label>Eigendomsaandeel koper 1 (bij twee kopers)</label>
+          <div class="iw"><span class="sx">%</span>
+            <input type="number" id="aandeel1" value="50" class="sr" step="1" min="0" max="100" oninput="update()">
+          </div>
+          <span class="sub">Koper 2 krijgt de rest. OVB = Σ aandeel × grondslag × tarief per koper.</span>
+        </div>
+        <div class="fl">
+          <label>Waarde in het economisch verkeer (marktwaarde)</label>
+          <div class="iw"><span class="px">€</span>
+            <input type="number" id="marktwaarde" placeholder="leeg = koopsom" step="5000" oninput="update()">
+          </div>
+          <span class="sub">Grondslag OVB = de hoogste van koopsom en marktwaarde (ook voor de startersgrens).</span>
         </div>
         <div class="fl">
           <label>Hypotheekbedrag</label>
@@ -225,6 +247,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
         <strong>8% (woning, geen hoofdverblijf):</strong> Verhuur, belegging, tweede woning of vakantiewoning. Tarief 2026 (was 10,4% t/m 2025).<br><br>
         <strong>10,4% (geen woning):</strong> Overig vastgoed, zoals bedrijfspanden en grond.<br><br>
         <strong>0% (nieuwbouw):</strong> Nieuwbouwwoningen zijn BTW-belast (21%) en vrijgesteld van OVB.<br><br>
+        <strong>Grondslag en afronding:</strong> OVB wordt geheven over de hoogste van koopsom en waarde in het economisch verkeer (art. 9 Wet BRV). Bij erfpacht kan de gekapitaliseerde canon meetellen in de grondslag. Het te betalen bedrag wordt naar beneden afgerond op hele euro's (Besluit 9 januari 2023, nr. 2023-1, Stcrt. 2023, 1102). Bij twee kopers geldt het tarief per koper over het eigen aandeel (bijv. starter + doorstromer 50/50: effectief 1%).<br><br>
         <strong>NHG 2026:</strong> Kostengrens € 470.000 (€ 498.200 met energiebesparende voorzieningen). Borgtochtprovisie <strong>0,4%</strong> van het hypotheekbedrag. NHG-rente is doorgaans 0,2-0,5% lager — het lagere rentevoordeel verdient de borgtochtprovisie in 2-3 jaar terug.
       </div>
     </div>
@@ -244,11 +267,28 @@ const STARTERSGRENS_2026=555000;   // woningwaardegrens startersvrijstelling OVB
 // NHG alleen bij eigen bewoning, hypotheek t/m de kostengrens
 function nhgMogelijk(hyp,type){return hyp<=NHG_GRENS_2026&&type!=='belegger'&&type!=='nietwoning';}
 function berekenOVB(koopsom,type,leeftijd){
-  if(type==='nvt')return{pct:0,bedrag:0,label:'Nieuwbouw (BTW, geen OVB)'};
-  if(type==='belegger')return{pct:8,bedrag:koopsom*0.08,label:'8% woning, geen hoofdverblijf (2026)'};
-  if(type==='nietwoning')return{pct:10.4,bedrag:koopsom*0.104,label:'10,4% overig vastgoed (geen woning)'};
-  if(type==='starter'&&leeftijd>=18&&leeftijd<35&&koopsom<=STARTERSGRENS_2026)return{pct:0,bedrag:0,label:'0% startersvrijstelling (18–34 jr, ≤ € 555.000)'};
-  return{pct:2,bedrag:koopsom*0.02,label:'2% eigen gebruik'};
+  // Grondslag = max(koopsom, waarde in het economisch verkeer); te betalen bedrag naar beneden afgerond op hele euro's
+  const mw=N('marktwaarde');
+  const g=Math.max(koopsom,mw||0);
+  const gTxt=mw>koopsom?' · grondslag marktwaarde '+fmt(g).trim()+' (hoger dan koopsom)':'';
+  if(type==='nvt')return{pct:0,bedrag:0,label:'Nieuwbouw (BTW, geen OVB)',g};
+  if(type==='belegger'){const b=Math.floor(g*0.08);return{pct:koopsom?b/koopsom*100:8,bedrag:b,label:'8% woning, geen hoofdverblijf (2026)'+gTxt,g};}
+  if(type==='nietwoning'){const b=Math.floor(g*0.104);return{pct:koopsom?b/koopsom*100:10.4,bedrag:b,label:'10,4% overig vastgoed (geen woning)'+gTxt,g};}
+  const l2raw=document.getElementById('leeftijd2').value;
+  const twee=l2raw!=='';
+  let a1=twee?N('aandeel1'):100; a1=Math.min(100,Math.max(0,a1));
+  const kopers=[{nr:1,l:leeftijd,a:a1/100,e:document.getElementById('eerder1').checked}];
+  if(twee)kopers.push({nr:2,l:parseFloat(l2raw)||0,a:(100-a1)/100,e:document.getElementById('eerder2').checked});
+  const st=k=>type==='starter'&&k.l>=18&&k.l<35&&!k.e&&g<=STARTERSGRENS_2026;
+  let bedrag=0;const delen=[];
+  kopers.forEach(k=>{const t=st(k)?0:0.02;const b=Math.floor(g*k.a*t);bedrag+=b;delen.push('koper '+k.nr+' '+Math.round(k.a*100)+'%: '+(t?'2%':'0%'));});
+  const pct=koopsom?bedrag/koopsom*100:0;
+  let label;
+  if(kopers.every(st))label='0% startersvrijstelling (18–34 jr, ≤ € 555.000)';
+  else if(!kopers.some(st))label='2% eigen gebruik'+(type==='starter'?' (startersvrijstelling niet van toepassing)':'');
+  else label='Gemengd: starter + doorstromer (effectief '+fmtPct(g?bedrag/g*100:0,2)+')';
+  if(twee)label+=' · '+delen.join(' · ');
+  return{pct,bedrag,label:label+gTxt,g};
 }
 
 function update(){
@@ -330,7 +370,7 @@ function bereken(){
 
   // Kostentabel
   const posten=[
-    {cat:'Overdrachtsbelasting',items:[{lbl:ovb.label,val:ovb.bedrag,subtekst:fmtPct(ovb.pct)+' van koopsom'}]},
+    {cat:'Overdrachtsbelasting',items:[{lbl:ovb.label,val:ovb.bedrag,subtekst:fmtPct(ovb.pct,2)+' van koopsom'}]},
     {cat:'Financieringskosten',items:[
       {lbl:'Notariskosten (hypotheekakte + leveringsakte)',val:notaris},
       {lbl:'Taxatiekosten',val:taxatie},

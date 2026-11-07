@@ -157,6 +157,13 @@ canvas{width:100%!important;}
             <option value="voor2013">Vóór 1-1-2013 (HRA ook bij afl.vrij)</option>
           </select>
         </div>
+        <div class="fl">
+          <label>Erfpachtcanon per jaar</label>
+          <div class="iw"><span class="px">€</span>
+            <input type="number" id="erfpacht" value="0" step="100" min="0" oninput="liveCalc()">
+          </div>
+          <span class="sub">Aftrekbaar als kosten eigen woning (box 1), los van de aflosvorm</span>
+        </div>
       </div>
       <button class="btn" onclick="bereken()">📊 Bereken netto maandlasten</button>
     </div>
@@ -200,6 +207,8 @@ canvas{width:100%!important;}
         <strong>Hypotheekrenteaftrek (HRA) 2026:</strong> De betaalde hypotheekrente is aftrekbaar van uw belastbaar inkomen. U krijgt de aftrek tegen het tarief van uw schijf: <strong>35,75%</strong> bij een inkomen tot €38.883 (schijf 1, 2026) en <strong>37,56%</strong> daarboven. 37,56% is het maximale aftrektarief in 2026 — ook als u in de toptariefschijf (49,50%, vanaf €78.426) valt. Na 1-1-2013 afgesloten hypotheken: alleen aftrekbaar bij annuïtair of lineair aflossen.<br><br>
         <strong>Eigenwoningforfait (EWF) 2026:</strong> Als woningeigenaar rekent de Belastingdienst een fictief inkomen uit uw woning: <strong>0,35% van de WOZ-waarde</strong> (tot €1.350.000; daarboven €4.725 + 2,35% over het meerdere) per jaar. Over dit bedrag betaalt u inkomstenbelasting. Bij een WOZ van €380.000 is dat €1.330/jaar = €111/maand bijtelling.<br><br>
         <strong>Wet Hillen (afbouw):</strong> Heeft u (bijna) geen hypotheekschuld meer en is EWF > HRA? Dan mocht u vroeger het verschil aftrekken. Deze regeling wordt sinds 2019 afgebouwd (versneld vanaf 2025). In 2026 is nog <strong>71,867%</strong> van het verschil aftrekbaar.<br><br>
+        <strong>Erfpacht:</strong> de canon telt mee in de bruto en netto last en is aftrekbaar als kosten van de eigen woning (ook bij aflossingsvrij).<br><br>
+        <strong>Begrippen:</strong> netto hypotheeklasten = rente + aflossing (+ erfpachtcanon) − fiscaal voordeel. Woonlasten zijn breder: daarbij komen ook energie, onderhoud en overige eigenaarslasten (niet in deze tool).<br><br>
         <strong>Netto formule:</strong> Bruto maandlast − (aftrekbare rente − EWF/12) × aftrektarief (35,75% of max. 37,56%). Is het EWF hoger dan de rente, dan wordt het verschil na Hillen-aftrek (28,133% resteert) belast tegen uw schijftarief.
       </div>
     </div>
@@ -221,7 +230,7 @@ const HILLEN_2026 = 0.71867;                  // Wet Hillen 2026 (versnelde afbo
 
 // ── HELPERS ──────────────────────────────────────────────────────────────
 const N = id => parseFloat(document.getElementById(id).value)||0;
-function fmt(n,d=0){if(!n&&n!==0)return'—';const neg=n<0;return(neg?'−':'')+' € '+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+',-';}
+function fmt(n,d=0){if(!n&&n!==0)return'—';const neg=n<0;return(neg?'−':'')+' € '+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+(d?'':',-');}
 function fmtPct(n,d=2){return n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
 
 function getIBTarief(inkomen){return inkomen > IB2_GRENS ? IB3 : inkomen > IB1_GRENS ? IB2 : IB1;} // marginaal tarief 2026
@@ -268,9 +277,12 @@ function berekenMaand(hyp,r,lt,woz,inkomen,vorm,afsluiting,t=0){
     aflossingDeel = 0;
   }
 
+  // Erfpachtcanon: onderdeel van de bruto last; aftrekbaar in box 1 (art. 3.120 lid 1 onderdeel c Wet IB 2001)
+  const canon = Math.max(0, N('erfpacht'))/12;
+  bruto += canon;
   // HRA
   const hraMogelijk = (afsluiting==='voor2013') || (vorm!=='af');
-  const hraRente = hraMogelijk ? renteDeel : 0;
+  const hraRente = (hraMogelijk ? renteDeel : 0) + canon; // aftrekbare kosten eigen woning
   // Saldo eigen woning negatief (rente > EWF): aftrek tegen max. 37,56% (tariefmaatregel).
   // Saldo positief (EWF > rente): bijtelling na Hillen-aftrek tegen het eigen schijftarief.
   const ewSaldoPositief = ewfMaand > hraRente;
@@ -289,7 +301,7 @@ function berekenMaand(hyp,r,lt,woz,inkomen,vorm,afsluiting,t=0){
 
   const netto = bruto - hraVoordeel + ewfBijtelling - hillenAftrek;
 
-  return {bruto, netto, renteDeel, aflossingDeel, hraVoordeel, ewfMaand, ewfBijtelling, hillenAftrek, saldo, ibTarief, tarief};
+  return {bruto, netto, renteDeel, aflossingDeel, canon, hraVoordeel, ewfMaand, ewfBijtelling, hillenAftrek, saldo, ibTarief, tarief};
 }
 
 // ── LIVE ─────────────────────────────────────────────────────────────────
@@ -308,12 +320,12 @@ function liveCalc(){
 function renderHoofd(bruto, netto, besparing){
   return `
   <div class="hbox bruto">
-    <div class="hbl">Bruto maandlast</div>
+    <div class="hbl">Bruto hypotheeklast</div>
     <div class="hbv">${fmt(Math.round(bruto))}</div>
-    <div class="hbs">Wat u aan de bank betaalt</div>
+    <div class="hbs">Rente + aflossing (+ erfpachtcanon)</div>
   </div>
   <div class="hbox netto">
-    <div class="hbl">Netto maandlast</div>
+    <div class="hbl">Netto hypotheeklast</div>
     <div class="hbv">${fmt(Math.round(netto))}</div>
     <div class="hbs">Na HRA & EWF</div>
   </div>
@@ -342,13 +354,14 @@ function bereken(){
 
   // Breakdown tabel (maand 1)
   const rows=[
-    {lbl:'Bruto maandlast', val:m.bruto, cls:''},
+    {lbl:'Bruto hypotheeklast'+(m.canon>0?' + erfpacht':''), val:m.bruto, cls:''},
     {lbl:'↳ Rentecomponent', val:m.renteDeel, cls:'', indent:true},
     {lbl:'↳ Aflossingscomponent', val:m.aflossingDeel, cls:'', indent:true},
-    {lbl:'Hypotheekrenteaftrek ('+fmtPct(m.tarief*100)+')', val:-m.hraVoordeel, cls:'pos'},
+    m.canon>0 ? {lbl:'↳ Erfpachtcanon', val:m.canon, cls:'', indent:true} : null,
+    {lbl:'Renteaftrek'+(m.canon>0?' incl. erfpachtcanon':'')+' ('+fmtPct(m.tarief*100)+')', val:-m.hraVoordeel, cls:'pos'},
     {lbl:'Eigenwoningforfait bijtelling ('+fmtPct(berekenEWF(woz)/woz*100)+')', val:m.ewfBijtelling, cls:'neg'},
     m.hillenAftrek>0 ? {lbl:'Hillen-aftrek (71,867% in 2026)', val:-m.hillenAftrek, cls:'pos'} : null,
-    {lbl:'Netto maandlast', val:m.netto, cls:'', bold:true},
+    {lbl:'Netto hypotheeklast'+(m.canon>0?' + erfpacht':''), val:m.netto, cls:'', bold:true},
   ].filter(Boolean);
 
   let html='<thead><tr><th>Post</th><th>Bedrag (maand 1)</th></tr></thead><tbody>';
