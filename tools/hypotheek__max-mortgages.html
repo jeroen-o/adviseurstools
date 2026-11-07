@@ -363,12 +363,12 @@ body>.form-body,body>.fout-box,body>.btnrow,body>#res-blok,body>.footer{max-widt
       <div class="veld">
         <div class="vh"><span class="vl">Spousal support you pay</span><button class="ibtn" id="ibtn-alimZ">i</button></div>
         <div class="iw"><span class="iaf">€</span><input type="number" id="alimZ" placeholder="0" inputmode="decimal"><span class="iaf s">/month</span></div>
-        <div class="ibox" id="info-alimZ" style="display:none">Spousal support (alimony) you pay per month. Counted as a gross monthly obligation and deducted from the permitted monthly mortgage burden (not grossed up, as it is tax-deductible).</div>
+        <div class="ibox" id="info-alimZ" style="display:none">Spousal support (alimony) you pay per month. 12 × this amount is deducted from your qualifying income (NHG V&amp;N 2026 C.7.14.2); it is not a monthly obligation. No end date is known, so it is also deducted in the pension test (conservative).</div>
       </div>
       <div class="veld" id="alimP-veld">
         <div class="vh"><span class="vl">Spousal support your partner pays</span><button class="ibtn" id="ibtn-alimP">i</button></div>
         <div class="iw"><span class="iaf">€</span><input type="number" id="alimP" placeholder="0" inputmode="decimal"><span class="iaf s">/month</span></div>
-        <div class="ibox" id="info-alimP" style="display:none">Spousal support your partner pays per month. Counted as a gross monthly obligation (not grossed up).</div>
+        <div class="ibox" id="info-alimP" style="display:none">Spousal support your partner pays per month. 12 × this amount is deducted from your partner's qualifying income (NHG V&amp;N 2026 C.7.14.2); it is not a monthly obligation.</div>
       </div>
     </div>
     <div class="veld">
@@ -601,8 +601,8 @@ function bereken(){
   if(errs.length){fout.innerHTML=errs.join('<br>');fout.style.display='block';return;}
 
   const tr=S.renteLang?r:Math.max(r,.05);
-  // Partneralimentatie: bruto maandlast (aftrekbaar, dus niet bruteren), in mindering op de toegestane financieringslast (besluit 6)
-  const alimM=gn('alimZ')+(burg!=='alleenstaand'?gn('alimP'):0);
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van de betalende aanvrager af (NHG V&N 2026 C.7.14.2), geen maandlast
+  const alimZj=gn('alimZ')*12, alimPj=burg!=='alleenstaand'?gn('alimP')*12:0;
   const heeftPartner=burg!=='alleenstaand';
   // Status per persoon (geboortedatum gaat vóór de handmatige keuze)
   const dr=pDrempel();
@@ -610,11 +610,12 @@ function bereken(){
   const aow1=ps1.st, aowP=ps2.st;
   // Verplichtingen als bruto maandlast (Trhk 2026): krediet 2% van de limiet p/m; studieschuld werkelijke termijn x bruteringsfactor (alleen als rente (deels) aftrekbaar is)
   const studieF=S.box1==='nee'?1:brutFactor(tr);
-  // Partneralimentatie en erfpachtcanon zijn aftrekbaar: niet bruteren. Overige niet-aftrekbare lasten: bruteren met dezelfde factor.
-  const last=gn('pLening')+gn('aKred')*.02+gn('studie')*studieF+alimM+gn('erfp')+gn('overig')*studieF;
+  // Erfpachtcanon: niet bruteren. Overige niet-aftrekbare lasten: bruteren met dezelfde factor. Partneralimentatie zit in het toetsinkomen.
+  const last=gn('pLening')+gn('aKred')*.02+gn('studie')*studieF+gn('erfp')+gn('overig')*studieF;
   // AOW-tabel volgt de persoon met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
   function scen(a1,a2,st1,st2){
-    const x1=Math.max(0,a1), x2=Math.max(0,a2);
+    // betaalde partneralimentatie per persoon van het toetsinkomen af (ook na AOW: geen einddatum bekend), niet negatief
+    const x1=Math.max(0,a1-alimZj), x2=Math.max(0,a2-alimPj);
     const hoogsteAow=(x1>=x2?st1:st2)==='ja';
     return maxHypScenario({ink:x1+x2,aowTab:hoogsteAow,tr:tr,lpt:lpt,box1:S.box1,box3d:gn('box3d'),last:last,alleen:!(heeftPartner&&a2>0)});
   }
@@ -644,7 +645,8 @@ function bereken(){
   g('res-hoofd').textContent=fmt(hoofd);
   g('res-note').innerHTML='1. Since a mortgage may not exceed 100% of the market value of the property, the purchase price must also be at least <strong>'+fmt(hoofd)+'</strong> to obtain this mortgage.'
     +(gn('studie')>0?'<br>Student loan: payment '+fmt(gn('studie'))+'/month × gross-up factor '+studieF.toFixed(2)+' = '+fmt(gn('studie')*studieF)+'/month counted as gross obligation.':'')
-    +(last>0?'<br>Total gross monthly obligations deducted from the permitted burden: '+fmt(last)+'/month'+(function(){const d=[];if(alimM>0)d.push('spousal support '+fmt(alimM));if(gn('erfp')>0)d.push('ground lease '+fmt(gn('erfp')));if(gn('overig')>0)d.push('other obligations '+fmt(gn('overig'))+' × '+studieF.toFixed(2));return d.length?' (incl. '+d.join(', ')+')':'';})()+'.':'')
+    +(last>0?'<br>Total gross monthly obligations deducted from the permitted burden: '+fmt(last)+'/month'+(function(){const d=[];if(gn('erfp')>0)d.push('ground lease '+fmt(gn('erfp')));if(gn('overig')>0)d.push('other obligations '+fmt(gn('overig'))+' × '+studieF.toFixed(2));return d.length?' (incl. '+d.join(', ')+')':'';})()+'.':'')
+    +((alimZj+alimPj)>0?'<br>Spousal support paid has been deducted from qualifying income (NHG V&amp;N 2026 C.7.14.2): '+[alimZj>0?'applicant '+fmt(alimZj)+' per year':'',alimPj>0?'partner '+fmt(alimPj)+' per year':''].filter(Boolean).join(', ')+'; also in the pension test.':'')
     +(lbl==='geen'?'<br>No valid energy label: '+fmt(10000)+' extra applies at purchase (and '+fmt(10000)+' for energy-saving measures).':'')
     +'<br>'+(dr<=0?'Pension test: not tested (switched off).':
       aowToets?'Pension test (from age '+dr+'): applies — tested on current income ('+fmt(Math.max(0,aowToets.nu))+') and on income from state pension age '+fmt(aowToets.ink)+' using the AOW table ('+fmt(Math.max(0,aowToets.aow))+'); the lower outcome applies (before energy-label amount).':

@@ -252,8 +252,8 @@ button,.btn{border-radius:8px;font-family:inherit}
           <div class="field"><label>Studieschuld: maandtermijn DUO (€/mnd)</label>
             <input type="number" class="fi" id="mhDuo" value="0" min="0" step="10" oninput="calcMh()">
           </div>
-          <div class="field"><label>Te betalen partneralimentatie (€/mnd)</label>
-            <input type="number" class="fi" id="mhAlim" value="0" min="0" step="10" placeholder="aftrekbaar: niet gebruteerd" oninput="calcMh()">
+          <div class="field"><label title="12 × het maandbedrag gaat van het toetsinkomen van aanvrager 1 af, ook van het inkomen vanaf AOW (geen einddatum bekend) — NHG V&amp;N 2026 C.7.14.2">Betaalde partneralimentatie (€/mnd, gaat van het toetsinkomen af)</label>
+            <input type="number" class="fi" id="mhAlim" value="0" min="0" step="10" placeholder="aanvrager 1 · C.7.14.2" oninput="calcMh()">
           </div>
           <div class="field"><label>Erfpachtcanon (€/mnd)</label>
             <input type="number" class="fi" id="mhErfpacht" value="0" min="0" step="10" placeholder="aftrekbaar: niet gebruteerd" oninput="calcMh()">
@@ -617,7 +617,11 @@ function calcMh(){
   const toetsRente=rvpJaar<10?Math.max(werkRente,5.0):werkRente;
 
   // Gezamenlijk toetsinkomen (100% + 100%) + pensioentoets; percentage uit de officiële tabel 2026
-  const personen=[{inkomen:ink1,pensioen:mhGetal('mhPens1'),geb:mhDatum('mhGeb1')}];
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van aanvrager 1 af (NHG V&N 2026 C.7.14.2), niet negatief;
+  // geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief). Geen maandlast meer.
+  const alimJaar=Math.max(0,alim)*12;
+  const pens1=mhGetal('mhPens1');
+  const personen=[{inkomen:Math.max(0,ink1-alimJaar),pensioen:pens1===null?null:Math.max(0,pens1-alimJaar),geb:mhDatum('mhGeb1')}];
   if(ink2>0||mhDatum('mhGeb2')) personen.push({inkomen:ink2,pensioen:mhGetal('mhPens2'),geb:mhDatum('mhGeb2')});
   const toets=flnToets(personen,{drempel:drempel,datum:new Date(),rente:toetsRente});
   // Alleenstaandenbedrag (Trhk art. 3 lid 8): alleen bij één aanvrager (afgeleid uit de ingevulde aanvragers) én toetsinkomen > € 30.000 (niet-AOW) resp. > € 29.000 (AOW-tabel)
@@ -633,7 +637,7 @@ function calcMh(){
   const brutering=FLN2026_BRUTERING_STUDIE[flnKolom(toetsRente)];
   const duoLast=duo*brutering;                                       // DUO-termijn × bruteringsfactor
   const overig=overigNetto*brutering;                                // overige niet-aftrekbare lasten: zelfde bruteringsfactor
-  const verplichtingen=kredietLast+duoLast+alim+erfpacht+overig;     // partneralimentatie en erfpachtcanon zijn aftrekbaar: niet bruteren
+  const verplichtingen=kredietLast+duoLast+erfpacht+overig;          // erfpachtcanon: niet bruteren (partneralimentatie zit in het toetsinkomen)
 
   const r=toetsRente/100/12;
   const m=360;
@@ -648,7 +652,7 @@ function calcMh(){
     <div class="result-hero">
       <div class="rh-lbl">Maximale hypotheek</div>
       <div class="rh-val">${toets.ontbreekt?'—':fmt(maxMetLabel)}</div>
-      <div class="rh-sub">Toetsinkomen: ${fmt(toetsInkomen)} · Financieringslast: ${fmtPct(quota*100,1)} (${toets.bindend.aowTabel?'AOW-tabel':'tabel niet-AOW'}) · Toetsrente: ${fmtPct(toetsRente,2)}</div>
+      <div class="rh-sub">Toetsinkomen: ${fmt(toetsInkomen)}${alimJaar>0?` (na aftrek ${fmt(alimJaar)} betaalde partneralimentatie)`:''} · Financieringslast: ${fmtPct(quota*100,1)} (${toets.bindend.aowTabel?'AOW-tabel':'tabel niet-AOW'}) · Toetsrente: ${fmtPct(toetsRente,2)}</div>
     </div>
     <div class="metrics">
       <div class="metric"><div class="m-lbl">Basis maximaal</div><div class="m-val blue">${fmt(maxHoofdsom)}</div></div>
@@ -658,7 +662,7 @@ function calcMh(){
     ${toets.ontbreekt?ri('warn','⚠️','Vul het inkomen vanaf AOW in',flnToetsTekst(toets,fmt)):ri('info','👴','Pensioentoets',flnToetsTekst(toets,fmt))}
     ${eenAanvrager?ri('info','👤','Alleenstaandenbedrag',alleen?`Eén aanvrager en toetsinkomen ${fmt(toetsInkomen)} &gt; ${fmt(alleenGrens)}: € 17.000 extra (Trhk 2026 art. 3 lid 8).`:`Niet van toepassing: toetsinkomen ${fmt(toetsInkomen)} is niet hoger dan ${fmt(alleenGrens)}.`):''}
     ${maxMetLabel<=nhgGrens?ri('ok','🛡️','NHG mogelijk (grens €470.000)','Uw maximale hypotheek valt binnen de NHG-grens 2026. NHG geeft rentekorting en bescherming bij gedwongen verkoop.'):ri('info','ℹ️','Buiten NHG-grens','Uw hypotheek overstijgt de NHG-grens van €470.000 (2026). Gewone hypotheek is uitstekend mogelijk.')}
-    ${verplichtingen>0?ri('warn','⚠️','Verplichtingen verlagen maximale hypotheek',`Bruto maandlast verplichtingen ${fmt(verplichtingen)}/mnd (krediet 2% × ${fmt(krediet)} = ${fmt(kredietLast)}${duo>0?`; DUO ${fmt(duo)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(duoLast)}`:''}${alim>0?`; partneralimentatie ${fmt(alim)}`:''}${erfpacht>0?`; erfpachtcanon ${fmt(erfpacht)}`:''}${overigNetto>0?`; overig ${fmt(overigNetto)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(overig)}`:''}) gaat af van de toegestane financieringslast en verlaagt uw max. hypotheek met ca. ${fmt(schuldenAftrek)}. Aflossen (en opzeggen van de kredietlimiet) vóór aanvraag loont.`):''}
+    ${verplichtingen>0?ri('warn','⚠️','Verplichtingen verlagen maximale hypotheek',`Bruto maandlast verplichtingen ${fmt(verplichtingen)}/mnd (krediet 2% × ${fmt(krediet)} = ${fmt(kredietLast)}${duo>0?`; DUO ${fmt(duo)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(duoLast)}`:''}${erfpacht>0?`; erfpachtcanon ${fmt(erfpacht)}`:''}${overigNetto>0?`; overig ${fmt(overigNetto)} × ${brutering.toFixed(2).replace('.',',')} = ${fmt(overig)}`:''}) gaat af van de toegestane financieringslast en verlaagt uw max. hypotheek met ca. ${fmt(schuldenAftrek)}. Aflossen (en opzeggen van de kredietlimiet) vóór aanvraag loont.`):''}
     ${ri('info','ℹ️','Berekening volgens de Tijdelijke regeling hypothecair krediet 2026','Financieringslastpercentage uit de officiële Nibud-tabel 2026 (rij per € 1.000 toetsinkomen, kolom naar toetsrente). Max. hypotheek = (toetsinkomen × percentage ÷ 12 − bruto maandlast verplichtingen) ÷ annuïteitsfactor (toetsrente, 360 mnd), plus het energielabelbedrag'+(alleen?' en € 17.000 voor alleenstaanden':'')+'. Dit is een indicatie; geldverstrekkers kunnen strenger zijn.')}`;
 }
 calcMh();

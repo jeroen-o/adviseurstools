@@ -198,7 +198,15 @@
             <span class="input-prefix">€</span>
             <input type="number" id="verplichtingen" value="0" min="0" step="50">
           </div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Bruto maandlast, in mindering op de toegestane financieringslast: krediet 2% van de limiet p/m; studieschuld werkelijke termijn × bruteringsfactor (1,05–1,40 naar toetsrente); partneralimentatie en erfpachtcanon zonder brutering; overige niet-aftrekbare lasten gebruteerd.</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Bruto maandlast, in mindering op de toegestane financieringslast: krediet 2% van de limiet p/m; studieschuld werkelijke termijn × bruteringsfactor (1,05–1,40 naar toetsrente); erfpachtcanon zonder brutering; overige niet-aftrekbare lasten gebruteerd. Betaalde partneralimentatie hier niet opnemen, maar in het veld hiernaast.</div>
+        </div>
+        <div class="field">
+          <label for="alimentatieBetaald">Betaalde partneralimentatie per maand</label>
+          <div class="input-wrap has-prefix">
+            <span class="input-prefix">€</span>
+            <input type="number" id="alimentatieBetaald" value="0" min="0" step="50">
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">12 × dit bedrag wordt van het bruto jaarinkomen (toetsinkomen) afgetrokken, ook van het inkomen vanaf AOW (geen einddatum bekend, conservatief) — NHG V&amp;N 2026 C.7.14.2. Geen maandlast.</div>
         </div>
       </div>
       <div class="field-row single">
@@ -472,6 +480,8 @@ function render(){
 function bereken(){
   const inkomen=parseFloat(document.getElementById('inkomen').value)||0;
   const verpl=parseFloat(document.getElementById('verplichtingen').value)||0;
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen af (NHG V&N 2026 C.7.14.2), niet negatief
+  const alimJaar=Math.max(0,parseFloat((document.getElementById('alimentatieBetaald')||{}).value)||0)*12;
   const autoMbd=berekenTotaalMaandbedrag();
   const mbdInput=document.getElementById('maandbedrag');
   let mbd;
@@ -534,8 +544,8 @@ function bereken(){
     const wqS=s/totHS,wqB=b/totHS;
     return {ink,wqS,wqB,exclS:(ink/12)*wqS,exclB:(ink/12)*wqB,tabs,bt,st};
   }
-  const cur=scenario(inkomen,ST,BT);
-  const pen=pensScenario?scenario(pensInk,STP,BTP):null;
+  const cur=scenario(Math.max(0,inkomen-alimJaar),ST,BT);
+  const pen=pensScenario?scenario(Math.max(0,pensInk-alimJaar),STP,BTP):null; // geen einddatum bekend: ook na AOW aftrekken
   const stdPens=!!(pen&&pen.exclS<cur.exclS);
   const behPens=!!(pen&&pen.exclB<cur.exclB);
   const sS=stdPens?pen:cur, sB=behPens?pen:cur;
@@ -575,7 +585,7 @@ function bereken(){
   tb.className='toets-block'+(klasse?' '+klasse:'');
   tb.querySelector('.toets-icon').textContent=icoon;
   set('toets-result',uitslag);
-  set('toets-detail',detail);
+  set('toets-detail',detail+(alimJaar>0?' Toetsinkomen na aftrek van '+fmt(alimJaar)+' betaalde partneralimentatie per jaar: '+fmt(sS.ink)+' (NHG V&N 2026 C.7.14.2).':''));
 
   // Resultaten vullen
   set('r-hoofdsom',fmt(totHS).replace(',00',''));
@@ -652,6 +662,7 @@ document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('situatie').addEventListener('change',bereken);
   ['gebdatum','pensioeninkomen','pensioenDrempel'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',bereken);el.addEventListener('change',bereken);});
   document.getElementById('verplichtingen').addEventListener('input',bereken);
+  document.getElementById('alimentatieBetaald').addEventListener('input',bereken);
   document.getElementById('maandbedrag').addEventListener('input',bereken);
   document.getElementById('btnVoegToe').addEventListener('click',function(){
     leningen.push({nr:teller++,hoofdsom:0,rente:0,looptijd:0,aflosvorm:'Annuïtair',box3:'NEE'});
@@ -662,6 +673,7 @@ document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('printBtn').addEventListener('click',function(){
     const inkomen=document.getElementById('inkomen').value;
     const verpl=document.getElementById('verplichtingen').value;
+    const alimB=parseFloat(document.getElementById('alimentatieBetaald').value)||0;
     const mbd=document.getElementById('maandbedrag').value;
     function g(id){const el=document.getElementById(id);return el?el.textContent:'—';}
 
@@ -733,6 +745,7 @@ document.addEventListener('DOMContentLoaded',function(){
     <tr><td>Pensioentoets vanaf leeftijd</td><td>${(document.getElementById('pensioenDrempel').selectedOptions[0]||{}).text||''}</td></tr>
     <tr><td>Situatie achterblijver (beheer)</td><td>${(document.getElementById('situatie').selectedOptions[0]||{}).text||''}</td></tr>
     <tr><td>Maandelijkse verplichtingen</td><td>€ ${Number(verpl).toLocaleString('nl-NL')}</td></tr>
+    ${alimB>0?`<tr><td>Betaalde partneralimentatie (van het toetsinkomen af)</td><td>€ ${alimB.toLocaleString('nl-NL')} p/m</td></tr>`:''}
     <tr><td>Maandbedrag hypotheek</td><td>€ ${Number(mbd).toLocaleString('nl-NL')}</td></tr>
   </tbody></table>
 </div>

@@ -384,7 +384,7 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
     </div>
     <div class="row two">
       <div>
-        <label>Partneralimentatie /mnd</label>
+        <label>Betaalde partneralimentatie /mnd <span class="hint">aanvrager 1; 12 × gaat van het toetsinkomen af (ook vanaf AOW), NHG V&amp;N 2026 C.7.14.2</span></label>
         <div class="number-grp" data-prefix="€"><input type="number" id="alim" value="0" min="0" step="10"></div>
       </div>
       <div>
@@ -768,7 +768,10 @@ function renderLeningdelen(){
    5. Hoofdberekening
    ============================================================= */
 function bereken(){
-  const ink1 = +document.getElementById('ink1').value || 0;
+  /* Betaalde partneralimentatie (NHG V&N 2026 C.7.14.2): jaarbedrag van het toetsinkomen van aanvrager 1 af, niet negatief.
+     Geen einddatum bekend → ook van het inkomen vanaf AOW en het prepensioen (conservatief). Geen maandlast meer. */
+  const alimJaar = Math.max(0, +document.getElementById('alim').value || 0) * 12;
+  const ink1 = Math.max(0, (+document.getElementById('ink1').value || 0) - alimJaar);
   const ink2 = +document.getElementById('ink2').value || 0;
   const gb1  = document.getElementById('gb1').value;
   const gb2  = document.getElementById('gb2').value;
@@ -777,11 +780,11 @@ function bereken(){
   const pensioenDrempel = parseInt(document.getElementById('pensioenDrempel').value,10) || 0;
   const beheerSituatie = document.getElementById('beheerSituatie').value;
   const pensRaw1 = document.getElementById('pens1').value, pensRaw2 = document.getElementById('pens2').value;
-  const pens1 = pensRaw1 === '' ? null : (+pensRaw1 || 0);
+  const pens1 = pensRaw1 === '' ? null : Math.max(0, (+pensRaw1 || 0) - alimJaar);
   const pens2 = pensRaw2 === '' ? null : (+pensRaw2 || 0);
   /* Optioneel: inkomen in de periode tussen vervroegd pensioen (prepensioen) en de AOW-datum */
   const preRaw1 = (document.getElementById('pre1')||{}).value||'', preRaw2 = (document.getElementById('pre2')||{}).value||'';
-  const pre1 = preRaw1 === '' ? null : (+preRaw1 || 0);
+  const pre1 = preRaw1 === '' ? null : Math.max(0, (+preRaw1 || 0) - alimJaar);
   const pre2 = preRaw2 === '' ? null : (+preRaw2 || 0);
 
   const erfpacht = +document.getElementById('erfpacht').value || 0;
@@ -790,7 +793,6 @@ function bereken(){
   const aflK     = +document.getElementById('aflK').value || 0;
   const duoTerm  = +document.getElementById('duoTerm').value || 0;
   const lease    = +document.getElementById('lease').value || 0;
-  const alim     = +document.getElementById('alim').value || 0;
   const ovv      = +document.getElementById('ovv').value || 0;
 
   /* AOW-status */
@@ -899,7 +901,7 @@ function bereken(){
   const maxFLmndAdv   = maxFLjaarAdv / 12;
   const dkLast = dkLimiet * 0.02;
   const duoBrutoAdv = duoTerm * getBruteringStudieschuld(toetsrenteAdv);
-  const aftrekAdv = dkLast + aflK + duoBrutoAdv + lease + alim + ovv;
+  const aftrekAdv = dkLast + aflK + duoBrutoAdv + lease + ovv;
   const beschikbaarAdv = maxFLmndAdv - aftrekAdv;
   const ruimteAdv = beschikbaarAdv - werkelijkTot;
   const benutAdv = beschikbaarAdv > 0 ? (werkelijkTot / beschikbaarAdv) * 100 : 999;
@@ -974,7 +976,7 @@ function bereken(){
   }
   const maxFLmndBh  = maxFLjaarBh / 12;
   const duoBrutoBh = duoTerm * getBruteringStudieschuld(toetsrenteBh);
-  const aftrekBh = dkLast + aflK + duoBrutoBh + lease + alim + ovv;
+  const aftrekBh = dkLast + aflK + duoBrutoBh + lease + ovv;
   const beschikbaarBh = maxFLmndBh - aftrekBh;
   const ruimteBh  = beschikbaarBh - werkelijkTot;
   const ruimteBhMin = beschikbaarBh - minimaalTot;
@@ -1022,7 +1024,8 @@ function bereken(){
 
   /* Tabellen advies */
   document.getElementById('adviesMaxTable').innerHTML = `
-    <tr><td>Gezamenlijk toetsinkomen${advPens?(pensInkAdv===pensInk?' (inkomen vanaf AOW — pensioentoets)':' (periode vervroegd pensioen vóór AOW — pensioentoets)'):''}</td><td class="num">${fmt(toetsInkomenAdv)}</td></tr>
+    <tr><td>Gezamenlijk toetsinkomen${advPens?(pensInkAdv===pensInk?' (inkomen vanaf AOW — pensioentoets)':' (periode vervroegd pensioen vóór AOW — pensioentoets)'):''}</td><td class="num">${fmt(toetsInkomenAdv)}</td></tr>${alimJaar>0?`
+    <tr class="sub"><td>waarvan afgetrokken: betaalde partneralimentatie aanvrager 1 (NHG V&amp;N 2026 C.7.14.2)</td><td class="num">− ${fmt(alimJaar)} /jr</td></tr>`:''}
     <tr><td>FL% box 1 (${pctStr(aandeelBox1*100)} aandeel)</td><td class="num">${(flBox1Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>FL% box 3 (${pctStr(aandeelBox3*100)} aandeel)</td><td class="num">${(flBox3Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>Effectief gewogen FL%</td><td class="num"><b>${(flAdv*100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></td></tr>
@@ -1032,7 +1035,6 @@ function bereken(){
     <tr class="sub"><td>af: aflopend krediet</td><td class="num">− ${fmt(aflK)}</td></tr>
     <tr class="sub"><td>af: studieschuld DUO (${fmt(duoTerm)} × ${fmtD2(getBruteringStudieschuld(toetsrenteAdv))})</td><td class="num">− ${fmt(duoBrutoAdv)}</td></tr>
     <tr class="sub"><td>af: private lease</td><td class="num">− ${fmt(lease)}</td></tr>
-    <tr class="sub"><td>af: partneralimentatie</td><td class="num">− ${fmt(alim)}</td></tr>
     <tr class="sub"><td>af: overige verplichtingen</td><td class="num">− ${fmt(ovv)}</td></tr>
     <tr class="highlight"><td>Beschikbaar voor hypotheek­last (per maand)</td><td class="num">${fmt(beschikbaarAdv)}</td></tr>
   `;
@@ -1052,7 +1054,8 @@ function bereken(){
     <tr><td><b>Minimale beheerlast</b><div class="tiny">alle leningdelen fictief aflossingsvrij</div></td><td class="num">${fmt(minimaalTot)}</td><td class="num">${pctStr(benutBhMin)}</td><td class="num">${fmt(ruimteBhMin)}</td></tr>
   `;
   document.getElementById('beheerMaxTable').innerHTML = `
-    <tr><td>Gezamenlijk toetsinkomen${bhPens?(pensInkBh===pensInk?' (inkomen vanaf AOW — pensioentoets)':' (periode vervroegd pensioen vóór AOW — pensioentoets)'):''}</td><td class="num">${fmt(toetsInkomenBh)}</td></tr>
+    <tr><td>Gezamenlijk toetsinkomen${bhPens?(pensInkBh===pensInk?' (inkomen vanaf AOW — pensioentoets)':' (periode vervroegd pensioen vóór AOW — pensioentoets)'):''}</td><td class="num">${fmt(toetsInkomenBh)}</td></tr>${alimJaar>0?`
+    <tr class="sub"><td>waarvan afgetrokken: betaalde partneralimentatie aanvrager 1 (NHG V&amp;N 2026 C.7.14.2)</td><td class="num">− ${fmt(alimJaar)} /jr</td></tr>`:''}
     <tr><td>FL% box 1 (${pctStr(aandeelBox1*100)} aandeel)</td><td class="num">${(flBox1Bh*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>FL% box 3 (${pctStr(aandeelBox3*100)} aandeel)</td><td class="num">${(flBox3Bh*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>Effectief gewogen FL%</td><td class="num"><b>${(flBh*100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></td></tr>
@@ -1062,7 +1065,6 @@ function bereken(){
     <tr class="sub"><td>af: aflopend krediet</td><td class="num">− ${fmt(aflK)}</td></tr>
     <tr class="sub"><td>af: studieschuld DUO (${fmt(duoTerm)} × ${fmtD2(getBruteringStudieschuld(toetsrenteBh))})</td><td class="num">− ${fmt(duoBrutoBh)}</td></tr>
     <tr class="sub"><td>af: private lease</td><td class="num">− ${fmt(lease)}</td></tr>
-    <tr class="sub"><td>af: partneralimentatie</td><td class="num">− ${fmt(alim)}</td></tr>
     <tr class="sub"><td>af: overige verplichtingen</td><td class="num">− ${fmt(ovv)}</td></tr>
     <tr class="highlight"><td>Beschikbaar voor hypotheek­last (per maand)</td><td class="num">${fmt(beschikbaarBh)}</td></tr>
   `;

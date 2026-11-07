@@ -292,7 +292,7 @@ tr.tekort td{background:var(--redlt)!important}
   <div class="grid g3">
     <label class="f">Studieschuld: werkelijke maandtermijn<input type="text" class="eur" id="v_studie" value=""><span class="hint" style="display:block;margin-top:4px">× bruteringsfactor 1,05–1,40 (Trhk art. 3a).</span></label>
     <label class="f">Krediet: limiet / oorspronkelijke kredietsom<input type="text" class="eur" id="v_krediet" value=""><span class="hint" style="display:block;margin-top:4px">Telt mee als 2% van de limiet per maand.</span></label>
-    <label class="f">Partneralimentatie per maand<input type="text" class="eur" id="v_alimentatie" value=""><span class="hint" style="display:block;margin-top:4px">Aftrekbaar: zonder brutering.</span></label>
+    <label class="f">Betaalde partneralimentatie per maand<input type="text" class="eur" id="v_alimentatie" value=""><span class="hint" style="display:block;margin-top:4px">Door de aanvrager betaald: 12 × dit bedrag gaat van het toetsinkomen van de aanvrager af, ook na AOW-leeftijd (geen einddatum bekend, conservatief) — NHG V&amp;N 2026 C.7.14.2. Geen maandlast.</span></label>
     <label class="f">Erfpachtcanon per maand<input type="text" class="eur" id="v_erfpacht" value=""><span class="hint" style="display:block;margin-top:4px">Aftrekbaar: zonder brutering.</span></label>
     <label class="f">Overige niet-aftrekbare vaste lasten per maand<input type="text" class="eur" id="v_overig" value=""><span class="hint" style="display:block;margin-top:4px">Gebruteerd met dezelfde factor als de studieschuld.</span></label>
   </div>
@@ -531,9 +531,11 @@ function berekenCore(inp){
   const annT=annF(toetsrente,360);
   const extraMaandlast=inp.extraBedrag*annT;
   const V=inp.verpl||{studie:0,krediet:0,alimentatie:0,erfpacht:0,overig:0};
-  const verplLast=aftrek=>{const f=aftrek?BRUT_STUDIE[kol]:1;return V.studie*f+V.krediet*0.02+V.alimentatie+V.erfpacht+V.overig*f;};
-  const verplNom=V.studie+V.krediet*0.02+V.alimentatie+V.erfpacht+V.overig;
-  const norminkomen=pers.reduce((s,p)=>s+p.ink,0);
+  const verplLast=aftrek=>{const f=aftrek?BRUT_STUDIE[kol]:1;return V.studie*f+V.krediet*0.02+V.erfpacht+V.overig*f;}; // partneralimentatie: van het toetsinkomen af (C.7.14.2)
+  const verplNom=V.studie+V.krediet*0.02+V.erfpacht+V.overig;
+  // Betaalde partneralimentatie (jaarbedrag) gaat van het toetsinkomen van de aanvrager af (NHG V&N 2026 C.7.14.2), niet negatief
+  const alimJaar=(V.alimentatie||0)*12;
+  const norminkomen=pers.reduce((s,p,i)=>s+(i===0?Math.max(0,p.ink-alimJaar):p.ink),0);
 
   const mSet=new Set([1]);
   const HORIZON=121; // GHF/TRHK: wijzigingen binnen 10 jaar (120 mnd) toetsen
@@ -551,7 +553,7 @@ function berekenCore(inp){
   const rows=momenten.map(m=>{
     let ink=0,pt=false,onvolledig=false,aowNu=false;
     const perP=[];
-    pers.forEach(p=>{
+    pers.forEach((p,pIdx)=>{
       const alAOW=p.aowM!==null&&p.aowM<1;                       // al AOW op toetsdatum
       const wordtAOW=p.aowM!==null&&p.aowM>=1&&p.aowM<=120;      // AOW binnen 10 jaar
       const isAOW=alAOW||(wordtAOW&&m>p.aowM);
@@ -562,6 +564,7 @@ function berekenCore(inp){
       else if(isAOW){pi=p.pens;if(p.pensLeeg)onvolledig=true;}
       else if(ptGeldt){pt=true;if(p.pensLeeg){onvolledig=true;pi=0;}else pi=Math.min(werkInk,p.pens);} // laagste van huidig en pensioeninkomen
       else pi=werkInk;
+      if(pIdx===0&&alimJaar>0)pi=Math.max(0,pi-alimJaar); // betaalde partneralimentatie, op elk toetsmoment (geen einddatum bekend)
       ink+=pi;perP.push({ink:pi,aow:isAOW});
     });
     // Trhk art. 3 lid 7: tabel van de aanvrager met het hoogste toetsinkomen; bij gelijk inkomen en verschillende AOW-status de laagste uitkomst
@@ -603,7 +606,7 @@ function berekenCore(inp){
   const maxHyp=Math.min(maxInkomenIncl,maxOnderpand||Infinity);
   const alleRuimteOk=rows.every(r=>r.ruimte>=-0.5);
   const akkoord=alleRuimteOk&&(!maxOnderpand||hoofdsom<=maxOnderpand+0.5);
-  return {delen,hoofdsom,toetsrente,kol,normrente:inp.normrente,norminkomen,
+  return {delen,hoofdsom,toetsrente,kol,normrente:inp.normrente,norminkomen,alimJaar,
     extraBedrag:inp.extraBedrag,extraMaandlast,rows,bindIdx,baseMax,extraLening,extraDuur,
     verhAlleen:rows[0].alleen,verplNom,verplLast0:rows[0].vL,alleenAan:inp.alleenAan,maxInkomen,maxInkomenIncl,mw:inp.mw,ebv:inp.ebv,maxOnderpand,maxHyp,
     akkoord,alleRuimteOk,tekortRow:rows.find(r=>r.ruimte<-0.5),drempel:inp.drempel,
@@ -784,7 +787,8 @@ function bereken(){
    '<div class="tbl-scroll"><table class="res"><thead><tr><th>Toetsmoment</th><th class="r">Toetsinkomen</th><th class="r">Woonquote</th><th class="r">Max. maandlast</th><th class="r">Berekende maandlast</th><th class="r">Ruimte</th></tr></thead><tbody>'+
    M.rows.map(r=>'<tr'+(r.ruimte<-0.5?' class="tekort"':'')+'><td>'+momentLbl(r.m)+(r.aowTab?' <span style="color:#5f6b7a;font-size:12px">(AOW-tabel)</span>':'')+(r.pt?' <span style="color:#5f6b7a;font-size:12px">(pensioentoets)</span>':'')+(r.onvolledig?' <span style="color:var(--err);font-size:12px">(inkomen vanaf AOW ontbreekt)</span>':'')+'</td><td class="r">'+fmt0(r.ink)+'</td><td class="r">'+fmtP(r.q1)+'</td><td class="r">'+fmt0(r.maxM)+'</td><td class="r">'+fmt0(r.last)+'</td><td class="r" style="color:'+(r.ruimte<-0.5?'var(--err)':'var(--ok)')+';font-weight:700">'+fmt0(r.ruimte)+'</td></tr>').join("")+
    '</tbody></table></div>'+
-   (M.verplNom>0?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Max. maandlast is na aftrek van de financiële verplichtingen: '+fmt0(M.verplLast0)+' bruto per maand bij aanvang (studieschuld × bruteringsfactor '+BRUT_STUDIE[M.kol].toLocaleString("nl-NL",{minimumFractionDigits:2})+' zolang er renteaftrek is, krediet 2% van de limiet, alimentatie en erfpachtcanon nominaal).</p>':'')+
+   (M.verplNom>0?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Max. maandlast is na aftrek van de financiële verplichtingen: '+fmt0(M.verplLast0)+' bruto per maand bij aanvang (studieschuld × bruteringsfactor '+BRUT_STUDIE[M.kol].toLocaleString("nl-NL",{minimumFractionDigits:2})+' zolang er renteaftrek is, krediet 2% van de limiet, erfpachtcanon nominaal).</p>':'')+
+   (M.alimJaar>0?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Betaalde partneralimentatie ('+fmt0(M.alimJaar)+' per jaar) is van het toetsinkomen van de aanvrager afgetrokken (NHG V&amp;N 2026 C.7.14.2), op elk toetsmoment (ook na AOW-leeftijd; geen einddatum bekend).</p>':'')+
    (M.rows.some(r=>r.aowTab)&&inp.pers.length>1?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Tabelkeuze (Trhk art. 3 lid 7): heeft één van beiden de AOW-leeftijd bereikt, dan geldt de tabel van de aanvrager met het hoogste toetsinkomen.</p>':'')+
    '<div class="tbl-scroll"><table class="res"><tbody>'+
     '<tr><td>Maximaal op basis van inkomen</td><td class="r" style="font-weight:700">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie'+(M.verhAlleen?' · incl. verhoging alleenstaande ('+fmt0(M.verhAlleen)+' in de maandruimte)':'')+'</td></tr>'+
@@ -878,7 +882,7 @@ function print_(){
     return r;
   };
   let uitleg='<h2>Toelichting op deze uitkomst</h2>';
-  uitleg+='<p>Het toetsinkomen bedraagt '+fmt0(M.norminkomen)+' ('+inp.pers.map((p,i)=>persNaam[i].toLowerCase()+' '+fmt0(p.ink)).join(' en ')+'; het tweede inkomen telt sinds 2023 volledig mee). Bij dit inkomen en de gewogen toetsrente van '+fmtP3(M.toetsrente)+' (rentekolom '+KOLOM_LBL[M.kol]+') hoort volgens de Nibud-tabellen 2026 een woonquote van '+fmtP(r0.q1)+' voor aftrekbare leningdelen en '+fmtP(r0.q3)+' voor niet-aftrekbare (box 3-)delen. De toetsrente is het naar bedrag en looptijd gewogen gemiddelde van de leningdelen; voor delen met een rentevastperiode korter dan 10 jaar die niet binnen die periode volledig worden afgelost, geldt ten minste de normrente van '+fmtP3(M.normrente)+'.</p>';
+  uitleg+='<p>Het toetsinkomen bedraagt '+fmt0(M.norminkomen)+' ('+inp.pers.map((p,i)=>persNaam[i].toLowerCase()+' '+fmt0(p.ink)).join(' en ')+(M.alimJaar>0?', na aftrek van '+fmt0(M.alimJaar)+' betaalde partneralimentatie bij de aanvrager':'')+'; het tweede inkomen telt sinds 2023 volledig mee). Bij dit inkomen en de gewogen toetsrente van '+fmtP3(M.toetsrente)+' (rentekolom '+KOLOM_LBL[M.kol]+') hoort volgens de Nibud-tabellen 2026 een woonquote van '+fmtP(r0.q1)+' voor aftrekbare leningdelen en '+fmtP(r0.q3)+' voor niet-aftrekbare (box 3-)delen. De toetsrente is het naar bedrag en looptijd gewogen gemiddelde van de leningdelen; voor delen met een rentevastperiode korter dan 10 jaar die niet binnen die periode volledig worden afgelost, geldt ten minste de normrente van '+fmtP3(M.normrente)+'.</p>';
   uitleg+='<p><b>'+ptTekst(M)+'</b>'+(M.onvolledig?' Let op: het inkomen vanaf AOW ontbreekt terwijl de pensioentoets of AOW-datum van toepassing is — vul dit in.':'')+'</p>';
   uitleg+='<p>Daarmee mag per jaar maximaal '+fmt0(r0.maxM*12)+' aan woonlasten worden besteed'+(verr?', inclusief de verruiming voor '+verr+' — een vast bedrag buiten de toetsing, omgerekend naar maandruimte via de annuïteitenfactor bij de toetsrente':'')+'. De berekende maandlast van de gevraagde lening is volgens de GHF-systematiek de last van een annuïtair aflossingsschema over de looptijd (maximaal 30 jaar), ongeacht de werkelijke aflossingsvorm — ook voor aflossingsvrije delen.</p>';
   M.rows.forEach(r=>{
@@ -901,7 +905,7 @@ function print_(){
    '<p>De Gedragscode Hypothecaire Financieringen geldt voor de hypotheek op de woning die u zelf bewoont of gaat bewonen en moet ervoor zorgen dat de woonlasten verantwoord zijn ten opzichte van uw financiële situatie. Daarvoor worden de financieringslastpercentages (woonquotes) gebruikt die het Nibud jaarlijks vaststelt en die in de Tijdelijke regeling hypothecair krediet zijn vastgelegd. Voor 2026 zijn de percentages voor het eerst afgerond op 0,1 procent.</p>'+
    '<p>Staat de rente 10 jaar of langer vast, of wordt het leningdeel binnen de rentevastperiode volledig afgelost, dan wordt met de werkelijke rente getoetst; in andere gevallen geldt ten minste de wettelijke normrente die de AFM per kwartaal vaststelt. De lasten worden altijd bepaald alsof de lening in maximaal 30 jaar annuïtair wordt afgelost, ook als (een deel van) de lening aflossingsvrij is of de werkelijke lasten lager uitvallen.</p>'+
    '<p>Leningdelen waarvan de rente niet (meer) aftrekbaar is — box 3-delen en delen waarvan de renteaftrekperiode is verstreken — tellen zwaarder mee: hun last wordt gebruteerd met de verhouding tussen de box 1- en box 3-woonquote. Vanaf de gekozen pensioentoetsleeftijd (standaard 57 jaar volgens Nibud/Tijdelijke regeling; bij sommige geldverstrekkers 52 jaar) wordt per aanvrager getoetst op het laagste van het huidige inkomen en het inkomen vanaf AOW; valt de AOW-datum binnen 10 jaar na de toetsdatum, dan wordt vanaf dat moment getoetst op het inkomen vanaf AOW. Wijzigingen ná die 10-jaarshorizon worden niet getoetst.</p>'+
-   '<p>Op onderpand mag maximaal 100% van de marktwaarde (na verbouwing) worden gefinancierd. Worden energiebesparende voorzieningen meegefinancierd, dan mag dit oplopen tot 106% van de marktwaarde. Voor energiezuinige woningen geldt daarnaast een vast extra hypotheekbedrag per labelcluster (voor 2026: € 5.000 bij label C/D tot € 40.000 bij A++++ met garantie) en voor verduurzamende maatregelen uit de wettelijke lijst een extra bedrag afhankelijk van het startlabel. Voor een alleenstaande aanvrager met een toetsinkomen boven € 30.000 (AOW: € 29.000) mag € 17.000 buiten de toetsing blijven (Trhk art. 3 lid 8). Financiële verplichtingen (studieschuld gebruteerd, krediet 2% van de limiet, partneralimentatie, erfpachtcanon) gaan af van de toegestane maandlast. Heeft bij twee aanvragers één de AOW-leeftijd bereikt, dan geldt de tabel van de aanvrager met het hoogste toetsinkomen (Trhk art. 3 lid 7). Voor nieuwe hypotheken mag een aflossingsvrij deel niet groter zijn dan 50% van de marktwaarde en is rente alleen aftrekbaar bij ten minste annuïtaire aflossing binnen 30 jaar.</p>';
+   '<p>Op onderpand mag maximaal 100% van de marktwaarde (na verbouwing) worden gefinancierd. Worden energiebesparende voorzieningen meegefinancierd, dan mag dit oplopen tot 106% van de marktwaarde. Voor energiezuinige woningen geldt daarnaast een vast extra hypotheekbedrag per labelcluster (voor 2026: € 5.000 bij label C/D tot € 40.000 bij A++++ met garantie) en voor verduurzamende maatregelen uit de wettelijke lijst een extra bedrag afhankelijk van het startlabel. Voor een alleenstaande aanvrager met een toetsinkomen boven € 30.000 (AOW: € 29.000) mag € 17.000 buiten de toetsing blijven (Trhk art. 3 lid 8). Financiële verplichtingen (studieschuld gebruteerd, krediet 2% van de limiet, erfpachtcanon) gaan af van de toegestane maandlast; betaalde partneralimentatie gaat van het toetsinkomen af (NHG V&amp;N 2026 C.7.14.2). Heeft bij twee aanvragers één de AOW-leeftijd bereikt, dan geldt de tabel van de aanvrager met het hoogste toetsinkomen (Trhk art. 3 lid 7). Voor nieuwe hypotheken mag een aflossingsvrij deel niet groter zijn dan 50% van de marktwaarde en is rente alleen aftrekbaar bij ten minste annuïtaire aflossing binnen 30 jaar.</p>';
 
   const namen=[$("c_naam").value.trim(),inp.pers.length>1?$("p_naam").value.trim():""].filter(Boolean).join(", ");
   const dNu=new Date().toLocaleDateString("nl-NL",{day:"2-digit",month:"2-digit",year:"numeric"});

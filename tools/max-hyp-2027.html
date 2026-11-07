@@ -265,7 +265,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       <div class="grid c3" style="margin-top:14px;">
         <div class="field"><label for="vl_v_studie">Studieschuld: werkelijke maandtermijn</label><input type="text" id="vl_v_studie" value="" inputmode="numeric" placeholder="€ 0"></div>
         <div class="field"><label for="vl_v_krediet">Krediet: limiet (2% p/m)</label><input type="text" id="vl_v_krediet" value="" inputmode="numeric" placeholder="€ 0"></div>
-        <div class="field"><label for="vl_v_alimentatie">Partneralimentatie per maand</label><input type="text" id="vl_v_alimentatie" value="" inputmode="numeric" placeholder="€ 0"></div>
+        <div class="field"><label for="vl_v_alimentatie">Betaalde partneralimentatie per maand</label><input type="text" id="vl_v_alimentatie" value="" inputmode="numeric" placeholder="€ 0"></div>
         <div class="field"><label for="vl_v_erfpacht">Erfpachtcanon per maand</label><input type="text" id="vl_v_erfpacht" value="" inputmode="numeric" placeholder="€ 0"></div>
         <div class="field"><label for="vl_v_overig">Overige niet-aftrekbare lasten per maand</label><input type="text" id="vl_v_overig" value="" inputmode="numeric" placeholder="€ 0"></div>
       </div>
@@ -406,7 +406,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       <div class="grid c3">
         <div class="field"><label for="v_studie">Studieschuld: werkelijke maandtermijn</label><input type="text" id="v_studie" value="" inputmode="numeric" placeholder="€ 0"><div class="hint">Termijn (rente + aflossing) × bruteringsfactor bij de toetsrente (1,05–1,40); factor 1 als de hypotheekrente niet aftrekbaar is (Trhk art. 3a).</div></div>
         <div class="field"><label for="v_krediet">Krediet: limiet / oorspronkelijke kredietsom</label><input type="text" id="v_krediet" value="" inputmode="numeric" placeholder="€ 0"><div class="hint">Telt mee als 2% van de limiet per maand.</div></div>
-        <div class="field"><label for="v_alimentatie">Partneralimentatie per maand</label><input type="text" id="v_alimentatie" value="" inputmode="numeric" placeholder="€ 0"><div class="hint">Aftrekbaar: telt mee zonder brutering.</div></div>
+        <div class="field"><label for="v_alimentatie">Betaalde partneralimentatie per maand</label><input type="text" id="v_alimentatie" value="" inputmode="numeric" placeholder="€ 0"><div class="hint">Door de aanvrager betaald: 12 × het maandbedrag wordt van het toetsinkomen van de aanvrager afgetrokken, ook na AOW-leeftijd (geen einddatum bekend, conservatief) — NHG V&amp;N 2026 C.7.14.2. Geen maandlast.</div></div>
         <div class="field"><label for="v_erfpacht">Erfpachtcanon per maand</label><input type="text" id="v_erfpacht" value="" inputmode="numeric" placeholder="€ 0"><div class="hint">Aftrekbaar: telt mee zonder brutering.</div></div>
         <div class="field"><label for="v_overig">Overige niet-aftrekbare vaste lasten per maand</label><input type="text" id="v_overig" value="" inputmode="numeric" placeholder="€ 0"><div class="hint">Bijv. private lease; gebruteerd met dezelfde factor als de studieschuld.</div></div>
       </div>
@@ -563,9 +563,9 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
   }
   function verplichtingenLast(v, bandIdx, aftrekbaar){
     var f = aftrekbaar ? BRUTERING_STUDIE[bandIdx] : 1;
-    return v.studie*f + v.krediet*0.02 + v.alimentatie + v.erfpacht + v.overig*f;
+    return v.studie*f + v.krediet*0.02 + v.erfpacht + v.overig*f; // partneralimentatie: van het toetsinkomen af (C.7.14.2), geen maandlast
   }
-  function verplichtingenTotaalNominaal(v){ return v.studie + v.krediet*0.02 + v.alimentatie + v.erfpacht + v.overig; }
+  function verplichtingenTotaalNominaal(v){ return v.studie + v.krediet*0.02 + v.erfpacht + v.overig; }
   function annuiteitFactor(maandRente, n){
     if(maandRente===0) return n;
     return (1-Math.pow(1+maandRente,-n))/maandRente;
@@ -767,6 +767,9 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
         } else {
           ink = werkInkomen;
         }
+        // Betaalde partneralimentatie (jaarbedrag) van het toetsinkomen van de aanvrager af (NHG V&N 2026 C.7.14.2);
+        // geen einddatum bekend → op elk toetsmoment, ook na AOW (conservatief). Niet negatief.
+        if(p === client && verpl.alimentatie > 0) ink = Math.max(0, ink - verpl.alimentatie*12);
         totaal += ink;
         personen.push({ink:ink, aow:aowNu});
       });
@@ -942,8 +945,8 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       + (jaar === "2027" ? " Normjaar 2027: € 18.000 boven € 31.000 (Stcrt. 2026, 38415)." : " Normjaar 2026: € 17.000 boven € 30.000 (AOW: € 29.000).")
       + (woonquoteNorm === "beheer" && !partnerAanwezig ? " Let op: bij beheer (NHG-beheercriteria) wordt dit bedrag niet buiten de toetsing gehouden." : "");
     document.getElementById("verplHint").textContent = verplNominaal > 0
-      ? "Bruto maandlast verplichtingen bij aanvang: " + fmtEUR(verplLastAanvang) + " (studieschuld × " + (heeftAftrekAanvang ? BRUTERING_STUDIE[bandIdx].toLocaleString("nl-NL",{minimumFractionDigits:2}) : "1,00") + ", krediet 2% van " + fmtEUR(verpl.krediet) + ", alimentatie en erfpacht nominaal). Dit bedrag gaat op elk toetsmoment af van de toegestane financieringslast."
-      : "De bruto maandlast van de verplichtingen gaat af van de toegestane financieringslast, op elk toetsmoment.";
+      ? "Bruto maandlast verplichtingen bij aanvang: " + fmtEUR(verplLastAanvang) + " (studieschuld × " + (heeftAftrekAanvang ? BRUTERING_STUDIE[bandIdx].toLocaleString("nl-NL",{minimumFractionDigits:2}) : "1,00") + ", krediet 2% van " + fmtEUR(verpl.krediet) + ", erfpacht nominaal). Dit bedrag gaat op elk toetsmoment af van de toegestane financieringslast." + (verpl.alimentatie > 0 ? " Betaalde partneralimentatie (" + fmtEUR(verpl.alimentatie*12) + " per jaar) is van het toetsinkomen van de aanvrager afgetrokken (NHG V&N 2026 C.7.14.2), ook na AOW-leeftijd." : "")
+      : (verpl.alimentatie > 0 ? "Betaalde partneralimentatie (" + fmtEUR(verpl.alimentatie*12) + " per jaar) is van het toetsinkomen van de aanvrager afgetrokken (NHG V&N 2026 C.7.14.2), op elk toetsmoment (ook na AOW-leeftijd; geen einddatum bekend)." : "De bruto maandlast van de verplichtingen gaat af van de toegestane financieringslast, op elk toetsmoment.");
 
     // -- scenario: alles in box 3 (geen enkele renteaftrek) --
     var box3Rows = momenten.map(function(m){
@@ -1225,6 +1228,9 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
     }
     var client = leesPersoonVL("c");
     var partner = partnerAanwezig ? leesPersoonVL("p") : null;
+    // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van de aanvrager af (NHG V&N 2026 C.7.14.2), niet negatief
+    var alimJaarVL = parseBedrag("vl_v_alimentatie") * 12;
+    if(alimJaarVL > 0) client.inkomen = Math.max(0, client.inkomen - alimJaarVL);
 
     var inkomen = client.inkomen + (partner ? partner.inkomen : 0);
     var onvolledig = client.onvolledig || (partner && partner.onvolledig);
@@ -1280,6 +1286,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       (partner && partner.aowDatum ? " · AOW-datum partner: " + fmtDatumNL(partner.aowDatum) : "") +
       (client.pensioentoetsGeldt ? " · pensioentoets van toepassing bij aanvrager" : "") +
       (partner && partner.pensioentoetsGeldt ? " · pensioentoets van toepassing bij partner" : "") +
+      (alimJaarVL > 0 ? " · na aftrek betaalde partneralimentatie " + fmtEUR(alimJaarVL) + " per jaar bij de aanvrager (NHG C.7.14.2)" : "") +
       (verplLastVL > 0 ? " · verplichtingen: " + fmtEUR(verplLastVL) + " bruto per maand in mindering" : "") +
       (!partner ? " · alleenstaandenbedrag: 2026 " + (r2026.alleenExtra ? "+ " + fmtEUR(r2026.alleenExtra) : "n.v.t. (toetsinkomen niet boven " + fmtEUR(client.aowBereikt ? 29000 : 30000) + ")") + ", 2027 " + (r2027.alleenExtra ? "+ " + fmtEUR(r2027.alleenExtra) : "n.v.t. (toetsinkomen niet boven € 31.000)") : "") +
       (onvolledig ? " · let op: pensioeninkomen ontbreekt terwijl de pensioentoets/AOW van toepassing is — vul dit in voor een juiste berekening (nu op € 0 gezet)" : "");

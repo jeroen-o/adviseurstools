@@ -361,11 +361,11 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
           <span class="hint">2% van de limiet per maand telt mee als bruto maandlast</span>
         </div>
         <div class="field">
-          <label>Te betalen partneralimentatie</label>
+          <label>Betaalde partneralimentatie (door aanvrager)</label>
           <div class="iw"><span class="pre">€</span>
             <input type="number" id="alimentatie" value="0" min="0" step="10" oninput="liveUpdate()">
           </div>
-          <span class="hint">Per maand · bruto last, niet gebruteerd (aftrekbaar)</span>
+          <span class="hint">Per maand · 12 × dit bedrag gaat van het toetsinkomen van de aanvrager af, ook van het inkomen vanaf AOW (geen einddatum bekend) — NHG V&amp;N 2026 C.7.14.2</span>
         </div>
         <div class="field">
           <label>Erfpachtcanon</label>
@@ -627,8 +627,11 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const fiscaal = (document.getElementById('fiscaal')||{}).value || 'box1';
   const box3Deel = fiscaal==='deels' ? N('box3deel') : 0;
   const aantalAanvragers = (i2>0 || document.getElementById('aanvragers').value==='2') ? 2 : 1;
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van de aanvrager af (NHG V&N 2026 C.7.14.2), niet negatief;
+  // geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief). Geen maandlast meer.
+  const alimJaar = Math.max(0, N('alimentatie')) * 12;
   function scen(pensSit){
-    const inks = pp.map(p=>pensSit(p)?p.pens:p.ink);
+    const inks = pp.map((p,i)=>Math.max(0, (pensSit(p)?p.pens:p.ink) - (i===0?alimJaar:0)));
     const idx = inks.indexOf(Math.max(...inks));
     const aowTbl = pensSit(pp[idx]);
     const ti = inks.reduce((x,y)=>x+y,0);
@@ -646,13 +649,13 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const studieLastMnd = studieTermijnMnd * studieFactor;
   // Consumptief krediet: 2% van de (oorspronkelijke) kredietlimiet PER MAAND als bruto last
   const andereLastMnd = andereLening * 0.02;
-  // Partneralimentatie en erfpachtcanon: aftrekbaar, dus niet bruteren; overige niet-aftrekbare lasten: bruteren met dezelfde factor
-  const alimMnd = N('alimentatie'), erfpMnd = N('erfpacht'), overigNetto = N('overigLast');
+  // Erfpachtcanon: niet bruteren; overige niet-aftrekbare lasten: bruteren met dezelfde factor. Partneralimentatie zit in het toetsinkomen.
+  const alimMnd = 0, erfpMnd = N('erfpacht'), overigNetto = N('overigLast');
   const overigMnd = overigNetto * studieFactor;
   const studieLastJaar = studieLastMnd * 12;
   const andereLastJaar = andereLastMnd * 12;
-  const overigeLastJaar = (alimMnd + erfpMnd + overigMnd) * 12;
-  const lastMnd = studieLastMnd + andereLastMnd + alimMnd + erfpMnd + overigMnd;
+  const overigeLastJaar = (erfpMnd + overigMnd) * 12;
+  const lastMnd = studieLastMnd + andereLastMnd + erfpMnd + overigMnd;
   const annFactor = berekenAnnuiteit(toetsRente, looptijdJaar);
   function uitkomst(sc){
     const ti = sc.toetsInkomen;
@@ -714,7 +717,7 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const maandlastRente = maxNhgGegeven * rente/100/12;
   return {
     toetsInkomen, toetsRente, flp, flp3, fiscaal, box3Deel, b3info: ub.b3info, maxJaarLast, studieLastJaar, andereLastJaar,
-    alimMnd, erfpMnd, overigNetto, overigMnd, overigeLastJaar, lastMnd, duoR, duoJ,
+    alimMnd, alimJaar, erfpMnd, overigNetto, overigMnd, overigeLastJaar, lastMnd, duoR, duoJ,
     alleenstaandGrens, aantalAanvragers, verduurzOn, verduurzExtra, maxMetVerduurz,
     studieTermijnMnd, studieFactor, studieLastMnd, studieGeschat, andereLastMnd,
     beschikbaarJaar, beschikbaarMnd, annFactor, maxOpInkomen, labelExtra,
@@ -790,13 +793,13 @@ function bereken(){
   </tr></thead><tbody>
     <tr><td>1. Inkomen 1 (u)</td><td>${fmt(r.hoogste)}</td><td style="text-align:right">100% wordt meegenomen</td></tr>
     ${ink2>0?`<tr><td>1b. Inkomen 2 (partner, 100%)</td><td class="pos">+${fmt(ink2Meegenomen)}</td><td style="text-align:right">100% van ${fmt(r.laagste)}</td></tr>`:''}
+    ${r.alimJaar>0?`<tr><td>1c. Betaalde partneralimentatie</td><td class="neg">−${fmt(r.alimJaar)}</td><td style="text-align:right">al afgetrokken van het inkomen van de aanvrager hierboven (NHG V&amp;N 2026 C.7.14.2)</td></tr>`:''}
     <tr class="totaal"><td>= Toetsinkomen</td><td>${fmt(r.toetsInkomen)}</td><td style="text-align:right">Basis voor NIBUD-norm${r.pensioenBepalend?' (inkomen vanaf AOW)':''}</td></tr>
     <tr><td>Pensioentoets</td><td>${r.pensioenBepalend?'bepalend':'—'}</td><td style="text-align:right">${r.pensioenRegel}</td></tr>
     <tr><td>2. FLP (financieringslast%)</td><td>${fmtPct(r.flp*100)}</td><td style="text-align:right">Bij toetsrente ${fmtPct(r.toetsRente,2)}${r.fiscaal==='box3'?' · box 3-tabel (rente niet aftrekbaar)':''}${r.fiscaal==='deels'&&r.box3Deel>0?` · box 3-deel ${fmt(r.box3Deel)} getoetst met box 3-percentage ${fmtPct(r.flp3*100)}`:''}</td></tr>
     <tr><td>= Max. bruto jaarlijkse hypotheeklast</td><td>${fmt(r.maxJaarLast)}</td><td style="text-align:right">${fmt(r.toetsInkomen)} × ${fmtPct(r.flp*100)}</td></tr>
     ${r.studieLastJaar>0?`<tr><td>3a. Aftrek studieschuld</td><td class="neg">−${fmt(r.studieLastJaar)}</td><td style="text-align:right">${fmt(r.studieTermijnMnd,2)}/mnd${r.studieGeschat?` (schatting: annuïteit ${r.duoJ} jaar à ${fmtPct(r.duoR,2)}, geen werkelijke DUO-termijn)`:''} × factor ${r.studieFactor.toFixed(2).replace('.',',')} = ${fmt(r.studieLastMnd,2)}/mnd</td></tr>`:''}
     ${r.andereLastJaar>0?`<tr><td>3b. Aftrek kredieten</td><td class="neg">−${fmt(r.andereLastJaar)}</td><td style="text-align:right">2% van ${fmt(N('andereLening'))} = ${fmt(r.andereLastMnd,2)}/mnd</td></tr>`:''}
-    ${r.alimMnd>0?`<tr><td>3c. Aftrek partneralimentatie</td><td class="neg">−${fmt(r.alimMnd*12)}</td><td style="text-align:right">${fmt(r.alimMnd,2)}/mnd (aftrekbaar: niet gebruteerd)</td></tr>`:''}
     ${r.erfpMnd>0?`<tr><td>3d. Aftrek erfpachtcanon</td><td class="neg">−${fmt(r.erfpMnd*12)}</td><td style="text-align:right">${fmt(r.erfpMnd,2)}/mnd (aftrekbaar: niet gebruteerd)</td></tr>`:''}
     ${r.overigNetto>0?`<tr><td>3e. Aftrek overige vaste lasten</td><td class="neg">−${fmt(r.overigMnd*12)}</td><td style="text-align:right">${fmt(r.overigNetto,2)}/mnd × factor ${r.studieFactor.toFixed(2).replace('.',',')} = ${fmt(r.overigMnd,2)}/mnd</td></tr>`:''}
     <tr class="totaal"><td>= Beschikbare jaarlijkse hypotheeklast</td><td>${fmt(r.beschikbaarJaar)}</td><td style="text-align:right">${fmt(r.beschikbaarMnd,2)}/mnd</td></tr>

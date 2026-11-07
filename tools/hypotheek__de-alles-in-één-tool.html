@@ -500,7 +500,7 @@ Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.
 </div>
 </div>
 <div class="form-group">
-<label for="alimentatieMaandlast">Partneralimentatie <span class="hint">(per maand; aftrekbaar, niet gebruteerd)</span></label>
+<label for="alimentatieMaandlast">Betaalde partneralimentatie <span class="hint">(per maand, door de aanvrager betaald; 12 × dit bedrag wordt van het toetsinkomen afgetrokken, NHG V&amp;N 2026 C.7.14.2)</span></label>
 <div class="input-prefix-group">
 <span class="prefix">€</span>
 <input type="number" id="alimentatieMaandlast" placeholder="0" min="0" step="50">
@@ -522,7 +522,7 @@ Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.
 </div>
 </div>
 <div class="info-box">
-<strong>Verplichtingen (Trhk 2026):</strong> De bruto maandlast gaat af van de toegestane financieringslast. Studieschuld: werkelijke DUO-termijn × bruteringsfactor (bij box 1). Consumptief krediet: 2% van de kredietlimiet per maand. Partneralimentatie en erfpachtcanon zijn aftrekbaar en worden niet gebruteerd. Overige niet-aftrekbare lasten worden bij box 1 met dezelfde factor gebruteerd.
+<strong>Verplichtingen (Trhk 2026):</strong> De bruto maandlast gaat af van de toegestane financieringslast. Studieschuld: werkelijke DUO-termijn × bruteringsfactor (bij box 1). Consumptief krediet: 2% van de kredietlimiet per maand. Erfpachtcanon wordt niet gebruteerd. Betaalde partneralimentatie is geen maandlast: het jaarbedrag gaat van het toetsinkomen van de aanvrager af, ook bij de pensioentoets (geen einddatum bekend, conservatief) — NHG V&amp;N 2026 C.7.14.2. Overige niet-aftrekbare lasten worden bij box 1 met dezelfde factor gebruteerd.
 </div>
 </div>
 
@@ -1243,7 +1243,7 @@ const minInkomenAOW = 29000;
 const pt = pensioentoetsStatus();
 const verplichtingenMaandVoor = (tab) => {
 const bf = (aftrek === 'box1') ? getBruteringFactor(toetsrente) : 1.0;
-return duoMaandlast * bf + kredietMaandlast * 0.02 + alimentatieMaandlast + erfpachtJaar / 12 + overigeVerplichtingen * bf;
+return duoMaandlast * bf + kredietMaandlast * 0.02 + erfpachtJaar / 12 + overigeVerplichtingen * bf; // partneralimentatie: van het toetsinkomen af
 };
 const scenarioLTI = (ink, isAow) => {
 const tab = isAow ? (aftrek === 'box3' ? 'b3aow' : 'aow') : (aftrek === 'box3' ? 'b3naow' : 'naow');
@@ -1253,7 +1253,11 @@ const netto = Math.max(0, eff * fl / 12 - verplichtingenMaandVoor(tab));
 return { ink, tab, eff, fl, isAow, maxNaVerpl: netto / annFactor(toetsrente, looptijd * 12) };
 };
 // AOW al bereikt (volgens geboortedatum) en inkomen vanaf AOW ingevuld: alleen dat inkomen toetsen (AOW-tabel)
-const ink1Nu = (pt.p1.aow && !state.pensioen1Leeg) ? state.pensioen1 : inkomen1;
+// Betaalde partneralimentatie (jaarbedrag) van het toetsinkomen van de aanvrager af (NHG V&N 2026 C.7.14.2), niet negatief;
+// geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief).
+const alimJaar = (alimentatieMaandlast || 0) * 12;
+const naAlim = (x) => Math.max(0, x - alimJaar);
+const ink1Nu = naAlim((pt.p1.aow && !state.pensioen1Leeg) ? state.pensioen1 : inkomen1);
 const ink2Nu = (pt.heeftP2 && pt.p2.aow && !state.pensioen2Leeg) ? state.pensioen2 : inkomen2;
 // Tabelkeuze (Trhk art. 3 lid 7): heeft één van beide de AOW-leeftijd bereikt, dan volgt de tabel de persoon met het hoogste toetsinkomen.
 // AOW-status aanvrager: schakelaar 'AOW-gerechtigde' of geboortedatum; partner: geboortedatum.
@@ -1262,7 +1266,7 @@ const tabelAow = (i1, a1, i2, a2) => (!pt.heeftP2 || i1 >= i2) ? a1 : a2;
 const scHuidig = scenarioLTI(ink1Nu + ink2Nu, tabelAow(ink1Nu, aow1, ink2Nu, aow2));
 let scPensioen = null;
 if (pt.geldt && !pt.ontbreekt) {
-const i1 = pt.p1.pt ? state.pensioen1 : ink1Nu;
+const i1 = pt.p1.pt ? naAlim(state.pensioen1) : ink1Nu;
 const i2 = pt.p2.pt ? state.pensioen2 : ink2Nu;
 // In dit scenario geldt wie onder de pensioentoets valt als AOW-gerechtigd
 scPensioen = scenarioLTI(i1 + i2, tabelAow(i1, pt.p1.pt || aow1, i2, pt.p2.pt || aow2));
@@ -1315,11 +1319,10 @@ const brutoBeschikbaarMaand = (effectiefInkomen * flPct) / 12;
 const bruteringFactor = (aftrek === 'box1') ? getBruteringFactor(toetsrente) : 1.0;
 const duoGebruteerd = duoMaandlast * bruteringFactor;
 const kredietGebruteerd = kredietMaandlast * 0.02; // 2% van de kredietlimiet per maand (bruto last)
-const alimentatieGebruteerd = alimentatieMaandlast; // alimentatie is aftrekbaar
 const erfpachtMaand = erfpachtJaar / 12;
 const overigeGebruteerd = overigeVerplichtingen * bruteringFactor;
 
-const totaalVerplichtingenMaand = duoGebruteerd + kredietGebruteerd + alimentatieGebruteerd + erfpachtMaand + overigeGebruteerd; // = verplichtingenMaandVoor()
+const totaalVerplichtingenMaand = duoGebruteerd + kredietGebruteerd + erfpachtMaand + overigeGebruteerd; // = verplichtingenMaandVoor()
 const nettoBeschikbaarMaand = Math.max(0, brutoBeschikbaarMaand - totaalVerplichtingenMaand);
 
 // Max hypotheek na verplichtingen
@@ -1383,7 +1386,7 @@ if (ltv < 101 && benutting <= 100) risicos.push({ type: 'ok', text: `LTV ${pct(l
 if (nhgCheck === 'ja') risicos.push({ type: 'ok', text: `NHG mogelijk: woningwaarde en hypotheekbedrag binnen NHG-grens 2026` });
 
 return {
-toetsinkomen, toetsrente, tabelType, flPct,
+toetsinkomen, toetsrente, tabelType, flPct, alimJaar,
 maxHypLTI_basis, alleenstaandeOpslag, labelOpslag, ebvOpslag, isAowTabel: scBepalend.isAow,
 ptTekst, pensioentoetsBepalend, scHuidig, scPensioen,
 totaalVerplichtingenMaand, brutoBeschikbaarMaand, nettoBeschikbaarMaand,
@@ -1445,7 +1448,7 @@ container.innerHTML = `
 <div class="result-hero-label">Maximale hypotheek (LTI conform Trhk 2026)</div>
 <div class="result-hero-amount">${euro(r.maxHyp)}</div>
 <div class="result-hero-sub">
-Toetsinkomen ${euro(r.toetsinkomen)} · Toetsrente ${pct(r.toetsrente*100, 2)} · FL-percentage ${pct(r.flPct*100, 1)}
+Toetsinkomen ${euro(r.toetsinkomen)}${r.alimJaar > 0 ? ` (na aftrek ${euro(r.alimJaar)} betaalde partneralimentatie)` : ''} · Toetsrente ${pct(r.toetsrente*100, 2)} · FL-percentage ${pct(r.flPct*100, 1)}
 </div>
 </div>
 
@@ -1794,7 +1797,7 @@ ${state.aoverzekering === 'nee' ? '<li style="color:#8a6d00">⚠️ Geen AO-verz
 <tr><td><strong>Klant</strong></td><td>${klant}</td><td><strong>Adviseur</strong></td><td>${adviseur}</td></tr>
 <tr><td><strong>Situatie</strong></td><td>${state.situatie === 'alleenstaand' ? 'Alleenstaand' : 'Met partner'}</td><td><strong>AOW</strong></td><td>${state.aow === 'ja' ? 'Ja' : 'Nee'}</td></tr>
 <tr><td><strong>Inkomen aanvrager</strong></td><td>${euro(state.inkomen1)}</td><td><strong>Inkomen partner</strong></td><td>${euro(state.inkomen2)}</td></tr>
-<tr><td><strong>Toetsinkomen</strong></td><td colspan="3"><strong>${euro(r.toetsinkomen)}</strong> (100% + 100% conform Trhk 2026)</td></tr>
+<tr><td><strong>Toetsinkomen</strong></td><td colspan="3"><strong>${euro(r.toetsinkomen)}</strong> (100% + 100% conform Trhk 2026${r.alimJaar > 0 ? `; na aftrek ${euro(r.alimJaar)} betaalde partneralimentatie, NHG V&amp;N 2026 C.7.14.2` : ''})</td></tr>
 <tr><td><strong>Woningwaarde</strong></td><td>${euro(state.woningWaarde)}</td><td><strong>Energielabel</strong></td><td>${state.label}</td></tr>
 <tr><td><strong>Geoffreerde rente</strong></td><td>${pct(state.rente*100,2)}</td><td><strong>RVP</strong></td><td>${state.rvp} jaar</td></tr>
 <tr><td><strong>Toetsrente</strong></td><td>${pct(r.toetsrente*100,2)}</td><td><strong>Looptijd</strong></td><td>${state.looptijd} jaar</td></tr>

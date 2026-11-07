@@ -462,7 +462,7 @@
           <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="lopendeLenMnd" value="0" inputmode="numeric"><span class="suffix">limiet</span></div>
         </div>
         <div class="input-group">
-          <label>Partneralimentatie <span class="tooltip" data-tip="Aftrekbaar: niet gebruteerd. Kinderalimentatie hoort bij overige niet-aftrekbare lasten.">i</span></label>
+          <label>Betaalde partneralimentatie <span class="tooltip" data-tip="Door aanvrager 1 betaald. 12 × het maandbedrag wordt van het toetsinkomen afgetrokken (NHG V&amp;N 2026 C.7.14.2), geen maandlast. Geen einddatum bekend: ook van het pensioeninkomen afgetrokken (conservatief). Kinderalimentatie hoort bij overige niet-aftrekbare lasten.">i</span></label>
           <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="alimentatieMnd" value="0" inputmode="numeric"><span class="suffix">/mnd</span></div>
         </div>
         <div class="input-group">
@@ -626,7 +626,7 @@
   <div class="disclaimer-footer">
     <h3>Disclaimer</h3>
     <p><strong>Indicatief rekenmodel.</strong> Deze tool is een hulpmiddel ter ondersteuning van het hypotheekadvies, geen vervanging daarvan. Aan de uitkomsten kunnen geen rechten worden ontleend. Voor een persoonlijk hypotheekadvies dat voldoet aan de AFM Leidraad Hypotheekadvisering 2026 (inclusief kennis-en-ervaring-toets, klantbeeld en geschiktheidstoetsing) raadpleeg een erkend financieel of hypothecair planner.</p>
-    <p><strong>Wat de tool wél doet:</strong> berekening van maximale hypotheek op basis van de NIBUD-financieringslastpercentages 2026 (vier tabellen, 4.272 cellen), SVB AOW-tabel 2026, drie pensioenmomenten, tweetrap-mix optimalisatie, verplichtingen (DUO gebruteerd, krediet 2% van de limiet, partneralimentatie, erfpacht, overige lasten) en het alleenstaandenbedrag volgens de Tijdelijke regeling hypothecair krediet.</p>
+    <p><strong>Wat de tool wél doet:</strong> berekening van maximale hypotheek op basis van de NIBUD-financieringslastpercentages 2026 (vier tabellen, 4.272 cellen), SVB AOW-tabel 2026, drie pensioenmomenten, tweetrap-mix optimalisatie, verplichtingen (DUO gebruteerd, krediet 2% van de limiet, erfpacht, overige lasten), betaalde partneralimentatie (van het toetsinkomen af) en het alleenstaandenbedrag volgens de Tijdelijke regeling hypothecair krediet.</p>
     <p><strong>Wat de tool níet doet:</strong> LTV-toets (max 100%/106% marktwaarde), NHG-toets en -premie, maximale aflossingsvrij-grens (50% marktwaarde), geldverstrekker-specifieke acceptatiecriteria, indexatie van inkomens, rentestress-test, risicodekking (ORV/AOV), estate planning. Werkelijke maximale hypotheek kan ook afhangen van energielabel, BKR-status, en kwaliteit van het inkomensbewijs (vast/variabel/ZZP). Geldverstrekkers kunnen strengere óf soepelere acceptatie hanteren.</p>
     <p><strong>Bron tabellen:</strong> Bijlage Financieringslastnormen 2026 (Ministerie van BZK / NIBUD), AOW-leeftijd: vastgesteld t/m 2031 (67 jaar en 3 maanden voor geboren 1-1-1961 t/m 30-9-1964); voor latere geboortedata een prognose.</p>
     <div class="build-info">
@@ -680,7 +680,7 @@
           <li><strong>Bruto jaarinkomen pensioen</strong> — verwacht totaal pensioeninkomen (AOW + ouderdomspensioen + lijfrente).</li>
           <li><strong>Toetsrente bij vast <10jr</strong> — slider voor de GHF-toetsrente (default 5,00%).</li>
           <li><strong>Hypotheekrente en rentevaste periode</strong> — bepalen de rentekolom en de annuïteit (default 4,00%, rentevast ≥ 10 jaar).</li>
-          <li><strong>Verlagingen</strong> — DUO-termijn, kredietlimiet, partneralimentatie, erfpacht, overige niet-aftrekbare lasten.</li>
+          <li><strong>Verlagingen</strong> — DUO-termijn, kredietlimiet, erfpacht, overige niet-aftrekbare lasten. Betaalde partneralimentatie verlaagt het toetsinkomen.</li>
           <li><strong>Alleenstaandenbedrag</strong> — € 17.000, automatisch bij één aanvrager boven de inkomensgrens.</li>
         </ul>
       </section>
@@ -738,7 +738,7 @@
         <ul>
           <li><strong>Studieschuld DUO</strong> — werkelijke maandtermijn × bruteringsfactor bij de rente (box 1-tabellen; box 3: factor 1).</li>
           <li><strong>Consumptief krediet</strong> — 2% van de kredietlimiet per maand (niet gebruteerd).</li>
-          <li><strong>Partneralimentatie</strong> — aftrekbaar, niet gebruteerd.</li>
+          <li><strong>Betaalde partneralimentatie</strong> — jaarbedrag gaat van het toetsinkomen van aanvrager 1 af (NHG V&amp;N 2026 C.7.14.2); de tool kent geen einddatum, dus ook van het pensioeninkomen (conservatief).</li>
           <li><strong>Erfpachtcanon</strong> — jaarlijks bedrag ÷ 12, aftrekbaar, niet gebruteerd.</li>
           <li><strong>Overige niet-aftrekbare lasten</strong> — gebruteerd met dezelfde factor (box 1-tabellen).</li>
         </ul>
@@ -822,11 +822,11 @@ function bruteringsFactor(rate) {
 // Toetscontext (wordt in calculate() gezet): rente, verplichtingen, aantal aanvragers
 let TK = { refRate: 4.0, d: { studieMnd: 0, kredietMnd: 0, alimMnd: 0, erfMnd: 0, overigMnd: 0 }, isSolo: true };
 // Bruto maandlast verplichtingen (Trhk 2026): DUO en overige niet-aftrekbare lasten gebruteerd (alleen box 1-tabellen),
-// krediet 2% van de limiet, partneralimentatie en erfpacht (aftrekbaar) niet gebruteerd.
+// krediet 2% van de limiet, erfpacht niet gebruteerd. Betaalde partneralimentatie: van het toetsinkomen af (readApplicant).
 function verlagingenVoor(type, rate) {
   const d = TK.d;
   const f = String(type).indexOf('box3') === 0 ? 1 : bruteringsFactor(rate === undefined ? TK.refRate : rate);
-  return d.studieMnd * f + d.kredietMnd + d.alimMnd + d.erfMnd + d.overigMnd * f;
+  return d.studieMnd * f + d.kredietMnd + d.erfMnd + d.overigMnd * f;
 }
 // Alleenstaandenbedrag (art. 3 lid 8): één aanvrager én toetsinkomen > € 30.000 (niet-AOW) / € 29.000 (AOW-tabel)
 function alleenstaandenBedrag(gez, aowTabel) {
@@ -911,9 +911,13 @@ function readApplicant(id) {
   const birthEl = document.getElementById('birthDate' + id);
   if (!birthEl) return null;
   const birthDate = birthEl.value;
-  const salary = parseEuro(document.getElementById('salary' + id).value);
+  // Betaalde partneralimentatie (NHG V&N 2026 C.7.14.2): jaarbedrag van het toetsinkomen van aanvrager 1 af, niet negatief.
+  // Geen einddatum bekend → ook van het pensioeninkomen (conservatief).
+  const alimEl = document.getElementById('alimentatieMnd');
+  const alimJaar = (id === 1 && alimEl) ? parseEuro(alimEl.value) * 12 : 0;
+  const salary = Math.max(0, parseEuro(document.getElementById('salary' + id).value) - alimJaar);
   const pensionRaw = String(document.getElementById('pension' + id).value || '').trim();
-  const pension = parseEuro(pensionRaw);
+  const pension = pensionRaw === '' ? 0 : Math.max(0, parseEuro(pensionRaw) - alimJaar);
   const pensionMissing = pensionRaw === '';
   const aowYears = parseInt(document.getElementById('aowYears' + id).value) || 67;
   const aowMonths = parseInt(document.getElementById('aowMonths' + id).value) || 0;
@@ -923,7 +927,7 @@ function readApplicant(id) {
   const drempel = getPensioenDrempel();
   const aowReached = yearsToAOW <= 0;
   const pensioentoetsGeldt = !aowReached && drempel > 0 && age >= drempel;
-  return { id, birthDate, salary, pension, pensionMissing, aowYears, aowMonths, age, aowAge, yearsToAOW, aowReached, pensioentoetsGeldt };
+  return { id, birthDate, salary, pension, alimJaar, pensionMissing, aowYears, aowMonths, age, aowAge, yearsToAOW, aowReached, pensioentoetsGeldt };
 }
 
 function getInputs() {
@@ -2161,6 +2165,8 @@ function refreshApplicantUI() {
   if (totalsEl) {
     let html = `<div class="total-row"><span>Totaal salaris</span><strong>${formatEuro(inp.salary)}</strong></div>`;
     html += `<div class="total-row"><span>Totaal pensioen</span><strong>${formatEuro(inp.pension)}</strong></div>`;
+    const alimJ = inp.applicants[0] && inp.applicants[0].alimJaar;
+    if (alimJ > 0) html += `<div class="total-row"><span>Salaris en pensioen na aftrek betaalde partneralimentatie (${formatEuro(alimJ)}/jaar, NHG C.7.14.2)</span><strong>toetsinkomen</strong></div>`;
     html += `<div class="total-row"><span>Eerste AOW over</span><strong>${formatYearsMonths(inp.primary.yearsToAOW)}</strong></div>`;
     totalsEl.innerHTML = html;
   }
@@ -2225,6 +2231,7 @@ document.getElementById('pensioenDrempel').addEventListener('change', () => { re
   el.addEventListener('input', () => {
     fmtEuroInput(el);
     updateReductionsTotal();
+    if (id === 'alimentatieMnd') refreshApplicantUI();
     calculate();
   });
 });
@@ -2234,8 +2241,10 @@ function updateReductionsTotal() {
   const total = verlagingenVoor('werkend', inp.refRate);
   const el = document.getElementById('reductionsTotalDisplay');
   if (el) {
-    el.textContent = `Totaal bruto maandlast: ${formatEuro(total)}/mnd (box 1, DUO/overige × ${bruteringsFactor(inp.refRate).toFixed(2).replace('.', ',')})`;
-    el.classList.toggle('zero', total === 0);
+    const alimJ = inp.applicants[0] ? inp.applicants[0].alimJaar : 0;
+    el.textContent = `Totaal bruto maandlast: ${formatEuro(total)}/mnd (box 1, DUO/overige × ${bruteringsFactor(inp.refRate).toFixed(2).replace('.', ',')})` +
+      (alimJ > 0 ? ` · partneralimentatie ${formatEuro(alimJ)}/jaar gaat van het toetsinkomen (salaris én pensioen) van aanvrager 1 af` : '');
+    el.classList.toggle('zero', total === 0 && !(alimJ > 0));
   }
 }
 document.getElementById('addPartBtn').addEventListener('click', () => addPart());

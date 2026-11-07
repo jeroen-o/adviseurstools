@@ -174,6 +174,7 @@ input[type=range]::-webkit-slider-thumb{width:18px;height:18px}
         <div class="f"><div class="fl">Energielabel woning</div><select class="se" id="mhLabel" onchange="calcMh()"><option value="0">E, F, G (€ 0)</option><option value="5000">C, D (€ 5.000)</option><option value="10000" selected>A, B (€ 10.000)</option><option value="20000">A+, A++ (€ 20.000)</option><option value="25000">A+++ (€ 25.000)</option><option value="30000">A++++ (€ 30.000)</option><option value="40000">A++++ met energieprestatiegarantie (€ 40.000)</option></select></div>
         <div class="f"><div class="fl">Bestaande verplichtingen (bruto €/mnd, bijv. 2% van kredietlimiet)</div><input type="number" class="in" id="mhSchuld" value="0" oninput="calcMh()"></div>
         <div class="f"><div class="fl">DUO-studieschuld: werkelijke maandtermijn (€/mnd)</div><input type="number" class="in" id="mhDuo" value="0" placeholder="Termijn volgens DUO" oninput="calcMh()"></div>
+        <div class="f"><div class="fl">Betaalde partneralimentatie aanvrager 1 (€/mnd) — gaat van het toetsinkomen af, ook vanaf AOW (NHG V&amp;N 2026 C.7.14.2); niet bij verplichtingen opnemen</div><input type="number" class="in" id="mhAlim" value="0" oninput="calcMh()"></div>
       </div></div>
       <div class="card"><div class="ch"><span class="ct">Leeftijd &amp; pensioentoets</span></div><div class="cb">
         <div class="f"><div class="fl">Pensioentoets vanaf leeftijd</div><select class="se" id="mhDrempel" onchange="calcMh()"><option value="0">Niet toetsen</option><option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option><option value="52">52 jaar (bij sommige geldverstrekkers)</option></select></div>
@@ -198,7 +199,8 @@ input[type=range]::-webkit-slider-thumb{width:18px;height:18px}
         <div class="f"><div class="fl">13e maand / eindejaarsuitkering</div><input type="number" class="in" id="ti13" value="0" placeholder="jaarlijks bedrag" oninput="calcTi()"></div>
         <div class="f"><div class="fl">Vaste / structurele bonus of winstdeling (jr, werkgeversverklaring)</div><input type="number" class="in" id="tiBonus" value="0" oninput="calcTi()"></div>
         <div class="f"><div class="fl">Structureel overwerk (gemiddeld/mnd)</div><input type="number" class="in" id="tiOverwerk" value="0" oninput="calcTi()"></div>
-        <div class="f"><div class="fl">Alimentatie ontvangen (jr)</div><input type="number" class="in" id="tiAlim" value="0" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Ontvangen partneralimentatie (jr) — telt mee zolang er recht op is (NHG C.7.14.1); kinderalimentatie telt niet mee</div><input type="number" class="in" id="tiAlim" value="0" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Betaalde partneralimentatie (jr) — gaat van het toetsinkomen af (NHG V&amp;N 2026 C.7.14.2)</div><input type="number" class="in" id="tiAlimBet" value="0" oninput="calcTi()"></div>
         <div class="f"><div class="fl">Freelance / winst uit onderneming (jr)</div><input type="number" class="in" id="tiFreelance" value="0" placeholder="Gemiddelde 3 jaar; laatste jaar als dat lager is" oninput="calcTi()"></div>
         <div class="f"><div class="fl">Dienstverband</div><select class="se" id="tiDienst" onchange="calcTi()"><option value="vast" selected>Vast</option><option value="flex">Flexibel / tijdelijk</option><option value="zzp">ZZP (3-jr gem.)</option></select></div>
         <div class="f" style="background:var(--bg2);border:1px dashed var(--border);border-radius:8px;padding:8px 10px;"><label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;cursor:pointer;"><input type="checkbox" id="tiBeleid" onchange="calcTi()" style="margin-top:2px;"> <span><strong>Beleid geldverstrekker (optioneel)</strong> — bonus, overwerk en freelance-inkomen voor 50%, flex −10%, zzp −15%. Dit volgt níet uit de Tijdelijke regeling hypothecair krediet of de Gedragscode; standaard uit.</span></label></div>
@@ -486,6 +488,9 @@ function calcMh(){
   const rvpSel=document.getElementById('mhRvp');const rvpJr=parseInt(rvpSel.options[rvpSel.selectedIndex].dataset.jr)||10;
   const schuld=parseFloat(document.getElementById('mhSchuld').value)||0;
   const duo=parseFloat(document.getElementById('mhDuo').value)||0;
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van aanvrager 1 af (NHG V&N 2026 C.7.14.2), niet negatief;
+  // geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief). Geen maandlast.
+  const alimJ=Math.max(0,parseFloat((document.getElementById('mhAlim')||{}).value)||0)*12;
   document.getElementById('mhI1V').textContent=fmt(i1);
   document.getElementById('mhI2V').textContent=fmt(i2);
   const toetsR=rvpJr<10?Math.max(5.0,rvp):rvp; // AFM-toetsrente 5% bij rentevaste periode < 10 jaar
@@ -498,7 +503,7 @@ function calcMh(){
     return;
   }
   // tabel volgt de aanvrager met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
-  function scen(pensSit){let tot=0,hoog=null;pp.forEach(p=>{const ps=pensSit(p);const x=ps?p.pens:p.inkomen;tot+=x;if(!hoog||x>hoog.x)hoog={x,ps};});return {ink:tot,tbl:(hoog&&hoog.ps)?FL2026_AOW:FL2026};}
+  function scen(pensSit){let tot=0,hoog=null;pp.forEach((p,pi)=>{const ps=pensSit(p);const x=Math.max(0,(ps?p.pens:p.inkomen)-(pi===0?alimJ:0));tot+=x;if(!hoog||x>hoog.x)hoog={x,ps};});return {ink:tot,tbl:(hoog&&hoog.ps)?FL2026_AOW:FL2026};}
   const sNu=scen(p=>p.aow); // huidige situatie: na AOW alleen pensioeninkomen
   const ptGeldt=pp.some(p=>p.geldt);
   const sPens=ptGeldt?scen(p=>p.aow||p.geldt):null;
@@ -518,7 +523,7 @@ function calcMh(){
   const maxHyp=Math.max(0,basisHyp+label);
   const nhg=maxHyp<=470000;
   document.getElementById('mhResult').innerHTML=`
-    <div class="rh"><div class="rh-e">Maximale Hypotheek</div><div class="rh-v">${fmt(maxHyp)}</div><div class="rh-c">Toetsinkomen: ${fmt(toets)} · Woonquota: ${fmtD(q*100,1)}${bindend.tbl===FL2026_AOW?' (AOW-tabel)':''} · Toetsrente: ${fmtD(toetsR,1)}</div></div>
+    <div class="rh"><div class="rh-e">Maximale Hypotheek</div><div class="rh-v">${fmt(maxHyp)}</div><div class="rh-c">Toetsinkomen: ${fmt(toets)}${alimJ>0?' (na aftrek '+fmt(alimJ)+' betaalde partneralimentatie)':''} · Woonquota: ${fmtD(q*100,1)}${bindend.tbl===FL2026_AOW?' (AOW-tabel)':''} · Toetsrente: ${fmtD(toetsR,1)}</div></div>
     <div class="kg">
       <div class="kp"><div class="kl">Basis max.</div><div class="kv b">${fmt(basisHyp)}</div></div>
       <div class="kp"><div class="kl">Label toeslag</div><div class="kv g">+${fmt(label)}</div></div>
@@ -538,6 +543,7 @@ function calcTi(){
   const bonus=parseFloat(document.getElementById('tiBonus').value)||0;
   const ow=parseFloat(document.getElementById('tiOverwerk').value)||0;
   const alim=parseFloat(document.getElementById('tiAlim').value)||0;
+  const alimBet=Math.max(0,parseFloat((document.getElementById('tiAlimBet')||{}).value)||0);
   const free=parseFloat(document.getElementById('tiFreelance').value)||0;
   const dienst=document.getElementById('tiDienst').value;
   const beleid=document.getElementById('tiBeleid').checked;
@@ -547,12 +553,12 @@ function calcTi(){
   const variabel=bonus*fVar+ow*12*fVar;
   const totaal=jaarsalaris+x13+variabel+alim+free*fVar;
   const afslag=beleid?(dienst==='flex'?0.9:dienst==='zzp'?0.85:1):1;
-  const toets=Math.round(totaal*afslag);
+  const toets=Math.max(0,Math.round(totaal*afslag-alimBet)); // betaalde partneralimentatie na eventuele afslag in mindering (C.7.14.2), niet negatief
   const dienstTxt=dienst==='flex'
     ?'Flex/tijdelijk: toetsinkomen via werkgeversverklaring met intentieverklaring, inkomensbepaling loondienst (UWV-gegevens) of Perspectiefverklaring.'
     :'ZZP: gemiddelde nettowinst over de laatste 3 jaar (ook verlies), maar niet meer dan het laatste jaar. Bewaar de aangiften en jaarcijfers.';
   document.getElementById('tiResult').innerHTML=`
-    <div class="rh"><div class="rh-e">Toetsinkomen Hypotheek</div><div class="rh-v">${fmt(toets)}</div><div class="rh-c">Bruto jaarsalaris: ${fmt(jaarsalaris)} · ${beleid?'inclusief optioneel beleid geldverstrekker':'normatief, zonder eigen afslagen'}</div></div>
+    <div class="rh"><div class="rh-e">Toetsinkomen Hypotheek</div><div class="rh-v">${fmt(toets)}</div><div class="rh-c">Bruto jaarsalaris: ${fmt(jaarsalaris)}${alimBet>0?' · na aftrek '+fmt(alimBet)+' betaalde partneralimentatie':''} · ${beleid?'inclusief optioneel beleid geldverstrekker':'normatief, zonder eigen afslagen'}</div></div>
     <div class="kg">
       <div class="kp"><div class="kl">Basis salaris</div><div class="kv b">${fmt(jaarsalaris)}</div></div>
       <div class="kp"><div class="kl">Variabele comp.${beleid?' (50%)':''}</div><div class="kv">${fmt(variabel)}</div></div>

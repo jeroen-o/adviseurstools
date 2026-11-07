@@ -375,12 +375,12 @@ input[type=date]{font-family:inherit}
       <div class="veld">
         <div class="vh"><span class="vl">Zelf te betalen partneralimentatie</span><button class="ibtn" onclick="toggleInfo('alimZ')">i</button></div>
         <div class="iw"><span class="iaf">€</span><input type="number" id="alimZ" placeholder="0" inputmode="decimal"><span class="iaf s">p/mnd</span></div>
-        <div class="ibox" id="info-alimZ" style="display:none">Partneralimentatie die u zelf betaalt per maand. Telt als bruto maandlast en gaat af van de toegestane financieringslast (niet gebruteerd, want fiscaal aftrekbaar).</div>
+        <div class="ibox" id="info-alimZ" style="display:none">Partneralimentatie die u zelf betaalt per maand. 12 × dit bedrag wordt van uw toetsinkomen afgetrokken (NHG V&amp;N 2026 C.7.14.2); het is geen maandlast. Er is geen einddatum bekend, dus ook bij de pensioentoets wordt het afgetrokken (conservatief).</div>
       </div>
       <div class="veld" id="alimP-veld">
         <div class="vh"><span class="vl">Door uw partner te betalen partneralimentatie</span><button class="ibtn" onclick="toggleInfo('alimP')">i</button></div>
         <div class="iw"><span class="iaf">€</span><input type="number" id="alimP" placeholder="0" inputmode="decimal"><span class="iaf s">p/mnd</span></div>
-        <div class="ibox" id="info-alimP" style="display:none">Partneralimentatie die uw partner betaalt per maand. Telt als bruto maandlast (niet gebruteerd).</div>
+        <div class="ibox" id="info-alimP" style="display:none">Partneralimentatie die uw partner betaalt per maand. 12 × dit bedrag wordt van het toetsinkomen van uw partner afgetrokken (NHG V&amp;N 2026 C.7.14.2); het is geen maandlast.</div>
       </div>
     </div>
     <div class="veld">
@@ -574,19 +574,20 @@ function bereken(){
 
   const tr=S.renteLang?r:Math.max(r,.05);
   const heeftPartner=burg!=="alleenstaand";
-  // Partneralimentatie: bruto maandlast (aftrekbaar, dus niet bruteren), in mindering op de toegestane financieringslast
-  const alimM=gn("alimZ")+(heeftPartner?gn("alimP"):0);
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van de betalende aanvrager af (NHG V&N 2026 C.7.14.2), geen maandlast
+  const alimZj=gn("alimZ")*12, alimPj=heeftPartner?gn("alimP")*12:0;
   // Status per persoon (geboortedatum gaat vóór de handmatige keuze)
   const dr=pDrempel();
   const ps1=persStatus("geb1",S.aow), ps2=heeftPartner?persStatus("geb2",S.aowP):{st:"nee"};
   const aow1=ps1.st, aowP=ps2.st;
   // Verplichtingen als bruto maandlast (Trhk 2026): krediet 2% van de limiet p/m; studieschuld werkelijke termijn x bruteringsfactor (alleen als rente (deels) aftrekbaar is)
   const studieF=S.box1==="nee"?1:brutFactor(tr);
-  // Partneralimentatie en erfpachtcanon zijn aftrekbaar: niet bruteren. Overige niet-aftrekbare lasten: bruteren met dezelfde factor.
-  const last=gn("pLening")+gn("aKred")*.02+gn("studie")*studieF+alimM+gn("erfp")+gn("overig")*studieF;
+  // Erfpachtcanon: niet bruteren. Overige niet-aftrekbare lasten: bruteren met dezelfde factor. Partneralimentatie zit in het toetsinkomen.
+  const last=gn("pLening")+gn("aKred")*.02+gn("studie")*studieF+gn("erfp")+gn("overig")*studieF;
   // AOW-tabel volgt de persoon met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
   function scen(a1,a2,st1,st2){
-    const x1=Math.max(0,a1), x2=Math.max(0,a2);
+    // betaalde partneralimentatie per persoon van het toetsinkomen af (ook na AOW: geen einddatum bekend), niet negatief
+    const x1=Math.max(0,a1-alimZj), x2=Math.max(0,a2-alimPj);
     const hoogsteAow=(x1>=x2?st1:st2)==="ja";
     return maxHypScenario({ink:x1+x2,aowTab:hoogsteAow,tr:tr,lpt:lpt,box1:S.box1,box3d:gn("box3d"),last:last,alleen:!(heeftPartner&&a2>0)});
   }
@@ -621,7 +622,8 @@ function bereken(){
   g("res-hoofd").textContent=fmt(hoofd);
   g("res-note").innerHTML="1. Omdat een hypotheek maximaal 100% van de marktwaarde van de woning mag zijn, moet de koopsom van de woning ook <strong>"+fmt(hoofd)+"</strong> of hoger zijn om deze hypotheek te kunnen krijgen."
     +(gn("studie")>0?"<br>Studieschuld: termijn "+fmt(gn("studie"))+" p/mnd × bruteringsfactor "+studieF.toFixed(2).replace(".",",")+" = "+fmt(gn("studie")*studieF)+" p/mnd als bruto last.":"")
-    +(last>0?"<br>Totaal bruto maandlasten in mindering op de toegestane financieringslast: "+fmt(last)+" p/mnd"+(function(){const d=[];if(alimM>0)d.push("partneralimentatie "+fmt(alimM));if(gn("erfp")>0)d.push("erfpachtcanon "+fmt(gn("erfp")));if(gn("overig")>0)d.push("overige lasten "+fmt(gn("overig"))+" × "+studieF.toFixed(2).replace(".",","));return d.length?" (w.o. "+d.join(", ")+")":"";})()+".":"")
+    +(last>0?"<br>Totaal bruto maandlasten in mindering op de toegestane financieringslast: "+fmt(last)+" p/mnd"+(function(){const d=[];if(gn("erfp")>0)d.push("erfpachtcanon "+fmt(gn("erfp")));if(gn("overig")>0)d.push("overige lasten "+fmt(gn("overig"))+" × "+studieF.toFixed(2).replace(".",","));return d.length?" (w.o. "+d.join(", ")+")":"";})()+".":"")
+    +((alimZj+alimPj)>0?"<br>Betaalde partneralimentatie is van het toetsinkomen afgetrokken (NHG V&amp;N 2026 C.7.14.2): "+[alimZj>0?"aanvrager "+fmt(alimZj)+" per jaar":"",alimPj>0?"partner "+fmt(alimPj)+" per jaar":""].filter(Boolean).join(", ")+"; ook bij de pensioentoets.":"")
     +(lbl==="geen"?"<br>Geen geldig energielabel: "+fmt(10000)+" extra bij aankoop (en "+fmt(10000)+" voor energiebesparende voorzieningen).":"")
     +"<br>"+(dr<=0?"Pensioentoets: niet getoetst (uitgeschakeld).":
       aowToets?"Pensioentoets (vanaf "+dr+" jaar): van toepassing — getoetst op huidig inkomen ("+fmt(Math.max(0,aowToets.nu))+") én op inkomen vanaf AOW "+fmt(aowToets.ink)+" met de AOW-tabel ("+fmt(Math.max(0,aowToets.aow))+"); de laagste uitkomst geldt (vóór energielabelbedrag).":

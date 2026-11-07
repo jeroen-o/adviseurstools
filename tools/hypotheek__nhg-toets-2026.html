@@ -483,7 +483,7 @@ input[type=number]:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
         <div class="field"><label>Energielabel (extra bedrag bij aankoop)</label><div class="iw"><select id="flLabel" onchange="flZoek()"><option value="0" selected>E, F of G — € 0</option><option value="5000">C of D — € 5.000</option><option value="10000">A of B — € 10.000</option><option value="20000">A+ of A++ — € 20.000</option><option value="25000">A+++ — € 25.000</option><option value="30000">A++++ — € 30.000</option><option value="40000">A++++ met energieprestatiegarantie — € 40.000</option><option value="10000">Geen geldig label — € 10.000</option></select></div></div>
         <div class="field"><label>Aantal aanvragers</label><div class="iw"><select id="flAlleen" onchange="flZoek()"><option value="1" selected>Eén aanvrager</option><option value="0">Twee aanvragers</option></select></div></div>
         <div class="field"><label>Studieschuld: werkelijke DUO-termijn</label><div class="iw"><span class="pre">€</span><input type="number" id="flDuo" value="0" min="0" step="10" oninput="flZoek()"><span class="suf">/mnd</span></div></div>
-        <div class="field"><label>Te betalen partneralimentatie</label><div class="iw"><span class="pre">€</span><input type="number" id="flAlim" value="0" min="0" step="10" oninput="flZoek()"><span class="suf">/mnd</span></div></div>
+        <div class="field"><label title="Wordt van het toetsinkomen afgetrokken (NHG V&amp;N 2026 C.7.14.2), ook van het inkomen vanaf AOW (geen einddatum bekend)">Betaalde partneralimentatie (gaat van het toetsinkomen af, C.7.14.2)</label><div class="iw"><span class="pre">€</span><input type="number" id="flAlim" value="0" min="0" step="10" oninput="flZoek()"><span class="suf">/mnd</span></div></div>
         <div class="field"><label>Erfpachtcanon</label><div class="iw"><span class="pre">€</span><input type="number" id="flErfp" value="0" min="0" step="10" oninput="flZoek()"><span class="suf">/mnd</span></div></div>
         <div class="field"><label>Overige niet-aftrekbare vaste lasten (netto)</label><div class="iw"><span class="pre">€</span><input type="number" id="flOverig" value="0" min="0" step="10" oninput="flZoek()"><span class="suf">/mnd</span></div></div>
         <div class="field"><label>Pensioentoets vanaf leeftijd</label><div class="iw"><select id="flDrempel" onchange="flZoek()"><option value="0">Niet toetsen</option><option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option><option value="52">52 jaar (bij sommige geldverstrekkers)</option></select></div></div>
@@ -885,21 +885,25 @@ function flTabel(){
 function flZoek(){
   var ink=v('flInk'),rente=v('flRente',5),box3=document.getElementById('flBox').value==='3';
   var gebV=document.getElementById('flGeb').value,pensV=document.getElementById('flPens').value;
-  var t=flnToets([{inkomen:ink,pensioen:pensV===''?null:parseFloat(pensV),geb:gebV?new Date(gebV+'T00:00:00'):null}],{drempel:parseInt(document.getElementById('flDrempel').value)||0,datum:new Date(),rente:rente,box3:box3});
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen af (NHG V&N 2026 C.7.14.2), niet negatief;
+  // geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief). Geen maandlast meer.
+  var alimJ=Math.max(0,v('flAlim'))*12;
+  ink=Math.max(0,ink-alimJ);
+  var t=flnToets([{inkomen:ink,pensioen:pensV===''?null:Math.max(0,parseFloat(pensV)-alimJ),geb:gebV?new Date(gebV+'T00:00:00'):null}],{drempel:parseInt(document.getElementById('flDrempel').value)||0,datum:new Date(),rente:rente,box3:box3});
   var bnd=t.bindend,kred=v('flKrediet')*0.02,label=v('flLabel');
   // Alleenstaandenbedrag (Trhk art. 3 lid 8): alleen bij één aanvrager én toetsinkomen > € 30.000 (niet-AOW) resp. > € 29.000 (AOW-tabel)
   var eenAanvr=document.getElementById('flAlleen').value==='1',alleenGrens=bnd.aowTabel?29000:30000;
   var alleen=(eenAanvr&&bnd.inkomen>alleenGrens)?FLN2026_EXTRA_ALLEENSTAANDE:0;
   // Overige verplichtingen (bruto maandlast): DUO-termijn en overige niet-aftrekbare lasten × bruteringsfactor (niet bij box 3);
-  // partneralimentatie en erfpachtcanon zijn aftrekbaar: niet bruteren
+  // erfpachtcanon: niet bruteren (partneralimentatie zit al in het toetsinkomen)
   var brut=box3?1:FLN2026_BRUTERING_STUDIE[flnKolom(rente)];
-  var duoL=v('flDuo')*brut,overL=v('flOverig')*brut,alimL=v('flAlim'),erfL=v('flErfp');
-  var lasten=kred+duoL+overL+alimL+erfL;
+  var duoL=v('flDuo')*brut,overL=v('flOverig')*brut,erfL=v('flErfp');
+  var lasten=kred+duoL+overL+erfL;
   var r=rente/100/12,af=r>0?r/(1-Math.pow(1+r,-360)):1/360;
   var basis=Math.max(0,(bnd.maxLast-lasten)/af),tot=basis+label+alleen;
-  var lDet=[];if(kred>0)lDet.push('krediet 2% = '+fmt(kred).replace(',-',''));if(duoL>0)lDet.push('DUO '+fmt(v('flDuo')).replace(',-','')+' × '+brut.toFixed(2).replace('.',',')+' = '+fmt(duoL).replace(',-',''));if(alimL>0)lDet.push('partneralimentatie '+fmt(alimL).replace(',-',''));if(erfL>0)lDet.push('erfpachtcanon '+fmt(erfL).replace(',-',''));if(overL>0)lDet.push('overige lasten '+fmt(v('flOverig')).replace(',-','')+' × '+brut.toFixed(2).replace('.',',')+' = '+fmt(overL).replace(',-',''));
+  var lDet=[];if(kred>0)lDet.push('krediet 2% = '+fmt(kred).replace(',-',''));if(duoL>0)lDet.push('DUO '+fmt(v('flDuo')).replace(',-','')+' × '+brut.toFixed(2).replace('.',',')+' = '+fmt(duoL).replace(',-',''));if(erfL>0)lDet.push('erfpachtcanon '+fmt(erfL).replace(',-',''));if(overL>0)lDet.push('overige lasten '+fmt(v('flOverig')).replace(',-','')+' × '+brut.toFixed(2).replace('.',',')+' = '+fmt(overL).replace(',-',''));
   var tabNaam={nietAOW:'tabel 1',welAOW:'tabel 2 (AOW)',box3NietAOW:'tabel 3',box3WelAOW:'tabel 4 (AOW)'}[bnd.tabel];
-  document.getElementById('flUit').innerHTML='<strong>Financieringslastpercentage: '+fmtP(bnd.pct)+'</strong> ('+tabNaam+', rij € '+Math.max(FLN2026[bnd.tabel].min,Math.min(FLN2026[bnd.tabel].max,Math.floor(bnd.inkomen/1000)*1000)).toLocaleString('nl-NL')+', toetsrente '+rente.toFixed(3).replace('.',',')+'%) · '+
+  document.getElementById('flUit').innerHTML='<strong>Financieringslastpercentage: '+fmtP(bnd.pct)+'</strong> ('+tabNaam+','+(alimJ>0?' toetsinkomen na aftrek '+fmt(alimJ).replace(',-','')+' betaalde partneralimentatie,':'')+' rij € '+Math.max(FLN2026[bnd.tabel].min,Math.min(FLN2026[bnd.tabel].max,Math.floor(bnd.inkomen/1000)*1000)).toLocaleString('nl-NL')+', toetsrente '+rente.toFixed(3).replace('.',',')+'%) · '+
     'max. financieringslast '+fmt(bnd.maxLast).replace(',-','')+'/mnd'+(lasten>0?' − verplichtingen '+fmt(lasten).replace(',-','')+'/mnd ('+lDet.join('; ')+')':'')+
     ' · <strong>indicatieve maximale hypotheek '+(t.ontbreekt?'—':fmt(tot))+'</strong> (annuïtair 30 jaar: '+fmt(basis)+' + label '+fmt(label)+(alleen?' + alleenstaande '+fmt(alleen):'')+')'+(eenAanvr&&!alleen?' · alleenstaandenbedrag niet van toepassing (toetsinkomen niet hoger dan '+fmt(alleenGrens).replace(',-','')+')':'')+'.<br><span style="font-size:12px;">'+flnToetsTekst(t)+'</span>';
 }

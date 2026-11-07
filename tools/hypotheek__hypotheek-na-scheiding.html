@@ -192,9 +192,14 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
           <span class="hint">Na AOW-leeftijd en in de pensioentoets: tabel 5f (AOW)</span>
         </div>
         <div class="fl">
-          <label>Partneralimentatie (bruto/mnd)</label>
+          <label>Ontvangen partneralimentatie (bruto/mnd)</label>
           <div class="iw"><span class="px">€</span><input type="number" id="alimentatie" value="0" step="50"></div>
-          <span class="hint">Telt mee als inkomen voor NIBUD-toets</span>
+          <span class="hint">Telt mee als inkomen zolang er recht op is (NHG V&amp;N 2026 C.7.14.1; beheer: nog ≥ 3 jaar recht, D.6.3.5). Kinderalimentatie telt niet mee.</span>
+        </div>
+        <div class="fl">
+          <label>Betaalde partneralimentatie (bruto/mnd)</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="alimentatieBetaald" value="0" step="50"></div>
+          <span class="hint">Wordt van het toetsinkomen afgetrokken (NHG V&amp;N 2026 C.7.14.2), ook van het inkomen vanaf AOW (geen einddatum bekend, conservatief). Geen maandlast.</span>
         </div>
         <div class="fl">
           <label>Kredietlimiet / oorspronkelijke kredietsom</label>
@@ -377,6 +382,8 @@ function bereken(){
   const r=N('hyprente')/100,lt=Math.round(N('looptijd')*12);
   const vorm=document.getElementById('vorm').value;
   const inkomen=N('inkomen'),alimentatie=N('alimentatie')*12,verp=N('verplichtingen');
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen af (NHG V&N 2026 C.7.14.2), niet negatief
+  const alimBetaald=Math.max(0,N('alimentatieBetaald'))*12;
   const kredietLimiet=N('kredietLimiet'),duoTermijn=N('duoTermijn');
   const nhg=document.getElementById('nhg').value==='1';
 
@@ -426,9 +433,9 @@ function bereken(){
     return;
   }
   // Toets 1: huidige situatie (na AOW: alleen pensioeninkomen)
-  const tNu=toets((aowBereikt?pensioenInk:inkomen)+alimentatie,TBL_NU);
+  const tNu=toets(Math.max(0,(aowBereikt?pensioenInk:inkomen)+alimentatie-alimBetaald),TBL_NU);
   // Toets 2: pensioentoets — inkomen vanaf AOW met de AOW-tabel; laagste uitkomst telt
-  const tPens=pensioentoetsGeldt?toets(pensioenInk+alimentatie,TBL_AOW):null;
+  const tPens=pensioentoetsGeldt?toets(Math.max(0,pensioenInk+alimentatie-alimBetaald),TBL_AOW):null;
   const bindend=(tPens&&tPens.maxHyp<tNu.maxHyp)?tPens:tNu;
   const totaalInk=bindend.ink;
   const flp=bindend.flp;
@@ -470,7 +477,7 @@ function bereken(){
   html+=`<tr><td>Uitkoop meefinancieren?</td><td>${fmt(uitkoopBedrag)}</td><td>${kanMetUitkoop?'✓ Mogelijk':'✗ Buiten draagkracht'}</td></tr>`;
   html+=`<tr class="tot"><td>Nieuwe maandlast (alleen overname)</td><td>${fmt(ml)}</td><td>${fmtPct(N('hyprente'),2)}, ${Math.round(lt/12)} jaar</td></tr>`;
   html+=`<tr class="cat"><td colspan="3">Toetsing</td></tr>`;
-  html+=`<tr><td>Toetsnorm</td><td>${norm==='beheer'?'Beheer':'Acceptatie'}</td><td>${tblNaam(bindend.tbl)} · toetsinkomen ${fmt(totaalInk)}</td></tr>`;
+  html+=`<tr><td>Toetsnorm</td><td>${norm==='beheer'?'Beheer':'Acceptatie'}</td><td>${tblNaam(bindend.tbl)} · toetsinkomen ${fmt(totaalInk)}${alimentatie>0?' (incl. ontvangen partneralimentatie '+fmt(alimentatie)+'/jr)':''}${alimBetaald>0?' (na aftrek betaalde partneralimentatie '+fmt(alimBetaald)+'/jr, NHG C.7.14.2)':''}</td></tr>`;
   html+=`<tr><td>Pensioentoets</td><td>${pensioentoetsGeldt?'van toepassing':(aowBereikt?'AOW bereikt':'n.v.t.')}</td><td>${pensRegel}</td></tr>`;
   if(nhg)html+=`<tr><td>NHG toepasbaar?</td><td>${nhgOk?'✓ Ja':'✗ Boven € 470.000'}</td><td>Borgtochtprovisie 0,4% (2026)</td></tr>`;
   if(verplMaand>0)html+=`<tr><td>Verplichtingen in de toets</td><td>${fmt(verplMaand)}/mnd</td><td>${kredietLimiet>0?'krediet 2% × '+fmt(kredietLimiet)+' = '+fmt(kredietLast)+'; ':''}${duoTermijn>0?'DUO '+fmt(duoTermijn)+' × '+duoFactor.toFixed(2).replace('.',',')+' = '+fmt(duoLast)+'; ':''}${verp>0?'overig '+fmt(verp):''}</td></tr>`;

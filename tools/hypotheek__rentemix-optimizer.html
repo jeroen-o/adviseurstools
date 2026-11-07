@@ -572,7 +572,7 @@ footer{background:#eef4fa;border:none;border-left:4px solid var(--navy2);border-
       <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vKrediet" value="0" min="0" step="500"></div>
     </div>
     <div class="field">
-      <label for="vAlimentatie">Partneralimentatie <span class="hint">/mnd, niet gebruteerd</span></label>
+      <label for="vAlimentatie">Betaalde partneralimentatie <span class="hint">/mnd, door de aanvrager; gaat van het toetsinkomen af</span></label>
       <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vAlimentatie" value="0" min="0" step="50"></div>
     </div>
     <div class="field">
@@ -584,7 +584,7 @@ footer{background:#eef4fa;border:none;border-left:4px solid var(--navy2);border-
       <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vOverig" value="0" min="0" step="50"></div>
     </div>
   </div>
-  <p class="muted" style="margin:10px 0 0;font-size:11px">Trhk 2026: de bruto maandlast van verplichtingen gaat af van de toegestane financieringslast. Studieschuld en overige niet-aftrekbare lasten × bruteringsfactor bij de gewogen toetsrente (1,05–1,40); krediet 2% van de limiet per maand; partneralimentatie en erfpachtcanon zijn aftrekbaar en worden niet gebruteerd. Alleenstaandenbedrag € 17.000: automatisch bij één aanvrager en een toetsinkomen boven € 30.000 (niet-AOW-tabel) of € 29.000 (AOW-tabel).</p>
+  <p class="muted" style="margin:10px 0 0;font-size:11px">Trhk 2026: de bruto maandlast van verplichtingen gaat af van de toegestane financieringslast. Studieschuld en overige niet-aftrekbare lasten × bruteringsfactor bij de gewogen toetsrente (1,05–1,40); krediet 2% van de limiet per maand; erfpachtcanon wordt niet gebruteerd. Betaalde partneralimentatie is geen maandlast: 12 × het maandbedrag gaat van het toetsinkomen van de aanvrager af, ook van het inkomen vanaf AOW (geen einddatum bekend, conservatief) — NHG V&amp;N 2026 C.7.14.2. Alleenstaandenbedrag € 17.000: automatisch bij één aanvrager en een toetsinkomen boven € 30.000 (niet-AOW-tabel) of € 29.000 (AOW-tabel).</p>
 </div>
 
 <!-- ====================== BESTAANDE LENINGDELEN ====================== -->
@@ -834,7 +834,15 @@ function pensioenStatus(a){
   const geldt = !aow && drempel > 0 && lft !== null && lft >= drempel;
   const pRaw = (a.pensioen === undefined || a.pensioen === null) ? "" : String(a.pensioen).trim();
   const p = parseFloat(pRaw);
-  return {aow, geldt, lft, drempel, inkomen: parseFloat(a.inkomen)||0, pensioen: (pRaw !== "" && isFinite(p)) ? p : null};
+  // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van de aanvrager af (NHG V&N 2026 C.7.14.2), niet negatief;
+  // geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief)
+  const alimJ = (a === aanvragers[0]) ? alimentatieJaar() : 0;
+  return {aow, geldt, lft, drempel, inkomen: Math.max(0, (parseFloat(a.inkomen)||0) - alimJ), pensioen: (pRaw !== "" && isFinite(p)) ? Math.max(0, p - alimJ) : null};
+}
+function alimentatieJaar(){
+  const el = document.getElementById("vAlimentatie");
+  const v = el ? (parseFloat(el.value)||0) : 0;
+  return v > 0 ? v * 12 : 0;
 }
 
 function fmtDatumNL(d){
@@ -868,7 +876,7 @@ function leesVerplichtingen(){
 // Bruto maandlast verplichtingen (Trhk 2026, box 1)
 function verplichtingenMaand(rente){
   const o = leesVerplichtingen(), f = bruteringsFactor(rente);
-  return {totaal: o.duo*f + o.krediet*0.02 + o.alim + o.erfpacht/12 + o.overig*f, factor: f};
+  return {totaal: o.duo*f + o.krediet*0.02 + o.erfpacht/12 + o.overig*f, factor: f}; // partneralimentatie: van het toetsinkomen af (pensioenStatus)
 }
 function berekenMaxHypotheek(inkomen, leeftijdsfase, annuiteitRente, kolom){
   if(inkomen <= 0) return null;
@@ -902,7 +910,7 @@ function bepaalLeeftijdsfase(){
 }
 
 function totaalToetsinkomen(){
-  let som = (parseFloat(aanvragers[0]?.inkomen)||0);
+  let som = Math.max(0, (parseFloat(aanvragers[0]?.inkomen)||0) - alimentatieJaar()); // na aftrek betaalde partneralimentatie
   if(aanvrager2Actief && aanvragers[1]) som += (parseFloat(aanvragers[1].inkomen)||0);
   return som;
 }
@@ -1000,7 +1008,7 @@ function updateInkomenSamenvatting(){
     else extra = ` · alle aanvragers AOW`;
   }
   document.getElementById("inkomenSamenvatting").innerHTML =
-    `Totaal toetsinkomen: <b style="color:var(--navy)">${fmtEur(tot)}</b>${extra}`;
+    `Totaal toetsinkomen: <b style="color:var(--navy)">${fmtEur(tot)}</b>${alimentatieJaar() > 0 ? ` (na aftrek ${fmtEur(alimentatieJaar())} betaalde partneralimentatie)` : ''}${extra}`;
 }
 
 function toggleAanvrager2(){
@@ -1387,7 +1395,7 @@ function run(){
             <div>
               <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.4px;font-weight:700">Max. hypotheek</div>
               <div style="font-size:24px;font-weight:700;color:var(--green);letter-spacing:-0.3px">${fmtEur(calc.maxHyp)}</div>
-              <div style="font-size:11px;color:#666">obv toetsinkomen ${fmtEur(toetsInkomenGetoond)}${pensioenBepalend?' (inkomen vanaf AOW)':''}</div>
+              <div style="font-size:11px;color:#666">obv toetsinkomen ${fmtEur(toetsInkomenGetoond)}${pensioenBepalend?' (inkomen vanaf AOW)':''}${alimentatieJaar() > 0 ? ` · na aftrek ${fmtEur(alimentatieJaar())} betaalde partneralimentatie (NHG C.7.14.2)` : ''}</div>
             </div>
             <div>
               <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.4px;font-weight:700">Woonquota</div>
@@ -1476,6 +1484,7 @@ function syncHeroToetsrente(){
 }
 document.getElementById("toetsrente").addEventListener("input", () => { syncHeroToetsrente(); run(); });
 ["vDuo","vKrediet","vAlimentatie","vErfpacht","vOverig"].forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener("input", run); });
+document.getElementById("vAlimentatie")?.addEventListener("input", () => updateInkomenSamenvatting());
 syncHeroToetsrente();
 
 renderAanvragers();
