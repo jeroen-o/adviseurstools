@@ -145,6 +145,8 @@ input.eur{font-variant-numeric:tabular-nums}
   .btn-print,.btn-hand{width:100%}
   .maxbox{flex-direction:column;align-items:flex-start}
   .res-kop{flex-direction:column;align-items:flex-start}
+  .persoon .grid{grid-template-columns:1fr!important}
+  .persoon,.persoon .grid>*{min-width:0}
 }
 /* voorkom automatisch inzoomen op iOS */
 @media(max-width:860px){
@@ -190,7 +192,7 @@ input.eur{font-variant-numeric:tabular-nums}
     <label class="f">Toetsdatum<input type="date" id="toetsdatum" value="2026-08-01"></label>
     <label class="f">Normrente (min. toetsrente)<input type="text" class="pct" id="normrente" value="5,000"></label>
     <label class="f" style="align-self:end"><span class="switch" style="margin-top:0"><input type="checkbox" id="partnerAan" checked> Partner aanwezig</span></label>
-    <label class="f" style="align-self:end"><span class="switch" style="margin-top:0"><input type="checkbox" id="alleenstaand"> Verhoging alleenstaande (€ 17.000)</span></label>
+    <label class="f" style="align-self:end"><span class="switch" style="margin-top:0"><input type="checkbox" id="alleenstaand" checked> Alleenstaandenbedrag toepassen (€ 17.000)</span><span class="hint" id="alleenHint" style="display:block;margin-top:4px">Alleen bij één aanvrager en toetsinkomen boven € 30.000 (AOW: € 29.000).</span></label>
     <label class="f">Pensioentoets vanaf leeftijd<select id="pdr">
       <option value="0">Niet toetsen</option>
       <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
@@ -206,6 +208,8 @@ input.eur{font-variant-numeric:tabular-nums}
         <label class="f">AOW-datum<input type="date" id="c_aow" value="2034-04-10"></label>
         <label class="f">Bruto jaarinkomen<input type="text" class="eur" id="c_ink" value="58.378"></label>
         <label class="f">Inkomen vanaf AOW <span class="hint">(AOW + pensioen)</span><input type="text" class="eur" id="c_pens" value="20.402"></label>
+        <label class="f">(Pre)pensioen vóór AOW vanaf <span class="hint">(optioneel)</span><input type="date" id="c_prep" value=""></label>
+        <label class="f">Inkomen vanaf die datum tot AOW<input type="text" class="eur" id="c_prepink" value=""></label>
       </div>
     </div>
     <div class="persoon" id="partnerBlok">
@@ -216,9 +220,24 @@ input.eur{font-variant-numeric:tabular-nums}
         <label class="f">AOW-datum<input type="date" id="p_aow" value="2037-06-22"></label>
         <label class="f">Bruto jaarinkomen<input type="text" class="eur" id="p_ink" value="30.621"></label>
         <label class="f">Inkomen vanaf AOW <span class="hint">(AOW + pensioen)</span><input type="text" class="eur" id="p_pens" value="14.570"></label>
+        <label class="f">(Pre)pensioen vóór AOW vanaf <span class="hint">(optioneel)</span><input type="date" id="p_prep" value=""></label>
+        <label class="f">Inkomen vanaf die datum tot AOW<input type="text" class="eur" id="p_prepink" value=""></label>
       </div>
     </div>
   </div>
+  <p class="hint" style="margin-top:10px">(Pre)pensioen vóór AOW: datum waarop iemand eerder stopt met werken (vervroegd pensioen, prepensioen) met het inkomen van die datum tot de AOW-datum. Vanaf die datum telt dat inkomen in plaats van het bruto jaarinkomen.</p>
+</div>
+
+<div class="card">
+  <h2>Financiële verplichtingen</h2>
+  <div class="grid g3">
+    <label class="f">Studieschuld: werkelijke maandtermijn<input type="text" class="eur" id="v_studie" value=""><span class="hint" style="display:block;margin-top:4px">× bruteringsfactor 1,05–1,40 (Trhk art. 3a).</span></label>
+    <label class="f">Krediet: limiet / oorspronkelijke kredietsom<input type="text" class="eur" id="v_krediet" value=""><span class="hint" style="display:block;margin-top:4px">Telt mee als 2% van de limiet per maand.</span></label>
+    <label class="f">Partneralimentatie per maand<input type="text" class="eur" id="v_alimentatie" value=""><span class="hint" style="display:block;margin-top:4px">Aftrekbaar: zonder brutering.</span></label>
+    <label class="f">Erfpachtcanon per maand<input type="text" class="eur" id="v_erfpacht" value=""><span class="hint" style="display:block;margin-top:4px">Aftrekbaar: zonder brutering.</span></label>
+    <label class="f">Overige niet-aftrekbare vaste lasten per maand<input type="text" class="eur" id="v_overig" value=""><span class="hint" style="display:block;margin-top:4px">Gebruteerd met dezelfde factor als de studieschuld.</span></label>
+  </div>
+  <p class="hint" style="margin-top:10px">De bruto maandlast van de verplichtingen gaat op elk toetsmoment af van de toegestane maandlast.</p>
 </div>
 
 <div class="card">
@@ -227,14 +246,14 @@ input.eur{font-variant-numeric:tabular-nums}
     <label class="f">Marktwaarde (na verbouwing)<input type="text" class="eur" id="marktwaarde" value="725.000"></label>
     <label class="f">Energielabel
       <select id="label">
-        <option value="0">E, F of G (+ € 0)</option>
+        <option value="0" selected>E, F of G (+ € 0)</option>
         <option value="5000">C of D (+ € 5.000)</option>
-        <option value="10000" selected>A of B (+ € 10.000)</option>
+        <option value="10000">A of B (+ € 10.000)</option>
         <option value="20000">A+ of A++ (+ € 20.000)</option>
         <option value="25000">A+++ (+ € 25.000)</option>
         <option value="30000">A++++ (+ € 30.000)</option>
         <option value="40000">A++++ met garantie (+ € 40.000)</option>
-        <option value="geen">Geen geldig label (+ € 0)</option>
+        <option value="geen">Geen geldig label (+ € 10.000)</option>
       </select></label>
     <label class="f">Energiebesparende voorz. (EBV)<input type="text" class="eur" id="ebv" value=""></label>
     <div class="f-switchwrap">
@@ -244,7 +263,7 @@ input.eur{font-variant-numeric:tabular-nums}
         <span class="tip" role="tooltip"><b>Verduurzaming uit de lijst</b><br>
         Wettelijke lijst met energiebesparende maatregelen uit de TRHK die aantoonbaar renderen: spouwmuur-, dak- en vloerisolatie, HR++-glas (incl. bijbehorende kozijnen/deuren), douche-wtw, (hybride) warmtepomp en zonnepanelen.<br><br>
         Financier je zulke maatregelen mee bij een verbouwing, dan mag een <b>vast extra hypotheekbedrag buiten de toetsing</b> worden verstrekt, afhankelijk van het <i>huidige</i> energielabel:<br>
-        E/F/G € 20.000 · C/D € 15.000 · A/B € 10.000 · A+/A++ € 10.000 · A+++ of beter € 0 · label onbekend € 10.000.<br><br>
+        E/F/G € 20.000 · C/D € 15.000 · A/B € 10.000 · A+/A++ € 10.000 · A+++ of beter € 0 · geen geldig label € 10.000.<br><br>
         Dit bedrag <b>stapelt</b> met de verruiming voor het energielabel zelf. Voorwaarde: het geld wordt daadwerkelijk besteed aan maatregelen van de lijst, doorgaans via een bouwdepot — leg dit vast in het dossier.</span>
       </span>
     </div>
@@ -278,7 +297,7 @@ input.eur{font-variant-numeric:tabular-nums}
 </div>
 <p class="dossier-hint" id="dossierHint"></p>
 
-<p class="note"><b>Compliance / AFM-disclaimer:</b> deze berekening is een <b>indicatieve toetsing</b> op basis van de definitieve Nibud-financieringslastnormen 2026 en de systematiek van de GHF/TRHK. Het is géén hypotheekadvies en géén vervanging van gecertificeerde adviessoftware (zoals DIAS Advies) of het acceptatiebeleid van een geldverstrekker; maatwerk, explains, werkelijke fiscale situatie en verstrekkersnormen kunnen tot een andere uitkomst leiden. De "indicatieve extra lening" is een benadering van de kortlopende-leningsystematiek. De verhoging voor alleenstaanden (€ 17.000) mag volgens de TRHK alleen worden toegepast bij <b>aantoonbaar niet-kwetsbare huishoudens zonder persoonlijk onvermijdbare uitgaven</b> — leg die onderbouwing vast in het dossier. Aan deze uitkomsten kunnen geen rechten worden ontleend.</p>
+<p class="note"><b>Compliance / AFM-disclaimer:</b> deze berekening is een <b>indicatieve toetsing</b> op basis van de definitieve Nibud-financieringslastnormen 2026 en de systematiek van de GHF/TRHK. Het is géén hypotheekadvies en géén vervanging van gecertificeerde adviessoftware of het acceptatiebeleid van een geldverstrekker; maatwerk, explains, werkelijke fiscale situatie en verstrekkersnormen kunnen tot een andere uitkomst leiden. De "indicatieve extra lening" is een benadering van de kortlopende-leningsystematiek. Het alleenstaandenbedrag (€ 17.000, Trhk art. 3 lid 8) geldt alleen bij één aanvrager zonder medeaanvrager en een toetsinkomen boven € 30.000 (boven € 29.000 als de AOW-leeftijd is bereikt); het is bedoeld voor huishoudens zonder persoonlijk onvermijdbare uitgaven — leg dit vast in het dossier. Aan deze uitkomsten kunnen geen rechten worden ontleend.</p>
 
 </div>
 
@@ -303,13 +322,13 @@ input.eur{font-variant-numeric:tabular-nums}
    <li><b>Rentevast 10 jaar of langer</b> — dan geldt de werkelijke rente in plaats van de normrente van 5%. Bij een rente onder de 5% levert dat direct meer leencapaciteit op. Een kort rentevast deel telt alleen tegen eigen rente als het binnen de rentevastperiode volledig wordt afgelost.</li>
    <li><b>Renteaftrek benutten</b> — een box 1-deel mét aftrek geeft door de brutering altijd méér ruimte dan hetzelfde deel in box 3 of zonder aftrek. Houd delen dus in box 1 zolang dat fiscaal kan.</li>
    <li><b>Energielabel correct invullen</b> — de verruiming is een vast bedrag búiten de toetsing: € 5.000 (C/D) tot € 40.000 (A++++ met garantie). Een vergeten of verkeerd label kost direct leencapaciteit.</li>
-   <li><b>Verduurzaming uit de lijst meefinancieren</b> — extra € 10.000 tot € 20.000 (afhankelijk van startlabel), stapelt met de label-verruiming, en EBV verhoogt bovendien het onderpandmaximum tot 106% van de marktwaarde.</li>
+   <li><b>Verduurzaming uit de lijst meefinancieren</b> — extra € 0 tot € 20.000 (afhankelijk van startlabel; geen geldig label € 10.000), stapelt met de label-verruiming, en EBV verhoogt bovendien het onderpandmaximum tot 106% van de marktwaarde.</li>
    <li><b>Tweede inkomen volledig opgeven</b> — sinds 2023 telt het inkomen van de partner voor 100% mee in het toetsinkomen.</li>
   </ul>
 
   <h4>Alleenstaanden</h4>
   <ul>
-   <li>Vink de <b>verhoging van € 17.000</b> aan: een vast extra bedrag buiten de toetsing. Voorwaarde: aantoonbaar niet-kwetsbaar, zonder persoonlijk onvermijdbare uitgaven — leg dit vast in het dossier.</li>
+   <li>Het <b>alleenstaandenbedrag van € 17.000</b> wordt automatisch meegenomen als er geen partner is en het toetsinkomen hoger is dan € 30.000 (AOW: € 29.000): een vast extra bedrag buiten de toetsing. Het is bedoeld voor huishoudens zonder persoonlijk onvermijdbare uitgaven — leg dit vast in het dossier.</li>
   </ul>
 
   <h4>AOW binnen 10 jaar (senioren)</h4>
@@ -350,7 +369,12 @@ function parseEur(s){s=(s||"").replace(/[€\s.]/g,"").replace(",",".");const v=
 function parsePct(s){const v=parseFloat((s||"").replace(",","."));return isNaN(v)?0:v;}
 function fmtEurInput(el){const v=parseEur(el.value);el.value=v?"€ "+Math.round(v).toLocaleString("nl-NL"):"";}
 function annF(rPct,n){const r=rPct/100/12;if(n<=0)return 0;if(r===0)return 1/n;return r/(1-Math.pow(1+r,-n));}
-function renteKolom(r){const g=[1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5];for(let i=0;i<g.length;i++){if(r<=g[i]+1e-9)return i;}return 11;}
+function renteKolom(r){r=Math.round(r*1000)/1000; // eerst op 3 decimalen, dan de kolom
+  const g=[1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5];for(let i=0;i<g.length;i++){if(r<=g[i]+1e-9)return i;}return 11;}
+// Bruteringsfactor studieschuld per rentekolom (Trhk art. 3a; Bijlage financieringslastnormen 2026)
+const BRUT_STUDIE=[1.05,1.05,1.10,1.15,1.20,1.20,1.25,1.30,1.30,1.35,1.40,1.40];
+// Alleenstaandenbedrag 2026 (Trhk art. 3 lid 8)
+const ALLEEN={bedrag:17000,grens:30000,grensAOW:29000};
 const KOLOM_LBL=["≤ 1,500%","1,501–2,000%","2,001–2,500%","2,501–3,000%","3,001–3,500%","3,501–4,000%","4,001–4,500%","4,501–5,000%","5,001–5,500%","5,501–6,000%","6,001–6,500%","≥ 6,501%"];
 function quote(tab,inkomen,kol){const T=NIBUD2026[tab];let idx=Math.floor((inkomen-T.s)/1000);idx=Math.max(0,Math.min(idx,T.r.length-1));return T.r[idx][kol]/10;}
 function maandenTussen(d1,d2){if(!d1||!d2)return null;const a=new Date(d1),b=new Date(d2);
@@ -413,16 +437,19 @@ function leesInput(){
   const drempelM=gebId=>{const v=$(gebId).value;if(!drempel||!v)return null;const d=new Date(v);if(isNaN(d))return null;
     d.setFullYear(d.getFullYear()+drempel);return maandenTussen(td,d.toISOString().slice(0,10));};
   const persoon=pf=>({ink:parseEur($(pf+"_ink").value),pens:parseEur($(pf+"_pens").value),pensLeeg:!$(pf+"_pens").value.trim(),
-    aowM:maandenTussen(td,$(pf+"_aow").value),drM:drempelM(pf+"_geb")});
+    aowM:maandenTussen(td,$(pf+"_aow").value),drM:drempelM(pf+"_geb"),
+    prepM:$(pf+"_prep").value&&$(pf+"_prepink").value.trim()?maandenTussen(td,$(pf+"_prep").value):null,prepInk:parseEur($(pf+"_prepink").value)});
   const pers=[persoon("c")];
   if(partner)pers.push(persoon("p"));
-  const labelVal=$("label").value, extraLabel=labelVal==="geen"?0:parseFloat(labelVal);
+  const labelVal=$("label").value, extraLabel=labelVal==="geen"?10000:parseFloat(labelVal); // geen geldig label: € 10.000 (Bijlage financieringslastnormen 2026)
   const extraVerbouwing=$("verbouwing").checked?({"0":20000,"5000":15000,"10000":10000,"20000":10000,"25000":0,"30000":0,"40000":0,"geen":10000})[labelVal]:0;
+  const verpl={studie:parseEur($("v_studie").value),krediet:parseEur($("v_krediet").value),alimentatie:parseEur($("v_alimentatie").value),
+    erfpacht:parseEur($("v_erfpacht").value),overig:parseEur($("v_overig").value)};
   return {delen,trs,pers,
     normrente:parsePct($("normrente").value)||5,
     extraBedrag:extraLabel+extraVerbouwing,
     mw:parseEur($("marktwaarde").value), ebv:parseEur($("ebv").value),
-    verhAlleen:$("alleenstaand").checked?17000:0,drempel};
+    alleenAan:!partner&&$("alleenstaand").checked,verpl,drempel};
 }
 
 /* ---------- kernberekening (herbruikbaar met alternatieve delen) ---------- */
@@ -439,10 +466,14 @@ function berekenCore(inp){
     d.last=d.bedrag*annF(d.toetsrente,n);
     sw+=d.bedrag*n; st+=d.bedrag*d.toetsrente*n;
   });
-  const toetsrente=st/sw, kol=renteKolom(toetsrente);
-  // verruimingen buiten de toetsing (TRHK): energielabel + evt. verhoging alleenstaande (vast bedrag,
+  const toetsrente=Math.round(st/sw*1000)/1000, kol=renteKolom(toetsrente);
+  // verruimingen buiten de toetsing (TRHK): energielabel + evt. alleenstaandenbedrag (vast bedrag,
   // omgerekend naar maandlast via de annuïteitenfactor bij de gewogen toetsrente)
-  const extraMaandlast=(inp.extraBedrag+(inp.verhAlleen||0))*annF(toetsrente,360);
+  const annT=annF(toetsrente,360);
+  const extraMaandlast=inp.extraBedrag*annT;
+  const V=inp.verpl||{studie:0,krediet:0,alimentatie:0,erfpacht:0,overig:0};
+  const verplLast=aftrek=>{const f=aftrek?BRUT_STUDIE[kol]:1;return V.studie*f+V.krediet*0.02+V.alimentatie+V.erfpacht+V.overig*f;};
+  const verplNom=V.studie+V.krediet*0.02+V.alimentatie+V.erfpacht+V.overig;
   const norminkomen=pers.reduce((s,p)=>s+p.ink,0);
 
   const mSet=new Set([1]);
@@ -450,36 +481,50 @@ function berekenCore(inp){
   delen.forEach(d=>{const e=Math.min(d.duur,360);
     if(d.aftm>=1&&d.aftm<e)mSet.add(d.aftm+1);
     if(e<360)mSet.add(e+1);});
-  // AOW-datum binnen de toetshorizon: vanaf dan alleen inkomen vanaf AOW (AOW-tabel als iedereen AOW heeft)
+  // AOW-datum binnen de toetshorizon: vanaf dan alleen inkomen vanaf AOW (tabelkeuze: Trhk art. 3 lid 7)
   pers.forEach(p=>{if(p.aowM!==null&&p.aowM>=1&&p.aowM<=120)mSet.add(p.aowM+1);});
   // Pensioentoets: vanaf het moment dat de persoon de drempelleeftijd (57 of 52 jaar) bereikt, binnen de horizon
   pers.forEach(p=>{if(p.drM!==null&&p.drM>=1&&p.drM<=120)mSet.add(p.drM+1);});
+  // (Pre)pensioen vóór AOW: vanaf die datum telt het (pre)pensioeninkomen in plaats van het bruto jaarinkomen
+  pers.forEach(p=>{if(p.prepM!==null&&p.prepM>=1&&p.prepM<=120)mSet.add(p.prepM+1);});
   const momenten=[...mSet].filter(m=>m>=1&&m<=HORIZON).sort((a,b)=>a-b);
 
   const rows=momenten.map(m=>{
-    let ink=0,alleAOW=true,pt=false,onvolledig=false,aowNu=false;
+    let ink=0,pt=false,onvolledig=false,aowNu=false;
+    const perP=[];
     pers.forEach(p=>{
       const alAOW=p.aowM!==null&&p.aowM<1;                       // al AOW op toetsdatum
       const wordtAOW=p.aowM!==null&&p.aowM>=1&&p.aowM<=120;      // AOW binnen 10 jaar
       const isAOW=alAOW||(wordtAOW&&m>p.aowM);
       const ptGeldt=!isAOW&&p.drM!==null&&m>p.drM;               // pensioentoets: drempelleeftijd bereikt, nog geen AOW
-      if(alAOW){ink+=p.pensLeeg?p.ink:p.pens;aowNu=true;}            // AOW al bereikt: inkomen vanaf AOW (leeg = bruto jaarinkomen is al het AOW-inkomen)
-      else if(isAOW){ink+=p.pens;if(p.pensLeeg)onvolledig=true;}
-      else if(ptGeldt){pt=true;if(p.pensLeeg)onvolledig=true;else ink+=Math.min(p.ink,p.pens);} // laagste van huidig en pensioeninkomen
-      else ink+=p.ink;
-      if(!isAOW&&p.ink>0)alleAOW=false;
+      const werkInk=(p.prepM!==null&&m>p.prepM)?p.prepInk:p.ink;  // (pre)pensioen vóór AOW
+      let pi;
+      if(alAOW){pi=p.pensLeeg?p.ink:p.pens;aowNu=true;}            // AOW al bereikt: inkomen vanaf AOW (leeg = bruto jaarinkomen is al het AOW-inkomen)
+      else if(isAOW){pi=p.pens;if(p.pensLeeg)onvolledig=true;}
+      else if(ptGeldt){pt=true;if(p.pensLeeg){onvolledig=true;pi=0;}else pi=Math.min(werkInk,p.pens);} // laagste van huidig en pensioeninkomen
+      else pi=werkInk;
+      ink+=pi;perP.push({ink:pi,aow:isAOW});
     });
-    const tab=alleAOW?"a":"n",tab3=alleAOW?"b3a":"b3n";
+    // Trhk art. 3 lid 7: tabel van de aanvrager met het hoogste toetsinkomen; bij gelijk inkomen en verschillende AOW-status de laagste uitkomst
+    const maxP=Math.max(...perP.map(x=>x.ink));
+    const top=perP.filter(x=>x.ink===maxP);
+    let aowTab=top.every(x=>x.aow);
+    if(!aowTab&&top.some(x=>x.aow))aowTab=quote("a",ink,kol)<quote("n",ink,kol);
+    const tab=aowTab?"a":"n",tab3=aowTab?"b3a":"b3n";
     const q1=quote(tab,ink,kol),q3=quote(tab3,ink,kol),brut=q3>0?q1/q3:1;
-    let last=0;
+    let last=0,lastAftrek=0;
     delen.forEach(d=>{
       if(m>Math.min(d.duur,360))return;
       const fB3=d.bedrag>0?Math.min(d.box3,d.bedrag)/d.bedrag:0;
       const lB1=d.last*(1-fB3),lB3=d.last*fB3;
+      if(m<=d.aftm)lastAftrek+=lB1;
       last+=(m>d.aftm?lB1*brut:lB1)+lB3*brut;
     });
-    const maxM=(ink*q1/100)/12+extraMaandlast;
-    return {m,ink,q1,q3,brut,last,maxM,ruimte:maxM-last,rate:last/hoofdsom,pt,onvolledig,aowNu};
+    // alleenstaandenbedrag: één aanvrager én toetsinkomen boven de grens (AOW: lagere grens)
+    const alleen=inp.alleenAan&&pers.length===1&&ink>(perP[0].aow?ALLEEN.grensAOW:ALLEEN.grens)?ALLEEN.bedrag:0;
+    const vL=verplLast(lastAftrek>0.005);
+    const maxM=(ink*q1/100)/12+extraMaandlast+alleen*annT-vL;
+    return {m,ink,q1,q3,brut,last,maxM,ruimte:maxM-last,rate:last/hoofdsom,pt,onvolledig,aowNu,aowTab,alleen,vL};
   });
 
   let baseMax=Infinity,bindIdx=0;
@@ -501,7 +546,7 @@ function berekenCore(inp){
   const akkoord=alleRuimteOk&&(!maxOnderpand||hoofdsom<=maxOnderpand+0.5);
   return {delen,hoofdsom,toetsrente,kol,normrente:inp.normrente,norminkomen,
     extraBedrag:inp.extraBedrag,extraMaandlast,rows,bindIdx,baseMax,extraLening,extraDuur,
-    verhAlleen:inp.verhAlleen,maxInkomen,maxInkomenIncl,mw:inp.mw,ebv:inp.ebv,maxOnderpand,maxHyp,
+    verhAlleen:rows[0].alleen,verplNom,verplLast0:rows[0].vL,alleenAan:inp.alleenAan,maxInkomen,maxInkomenIncl,mw:inp.mw,ebv:inp.ebv,maxOnderpand,maxHyp,
     akkoord,alleRuimteOk,tekortRow:rows.find(r=>r.ruimte<-0.5),drempel:inp.drempel,
     ptRows:rows.filter(r=>r.pt),onvolledig:rows.some(r=>r.onvolledig)};
 }
@@ -655,6 +700,11 @@ function bereken(){
   if(!M){el.innerHTML='<h2>Resultaat</h2><p style="color:#7a8a96">Vul minimaal één inkomen en één leningdeel in om de toetsing te zien.</p>';return;}
   M.trs=inp.trs;
   const r0=M.rows[0];
+  const ah=$("alleenHint");
+  if(ah)ah.textContent=$("partnerAan").checked?"Niet van toepassing: er is een partner/medeaanvrager.":
+    (!$("alleenstaand").checked?"Uitgezet: geen alleenstaandenbedrag.":
+     (r0.alleen>0?"Van toepassing: toetsinkomen "+fmt0(r0.ink)+" hoger dan "+fmt0(r0.aowTab?ALLEEN.grensAOW:ALLEEN.grens)+" → + "+fmt0(ALLEEN.bedrag)+" buiten de toetsing.":
+      "Niet van toepassing: toetsinkomen "+fmt0(r0.ink)+" niet hoger dan "+fmt0(r0.aowTab?ALLEEN.grensAOW:ALLEEN.grens)+"."));
   const basis=M.maxHyp===M.maxOnderpand&&M.maxOnderpand<M.maxInkomenIncl?"op basis van marktwaarde":
     (M.extraLening>1&&M.maxInkomenIncl>M.maxInkomen+1?"op basis van inkomen en extra aflossing(en)":"op basis van inkomen");
 
@@ -669,12 +719,14 @@ function bereken(){
    '<div class="kv">'+
     '<div class="item"><div class="k">Norm-/toetsinkomen</div><div class="v">'+fmt0(M.norminkomen)+'</div><div class="s">woonquote box 1: '+fmtP(r0.q1)+' · box 3: '+fmtP(r0.q3)+'</div></div>'+
     '<div class="item"><div class="k">Gewogen toetsrente</div><div class="v">'+fmtP3(M.toetsrente)+'</div><div class="s">kolom '+KOLOM_LBL[M.kol]+' · normrente '+fmtP3(M.normrente)+'</div></div>'+
-    '<div class="item"><div class="k">Maximaal te verwonen per jaar</div><div class="v">'+fmt0(r0.maxM*12)+'</div><div class="s">'+([M.extraBedrag>0?'energielabel '+fmt0(M.extraBedrag):null,M.verhAlleen>0?'alleenstaande '+fmt0(M.verhAlleen):null].filter(Boolean).map(t=>'incl. verruiming '+t).join(' · ')||'zonder verruimingen')+'</div></div>'+
+    '<div class="item"><div class="k">Maximaal te verwonen per jaar</div><div class="v">'+fmt0(r0.maxM*12)+'</div><div class="s">'+([M.extraBedrag>0?'energielabel '+fmt0(M.extraBedrag):null,M.verhAlleen>0?'alleenstaande '+fmt0(M.verhAlleen):null].filter(Boolean).map(t=>'incl. verruiming '+t).join(' · ')||'zonder verruimingen')+(M.verplNom>0?' · na '+fmt0(M.verplLast0)+' p/m verplichtingen':'')+'</div></div>'+
     '<div class="item"><div class="k">Berekende maandlast (aanvang)</div><div class="v">'+fmt0(r0.last)+'</div><div class="s">GHF-last: annuïtair over duur (max 360 mnd)</div></div>'+
    '</div>'+
    '<div class="tbl-scroll"><table class="res"><thead><tr><th>Toetsmoment</th><th class="r">Toetsinkomen</th><th class="r">Woonquote</th><th class="r">Max. maandlast</th><th class="r">Berekende maandlast</th><th class="r">Ruimte</th></tr></thead><tbody>'+
-   M.rows.map(r=>'<tr'+(r.ruimte<-0.5?' class="tekort"':'')+'><td>'+momentLbl(r.m)+(r.pt?' <span style="color:#7a8a96;font-size:12px">(pensioentoets)</span>':'')+(r.onvolledig?' <span style="color:var(--err);font-size:12px">(inkomen vanaf AOW ontbreekt)</span>':'')+'</td><td class="r">'+fmt0(r.ink)+'</td><td class="r">'+fmtP(r.q1)+'</td><td class="r">'+fmt0(r.maxM)+'</td><td class="r">'+fmt0(r.last)+'</td><td class="r" style="color:'+(r.ruimte<-0.5?'var(--err)':'var(--ok)')+';font-weight:700">'+fmt0(r.ruimte)+'</td></tr>').join("")+
+   M.rows.map(r=>'<tr'+(r.ruimte<-0.5?' class="tekort"':'')+'><td>'+momentLbl(r.m)+(r.aowTab?' <span style="color:#7a8a96;font-size:12px">(AOW-tabel)</span>':'')+(r.pt?' <span style="color:#7a8a96;font-size:12px">(pensioentoets)</span>':'')+(r.onvolledig?' <span style="color:var(--err);font-size:12px">(inkomen vanaf AOW ontbreekt)</span>':'')+'</td><td class="r">'+fmt0(r.ink)+'</td><td class="r">'+fmtP(r.q1)+'</td><td class="r">'+fmt0(r.maxM)+'</td><td class="r">'+fmt0(r.last)+'</td><td class="r" style="color:'+(r.ruimte<-0.5?'var(--err)':'var(--ok)')+';font-weight:700">'+fmt0(r.ruimte)+'</td></tr>').join("")+
    '</tbody></table></div>'+
+   (M.verplNom>0?'<p style="margin:6px 0 0;font-size:13px;color:#4a5a66">Max. maandlast is na aftrek van de financiële verplichtingen: '+fmt0(M.verplLast0)+' bruto per maand bij aanvang (studieschuld × bruteringsfactor '+BRUT_STUDIE[M.kol].toLocaleString("nl-NL",{minimumFractionDigits:2})+' zolang er renteaftrek is, krediet 2% van de limiet, alimentatie en erfpachtcanon nominaal).</p>':'')+
+   (M.rows.some(r=>r.aowTab)&&inp.pers.length>1?'<p style="margin:6px 0 0;font-size:13px;color:#4a5a66">Tabelkeuze (Trhk art. 3 lid 7): heeft één van beiden de AOW-leeftijd bereikt, dan geldt de tabel van de aanvrager met het hoogste toetsinkomen.</p>':'')+
    '<div class="tbl-scroll"><table class="res"><tbody>'+
     '<tr><td>Maximaal op basis van inkomen</td><td class="r" style="font-weight:700">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie'+(M.verhAlleen?' · incl. verhoging alleenstaande ('+fmt0(M.verhAlleen)+' in de maandruimte)':'')+'</td></tr>'+
     (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r" style="font-weight:700">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden, rente '+fmtP3(M.toetsrente)+' → samen '+fmt0(M.maxInkomenIncl)+'</td></tr>':'')+
@@ -719,6 +771,7 @@ function print_(){
     '<tr><td>Bruto jaarinkomen</td>'+inp.pers.map(p=>'<td class="r">'+fmt0(p.ink)+'</td>').join("")+'</tr>'+
     '<tr><td>AOW-datum</td>'+persData.map(k=>'<td class="r">'+dNL($(k[1]).value)+'</td>').join("")+'</tr>'+
     '<tr><td>Inkomen vanaf AOW</td>'+inp.pers.map(p=>'<td class="r">'+(p.pens?fmt0(p.pens):'—')+'</td>').join("")+'</tr>'+
+    (inp.pers.some(p=>p.prepM!==null)?'<tr><td>(Pre)pensioen vóór AOW</td>'+inp.pers.map((p,i)=>'<td class="r">'+(p.prepM!==null?fmt0(p.prepInk)+' vanaf '+dNL($(["c_prep","p_prep"][i]).value):'—')+'</td>').join("")+'</tr>':'')+
     '</tbody></table>';
 
   /* --- woning & lening --- */
@@ -727,7 +780,8 @@ function print_(){
     '<tr><td>Energielabel</td><td class="r">'+labelNaam()+'</td></tr>'+
     (M.ebv>0?'<tr><td>Energiebesparende voorzieningen</td><td class="r">'+fmt0(M.ebv)+'</td></tr>':'')+
     '<tr><td>Toetsdatum</td><td class="r">'+dNL($("toetsdatum").value)+'</td></tr>'+
-    '<tr><td>Gevraagde hoofdsom</td><td class="r"><b>'+fmt0(M.hoofdsom)+'</b></td></tr></tbody></table>';
+    '<tr><td>Gevraagde hoofdsom</td><td class="r"><b>'+fmt0(M.hoofdsom)+'</b></td></tr>'+
+    (M.verplNom>0?'<tr><td>Financiële verplichtingen (bruto per maand, bij aanvang)</td><td class="r">'+fmt0(M.verplLast0)+'</td></tr>':'')+'</tbody></table>';
 
   const delenHtml='<table class="res"><thead><tr><th>Aflossingsvorm</th><th class="r">Bedrag</th><th class="r">Aftrekbaar t/m</th><th class="r">Box 3</th><th class="r">Rentevast</th><th class="r">Rente</th><th class="r">Duur</th><th class="r">Toetsrente deel</th></tr></thead><tbody>'+
     M.delen.map(d=>'<tr><td>'+d.vorm+'</td><td class="r">'+fmt0(d.bedrag)+'</td><td class="r">'+d.aftm+' mnd</td><td class="r">'+(d.box3?fmt0(d.box3):'—')+'</td><td class="r">'+d.rv+' mnd</td><td class="r">'+fmtP3(d.rente)+'</td><td class="r">'+d.duur+' mnd</td><td class="r">'+fmtP3(d.toetsrente)+'</td></tr>').join("")+'</tbody></table>';
@@ -760,6 +814,7 @@ function print_(){
       if(Math.min(d.duur,360)+1===m)r.push("leningdeel "+(i+1)+" is dan volledig afgelost en telt niet meer mee");
     });
     inp.pers.forEach((p,i)=>{if(p.aowM!==null&&p.aowM+1===m)r.push((i===0?"de cliënt":"de partner")+" bereikt de AOW-leeftijd; vanaf dan wordt getoetst op het inkomen vanaf AOW");});
+    inp.pers.forEach((p,i)=>{if(p.prepM!==null&&p.prepM+1===m)r.push((i===0?"de cliënt":"de partner")+" stopt met werken ((pre)pensioen); vanaf dan telt het inkomen van "+fmt0(p.prepInk));});
     inp.pers.forEach((p,i)=>{if(p.drM!==null&&p.drM+1===m)r.push((i===0?"de cliënt":"de partner")+" bereikt de pensioentoetsleeftijd van "+M.drempel+" jaar; vanaf dan wordt getoetst op het laagste van het huidige inkomen en het inkomen vanaf AOW");});
     return r;
   };
@@ -787,7 +842,7 @@ function print_(){
    '<p>De Gedragscode Hypothecaire Financieringen geldt voor de hypotheek op de woning die u zelf bewoont of gaat bewonen en moet ervoor zorgen dat de woonlasten verantwoord zijn ten opzichte van uw financiële situatie. Daarvoor worden de financieringslastpercentages (woonquotes) gebruikt die het Nibud jaarlijks vaststelt en die in de Tijdelijke regeling hypothecair krediet zijn vastgelegd. Voor 2026 zijn de percentages voor het eerst afgerond op 0,1 procent.</p>'+
    '<p>Staat de rente 10 jaar of langer vast, of wordt het leningdeel binnen de rentevastperiode volledig afgelost, dan wordt met de werkelijke rente getoetst; in andere gevallen geldt ten minste de wettelijke normrente die de AFM per kwartaal vaststelt. De lasten worden altijd bepaald alsof de lening in maximaal 30 jaar annuïtair wordt afgelost, ook als (een deel van) de lening aflossingsvrij is of de werkelijke lasten lager uitvallen.</p>'+
    '<p>Leningdelen waarvan de rente niet (meer) aftrekbaar is — box 3-delen en delen waarvan de renteaftrekperiode is verstreken — tellen zwaarder mee: hun last wordt gebruteerd met de verhouding tussen de box 1- en box 3-woonquote. Vanaf de gekozen pensioentoetsleeftijd (standaard 57 jaar volgens Nibud/Tijdelijke regeling; bij sommige geldverstrekkers 52 jaar) wordt per aanvrager getoetst op het laagste van het huidige inkomen en het inkomen vanaf AOW; valt de AOW-datum binnen 10 jaar na de toetsdatum, dan wordt vanaf dat moment getoetst op het inkomen vanaf AOW. Wijzigingen ná die 10-jaarshorizon worden niet getoetst.</p>'+
-   '<p>Op onderpand mag maximaal 100% van de marktwaarde (na verbouwing) worden gefinancierd. Worden energiebesparende voorzieningen meegefinancierd, dan mag dit oplopen tot 106% van de marktwaarde. Voor energiezuinige woningen geldt daarnaast een vast extra hypotheekbedrag per labelcluster (voor 2026: € 5.000 bij label C/D tot € 40.000 bij A++++ met garantie) en voor verduurzamende maatregelen uit de wettelijke lijst een extra bedrag afhankelijk van het startlabel. Voor aantoonbaar niet-kwetsbare alleenstaanden mag de maximale hypotheek met € 17.000 worden verhoogd; leg die onderbouwing vast in het dossier. Voor nieuwe hypotheken mag een aflossingsvrij deel niet groter zijn dan 50% van de marktwaarde en is rente alleen aftrekbaar bij ten minste annuïtaire aflossing binnen 30 jaar.</p>';
+   '<p>Op onderpand mag maximaal 100% van de marktwaarde (na verbouwing) worden gefinancierd. Worden energiebesparende voorzieningen meegefinancierd, dan mag dit oplopen tot 106% van de marktwaarde. Voor energiezuinige woningen geldt daarnaast een vast extra hypotheekbedrag per labelcluster (voor 2026: € 5.000 bij label C/D tot € 40.000 bij A++++ met garantie) en voor verduurzamende maatregelen uit de wettelijke lijst een extra bedrag afhankelijk van het startlabel. Voor een alleenstaande aanvrager met een toetsinkomen boven € 30.000 (AOW: € 29.000) mag € 17.000 buiten de toetsing blijven (Trhk art. 3 lid 8). Financiële verplichtingen (studieschuld gebruteerd, krediet 2% van de limiet, partneralimentatie, erfpachtcanon) gaan af van de toegestane maandlast. Heeft bij twee aanvragers één de AOW-leeftijd bereikt, dan geldt de tabel van de aanvrager met het hoogste toetsinkomen (Trhk art. 3 lid 7). Voor nieuwe hypotheken mag een aflossingsvrij deel niet groter zijn dan 50% van de marktwaarde en is rente alleen aftrekbaar bij ten minste annuïtaire aflossing binnen 30 jaar.</p>';
 
   const namen=[$("c_naam").value.trim(),inp.pers.length>1?$("p_naam").value.trim():""].filter(Boolean).join(", ");
   const dNu=new Date().toLocaleDateString("nl-NL",{day:"2-digit",month:"2-digit",year:"numeric"});
@@ -835,8 +890,9 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("handleiding").h
 $("printBtn").addEventListener("click",print_);
 
 /* ---------- dossier: nieuw / opslaan / openen ---------- */
-const VELDEN=["toetsdatum","normrente","c_naam","c_geb","c_aow","c_ink","c_pens",
-  "p_naam","p_geb","p_aow","p_ink","p_pens","marktwaarde","label","ebv","pdr"];
+const VELDEN=["toetsdatum","normrente","c_naam","c_geb","c_aow","c_ink","c_pens","c_prep","c_prepink",
+  "p_naam","p_geb","p_aow","p_ink","p_pens","p_prep","p_prepink","marktwaarde","label","ebv","pdr",
+  "v_studie","v_krediet","v_alimentatie","v_erfpacht","v_overig"];
 const VINKJES=["partnerAan","alleenstaand","verbouwing"];
 
 function toonHint(tekst,fout){
@@ -859,7 +915,7 @@ function nieuweBerekening(){
   $("normrente").value="5,000";
   $("pdr").value="57";
   $("partnerAan").checked=true;
-  $("alleenstaand").checked=false;
+  $("alleenstaand").checked=true;
   $("verbouwing").checked=false;
   $("delenBody").innerHTML="";
   deelRij();
@@ -913,7 +969,7 @@ $("dossierFile").addEventListener("change",e=>{
 });
 
 function syncAlleen(){const p=$("partnerAan").checked;$("partnerBlok").style.display=p?"":"none";
-  const a=$("alleenstaand");a.disabled=p;if(p)a.checked=false;
+  const a=$("alleenstaand");a.disabled=p;
   a.closest("label").style.opacity=p?"0.45":"1";}
 $("partnerAan").addEventListener("change",()=>{syncAlleen();bereken();});
 syncAlleen();
