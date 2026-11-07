@@ -141,6 +141,14 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
           <div class="iw"><span class="sx">%</span><input type="number" id="hyprente" value="3.80" step="0.01" class="sr"></div>
         </div>
         <div class="fl">
+          <label>Rentevaste periode (nieuwe/over te nemen lening)</label>
+          <select id="rvp">
+            <option value="10" selected>10 jaar of langer</option>
+            <option value="5">Korter dan 10 jaar</option>
+          </select>
+          <span class="hint">RVP korter dan 10 jaar: toetsrente AFM 5,0% (of de hogere werkelijke rente), voor woonquote én annuïteit</span>
+        </div>
+        <div class="fl">
           <label>Resterende looptijd</label>
           <div class="iw"><span class="sx">jr</span><input type="number" id="looptijd" value="22" step="1" class="sr"></div>
         </div>
@@ -381,6 +389,11 @@ function maandlast(s,r,n,vorm){if(vorm==='af')return s*r/12;if(vorm==='lin')retu
 function bereken(){
   const ww=N('woningWaarde'),hs=N('hypSaldo'),eigPct=parseInt(document.getElementById('eigendomPct').value)/100;
   const r=N('hyprente')/100,lt=Math.round(N('looptijd')*12);
+  // Toetsrente (Trhk 2026/AFM): RVP < 10 jaar → max(5%, werkelijke rente); anders de werkelijke rente.
+  // Gebruikt voor de woonquote, de annuïteit van de maximale hypotheek en de brutering van de studieschuld.
+  const rvpKort=document.getElementById('rvp').value!=='10';
+  const toetsPct=rvpKort?Math.max(5,N('hyprente')):N('hyprente'), rT=toetsPct/100;
+  const toetsTxt=`toetsrente ${fmtPct(toetsPct,2)}${rvpKort?' (RVP &lt; 10 jaar → AFM-toetsrente)':' (RVP ≥ 10 jaar → werkelijke rente)'}`;
   const vorm=document.getElementById('vorm').value;
   const inkomen=N('inkomen'),alimentatie=N('alimentatie')*12,verp=N('verplichtingen');
   // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen af (NHG V&N 2026 C.7.14.2), niet negatief
@@ -401,7 +414,7 @@ function bereken(){
 
   // Verplichtingen per maand: krediet 2% van de limiet, studieschuld werkelijke termijn × factor, overige lasten volledig
   const kredietLast=kredietLimiet*0.02;
-  const duoFactor=factorStudie(N('hyprente'));
+  const duoFactor=factorStudie(toetsPct);
   const duoLast=duoTermijn*duoFactor;
   const verplMaand=kredietLast+duoLast+verp;
 
@@ -426,7 +439,7 @@ function bereken(){
   // (buiten de financieringslast) als het toetsinkomen ná aftrek van betaalde partneralimentatie hoger is dan € 30.000
   // (bij de AOW-tabel: € 29.000). Per toetsmoment bepaald. Niet bij beheer: de NHG-beheercriteria kennen dit bedrag voor zover bekend niet.
   const ALLEEN_BEDRAG=17000,ALLEEN_GRENS=30000,ALLEEN_GRENS_AOW=29000;
-  function toets(ink,tbl){const f=getFLP(ink,N('hyprente'),tbl);const mm=Math.max(0,ink*f/12-verplMaand);const maxInk=mm/ann(1,r,360);
+  function toets(ink,tbl){const f=getFLP(ink,toetsPct,tbl);const mm=Math.max(0,ink*f/12-verplMaand);const maxInk=mm/ann(1,rT,360);
     const grens=tbl===FL2026_AOW?ALLEEN_GRENS_AOW:ALLEEN_GRENS;const alleen=(norm!=='beheer'&&ink>grens)?ALLEEN_BEDRAG:0;
     return {ink,tbl,flp:f,maxInk,alleen,grens,maxHyp:maxInk+alleen};}
   const alleenTxt=t=>norm==='beheer'?'niet toegepast — beheer (NHG-beheercriteria). De NHG-beheercriteria kennen dit bedrag voor zover bekend niet'
@@ -473,7 +486,7 @@ function bereken(){
   document.getElementById('hoofd').innerHTML=`
     <div class="hb n"><div class="hbl">Overwaarde</div><div class="hbv">${fmt(overwaarde)}</div><div class="hbs">WOZ − hypotheek</div></div>
     <div class="hb ${uitkoopBedrag>0?'o':'g'}"><div class="hbl">Uitkoop partner</div><div class="hbv">${fmt(uitkoopBedrag)}</div><div class="hbs">${fmtPct(aandeelVertrekkende*100)} × overwaarde</div></div>
-    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,1)} bij ${fmtPct(N('hyprente'),2)} · 30 jr annuïtair · ${norm==='beheer'?'beheer (NHG)':'acceptatie (Trhk)'}${bindend.alleen>0?' · incl. '+fmt(bindend.alleen)+' alleenstaandenbedrag':''}</div></div>
+    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,1)} bij ${fmtPct(toetsPct,2)}${rvpKort?' (toetsrente)':''} · 30 jr annuïtair · ${norm==='beheer'?'beheer (NHG)':'acceptatie (Trhk)'}${bindend.alleen>0?' · incl. '+fmt(bindend.alleen)+' alleenstaandenbedrag':''}</div></div>
     <div class="hb ${kanOvernemen?'g':'r'}"><div class="hbl">Maandlast na overname</div><div class="hbv">${fmt(ml)}</div><div class="hbs">${kanOvernemen?'✓ Draagbaar':'✗ Te hoog'}</div></div>`;
 
   let html=`<thead><tr><th>Post</th><th>Bedrag</th><th>Toelichting</th></tr></thead><tbody>`;
@@ -489,7 +502,7 @@ function bereken(){
   html+=`<tr class="tot"><td>Nieuwe maandlast (alleen overname)</td><td>${fmt(ml)}</td><td>${fmtPct(N('hyprente'),2)}, ${Math.round(lt/12)} jaar</td></tr>`;
   html+=`<tr class="cat"><td colspan="3">Toetsing</td></tr>`;
   html+=`<tr><td>Toetsnorm</td><td>${norm==='beheer'?'Beheer':'Acceptatie'}</td><td>${tblNaam(bindend.tbl)} · toetsinkomen ${fmt(totaalInk)}${alimentatie>0?' (incl. ontvangen partneralimentatie '+fmt(alimentatie)+'/jr)':''}${alimBetaald>0?' (na aftrek betaalde partneralimentatie '+fmt(alimBetaald)+'/jr, NHG C.7.14.2)':''}</td></tr>`;
-  html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(bindend.maxInk)}</td><td>Financieringslast ${fmtPct(flp*100,1)} van ${fmt(totaalInk)}${verplMaand>0?' na aftrek verplichtingen':''}, 30 jr annuïtair</td></tr>`;
+  html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(bindend.maxInk)}</td><td>Financieringslast ${fmtPct(flp*100,1)} van ${fmt(totaalInk)}${verplMaand>0?' na aftrek verplichtingen':''}, 30 jr annuïtair · ${toetsTxt}</td></tr>`;
   html+=`<tr><td>Alleenstaandenbedrag</td><td>${bindend.alleen>0?'+'+fmt(bindend.alleen):'—'}</td><td>Trhk 2026 art. 3 lid 8: ${alleenTxt(bindend)}${pensioentoetsGeldt?` (pensioentoets: ${tPens.alleen>0?'+'+fmt(tPens.alleen):'n.v.t.'}; huidig inkomen: ${tNu.alleen>0?'+'+fmt(tNu.alleen):'n.v.t.'})`:''}.</td></tr>`;
   html+=`<tr class="tot"><td>Maximale hypotheek</td><td>${fmt(maxHyp)}</td><td>${bindend.alleen>0?'Hypotheek tot dit maximum is akkoord: het alleenstaandenbedrag blijft buiten de financieringslast':''}</td></tr>`;
   html+=`<tr><td>Pensioentoets</td><td>${pensioentoetsGeldt?'van toepassing':(aowBereikt?'AOW bereikt':'n.v.t.')}</td><td>${pensRegel}</td></tr>`;

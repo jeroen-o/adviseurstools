@@ -501,23 +501,31 @@ function bereken(){
   const flp=getFLPPensioen(totaalInk,toets*100);
   const flpH=huidigInk>0?getFLPNietAOW(huidigInk,toets*100):0;
   const lastPens=totaalInk*flp, lastHuidig=huidigInk*flpH;
-  const maxJaarLast=modus==='huidig'?lastHuidig:(modus==='pt'&&huidigInk>0?Math.min(lastPens,lastHuidig):lastPens);
+  // Alleenstaandenbedrag (Trhk 2026 art. 3 lid 8): één aanvrager → € 17.000 extra boven op de maximale hypotheek,
+  // buiten de financieringslast, als het toetsinkomen hoger is dan € 30.000 (AOW-tabel: € 29.000). Per toetsmoment bepaald.
+  const ALLEEN_BEDRAG=17000;
+  const alleenVan=(ink,aowTbl)=>situatie==='single'&&ink>(aowTbl?29000:30000)?ALLEEN_BEDRAG:0;
+  const annLt=ann(1,toets,lt*12);
+  const bindHuidig=modus==='huidig'||(modus==='pt'&&huidigInk>0&&(lastHuidig/12/annLt+alleenVan(huidigInk,false))<(lastPens/12/annLt+alleenVan(totaalInk,true)));
+  const maxJaarLast=bindHuidig?lastHuidig:lastPens;
+  const alleenBedrag=bindHuidig?alleenVan(huidigInk,false):alleenVan(totaalInk,true);
+  const alleenGrens=bindHuidig?30000:29000, alleenInk=bindHuidig?huidigInk:totaalInk;
   const toetsInkOms=modus==='huidig'?'huidig inkomen '+fmt(huidigInk)+' (niet-AOW-tabel, woonquote '+fmtPct(flpH*100,1)+')':
-    (modus==='pt'&&huidigInk>0&&lastHuidig<lastPens)?'huidig inkomen '+fmt(huidigInk)+' (niet-AOW-tabel, woonquote '+fmtPct(flpH*100,1)+'; lager dan de toets op inkomen vanaf AOW)':
+    (modus==='pt'&&bindHuidig)?'huidig inkomen '+fmt(huidigInk)+' (niet-AOW-tabel, woonquote '+fmtPct(flpH*100,1)+'; lager dan de toets op inkomen vanaf AOW)':
     'pensioeninkomen '+fmt(totaalInk)+' (AOW-tabel, woonquote '+fmtPct(flp*100,1)+')';
   const ptTekst=drempel<=0?'Pensioentoets: niet getoetst (uitgeschakeld)'+(aowBereikt?'; AOW-leeftijd bereikt — getoetst op inkomen vanaf AOW met de AOW-tabel':(huidigInk>0?'; getoetst op huidig inkomen':'; geen huidig inkomen ingevuld — getoetst op inkomen vanaf AOW')):
     aowBereikt?'Pensioentoets (vanaf '+drempel+' jaar): AOW-leeftijd bereikt — getoetst op '+fmt(totaalInk)+' met de AOW-tabel':
     ptGeldt?'Pensioentoets (vanaf '+drempel+' jaar): van toepassing (leeftijd '+lftT+') — getoetst op '+fmt(totaalInk)+' met de AOW-tabel'+(huidigInk>0?' én op huidig inkomen '+fmt(huidigInk)+'; de laagste uitkomst geldt':''):
     'Pensioentoets (vanaf '+drempel+' jaar): niet van toepassing (leeftijd '+lftT+')'+(huidigInk>0?' — getoetst op huidig inkomen':' — geen huidig inkomen ingevuld, daarom getoetst op inkomen vanaf AOW');
   const annF=ann(1,toets,lt*12);
-  const maxHyp=maxJaarLast/12/annF;
+  const maxHyp=maxJaarLast/12/annF+alleenBedrag;
 
   // LTV max voor seniorenHypotheek
   const ltvMax=lft>=70?70:lft>=65?75:80;
   const maxOpWoningWaarde=ww*ltvMax/100;
   const maxEff=Math.min(maxHyp,maxOpWoningWaarde);
 
-  const kanHyp=maxEff>=hyp;
+  const kanHyp=Math.round(maxEff)>=hyp; // vergelijking op hele euro's (zoals getoond): het maximum zelf is haalbaar
   const maandlast=ml(hyp,rente,lt*12,vorm);
 
   let vCls,vIco,vT,vS;
@@ -548,7 +556,7 @@ function bereken(){
   document.getElementById('scGrid').style.gridTemplateColumns=`repeat(${scenL.length},1fr)`;
   document.getElementById('scGrid').innerHTML=scenL.map(j=>{
     const annJ=ann(1,toets,j*12);
-    const maxJ=Math.min(maxJaarLast/12/annJ,ww*ltvMax/100);
+    const maxJ=Math.min(maxJaarLast/12/annJ+alleenBedrag,ww*ltvMax/100);
     return `<div class="sc ${maxJ>=hyp?'ok':'nee'}">
       <div class="sc-lbl">${j} jaar</div>
       <div class="sc-val">${fmt(maxJ)}</div>
@@ -562,13 +570,14 @@ function bereken(){
   html+=`<tr><td>Aanvullend pensioen</td><td>${fmt(aanv)}</td><td>Via werkgever/pensioenfonds</td></tr>`;
   if(overig>0)html+=`<tr><td>Overig inkomen</td><td>${fmt(overig)}</td><td>Lijfrente, huur etc.</td></tr>`;
   html+=`<tr class="tot"><td><strong>Totaal pensioeninkomen</strong></td><td><strong>${fmt(totaalInk)}</strong></td><td></td></tr>`;
-  html+=`<tr><td>Woonquote (Trhk 2026, AOW-tabel)</td><td>${fmtPct(flp*100,1)}</td><td>Toetsrente ${fmtPct(toets*100,2)} (RVP ${rvp} jaar${rvp<10?' → AFM-toetsrente':' → werkelijke rente'})</td></tr>`;
+  if(modus!=='huidig')html+=`<tr><td>Woonquote (Trhk 2026, AOW-tabel)</td><td>${fmtPct(flp*100,1)}</td><td>Toetsrente ${fmtPct(toets*100,2)} (RVP ${rvp} jaar${rvp<10?' → AFM-toetsrente':' → werkelijke rente'})</td></tr>`;
   if(huidigInk>0&&!aowBereikt){
-    html+=`<tr><td>Huidig inkomen (vóór AOW)</td><td>${fmt(huidigInk)}</td><td>Woonquote ${fmtPct(flpH*100,1)} (Trhk 2026 tabel 1, niet-AOW) → ${fmt(lastHuidig/12)}/mnd</td></tr>`;
+    html+=`<tr><td>Huidig inkomen (vóór AOW)</td><td>${fmt(huidigInk)}</td><td>Woonquote ${fmtPct(flpH*100,1)} (Trhk 2026 tabel 1, niet-AOW) → ${fmt(lastHuidig/12)}/mnd${modus==='huidig'?' · toetsrente '+fmtPct(toets*100,2)+' (RVP '+rvp+' jaar'+(rvp<10?' → AFM-toetsrente':' → werkelijke rente')+')':''}</td></tr>`;
   }
   html+=`<tr><td>Pensioentoets</td><td>${drempel>0?'vanaf '+drempel+' jaar':'uit'}</td><td>${ptTekst}</td></tr>`;
   html+=`<tr><td>Max. jaarlijkse hypotheeklast</td><td>${fmt(maxJaarLast)}</td><td>${fmt(maxJaarLast/12)}/mnd</td></tr>`;
-  html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(maxHyp)}</td><td></td></tr>`;
+  html+=`<tr><td>Alleenstaandenbedrag</td><td>${alleenBedrag>0?'+'+fmt(alleenBedrag):'—'}</td><td>Trhk 2026 art. 3 lid 8: ${situatie!=='single'?'niet van toepassing (met partner)':alleenBedrag>0?'van toepassing: één aanvrager en toetsinkomen '+fmt(alleenInk)+' hoger dan '+fmt(alleenGrens)+(bindHuidig?'':' (AOW-tabel)')+' → buiten de financieringslast':'niet van toepassing: toetsinkomen '+fmt(alleenInk)+' niet hoger dan '+fmt(alleenGrens)+(bindHuidig?'':' (AOW-tabel)')}</td></tr>`;
+  html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(maxHyp)}</td><td>${alleenBedrag>0?'Incl. alleenstaandenbedrag; '+fmt(maxHyp-alleenBedrag)+' op de financieringslast':''}</td></tr>`;
   html+=`<tr><td>Max. hypotheek op LTV (${ltvMax}%)</td><td>${fmt(maxOpWoningWaarde)}</td><td>Woningwaarde ${fmt(ww)}</td></tr>`;
   html+=`<tr class="tot"><td><strong>Effectief maximum</strong></td><td><strong>${fmt(maxEff)}</strong></td><td>Laagste van beide</td></tr>`;
   document.getElementById('tbl').innerHTML=html+'</tbody>';

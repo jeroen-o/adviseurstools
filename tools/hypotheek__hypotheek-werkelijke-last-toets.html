@@ -993,6 +993,18 @@ function bereken(){
   renderTopStatus('beheerStatusBox', 'beheerBar', 'beheerBarNote',
     benutBhMin, ruimteBhMin, minimaalTot, beschikbaarBh, 'NHG beheer-toets (minimale last)');
 
+  /* Gewogen RVP < 10 jr: de werkelijke-lasttoets rekent de last op de contractrente, maar de Trhk-toets
+     (art. 3) rekent de financieringslast op de toetsrente (annuïtair, 30 jaar). Die is dan strenger: toon wat Trhk toestaat. */
+  if (wgRvp < 10 && totaalHoofdsom > 0){
+    const annTrhk = annuMaand(1, toetsrenteAdv, 30);
+    const trhkLast = totaalHoofdsom * annTrhk + erfpacht;
+    const trhkMax = annTrhk > 0 ? Math.max(0, beschikbaarAdv - erfpacht) / annTrhk : 0;
+    const trhkOk = Math.round(trhkMax) >= Math.round(totaalHoofdsom);
+    const p2 = v => v.toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
+    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend',
+      `<div class="status ${trhkOk ? 'ok' : 'warn'}" style="margin-top:10px"><h3>${toetsrenteAdv > wgRente + 1e-9 ? 'Let op: Trhk-toets op ' + p2(toetsrenteAdv) + ' is strenger' : 'Trhk-toets op ' + p2(toetsrenteAdv)}</h3><p>De gewogen rentevaste periode is ${wgRvp.toLocaleString('nl-NL',{maximumFractionDigits:1})} jaar (&lt; 10 jaar). Deze tool toetst de <b>werkelijke</b> maandlast (contractrente ${p2(wgRente)}); de Trhk-toets rekent de financieringslast op de toetsrente van ${p2(toetsrenteAdv)} (annuïtair, 30 jaar): toetslast ${fmt(trhkLast)} per maand. Trhk staat bij dit normbudget maximaal <b>${fmt(Math.round(trhkMax))}</b> hypotheek toe (huidige hoofdsom ${fmt(totaalHoofdsom)}${trhkOk ? ' — past' : ' — past niet'}).</p></div>`);
+  }
+
   /* Pensioentoets-meldingen */
   const pensTxt = pensioenDrempel > 0 ? `Pensioentoets (vanaf ${pensioenDrempel} jaar)` : 'Pensioentoets';
   let pensStatus;
@@ -1097,21 +1109,25 @@ function bereken(){
 }
 
 function renderTopStatus(boxId, barId, noteId, benut, ruimte, werkelijk, beschikbaar, label){
+  /* Afrondingsgrens: een last gelijk aan het normbudget (verschil < een halve cent, d.w.z. een hoofdsom gelijk aan het
+     afgeronde maximum) past; pas bij een werkelijke overschrijding is de uitkomst negatief. */
+  const over = (werkelijk - beschikbaar) > 0.005 || beschikbaar <= 0;
+  const eur2 = n => '€ ' + n.toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2});
   let cls='ok', titel=`${label}: werkelijke maandlast past binnen de norm`;
-  let msg = `Er resteert een ruimte van ${fmt(ruimte)} per maand (${(Math.round((100-benut)*10)/10).toString().replace('.',',')}% van het beschikbare normbudget).`;
-  if (benut > 100){
+  let msg = `Er resteert een ruimte van ${fmt(Math.max(0, ruimte))} per maand (${(Math.round(Math.max(0, 100-benut)*10)/10).toString().replace('.',',')}% van het beschikbare normbudget).`;
+  if (over){
     cls='bad';
     titel = `${label}: werkelijke maandlast overschrijdt de norm`;
-    msg = `De werkelijke maandlast overschrijdt het beschikbare normbudget met ${fmt(werkelijk - beschikbaar)} per maand.`;
+    msg = `De werkelijke maandlast overschrijdt het beschikbare normbudget met ${(werkelijk - beschikbaar) < 1 ? eur2(werkelijk - beschikbaar) : fmt(werkelijk - beschikbaar)} per maand.`;
   } else if (benut > 95){
     cls='warn';
     titel = `${label}: werkelijke maandlast past krap binnen de norm`;
-    msg = `Benutting ${pctStr(benut)} van het beschikbare normbudget; ruimte ${fmt(ruimte)}.`;
+    msg = `Benutting ${pctStr(Math.min(100, benut))} van het beschikbare normbudget; ruimte ${fmt(Math.max(0, ruimte))}.`;
   }
   document.getElementById(boxId).innerHTML = `<div class="status ${cls}"><h3>${titel}</h3><p>${msg}</p></div>`;
   const bf = document.getElementById(barId);
   bf.style.width = Math.min(100, clamp(benut,0,130)) + '%';
-  bf.className = 'bar-fill ' + (benut>100 ? 'bad' : benut>95 ? 'warn' : 'ok');
+  bf.className = 'bar-fill ' + (over ? 'bad' : benut>95 ? 'warn' : 'ok');
   bf.textContent = pctStr(benut);
   document.getElementById(noteId).textContent = `${pctStr(benut)} benutting`;
 }

@@ -325,6 +325,9 @@
       <hr class="divider">
       <div class="section-label">Vergelijking met maandbedrag hypotheek</div>
       <div class="result-row"><span class="result-label">Maandbedrag hypotheek</span><span class="result-value" id="r-mbd">—</span></div>
+      <div class="result-row"><span class="result-label">Alleenstaandenbedrag standaard (Trhk 2026 art. 3 lid 8)</span><span class="result-value" id="r-alleen">—</span></div>
+      <div class="result-row"><span class="result-label">Toetslast standaard (excl. alleenstaandenbedrag)</span><span class="result-value" id="r-mbd-std">—</span></div>
+      <div class="result-row"><span class="result-label">Max. hypotheek standaard (CHF, bij deze leningmix)</span><span class="result-value" id="r-maxhyp-std">—</span></div>
 
       <div class="result-row highlight-std">
         <span class="result-label">Ruimte Standaard (CHF)</span>
@@ -554,12 +557,24 @@ function bereken(){
   const exclStd=sS.exclS, exclBeh=sB.exclB;
   const mflStd=exclStd-verpl;
   const mflBeh=exclBeh-verpl;
-  const ruimteStd=mflStd-mbd;
+  // Alleenstaandenbedrag (Trhk 2026 art. 3 lid 8): de achterblijver is één aanvrager → € 17.000 extra boven op de
+  // maximale hypotheek, buiten de financieringslast, als het toetsinkomen hoger is dan € 30.000 (AOW-tabel: € 29.000).
+  // Alleen bij de standaardtoets; de NHG-beheercriteria kennen dit bedrag voor zover bekend niet.
+  const ALLEEN_BEDRAG=17000;
+  const alleenGrens=sS.st===STP||situatie==='aow'?29000:30000;
+  const alleen=sS.ink>alleenGrens?ALLEEN_BEDRAG:0;
+  // Toetslast standaard: maandbedrag over de hoofdsom minus het alleenstaandenbedrag (naar rato over de leningdelen)
+  const mbdStd=totHS>0?mbd*Math.max(0,totHS-alleen)/totHS:mbd;
+  // Max. hypotheek standaard bij de huidige leningmix (last per euro hoofdsom), plus alleenstaandenbedrag
+  const lastPerEuro=totHS>0?mbd/totHS:0;
+  const maxHypStd=lastPerEuro>0?Math.max(0,mflStd)/lastPerEuro+alleen:Infinity;
+  const ruimteStd=mflStd-mbdStd;
   const ruimteBeh=mflBeh-mbd;
 
-  // Uitslag: gebaseerd op standaard CHF-criterium
-  const posStd=mflStd>mbd;
-  const posBeh=mflBeh>mbd;
+  // Uitslag: gebaseerd op standaard CHF-criterium. Vergelijking op hele euro's (zoals getoond):
+  // een hypotheek gelijk aan het getoonde maximum is positief.
+  const posStd=Math.round(maxHypStd)>=Math.round(totHS);
+  const posBeh=Math.round(ruimteBeh*100)>=0;
 
   const tb=document.getElementById('toets-block');
   let klasse, icoon, uitslag, detail;
@@ -574,7 +589,7 @@ function bereken(){
     uitslag='Misschien Mogelijk';
     detail='Achterblijver voldoet aan het standaard CHF-criterium.'+
            (posBeh?' Ook beheer geeft voldoende ruimte.':' Ruimte ontbreekt bij beheercriteria.')+
-           ' Standaard ruimte: '+fmt(ruimteStd)+' | Beheer ruimte: '+fmt(ruimteBeh)+'.';
+           ' Standaard ruimte: '+fmt(Math.max(0,ruimteStd))+' | Beheer ruimte: '+fmt(ruimteBeh)+'.';
   } else {
     klasse='negatief';
     icoon='❌';
@@ -586,6 +601,7 @@ function bereken(){
   tb.className='toets-block'+(klasse?' '+klasse:'');
   tb.querySelector('.toets-icon').textContent=icoon;
   set('toets-result',uitslag);
+  if(alleen>0) detail+=' Inclusief alleenstaandenbedrag van '+fmt(ALLEEN_BEDRAG).replace(',00','')+' (Trhk 2026 art. 3 lid 8; toetsinkomen '+fmtE(Math.round(sS.ink))+' hoger dan '+fmtE(alleenGrens)+'), buiten de maandlast: max. hypotheek standaard '+fmt(Math.round(maxHypStd)).replace(',00','')+'.';
   set('toets-detail',detail+(alimJaar>0?' Toetsinkomen na aftrek van '+fmt(alimJaar)+' betaalde partneralimentatie per jaar: '+fmt(sS.ink)+' (NHG V&N 2026 C.7.14.2).':''));
 
   // Resultaten vullen
@@ -598,10 +614,13 @@ function bereken(){
   set('r-std',fmt(mflStd));
   set('r-beh',fmt(mflBeh));
   set('r-mbd',fmt(mbd));
+  set('r-alleen',alleen>0?'+ '+fmt(alleen).replace(',00','')+' (buiten de maandlast)':'n.v.t. (toetsinkomen niet hoger dan '+fmtE(alleenGrens)+')');
+  set('r-mbd-std',fmt(mbdStd));
+  set('r-maxhyp-std',isFinite(maxHypStd)?fmt(Math.round(maxHypStd)).replace(',00',''):'—');
 
   const elStd=document.getElementById('r-ruimte-std');
-  elStd.textContent=fmt(ruimteStd);
-  elStd.style.color=ruimteStd>=0?'var(--accent-light)':'#ff9a9a';
+  elStd.textContent=fmt(posStd?Math.max(0,ruimteStd):ruimteStd);
+  elStd.style.color=posStd?'var(--accent-light)':'#ff9a9a';
 
   const elBeh=document.getElementById('r-ruimte-beh');
   elBeh.textContent=fmt(ruimteBeh);
@@ -645,7 +664,7 @@ function bereken(){
 }
 
 function reset(){
-  ['r-hoofdsom','r-rente','r-wq-std','r-wq-beh','r-excl-std','r-excl-beh','r-std','r-beh','r-ruimte-std','r-ruimte-beh'].forEach(id=>set(id,'—'));
+  ['r-hoofdsom','r-rente','r-wq-std','r-wq-beh','r-excl-std','r-excl-beh','r-std','r-beh','r-ruimte-std','r-ruimte-beh','r-alleen','r-mbd-std','r-maxhyp-std'].forEach(id=>set(id,'—'));
   const tb=document.getElementById('toets-block');
   tb.className='toets-block';
   tb.querySelector('.toets-icon').textContent='—';
@@ -775,7 +794,9 @@ document.addEventListener('DOMContentLoaded',function(){
     <div class="r-item"><span class="r-label">Max. last incl. verpl. standaard</span><span class="r-val">${g('r-std')}</span></div>
     <div class="r-item"><span class="r-label">Max. last incl. verpl. beheer</span><span class="r-val">${g('r-beh')}</span></div>
     <div class="r-item"><span class="r-label">Maandbedrag hypotheek</span><span class="r-val">${g('r-mbd')}</span></div>
-    <div class="r-item"></div>
+    <div class="r-item"><span class="r-label">Alleenstaandenbedrag standaard</span><span class="r-val">${g('r-alleen')}</span></div>
+    <div class="r-item"><span class="r-label">Toetslast standaard</span><span class="r-val">${g('r-mbd-std')}</span></div>
+    <div class="r-item"><span class="r-label">Max. hypotheek standaard</span><span class="r-val">${g('r-maxhyp-std')}</span></div>
     <div class="r-item hl-std"><span class="r-label">Ruimte Standaard (CHF)</span><span class="r-val">${g('r-ruimte-std')}</span></div>
     <div class="r-item hl-beh"><span class="r-label">Ruimte Beheercriteria</span><span class="r-val">${g('r-ruimte-beh')}</span></div>
   </div>
