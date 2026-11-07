@@ -339,9 +339,9 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
     <div class="cb" id="hyp-side-body"></div>
   </div>
   <div class="ai-panel">
-    <div class="ai-head"><h3>AI-analyse</h3><span class="ai-badge">✦ Claude</span></div>
+    <div class="ai-head"><h3>Analyse</h3><span class="ai-badge">Indicatief</span></div>
     <div class="ai-body">
-      <div class="ai-out" id="ai-out"><p style="color:#888;">Klik op <strong>Analyseer</strong> voor een AI-toelichting op het berekende toetsinkomen.</p></div>
+      <div class="ai-out" id="ai-out"><p style="color:#888;">Klik op <strong>Analyseer</strong> voor een toelichting op het berekende toetsinkomen.</p></div>
       <button class="ai-btn" id="ai-btn" onclick="runAI()">✦ Analyseer toetsinkomen</button>
     </div>
   </div>
@@ -439,13 +439,67 @@ function swAp(idx){document.querySelectorAll('.ap-tab').forEach((t,i)=>t.classLi
 function togA2(){a2Actief=sel('a1-actief')==='j';el('a1-fields').classList.toggle('hid',!a2Actief);herbereken();}
 function setType(idx,type,chip){inkType[idx]=type;document.querySelectorAll(`#chips${idx} .chip`).forEach(c=>c.classList.remove('on'));chip.classList.add('on');if(idx===0)el('a0-zzp').classList.toggle('hid',type!=='zzp');herbereken();}
 function berekenZZP(){const f=[v('a0-z1'),v('a0-z2'),v('a0-z3')].filter(x=>x>0);if(f.length)el('a0-zgem').value=fmt(f.reduce((a,b)=>a+b,0)/f.length/12);herbereken();}
-async function runAI(){
+const fmtC=n=>'€ '+(Number(n)||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pctNL=x=>(Math.round(x*10)/10).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+const tag=(c,t)=>`<span class="tag tag-${c}">${t}</span>`;
+function maakAnalyse(r){
+  const ts=r.ts||{vak:0,zorg:0,kb:0,kgb:0,tot:0},ti=r.tiTot||0,netto=r.nettoTot||0;
+  const gezinL={een:'alleenstaande','een-k':'alleenstaande met kinderen',paar:'paar zonder kinderen','paar-k':'paar met kinderen'}[r.gezin]||'huishouden';
+  const wtL={koop:'koopwoning (hypotheek)',huur:'huurwoning',inwonend:'inwonende situatie'}[r.wt]||'woonsituatie';
+  const p=[];
+  // 1. Positie t.o.v. normbedragen
+  let pos;
+  if(ti<MININ)pos=`${tag('err','Onder minimum')} Het toetsinkomen van <strong>${fmtC(ti)}</strong> ligt <strong>${fmtC(MININ-ti)}</strong> onder de minimumnorm van ${fmtC(MININ)}. Voor een ${gezinL} in een ${wtL} is er volgens de VFN-methodiek weinig tot geen financieringsruimte.`;
+  else if(ti<MODAAL)pos=`${tag('warn','Tussen minimum en modaal')} Het toetsinkomen van <strong>${fmtC(ti)}</strong> ligt ${fmtC(ti-MININ)} boven het minimum (${fmtC(MININ)}), maar ${fmtC(MODAAL-ti)} onder modaal (${fmtC(MODAAL)}). De ruimte voor een ${gezinL} is beperkt.`;
+  else if(ti<MOD15)pos=`${tag('ok','Boven modaal')} Het toetsinkomen van <strong>${fmtC(ti)}</strong> ligt boven modaal (${fmtC(MODAAL)}) en ${fmtC(MOD15-ti)} onder de grens van 1,5× modaal (${fmtC(MOD15)}). Dit is een solide uitgangspositie voor een ${gezinL}.`;
+  else pos=`${tag('ok','Boven 1,5× modaal')} Het toetsinkomen van <strong>${fmtC(ti)}</strong> ligt ${fmtC(ti-MOD15)} boven 1,5× modaal (${fmtC(MOD15)}). Het inkomen valt in de hoogste inkomensband van deze methodiek.`;
+  p.push(pos+` Dat is <strong>${Math.round(ti/MININ*100)}%</strong> van het minimuminkomen.`);
+  // 2. Effect op woonlasten / leencapaciteit (kwalitatief)
+  if(r.wt==='koop'){
+    const band=inkBand(netto),bandL=['tot en met modaal','tussen modaal en 1,5× modaal','boven 1,5× modaal'][band];
+    let h=`<strong>Hypotheek:</strong> de bruto last van ${fmtC(r.hypBruto)} wordt na ${r.pctAft}% renteaftrek ${fmtC(r.nHyp)} netto; daarbij komt een eigenwoningsurplus van ${fmtC(r.surplusWon)} (inkomensband ${bandL}). `;
+    if(ti<MININ)h+=`${tag('err','Leenruimte kritiek')} Met een toetsinkomen onder het minimum is het niet aannemelijk dat deze woonlast verantwoord gedragen kan worden.`;
+    else if(ti<MODAAL)h+=`${tag('warn','Beperkte ruimte')} Een hoger toetsinkomen vergroot de leencapaciteit; in deze band weegt elke extra maandlast zwaar.`;
+    else h+=`${tag('ok','Ruimte aanwezig')} Een hoger toetsinkomen werkt positief door in de leencapaciteit; de definitieve ruimte hangt af van de volledige leennormentoets en overige lasten.`;
+    p.push(h);
+  }else if(r.wt==='huur'){
+    p.push(`<strong>Woonlast:</strong> bij een huurwoning telt de kale huur minus huurtoeslag als woonlast. ${ti<MODAAL?tag('warn','Let op woonquote')+' Bij dit inkomensniveau drukt de huur relatief zwaar op het budget; extra krediet verkleint de vrije ruimte verder.':tag('ok','Ruimte aanwezig')+' Het toetsinkomen biedt naar verwachting ruimte naast de huurlast; de exacte leencapaciteit volgt uit de volledige toets.'}`);
+  }else{
+    p.push(`<strong>Woonlast:</strong> bij inwonen wordt een forfaitaire woonlast gehanteerd (30% van het netto inkomen, max. € 750). ${ti<MININ?tag('err','Weinig ruimte')+' Ook met deze lagere woonlast is de financieringsruimte zeer beperkt.':tag('ok','Gunstig')+' De relatief lage woonlast laat doorgaans meer ruimte over voor andere verplichtingen.'}`);
+  }
+  // 3. Samenstelling toeslagen
+  const aandeel=ti>0?ts.tot/ti*100:0,kind=(ts.kb||0)+(ts.kgb||0),inkAfh=(ts.zorg||0)+(ts.kgb||0),afhPct=ti>0?inkAfh/ti*100:0;
+  const onderdelen=[`vakantietoeslag ${fmtC(ts.vak)}`];
+  if(ts.zorg>0)onderdelen.push(`zorgtoeslag ${fmtC(ts.zorg)}`);
+  if(ts.kb>0)onderdelen.push(`kinderbijslag ${fmtC(ts.kb)}`);
+  if(ts.kgb>0)onderdelen.push(`kindgebonden budget ${fmtC(ts.kgb)}`);
+  const tsTag=aandeel>=25?tag('err','Hoog aandeel toeslagen'):aandeel>=12?tag('warn','Substantieel aandeel toeslagen'):tag('ok','Beperkt aandeel toeslagen');
+  p.push(`${tsTag} De toeslagen bedragen samen <strong>${fmtC(ts.tot)}</strong> per maand (${onderdelen.join(', ')}), ofwel <strong>${pctNL(aandeel)}</strong> van het toetsinkomen. ${inkAfh>0?`Hiervan is ${fmtC(inkAfh)} (${pctNL(afhPct)}) inkomensafhankelijk en daardoor gevoelig voor wijzigingen in inkomen, gezinssituatie of regelgeving.`:'Er zijn geen inkomensafhankelijke toeslagen meegeteld; de vakantietoeslag volgt het netto inkomen.'}`);
+  // 4. Risico's en aandachtspunten
+  const risk=[];
+  if(ti<MININ)risk.push(`${tag('err','Afwijzingsrisico')} een aanvraag op dit toetsinkomen voldoet niet aan de minimumnorm`);
+  if(aandeel>=25)risk.push(`${tag('warn','Toeslagafhankelijk')} een groot deel van het inkomen bestaat uit toeslagen die kunnen wijzigen of vervallen`);
+  if(kind>0)risk.push(`${tag('warn','Kindregelingen')} kinderbijslag${ts.kgb>0?' en kindgebonden budget':''} vervallen op termijn wanneer kinderen ouder worden`);
+  if(ts.zorg>0&&ti>=MININ&&ti<MODAAL)risk.push(`${tag('warn','Afbouw zorgtoeslag')} bij een stijgend inkomen bouwt de zorgtoeslag af, waardoor het toetsinkomen minder hard stijgt dan het netto inkomen`);
+  const c=sel('contract0');
+  if(c&&c!=='vast')risk.push(`${tag('warn','Dienstverband')} het contract (${({bepaald:'bepaalde tijd',flex:'flex/oproep',proeftijd:'proeftijd'})[c]||c}) vraagt om onderbouwing van de bestendigheid van het inkomen`);
+  const gbj=v('gbj0'),aow=v('aow0')||67,nu=new Date().getFullYear();
+  if(gbj>1940&&gbj+aow-nu<=7)risk.push(`${tag('warn','Pensioen')} pensionering valt binnen de looptijd van een krediet; toets ook het inkomen na AOW-datum`);
+  if(v('a0-corr')<100)risk.push(`${tag('warn','Correctiefactor')} het inkomen van aanvrager 1 is gecorrigeerd naar ${v('a0-corr')}%`);
+  if(!risk.length)risk.push(`${tag('ok','Geen bijzonderheden')} op basis van de ingevoerde gegevens vallen geen specifieke risico's op; verifieer het inkomen wel met actuele stukken`);
+  p.push(`<strong>Aandachtspunten:</strong> ${risk.join('; ')}.`);
+  if(ti>=MOD15&&aandeel<12)p.push(`<strong>Conclusie:</strong> het toetsinkomen steunt grotendeels op eigen inkomen en is daardoor relatief robuust.`);
+  else if(ti<MININ)p.push(`<strong>Conclusie:</strong> overweeg een lager kredietbedrag, aflossing van bestaande lasten of een tweede aanvrager voordat een aanvraag wordt ingediend.`);
+  else p.push(`<strong>Conclusie:</strong> het toetsinkomen voldoet aan de minimumnorm; ${aandeel>=12?'houd rekening met de afhankelijkheid van toeslagen bij het bepalen van een verantwoorde kredietomvang':'de uiteindelijke ruimte volgt uit de volledige leennormentoets'}.`);
+  return p.map(x=>`<p>${x}</p>`).join('')+`<p style="font-size:11px;color:#888;margin-top:8px;">Deze analyse is een automatisch gegenereerde indicatie op basis van de ingevoerde gegevens en geen financieel advies.</p>`;
+}
+function runAI(){
   const btn=el('ai-btn'),out=el('ai-out');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analyseren...';out.style.opacity='.5';
-  const r=window._last||{},gezinL={een:'alleenstaand','een-k':'alleenstaand met kinderen',paar:'paar zonder kinderen','paar-k':'paar met kinderen'}[r.gezin]||r.gezin;
-  const wtL={koop:'koopwoning (hypotheek)',huur:'huurwoning',inwonend:'inwonend'}[r.wt]||r.wt;
-  const prompt=`Je bent een Nederlandse financieel adviseur gespecialiseerd in hypotheken (VFN v1.7, art. 4:34 Wft). Analyseer dit toetsinkomen in 4-5 korte alinea's. Gebruik HTML-tags <p>, <strong> en <span class="tag tag-ok/tag-warn/tag-err">label</span>. Focus op: hoogte t.o.v. normen (min €2.033/modaal €2.812/1,5× €3.633), hypotheekeffect, toeslagensamenstelling, risico's.\n\nGegevens:\n- Woonsituatie: ${wtL}\n- Gezin: ${gezinL}\n- Netto inkomen: €${Math.round(r.nettoTot||0)}\n- Toeslagen: €${Math.round(r.ts?.tot||0)} (vak €${Math.round(r.ts?.vak||0)}, zorg €${Math.round(r.ts?.zorg||0)}, KB €${Math.round((r.ts?.kb||0)+(r.ts?.kgb||0))})\n- Toetsinkomen: €${Math.round(r.tiTot||0)}\n${r.wt==='koop'?`- Bruto hyp: €${Math.round(r.hypBruto||0)} | Netto hyp: €${Math.round(r.nHyp||0)} (${r.pctAft||5}% aftrek) | Surplus: €${Math.round(r.surplusWon||0)}`:''}`;
-  try{const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});const data=await resp.json();const txt=data.content?.find(c=>c.type==='text')?.text||'Geen resultaat.';out.style.opacity='1';out.innerHTML=txt;}catch(e){out.style.opacity='1';out.innerHTML=`<p style="color:var(--red);">Fout: ${e.message}</p>`;}
-  btn.disabled=false;btn.innerHTML='↻ Heranalyseer';
+  herbereken();
+  setTimeout(()=>{
+    try{out.innerHTML=maakAnalyse(window._last||{});}catch(e){out.innerHTML=`<p style="color:var(--red);">Analyse kon niet worden gemaakt.</p>`;}
+    out.style.opacity='1';btn.disabled=false;btn.innerHTML='↻ Heranalyseer';
+  },450);
 }
 function resetAlles(){
   el('wtype').value='koop';el('gezin').value='paar';el('nkind').value='0';el('hyp-bruto').value=1450;el('huur').value=950;el('htoeslag').value=0;el('kostgeld').value=0;
@@ -455,7 +509,7 @@ function resetAlles(){
   inkType[0]='loon';inkType[1]='loon';
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
   document.querySelectorAll('#chips0 .chip[data-v="loon"],#chips1 .chip[data-v="loon"]').forEach(c=>c.classList.add('on'));
-  el('a0-zzp').classList.add('hid');el('ai-out').innerHTML='<p style="color:#888;">Klik op <strong>Analyseer</strong> voor een AI-toelichting.</p>';el('ai-btn').innerHTML='✦ Analyseer toetsinkomen';
+  el('a0-zzp').classList.add('hid');el('ai-out').innerHTML='<p style="color:#888;">Klik op <strong>Analyseer</strong> voor een toelichting op het berekende toetsinkomen.</p>';el('ai-btn').innerHTML='✦ Analyseer toetsinkomen';
   onWtype();
 }
 const ps=document.createElement('style');ps.media='print';ps.textContent='.sticky-bar,.fb,.ai-panel{display:none!important}.cb.hid{display:block!important}body{background:#fff}.main{grid-template-columns:1fr}.sidebar{position:static}';document.head.appendChild(ps);
