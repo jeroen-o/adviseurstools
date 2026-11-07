@@ -95,3 +95,20 @@
   document.addEventListener('click',function(e){if(!form.contains(e.target)){box.hidden=true;inp.setAttribute('aria-expanded','false');}});
   document.addEventListener('keydown',function(e){if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault();inp.focus();}});
 })();
+// Filter in het tooloverzicht
+(function(){
+  var ov=document.getElementById('tooloverzicht'); if(!ov) return;
+  var inp=ov.querySelector('.tfilter input'), leeg=ov.querySelector('.tleeg');
+  function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+  inp.addEventListener('input',function(){
+    var w=n(inp.value).split(/\s+/).filter(Boolean), tot=0;
+    ov.querySelectorAll('.tgroep').forEach(function(g){
+      var z=0; g.querySelectorAll('.tcard').forEach(function(c){
+        var t=n(c.getAttribute('data-zoek')), ok=w.every(function(x){return t.indexOf(x)>=0;});
+        c.hidden=!ok; if(ok) z++;
+      });
+      g.hidden=!z; tot+=z;
+    });
+    leeg.hidden=tot>0;
+  });
+})();

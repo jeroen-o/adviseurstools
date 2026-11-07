@@ -26,3 +26,8 @@ In de kop van elke pagina staat een zoekveld ("Wat zoek je, wat wil je berekenen
 - Na het toevoegen of hernoemen van pagina's: `python3 scripts/maak-zoekindex.py`
 - Zonder resultaat biedt de zoeker een concept-mail aan (mailto) naar jeroen@oversteegen.nl met de zoekvraag erin.
 - Sneltoets: `/` zet de cursor in het zoekveld.
+
+## Tooloverzicht op categoriepagina's
+De categoriepagina's (hypotheek, krediet, assurantie, vermogen-pensioen, overige, platformen) tonen tegels in plaats van lijsten, doorlopend genummerd, met filterveld. Op de homepage lopen de nummers ook door.
+- Titels, omschrijvingen en thema's staan in `scripts/maak-overzicht.py` (CURATED, UITGELICHT, THEMAS).
+- Na wijzigingen: `python3 scripts/maak-overzicht.py` en daarna `python3 scripts/maak-zoekindex.py`.
