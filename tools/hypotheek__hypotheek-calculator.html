@@ -5,6 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hypotheek Calculator</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root{--navy:#003057;--navy2:#0b4a7d;--gold:#e5a138;--gold-dk:#b97c14;--gold-lt:#fdf5e7;--bg:#f4f7f9;--white:#fff;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;--green:#1a7f4b;--grlt:#e8f6ee;--red:#b42318;--redlt:#fdecea;--orange:#b45309;--orlt:#fef3c7;--shadow:0 2px 14px rgba(0,48,87,.08)}
+      *,*::before,*::after{box-sizing:border-box}
+      body{margin:0;font-family:Montserrat,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55}
+      .page{min-height:100vh;background:var(--bg)}
+      .hdr{background:var(--navy);color:#fff;padding:16px}
+      .hdr-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+      .hdr-title{font-size:20px;font-weight:700;color:#fff;line-height:1.25;margin:0}
+      .hdr-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin:2px 0 0}
+      .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+      .card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+      .ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:14px;margin:0}
+      .cb{padding:16px 18px}
+      .sec-h{font-size:14px;font-weight:700;color:var(--navy);margin:0}
+      .sep{font-size:10.5px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.09em;padding-bottom:4px;border-bottom:1px solid var(--border);margin:0}
+      .deel{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fbfcfd}
+      .deel h4{margin:0;font-size:13.5px;font-weight:700;color:var(--navy)}
+      .fld-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+      .fld label,.lbl{display:block;font-size:12.5px;font-weight:600;color:var(--navy);margin-bottom:4px}
+      .inp{width:100%;min-height:40px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:15px;color:var(--text);background:#fff;outline:none}
+      .inp:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48,87,.12)}
+      .extra{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+      .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--gold);color:var(--navy)}
+      .btn:hover{background:#d8942b}
+      .btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy);padding:8px 14px;font-size:13px}
+      .btn.sec:hover{background:#eef4fa}
+      .btn.del{background:#fff;color:var(--red);border:1.5px solid var(--red);padding:4px 10px;font-size:12px}
+      .btn.del:hover{background:var(--redlt)}
+      .kpi-main{background:var(--gold-lt);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:10px;padding:14px 18px}
+      .kpi-main h3{margin:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+      .kpi-main p{margin:4px 0 0;font-size:26px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.2}
+      .empty{text-align:center;padding:24px 0;color:var(--muted)}
+      .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      table.t{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+      table.t th{background:var(--navy);color:#fff;padding:7px 10px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;text-align:right;white-space:nowrap}
+      table.t th:first-child{text-align:left}
+      table.t td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+      table.t td:first-child{text-align:left}
+      table.t tbody tr:nth-child(even) td{background:#f8fafc}
+      table.t td.b{font-weight:700;color:var(--navy)}
+      .uitleg h3{font-size:13.5px;font-weight:700;color:var(--navy);margin:0 0 2px}
+      .uitleg p{font-size:13px;line-height:1.65;margin:0;color:var(--text)}
+      .uitleg > div + div{margin-top:12px}
+      @media(max-width:700px){.fld-grid{grid-template-columns:1fr 1fr}}
+      @media(max-width:560px){.fld-grid{grid-template-columns:1fr}.hdr-title{font-size:17px}.cb{padding:14px}.kpi-main p{font-size:22px}}
+      @media print{.noprint{display:none!important}body,.page{background:#fff;color:#000}.card{box-shadow:none}.hdr{background:#fff;color:#000;border-bottom:1px solid #000}.hdr-title,.hdr-sub{color:#000}}
+    </style>
 </head>
 <body>
     <div id="root"></div>
@@ -162,12 +211,12 @@
   body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 24px; }
   h1 { font-size: 20px; margin-bottom: 4px; }
   .subtitle { color: #555; margin-bottom: 20px; font-size: 13px; }
-  h2 { font-size: 14px; margin: 20px 0 8px; border-bottom: 2px solid #2563eb; padding-bottom: 4px; color: #2563eb; }
+  h2 { font-size: 14px; margin: 20px 0 8px; border-bottom: 2px solid #003057; padding-bottom: 4px; color: #003057; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-  th { background: #2563eb; color: white; text-align: left; padding: 6px 10px; font-size: 11px; }
+  th { background: #003057; color: white; text-align: left; padding: 6px 10px; font-size: 11px; }
   td { padding: 5px 10px; border-bottom: 1px solid #e5e7eb; }
   tr.even td { background: #f8fafc; }
-  .total-box { background: #2563eb; color: white; padding: 14px 18px; border-radius: 8px;
+  .total-box { background: #003057; color: white; padding: 14px 18px; border-radius: 8px;
                display: inline-block; margin-top: 8px; margin-bottom: 16px; }
   .total-box .label { font-size: 12px; opacity: .85; }
   .total-box .amount { font-size: 22px; font-weight: bold; margin-top: 2px; }
@@ -216,23 +265,22 @@
                 parseFloat(d.bedrag) > 0 && parseFloat(d.rente) >= 0 && parseInt(d.looptijd) > 0
             );
 
-            return React.createElement('div', { className: 'min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4' },
-                React.createElement('div', { className: 'max-w-4xl mx-auto' },
-                    React.createElement('div', { className: 'text-center mb-8' },
-                        React.createElement('div', { className: 'flex items-center justify-center gap-3 mb-3' },
-                            React.createElement('svg', { className: 'w-10 h-10 text-blue-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
-                                React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M3 12l2-3m0 0l7-4 7 4M5 9v7a1 1 0 001 1h12a1 1 0 001-1V9m-9 4v4m0 0H9m4 0h4' })
-                            ),
-                            React.createElement('h1', { className: 'text-4xl font-bold text-gray-800' }, 'Hypotheek Calculator')
-                        ),
-                        React.createElement('p', { className: 'text-gray-600 text-lg' }, 'Bereken de maandlasten van verschillende hypotheekvormen')
-                    ),
+            return React.createElement('div', { className: 'page' },
+                React.createElement('header', { className: 'hdr' },
+                    React.createElement('div', { className: 'hdr-in' },
+                        React.createElement('div', {},
+                            React.createElement('h1', { className: 'hdr-title' }, 'Hypotheek Calculator'),
+                            React.createElement('p', { className: 'hdr-sub' }, 'Bereken de maandlasten van verschillende hypotheekvormen')
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'wrap' },
 
-                    React.createElement('div', { className: 'bg-white rounded-2xl shadow-xl p-8 mb-6' },
-                        React.createElement('div', { className: 'flex justify-end mb-6' },
+                    React.createElement('div', { className: 'card cb' },
+                        React.createElement('div', { className: 'flex justify-end mb-4 noprint' },
                             React.createElement('button', {
                                 onClick: handlePrint,
-                                className: 'flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
+                                className: 'btn'
                             },
                                 React.createElement('svg', { className: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
                                     React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4H9a2 2 0 00-2 2v2a2 2 0 002 2h4a2 2 0 002-2v-2a2 2 0 00-2-2zm0 0H7v4a2 2 0 002 2h4a2 2 0 002-2v-4' })
@@ -241,61 +289,61 @@
                             )
                         ),
 
-                        React.createElement('div', { className: 'mb-8' },
-                            React.createElement('div', { className: 'flex justify-between items-center mb-4' },
-                                React.createElement('h3', { className: 'text-lg font-bold text-gray-800' }, 'Leningdelen'),
+                        React.createElement('div', { className: 'mb-6' },
+                            React.createElement('div', { className: 'flex justify-between items-center mb-3 gap-2 flex-wrap' },
+                                React.createElement('h3', { className: 'sec-h' }, 'Leningdelen'),
                                 React.createElement('button', {
                                     onClick: addLending,
-                                    className: 'px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm'
+                                    className: 'btn sec'
                                 }, '+ Lening toevoegen')
                             ),
                             React.createElement('div', { className: 'space-y-4' },
                                 leningdelen.map((deel, idx) =>
-                                    React.createElement('div', { key: deel.id, className: 'border-2 border-gray-200 rounded-lg p-4' },
+                                    React.createElement('div', { key: deel.id, className: 'deel' },
                                         React.createElement('div', { className: 'flex justify-between items-center mb-3' },
-                                            React.createElement('h4', { className: 'font-semibold text-gray-700' }, `Lening ${idx + 1}`),
+                                            React.createElement('h4', {}, `Lening ${idx + 1}`),
                                             leningdelen.length > 1 && React.createElement('button', {
                                                 onClick: () => removeLending(deel.id),
-                                                className: 'px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm'
+                                                className: 'btn del'
                                             }, 'Verwijderen')
                                         ),
-                                        React.createElement('div', { className: 'grid md:grid-cols-4 gap-4' },
-                                            React.createElement('div', {},
-                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Type'),
+                                        React.createElement('div', { className: 'fld-grid' },
+                                            React.createElement('div', { className: 'fld' },
+                                                React.createElement('label', { className: 'lbl' }, 'Type'),
                                                 React.createElement('select', {
                                                     value: deel.type,
                                                     onChange: (e) => updateLending(deel.id, 'type', e.target.value),
-                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors'
+                                                    className: 'inp'
                                                 },
                                                     React.createElement('option', { value: 'annuitair' }, 'Annuïtair'),
                                                     React.createElement('option', { value: 'lineair' }, 'Lineair'),
                                                     React.createElement('option', { value: 'aflossingsvrij' }, 'Aflossingsvrij')
                                                 )
                                             ),
-                                            React.createElement('div', {},
-                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Bedrag (€)'),
+                                            React.createElement('div', { className: 'fld' },
+                                                React.createElement('label', { className: 'lbl' }, 'Bedrag (€)'),
                                                 React.createElement('input', {
                                                     type: 'number', value: deel.bedrag,
                                                     onChange: (e) => updateLending(deel.id, 'bedrag', e.target.value),
-                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                                    className: 'inp',
                                                     placeholder: '100000'
                                                 })
                                             ),
-                                            React.createElement('div', {},
-                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Rente (%)'),
+                                            React.createElement('div', { className: 'fld' },
+                                                React.createElement('label', { className: 'lbl' }, 'Rente (%)'),
                                                 React.createElement('input', {
                                                     type: 'number', step: '0.1', value: deel.rente,
                                                     onChange: (e) => updateLending(deel.id, 'rente', e.target.value),
-                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                                    className: 'inp',
                                                     placeholder: '4.5'
                                                 })
                                             ),
-                                            React.createElement('div', {},
-                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Looptijd (jaren)'),
+                                            React.createElement('div', { className: 'fld' },
+                                                React.createElement('label', { className: 'lbl' }, 'Looptijd (jaren)'),
                                                 React.createElement('input', {
                                                     type: 'number', value: deel.looptijd,
                                                     onChange: (e) => updateLending(deel.id, 'looptijd', e.target.value),
-                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                                    className: 'inp',
                                                     placeholder: '30'
                                                 })
                                             )
@@ -305,54 +353,54 @@
                             )
                         ),
 
-                        React.createElement('div', { className: 'mb-8 bg-gray-50 rounded-lg p-4' },
-                            React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Premie / Overige maandlasten (€)'),
+                        React.createElement('div', { className: 'mb-6 extra' },
+                            React.createElement('label', { className: 'lbl' }, 'Premie / Overige maandlasten (€)'),
                             React.createElement('input', {
                                 type: 'number', step: '0.01', value: premie,
                                 onChange: (e) => setPremie(e.target.value),
-                                className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                className: 'inp',
                                 placeholder: '0'
                             })
                         ),
 
-                        isValid && React.createElement('div', { className: 'bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg' },
-                            React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
-                                React.createElement('svg', { className: 'w-6 h-6', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                        isValid && React.createElement('div', { className: 'kpi-main' },
+                            React.createElement('div', { className: 'flex items-center gap-2' },
+                                React.createElement('svg', { className: 'w-4 h-4', style: { color: 'var(--gold-dk)' }, fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
                                     React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
                                 ),
-                                React.createElement('h3', { className: 'font-bold text-2xl' }, 'Totale maandlast')
+                                React.createElement('h3', {}, 'Totale maandlast')
                             ),
-                            React.createElement('p', { className: 'text-4xl font-bold' }, '€ ' + fmt(berekenTotalMaandlast()))
+                            React.createElement('p', {}, '€ ' + fmt(berekenTotalMaandlast()))
                         ),
 
-                        !isValid && React.createElement('div', { className: 'text-center py-8 text-gray-500' },
+                        !isValid && React.createElement('div', { className: 'empty' },
                             React.createElement('p', {}, 'Vul alle velden in om de berekening te starten')
                         )
                     ),
 
-                    isValid && React.createElement('div', { className: 'bg-white rounded-2xl shadow-xl p-8 mb-6' },
-                        React.createElement('h3', { className: 'text-xl font-bold text-gray-800 mb-4' }, 'Maandlijks overzicht'),
-                        React.createElement('div', { className: 'overflow-x-auto' },
-                            React.createElement('table', { className: 'w-full text-sm' },
+                    isValid && React.createElement('div', { className: 'card' },
+                        React.createElement('h3', { className: 'ch' }, 'Maandlijks overzicht'),
+                        React.createElement('div', { className: 'cb tbl-wrap' },
+                            React.createElement('table', { className: 't' },
                                 React.createElement('thead', {},
-                                    React.createElement('tr', { className: 'border-b-2 border-gray-300' },
-                                        React.createElement('th', { className: 'text-left py-3 px-4 font-semibold text-gray-700' }, 'Maand'),
-                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Maandlast'),
-                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Premie'),
-                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Rente'),
-                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Aflossing'),
-                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Restschuld')
+                                    React.createElement('tr', {},
+                                        React.createElement('th', {}, 'Maand'),
+                                        React.createElement('th', {}, 'Maandlast'),
+                                        React.createElement('th', {}, 'Premie'),
+                                        React.createElement('th', {}, 'Rente'),
+                                        React.createElement('th', {}, 'Aflossing'),
+                                        React.createElement('th', {}, 'Restschuld')
                                     )
                                 ),
                                 React.createElement('tbody', {},
                                     generateTable().map((row, idx) =>
-                                        React.createElement('tr', { key: idx, className: idx % 2 === 0 ? 'bg-gray-50' : '' },
-                                            React.createElement('td', { className: 'py-3 px-4 text-gray-800' }, row.maand),
-                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.maandlast - row.premie)),
-                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.premie)),
-                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.rente)),
-                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.aflossing)),
-                                            React.createElement('td', { className: 'py-3 px-4 text-right font-semibold text-gray-800' }, '€ ' + fmt(row.restschuld))
+                                        React.createElement('tr', { key: idx },
+                                            React.createElement('td', {}, row.maand),
+                                            React.createElement('td', {}, '€ ' + fmt(row.maandlast - row.premie)),
+                                            React.createElement('td', {}, '€ ' + fmt(row.premie)),
+                                            React.createElement('td', {}, '€ ' + fmt(row.rente)),
+                                            React.createElement('td', {}, '€ ' + fmt(row.aflossing)),
+                                            React.createElement('td', { className: 'b' }, '€ ' + fmt(row.restschuld))
                                         )
                                     )
                                 )
@@ -360,20 +408,20 @@
                         )
                     ),
 
-                    React.createElement('div', { className: 'bg-white rounded-xl shadow-md p-6' },
-                        React.createElement('h2', { className: 'text-xl font-bold text-gray-800 mb-4' }, 'Uitleg hypotheekvormen'),
-                        React.createElement('div', { className: 'space-y-4 text-gray-700' },
+                    React.createElement('div', { className: 'card' },
+                        React.createElement('h2', { className: 'ch' }, 'Uitleg hypotheekvormen'),
+                        React.createElement('div', { className: 'cb uitleg' },
                             React.createElement('div', {},
-                                React.createElement('h3', { className: 'font-semibold text-blue-600 mb-1' }, 'Annuïtaire hypotheek'),
-                                React.createElement('p', { className: 'text-sm leading-relaxed' }, 'U betaalt elke maand hetzelfde bedrag. In het begin bestaat dit vooral uit rente, later betaalt u meer af op de hoofdsom.')
+                                React.createElement('h3', {}, 'Annuïtaire hypotheek'),
+                                React.createElement('p', {}, 'U betaalt elke maand hetzelfde bedrag. In het begin bestaat dit vooral uit rente, later betaalt u meer af op de hoofdsom.')
                             ),
                             React.createElement('div', {},
-                                React.createElement('h3', { className: 'font-semibold text-green-600 mb-1' }, 'Aflossingsvrije hypotheek'),
-                                React.createElement('p', { className: 'text-sm leading-relaxed' }, 'U betaalt alleen rente. De hoofdsom blijft gelijk en moet aan het einde van de looptijd in één keer worden afgelost.')
+                                React.createElement('h3', {}, 'Aflossingsvrije hypotheek'),
+                                React.createElement('p', {}, 'U betaalt alleen rente. De hoofdsom blijft gelijk en moet aan het einde van de looptijd in één keer worden afgelost.')
                             ),
                             React.createElement('div', {},
-                                React.createElement('h3', { className: 'font-semibold text-purple-600 mb-1' }, 'Lineaire hypotheek'),
-                                React.createElement('p', { className: 'text-sm leading-relaxed' }, 'U lost elke maand hetzelfde bedrag af. Omdat de restschuld daalt, betaalt u steeds minder rente. De maandlast daalt dus elke maand.')
+                                React.createElement('h3', {}, 'Lineaire hypotheek'),
+                                React.createElement('p', {}, 'U lost elke maand hetzelfde bedrag af. Omdat de restschuld daalt, betaalt u steeds minder rente. De maandlast daalt dus elke maand.')
                             )
                         )
                     )
