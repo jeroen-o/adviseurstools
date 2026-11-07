@@ -228,6 +228,8 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
         <input type="date" id="gb1" value="1980-06-15">
         <label style="margin-top:10px">Toetsinkomen <span class="hint">per jaar</span></label>
         <div class="number-grp" data-prefix="€"><input type="number" id="ink1" value="55000" min="0" step="500"></div>
+        <label style="margin-top:10px">Inkomen vanaf AOW <span class="hint">AOW + pensioen, per jaar</span></label>
+        <div class="number-grp" data-prefix="€"><input type="number" id="pens1" value="" min="0" step="500" placeholder="nodig bij pensioentoets"></div>
         <div class="av-status" id="status1"></div>
       </div>
       <div class="aanvrager">
@@ -236,6 +238,8 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
         <input type="date" id="gb2" value="">
         <label style="margin-top:10px">Toetsinkomen <span class="hint">0 indien n.v.t.</span></label>
         <div class="number-grp" data-prefix="€"><input type="number" id="ink2" value="35000" min="0" step="500"></div>
+        <label style="margin-top:10px">Inkomen vanaf AOW <span class="hint">AOW + pensioen, per jaar</span></label>
+        <div class="number-grp" data-prefix="€"><input type="number" id="pens2" value="" min="0" step="500" placeholder="nodig bij pensioentoets"></div>
         <div class="av-status" id="status2"></div>
       </div>
     </div>
@@ -249,7 +253,24 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
         <div class="number-grp pct"><input type="number" id="rente3jr" value="4.50" min="0" step="0.05"></div>
       </div>
     </div>
-    <div class="info"><strong>Toetsinkomen 2026:</strong> hoogste + 100% laagste. <strong>Tabelkeuze:</strong> beide AOW → AOW-tabel; één of geen AOW → niet-AOW-tabel. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0.</div>
+    <div class="row two">
+      <div>
+        <label for="pensioenDrempel">Pensioentoets vanaf leeftijd <span class="hint">advies én beheer</span></label>
+        <select id="pensioenDrempel">
+          <option value="0">Niet toetsen</option>
+          <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+          <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+        </select>
+      </div>
+      <div>
+        <label for="beheerSituatie">Situatie beheertoets <span class="hint">NHG bijlage 5</span></label>
+        <select id="beheerSituatie">
+          <option value="auto" selected>Met werk / AOW (automatisch o.b.v. geboortedatum)</option>
+          <option value="zonderwerk">Zonder werk (5c/5i paar · 5d/5j alleenstaand)</option>
+        </select>
+      </div>
+    </div>
+    <div class="info"><strong>Toetsinkomen 2026:</strong> hoogste + 100% laagste. <strong>Tabelkeuze:</strong> beide AOW → AOW-tabel; één of geen AOW → niet-AOW-tabel. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0. <strong>Pensioentoets:</strong> vanaf de gekozen leeftijd (en vóór de AOW-datum) wordt per persoon óók getoetst op het inkomen vanaf AOW met de AOW-tabel (advies: Trhk welAOW; beheer: NHG 5e/5f, box 3: 5k/5l); de laagste uitkomst telt. Is de AOW-leeftijd al bereikt, vul dan bij toetsinkomen het AOW-/pensioeninkomen in.</div>
   </div>
 
   <div class="card">
@@ -391,8 +412,9 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
     <details class="src">
       <summary>Bron en regels — NHG beheer</summary>
       <ul>
-        <li>Financieringslasttabel beheer 2026 — bijlage 5 Voorwaarden en normen NHG; D.6.5.</li>
-        <li>Tabelkeuze: paar/alleenstaand × wel/niet AOW × box 1/box 3. Per box gewogen naar hoofdsom-aandeel.</li>
+        <li>Financieringslasttabel beheer 2026 — bijlage 5 Voorwaarden en normen NHG 2026; D.6.5. De beheercriteria 2026 mogen voorlopig ook in 2027 worden gebruikt.</li>
+        <li>Tabelkeuze: paar/alleenstaand × met werk / zonder werk / AOW × box 1/box 3 (5a–5f; niet-aftrekbare delen 5g–5l). Per box gewogen naar hoofdsom-aandeel.</li>
+        <li>Pensioentoets: vanaf de gekozen leeftijd (57 of 52 jaar) en vóór de AOW-datum óók toetsing op het inkomen vanaf AOW met 5f/5l (alleenstaand) of 5e/5k (paar); de laagste uitkomst telt.</li>
         <li>Toetsrente: bij RVP ≥ 3 jr werkelijke rente, bij RVP < 3 jr de 3-jaars NHG-rente (of werkelijke als hoger).</li>
         <li>Werkelijke maandlast: rente + aflossing + inleg opbouwproduct + erfpachtcanon.</li>
         <li>Minimale beheerlast: zelfde berekening met alle leningdelen aflossingsvrij; geeft de ondergrens die NHG hanteert om woningbehoud mogelijk te maken.</li>
@@ -404,7 +426,7 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
   <div class="toets-pane" id="pane-tabellen">
     <h2 style="margin:0 0 12px 0">Gebruikte normtabellen 2026</h2>
     <div class="info">
-      <strong>Bronnen:</strong> CHF/GHF — Bijlage 1 Trhk (Nibud); NHG-beheer — bijlage 5 Voorwaarden en normen NHG. <strong>Let op:</strong> de NHG-beheertabel voor <em>paar werkend</em> en <em>paar AOW</em> is identiek aan respectievelijk CHF nietAOW en CHF welAOW; deze worden hergebruikt. De alleenstaand-tabellen voor beheer zijn wél eigenstandig.
+      <strong>Bronnen:</strong> CHF/GHF — Bijlage 1 Trhk (Nibud); NHG-beheer — bijlage 5 Voorwaarden en normen NHG. <strong>Let op:</strong> de NHG-beheertabel voor <em>paar met werk</em> (5a/5g) en <em>paar AOW</em> (5e/5k) is identiek aan respectievelijk CHF nietAOW en CHF welAOW; deze worden hergebruikt. De alleenstaand-tabellen (5b/5d/5f, box 3: 5h/5j/5l) en de paar-zonder-werk-tabellen (5c/5i) voor beheer zijn wél eigenstandig. Financieringslasttabel beheer 2026 (NHG Voorwaarden en normen 2026, bijlage 5); de beheercriteria 2026 mogen voorlopig ook in 2027 worden gebruikt.
     </div>
     <div class="row two" style="align-items:flex-end">
       <div>
@@ -417,10 +439,16 @@ table.normtab td.mark-cell{background:var(--orange) !important;color:#fff !impor
             <option value="CHF_B3_WELAOW">Paar AOW · box 3</option>
           </optgroup>
           <optgroup label="NHG beheer — bijlage 5 (alleenstaand)">
-            <option value="NHG_ALLEEN_REG">Alleenstaand werkend · regulier (box 1)</option>
-            <option value="NHG_ALLEEN_AOW_REG">Alleenstaand AOW · regulier (box 1)</option>
-            <option value="NHG_ALLEEN_B3">Alleenstaand werkend · box 3</option>
-            <option value="NHG_ALLEEN_AOW_B3">Alleenstaand AOW · box 3</option>
+            <option value="NHG_ALLEEN_REG">Alleenstaand met werk · regulier (box 1) — 5b</option>
+            <option value="NHG_ALLEEN_ZW_REG">Alleenstaand zonder werk · regulier (box 1) — 5d</option>
+            <option value="NHG_ALLEEN_AOW_REG">Alleenstaand AOW · regulier (box 1) — 5f</option>
+            <option value="NHG_ALLEEN_B3">Alleenstaand met werk · box 3 — 5h</option>
+            <option value="NHG_ALLEEN_ZW_B3">Alleenstaand zonder werk · box 3 — 5j</option>
+            <option value="NHG_ALLEEN_AOW_B3">Alleenstaand AOW · box 3 — 5l</option>
+          </optgroup>
+          <optgroup label="NHG beheer — bijlage 5 (paar zonder werk)">
+            <option value="NHG_PAAR_ZW_REG">Paar zonder werk · regulier (box 1) — 5c</option>
+            <option value="NHG_PAAR_ZW_B3">Paar zonder werk · box 3 — 5i</option>
           </optgroup>
         </select>
       </div>
@@ -483,6 +511,14 @@ const NHG_ALLEEN_REG = [[28000,258,275,292,308,325,333,338,344,348,353,356,359],
 const NHG_ALLEEN_B3 = [[28000,237,241,245,249,252,255,258,261,263,266,268,270],[29000,237,241,245,249,252,255,258,261,263,266,268,270],[30000,237,241,245,249,252,255,258,261,263,266,268,270],[31000,237,241,245,249,252,255,258,261,263,266,268,270],[32000,237,241,245,249,252,255,258,261,263,266,268,270],[33000,237,241,245,249,252,255,258,261,263,266,268,270],[34000,237,241,245,249,252,255,258,261,263,266,268,270],[35000,237,241,245,249,252,255,258,261,263,266,268,270],[36000,237,241,245,249,252,255,258,261,263,266,268,270],[37000,237,241,245,249,252,255,258,261,263,266,268,270],[38000,237,241,245,249,252,255,258,261,263,266,268,270],[39000,237,241,245,249,252,255,258,261,263,266,268,270],[40000,237,241,245,249,252,255,258,261,263,266,268,270],[41000,237,241,245,249,252,255,258,261,263,266,268,270],[42000,237,241,245,249,252,255,258,261,263,266,268,270],[43000,238,242,246,250,252,255,258,261,263,266,268,270],[44000,239,243,247,251,253,256,259,262,264,267,269,271],[45000,240,245,248,252,254,258,260,263,266,268,270,273],[46000,241,246,250,253,256,259,262,265,267,270,272,274],[47000,242,247,251,254,257,260,263,266,268,271,273,275],[48000,243,247,252,256,258,261,264,267,270,272,274,276],[49000,243,248,252,256,259,262,265,268,271,273,275,278],[50000,244,249,252,257,260,263,266,269,272,274,276,279],[51000,245,250,252,258,261,264,267,270,273,275,277,280],[52000,246,250,253,259,262,265,268,271,274,276,278,281],[53000,247,251,255,259,262,266,269,272,274,277,279,281],[54000,248,252,256,260,263,267,270,273,275,278,280,282],[55000,248,252,256,261,263,267,271,273,276,279,281,283],[56000,249,253,257,261,264,268,271,274,278,279,283,284],[57000,250,254,258,262,266,268,273,276,278,281,283,286],[58000,250,255,259,263,266,270,273,276,278,281,283,286],[59000,251,255,259,263,266,270,273,276,279,282,284,286],[60000,251,255,259,263,267,270,273,277,280,282,285,287],[61000,251,256,260,264,267,271,274,277,280,283,285,288],[62000,251,256,260,264,268,271,274,278,281,284,286,288],[63000,252,256,261,265,268,272,275,278,281,284,287,289],[64000,252,257,261,265,269,272,276,278,282,285,287,289],[65000,253,257,261,266,270,273,276,279,282,285,288,290],[66000,253,258,262,266,270,274,277,280,282,286,288,291],[67000,254,258,263,267,271,274,277,280,283,286,289,291],[68000,255,259,263,267,271,275,278,281,284,287,290,292],[69000,255,260,264,268,272,276,279,282,285,287,290,293],[70000,256,261,265,269,273,276,280,283,285,288,291,293],[71000,256,261,265,269,273,277,280,283,286,289,291,294],[72000,257,262,266,270,274,278,281,284,287,290,292,295],[73000,257,262,267,271,274,278,282,285,288,290,293,295],[74000,258,263,267,271,275,278,282,285,288,291,293,296],[75000,258,263,268,272,276,279,283,286,289,292,294,296],[76000,259,263,268,272,276,279,283,286,289,292,294,297],[77000,259,264,268,273,276,280,283,287,290,292,295,297],[78000,260,264,269,273,277,280,284,287,290,293,295,298],[79000,260,264,269,273,277,281,284,287,291,293,296,298],[80000,260,265,269,274,278,281,284,288,291,294,296,298],[81000,260,265,269,274,278,281,285,288,291,294,296,299],[82000,260,265,269,274,278,281,285,288,291,294,297,299],[83000,260,265,270,274,278,282,285,288,291,294,297,299],[84000,260,265,270,274,278,282,285,288,291,294,297,299],[85000,260,265,270,274,278,282,285,288,291,294,297,299]];
 const NHG_ALLEEN_AOW_REG = [[21000,225,231,235,239,243,247,251,254,256,258,261,262],[22000,238,245,250,255,259,263,267,270,273,276,279,281],[23000,246,254,261,266,271,275,279,282,286,289,292,294],[24000,254,262,269,276,281,286,290,294,297,301,304,306],[25000,258,268,276,283,289,295,300,304,308,311,314,317],[26000,262,272,282,290,296,303,308,313,317,321,324,327],[27000,266,276,286,295,303,310,315,321,326,330,333,337],[28000,269,280,291,300,308,316,322,328,333,338,342,345],[29000,271,283,293,303,312,320,327,334,339,344,348,352],[30000,273,285,296,307,316,324,332,339,345,350,355,359],[31000,275,288,299,310,320,329,337,344,351,357,362,366],[32000,276,289,302,313,323,333,341,349,356,362,367,372],[33000,277,291,304,315,326,336,345,353,360,367,373,378],[34000,278,292,305,317,328,339,348,356,364,370,377,382],[35000,279,292,305,318,330,340,350,359,367,374,380,386],[36000,280,293,306,318,330,341,351,360,369,376,383,388],[37000,281,294,307,319,331,342,353,362,371,378,385,392],[38000,284,297,309,321,333,345,356,365,374,382,389,396],[39000,284,300,312,324,336,347,358,369,377,386,393,400],[40000,285,300,315,328,339,350,361,372,381,389,397,404],[41000,288,303,317,330,344,355,365,376,386,394,402,410],[42000,289,306,320,334,346,359,369,380,390,399,407,415],[43000,290,307,323,337,350,361,374,384,394,403,412,419],[44000,291,308,326,340,353,365,376,388,398,407,416,424],[45000,292,310,327,343,356,369,380,390,401,411,420,428],[46000,293,311,328,345,359,372,383,394,403,414,424,432],[47000,293,312,329,346,362,375,387,398,407,417,427,436],[48000,293,312,330,347,364,378,390,401,411,420,429,439],[49000,293,312,331,349,365,380,393,405,415,424,433,441],[50000,293,312,331,349,366,382,396,407,418,427,436,444],[51000,293,312,331,350,367,383,398,410,421,431,439,448],[52000,293,312,331,350,368,384,399,412,424,434,443,451],[53000,293,312,331,350,368,384,400,414,426,436,446,454],[54000,293,312,331,350,368,385,401,416,428,439,448,457],[55000,293,312,331,350,368,385,401,416,430,441,451,460],[56000,293,312,331,350,368,385,401,417,431,443,453,462],[57000,293,312,331,350,368,386,402,417,431,444,455,464],[58000,293,312,331,350,368,386,402,417,432,445,457,466],[59000,294,312,331,350,368,386,403,418,433,445,458,468],[60000,294,312,331,350,368,386,403,418,433,446,458,470]];
 const NHG_ALLEEN_AOW_B3 = [[21000,220,224,227,230,234,236,239,242,244,246,248,250],[22000,231,235,239,242,245,248,251,254,256,259,261,263],[23000,238,242,246,249,252,256,258,261,264,266,268,270],[24000,243,247,251,254,258,261,264,267,269,272,274,276],[25000,247,251,255,258,262,265,268,271,274,276,278,281],[26000,250,254,258,261,265,268,271,274,277,279,282,284],[27000,252,256,260,264,268,271,274,277,280,282,285,287],[28000,254,258,262,266,269,273,276,279,281,284,286,288],[29000,254,258,262,266,270,273,276,279,282,284,287,289],[30000,255,259,263,267,271,274,277,280,283,285,288,290],[31000,256,260,265,268,272,275,278,281,284,287,289,291],[32000,257,261,266,269,273,276,280,283,285,288,290,293],[33000,259,263,267,271,275,278,281,284,287,290,292,294],[34000,260,265,269,273,277,280,283,286,289,292,294,296],[35000,262,266,270,274,278,281,284,287,290,293,295,298],[36000,262,266,271,274,278,282,285,288,291,293,296,298],[37000,263,267,272,276,279,283,286,289,292,294,297,299],[38000,264,268,273,277,280,284,287,290,293,296,298,300],[39000,264,268,273,277,280,284,287,290,293,296,298,300],[40000,264,268,273,277,280,284,287,290,293,296,298,300],[41000,265,270,274,278,282,285,289,292,295,297,300,302],[42000,265,271,275,279,283,286,289,293,295,298,301,303],[43000,265,271,275,279,283,287,290,293,296,299,301,304],[44000,266,271,275,279,283,287,291,294,297,300,302,305],[45000,266,271,275,279,283,287,291,294,297,300,302,305],[46000,266,271,275,279,283,287,291,294,297,300,302,305],[47000,266,271,275,279,283,287,291,294,297,300,302,305],[48000,266,271,275,279,283,287,291,294,297,300,302,305],[49000,266,271,275,279,283,287,291,294,297,300,302,305],[50000,266,271,275,279,283,287,291,294,297,300,302,305],[51000,266,271,275,279,283,287,291,294,297,300,302,305],[52000,266,271,275,279,283,287,291,294,297,300,302,305],[53000,266,271,275,279,283,287,291,294,297,300,302,305],[54000,267,271,276,280,284,288,292,295,298,300,303,305],[55000,267,272,276,280,284,288,292,295,298,300,303,305],[56000,267,272,276,281,285,288,292,295,298,300,303,305],[57000,267,272,276,281,285,288,292,295,298,301,304,306],[58000,267,272,277,281,285,288,292,295,299,302,304,307],[59000,268,273,278,282,286,290,293,296,300,303,305,308],[60000,269,274,279,283,287,291,294,297,301,304,307,309]];
+
+/* NHG Voorwaarden en normen 2026, bijlage 5 — 'zonder werk'-tabellen (percentages × 1000; rij 0 = rij "-").
+   5c = (echt)paar zonder werk, 5i = idem box 3 (niet-aftrekbaar); 5d = alleenstaande zonder werk, 5j = idem box 3.
+   De beheercriteria 2026 mogen voorlopig ook in 2027 worden gebruikt. */
+const NHG_PAAR_ZW_REG = [[0,65,68,70,73,74,78,82,86,91,94,98,102],[32000,65,68,70,73,74,78,82,86,91,94,98,102],[33000,74,78,80,83,86,90,95,99,104,108,112,116],[34000,82,86,89,93,96,100,106,111,116,121,126,130],[35000,89,94,97,102,105,110,116,122,128,133,138,143],[36000,97,102,106,110,114,120,126,132,138,144,149,155],[37000,103,109,113,118,123,129,135,140,145,149,153,156],[38000,110,116,120,126,131,137,144,150,155,159,163,167],[39000,116,124,128,134,139,146,152,159,164,169,173,178],[40000,122,130,139,148,156,153,159,166,172,177,182,186],[41000,126,135,144,153,162,160,166,173,179,184,189,194],[42000,130,140,149,158,167,165,172,179,185,191,196,201],[43000,135,144,154,163,173,171,176,183,191,198,204,210],[44000,138,148,157,167,176,174,182,190,197,204,211,216],[45000,141,150,160,169,179,183,192,199,205,211,217,222],[46000,143,153,162,172,181,186,194,202,209,215,221,227],[47000,145,155,165,175,184,193,202,211,218,223,228,234],[48000,147,157,167,177,187,196,205,214,223,230,236,242],[49000,148,158,168,178,188,198,207,216,224,232,241,248],[50000,149,159,169,179,189,198,208,217,225,233,241,249],[51000,151,160,170,180,190,199,208,217,226,234,242,249],[52000,152,162,171,180,190,200,209,218,226,235,242,250],[53000,154,163,172,181,190,200,209,218,227,235,243,250],[54000,156,165,174,183,191,201,210,219,227,236,243,251],[55000,158,167,175,184,193,201,210,219,228,236,244,251],[56000,159,168,177,186,194,203,211,220,228,236,244,252],[57000,161,170,179,188,196,205,213,221,229,237,245,253],[58000,163,172,181,190,198,207,215,223,230,238,246,253],[59000,165,174,183,192,201,209,217,224,232,239,247,254]];
+const NHG_PAAR_ZW_B3 = [[0,58,59,60,61,62,63,64,64,65,66,66,67],[32000,58,59,60,61,62,63,64,64,65,66,66,67],[33000,66,67,68,69,70,71,72,73,74,74,75,75],[34000,74,75,76,77,78,79,80,81,82,82,83,84],[35000,80,82,83,84,85,87,88,88,89,90,91,92],[36000,87,88,90,91,92,94,95,96,97,97,98,99],[37000,93,95,96,98,99,100,101,102,103,104,105,106],[38000,99,100,102,104,105,106,108,109,110,111,112,113],[39000,104,106,108,109,111,112,113,115,116,117,118,119],[40000,109,111,113,115,116,118,119,120,121,123,124,125],[41000,113,115,117,119,120,122,123,125,126,127,128,129],[42000,118,120,122,123,125,127,128,129,131,132,133,134],[43000,122,124,126,128,129,131,133,134,135,136,138,139],[44000,125,127,129,131,133,134,136,137,139,140,141,142],[45000,127,129,131,133,135,137,138,140,141,143,144,145],[46000,129,131,134,136,137,139,141,142,144,145,146,147],[47000,131,133,136,138,139,141,143,144,146,147,148,149],[48000,133,136,138,140,142,143,145,147,148,149,151,152],[49000,135,138,140,142,144,145,147,149,150,152,153,154],[50000,137,139,141,143,145,147,149,150,152,153,155,156],[51000,139,141,143,145,147,149,151,152,154,155,157,158],[52000,140,143,145,147,149,151,153,154,156,157,159,160],[53000,142,145,147,149,151,153,155,157,158,160,161,162],[54000,144,146,149,151,153,155,157,158,160,161,163,164],[55000,145,148,150,152,155,156,158,160,162,163,164,166],[56000,147,149,152,154,156,158,160,162,163,165,166,167],[57000,149,151,154,156,158,160,162,164,165,167,168,169],[58000,150,153,156,158,160,162,164,166,167,169,170,171],[59000,152,155,157,160,162,164,166,167,169,171,172,173]];
+const NHG_ALLEEN_ZW_REG = [[0,121,128,134,139,145,150,155,159,164,168,171,175],[20000,121,128,134,139,145,150,155,159,164,168,171,175],[21000,139,146,152,159,165,171,177,182,188,192,197,201],[22000,155,163,170,177,184,191,197,203,208,214,219,223],[23000,168,176,185,193,200,207,214,220,226,232,237,242],[24000,179,189,198,207,215,223,230,237,243,249,255,260],[25000,188,199,209,219,228,237,244,252,258,265,271,276],[26000,194,205,216,227,237,245,254,261,269,275,281,287],[27000,198,210,221,232,242,251,260,268,276,283,289,295],[28000,203,216,227,239,250,260,269,278,286,294,300,306],[29000,203,217,227,242,257,268,278,287,296,303,310,317],[30000,203,217,231,245,257,269,279,289,298,307,315,322],[31000,203,217,232,245,257,269,279,289,298,307,315,322],[32000,205,219,233,248,261,274,285,294,303,312,319,327],[33000,205,219,233,248,262,274,286,297,307,316,324,332],[34000,205,219,234,248,263,275,288,299,310,319,328,336],[35000,206,220,234,248,263,276,289,301,312,322,331,340],[36000,207,221,235,249,263,276,289,302,314,325,334,343],[37000,208,222,236,250,263,276,290,303,315,326,337,346],[38000,208,222,236,251,263,276,290,303,315,327,338,347],[39000,209,222,236,251,263,276,290,303,315,327,338,347],[40000,209,223,237,251,263,277,290,303,315,327,338,348],[41000,210,224,238,251,264,277,290,303,315,327,338,348],[42000,211,225,239,251,265,278,291,303,315,327,338,349],[43000,214,226,239,252,266,279,292,304,316,328,338,349],[44000,216,228,240,254,267,280,293,305,317,328,339,349],[45000,218,230,242,254,267,280,293,305,317,329,339,350],[46000,219,232,244,256,268,281,293,305,317,329,339,350],[47000,221,233,246,258,269,281,293,305,317,329,339,350],[48000,221,235,247,259,271,282,294,305,317,329,339,350],[49000,223,235,248,261,273,284,295,306,317,329,339,350],[50000,225,238,250,263,275,287,297,308,319,330,341,351],[51000,225,238,250,263,275,287,297,308,319,330,341,351],[52000,227,240,253,265,278,289,300,311,321,332,342,353],[53000,231,244,256,269,281,293,304,315,325,335,346,356],[54000,234,247,260,272,285,296,308,319,329,339,349,359],[55000,236,250,263,276,288,300,311,322,333,342,352,362],[56000,239,253,266,279,292,304,315,326,336,346,355,365],[57000,242,256,269,282,295,307,318,329,340,350,359,368],[58000,244,258,272,285,298,310,322,333,343,353,362,372],[59000,247,261,274,288,301,313,325,336,347,357,366,375]];
+const NHG_ALLEEN_ZW_B3 = [[0,113,115,117,118,120,121,123,124,125,127,128,129],[20000,113,115,117,118,120,121,123,124,125,127,128,129],[21000,130,132,134,136,138,139,141,142,144,145,146,147],[22000,144,147,149,151,153,155,157,158,160,161,163,164],[23000,155,158,160,163,165,167,169,171,172,174,175,177],[24000,165,168,170,173,175,177,179,181,183,185,186,188],[25000,174,176,179,182,184,187,189,191,193,194,196,198],[26000,179,182,184,187,190,192,194,196,198,200,202,203],[27000,181,184,187,189,192,194,197,199,201,202,204,206],[28000,183,186,189,192,194,197,199,201,203,205,207,208],[29000,183,186,189,192,194,197,199,201,203,205,207,208],[30000,183,186,189,192,194,197,199,201,203,205,207,208],[31000,183,186,189,192,194,197,199,201,203,205,207,208],[32000,184,187,190,193,195,198,200,202,204,206,208,209],[33000,185,188,191,194,197,199,201,203,205,207,209,211],[34000,186,189,192,195,198,200,202,205,207,208,210,212],[35000,187,190,193,196,199,201,203,205,207,209,211,213],[36000,188,191,194,197,199,202,204,206,208,210,212,214],[37000,189,192,195,198,200,203,205,207,209,211,213,215],[38000,189,192,196,198,201,204,206,208,210,212,214,216],[39000,189,192,196,198,201,204,206,208,210,212,214,216],[40000,189,192,196,198,201,204,206,208,210,212,214,216],[41000,191,194,197,200,203,205,208,210,212,214,216,217],[42000,193,196,199,202,205,208,210,212,214,216,218,220],[43000,195,199,202,205,208,210,213,215,217,219,221,222],[44000,197,201,204,207,210,212,215,217,219,221,223,225],[45000,199,203,206,209,212,214,217,219,221,223,225,227],[46000,201,205,208,211,214,216,219,221,223,225,227,229],[47000,203,206,210,213,216,218,221,223,225,227,229,231],[48000,204,208,211,214,217,220,222,225,227,229,231,233],[49000,206,209,213,216,219,221,224,226,228,230,232,234],[50000,207,211,215,218,221,223,226,228,231,233,235,236],[51000,207,211,215,218,221,223,226,228,231,233,235,236],[52000,208,211,215,218,221,223,226,228,231,233,235,236],[53000,210,214,217,220,223,226,228,231,233,235,237,239],[54000,212,217,220,223,226,229,232,234,236,239,241,242],[55000,215,219,223,226,229,232,235,237,240,242,244,246],[56000,218,221,226,229,232,235,238,240,242,245,247,249],[57000,220,224,228,232,235,238,240,243,245,248,250,252],[58000,223,226,230,234,237,240,243,246,248,250,252,254],[59000,225,229,232,236,240,243,246,248,251,253,255,257]];
 
 /* Brutering studieschuld (Nibud 2026) */
 const BRUT_FACTOREN = [
@@ -676,6 +712,11 @@ function bereken(){
   const gb2  = document.getElementById('gb2').value;
   const kinderen = +document.getElementById('kinderen').value || 0;
   const rente3jr = +document.getElementById('rente3jr').value || 4.50;
+  const pensioenDrempel = parseInt(document.getElementById('pensioenDrempel').value,10) || 0;
+  const beheerSituatie = document.getElementById('beheerSituatie').value;
+  const pensRaw1 = document.getElementById('pens1').value, pensRaw2 = document.getElementById('pens2').value;
+  const pens1 = pensRaw1 === '' ? null : (+pensRaw1 || 0);
+  const pens2 = pensRaw2 === '' ? null : (+pensRaw2 || 0);
 
   const erfpacht = +document.getElementById('erfpacht').value || 0;
   const inleg    = +document.getElementById('inleg').value || 0;
@@ -689,8 +730,8 @@ function bereken(){
   /* AOW-status */
   const av1 = bepaalAOW(gb1);
   const av2 = (ink2>0 || gb2) ? bepaalAOW(gb2) : null;
-  renderAanvragerStatus('status1', av1, 1);
-  renderAanvragerStatus('status2', av2, 2);
+  renderAanvragerStatus('status1', av1, 1, pensioenDrempel);
+  renderAanvragerStatus('status2', av2, 2, pensioenDrempel);
 
   const isAlleenstaand = ink2 === 0;
   const beideAOW = (av1?.isAOW) && (!isAlleenstaand && av2?.isAOW);
@@ -702,6 +743,17 @@ function bereken(){
 
   /* Toetsinkomen */
   const toetsInkomen = ink1 + ink2;
+
+  /* Pensioentoets: geldt voor een persoon met leeftijd ≥ drempel die de AOW-leeftijd nog niet heeft bereikt.
+     Dan wordt óók getoetst op het inkomen vanaf AOW (AOW-tabellen); de laagste uitkomst telt. */
+  const pt1 = !!(av1 && !av1.isAOW && pensioenDrempel > 0 && av1.leeftijd >= pensioenDrempel);
+  const pt2 = !isAlleenstaand && !!(av2 && !av2.isAOW && pensioenDrempel > 0 && av2.leeftijd >= pensioenDrempel);
+  const pensioentoetsGeldt = pt1 || pt2;
+  const pensOnvolledig = (pt1 && pens1 === null) || (pt2 && pens2 === null);
+  const pensScenario = pensioentoetsGeldt && !pensOnvolledig;
+  /* Inkomen en tabelkeuze in het pensioenscenario (moment waarop de betrokkene(n) AOW ontvangen) */
+  const pensInk = pensScenario ? ((pt1 ? pens1 : ink1) + (isAlleenstaand ? 0 : (pt2 ? pens2 : ink2))) : 0;
+  const pensAlleAOW = isAlleenstaand ? true : ((pt1 || !!av1?.isAOW) && (pt2 || !!av2?.isAOW));
 
   /* Gewogen rente en RVP */
   const totaalHoofdsom = leningdelen.reduce((s,d) => s + (d.hoofdsom>0 ? d.hoofdsom : 0), 0);
@@ -749,10 +801,23 @@ function bereken(){
   }
   const tabBox1Adv = tabelAOW ? CHF_WELAOW : CHF_NIETAOW;
   const tabBox3Adv = tabelAOW ? CHF_B3_WELAOW : CHF_B3_NIETAOW;
-  const flBox1Adv = lookupFLpct(tabBox1Adv, toetsInkomen, toetsrenteAdv);
-  const flBox3Adv = lookupFLpct(tabBox3Adv, toetsInkomen, toetsrenteAdv);
-  const flAdv = aandeelBox1 * flBox1Adv + aandeelBox3 * flBox3Adv;
-  const maxFLjaarAdv  = toetsInkomen * flAdv;
+  const flCurB1Adv = lookupFLpct(tabBox1Adv, toetsInkomen, toetsrenteAdv);
+  const flCurB3Adv = lookupFLpct(tabBox3Adv, toetsInkomen, toetsrenteAdv);
+  const flCurAdv = aandeelBox1 * flCurB1Adv + aandeelBox3 * flCurB3Adv;
+  /* Pensioentoets advies: Trhk welAOW-tabel (box 1) / box3 welAOW, op het inkomen vanaf AOW */
+  let pensAdv = null;
+  if (pensScenario){
+    const tP1 = pensAlleAOW ? CHF_WELAOW : CHF_NIETAOW, tP3 = pensAlleAOW ? CHF_B3_WELAOW : CHF_B3_NIETAOW;
+    const b1 = lookupFLpct(tP1, pensInk, toetsrenteAdv), b3 = lookupFLpct(tP3, pensInk, toetsrenteAdv);
+    const fl = aandeelBox1*b1 + aandeelBox3*b3;
+    pensAdv = {b1, b3, fl, jaar: pensInk*fl, naam: pensAlleAOW ? 'CHF welAOW' : 'CHF nietAOW (niet iedereen AOW)'};
+  }
+  const advPens = !!(pensAdv && pensAdv.jaar < toetsInkomen * flCurAdv);
+  const toetsInkomenAdv = advPens ? pensInk : toetsInkomen;
+  const flBox1Adv = advPens ? pensAdv.b1 : flCurB1Adv;
+  const flBox3Adv = advPens ? pensAdv.b3 : flCurB3Adv;
+  const flAdv = advPens ? pensAdv.fl : flCurAdv;
+  const maxFLjaarAdv  = toetsInkomenAdv * flAdv;
   const maxFLmndAdv   = maxFLjaarAdv / 12;
   const dkLast = dkLimiet * 0.02;
   const duoBrutoAdv = duoTerm * getBruteringStudieschuld(toetsrenteAdv);
@@ -778,16 +843,44 @@ function bereken(){
   /* Tabel-keuze beheer */
   let tabBox1Bh, tabBox3Bh, beheerTabelNaam;
   if (isAlleenstaand){
-    if (av1?.isAOW){ tabBox1Bh = NHG_ALLEEN_AOW_REG; tabBox3Bh = NHG_ALLEEN_AOW_B3; beheerTabelNaam='Alleenstaand AOW'; }
-    else            { tabBox1Bh = NHG_ALLEEN_REG;     tabBox3Bh = NHG_ALLEEN_B3;     beheerTabelNaam='Alleenstaand werkend'; }
+    if (av1?.isAOW){ tabBox1Bh = NHG_ALLEEN_AOW_REG; tabBox3Bh = NHG_ALLEEN_AOW_B3; beheerTabelNaam='Alleenstaand AOW (5f / box 3: 5l)'; }
+    else if (beheerSituatie === 'zonderwerk'){ tabBox1Bh = NHG_ALLEEN_ZW_REG; tabBox3Bh = NHG_ALLEEN_ZW_B3; beheerTabelNaam='Alleenstaand zonder werk (5d / box 3: 5j)'; }
+    else            { tabBox1Bh = NHG_ALLEEN_REG;     tabBox3Bh = NHG_ALLEEN_B3;     beheerTabelNaam='Alleenstaand met werk (5b / box 3: 5h)'; }
   } else {
-    if (beideAOW){   tabBox1Bh = CHF_WELAOW;          tabBox3Bh = CHF_B3_WELAOW;     beheerTabelNaam='Paar AOW (= bijlage 1 Trhk)'; }
-    else         {   tabBox1Bh = CHF_NIETAOW;         tabBox3Bh = CHF_B3_NIETAOW;    beheerTabelNaam='Paar werkend (= bijlage 1 Trhk)'; }
+    if (beideAOW){   tabBox1Bh = CHF_WELAOW;          tabBox3Bh = CHF_B3_WELAOW;     beheerTabelNaam='Paar AOW (5e / box 3: 5k; = bijlage 1 Trhk welAOW)'; }
+    else if (beheerSituatie === 'zonderwerk'){ tabBox1Bh = NHG_PAAR_ZW_REG; tabBox3Bh = NHG_PAAR_ZW_B3; beheerTabelNaam='Paar zonder werk (5c / box 3: 5i)'; }
+    else         {   tabBox1Bh = CHF_NIETAOW;         tabBox3Bh = CHF_B3_NIETAOW;    beheerTabelNaam='Paar met werk (5a / box 3: 5g; = bijlage 1 Trhk nietAOW)'; }
   }
-  const flBox1Bh = lookupFLpct(tabBox1Bh, toetsInkomen, toetsrenteBh);
-  const flBox3Bh = lookupFLpct(tabBox3Bh, toetsInkomen, toetsrenteBh);
-  const flBh = aandeelBox1 * flBox1Bh + aandeelBox3 * flBox3Bh;
-  const maxFLjaarBh = toetsInkomen * flBh;
+  const flCurB1Bh = lookupFLpct(tabBox1Bh, toetsInkomen, toetsrenteBh);
+  const flCurB3Bh = lookupFLpct(tabBox3Bh, toetsInkomen, toetsrenteBh);
+  const flCurBh = aandeelBox1 * flCurB1Bh + aandeelBox3 * flCurB3Bh;
+  /* Pensioentoets beheer: NHG 5f/5l (alleenstaand) of 5e/5k (paar, beiden AOW) op het inkomen vanaf AOW */
+  let pensBh = null;
+  if (pensScenario){
+    let tP1, tP3, naam;
+    if (isAlleenstaand){ tP1 = NHG_ALLEEN_AOW_REG; tP3 = NHG_ALLEEN_AOW_B3; naam = 'Alleenstaand AOW (5f / box 3: 5l)'; }
+    else if (pensAlleAOW){ tP1 = CHF_WELAOW; tP3 = CHF_B3_WELAOW; naam = 'Paar AOW (5e / box 3: 5k)'; }
+    else { tP1 = tabBox1Bh; tP3 = tabBox3Bh; naam = beheerTabelNaam + ' — niet iedereen AOW'; }
+    const b1 = lookupFLpct(tP1, pensInk, toetsrenteBh), b3 = lookupFLpct(tP3, pensInk, toetsrenteBh);
+    const fl = aandeelBox1*b1 + aandeelBox3*b3;
+    pensBh = {b1, b3, fl, jaar: pensInk*fl, naam, t1: tP1};
+  }
+  const bhPens = !!(pensBh && pensBh.jaar < toetsInkomen * flCurBh);
+  const toetsInkomenBh = bhPens ? pensInk : toetsInkomen;
+  const flBox1Bh = bhPens ? pensBh.b1 : flCurB1Bh;
+  const flBox3Bh = bhPens ? pensBh.b3 : flCurB3Bh;
+  const flBh = bhPens ? pensBh.fl : flCurBh;
+  if (bhPens) beheerTabelNaam = pensBh.naam + ' (pensioentoets)';
+  const maxFLjaarBh = toetsInkomenBh * flBh;
+  /* Melding buiten tabelbereik (laagste rij "-" onder minimum, hoogste rij boven maximum) */
+  const bhTabGebruikt = bhPens ? pensBh.t1 : tabBox1Bh;
+  let bhBereikTxt = '';
+  if (bhTabGebruikt){
+    const rijen = bhTabGebruikt.map(r => r[0]).filter(x => x > 0);
+    const mn = Math.min(...rijen), mx = Math.max(...rijen);
+    if (toetsInkomenBh < mn) bhBereikTxt = `Toetsinkomen ligt onder het laagste inkomen van de beheertabel (${fmt(mn)}): gerekend met de rij “-” (onder laagste inkomen).`;
+    else if (toetsInkomenBh > mx) bhBereikTxt = `De beheertabel loopt tot ${fmt(mx)} inkomen: voor hogere inkomens wordt het percentage van ${fmt(mx)} gebruikt.`;
+  }
   const maxFLmndBh  = maxFLjaarBh / 12;
   const duoBrutoBh = duoTerm * getBruteringStudieschuld(toetsrenteBh);
   const aftrekBh = dkLast + aflK + duoBrutoBh + lease + alim + ovv;
@@ -806,6 +899,24 @@ function bereken(){
   renderTopStatus('beheerStatusBox', 'beheerBar', 'beheerBarNote',
     benutBhMin, ruimteBhMin, minimaalTot, beschikbaarBh, 'NHG beheer-toets (minimale last)');
 
+  /* Pensioentoets-meldingen */
+  const pensTxt = pensioenDrempel > 0 ? `Pensioentoets (vanaf ${pensioenDrempel} jaar)` : 'Pensioentoets';
+  let pensStatus;
+  if (pensioenDrempel === 0) pensStatus = 'niet toetsen (uitgeschakeld)';
+  else if (!pensioentoetsGeldt) pensStatus = 'niet van toepassing';
+  else if (pensOnvolledig) pensStatus = 'van toepassing — inkomen vanaf AOW ontbreekt';
+  else pensStatus = `van toepassing — getoetst op ${fmt(pensInk)} (inkomen vanaf AOW)`;
+  if (pensOnvolledig){
+    const w = `<div class="status bad" style="margin-top:10px"><h3>${pensTxt}: vul inkomen vanaf AOW in</h3><p>De pensioentoets is van toepassing (${pt1?'aanvrager 1':''}${pt1&&pt2?' en ':''}${pt2?'aanvrager 2':''}), maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. De uitkomst hieronder is alleen op het huidige inkomen gebaseerd en is daarom <b>onvolledig</b>.</p></div>`;
+    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', w);
+    document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', w);
+  } else if (pensScenario){
+    const wa = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met AOW-tabel (${pensAdv.naam}). ${advPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
+    const wb = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met AOW-tabel (${pensBh.naam}). ${bhPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
+    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', wa);
+    document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', wb);
+  }
+
   /* Kwetsbaarheidstoets */
   if ((kinderen === 2 && toetsInkomen < 25000) || (kinderen >= 3 && toetsInkomen < 30000)){
     const w = `<div class="status warn" style="margin-top:10px"><h3>Kwetsbare huishoudensituatie</h3><p>Bij ${kinderen} kinderen en toetsinkomen onder de drempel (€25.000 bij 2 kinderen, €30.000 bij ≥3 kinderen) moet aanvullend worden getoetst of er voldoende ruimte is voor basisuitgaven.</p></div>`;
@@ -820,7 +931,7 @@ function bereken(){
 
   /* Tabellen advies */
   document.getElementById('adviesMaxTable').innerHTML = `
-    <tr><td>Gezamenlijk toetsinkomen</td><td class="num">${fmt(toetsInkomen)}</td></tr>
+    <tr><td>Gezamenlijk toetsinkomen${advPens?' (inkomen vanaf AOW — pensioentoets)':''}</td><td class="num">${fmt(toetsInkomenAdv)}</td></tr>
     <tr><td>FL% box 1 (${pctStr(aandeelBox1*100)} aandeel)</td><td class="num">${(flBox1Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>FL% box 3 (${pctStr(aandeelBox3*100)} aandeel)</td><td class="num">${(flBox3Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>Effectief gewogen FL%</td><td class="num"><b>${(flAdv*100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></td></tr>
@@ -835,7 +946,8 @@ function bereken(){
     <tr class="highlight"><td>Beschikbaar voor hypotheek­last (per maand)</td><td class="num">${fmt(beschikbaarAdv)}</td></tr>
   `;
   document.getElementById('adviesParamTable').innerHTML = `
-    <tr><td>Gebruikte tabel</td><td class="num">${tabelAOW?'CHF welAOW':'CHF nietAOW'}${oneAOW?' (één AOW → niet-AOW-tabel)':''}</td></tr>
+    <tr><td>Gebruikte tabel</td><td class="num">${advPens ? pensAdv.naam + ' (pensioentoets)' : (tabelAOW?'CHF welAOW':'CHF nietAOW') + ((oneAOW && !isAlleenstaand)?' (één AOW → niet-AOW-tabel)':'')}</td></tr>
+    <tr><td>${pensTxt}</td><td class="num">${pensStatus}</td></tr>
     <tr><td>Gewogen debetrente</td><td class="num">${fmtD2(wgRente)}%</td></tr>
     <tr><td>Gewogen rentevaste periode</td><td class="num">${fmtD2(wgRvp)} jr</td></tr>
     <tr><td>Toetsrente toegepast</td><td class="num"><b>${fmtD2(toetsrenteAdv)}%</b></td></tr>
@@ -849,7 +961,7 @@ function bereken(){
     <tr><td><b>Minimale beheerlast</b><div class="tiny">alle leningdelen fictief aflossingsvrij</div></td><td class="num">${fmt(minimaalTot)}</td><td class="num">${pctStr(benutBhMin)}</td><td class="num">${fmt(ruimteBhMin)}</td></tr>
   `;
   document.getElementById('beheerMaxTable').innerHTML = `
-    <tr><td>Gezamenlijk toetsinkomen</td><td class="num">${fmt(toetsInkomen)}</td></tr>
+    <tr><td>Gezamenlijk toetsinkomen${bhPens?' (inkomen vanaf AOW — pensioentoets)':''}</td><td class="num">${fmt(toetsInkomenBh)}</td></tr>
     <tr><td>FL% box 1 (${pctStr(aandeelBox1*100)} aandeel)</td><td class="num">${(flBox1Bh*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>FL% box 3 (${pctStr(aandeelBox3*100)} aandeel)</td><td class="num">${(flBox3Bh*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>Effectief gewogen FL%</td><td class="num"><b>${(flBh*100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></td></tr>
@@ -865,6 +977,8 @@ function bereken(){
   `;
   document.getElementById('beheerParamTable').innerHTML = `
     <tr><td>Gebruikte beheertabel</td><td class="num">${beheerTabelNaam}</td></tr>
+    <tr><td>Normen</td><td class="num">NHG beheercriteria 2026 (voorlopig ook geldig in 2027)</td></tr>${bhBereikTxt?`<tr class="sub"><td colspan="2">${bhBereikTxt}</td></tr>`:''}
+    <tr><td>${pensTxt}</td><td class="num">${pensStatus}</td></tr>
     <tr><td>Gewogen debetrente</td><td class="num">${fmtD2(wgRente)}%</td></tr>
     <tr><td>Gewogen rentevaste periode</td><td class="num">${fmtD2(wgRvp)} jr</td></tr>
     <tr><td>Toetsrente toegepast</td><td class="num"><b>${fmtD2(toetsrenteBh)}%</b></td></tr>
@@ -908,7 +1022,7 @@ function renderTopStatus(boxId, barId, noteId, benut, ruimte, werkelijk, beschik
   document.getElementById(noteId).textContent = `${pctStr(benut)} benutting`;
 }
 
-function renderAanvragerStatus(elId, av, num){
+function renderAanvragerStatus(elId, av, num, drempel){
   const el = document.getElementById(elId);
   if (!av){
     el.innerHTML = `<span class="pill no">Geen geboortedatum</span> AOW-status onbekend`;
@@ -924,8 +1038,8 @@ function renderAanvragerStatus(elId, av, num){
     const now = new Date();
     const monthsTo = (av.aowDate.getFullYear()-now.getFullYear())*12 + (av.aowDate.getMonth()-now.getMonth());
     const jrTo = Math.floor(monthsTo/12), mnTo = monthsTo%12;
-    const within10 = monthsTo <= 120;
-    el.innerHTML = `<span class="pill ${within10?'warn':'no'}">Niet AOW</span> Leeftijd ${av.leeftijd} · AOW-leeftijd ${mAOW} · AOW-datum ${aowDatum} (over ${jrTo} jr ${mnTo} mnd)${within10?' — let op: AOW binnen 10 jr':''}`;
+    const pt = drempel > 0 && av.leeftijd >= drempel;
+    el.innerHTML = `<span class="pill ${pt?'warn':'no'}">Niet AOW</span> Leeftijd ${av.leeftijd} · AOW-leeftijd ${mAOW} · AOW-datum ${aowDatum} (over ${jrTo} jr ${mnTo} mnd)${pt?` — pensioentoets (vanaf ${drempel} jaar) van toepassing: vul inkomen vanaf AOW in`:''}`;
   }
 }
 
@@ -933,7 +1047,7 @@ function renderAanvragerStatus(elId, av, num){
    6. Event wiring
    ============================================================= */
 function wireInputs(){
-  ['ink1','ink2','gb1','gb2','kinderen','rente3jr',
+  ['ink1','ink2','gb1','gb2','kinderen','rente3jr','pens1','pens2','pensioenDrempel','beheerSituatie',
    'erfpacht','inleg','dkLimiet','aflK','duoTerm','lease','alim','ovv']
     .forEach(id => {
       const el = document.getElementById(id);
@@ -1045,10 +1159,14 @@ const NORMTABELLEN = {
   CHF_WELAOW:         {data: () => CHF_WELAOW,         bron: 'Bijlage 1 Trhk · CHF/GHF welAOW (regulier, box 1)',   let: 'Geldt wanneer beide aanvragers (of de enige aanvrager) de AOW-leeftijd hebben bereikt.'},
   CHF_B3_NIETAOW:     {data: () => CHF_B3_NIETAOW,     bron: 'Bijlage 1 Trhk · CHF/GHF nietAOW (box 3)',            let: 'Voor leningdelen waarvan de rente niet fiscaal aftrekbaar is in box 1.'},
   CHF_B3_WELAOW:      {data: () => CHF_B3_WELAOW,      bron: 'Bijlage 1 Trhk · CHF/GHF welAOW (box 3)',             let: 'Box 3-variant voor AOW-gerechtigd huishouden.'},
-  NHG_ALLEEN_REG:     {data: () => NHG_ALLEEN_REG,     bron: 'NHG bijlage 5 — tabel 3 alleenstaand werkend (regulier)', let: 'Beheertoets D.6.5 voor alleenstaande aanvrager, niet AOW.'},
-  NHG_ALLEEN_AOW_REG: {data: () => NHG_ALLEEN_AOW_REG, bron: 'NHG bijlage 5 — tabel 6 alleenstaand AOW (regulier)',     let: 'Beheertoets D.6.5 voor alleenstaande AOW-gerechtigde aanvrager.'},
-  NHG_ALLEEN_B3:      {data: () => NHG_ALLEEN_B3,      bron: 'NHG bijlage 5 — tabel 3 alleenstaand werkend (box 3)',    let: 'Box 3-variant beheer alleenstaand werkend.'},
-  NHG_ALLEEN_AOW_B3:  {data: () => NHG_ALLEEN_AOW_B3,  bron: 'NHG bijlage 5 — tabel 6 alleenstaand AOW (box 3)',        let: 'Box 3-variant beheer alleenstaand AOW.'},
+  NHG_ALLEEN_REG:     {data: () => NHG_ALLEEN_REG,     bron: 'NHG Voorwaarden en normen 2026, bijlage 5b — alleenstaande met werk (regulier)', let: 'Beheertoets D.6.5 voor alleenstaande aanvrager met werk, niet AOW. Beheercriteria 2026 voorlopig ook geldig in 2027.'},
+  NHG_ALLEEN_ZW_REG:  {data: () => NHG_ALLEEN_ZW_REG,  bron: 'NHG Voorwaarden en normen 2026, bijlage 5d — alleenstaande zonder werk (regulier)', let: 'Beheertoets D.6.5 voor alleenstaande aanvrager zonder werk (€ 20.000–59.000). Beheercriteria 2026 voorlopig ook geldig in 2027.'},
+  NHG_ALLEEN_AOW_REG: {data: () => NHG_ALLEEN_AOW_REG, bron: 'NHG Voorwaarden en normen 2026, bijlage 5f — alleenstaande met AOW (regulier)',     let: 'Beheertoets D.6.5 voor alleenstaande AOW-gerechtigde aanvrager. Beheercriteria 2026 voorlopig ook geldig in 2027.'},
+  NHG_ALLEEN_B3:      {data: () => NHG_ALLEEN_B3,      bron: 'NHG Voorwaarden en normen 2026, bijlage 5h — alleenstaande met werk (box 3 / niet aftrekbaar)',    let: 'Box 3-variant beheer alleenstaand met werk.'},
+  NHG_ALLEEN_ZW_B3:   {data: () => NHG_ALLEEN_ZW_B3,   bron: 'NHG Voorwaarden en normen 2026, bijlage 5j — alleenstaande zonder werk (box 3 / niet aftrekbaar)',    let: 'Box 3-variant beheer alleenstaand zonder werk.'},
+  NHG_ALLEEN_AOW_B3:  {data: () => NHG_ALLEEN_AOW_B3,  bron: 'NHG Voorwaarden en normen 2026, bijlage 5l — alleenstaande met AOW (box 3 / niet aftrekbaar)',        let: 'Box 3-variant beheer alleenstaand AOW.'},
+  NHG_PAAR_ZW_REG:    {data: () => NHG_PAAR_ZW_REG,    bron: 'NHG Voorwaarden en normen 2026, bijlage 5c — (echt)paar zonder werk (regulier)', let: 'Beheertoets D.6.5 voor paar zonder werk (€ 32.000–59.000). Beheercriteria 2026 voorlopig ook geldig in 2027.'},
+  NHG_PAAR_ZW_B3:     {data: () => NHG_PAAR_ZW_B3,     bron: 'NHG Voorwaarden en normen 2026, bijlage 5i — (echt)paar zonder werk (box 3 / niet aftrekbaar)', let: 'Box 3-variant beheer paar zonder werk.'},
 };
 function renderNormtabel(markCurrent){
   const sel = document.getElementById('tabSelect');
