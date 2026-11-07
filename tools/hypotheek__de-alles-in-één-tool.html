@@ -1247,7 +1247,7 @@ return duoMaandlast * bf + kredietMaandlast * 0.02 + erfpachtJaar / 12 + overige
 };
 const scenarioLTI = (ink, isAow) => {
 const tab = isAow ? (aftrek === 'box3' ? 'b3aow' : 'aow') : (aftrek === 'box3' ? 'b3naow' : 'naow');
-const eff = Math.max(isAow ? minInkomenAOW : 30000, ink);
+const eff = ink; // laagste tabelrij onder het minimum regelt getFL; vermenigvuldigen met het werkelijke inkomen
 const fl = getFL(tab, toetsrente, eff);
 const netto = Math.max(0, eff * fl / 12 - verplichtingenMaandVoor(tab));
 return { ink, tab, eff, fl, isAow, maxNaVerpl: netto / annFactor(toetsrente, looptijd * 12) };
@@ -1366,7 +1366,7 @@ const stijgingMaandlast = maandLastNa10Jaar - maandInfo.brutoMaand;
 
 // Scenarioanalyse: 70% inkomen (AO)
 const inkomenAO = toetsinkomen * 0.70;
-const maxHypAO = maxHypotheekLTI(Math.max(scBepalend.isAow ? minInkomenAOW : 30000, inkomenAO), tabelType, toetsrente, looptijd);
+const maxHypAO = maxHypotheekLTI(inkomenAO, tabelType, toetsrente, looptijd);
 const maandlastAO_pct = (toetsinkomen > 0) ? (maandInfo.brutoMaand * 12 / inkomenAO) * 100 : 0;
 
 // Eigenaarslasten
