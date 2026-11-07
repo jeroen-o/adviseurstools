@@ -76,7 +76,7 @@
   function toon(){
     var q=inp.value.trim(); if(q.length<2){box.hidden=true;inp.setAttribute('aria-expanded','false');return;}
     hits=zoek(q); sel=-1;
-    var h=hits.map(function(x,i){return '<a role="option" id="zr'+i+'" class="zr" href="'+esc(root+x.u)+'"><span class="zt">'+esc(x.t)+(x.c==='Beveiligd'?' 🔒':'')+'</span><span class="zc">'+esc(x.c)+'</span></a>';}).join('');
+    var h=hits.map(function(x,i){return '<a role="option" id="zr'+i+'" class="zr" href="'+esc(/^https?:/.test(x.u)?x.u:root+x.u)+'"'+(/^https?:/.test(x.u)?' target="_blank" rel="noopener"':'')+'><span class="zt">'+esc(x.t)+(x.c==='Beveiligd'?' 🔒':'')+'</span><span class="zc">'+esc(x.c)+'</span></a>';}).join('');
     var m='<a class="zmail" href="'+esc(mailLink(q))+'">'+(hits.length?'Staat het er niet tussen? <b>Vraag een tool aan →</b>':'<b>Niets gevonden voor “'+esc(q)+'”.</b><br>Wil je dat we dit voor je maken? <b>Stuur ons een mail →</b>')+'</a>';
     box.innerHTML=(hits.length?h:'')+m; box.hidden=false; inp.setAttribute('aria-expanded','true');
   }

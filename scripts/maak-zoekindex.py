@@ -73,6 +73,17 @@ for f in sorted(glob.glob(os.path.join(ROOT, '**', 'index.html'), recursive=True
     kw = ' '.join(t for t in kw.split() if t.lower() not in STOP)[:600]
     items.append({'t': titel, 'c': 'Beveiligd' if beveiligd else cat, 'u': url, 'k': kw})
 
+# externe tools uit de tegeloverzichten
+gezien = {i['u'] for i in items}
+for cat, naam in CAT.items():
+    f = os.path.join(ROOT, cat, 'index.html')
+    if not os.path.exists(f):
+        continue
+    for href, ttl, sub in re.findall(r'<a class="tcard" href="(https?://[^"]+)"[^>]*>.*?<span class="ttl">(.*?)</span>(?:<span class="tsub">(.*?)</span>)?', open(f, encoding='utf-8').read(), re.S):
+        href = html.unescape(href)
+        if href not in gezien:
+            gezien.add(href)
+            items.append({'t': html.unescape(ttl) + ' ↗', 'c': naam, 'u': href, 'k': html.unescape(sub or '')})
 items.sort(key=lambda x: (x['u'] != '', x['t'].lower()))
 with open(os.path.join(ROOT, 'assets', 'zoekindex.js'), 'w', encoding='utf-8') as out:
     out.write('// Automatisch gemaakt door scripts/maak-zoekindex.py — niet handmatig bewerken.\n')

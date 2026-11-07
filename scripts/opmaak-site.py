@@ -103,7 +103,7 @@ def footer(r, s):
 
 
 def pagekop(r, titel, sub, kruimel):
-    k = ' <span>›</span> '.join(f'<a href="{E(h)}">{E(t)}</a>' for t, h in kruimel)
+    k = ' <span>›</span> '.join(f'<a href="{E(h)}">{E(t)}</a>' for t, h in kruimel) + f' <span>›</span> <b aria-current="page">{E(titel)}</b>'
     sub = f'<p class="pk-sub">{E(sub)}</p>' if sub else ''
     return f'<div class="pagekop"><div class="wrap"><nav class="kruimel" aria-label="Kruimelpad">{k}</nav><h1>{E(titel)}</h1>{sub}</div></div>'
 

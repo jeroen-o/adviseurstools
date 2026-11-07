@@ -112,10 +112,12 @@ CURATED = {
     'echtscheidingstools': ('Echtscheidingstools', 'Alimentatie, pensioenverevening, boedel en woning', None),
     'fatuurtool-verhuur': ('Factuurtool verhuur', 'Facturen en inzicht voor verhuur', None),
     'www.pseudomaker.nl': ('Pseudonimiseren', 'Externe site', None),
+    'pandwise.nl': ('PandWise', 'Woningdossier en woningwaarderapport per adres (externe site)', None),
     'diverse-tools': ('Diverse tools', 'WW, transitievergoeding, toeslagen en zzp', None),
 }
 
 
+EXTRA = {'overige': [('https://pandwise.nl/', 'PandWise')]}
 UITGELICHT = ['max-hyp-2027', 'pensioenklif', 'max-hyp-box-1-3']
 
 
@@ -200,6 +202,7 @@ def verwerk(pagina):
             eerste = True
         if not links:
             print('geen lijsten:', pagina); return
+    links = links + EXTRA.get(pagina, [])
     # dubbele links weg (eerste voorkomen telt)
     gezien, uniek = set(), []
     for h, t in links:
