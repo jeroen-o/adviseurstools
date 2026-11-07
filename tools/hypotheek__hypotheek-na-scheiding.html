@@ -63,7 +63,7 @@ input:focus,select:focus{border-color:var(--navy);}
 <body>
 <div class="hdr">
   <div class="hdr-ico">⚖️</div>
-  <div><h1>Hypotheek Na Scheiding</h1><p>Uitkoop partner · draagkracht check · NIBUD 2026 · fiscale gevolgen</p></div>
+  <div><h1>Hypotheek Na Scheiding</h1><p>Uitkoop partner · draagkracht check · leennormen 2026 (Trhk) · fiscale gevolgen</p></div>
   <div class="badge">Scheiding</div>
 </div>
 <div class="wrap">
@@ -116,14 +116,24 @@ input:focus,select:focus{border-color:var(--navy);}
           <span class="hint">Telt mee als inkomen voor NIBUD-toets</span>
         </div>
         <div class="fl">
-          <label>Overige maandelijkse verplichtingen</label>
+          <label>Kredietlimiet / oorspronkelijke kredietsom</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="kredietLimiet" value="0" step="500"></div>
+          <span class="hint">Telt mee als 2% per maand</span>
+        </div>
+        <div class="fl">
+          <label>Studieschuld DUO — werkelijke termijn/mnd</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="duoTermijn" value="0" step="10"></div>
+          <span class="hint">× factor 1,05–1,40 o.b.v. toetsrente (Trhk 2026)</span>
+        </div>
+        <div class="fl">
+          <label>Overige bruto maandlasten (bijv. private lease, erfpacht)</label>
           <div class="iw"><span class="px">€</span><input type="number" id="verplichtingen" value="0" step="50"></div>
         </div>
         <div class="fl">
           <label>NHG gewenst</label>
           <select id="nhg">
             <option value="0" selected>Nee</option>
-            <option value="1">Ja (≤€435.000)</option>
+            <option value="1">Ja (≤ € 470.000)</option>
           </select>
         </div>
       </div>
@@ -158,17 +168,116 @@ const N=id=>parseFloat(document.getElementById(id).value)||0;
 const fmt=n=>' € '+Math.round(n).toLocaleString('nl-NL')+',-';
 const fmtPct=(n,d=1)=>n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
 
-// NIBUD vereenvoudigd 2026
-const NIBUD=[
-  [30000,.18],[40000,.21],[50000,.23],[60000,.25],[70000,.265],[80000,.275],[100000,.285]
+// Financieringslastpercentages 2026 — Trhk 2026, bijlage 1, tabel 1 (geen AOW-leeftijd, rente aftrekbaar).
+// [inkomen vanaf, toetsrente ≤1,5% · 1,501–2,0% · 2,001–2,5% · … · 6,001–6,5% · ≥6,501%]
+const FL2026=[
+  [30000,15.5,16.5,17.5,18.4,19.3,20.1,20.9,21.6,22.2,22.7,23.2,23.7],
+  [31000,16.2,17.3,18.3,19.3,20.2,21.2,22.0,22.7,23.4,24.1,24.6,25.1],
+  [32000,16.7,17.9,19.0,20.1,21.1,22.1,23.0,23.8,24.6,25.3,25.9,26.4],
+  [33000,17.1,18.3,19.5,20.6,21.6,22.6,23.6,24.6,25.4,26.1,26.8,27.4],
+  [34000,17.3,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [35000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [36000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [37000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [38000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [39000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [40000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [41000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [42000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [43000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [44000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [45000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [46000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [47000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [48000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [49000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [50000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [51000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [52000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [53000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [54000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [55000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [56000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [57000,17.5,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [58000,17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [59000,17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [60000,17.7,18.7,19.7,20.7,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [61000,17.7,18.7,19.7,20.7,21.7,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [62000,17.8,18.8,19.8,20.7,21.7,22.7,23.6,24.6,25.5,26.4,27.3,28.1],
+  [63000,17.8,18.9,19.9,20.9,21.8,22.7,23.7,24.6,25.5,26.4,27.3,28.1],
+  [64000,17.9,18.9,19.9,21.0,21.9,22.8,23.7,24.6,25.5,26.4,27.3,28.1],
+  [65000,18.0,19.0,20.0,21.0,22.0,22.9,23.8,24.7,25.5,26.4,27.3,28.1],
+  [66000,18.1,19.1,20.1,21.1,22.1,23.0,23.9,24.7,25.6,26.4,27.3,28.1],
+  [67000,18.2,19.2,20.2,21.2,22.2,23.1,24.0,24.8,25.7,26.5,27.3,28.1],
+  [68000,18.3,19.4,20.4,21.4,22.3,23.2,24.1,25.0,25.8,26.7,27.4,28.2],
+  [69000,18.5,19.5,20.5,21.5,22.5,23.4,24.3,25.1,26.0,26.8,27.6,28.3],
+  [70000,18.6,19.7,20.7,21.7,22.7,23.6,24.5,25.3,26.2,27.0,27.8,28.5],
+  [71000,18.8,19.9,20.9,21.9,22.9,23.8,24.7,25.6,26.4,27.2,28.0,28.7],
+  [72000,19.0,20.0,21.1,22.1,23.1,24.1,25.0,25.8,26.6,27.4,28.2,28.9],
+  [73000,19.1,20.2,21.3,22.3,23.3,24.3,25.2,26.0,26.9,27.6,28.4,29.2],
+  [74000,19.3,20.4,21.5,22.5,23.5,24.5,25.4,26.3,27.1,27.9,28.6,29.3],
+  [75000,19.4,20.5,21.6,22.6,23.7,24.6,25.6,26.4,27.3,28.1,28.8,29.5],
+  [76000,19.5,20.6,21.7,22.8,23.8,24.8,25.7,26.6,27.5,28.2,29.0,29.7],
+  [77000,19.6,20.8,21.9,22.9,24.0,24.9,25.9,26.8,27.6,28.4,29.2,29.9],
+  [78000,19.7,20.9,22.0,23.1,24.1,25.1,26.1,27.0,27.8,28.6,29.4,30.1],
+  [79000,19.8,20.9,22.1,23.2,24.2,25.2,26.2,27.1,27.9,28.7,29.5,30.2],
+  [80000,19.9,21.0,22.2,23.2,24.3,25.3,26.3,27.2,28.1,28.9,29.6,30.3],
+  [81000,20.0,21.1,22.2,23.3,24.3,25.4,26.4,27.3,28.1,29.0,29.7,30.4],
+  [82000,20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.3,28.2,29.0,29.8,30.5],
+  [83000,20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.4,28.2,29.1,29.9,30.6],
+  [84000,20.2,21.3,22.4,23.4,24.5,25.5,26.5,27.4,28.3,29.1,29.9,30.6],
+  [85000,20.2,21.3,22.4,23.5,24.5,25.5,26.5,27.4,28.3,29.2,29.9,30.7],
+  [86000,20.2,21.4,22.5,23.5,24.6,25.6,26.5,27.4,28.4,29.2,30.0,30.7],
+  [87000,20.3,21.4,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.2,30.0,30.8],
+  [88000,20.4,21.5,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.3,30.1,30.8],
+  [89000,20.5,21.5,22.6,23.7,24.7,25.7,26.6,27.6,28.4,29.3,30.1,30.8],
+  [90000,20.5,21.6,22.6,23.7,24.7,25.7,26.7,27.6,28.5,29.3,30.1,30.9],
+  [91000,20.5,21.6,22.7,23.7,24.8,25.8,26.7,27.6,28.5,29.3,30.2,30.9],
+  [92000,20.6,21.7,22.7,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],
+  [93000,20.7,21.7,22.8,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],
+  [94000,20.8,21.8,22.8,23.9,24.9,25.9,26.9,27.8,28.6,29.5,30.2,31.0],
+  [95000,20.8,21.9,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.3,31.0],
+  [96000,20.9,21.9,23.0,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0],
+  [97000,21.0,22.0,23.0,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.4,31.1],
+  [98000,21.0,22.1,23.1,24.1,25.1,26.1,27.0,27.9,28.8,29.6,30.4,31.1],
+  [99000,21.1,22.1,23.2,24.2,25.1,26.1,27.1,28.0,28.8,29.6,30.4,31.2],
+  [100000,21.1,22.2,23.2,24.2,25.2,26.1,27.1,28.0,28.9,29.7,30.5,31.2],
+  [101000,21.2,22.2,23.3,24.3,25.3,26.2,27.1,28.0,28.9,29.7,30.5,31.2],
+  [102000,21.2,22.3,23.4,24.4,25.3,26.3,27.1,28.1,28.9,29.8,30.5,31.3],
+  [103000,21.3,22.4,23.4,24.4,25.4,26.3,27.2,28.1,29.0,29.8,30.6,31.3],
+  [104000,21.3,22.4,23.5,24.5,25.5,26.4,27.3,28.1,29.0,29.8,30.6,31.3],
+  [105000,21.3,22.5,23.5,24.5,25.5,26.5,27.3,28.2,29.1,29.9,30.6,31.4],
+  [106000,21.4,22.5,23.6,24.6,25.6,26.5,27.4,28.2,29.1,29.9,30.7,31.4],
+  [107000,21.4,22.5,23.7,24.7,25.6,26.6,27.5,28.3,29.1,30.0,30.7,31.5],
+  [108000,21.5,22.6,23.7,24.7,25.7,26.7,27.5,28.4,29.2,30.0,30.8,31.5],
+  [109000,21.5,22.6,23.7,24.8,25.8,26.7,27.6,28.4,29.2,30.0,30.8,31.5],
+  [110000,21.6,22.7,23.7,24.8,25.8,26.7,27.7,28.5,29.3,30.0,30.8,31.5],
+  [111000,21.6,22.7,23.8,24.8,25.9,26.8,27.7,28.5,29.3,30.1,30.8,31.6],
+  [112000,21.7,22.8,23.8,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.9,31.6],
+  [113000,21.7,22.8,23.9,24.9,25.9,26.9,27.8,28.7,29.4,30.2,30.9,31.7],
+  [114000,21.8,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.2,30.9,31.7],
+  [115000,21.8,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0,31.7],
+  [116000,21.8,22.9,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.3,31.0,31.7],
+  [117000,21.9,23.0,24.1,25.1,26.1,27.0,28.0,28.8,29.6,30.4,31.1,31.8],
+  [118000,21.9,23.0,24.1,25.1,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8],
+  [119000,22.0,23.1,24.1,25.2,26.2,27.1,28.0,28.9,29.7,30.5,31.2,31.9],
+  [120000,22.0,23.1,24.2,25.2,26.2,27.2,28.1,28.9,29.8,30.5,31.3,31.9],
+  [121000,22.0,23.2,24.2,25.3,26.3,27.2,28.1,29.0,29.8,30.6,31.3,32.0],
+  [122000,22.1,23.2,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.4,32.0],
+  [123000,22.1,23.2,24.3,25.4,26.4,27.3,28.2,29.1,29.9,30.7,31.4,32.1],
+  [124000,22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],
+  [125000,22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]
 ];
 function getFLP(ink,r){
-  let row=NIBUD[0];
-  for(const rr of NIBUD){if(ink>=rr[0])row=rr;}
-  const base=row[1];
-  const rAdj=r<3?0.02:r<4?0.01:r<5?0:r<6?-0.01:-0.02;
-  return Math.max(0.12,base+rAdj);
+  const g=[1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5];
+  let k=11;for(let j=0;j<g.length;j++){if(r<=g[j]+1e-9){k=j;break;}}
+  let row=FL2026[0];
+  for(const rr of FL2026){if(ink>=rr[0])row=rr;else break;}
+  return row[k+1]/100;
 }
+// Brutering studieschuld Trhk 2026 (art. 3a): werkelijke maandtermijn × factor o.b.v. toetsrente
+const BRUT_STUDIE=[[1.5,1.05],[2.0,1.05],[2.5,1.10],[3.0,1.15],[3.5,1.20],[4.0,1.20],[4.5,1.25],[5.0,1.30],[5.5,1.30],[6.0,1.35],[6.5,1.40]];
+function factorStudie(r){for(const[m,f]of BRUT_STUDIE){if(r<=m+1e-9)return f;}return 1.40;}
 function ann(s,r,n){const rm=r/12;if(rm===0)return s/n;return s*rm*Math.pow(1+rm,n)/(Math.pow(1+rm,n)-1);}
 function maandlast(s,r,n,vorm){if(vorm==='af')return s*r/12;if(vorm==='lin')return s/n+s*r/12;return ann(s,r,n);}
 
@@ -177,6 +286,7 @@ function bereken(){
   const r=N('hyprente')/100,lt=Math.round(N('looptijd')*12);
   const vorm=document.getElementById('vorm').value;
   const inkomen=N('inkomen'),alimentatie=N('alimentatie')*12,verp=N('verplichtingen');
+  const kredietLimiet=N('kredietLimiet'),duoTermijn=N('duoTermijn');
   const nhg=document.getElementById('nhg').value==='1';
 
   const overwaarde=Math.max(0,ww-hs);
@@ -193,18 +303,23 @@ function bereken(){
   // NIBUD toets
   const totaalInk=inkomen+alimentatie;
   const flp=getFLP(totaalInk,N('hyprente'));
-  const maxJaarLast=totaalInk*flp-(verp*12*0.02);
-  const maxHyp=maxJaarLast/12/ann(1,r,lt);
-  const maxHypFin=(totaalInk*flp/12-(verp*0.02))/ann(1,r,lt);
+  // Verplichtingen per maand: krediet 2% van de limiet, studieschuld werkelijke termijn × factor, overige lasten volledig
+  const kredietLast=kredietLimiet*0.02;
+  const duoFactor=factorStudie(N('hyprente'));
+  const duoLast=duoTermijn*duoFactor;
+  const verplMaand=kredietLast+duoLast+verp;
+  const maxMaandLast=Math.max(0,totaalInk*flp/12-verplMaand);
+  // Trhk: maximale hypotheek o.b.v. annuïtaire last over 30 jaar
+  const maxHyp=maxMaandLast/ann(1,r,360);
   const kanOvernemen=maxHyp>=hs;
   const kanMetUitkoop=maxHyp>=hypMet;
 
   // NHG check
-  const nhgOk=nhg&&hypMet<=435000;
+  const nhgOk=nhg&&hypMet<=470000; // NHG-kostengrens 2026
 
   // Verdict
   let vCls,vIco,vTitel,vSub;
-  if(kanMetUitkoop){vCls='ok';vIco='✅';vTitel='Doorgang mogelijk — hypotheek + uitkoop past binnen draagkracht';vSub=`Op basis van NIBUD 2026 kunt u maximaal ${fmt(maxHyp)} lenen. De gecombineerde hypotheek van ${fmt(hypMet)} past binnen uw draagkracht.`;}
+  if(kanMetUitkoop){vCls='ok';vIco='✅';vTitel='Doorgang mogelijk — hypotheek + uitkoop past binnen draagkracht';vSub=`Op basis van de leennormen 2026 (Trhk) kunt u maximaal ${fmt(maxHyp)} lenen. De gecombineerde hypotheek van ${fmt(hypMet)} past binnen uw draagkracht.`;}
   else if(kanOvernemen){vCls='warn';vIco='⚠️';vTitel='Hypotheek overnemen lukt, uitkoop meefinancieren niet';vSub=`U kunt de bestaande hypotheek (${fmt(hs)}) overnemen, maar heeft niet genoeg draagkracht om ook de uitkoop van ${fmt(uitkoopBedrag)} mee te financieren. Oplossing: uitkoop uit eigen middelen of via familie.`;}
   else{vCls='nee';vIco='❌';vTitel='Hypotheek alleen niet haalbaar bij huidig inkomen';vSub=`Maximale hypotheek op uw inkomen: ${fmt(maxHyp)}. De bestaande schuld van ${fmt(hs)} overstijgt uw draagkracht. Overleg met uw bank — bij NHG zijn soms uitzonderingen mogelijk. Overweeg ook verkoop van de woning.`;}
 
@@ -213,7 +328,7 @@ function bereken(){
   document.getElementById('hoofd').innerHTML=`
     <div class="hb n"><div class="hbl">Overwaarde</div><div class="hbv">${fmt(overwaarde)}</div><div class="hbs">WOZ − hypotheek</div></div>
     <div class="hb ${uitkoopBedrag>0?'o':'g'}"><div class="hbl">Uitkoop partner</div><div class="hbv">${fmt(uitkoopBedrag)}</div><div class="hbs">${fmtPct(aandeelVertrekkende*100)} × overwaarde</div></div>
-    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,0)} bij ${fmtPct(N('hyprente'),2)}%</div></div>
+    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,1)} bij ${fmtPct(N('hyprente'),2)} · 30 jr annuïtair</div></div>
     <div class="hb ${kanOvernemen?'g':'r'}"><div class="hbl">Maandlast na overname</div><div class="hbv">${fmt(ml)}</div><div class="hbs">${kanOvernemen?'✓ Draagbaar':'✗ Te hoog'}</div></div>`;
 
   let html=`<thead><tr><th>Post</th><th>Bedrag</th><th>Toelichting</th></tr></thead><tbody>`;
@@ -226,8 +341,9 @@ function bereken(){
   html+=`<tr class="cat"><td colspan="3">Hypotheek na overname</td></tr>`;
   html+=`<tr><td>Over te nemen hypotheek</td><td>${fmt(hs)}</td><td>Ontslag OHA bank vereist</td></tr>`;
   html+=`<tr><td>Uitkoop meefinancieren?</td><td>${fmt(uitkoopBedrag)}</td><td>${kanMetUitkoop?'✓ Mogelijk':'✗ Buiten draagkracht'}</td></tr>`;
-  html+=`<tr class="tot"><td>Nieuwe maandlast (alleen overname)</td><td>${fmt(ml)}</td><td>${fmtPct(N('hyprente'),2)}%, ${Math.round(lt/12)} jaar</td></tr>`;
-  if(nhg)html+=`<tr><td>NHG toepasbaar?</td><td>${nhgOk?'✓ Ja':'✗ Boven €435k'}</td><td>Borgtochtprovisie 0,6%</td></tr>`;
+  html+=`<tr class="tot"><td>Nieuwe maandlast (alleen overname)</td><td>${fmt(ml)}</td><td>${fmtPct(N('hyprente'),2)}, ${Math.round(lt/12)} jaar</td></tr>`;
+  if(nhg)html+=`<tr><td>NHG toepasbaar?</td><td>${nhgOk?'✓ Ja':'✗ Boven € 470.000'}</td><td>Borgtochtprovisie 0,4% (2026)</td></tr>`;
+  if(verplMaand>0)html+=`<tr><td>Verplichtingen in de toets</td><td>${fmt(verplMaand)}/mnd</td><td>${kredietLimiet>0?'krediet 2% × '+fmt(kredietLimiet)+' = '+fmt(kredietLast)+'; ':''}${duoTermijn>0?'DUO '+fmt(duoTermijn)+' × '+duoFactor.toFixed(2).replace('.',',')+' = '+fmt(duoLast)+'; ':''}${verp>0?'overig '+fmt(verp):''}</td></tr>`;
   document.getElementById('tbl').innerHTML=html+'</tbody>';
 
   document.getElementById('resCard').classList.remove('hidden');

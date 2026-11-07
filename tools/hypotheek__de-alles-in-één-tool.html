@@ -1024,15 +1024,25 @@ return s1 * 0.3575 + (s2 - s1) * 0.3756 + (inkomen - s2) * 0.495;
 }
 
 // Netto maandlast berekening
-function berekenNettoMaandlast(hypotheek, rente, looptijdJaar, wozWaarde, inkomen) {
+// Belasting box 1 2026 met aftrektarief eigen woning begrensd op 37,56% (toptarief 49,50% telt niet mee).
+// AOW-gerechtigd: schijf 1 tarief 17,85%.
+function box1AftrekBegrensd(inkomen, aowGerechtigd) {
+const s1 = 38883, t1 = aowGerechtigd ? 0.1785 : 0.3575, tMax = 0.3756;
+const x = Math.max(0, inkomen);
+return x <= s1 ? x * t1 : s1 * t1 + (x - s1) * tMax;
+}
+function berekenNettoMaandlast(hypotheek, rente, looptijdJaar, wozWaarde, inkomen, aowGerechtigd, nietAftrekbaar) {
 const brutoMaand = hypotheek * annFactor(rente, looptijdJaar * 12);
 const renteJaar = hypotheek * rente; // eerste jaar, benadering
-const aftrekPct = Math.min(0.3575, 0.3575); // begrensd op 35,75%
-const aftrekJaar = renteJaar * aftrekPct;
 const ewf = berekenEWF(wozWaarde);
+// Progressief aftrektarief 2026: 35,75% in schijf 1 (17,85% boven AOW-leeftijd), daarboven max. 37,56%
+const aftrekpost = Math.max(0, renteJaar - ewf);
+const voordeel = nietAftrekbaar ? 0 : box1AftrekBegrensd(inkomen, aowGerechtigd) - box1AftrekBegrensd(inkomen - aftrekpost, aowGerechtigd);
+const aftrekPct = nietAftrekbaar ? 0 : (aftrekpost > 0 ? voordeel / aftrekpost : (inkomen > 38883 ? 0.3756 : (aowGerechtigd ? 0.1785 : 0.3575)));
+const aftrekJaar = renteJaar * aftrekPct;
 const nettoRenteVoordeel = Math.max(0, aftrekJaar - ewf * aftrekPct);
 const nettoMaand = brutoMaand - (nettoRenteVoordeel / 12);
-return { brutoMaand, nettoMaand, renteJaar, aftrekJaar, ewf };
+return { brutoMaand, nettoMaand, renteJaar, aftrekJaar, ewf, aftrekPct };
 }
 
 // Bruteringsfactor studielening
@@ -1063,8 +1073,9 @@ const opslagen = {
 return opslagen[label] || 0;
 }
 
-// NHG grens 2026 (indicatief - check nhg.nl voor definitief)
-const NHG_GRENS_2026 = 435000;
+// NHG-kostengrens 2026 (NHG Voorwaarden & Normen 2026): € 470.000; met energiebesparende voorzieningen € 498.200
+const NHG_GRENS_2026 = 470000;
+const NHG_GRENS_2026_EBV = 498200;
 
 // ============================================================
 // STATE
@@ -1244,13 +1255,15 @@ const lti = toetsinkomen > 0 ? (gewenstToets / toetsinkomen) : 0;
 const benutting = maxHyp > 0 ? (gewenstToets / maxHypLTI_finaal) * 100 : 0;
 
 // NHG check
-const nhgMogelijk = woningWaarde <= NHG_GRENS_2026 && gewenstToets <= NHG_GRENS_2026;
+const nhgGrens = (ebv === 'ja') ? NHG_GRENS_2026_EBV : NHG_GRENS_2026;
+const nhgMogelijk = woningWaarde <= nhgGrens && gewenstToets <= nhgGrens;
 const nhgCheck = nhg === 'ja' ? (nhgMogelijk ? 'ja' : 'nee') : 'niet_gewenst';
 
 // Maandlasten (o.b.v. gewenste of max hypotheek)
 const rekHyp = gewenstBedrag > 0 ? Math.min(gewenstBedrag, maxHyp) : Math.min(maxHyp, woningWaarde || maxHyp);
 const woz = woningWaarde || rekHyp;
-const maandInfo = berekenNettoMaandlast(rekHyp, rente, looptijd, woz, inkomen1);
+// Renteaftrek toegerekend aan de partner met het hoogste inkomen
+const maandInfo = berekenNettoMaandlast(rekHyp, rente, looptijd, woz, Math.max(inkomen1, inkomen2 || 0), aow === 'ja', aftrek === 'box3');
 
 // Scenarioanalyse: +2% rente (na 10 jaar)
 const renteScenario = rente + 0.02;
@@ -1357,7 +1370,7 @@ Toetsinkomen ${euro(r.toetsinkomen)} · Toetsrente ${pct(r.toetsrente*100, 2)} �
 <div class="result-card success">
 <div class="result-card-label">Netto maandlast</div>
 <div class="result-card-value">${euro(r.maandInfo.nettoMaand)}</div>
-<div class="result-card-sub">Na renteaftrek (${pct(3.575,1)}) en EWF</div>
+<div class="result-card-sub">Na renteaftrek (${pct(r.maandInfo.aftrekPct*100,2)}) en EWF</div>
 </div>
 <div class="result-card">
 <div class="result-card-label">Loan-to-Value (LTV)</div>
@@ -1372,7 +1385,7 @@ Toetsinkomen ${euro(r.toetsinkomen)} · Toetsrente ${pct(r.toetsrente*100, 2)} �
 <div class="result-card accent">
 <div class="result-card-label">Renteaftrekvoordeel</div>
 <div class="result-card-value">${euro(r.maandInfo.aftrekJaar / 12)}<span style="font-size:14px">/mnd</span></div>
-<div class="result-card-sub">${euro(r.maandInfo.aftrekJaar)}/jaar (35,75%)</div>
+<div class="result-card-sub">${euro(r.maandInfo.aftrekJaar)}/jaar (${pct(r.maandInfo.aftrekPct*100,2)})</div>
 </div>
 <div class="result-card">
 <div class="result-card-label">Eigenaarslasten</div>
@@ -1384,7 +1397,7 @@ Toetsinkomen ${euro(r.toetsinkomen)} · Toetsrente ${pct(r.toetsrente*100, 2)} �
 <!-- NHG -->
 <div style="margin-bottom:16px">
 ${nhgBadge}
-${r.nhgCheck === 'ja' ? `<span style="font-size:13px; color:#555; margin-left:12px">Woningwaarde ${euro(state.woningWaarde)} ≤ NHG-grens ${euro(NHG_GRENS_2026)}</span>` : ''}
+${r.nhgCheck === 'ja' ? `<span style="font-size:13px; color:#555; margin-left:12px">Woningwaarde ${euro(state.woningWaarde)} ≤ NHG-grens ${euro(state.ebv === 'ja' ? NHG_GRENS_2026_EBV : NHG_GRENS_2026)}</span>` : ''}
 </div>
 
 <!-- OPBOUW BEREKENING -->
@@ -1575,7 +1588,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <div class="kf-box green">
 <div class="kf-label">Netto maandlast</div>
 <div class="kf-value">${euro(r.maandInfo.nettoMaand)}</div>
-<div class="kf-sub">Na renteaftrek 35,75% en EWF</div>
+<div class="kf-sub">Na renteaftrek ${pct(r.maandInfo.aftrekPct*100,2)} en EWF</div>
 </div>
 <div class="kf-box">
 <div class="kf-label">FL-percentage</div>
@@ -1590,7 +1603,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <div class="kf-box">
 <div class="kf-label">NHG</div>
 <div class="kf-value" style="font-size:12pt">${r.nhgCheck === 'ja' ? '✅ Mogelijk' : r.nhgCheck === 'niet_gewenst' ? '— Niet gewenst' : '❌ Niet mogelijk'}</div>
-<div class="kf-sub">Grens 2026: ${euro(NHG_GRENS_2026)}</div>
+<div class="kf-sub">Grens 2026: ${euro(state.ebv === 'ja' ? NHG_GRENS_2026_EBV : NHG_GRENS_2026)}${state.ebv === 'ja' ? ' (met energiebesparende voorzieningen)' : ''}</div>
 </div>
 </div>
 </div>
@@ -1619,7 +1632,7 @@ ${r.ebvOpslag > 0 ? `<tr><td class="plus">+ EBV-opslag verduurzaming (label ${st
 <table>
 <tr><th>Post</th><th style="text-align:right">Maand</th><th style="text-align:right">Jaar</th></tr>
 <tr><td>Bruto hypotheeklast (annuïtair, ${pct(state.rente*100,2)}, ${state.looptijd} jr)</td><td class="td-right">${euro(r.maandInfo.brutoMaand)}</td><td class="td-right">${euro(r.maandInfo.brutoMaand*12)}</td></tr>
-<tr><td class="plus">− Renteaftrek (${pct(3.575,1)}, jaar 1)</td><td class="td-right plus">−${euro(r.maandInfo.aftrekJaar/12)}</td><td class="td-right plus">−${euro(r.maandInfo.aftrekJaar)}</td></tr>
+<tr><td class="plus">− Renteaftrek (${pct(r.maandInfo.aftrekPct*100,2)}, jaar 1)</td><td class="td-right plus">−${euro(r.maandInfo.aftrekJaar/12)}</td><td class="td-right plus">−${euro(r.maandInfo.aftrekJaar)}</td></tr>
 <tr><td>+ Eigenwoningforfait (${pct((r.woz <= 75000 ? 0.35 : 0.35),2)} van WOZ ${euro(r.woz)})</td><td class="td-right">${euro(r.maandInfo.ewf/12)}</td><td class="td-right">${euro(r.maandInfo.ewf)}</td></tr>
 <tr class="total-row"><td>Netto maandlast hypotheek</td><td class="td-right">${euro(r.maandInfo.nettoMaand)}</td><td class="td-right">${euro(r.maandInfo.nettoMaand*12)}</td></tr>
 <tr><td>Eigenaarslasten (onderhoud, OZB, opstal, waterschap)</td><td class="td-right">${euro(r.eigenaarslasten/12)}</td><td class="td-right">${euro(r.eigenaarslasten)}</td></tr>

@@ -119,12 +119,13 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
         <div class="fl">
           <label>Type koper</label>
           <select id="koperType" onchange="update()">
-            <option value="starter">Starter (eerste woning, OVB 2%)</option>
-            <option value="doorstromer" selected>Doorstromer (eigen gebruik, OVB 2%)</option>
-            <option value="belegger">Belegger / verhuurder (OVB 10,4%)</option>
+            <option value="starter">Starter (18 t/m 34 jaar, zelf bewonen: OVB 0%)</option>
+            <option value="doorstromer" selected>Doorstromer (hoofdverblijf, OVB 2%)</option>
+            <option value="belegger">Belegger / verhuurder / 2e woning (OVB 8%)</option>
+            <option value="nietwoning">Geen woning (bedrijfspand, grond; OVB 10,4%)</option>
             <option value="nvt">Nieuwbouw (geen OVB)</option>
           </select>
-          <span class="sub">Starters ≤35jr, woning ≤€510.000: OVB 0%</span>
+          <span class="sub">Starters 18 t/m 34 jaar, woningwaarde ≤ € 555.000: OVB 0%</span>
         </div>
         <div class="fl">
           <label>Leeftijd (voor OVB startersvrijstelling)</label>
@@ -219,11 +220,12 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
     <div class="ch">📚 Overdrachtsbelasting 2026</div>
     <div class="cb">
       <div class="uitleg">
-        <strong>0% (startersvrijstelling):</strong> Koper ≤35 jaar, eerste eigen woning, koopsom ≤ <strong>€510.000</strong>. Éénmalig in het leven te gebruiken. Schriftelijk verklaren bij notaris.<br><br>
-        <strong>2% (eigen gebruik):</strong> U woont zelf in de woning. Doorstromers, second homes voor eigen gebruik.<br><br>
-        <strong>10,4% (niet-eigen gebruik):</strong> Verhuur, belegging, tweede woning die u niet zelf bewoont. Geldt sinds 1-1-2023.<br><br>
+        <strong>0% (startersvrijstelling):</strong> Koper van 18 tot 35 jaar die de woning zelf duurzaam als hoofdverblijf gaat bewonen, woningwaarde ≤ <strong>€ 555.000</strong> (2026; harde grens). Éénmalig in het leven te gebruiken. Schriftelijk verklaren bij notaris.<br><br>
+        <strong>2% (hoofdverblijf):</strong> U gaat zelf duurzaam in de woning wonen (hoofdverblijf). Doorstromers.<br><br>
+        <strong>8% (woning, geen hoofdverblijf):</strong> Verhuur, belegging, tweede woning of vakantiewoning. Tarief 2026 (was 10,4% t/m 2025).<br><br>
+        <strong>10,4% (geen woning):</strong> Overig vastgoed, zoals bedrijfspanden en grond.<br><br>
         <strong>0% (nieuwbouw):</strong> Nieuwbouwwoningen zijn BTW-belast (21%) en vrijgesteld van OVB.<br><br>
-        <strong>NHG 2026:</strong> Grens €435.000. Borgtochtprovisie <strong>0,6%</strong> van het hypotheekbedrag. NHG-rente is doorgaans 0,2-0,5% lager — het lagere rentevoordeel verdient de borgtochtprovisie in 2-3 jaar terug.
+        <strong>NHG 2026:</strong> Kostengrens € 470.000 (€ 498.200 met energiebesparende voorzieningen). Borgtochtprovisie <strong>0,4%</strong> van het hypotheekbedrag. NHG-rente is doorgaans 0,2-0,5% lager — het lagere rentevoordeel verdient de borgtochtprovisie in 2-3 jaar terug.
       </div>
     </div>
   </div>
@@ -235,10 +237,17 @@ const N=id=>parseFloat(document.getElementById(id).value)||0;
 function fmt(n,d=0){if(!n&&n!==0)return'—';return' € '+Math.round(n).toLocaleString('nl-NL')+',-';}
 function fmtPct(n,d=1){return n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
 
+// Normen 2026
+const NHG_GRENS_2026=470000;       // NHG-kostengrens 2026 (met energiebesparende voorzieningen € 498.200)
+const NHG_PROVISIE_2026=0.004;     // borgtochtprovisie 0,4%
+const STARTERSGRENS_2026=555000;   // woningwaardegrens startersvrijstelling OVB 2026
+// NHG alleen bij eigen bewoning, hypotheek t/m de kostengrens
+function nhgMogelijk(hyp,type){return hyp<=NHG_GRENS_2026&&type!=='belegger'&&type!=='nietwoning';}
 function berekenOVB(koopsom,type,leeftijd){
   if(type==='nvt')return{pct:0,bedrag:0,label:'Nieuwbouw (BTW, geen OVB)'};
-  if(type==='belegger')return{pct:10.4,bedrag:koopsom*0.104,label:'10,4% verhuur/belegging'};
-  if(type==='starter'&&leeftijd<=35&&koopsom<=510000)return{pct:0,bedrag:0,label:'0% startersvrijstelling (≤35jr, ≤€510k)'};
+  if(type==='belegger')return{pct:8,bedrag:koopsom*0.08,label:'8% woning, geen hoofdverblijf (2026)'};
+  if(type==='nietwoning')return{pct:10.4,bedrag:koopsom*0.104,label:'10,4% overig vastgoed (geen woning)'};
+  if(type==='starter'&&leeftijd>=18&&leeftijd<35&&koopsom<=STARTERSGRENS_2026)return{pct:0,bedrag:0,label:'0% startersvrijstelling (18–34 jr, ≤ € 555.000)'};
   return{pct:2,bedrag:koopsom*0.02,label:'2% eigen gebruik'};
 }
 
@@ -247,8 +256,8 @@ function update(){
   const type=document.getElementById('koperType').value;
   const lft=N('leeftijd');
   const ovb=berekenOVB(ks,type,lft);
-  const nhgPct=0.006;
-  const nhgKosten=hyp<=435000?hyp*nhgPct:0;
+  const nhgPct=NHG_PROVISIE_2026;
+  const nhgKosten=nhgMogelijk(hyp,type)?hyp*nhgPct:0;
   const totaalKK=ovb.bedrag+nhgKosten; // snelle indicatie
   document.getElementById('liveCard').style.display='block';
   document.getElementById('liveBanner').innerHTML=`
@@ -256,7 +265,7 @@ function update(){
       <div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">OVB indicatie</div>
       <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--navy);">${fmt(ovb.bedrag)}</div>
       <div style="font-size:11px;color:var(--muted);">${ovb.label}</div></div>
-      ${hyp<=435000?`<div style="background:var(--grlt);border:1.5px solid #A7DFC2;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:var(--green);">✓ NHG mogelijk · borgtochtprovisie ${fmt(nhgKosten)}</div>`:'<div style="background:var(--redlt);border:1.5px solid #F5B7B1;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:var(--red);">× Boven NHG-grens €435k</div>'}
+      ${nhgMogelijk(hyp,type)?`<div style="background:var(--grlt);border:1.5px solid #A7DFC2;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:var(--green);">✓ NHG mogelijk · borgtochtprovisie ${fmt(nhgKosten)}</div>`:'<div style="background:var(--redlt);border:1.5px solid #F5B7B1;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:var(--red);">'+((type==='belegger'||type==='nietwoning')?'× Geen NHG (alleen bij eigen bewoning)':'× Boven NHG-grens € 470.000')+'</div>'}
     </div>`;
 }
 
@@ -265,7 +274,7 @@ function bereken(){
   const type=document.getElementById('koperType').value;
   const lft=N('leeftijd');
   const ovb=berekenOVB(ks,type,lft);
-  const nhgKosten=hyp<=435000?hyp*0.006:0;
+  const nhgKosten=nhgMogelijk(hyp,type)?hyp*NHG_PROVISIE_2026:0;
   const notaris=N('notarisKosten');
   const taxatie=N('taxatieKosten');
   const advies=N('adviesKosten');
@@ -281,8 +290,8 @@ function bereken(){
 
   // NHG badge
   document.getElementById('nhgBadge').innerHTML=`
-    <div class="nhg-badge ${hyp<=435000?'ja':'nee'}">
-      ${hyp<=435000?'✓ NHG-hypotheek mogelijk (≤€435.000)':'× Buiten NHG-grens (>€435.000)'}
+    <div class="nhg-badge ${nhgMogelijk(hyp,type)?'ja':'nee'}">
+      ${nhgMogelijk(hyp,type)?'✓ NHG-hypotheek mogelijk (≤ € 470.000)':((type==='belegger'||type==='nietwoning')?'× Geen NHG (alleen bij eigen bewoning)':'× Buiten NHG-grens (> € 470.000; met energiebesparende voorzieningen € 498.200)')}
     </div>`;
 
   // Totaal banner
@@ -326,7 +335,7 @@ function bereken(){
       {lbl:'Notariskosten (hypotheekakte + leveringsakte)',val:notaris},
       {lbl:'Taxatiekosten',val:taxatie},
       {lbl:'Hypotheekadvies & bemiddeling',val:advies},
-      hyp<=435000?{lbl:'NHG borgtochtprovisie (0,6%)',val:nhgKosten,subtekst:'0,6% × '+fmt(hyp)}:null,
+      nhgMogelijk(hyp,type)?{lbl:'NHG borgtochtprovisie (0,4%)',val:nhgKosten,subtekst:'0,4% × '+fmt(hyp)}:null,
       bankgar>0?{lbl:'Bankgarantie',val:bankgar}:null,
     ].filter(Boolean)},
     {cat:'Overige kosten',items:[
