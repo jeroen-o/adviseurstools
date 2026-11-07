@@ -243,7 +243,7 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
       </div>
       <div class="st mb12 mt12">Pensioentoets</div>
       <div class="g3">
-        <div class="f"><label>Geboortejaar aanvrager 1</label><input type="number" id="gbj0" value="1985" min="1940" max="2005" oninput="herbereken()"></div>
+        <div class="f"><label>Geboortejaar aanvrager 1</label><input type="number" id="gbj0" value="1985" min="1940" max="2005" oninput="syncAow0();herbereken()"></div>
         <div class="f"><label>Contract / dienstverband</label>
           <select id="contract0" onchange="herbereken()">
             <option value="vast">Vast / onbepaald tijd</option>
@@ -253,7 +253,8 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
           </select></div>
         <div class="f"><label>AOW-leeftijd</label>
           <select id="aow0" onchange="herbereken()">
-            <option value="67" selected>67 jaar (2025)</option>
+            <option value="67">67 jaar (geboren vóór 1961)</option>
+            <option value="67.25" selected>67 jaar en 3 mnd (geboren vanaf 1961)</option>
             <option value="68">68 jaar</option>
           </select></div>
       </div>
@@ -291,7 +292,7 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
 
 <!-- STAP 3 -->
 <div class="card">
-  <div class="ch" onclick="tog(this)">Stap 3 – Toeslagen 2025 – specificatie<span class="ti">▼</span></div>
+  <div class="ch" onclick="tog(this)">Stap 3 – Toeslagen (VFN-bedragen 2025; 2026 nog niet gepubliceerd) – specificatie<span class="ti">▼</span></div>
   <div class="cb">
     <div class="ib mb12"><strong>Methode: overige inkomstenbronnen (VFN v1.7)</strong>Toetsinkomen = netto inkomen + vakantietoeslag + zorgtoeslag + kinderbijslag + kindgebonden budget.</div>
     <table class="tbl"><thead><tr><th>Toeslag</th><th>Grondslag</th><th>Bedrag/mnd</th><th>Toelichting</th></tr></thead><tbody id="toeslag-tbody"></tbody></table>
@@ -355,7 +356,11 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
 </div>
 
 <script>
+// VFN-normbedragen 2025; 2026-bedragen nog niet gepubliceerd/gevonden (nov 2026)
 const MININ=2033,MODAAL=2812,MOD15=3633,SURPLUS_WON=[95,108,122];
+// AOW-leeftijd (SVB/Rijksoverheid): geboren vóór 1-1-1961 67 jaar; 1-1-1961 t/m 30-9-1964 67 jaar en 3 mnd; later nog niet vastgesteld (indicatief 67 jr + 3 mnd)
+function aowUitGbj(gbj){return (gbj&&gbj<1961)?67:67.25;}
+function syncAow0(){const g=v('gbj0'),s=el('aow0');if(s&&g)s.value=String(aowUitGbj(g));}
 const inkType=['loon','loon'];let a2Actief=false;
 const el=id=>document.getElementById(id),v=id=>parseFloat(el(id)?.value)||0,sel=id=>el(id)?.value||'';
 const fmt=n=>'€\u00a0'+Math.round(n).toLocaleString('nl-NL');
@@ -378,8 +383,8 @@ function inkAanvrager(idx){
 }
 function nettoHyp(bruto,netto){if(bruto<=350)return bruto;const pct=netto>MOD15?.07:.05;return Math.max(350,bruto*(1-pct));}
 function pensioenCheck(idx){
-  const gbj=v(`gbj${idx}`),aow=idx===0?v('aow0'):67;if(!gbj||gbj<1940)return;
-  const nu=new Date().getFullYear(),leeft=nu-gbj,pjaar=gbj+aow;
+  const gbj=v(`gbj${idx}`),aow=idx===0?v('aow0'):aowUitGbj(gbj);if(!gbj||gbj<1940)return;
+  const nu=new Date().getFullYear(),leeft=nu-gbj,pjaar=Math.floor(gbj+aow);
   let cls,msg;
   if(leeft>=aow){cls='pen-err';msg=`\u26D4 Aanvrager ${idx+1}: reeds met pensioen (${leeft} jaar).`;}
   else if(pjaar-nu<=7){cls='pen-warn';msg=`\u26A0 Aanvrager ${idx+1}: pensionering binnen ${pjaar-nu} jaar (${pjaar}).`;}
@@ -418,12 +423,12 @@ function herbereken(){
   if(wt==='koop')bdRows.push({i:'\ud83c\udfe1',l:'Eigenwoningsurplus',v:`\u2212 ${fmt(surplusWon)}`,c:'sub'});
   bdRows.push({i:'=',l:'Toetsinkomen totaal',v:fmt(tiTot),c:'tot'});
   el('bd-body').innerHTML=bdRows.map(r=>`<div class="brow"><span class="bico">${r.i}</span><span class="blbl">${r.l}</span><span class="bval ${r.c}">${r.v}</span></div>`).join('');
-  el('toeslag-grid').innerHTML=[{l:'Vakantietoeslag',v:fmt(ts.vak),n:'(netto\xf70,95)\xd75%'},{l:'Zorgtoeslag',v:fmt(ts.zorg),n:ts.zorg===0?'Inkomen te hoog':'Inkomensafh. 2025'},{l:'Kinderbijslag',v:fmt(ts.kb),n:ts.kb>0?'\u20ac252/mnd forfait':'n.v.t.'},{l:'KGB',v:fmt(ts.kgb),n:ts.kgb>0?'Inkomensafh.':'n.v.t.'}].map(r=>`<div class="tg"><div class="tg-label">${r.l}</div><div class="tg-value">${r.v}</div><div class="tg-note">${r.n}</div></div>`).join('');
+  el('toeslag-grid').innerHTML=[{l:'Vakantietoeslag',v:fmt(ts.vak),n:'(netto\xf70,95)\xd75%'},{l:'Zorgtoeslag',v:fmt(ts.zorg),n:ts.zorg===0?'Inkomen te hoog':'Inkomensafh. (VFN 2025)'},{l:'Kinderbijslag',v:fmt(ts.kb),n:ts.kb>0?'\u20ac252/mnd forfait':'n.v.t.'},{l:'KGB',v:fmt(ts.kgb),n:ts.kgb>0?'Inkomensafh.':'n.v.t.'}].map(r=>`<div class="tg"><div class="tg-label">${r.l}</div><div class="tg-value">${r.v}</div><div class="tg-note">${r.n}</div></div>`).join('');
   const gezinL={een:'Alleenstaand','een-k':'Alleenst.+kind',paar:'Paar','paar-k':'Paar+kind'}[gezin];
   el('toeslag-tbody').innerHTML=[['Vakantietoeslag','(netto \xf7 0,95) \xd7 5%',fmt(ts.vak),'Alle situaties'],['Zorgtoeslag',`${gezinL} \u00b7 netto ${fmt(nettoTot)}`,fmt(ts.zorg),ts.zorg===0?'Inkomen te hoog':'Inkomensafh.'],['Kinderbijslag','\u20ac252/mnd bij kinderen',fmt(ts.kb),ts.kb>0?'Bij kinderen':'n.v.t.'],['Kindgebonden budget','Inkomensafh. afbouw',fmt(ts.kgb),ts.kgb>0?'Inkomensafh.':'n.v.t.'],['TOTAAL','',fmt(ts.tot),'']].map((r,i)=>`<tr class="${i===4?'tot-row':''}"><td>${r[0]}</td><td style="font-size:11px;color:#888;">${r[1]}</td><td style="font-weight:700;color:var(--navy);">${r[2]}</td><td style="font-size:11px;color:#888;">${r[3]}</td></tr>`).join('');
   if(wt==='koop'){el('hyp-side-body').innerHTML=[{i:'\ud83d\udcb6',l:'Bruto hypotheeklast',v:fmt(hypBruto),c:''},{i:'\ud83d\udcc9',l:`Na ${pctAft}% renteaftrek`,v:fmt(nHyp),c:'g'},{i:'\ud83c\udfe0',l:'Eigenwoningsurplus',v:`\u2212 ${fmt(surplusWon)}`,c:'r'},{i:'\u2696',l:'Netto woonlast',v:fmt(nHyp+surplusWon),c:'b'}].map(r=>{const col=r.c==='g'?'color:var(--green)':r.c==='r'?'color:var(--red)':r.c==='b'?'color:var(--navy)':'';return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);"><span style="width:20px;text-align:center;">${r.i}</span><span style="flex:1;font-size:13px;">${r.l}</span><span style="font-weight:700;font-size:13px;${col}">${r.v}</span></div>`;}).join('');}
   const nu=new Date().getFullYear(),gbj=v('gbj0'),aow=v('aow0');
-  if(gbj>1940){const leeft=nu-gbj,pjaar=gbj+aow,cls=leeft>=aow?'r':(pjaar-nu<=7?'o':'g');el('sb-pen').textContent=leeft>=aow?'\u26d4 Pensioen':(pjaar-nu<=7)?`\u26a0 ${pjaar-nu}jr`:'\u2713 OK';el('sb-pen').className='sv '+cls;}
+  if(gbj>1940){const leeft=nu-gbj,pjaar=Math.floor(gbj+aow),cls=leeft>=aow?'r':(pjaar-nu<=7?'o':'g');el('sb-pen').textContent=leeft>=aow?'\u26d4 Pensioen':(pjaar-nu<=7)?`\u26a0 ${pjaar-nu}jr`:'\u2713 OK';el('sb-pen').className='sv '+cls;}
   const share1=nettoTot>0?a1.tot/nettoTot:1,ti1=a1.tot+ts.tot*share1,ti2=a2Actief?a2o.tot+ts.tot*(1-share1):0;
   const wfRows=[{lbl:'Netto basisinkomen',sub:`A1: ${fmt(a1.base_c)}${a2Actief?` \u00b7 A2: ${fmt(a2o.base_c)}`:''}`,icon:'',amt:nettoTot},{lbl:'+ Vakantietoeslag',sub:'(netto \xf7 0,95) \xd7 5%',icon:'+',amt:ts.vak},{lbl:'+ Zorgtoeslag',sub:`${gezinL} \u00b7 inkomensafhankelijk`,icon:'+',amt:ts.zorg}];
   if(ts.kb>0)wfRows.push({lbl:'+ Kinderbijslag',sub:'\u20ac252/mnd forfait',icon:'+',amt:ts.kb});
@@ -483,8 +488,8 @@ function maakAnalyse(r){
   if(ts.zorg>0&&ti>=MININ&&ti<MODAAL)risk.push(`${tag('warn','Afbouw zorgtoeslag')} bij een stijgend inkomen bouwt de zorgtoeslag af, waardoor het toetsinkomen minder hard stijgt dan het netto inkomen`);
   const c=sel('contract0');
   if(c&&c!=='vast')risk.push(`${tag('warn','Dienstverband')} het contract (${({bepaald:'bepaalde tijd',flex:'flex/oproep',proeftijd:'proeftijd'})[c]||c}) vraagt om onderbouwing van de bestendigheid van het inkomen`);
-  const gbj=v('gbj0'),aow=v('aow0')||67,nu=new Date().getFullYear();
-  if(gbj>1940&&gbj+aow-nu<=7)risk.push(`${tag('warn','Pensioen')} pensionering valt binnen de looptijd van een krediet; toets ook het inkomen na AOW-datum`);
+  const gbj=v('gbj0'),aow=v('aow0')||aowUitGbj(gbj),nu=new Date().getFullYear();
+  if(gbj>1940&&Math.floor(gbj+aow)-nu<=7)risk.push(`${tag('warn','Pensioen')} pensionering valt binnen de looptijd van een krediet; toets ook het inkomen na AOW-datum`);
   if(v('a0-corr')<100)risk.push(`${tag('warn','Correctiefactor')} het inkomen van aanvrager 1 is gecorrigeerd naar ${v('a0-corr')}%`);
   if(!risk.length)risk.push(`${tag('ok','Geen bijzonderheden')} op basis van de ingevoerde gegevens vallen geen specifieke risico's op; verifieer het inkomen wel met actuele stukken`);
   p.push(`<strong>Aandachtspunten:</strong> ${risk.join('; ')}.`);
@@ -505,7 +510,7 @@ function resetAlles(){
   el('wtype').value='koop';el('gezin').value='paar';el('nkind').value='0';el('hyp-bruto').value=1450;el('huur').value=950;el('htoeslag').value=0;el('kostgeld').value=0;
   el('a0-netto').value=3800;el('a0-bruto').value=5800;el('a0-corr').value=100;['a0-13e','a0-ort','a0-ali','a0-ver','a0-z1','a0-z2','a0-z3'].forEach(i=>el(i).value=0);
   el('a1-actief').value='n';a2Actief=false;el('a1-fields').classList.add('hid');['a1-netto','a1-ort','a1-ali'].forEach(i=>el(i)&&(el(i).value=0));el('a1-corr')&&(el('a1-corr').value=100);
-  el('gbj0').value=1985;el('gbj1').value=0;el('aow0').value=67;el('contract0').value='vast';
+  el('gbj0').value=1985;el('gbj1').value=0;syncAow0();el('contract0').value='vast';
   inkType[0]='loon';inkType[1]='loon';
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
   document.querySelectorAll('#chips0 .chip[data-v="loon"],#chips1 .chip[data-v="loon"]').forEach(c=>c.classList.add('on'));

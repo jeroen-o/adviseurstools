@@ -114,7 +114,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   <div class="nav-row nr1">
     <button class="mt active" onclick="sw(0)" id="t0">🏖️ AOW & Pensioen</button>
     <button class="mt" onclick="sw(1)" id="t1">📊 Pensioenkloof</button>
-    <button class="mt" onclick="sw(2)" id="t2">💰 Jaarruimte 2025</button>
+    <button class="mt" onclick="sw(2)" id="t2">💰 Jaarruimte 2026</button>
     <button class="mt" onclick="sw(3)" id="t3">📈 Lijfrente</button>
   </div>
   <div class="nav-row nr2">
@@ -144,12 +144,12 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="field"><label>Opgebouwd pensioenkapitaal (€)</label>
           <input type="number" class="fi" id="a2" value="80000" oninput="calcAow()">
         </div>
-        <div class="field"><label>AOW-opbouwjaren (van 15 t/m pensioenleeftijd)</label>
+        <div class="field"><label>AOW-opbouwjaren (50 jaar vóór AOW-leeftijd)</label>
           <select class="fw" id="a3" onchange="calcAow()">
-            <option value="52" selected>52 jaar (volledig — altijd NL)</option>
-            <option value="47">47 jaar (5 jr buiten NL)</option>
-            <option value="42">42 jaar (10 jr buiten NL)</option>
-            <option value="32">32 jaar (20 jr buiten NL)</option>
+            <option value="50" selected>50 jaar (volledig — altijd NL)</option>
+            <option value="45">45 jaar (5 jr buiten NL)</option>
+            <option value="40">40 jaar (10 jr buiten NL)</option>
+            <option value="30">30 jaar (20 jr buiten NL)</option>
           </select>
         </div>
         <div class="field"><label>Pensioenregeling werkgever</label>
@@ -213,11 +213,11 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 
 <!-- ══ 2: JAARRUIMTE ══ -->
 <div class="pan" id="p2">
-  <div class="hero"><h2>💰 Jaarruimte & Reserveringsruimte 2025</h2><p>Bereken hoeveel u fiscaal aftrekbaar kunt inleggen voor lijfrente of banksparen (Wet IB 2001, WTP-regels).</p></div>
+  <div class="hero"><h2>💰 Jaarruimte & Reserveringsruimte 2026</h2><p>Bereken hoeveel u fiscaal aftrekbaar kunt inleggen voor lijfrente of banksparen (Wet IB 2001, WTP-regels).</p></div>
   <div class="g2">
     <div>
-      <div class="card"><div class="ch">Fiscale gegevens 2024</div><div class="cb">
-        <div class="field"><label>Belastbaar jaarinkomen 2024 <span class="fv" id="jr0v">€ 65.000</span></label>
+      <div class="card"><div class="ch">Fiscale gegevens 2025 (basis voor jaarruimte 2026)</div><div class="cb">
+        <div class="field"><label>Inkomen 2025 (premiegrondslag-basis) <span class="fv" id="jr0v">€ 65.000</span></label>
           <input type="range" id="jr0" min="10000" max="200000" step="1000" value="65000" oninput="calcJr()">
           <div class="slab"><span>€10k</span><span>€200k</span></div>
         </div>
@@ -233,7 +233,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="field"><label>Onbenutte jaarruimte voorgaande 10 jaar (€)</label>
           <input type="number" class="fi" id="jr3" value="0" placeholder="reserveringsruimte" oninput="calcJr()">
         </div>
-        <div class="field"><label>Uw leeftijd (voor reserveringsruimtecap)</label>
+        <div class="field"><label>Uw leeftijd</label>
           <input type="number" class="fi" id="jr4" value="45" min="18" max="74" oninput="calcJr()">
         </div>
       </div></div>
@@ -316,7 +316,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         </div>
         <div class="field"><label>AOW-leeftijd</label>
           <select class="fw" id="es5" onchange="calcEs()">
-            <option value="67" selected>67 jaar</option>
+            <option value="67">67 jaar (geboren vóór 1-1-1961)</option>
+            <option value="67.25" selected>67 jaar en 3 mnd (geboren 1961 t/m 30-9-1964; daarna indicatief)</option>
             <option value="68">68 jaar (verwacht)</option>
           </select>
         </div>
@@ -427,6 +428,12 @@ function fvAnnuity(pmt,r,n,pv=0){
   return pv*Math.pow(1+r,n)+pmt*(Math.pow(1+r,n)-1)/r;
 }
 
+// ── AOW-PARAMETERS 2026 ─────────────────────────────────────────
+// AOW bruto per maand alleenstaand per 1-7-2026 (excl. vakantiegeld), bron SVB-bedragen 2026 (via raisin.com)
+const AOW_ALLEENSTAAND_2026=1662;
+function aowLeeftijdUitGeboortejaar(gj){return (gj&&gj<1961)?67:67.25;}
+function fmtAowLeeftijd(pl){const j=Math.floor(pl),m=Math.round((pl-j)*12);return m?`${j} jaar en ${m} mnd`:`${j} jaar`;}
+
 // ── 0: AOW & PENSIOEN ────────────────────────────────────────────
 function calcAow(){
   const lft=+document.getElementById('a0').value;
@@ -438,11 +445,15 @@ function calcAow(){
   document.getElementById('a0v').textContent=lft+' jaar';
   document.getElementById('a1v').textContent=fmt(sal);
 
-  const aowLft=67, jarenTot=Math.max(0,aowLft-lft);
+  // AOW-leeftijd uit geboortejaar (afgeleid uit huidige leeftijd):
+  // geboren vóór 1-1-1961: 67 jaar; 1-1-1961 t/m 30-9-1964: 67 jaar en 3 mnd (2028-2031);
+  // later geboren: nog niet vastgesteld, indicatief 67 jaar en 3 mnd.
+  const gbJaar=new Date().getFullYear()-lft;
+  const aowLft=aowLeeftijdUitGeboortejaar(gbJaar), jarenTot=Math.max(0,aowLft-lft);
 
-  // AOW 2025: bruto alleenstaand €1.496/mnd; 2% opbouw per jaar van leeftijd 15 t/m 67 = 52 jaar vol
-  const aowVol=1496;
-  const aowPct=Math.min(100,Math.round(jarenAow/52*100));
+  // AOW 2026 (per 1-7-2026): bruto alleenstaand €1.662/mnd excl. vakantiegeld; 2% opbouw per jaar over 50 jaar vóór AOW-leeftijd
+  const aowVol=AOW_ALLEENSTAAND_2026;
+  const aowPct=Math.min(100,Math.round(jarenAow/50*100));
   const aowMaand=Math.round(aowVol*aowPct/100);
 
   // Werkgeverspensioen
@@ -467,7 +478,7 @@ function calcAow(){
     <div class="hs">
       <div class="hs-l">Verwacht pensioeninkomen (bruto/mnd)</div>
       <div class="hs-v">${fmt(totaal)}</div>
-      <div class="hs-s">Vervangingsratio: ${ratio}% van huidig netto salaris · AOW-leeftijd: ${aowLft}</div>
+      <div class="hs-s">Vervangingsratio: ${ratio}% van huidig netto salaris · AOW-leeftijd: ${fmtAowLeeftijd(aowLft)}${gbJaar>1964?' (indicatief, nog niet vastgesteld)':''}</div>
     </div>
     <div class="g4" style="margin-bottom:12px">
       <div class="sc bl"><div class="sc-l">AOW (${aowPct}%)</div><div class="sc-v">${fmt(aowMaand)}</div></div>
@@ -484,7 +495,7 @@ function calcAow(){
       ratio>=70?`Uw pensioeninkomen is adequaat (norm: 70% van netto salaris). Blijf dit jaarlijks monitoren via mijnpensioenoverzicht.nl.`:
       ratio>=50?`Uw pensioeninkomen valt onder de aanbevolen 70%-norm. Overweeg een aanvulling via lijfrente of banksparen.`:
       `Uw pensioen dekt minder dan 50% van uw huidige netto inkomen. Direct actie ondernemen is sterk aan te raden.`)}
-    ${ib('info','ℹ️','Toelichting berekening','AOW bruto alleenstaand 2025: €1.496/mnd bij volledige opbouw (52 jaar van 15 t/m 67). Uitkering opgebouwd kapitaal op basis van annuïteitsformule met 1% rendement over 20 jaar.')}`;
+    ${ib('info','ℹ️','Toelichting berekening','AOW bruto alleenstaand 2026: €1.662/mnd (per 1-7-2026, excl. vakantiegeld) bij volledige opbouw (50 jaar vóór de AOW-leeftijd). Uitkering opgebouwd kapitaal op basis van annuïteitsformule met 1% rendement over 20 jaar.')}`;
 }
 calcAow();
 
@@ -539,17 +550,17 @@ function calcJr(){
   const lft=+document.getElementById('jr4').value||45;
   document.getElementById('jr0v').textContent=fmt(ink);
 
-  // Jaarruimte 2025: 30% × (inkomen − franchise €15.599), max inkomen €137.800
-  const franchise=15599, maxInk=137800;
+  // Jaarruimte 2026 (Belastingdienst, Overzicht cijfers leven 2026):
+  // 30% × premiegrondslag; premiegrondslag = inkomen vorig jaar (max €137.800) − AOW-franchise €19.172 (max €118.628);
+  // minus factor A × 6,27; jaarruimte maximaal €35.589.
+  const franchise=19172, maxInk=137800, maxJr=35589;
   const grondslag=Math.max(0,Math.min(ink,maxInk)-franchise);
   // Trek A-factor × 6,27 af als werkgever pensioenpremie betaalt
   const afActie=wg==='ja'?afactor*6.27:0;
-  const jr=Math.max(0,Math.round(grondslag*0.30-afActie));
+  const jr=Math.max(0,Math.min(maxJr,Math.round(grondslag*0.30-afActie)));
 
-  // Reserveringsruimte 2025: onbenutte jaarruimte (max 10 jaar terug), begrensd op:
-  // - Leeftijd < 67: min(10% × premiegrondslag 2025, €8.254) × resterende jaren of gewoon max €8.254/jr
-  // - Simpel: max(min(invoer, 8254))
-  const maxReserv=8254;
+  // Reserveringsruimte 2026: onbenutte jaarruimte (max 10 jaar terug), maximaal €42.753 per jaar
+  const maxReserv=42753;
   const reserv=Math.min(Math.max(0,oud),maxReserv);
   const totaal=jr+reserv;
   const voordeel37=Math.round(totaal*0.3756);
@@ -557,7 +568,7 @@ function calcJr(){
 
   document.getElementById('jrRes').innerHTML=`
     <div class="hs">
-      <div class="hs-l">Fiscale jaarruimte 2025</div>
+      <div class="hs-l">Fiscale jaarruimte 2026</div>
       <div class="hs-v">${fmt(jr)}</div>
       <div class="hs-s">+ Reserveringsruimte: ${fmt(reserv)} = Totaal aftrekbaar: ${fmt(totaal)}</div>
     </div>
@@ -566,9 +577,9 @@ function calcJr(){
       <div class="sc bl"><div class="sc-l">Reserveringsruimte</div><div class="sc-v">${fmt(reserv)}</div></div>
       <div class="sc gn"><div class="sc-l">Belastingvoordeel (37,56%)</div><div class="sc-v">${fmt(voordeel37)}</div></div>
     </div>
-    ${ib('hl','💰','Wat kunt u aftrekken?',`Totaal ${fmt(totaal)} inleggen in lijfrente of banksparen en aftrekken van belastbaar inkomen. Voordeel: ${fmt(voordeel37)} (schijf 1) of ${fmt(voordeel49)} (schijf 2).`)}
-    ${ib('info','📋','Formule jaarruimte 2025',`30% × (inkomen − €15.599) − (A-factor × 6,27). Inkomen gecapped op €137.800. A-factor vindt u op uw UPO (Uniform Pensioenoverzicht) van uw pensioenfonds.`)}
-    ${ib('warn','⚠️','Reserveringsruimte gecapped op €8.254/jr',`De maximale reserveringsruimte per jaar is €8.254 (2025). Onbenutte jaarruimte uit de voorgaande 10 jaar mag u in één jaar benutten.`)}
+    ${ib('hl','💰','Wat kunt u aftrekken?',`Totaal ${fmt(totaal)} inleggen in lijfrente of banksparen en aftrekken van belastbaar inkomen. Voordeel: ${fmt(voordeel37)} (tarief 37,56%) of ${fmt(voordeel49)} (toptarief 49,50%; lijfrentepremie blijft tegen het toptarief aftrekbaar).`)}
+    ${ib('info','📋','Formule jaarruimte 2026',`30% × (inkomen 2025 − AOW-franchise €19.172) − (A-factor × 6,27). Inkomen gemaximeerd op €137.800; jaarruimte maximaal €35.589. A-factor vindt u op uw UPO (Uniform Pensioenoverzicht) van uw pensioenfonds.`)}
+    ${ib('warn','⚠️','Reserveringsruimte gemaximeerd op €42.753/jr',`De maximale reserveringsruimte per jaar is €42.753 (2026). Onbenutte jaarruimte uit de voorgaande 10 jaar mag u in één jaar benutten.`)}
     ${ib('info','📅','Deadline','Inleg vóór 31 december van het belastingjaar. Vermeld in uw belastingaangifte onder "Premies lijfrente" / "Banksparen". Bewaar bewijs van storting en A-factor.')}`;
 }
 calcJr();
@@ -659,7 +670,7 @@ function calcEs(){
       <div class="sc ${jarenNodig<=10?'gn':jarenNodig<=20?'am':'rd'}"><div class="sc-l">FI over ca.</div><div class="sc-v">${haalbaar?jarenNodig+' jaar':'> 50 jr'}</div></div>
     </div>
     ${haalbaar?ib('ok','🎯','Uw FI-datum',`Met ${fmt(inleg)}/mnd inleg bij ${fmtP(rende)} rendement bereikt u financiële onafhankelijkheid over ca. ${jarenNodig} jaar. Uw vermogen betaalt dan uw levensonderhoud zonder loonarbeid.`):ib('warn','⚠️','FI-datum ver weg',`Met de huidige parameters duurt het meer dan 50 jaar. Verhoog de inleg, verlaag de uitgaven of kies een hogere onttrekkingsrate.`)}
-    ${ib('info','🏛️','AOW als bonus',`Wanneer u op ${aowLft}-jarige leeftijd AOW ontvangt (~€1.496/mnd bruto), daalt uw benodigde onttrekking significant. Uw FI-getal kan dan kleiner worden ingesteld.`)}
+    ${ib('info','🏛️','AOW als bonus',`Wanneer u vanaf ${fmtAowLeeftijd(aowLft)} AOW ontvangt (~€1.662/mnd bruto, alleenstaand 2026), daalt uw benodigde onttrekking significant. Uw FI-getal kan dan kleiner worden ingesteld.`)}
     ${ib('warn','📊','4%-regel is een richtlijn','De 4%-regel (Trinity Study) is gebaseerd op een 30-jaar horizon bij een gespreide portefeuille. Voor eerder stoppen (> 30 jr) is 3–3,5% veiliger.')}`;
 }
 calcEs();
@@ -728,7 +739,7 @@ function calcPp(){
 
   const ppPct=type==='middelloon'?0.70:type==='bp'?0.50:0;
   const ppBedrag=Math.round(ouderdom*ppPct/12);
-  const aowPartner=1496;
+  const aowPartner=AOW_ALLEENSTAAND_2026; // nabestaande partner ontvangt AOW voor alleenstaanden
   const totaalPartner=ppBedrag+aowPartner;
 
   let html='';

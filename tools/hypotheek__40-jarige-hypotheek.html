@@ -476,7 +476,7 @@
             <button class="toggle-btn active" data-nhg="true">Met NHG</button>
             <button class="toggle-btn" data-nhg="false">Zonder NHG</button>
           </div>
-          <div class="field-help" id="nhgHelp">NHG-grens 2026: € 450.000</div>
+          <div class="field-help" id="nhgHelp">NHG-grens 2026: € 470.000</div>
         </div>
 
         <div class="field">
@@ -603,7 +603,7 @@
           <div class="editor-meta">
             <div class="meta-field">
               <label for="nhgLimitInput">NHG-grens (€)</label>
-              <input type="number" id="nhgLimitInput" min="0" step="1000" value="450000">
+              <input type="number" id="nhgLimitInput" min="0" step="1000" value="470000">
             </div>
             <div class="meta-field">
               <label for="ratesLabelInput">Label rentetabel</label>
@@ -657,7 +657,7 @@
 <script>
 const DEFAULT_RATES = {
   label: 'Standaardwaarden',
-  nhgLimit: 450000,
+  nhgLimit: 470000, // NHG-kostengrens 2026 (met energiebesparende voorzieningen € 498.200)
   starter: {
     10: { nhg: 4.17, b55: 4.17, b65: 4.18, b85: 4.21, b95: 4.23, bMax: 4.27 },
     12: { nhg: 4.23, b55: 4.34, b65: 4.35, b85: 4.41, b95: 4.43, bMax: 4.47 },
@@ -688,7 +688,8 @@ function loadRates() {
       const parsed = JSON.parse(stored);
       return {
         label: parsed.label || DEFAULT_RATES.label,
-        nhgLimit: parsed.nhgLimit ?? DEFAULT_RATES.nhgLimit,
+        // Oude standaardgrens 2025 (€ 450.000) automatisch bijwerken naar 2026
+        nhgLimit: (parsed.nhgLimit === 450000 ? DEFAULT_RATES.nhgLimit : (parsed.nhgLimit ?? DEFAULT_RATES.nhgLimit)),
         starter: { ...DEFAULT_RATES.starter, ...parsed.starter },
         annuity30: { ...DEFAULT_RATES.annuity30, ...parsed.annuity30 }
       };

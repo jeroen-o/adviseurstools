@@ -455,7 +455,7 @@ function berekenAdvies(form) {
     const eerlijk2 = Math.max(0, K_b3 * (1 - e1_sb) - ev2);
     const D1_sb = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0) * (parseFloat(l.draag1) || 50) / 100, 0);
     const afwijking = Math.max(Math.abs(D1_sb - eerlijk1), Math.abs(H_sb - D1_sb - eerlijk2));
-    if (afwijking > 6633) {
+    if (afwijking > 6908) { // jaarlijkse schenkvrijstelling ouder-kind 2026
       const heeftRechtvaardiging = (form.ewv1 || form.ewv2) || Math.abs(ev1 - ev2) > 500;
       factoren.push({ score: heeftRechtvaardiging ? 1 : 3, kleur: heeftRechtvaardiging ? "orange" : "red", label: heeftRechtvaardiging ? "Schenkbelasting-risico (gemitigeerd)" : "⚠️ Mogelijk schenkbelasting-risico", uitleg: `De draagplicht wijkt € ${Math.round(afwijking).toLocaleString("nl-NL")},- af van de 'eerlijke' verdeling. ${heeftRechtvaardiging ? "Zakelijke rechtvaardiging aanwezig (EWV/ongelijke inbreng) — gedekt door Besluit 30-1-2018. Leg expliciet vast." : "Zonder zakelijke rechtvaardiging: risico op kwalificatie als schenking (art. 1 lid 1 sub f SW 1956). Bespreek met notaris. Zie tab Scenario's."}` });
     }
@@ -1534,7 +1534,7 @@ function Stap6({ form, up }) {
                 {c.box3Deel > 500 && (
                   <div style={{ fontSize: 11.5, color: "#7f1d1d", fontFamily: fam.sans, lineHeight: 1.6 }}>
                     <strong>€ {Math.round(c.box3Deel).toLocaleString("nl-NL")} valt in box 3</strong> — over dit deel is de rente niet aftrekbaar.
-                    Indicatief verlies renteaftrek (4% rente, 36,97% tarief): <strong>€ {Math.round(c.box3Rente * 0.3697).toLocaleString("nl-NL")} per jaar</strong> minder aftrek.
+                    Indicatief verlies renteaftrek (4% rente, 37,56% maximaal aftrektarief 2026): <strong>€ {Math.round(c.box3Rente * 0.3756).toLocaleString("nl-NL")} per jaar</strong> minder aftrek.
                     Oorzaak: EWR van € {Math.round(c.ewr).toLocaleString("nl-NL")} is niet volledig ingebracht.
                     Oplossing: inbreng verhogen met € {Math.round(c.box3Deel).toLocaleString("nl-NL")} om box 3-deel te elimineren.
                   </div>
@@ -2056,7 +2056,7 @@ Max EWS = €250.000 − €80.000 = €170.000
 
 Als de draagplicht van deze partner €200.000 is, dan:
 Box 3-deel = €200.000 − €170.000 = €30.000 (géén renteaftrek)
-Jaarlijks renteaftrekverlies (4% rente, 36,97% tarief) = €30.000 × 4% × 36,97% ≈ €444
+Jaarlijks renteaftrekverlies (4% rente, 37,56% maximaal aftrektarief 2026) = €30.000 × 4% × 37,56% ≈ €451
 
 Drie oplossingen:
 1. EWR volledig inbrengen als eigen vermogen (elimineert box 3-deel)
@@ -2231,7 +2231,7 @@ function bereken(form, verkoopprijs, renteperc, belastingtarief) {
     // Bestaande EWR uit vorige woning NIET opgeteld (zie toelichting).
     ewr1: Math.max(0, V * E1 - H * 0.5), ewr2: Math.max(0, V * E2 - H * 0.5),
     rente1: H * 0.5 * r, rente2: H * 0.5 * r,
-    // Hypotheekrenteaftrek: per 2023 maximaal tarief schijf 1 (36,97%) voor iedereen.
+    // Hypotheekrenteaftrek 2026: maximaal 37,56% (tariefmaatregel art. 2.10a Wet IB 2001); 35,75% bij inkomen in schijf 1.
     aftrek1: H * 0.5 * r * t, aftrek2: H * 0.5 * r * t,
   };
 
@@ -2251,8 +2251,8 @@ function bereken(form, verkoopprijs, renteperc, belastingtarief) {
   const schenkingAan1 = eerlijk1 > D1 ? eerlijk1 - D1 : 0;
   const schenkingAan2 = eerlijk2 > D2 ? eerlijk2 - D2 : 0;
 
-  const VRIJSTELLING_JAARLIJKS = 6633;
-  const SCHIJF1_GRENS = 152368;
+  const VRIJSTELLING_JAARLIJKS = 6908; // 2026
+  const SCHIJF1_GRENS = 158669; // tariefgrens schenkbelasting 2026
   function berekenSB(bedrag) {
     if (bedrag <= VRIJSTELLING_JAARLIJKS) return 0;
     const b = bedrag - VRIJSTELLING_JAARLIJKS;
@@ -2340,7 +2340,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
       ) : (
         <>
           <InfoBox type="info">
-            <strong>Besluit Staatssecretaris van Financiën 30 januari 2018 (nr. 2018-3514):</strong> Een draagplichtovereenkomst die is gebaseerd op ongelijke inbreng van eigen vermogen of eigenwoningverleden wordt door de Belastingdienst <em>niet</em> als schenking aangemerkt. Afwijking zonder zakelijke grondslag kan wél schenkbelasting uitlokken (art. 1 lid 1 sub f SW 1956). De berekening hieronder is indicatief en beoordeelt het risico bij de huidige gegevens. De schenking crystalliseert eenmalig bij verkoop of overdracht van de woning — niet jaarlijks. Jaarlijkse vrijstelling 2025: € {VRIJSTELLING.toLocaleString("nl-NL")}.
+            <strong>Besluit Staatssecretaris van Financiën 30 januari 2018 (nr. 2018-3514):</strong> Een draagplichtovereenkomst die is gebaseerd op ongelijke inbreng van eigen vermogen of eigenwoningverleden wordt door de Belastingdienst <em>niet</em> als schenking aangemerkt. Afwijking zonder zakelijke grondslag kan wél schenkbelasting uitlokken (art. 1 lid 1 sub f SW 1956). De berekening hieronder is indicatief en beoordeelt het risico bij de huidige gegevens. De schenking crystalliseert eenmalig bij verkoop of overdracht van de woning — niet jaarlijks. Jaarlijkse vrijstelling 2026: € {VRIJSTELLING.toLocaleString("nl-NL")}.
           </InfoBox>
 
           <div className="scenario-table" style={{ overflowX: "auto", marginBottom: 20, WebkitOverflowScrolling: "touch" }}>
@@ -2397,7 +2397,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
                           {p.van} draagt {euro(p.schenking)} méér dan zijn/haar eerlijk aandeel. Dit voordeel voor {p.naam} kan bij verkoop als eenmalige schenking worden aangemerkt (art. 1 lid 1 sub f SW 1956).
                         </div>
                         <div className="rg3" style={{ marginBottom: 10 }}>
-                          {[["Schenkingsbedrag", euro(p.schenking)], ["Vrijstelling 2025", euro(VRIJSTELLING)], ["Belastbaar", euro(Math.max(0, p.schenking-VRIJSTELLING))]].map(([l, v]) => (
+                          {[["Schenkingsbedrag", euro(p.schenking)], ["Vrijstelling 2026", euro(VRIJSTELLING)], ["Belastbaar", euro(Math.max(0, p.schenking-VRIJSTELLING))]].map(([l, v]) => (
                             <div key={l} style={{ background: C.grayLight, borderRadius: 7, padding: "8px 10px" }}>
                               <div style={{ fontSize: 10, color: C.gray, textTransform: "uppercase", fontFamily: fam.sans }}>{l}</div>
                               <div style={{ fontWeight: 700, fontSize: 13, color: C.navy, fontFamily: fam.sans, marginTop: 2 }}>{v}</div>
@@ -2410,8 +2410,8 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
                               Indicatieve schenkbelasting (eenmalig bij verkoop): {euro(p.belasting)}
                             </div>
                             <div style={{ fontSize: 11, color: "#7f1d1d", marginTop: 3, fontFamily: fam.sans }}>
-                              Tarief: 10% over €{Math.min(p.schenking-VRIJSTELLING, 152368).toLocaleString("nl-NL")}
-                              {p.schenking-VRIJSTELLING > 152368 ? ` + 20% over €${(p.schenking-VRIJSTELLING-152368).toLocaleString("nl-NL")},-` : ""}
+                              Tarief: 10% over €{Math.min(p.schenking-VRIJSTELLING, 158669).toLocaleString("nl-NL")}
+                              {p.schenking-VRIJSTELLING > 158669 ? ` + 20% over €${(p.schenking-VRIJSTELLING-158669).toLocaleString("nl-NL")},-` : ""}
                               {" "}(niet-familierelatie ongehuwd samenwoners)
                             </div>
                           </div>
@@ -2483,7 +2483,7 @@ function ScenarioVergelijkingTab({ form }) {
   const K = (parseFloat(form?.aankoopprijs) || 0) + (parseFloat(form?.verwervingskosten) || 0);
   const [verkoopprijs, setVerkoopprijs] = useState(String(Math.round(K * 1.15) || ""));
   const [renteperc, setRenteperc] = useState("4.0");
-  const [belastingtarief, setBelastingtarief] = useState("36.97");
+  const [belastingtarief, setBelastingtarief] = useState("37.56");
   const [actieveKolom, setActieveKolom] = useState("opbrengst");
 
   const n1 = form?.naam1 || "Aanvrager";
@@ -2502,7 +2502,7 @@ function ScenarioVergelijkingTab({ form }) {
   const KOLOMMEN = [
     { id: "opbrengst", label: "Netto opbrengst bij verkoop", hint: "Eigendomswaarde (verkoopprijs × eigendomsaandeel) minus resterende hypotheekschuld (draagplicht). Eigen inbreng zit in de lagere draagplicht verdisconteerd." },
     { id: "ewr", label: "Nieuwe EWR (deze woning)", hint: "Eigenwoningreserve = verkoopprijs × eigendomsaandeel − draagplicht. Indicatief — bestaande EWR uit vorige woning en verkoopkosten niet meegerekend. Zie bijleenregeling (art. 3.119aa Wet IB 2001)." },
-    { id: "aftrek", label: "Jaarlijkse renteaftrek", hint: "Renteaftrek = draagplicht × rente × 36,97% (wettelijk maximum per 2023, art. 3.120 Wet IB 2001). Gebaseerd op initieel leningbedrag." },
+    { id: "aftrek", label: "Jaarlijkse renteaftrek", hint: "Renteaftrek = draagplicht × rente × gekozen aftrektarief (2026: maximaal 37,56%, art. 2.10a Wet IB 2001). Gebaseerd op initieel leningbedrag." },
   ];
 
   function getVal(scenario, partner, kolom) {
@@ -2559,10 +2559,11 @@ function ScenarioVergelijkingTab({ form }) {
           <Field label="Hypotheekrente (%)" hint="Gemiddelde rente over de looptijd">
             <input style={inp} type="number" step="0.1" value={renteperc} onChange={e => setRenteperc(e.target.value)} placeholder="4.0" />
           </Field>
-          <Field label="Renteaftrekpercentage (%)" hint="Wettelijk max. 36,97% voor iedereen (art. 3.120 jo. 2.10a Wet IB 2001, v.a. 2023)">
+          <Field label="Renteaftrekpercentage (%)" hint="2026: maximaal aftrektarief 37,56%; bij belastbaar inkomen t/m € 38.883 geldt 35,75% (art. 2.10a Wet IB 2001)">
             <select style={sel} value={belastingtarief} onChange={e => setBelastingtarief(e.target.value)}>
-              <option value="36.97">36,97% — wettelijk maximum (schijf 1 tarief 2025)</option>
-              <option value="31.00">31,00% — lager tarief (bijv. pensioengerechtigden schijf 1)</option>
+              <option value="37.56">37,56% — maximaal aftrektarief 2026 (inkomen boven € 38.883)</option>
+              <option value="35.75">35,75% — schijf 1 tarief 2026 (inkomen t/m € 38.883)</option>
+              <option value="17.85">17,85% — schijf 1 tarief 2026 vanaf AOW-leeftijd</option>
             </select>
           </Field>
         </div>
@@ -2633,7 +2634,7 @@ function ScenarioVergelijkingTab({ form }) {
           </div>
         )}
         <div style={{ marginTop: 10, padding: "10px 14px", background: C.grayLight, borderRadius: 8, fontSize: 11.5, color: C.gray, fontFamily: fam.sans }}>
-          <strong>Vereenvoudigingen:</strong> Berekeningen gaan uit van het initiële leningbedrag (geen tussentijdse aflossingen meegenomen). Bij annuïtaire/lineaire hypotheken neemt de resterende schuld af over de looptijd — de werkelijke netto-opbrengst bij verkoop zal dus hoger liggen. De EWR-kolom toont alleen de nieuwe EWR uit <em>deze</em> woning; een eventuele bestaande EWR uit een vorige woning{(calc.ewrOud1 > 0 || calc.ewrOud2 > 0) ? ` (${n1}: €\u00A0${Math.round(calc.ewrOud1).toLocaleString("nl-NL")}, ${n2}: €\u00A0${Math.round(calc.ewrOud2).toLocaleString("nl-NL")})` : ""} telt bij de totale EWR op en is hier niet weergegeven. Renteaftrek is berekend tegen het wettelijk maximumtarief van 36,97% (v.a. 2023, art. 3.120 Wet IB 2001).
+          <strong>Vereenvoudigingen:</strong> Berekeningen gaan uit van het initiële leningbedrag (geen tussentijdse aflossingen meegenomen). Bij annuïtaire/lineaire hypotheken neemt de resterende schuld af over de looptijd — de werkelijke netto-opbrengst bij verkoop zal dus hoger liggen. De EWR-kolom toont alleen de nieuwe EWR uit <em>deze</em> woning; een eventuele bestaande EWR uit een vorige woning{(calc.ewrOud1 > 0 || calc.ewrOud2 > 0) ? ` (${n1}: €\u00A0${Math.round(calc.ewrOud1).toLocaleString("nl-NL")}, ${n2}: €\u00A0${Math.round(calc.ewrOud2).toLocaleString("nl-NL")})` : ""} telt bij de totale EWR op en is hier niet weergegeven. Renteaftrek is berekend tegen het gekozen aftrektarief (2026: maximaal 37,56%; 35,75% bij inkomen in de eerste schijf; art. 2.10a Wet IB 2001).
         </div>
       </div>
 

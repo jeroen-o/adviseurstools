@@ -358,7 +358,7 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
       <div class="box-toggle">
         <label class="box-lbl box1-lbl active" id="lbl-box1">
           <input type="radio" name="box-hyp" id="r-box1" value="box1" checked onchange="herbereken()">
-          Box 1 – Hypotheek (HRA 37,48%)
+          Box 1 – Hypotheek (HRA max. 37,56%)
         </label>
         <label class="box-lbl box3-lbl" id="lbl-box3">
           <input type="radio" name="box-hyp" id="r-box3" value="box3" onchange="herbereken()">
@@ -415,7 +415,7 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
 </div>
 
 <div class="disc">
-  Annuïtaire berekening. Doorlopend krediet: toetslast = 2% van kredietlimiet. Indicatieve extra hypotheekcapaciteit op basis van GHF-systematiek (vrijgekomen budget ÷ netfactor × PV-factor). HRA-factor = 37,48% × 50% gemiddelde rentefractie = 18,74% (Box 1). Aan deze berekening kunnen geen rechten worden ontleend.
+  Annuïtaire berekening. Doorlopend krediet: toetslast = 2% van kredietlimiet. Indicatieve extra hypotheekcapaciteit op basis van GHF-systematiek (vrijgekomen budget ÷ netfactor × PV-factor). HRA-factor = 37,56% (maximaal aftrektarief 2026) × 50% gemiddelde rentefractie = 18,78% (Box 1). Aan deze berekening kunnen geen rechten worden ontleend.
 </div>
 
 </div><!-- /main -->
@@ -525,7 +525,7 @@ function herbereken() {
   const toetsR = Math.max(1, Math.min(15, v('ip-rente')||5.0));
   const hypLt  = Math.max(5, Math.min(40, v('ip-lt')||30)) * 12;
   const isBox1 = el('r-box1').checked;
-  const aftrekPct=0.3748, intFracGem=0.50;
+  const aftrekPct=0.3756 /* max aftrektarief 2026 */, intFracGem=0.50;
   const netFactor = 1 - aftrekPct*intFracGem; // 0.8126
   const rT = toetsR/100/12;
   const pvFac = (1-Math.pow(1+rT,-hypLt))/rT;
@@ -575,7 +575,7 @@ function herbereken() {
   if(extraHyp>0){
     rows.push(['🏠 Extra hypotheekcapaciteit','\u2013','\u2013',fmt(extraHyp),'pos']);
     if(isBox1) rows.push(['🏠 Bruto annuiteit extra hyp./mnd','\u2013','\u2013',fmt(effectief)+'/mnd','']);
-    if(isBox1) rows.push(['🏠 Netto last na HRA (37,48%)','\u2013','\u2013',fmt(netML)+'/mnd','']);
+    if(isBox1) rows.push(['🏠 Netto last na HRA (37,56%)','\u2013','\u2013',fmt(netML)+'/mnd','']);
   }
 
   el('cmp-tbody').innerHTML=rows.map((r,i)=>{

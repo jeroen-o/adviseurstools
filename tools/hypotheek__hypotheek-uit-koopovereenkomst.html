@@ -562,7 +562,7 @@ h1,h2,h3{font-family:'Fraunces',serif;font-weight:600}
       </div>
       <div class="result-rows" id="s2-deel-breakdown"></div>
       <div style="margin-top:0.75rem;padding:0.75rem;background:var(--gold-light);border-radius:var(--radius);font-size:12px;color:var(--orange);line-height:1.6">
-        ⚠️ Dit is een indicatieve berekening. De netto maandlast is berekend met 36,97% hypotheekrenteaftrek (2026 tarief). 
+        ⚠️ Dit is een indicatieve berekening. De netto maandlast is berekend met <span id="s2-aftrek-pct">37,56%</span> hypotheekrenteaftrek (2026: 35,75% bij een hoogste inkomen t/m € 38.883, anders het maximale aftrektarief van 37,56%). Het eigenwoningforfait is niet meegenomen. 
         De werkelijke aftrek hangt af van uw persoonlijke fiscale situatie. Raadpleeg een hypotheekadviseur voor een definitieve berekening.
       </div>
     </div>
@@ -1260,9 +1260,20 @@ function calcAflosvrij(P, rJaar){
   return P * rJaar/100/12;
 }
 
+// Aftrektarief eigen woning 2026: schijf 1 35,75% (t/m € 38.883), maximaal 37,56%.
+// Aftrek wordt toegerekend aan de partner met het hoogste inkomen; zonder inkomen: maximaal tarief.
+function aftrekTarief2026(){
+  const i1=parseNum(document.getElementById('s2-inkomen1')?.value||'');
+  const i2=parseNum(document.getElementById('s2-inkomen2')?.value||'');
+  const hoogste=Math.max(i1,i2);
+  return (hoogste>0 && hoogste<=38883) ? 0.3575 : 0.3756;
+}
 function recalcMortgage(){
   const delen = document.querySelectorAll('.leningdeel');
   if(!delen.length) return;
+  const AFTREK_PCT = aftrekTarief2026();
+  const aftrekPctEl=document.getElementById('s2-aftrek-pct');
+  if(aftrekPctEl) aftrekPctEl.textContent=(AFTREK_PCT*100).toFixed(2).replace('.',',')+'%';
 
   // ── Lees alle leningdeel-parameters ──
   const parts = [];
@@ -1317,7 +1328,7 @@ function recalcMortgage(){
   const breakdown=[];
   parts.forEach(p=>{
     const m = maandlastOp(p,1);
-    const aftrekVoordeel = (p.box==='box1' && p.aftrekjaren>=1) ? m.rente*0.3697 : 0;
+    const aftrekVoordeel = (p.box==='box1' && p.aftrekjaren>=1) ? m.rente*AFTREK_PCT : 0;
     const netto = Math.max(0, m.bruto - aftrekVoordeel);
     totalBruto += m.bruto;
     totalNetto += netto;
@@ -1351,7 +1362,7 @@ function recalcMortgage(){
     parts.forEach(p=>{
       const m = maandlastOp(p, maandNr);
       const aftrekOp = p.box==='box1' && jaar<=p.aftrekjaren;
-      const aftrek = aftrekOp ? m.rente*0.3697 : 0;
+      const aftrek = aftrekOp ? m.rente*AFTREK_PCT : 0;
       jBruto += m.bruto;
       jNetto += Math.max(0, m.bruto - aftrek);
       jSaldo += m.saldo;
