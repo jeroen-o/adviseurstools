@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Schadeverzekeringen-platform (voorbeeld)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#06142E;color:#C8D4EC;height:100vh;overflow:hidden;font-size:13px;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:#06142E;}
+::-webkit-scrollbar-thumb{background:#1E3560;border-radius:4px;}
+input,select,textarea,button{font-family:'Inter',sans-serif;}
+.app{display:flex;height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:210px;background:#0D2149;border-right:1px solid #1E3560;display:flex;flex-direction:column;flex-shrink:0;transition:width .2s;}
+.sidebar.collapsed{width:0;overflow:hidden;}
+.sidebar-logo{padding:18px 16px 12px;border-bottom:1px solid #1E3560;}
+.sidebar-brand{color:#F4671F;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;}
+.sidebar-title{color:#F8F9FC;font-size:15px;font-weight:800;margin-top:3px;line-height:1.3;}
+.sidebar-sub{color:#8A9BBF;font-size:10px;margin-top:4px;}
+.sidebar-nav{flex:1;padding:8px 0;overflow-y:auto;}
+.nav-btn{width:100%;background:transparent;border:none;border-left:3px solid transparent;color:#8A9BBF;padding:9px 14px;text-align:left;cursor:pointer;font-size:12px;font-weight:500;display:flex;align-items:center;gap:9px;transition:all .1s;}
+.nav-btn:hover{color:#C8D4EC;background:#FFFFFF08;}
+.nav-btn.active{color:#F8F9FC;font-weight:700;background:linear-gradient(90deg,#F4671F22,transparent);border-left-color:#F4671F;}
+.nav-sep{height:1px;background:#1E3560;margin:5px 0;}
+.nav-badge{margin-left:auto;background:#F4671F;color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;font-weight:800;}
+.sidebar-status{padding:12px 14px;border-top:1px solid #1E3560;}
+.dot-green{width:7px;height:7px;border-radius:50%;background:#26B879;box-shadow:0 0 7px #26B879;display:inline-block;margin-right:6px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* TOPBAR */
+.topbar{height:50px;background:#0D2149;border-bottom:1px solid #1E3560;display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;}
+.topbar-title{color:#F8F9FC;font-weight:700;font-size:14px;flex:1;}
+.topbar-badge{background:#0D1E3A;border:1px solid #1E3560;border-radius:5px;padding:4px 10px;font-size:11px;color:#8A9BBF;}
+.avatar{width:30px;height:30px;background:linear-gradient(135deg,#F4671F,#FF8C4A);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:11px;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.content{flex:1;overflow-y:auto;padding:20px 22px;}
+
+/* CARDS */
+.card{background:#0D1E3A;border:1px solid #1E3560;border-radius:10px;padding:18px;}
+.card-sm{background:#0D1E3A;border:1px solid #1E3560;border-radius:8px;padding:12px 14px;}
+.card-dark{background:#0A1830;border-radius:7px;padding:10px 14px;}
+
+/* GRID HELPERS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;}
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.flex{display:flex;align-items:center;}
+.flex-gap{display:flex;align-items:center;gap:10px;}
+.gap-8{gap:8px!important;}
+.mb-4{margin-bottom:4px!important;}
+.mb-8{margin-bottom:8px!important;}
+.mb-12{margin-bottom:12px!important;}
+.mb-16{margin-bottom:16px!important;}
+.mb-20{margin-bottom:20px!important;}
+.mt-10{margin-top:10px!important;}
+.mt-14{margin-top:14px!important;}
+
+/* TYPOGRAPHY */
+.t-white{color:#F8F9FC!important;}
+.t-muted{color:#8A9BBF!important;}
+.t-orange{color:#F4671F!important;}
+.t-green{color:#26B879!important;}
+.t-red{color:#E84545!important;}
+.t-gold{color:#E8A830!important;}
+.t-amber{color:#F4A200!important;}
+.t-text{color:#C8D4EC!important;}
+.t-sm{font-size:11px!important;}
+.t-xs{font-size:10px!important;}
+.t-md{font-size:14px!important;}
+.t-lg{font-size:17px!important;}
+.fw-700{font-weight:700!important;}
+.fw-600{font-weight:600!important;}
+.label{color:#8A9BBF;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;display:block;margin-bottom:5px;}
+
+/* SECTION TITLE */
+.section-title{color:#8A9BBF;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid #1E3560;margin-bottom:12px;margin-top:2px;}
+
+/* STAT CARD */
+.stat-card{background:#0D1E3A;border:1px solid #1E3560;border-radius:10px;padding:15px 18px;cursor:pointer;transition:border-color .2s;}
+.stat-card:hover{border-color:#F4671F;}
+.stat-label{color:#8A9BBF;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.stat-value{font-size:28px;font-weight:800;}
+.stat-sub{color:#8A9BBF;font-size:11px;margin-top:3px;}
+
+/* BADGE */
+.badge{border-radius:4px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.4px;white-space:nowrap;display:inline-block;}
+.badge-new{background:#1A2E50;color:#8A9BBF;border:1px solid #8A9BBF44;}
+.badge-progress{background:#2C1F08;color:#F4A200;border:1px solid #F4A20044;}
+.badge-ok{background:#0D2C1E;color:#26B879;border:1px solid #26B87944;}
+.badge-rejected{background:#2C0D0D;color:#E84545;border:1px solid #E8454544;}
+.badge-prolong{background:#2A1E0A;color:#E8A830;border:1px solid #E8A83044;}
+.badge-mutated{background:#2A1508;color:#FF8C4A;border:1px solid #FF8C4A44;}
+.badge-royement{background:#1A0A0A;color:#E84545;border:1px solid #E8454544;}
+.badge-offerte{background:#1A1030;color:#A78BFA;border:1px solid #A78BFA44;}
+
+/* TYPE PILL */
+.type-pill{background:#0D1E3A;color:#C8D4EC;border:1px solid #1E3560;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;display:inline-block;}
+
+/* FORMS */
+.form-group{margin-bottom:13px;}
+.form-label{display:block;color:#8A9BBF;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px;}
+.form-req{color:#F4671F;}
+.form-input,.form-select,.form-textarea{width:100%;background:#0A1830;border:1px solid #1E3560;color:#F8F9FC;border-radius:6px;padding:8px 11px;font-size:13px;transition:border-color .15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:#F4671F;}
+.form-input::placeholder{color:#8A9BBF;}
+.form-textarea{resize:vertical;}
+.form-select option{background:#0D1E3A;}
+
+/* BUTTONS */
+.btn{border-radius:7px;padding:9px 20px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:opacity .15s,transform .1s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{opacity:.85;transform:translateY(-1px);}
+.btn-primary{background:linear-gradient(135deg,#F4671F,#FF8C4A);color:#fff;}
+.btn-ghost{background:#0D1E3A;color:#C8D4EC;border:1px solid #1E3560!important;}
+.btn-gold{background:linear-gradient(135deg,#2A1E0A,#4A3010);color:#E8A830;border:1px solid #E8A83044!important;}
+.btn-danger{background:#1A0808;color:#E84545;border:1px solid #E8454544!important;}
+.btn-purple{background:#1A1030;color:#A78BFA;border:1px solid #A78BFA!important;}
+.btn-sm{padding:5px 12px;font-size:11px!important;}
+
+/* ALERTS */
+.alert-err{background:#1A0808;border:1px solid #E8454544;border-radius:7px;padding:10px 14px;color:#E84545;font-size:12px;margin-bottom:10px;}
+.alert-ok{background:#0D2C1E;border:1px solid #26B87944;border-radius:7px;padding:10px 14px;color:#26B879;font-size:12px;font-weight:600;margin-bottom:10px;}
+.alert-info{background:#0A1830;border:1px solid #1E3560;border-radius:7px;padding:10px 14px;color:#8A9BBF;font-size:12px;margin-bottom:10px;}
+.alert-gold{background:#100E04;border:1px solid #E8A83044;border-radius:7px;padding:10px 14px;color:#E8A830;font-size:12px;margin-bottom:10px;}
+.alert-red{background:#100A0A;border:1px solid #E8454544;border-radius:7px;padding:10px 14px;color:#E84545;font-size:12px;margin-bottom:10px;}
+
+/* MESSAGES LIST */
+.msg-item{background:#0D1E3A;border:1px solid #1E3560;border-radius:8px;padding:12px;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:6px;}
+.msg-item:hover{border-color:#F4671F44;background:#10233F;}
+.msg-item.active{border-color:#F4671F;background:#1A3060;}
+.msg-subject{color:#F8F9FC;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-meta{color:#8A9BBF;font-size:10px;margin-top:2px;}
+
+/* CHAT BUBBLE */
+.bubble{border-radius:8px;padding:9px 13px;max-width:85%;}
+.bubble-out{background:#0D1E3A;border:1px solid #1E3560;align-self:flex-end;}
+.bubble-in{background:#0A160A;border:1px solid #1A3A1A;align-self:flex-start;}
+.bubble-name-out{color:#F4671F;font-size:10px;font-weight:700;margin-bottom:3px;}
+.bubble-name-in{color:#26B879;font-size:10px;font-weight:700;margin-bottom:3px;}
+.bubble-ts{color:#8A9BBF;font-size:9px;margin-top:4px;}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:9px 12px;text-align:left;color:#8A9BBF;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid #1E3560;background:#0A1830;}
+.tbl td{padding:10px 12px;border-bottom:1px solid #1E3560;vertical-align:middle;}
+.tbl tr:nth-child(even) td{background:#090F1E;}
+.tbl tr:hover td{background:#10233F;}
+.tbl-wrap{background:#0D1E3A;border:1px solid #1E3560;border-radius:10px;overflow:hidden;}
+
+/* XML PREVIEW */
+.xml-box{background:#040D1C;border:1px solid #1E3560;border-radius:7px;padding:14px;margin-top:12px;}
+.xml-label{color:#8A9BBF;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.xml-pre{color:#6BE5A0;font-size:11px;line-height:1.7;overflow-x:auto;font-family:'Courier New',monospace;white-space:pre;}
+
+/* TABS */
+.tab-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.tab-btn{background:#0A1830;border:1px solid #1E3560;color:#8A9BBF;border-radius:5px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
+.tab-btn.active{background:#F4671F;border-color:#F4671F;color:#fff;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:#0D2149;border-radius:9px;padding:12px 18px;font-weight:700;font-size:13px;z-index:9999;box-shadow:0 8px 32px #000c;border:1px solid;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* CONFIRM MODAL */
+.modal-overlay{position:fixed;inset:0;background:#000a;z-index:500;display:flex;align-items:center;justify-content:center;}
+.modal{background:#0D2149;border:1px solid #E8454544;border-radius:12px;padding:24px;max-width:420px;width:90%;}
+
+/* MISC */
+.sep{height:1px;background:#1E3560;margin:8px 0;}
+.polis-id{color:#F4671F;font-family:'Courier New',monospace;font-size:12px;font-weight:700;}
+.hidden{display:none!important;}
+.fade{animation:fadeIn .2s ease;}
+.info-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1E3560;font-size:12px;}
+.schadestap{display:flex;gap:8px;align-items:center;margin-bottom:5px;}
+.schadestap-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+@media(max-width:700px){
+  .sidebar{position:fixed;z-index:100;height:100vh;}
+  .content [style*="grid-template-columns"]{grid-template-columns:1fr!important;}
+  .topbar-badge{display:none}
+  .grid-2,.grid-3,.grid-4,.grid-5{grid-template-columns:1fr!important;}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-brand">Voorbeeld</div>
+      <div class="sidebar-title">Schade<br>Platform</div>
+      <div class="sidebar-sub">Berichten volgens AFD 1.0 · AFD 2.0</div>
+    </div>
+    <nav class="sidebar-nav" id="sidenav"></nav>
+    <div class="sidebar-status">
+      <div style="color:#8A9BBF;font-size:10px;margin-bottom:3px;">Koppeling</div>
+      <div><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#F4A200;margin-right:5px"></span><span style="color:#F4A200;font-size:11px;font-weight:600;">Simulatie · geen verbinding</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <button onclick="toggleSidebar()" style="background:transparent;border:none;color:#8A9BBF;font-size:17px;cursor:pointer;padding:3px 5px;">☰</button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-badge">AFD 2.0 · simulatie</div>
+      <div class="avatar">A</div>
+    </div>
+    <div class="content" id="content"></div>
+    <div style="padding:8px 16px;font-size:11px;color:#8A9BBF;border-top:1px solid #1E3560">Voorbeeldomgeving: klanten, polissen, berichten, premies en datums zijn fictieve voorbeelddata. Er wordt niets naar verzekeraars of een berichtenplatform verzonden en er gaan geen klantgegevens naar adviseurstools.nl.</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast hidden" id="toast"></div>
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal" id="modal-box"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+const BRANCHES=[
+  {code:"100",label:"Motorrijtuig (WA/Casco)"},
+  {code:"200",label:"Brand & Inboedel"},
+  {code:"300",label:"Aansprakelijkheid (AVP/AVB)"},
+  {code:"400",label:"Rechtsbijstand"},
+  {code:"500",label:"Reis & Vakantie"},
+  {code:"600",label:"Zorgverzekering"},
+  {code:"700",label:"Transport & Goederen"},
+  {code:"800",label:"Bedrijfsschade"},
+  {code:"900",label:"Technische Verzekeringen"},
+];
+const VERZEKERAARS=["Achmea / Centraal Beheer","Allianz Nederland","ASR Verzekeringen",
+  "Aegon Schadeverzekering","Nationale-Nederlanden","Interpolis","OHRA","Univé",
+  "Generali Nederland","Reaal Schadeverzekeringen","HDI Global","Chubb","AIG Nederland","Markel","Zurich Insurance"];
+const STATUS_BADGE={
+  "Nieuw":"badge-new","In behandeling":"badge-progress","Goedgekeurd":"badge-ok",
+  "Afgewezen":"badge-rejected","Prolongatie":"badge-prolong","Gemuteerd":"badge-mutated",
+  "Geroyeerd":"badge-royement","Offerte":"badge-offerte"
+};
+const MSG_ICONS={AANVRAAG:"📋",MUTATIE:"✏️",PROLONGATIE:"🔄",SCHADE:"⚠️",BEVESTIGING:"✅",ROYEMENT:"🚫",OFFERTE:"💼"};
+const MSG_LABELS={AANVRAAG:"Aanvraag",MUTATIE:"Mutatie",PROLONGATIE:"Prolongatie",SCHADE:"Schademelding",BEVESTIGING:"Bevestiging",ROYEMENT:"Royement",OFFERTE:"Offerte"};
+
+let STATE={
+  nav:"dashboard",
+  sidebarOpen:true,
+  messages:[
+    {id:"MSG-2024-0041",type:"AANVRAAG",status:"In behandeling",verzekeraar:"Achmea / Centraal Beheer",klant:"Janssen Logistics BV",bsn_kvk:"KvK: 12345678",branche:"800",onderwerp:"Bedrijfsschadeverzekering – Nieuwe aanvraag",datum:"2024-11-14",afdVersie:"AFD 2.0",polisNr:"—",premie:"€ 3.420 / jaar",prioriteit:"Hoog",berichten:[{van:"Intermediair",tekst:"Aanvraag ingediend (voorbeeld). AFD 2.0-bericht.",ts:"14-11-2024 09:12"},{van:"Achmea",tekst:"Bericht ontvangen. Acceptatie-beoordeling gestart.",ts:"14-11-2024 11:30"}]},
+    {id:"MSG-2024-0038",type:"PROLONGATIE",status:"Prolongatie",verzekeraar:"Nationale-Nederlanden",klant:"Fam. De Vries",bsn_kvk:"BSN: 876543210",branche:"200",onderwerp:"Brand & Inboedel – Automatische prolongatie 2025",datum:"2024-11-10",afdVersie:"AFD 1.0",polisNr:"NN-8834-2209",premie:"€ 842 / jaar",prioriteit:"Normaal",berichten:[{van:"NN",tekst:"Prolongatiebericht conform AFD 1.0. Nieuwe looptijd 01-01-2025.",ts:"10-11-2024 08:00"}]},
+    {id:"MSG-2024-0035",type:"SCHADE",status:"In behandeling",verzekeraar:"ASR Verzekeringen",klant:"Bakker & Zn. VOF",bsn_kvk:"KvK: 87654321",branche:"100",onderwerp:"Motorrijtuig – Aanrijding 08-11-2024",datum:"2024-11-08",afdVersie:"AFD 2.0",polisNr:"ASR-4421-MR",premie:"—",prioriteit:"Hoog",berichten:[{van:"Intermediair",tekst:"Schademelding ingediend. Schadedossier aangemaakt conform AFD 2.0.",ts:"08-11-2024 14:22"},{van:"ASR",tekst:"Schadedossier geopend. Expert aangesteld.",ts:"09-11-2024 10:15"},{van:"ASR",tekst:"Expertiserapport ontvangen. Schade geschat op € 4.850.",ts:"12-11-2024 16:40"}]},
+    {id:"MSG-2024-0030",type:"MUTATIE",status:"Gemuteerd",verzekeraar:"Allianz Nederland",klant:"M. Verhoeven",bsn_kvk:"BSN: 234567890",branche:"300",onderwerp:"AVP – Wijziging adresgegevens + dekking verhoogd",datum:"2024-11-02",afdVersie:"AFD 2.0",polisNr:"ALZ-2201-AVP",premie:"€ 198 / jaar",prioriteit:"Normaal",berichten:[{van:"Intermediair",tekst:"Mutatieaanvraag verstuurd (voorbeeld).",ts:"02-11-2024 10:05"},{van:"Allianz",tekst:"Mutatie verwerkt. Polisblad wordt nagezonden via GRS.",ts:"03-11-2024 13:20"}]},
+    {id:"MSG-2024-0027",type:"BEVESTIGING",status:"Goedgekeurd",verzekeraar:"Univé",klant:"Techbouw BV",bsn_kvk:"KvK: 11223344",branche:"900",onderwerp:"Technische verzekering – Acceptatie bevestigd",datum:"2024-10-28",afdVersie:"AFD 1.0",polisNr:"UNI-6610-TV",premie:"€ 5.100 / jaar",prioriteit:"Normaal",berichten:[{van:"Univé",tekst:"Acceptatiebericht conform AFD 1.0. Polis actief per 01-11-2024.",ts:"28-10-2024 09:00"}]},
+    {id:"MSG-2024-0022",type:"OFFERTE",status:"Offerte",verzekeraar:"Generali Nederland",klant:"Fam. De Vries",bsn_kvk:"BSN: 876543210",branche:"500",onderwerp:"Reisverzekering – Offerte aangevraagd",datum:"2024-10-20",afdVersie:"AFD 2.0",polisNr:"—",premie:"€ 245 / jaar",prioriteit:"Normaal",berichten:[{van:"Intermediair",tekst:"Offerte aangevraagd bij Generali (voorbeeld).",ts:"20-10-2024 11:00"},{van:"Generali",tekst:"Offerte gereed. Premie € 245/jaar.",ts:"21-10-2024 14:30"}]},
+  ],
+  polissen:[
+    {id:"NN-8834-2209",klant:"Fam. De Vries",klantId:"K002",verzekeraar:"Nationale-Nederlanden",branche:"200",omschrijving:"Brand & Inboedel Woning",premie:842,status:"Actief",ingangsDatum:"2024-01-01",eindDatum:"2025-01-01",dekking:150000,eigenRisico:250},
+    {id:"ASR-4421-MR",klant:"Bakker & Zn. VOF",klantId:"K003",verzekeraar:"ASR Verzekeringen",branche:"100",omschrijving:"Motorrijtuig WA+Casco",premie:1240,status:"Actief",ingangsDatum:"2024-03-01",eindDatum:"2025-03-01",dekking:0,eigenRisico:500},
+    {id:"ALZ-2201-AVP",klant:"M. Verhoeven",klantId:"K004",verzekeraar:"Allianz Nederland",branche:"300",omschrijving:"AVP Particulier",premie:198,status:"Actief",ingangsDatum:"2024-06-01",eindDatum:"2025-06-01",dekking:1250000,eigenRisico:0},
+    {id:"UNI-6610-TV",klant:"Techbouw BV",klantId:"K005",verzekeraar:"Univé",branche:"900",omschrijving:"Technische Verzekering CAR",premie:5100,status:"Actief",ingangsDatum:"2024-11-01",eindDatum:"2025-11-01",dekking:500000,eigenRisico:1000},
+    {id:"ACH-9921-BS",klant:"Janssen Logistics BV",klantId:"K001",verzekeraar:"Achmea / Centraal Beheer",branche:"800",omschrijving:"Bedrijfsschadeverzekering",premie:3420,status:"In behandeling",ingangsDatum:"2024-11-14",eindDatum:"2025-11-14",dekking:250000,eigenRisico:2500},
+  ],
+  klanten:[
+    {id:"K001",naam:"Janssen Logistics BV",type:"Zakelijk",bsn_kvk:"KvK: 12345678",email:"info@janssen.nl",tel:"020-1234567",adres:"Industrieweg 45, 3001 AA Rotterdam"},
+    {id:"K002",naam:"Fam. De Vries",type:"Particulier",bsn_kvk:"BSN: 876543210",email:"devries@gmail.com",tel:"06-12345678",adres:"Rozenlaan 12, 1234 AB Amsterdam"},
+    {id:"K003",naam:"Bakker & Zn. VOF",type:"Zakelijk",bsn_kvk:"KvK: 87654321",email:"admin@bakker.nl",tel:"010-9876543",adres:"Havenstraat 8, 3011 CD Rotterdam"},
+    {id:"K004",naam:"M. Verhoeven",type:"Particulier",bsn_kvk:"BSN: 234567890",email:"m.verhoeven@outlook.com",tel:"06-87654321",adres:"Kerkstraat 3, 5678 EF Utrecht"},
+    {id:"K005",naam:"Techbouw BV",type:"Zakelijk",bsn_kvk:"KvK: 11223344",email:"info@techbouw.nl",tel:"030-5554444",adres:"Bouwlaan 99, 3584 BB Utrecht"},
+  ],
+  docs:[
+    {id:"D001",naam:"Polisblad NN-8834-2209.pdf",type:"Polisblad",klant:"Fam. De Vries",polis:"NN-8834-2209",datum:"2024-01-02",size:"248 KB"},
+    {id:"D002",naam:"Expertiserapport ASR-4421.pdf",type:"Expertiserapport",klant:"Bakker & Zn. VOF",polis:"ASR-4421-MR",datum:"2024-11-12",size:"1.2 MB"},
+    {id:"D003",naam:"Acceptatiebevestiging UNI-6610.pdf",type:"Bevestiging",klant:"Techbouw BV",polis:"UNI-6610-TV",datum:"2024-10-28",size:"180 KB"},
+    {id:"D004",naam:"Dekkingsverklaring ALZ-2201.pdf",type:"Dekkingsverklaring",klant:"M. Verhoeven",polis:"ALZ-2201-AVP",datum:"2024-06-02",size:"95 KB"},
+  ],
+  selectedMsg:null,
+  msgFilter:"Alle",
+  msgSearch:"",
+  siviTab:"ecosysteem",
+};
+
+// ══════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════
+const h=s=>s; // passthrough - all strings are HTML
+function el(tag,cls,inner="",attrs={}){
+  let a=Object.entries(attrs).map(([k,v])=>`${k}="${v}"`).join(" ");
+  return `<${tag}${cls?" class='"+cls+"'":""}${a?" "+a:""}>${inner}</${tag}>`;
+}
+function badge(status){
+  return `<span class="badge ${STATUS_BADGE[status]||'badge-new'}">${status}</span>`;
+}
+function typePill(type){
+  return `<span class="type-pill">${MSG_ICONS[type]||""} ${MSG_LABELS[type]||type}</span>`;
+}
+function sectionTitle(t){return `<div class="section-title">${t}</div>`;}
+function cardDark(inner){return `<div class="card-dark">${inner}</div>`;}
+function fmtEur(n){return n?`€ ${Number(n).toLocaleString("nl-NL")}`:"";}
+function inputF(id,label,type="text",placeholder="",val="",req=false,opts=null){
+  const req_s=req?`<span class="form-req"> *</span>`:"";
+  if(opts){
+    let options=`<option value="">— Selecteer —</option>`+opts.map(o=>`<option value="${o.v||o}"${(o.v||o)===val?" selected":""}>${o.l||o}</option>`).join("");
+    return `<div class="form-group"><label class="form-label" for="${id}">${label}${req_s}</label><select class="form-select" id="${id}">${options}</select></div>`;
+  }
+  return `<div class="form-group"><label class="form-label" for="${id}">${label}${req_s}</label><input class="form-input" type="${type}" id="${id}" placeholder="${placeholder}" value="${val}"/></div>`;
+}
+function textareaF(id,label,placeholder="",rows=3){
+  return `<div class="form-group"><label class="form-label" for="${id}">${label}</label><textarea class="form-textarea" id="${id}" rows="${rows}" placeholder="${placeholder}"></textarea></div>`;
+}
+function afdXML(type,data){
+  const xml=`&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;AFD_Bericht versie="2.0" xmlns="urn:sivi:afd:2.0"&gt;
+  &lt;Berichtkop&gt;
+    &lt;Berichttype&gt;${type}&lt;/Berichttype&gt;
+    &lt;Datum&gt;${new Date().toISOString().split("T")[0]}&lt;/Datum&gt;
+    &lt;Referentie&gt;VOORBEELD-${Date.now()}&lt;/Referentie&gt;
+    &lt;Verzender&gt;&lt;KantoorNaam&gt;Uw kantoor (voorbeeld)&lt;/KantoorNaam&gt;&lt;/Verzender&gt;
+    &lt;Ontvanger&gt;&lt;MaatschappijNaam&gt;${data.verzekeraar||"—"}&lt;/MaatschappijNaam&gt;&lt;/Ontvanger&gt;
+  &lt;/Berichtkop&gt;
+  &lt;Contract&gt;
+    &lt;PolisNr&gt;${data.polisNr||"NIEUW"}&lt;/PolisNr&gt;
+    &lt;Branchecode&gt;${data.branche||"000"}&lt;/Branchecode&gt;
+    &lt;Premie valuta="EUR"&gt;${data.premie||"0.00"}&lt;/Premie&gt;
+    &lt;Verwerkingscode&gt;${data.verwCode||"01"}&lt;/Verwerkingscode&gt;
+  &lt;/Contract&gt;
+  &lt;Partij rol="Verzekeringnemer"&gt;
+    &lt;Naam&gt;${data.klant||"—"}&lt;/Naam&gt;
+    &lt;BSN_KvK&gt;${data.bsn_kvk||"—"}&lt;/BSN_KvK&gt;
+  &lt;/Partij&gt;
+&lt;/AFD_Bericht&gt;`;
+  return `<div class="xml-box"><div class="xml-label">📄 AFD 2.0 BERICHTVOORBEELD (simulatie, niet verzonden)</div><pre class="xml-pre">${xml}</pre></div>`;
+}
+function showToast(msg,color="#26B879"){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.style.color=color;t.style.borderColor=color;
+  t.classList.remove("hidden");
+  setTimeout(()=>t.classList.add("hidden"),3500);
+}
+function getVal(id){const e=document.getElementById(id);return e?e.value:"";}
+
+// ══════════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════════
+const NAV_ITEMS=[
+  {k:"dashboard",icon:"⬡",l:"Dashboard"},
+  {k:"berichten",icon:"✉",l:"Berichtencentrum",badge:true},
+  {k:"aanvraag",icon:"＋",l:"Nieuwe Aanvraag"},
+  {k:"schade",icon:"⚠",l:"Schade melden"},
+  {k:"offerte",icon:"💼",l:"Offerte"},
+  {k:"mutatie",icon:"✐",l:"Mutatie"},
+  {k:"prolongatie",icon:"↺",l:"Prolongatie"},
+  {k:"royement",icon:"⊘",l:"Royement"},
+  null,
+  {k:"polissen",icon:"📋",l:"Polisoverzicht"},
+  {k:"klanten",icon:"👥",l:"Klantenbeheer"},
+  {k:"documenten",icon:"📁",l:"Documenten"},
+  {k:"rapportages",icon:"📊",l:"Rapportages"},
+  null,
+  {k:"sivi",icon:"🏛",l:"Standaarden (SIVI)"},
+];
+const PAGE_TITLES={dashboard:"Dashboard",berichten:"Berichtencentrum",aanvraag:"Nieuwe Aanvraag",schade:"Schade melden",offerte:"Offerte aanvragen",mutatie:"Mutatie",prolongatie:"Prolongatie",royement:"Royement",polissen:"Polisoverzicht",klanten:"Klantenbeheer",documenten:"Documenten",rapportages:"Rapportages",sivi:"Standaarden — SIVI, AFD en berichtenverkeer"};
+
+function renderNav(){
+  const badge=STATE.messages.filter(m=>["Nieuw","In behandeling"].includes(m.status)).length;
+  document.getElementById("sidenav").innerHTML=NAV_ITEMS.map((item,i)=>{
+    if(!item)return `<div class="nav-sep"></div>`;
+    const b=item.badge&&badge>0?`<span class="nav-badge">${badge}</span>`:"";
+    return `<button class="nav-btn${STATE.nav===item.k?" active":""}" onclick="navigate('${item.k}')">${item.icon} <span>${item.l}</span>${b}</button>`;
+  }).join("");
+}
+function navigate(page){
+  STATE.nav=page;STATE.selectedMsg=null;
+  document.getElementById("topbar-title").textContent=PAGE_TITLES[page]||page;
+  renderNav();renderContent();
+  if(window.innerWidth<=700&&STATE.sidebarOpen)toggleSidebar();
+}
+function toggleSidebar(){
+  STATE.sidebarOpen=!STATE.sidebarOpen;
+  document.getElementById("sidebar").classList.toggle("collapsed",!STATE.sidebarOpen);
+}
+
+// ══════════════════════════════════════════════════════════
+// PAGES
+// ══════════════════════════════════════════════════════════
+function renderContent(){
+  const c=document.getElementById("content");
+  const pages={dashboard:pageDashboard,berichten:pageBerichten,aanvraag:pageAanvraag,schade:pageSchade,offerte:pageOfferte,mutatie:pageMutatie,prolongatie:pageProlongatie,royement:pageRoyement,polissen:pagePolissen,klanten:pageKlanten,documenten:pageDocs,rapportages:pageRapportages,sivi:pageSivi};
+  c.innerHTML=(pages[STATE.nav]||pageDashboard)();
+  bindEvents();
+}
+
+// ─── DASHBOARD ─────────────────────────────────────────────
+function pageDashboard(){
+  const tot=STATE.polissen.reduce((a,p)=>a+p.premie,0);
+  const urg=STATE.messages.filter(m=>m.prioriteit==="Hoog"&&m.status==="In behandeling");
+  const stats=`
+    <div class="grid-4 mb-20">
+      ${[
+        {l:"Berichten",v:STATE.messages.length,c:"#F8F9FC",icon:"✉️",nav:"berichten"},
+        {l:"In behandeling",v:STATE.messages.filter(m=>m.status==="In behandeling").length,c:"#F4A200",icon:"⏳",nav:"berichten"},
+        {l:"Klanten",v:STATE.klanten.length,c:"#F4671F",icon:"👥",nav:"klanten"},
+        {l:"Polissen",v:STATE.polissen.length,c:"#C8D4EC",icon:"📋",nav:"polissen"},
+        {l:"Portefeuille",v:"€"+Math.round(tot/1000)+"k",c:"#E8A830",icon:"💶",sub:"jaarpremie",nav:"rapportages"},
+      ].map(s=>`<div class="stat-card" onclick="navigate('${s.nav}')">
+        <div class="stat-label">${s.icon} ${s.l}</div>
+        <div class="stat-value" style="color:${s.c}">${s.v}</div>
+        ${s.sub?`<div class="stat-sub">${s.sub}</div>`:""}
+      </div>`).join("")}
+    </div>`;
+  const urgBox=urg.length?`<div class="alert-err mb-16">
+    <strong>🔴 URGENTE BERICHTEN (${urg.length})</strong>
+    ${urg.map(m=>`<div style="margin-top:5px;cursor:pointer;font-size:12px;" onclick="openMsg('${m.id}')">${MSG_ICONS[m.type]} ${m.onderwerp} — ${m.klant}</div>`).join("")}
+  </div>`:"";
+  const recent=`<div class="card" style="flex:1.5">
+    ${sectionTitle("Recente berichten")}
+    ${STATE.messages.slice(0,5).map(m=>`
+      <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #1E3560;cursor:pointer;align-items:flex-start;" onclick="openMsg('${m.id}')">
+        <span style="font-size:15px;flex-shrink:0">${MSG_ICONS[m.type]}</span>
+        <div style="flex:1;min-width:0">
+          <div class="msg-subject">${m.onderwerp}</div>
+          <div class="msg-meta">${m.klant} · ${m.datum} · ${m.afdVersie}</div>
+        </div>
+        ${badge(m.status)}
+      </div>`).join("")}
+  </div>`;
+  const acties=`<div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="card">
+      ${sectionTitle("Snelle acties")}
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        ${[["berichten","✉️","Berichtencentrum"],["aanvraag","📋","Nieuwe aanvraag"],["schade","⚠️","Schade melden"],["offerte","💼","Offerte aanvragen"],["prolongatie","🔄","Prolongatie"],["rapportages","📊","Rapportages"]].map(([n,ic,lb])=>
+          `<button class="btn btn-ghost" style="text-align:left;justify-content:flex-start;" onclick="navigate('${n}')">${ic} ${lb}</button>`).join("")}
+    </div></div>
+    <div class="card">
+      ${sectionTitle("Status (simulatie)")}
+      ${[["Koppeling","geen — simulatie","#F4A200"],["AFD versie","2.0","#F4671F"],["Gegevens","voorbeelddata","#E8A830"],["Berichten vandaag",STATE.messages.length.toString(),"#C8D4EC"]].map(([l,v,c])=>
+        `<div class="info-row"><span class="t-muted">${l}</span><span style="color:${c};font-weight:700">${v}</span></div>`).join("")}
+    </div>
+  </div>`;
+  return `<div class="mb-16">
+    <div style="color:#F8F9FC;font-size:20px;font-weight:800;margin-bottom:3px;">Welkom, Adviseur 👋</div>
+    <div class="t-muted t-sm">Schadeverzekeringen-platform · berichtopbouw volgens AFD 1.0 / AFD 2.0 · <strong style="color:#F4A200">simulatie met fictieve voorbeelddata</strong></div>
+  </div>
+  ${stats}${urgBox}
+  <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;">${recent}${acties}</div>`;
+}
+
+// ─── BERICHTENCENTRUM ──────────────────────────────────────
+function openMsg(id){STATE.selectedMsg=id;navigate("berichten");}
+function pageBerichten(){
+  const FILTERS=["Alle","AANVRAAG","MUTATIE","PROLONGATIE","SCHADE","OFFERTE","BEVESTIGING","ROYEMENT"];
+  const filtered=STATE.messages.filter(m=>{
+    const mf=STATE.msgFilter==="Alle"||m.type===STATE.msgFilter;
+    const ms=!STATE.msgSearch||[m.klant,m.onderwerp,m.polisNr,m.id].some(v=>v&&v.toLowerCase().includes(STATE.msgSearch.toLowerCase()));
+    return mf&&ms;
+  });
+  const msg=STATE.selectedMsg?STATE.messages.find(m=>m.id===STATE.selectedMsg):null;
+  const list=`<div style="width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;">
+    <input class="form-input" placeholder="🔍  Zoek klant, polis, onderwerp..." value="${STATE.msgSearch}" oninput="STATE.msgSearch=this.value;renderContent()" style="margin-bottom:4px"/>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
+      ${FILTERS.map(f=>`<button class="tab-btn${STATE.msgFilter===f?" active":""}" onclick="STATE.msgFilter='${f}';renderContent()">${f}</button>`).join("")}
+    </div>
+    <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
+      ${filtered.map(m=>`<div class="msg-item${STATE.selectedMsg===m.id?" active":""}" onclick="STATE.selectedMsg='${m.id}';renderContent()">
+        <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:5px">
+          <span style="font-size:14px;flex-shrink:0">${MSG_ICONS[m.type]}</span>
+          <div style="flex:1;min-width:0"><div class="msg-subject">${m.onderwerp}</div><div class="msg-meta">${m.klant}</div></div>
+          ${badge(m.status)}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="t-muted t-xs">${m.id}</span><span class="t-muted t-xs">·</span>
+          <span class="t-muted t-xs">${m.datum}</span>
+          <span class="t-muted t-xs" style="margin-left:auto;background:#0A1830;padding:1px 5px;border-radius:3px">${m.afdVersie}</span>
+        </div>
+      </div>`).join("")||`<div style="color:#8A9BBF;text-align:center;padding:30px;font-size:12px">Geen berichten gevonden</div>`}
+    </div>
+  </div>`;
+  const detail=msg?renderMsgDetail(msg):`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#8A9BBF;">
+    <div style="font-size:48px;opacity:.15;margin-bottom:12px">✉</div>
+    <div style="font-size:14px;font-weight:600;color:#C8D4EC">Berichtencentrum</div>
+    <div style="font-size:12px;margin-top:6px;text-align:center;max-width:240px">Selecteer een bericht om details te bekijken</div>
+  </div>`;
+  return `<div style="display:flex;gap:14px;height:calc(100vh - 110px)">${list}<div class="card" style="flex:1;overflow:auto;display:flex;flex-direction:column;">${detail}</div></div>`;
+}
+function renderMsgDetail(m){
+  const statusOpts=Object.keys({Nieuw:1,"In behandeling":1,Goedgekeurd:1,Afgewezen:1,Prolongatie:1,Gemuteerd:1,Geroyeerd:1,Offerte:1}).map(s=>`<option${s===m.status?" selected":""}>${s}</option>`).join("");
+  const bubbles=m.berichten.map(b=>`<div class="bubble ${b.van==="Intermediair"?"bubble-out":"bubble-in"}">
+    <div class="${b.van==="Intermediair"?"bubble-name-out":"bubble-name-in"}">${b.van}</div>
+    <div style="color:#C8D4EC;font-size:12px">${b.tekst}</div>
+    <div class="bubble-ts">${b.ts}</div>
+  </div>`).join("");
+  const meta=[["Klant",m.klant],["BSN/KvK",m.bsn_kvk],["Verzekeraar",m.verzekeraar],["Polisnummer",m.polisNr],["Premie",m.premie],["Datum",m.datum]];
+  return `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding-bottom:12px;border-bottom:1px solid #1E3560;margin-bottom:12px;flex-shrink:0">
+      <div style="font-size:22px">${MSG_ICONS[m.type]}</div>
+      <div style="flex:1">
+        <div style="color:#F8F9FC;font-size:14px;font-weight:700;margin-bottom:5px">${m.onderwerp}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          ${typePill(m.type)} ${badge(m.status)}
+          <span class="t-muted t-xs">${m.afdVersie}</span>
+          ${m.prioriteit==="Hoog"?`<span style="color:#E84545;font-size:10px;font-weight:700">🔴 Hoog</span>`:""}
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <select class="form-select" style="width:auto;padding:4px 8px;font-size:11px" onchange="changeStatus('${m.id}',this.value)">${statusOpts}</select>
+        <button onclick="STATE.selectedMsg=null;renderContent()" style="background:transparent;border:none;color:#8A9BBF;font-size:18px;cursor:pointer">✕</button>
+      </div>
+    </div>
+    <div class="grid-3 mb-12" style="flex-shrink:0">
+      ${meta.map(([k,v])=>`<div class="card-dark"><div class="label">${k}</div><div style="color:#F8F9FC;font-size:12px;font-weight:600">${v||"—"}</div></div>`).join("")}
+    </div>
+    ${sectionTitle("Berichthistorie")}
+    <div id="chat-${m.id}" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding-right:4px">${bubbles}</div>
+    <div style="display:flex;gap:7px;flex-shrink:0">
+      <input class="form-input" id="reply-input" placeholder="Verstuur bericht naar verzekeraar..." onkeydown="if(event.key==='Enter')sendReply('${m.id}')"/>
+      <button class="btn btn-primary" onclick="sendReply('${m.id}')">↗</button>
+    </div>`;
+}
+function changeStatus(id,s){
+  STATE.messages=STATE.messages.map(m=>m.id===id?{...m,status:s}:m);
+  renderNav();
+}
+function sendReply(id){
+  const inp=document.getElementById("reply-input");
+  if(!inp||!inp.value.trim())return;
+  const msg=STATE.messages.find(m=>m.id===id);
+  if(!msg)return;
+  msg.berichten.push({van:"Intermediair",tekst:inp.value,ts:new Date().toLocaleString("nl-NL")});
+  STATE.messages=[...STATE.messages];
+  renderContent();
+}
+
+// ─── AANVRAAG ──────────────────────────────────────────────
+function pageAanvraag(){
+  const brOpts=BRANCHES.map(b=>({v:b.code,l:`${b.code} – ${b.label}`}));
+  return `<div class="card" style="max-width:860px">
+    <div class="flex-gap mb-20">
+      <div style="background:#F4671F;border-radius:7px;padding:8px 11px;font-size:20px">📋</div>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">Nieuwe Aanvraag</div>
+      <div class="t-muted t-sm">AFD 2.0-aanvraagbericht (simulatie)</div></div>
+      <div style="margin-left:auto"><select class="form-select" style="width:auto;color:#F4671F;border-color:#F4671F;font-size:11px;font-weight:700;padding:4px 10px">
+        <option>AFD 2.0</option><option>AFD 1.0</option></select></div>
+    </div>
+    <div class="grid-2">
+      <div>
+        ${sectionTitle("Klantgegevens")}
+        ${inputF("a-naam","Klantnaam / Bedrijfsnaam","text","Naam verzekeringnemer","",true)}
+        ${inputF("a-bsn","BSN / KvK-nummer","text","BSN: 123456789")}
+        ${inputF("a-geb","Geboortedatum","date")}
+        ${inputF("a-straat","Straat + Huisnummer","text","Hoofdstraat 1")}
+        <div class="grid-2" style="gap:10px">
+          ${inputF("a-pc","Postcode","text","1234 AB")}
+          ${inputF("a-stad","Woonplaats","text","Amsterdam")}
+        </div>
+      </div>
+      <div>
+        ${sectionTitle("Verzekeringsgegevens")}
+        ${inputF("a-mij","Verzekeraar","text","",""  ,true,VERZEKERAARS)}
+        ${inputF("a-branch","Branche (AFD)","text","","",true,brOpts)}
+        <div class="grid-2" style="gap:10px">
+          ${inputF("a-ing","Ingangsdatum","date")}
+          ${inputF("a-eind","Einddatum","date")}
+        </div>
+        ${inputF("a-premie","Jaarpremie (€)","text","0.00")}
+        <div class="grid-2" style="gap:10px">
+          ${inputF("a-er","Eigen Risico (€)","text","250","250")}
+          ${inputF("a-vb","Verzekerd Bedrag (€)","text","0")}
+        </div>
+      </div>
+    </div>
+    ${textareaF("a-omschr","Dekkingsomschrijving / bijzonderheden","Beschrijf de gewenste dekking...",3)}
+    ${textareaF("a-toel","Aanvullende toelichting","Extra informatie voor de verzekeraar...",2)}
+    <div id="a-err" class="alert-err hidden"></div>
+    <div id="a-ok" class="alert-ok hidden"></div>
+    <div style="display:flex;gap:9px;margin-top:6px">
+      <button class="btn btn-primary" onclick="submitAanvraag()">📤 Indienen (simulatie)</button>
+      <button class="btn btn-ghost" onclick="toggleXml('a-xml','NIEUW_CONTRACT',{})">Bekijk AFD XML</button>
+    </div>
+    <div id="a-xml" class="hidden"></div>
+  </div>`;
+}
+function submitAanvraag(){
+  const naam=getVal("a-naam"),mij=getVal("a-mij"),br=getVal("a-branch");
+  if(!naam||!mij||!br){showErr("a-err","Vul minimaal Klantnaam *, Verzekeraar * en Branche * in.");return;}
+  hideErr("a-err");
+  const branch=BRANCHES.find(b=>b.code===br);
+  addMessage({type:"AANVRAAG",status:"Nieuw",verzekeraar:mij,klant:naam,bsn_kvk:getVal("a-bsn"),branche:br,onderwerp:`${branch?.label||br} – Nieuwe aanvraag`,premie:getVal("a-premie"),polisNr:"—"});
+  showOk("a-ok","✅ Aanvraag vastgelegd (simulatie — niet verzonden)");
+  setTimeout(()=>navigate("berichten"),1800);
+}
+
+// ─── SCHADEMELDING ─────────────────────────────────────────
+function pageSchade(){
+  const polOpts=STATE.polissen.map(p=>({v:p.id,l:`${p.id} – ${p.omschrijving} (${p.klant})`}));
+  const schadeTypes=["Aanrijding / Botsing","Brand / Brandschade","Storm / Hagel","Waterschade","Inbraak / Diefstal","Vandalisme","Glasschade","Aansprakelijkheid derden","Bedrijfsschade","Technische storing","Overige schade"];
+  return `<div class="card" style="max-width:860px">
+    <div class="flex-gap mb-16">
+      <div style="background:#2C0D0D;border:1px solid #E84545;border-radius:7px;padding:8px 11px;font-size:20px">⚠️</div>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">Schademelding</div>
+      <div class="t-muted t-sm">Schadebericht conform AFD 2.0 – Schadedossier aanmaken</div></div>
+    </div>
+    <div class="alert-red mb-16">⚡ Conform AFD-Handboek: Schadedossier = Polis/Onderdeel → Schade Incident → Schade/Verlies → Financiële informatie</div>
+    <div class="grid-2">
+      <div>
+        ${sectionTitle("Schadedossier")}
+        ${inputF("s-polis","Polisnummer","text","","",true,polOpts)}
+        <div id="s-polisinfo"></div>
+        ${inputF("s-type","Type schade","text","","",true,schadeTypes)}
+        ${inputF("s-datum","Schadedatum","date","","",true)}
+        ${inputF("s-locatie","Schadelocatie","text","Adres of locatie")}
+        ${textareaF("s-omschr","Omschrijving incident","Hoe is de schade ontstaan?",3)}
+      </div>
+      <div>
+        ${sectionTitle("Betrokkenen & financieel")}
+        <div class="grid-2" style="gap:10px">
+          ${inputF("s-derden","Derden betrokken?","text","","Nee",false,["Ja","Nee"])}
+          ${inputF("s-politie","Politie ingeschakeld?","text","","Nee",false,["Ja","Nee"])}
+        </div>
+        ${inputF("s-derdeninfo","Gegevens derden (indien ja)","text","Naam, adres, kenteken...")}
+        ${inputF("s-pvnr","Politierapportnummer (indien ja)","text","PV-nummer")}
+        ${inputF("s-est","Geschatte schade (€)","text","0")}
+        ${inputF("s-er","Eigen risico (€)","text","0")}
+        ${textareaF("s-bijz","Bijzonderheden","Getuigen, foto's, overige info...",3)}
+        <div class="card-dark">
+          <div class="label mb-8">SCHADESTROOM (AFD 2.0)</div>
+          ${["Schademelding ontvangen","Schadedossier aangemaakt","Expert aanstellen","Expertise rapport","Schade-uitkering"].map((stap,i)=>
+            `<div class="schadestap"><div class="schadestap-dot" style="background:${i===0?"#F4671F":"#1E3560"}">${i+1}</div>
+            <span style="color:${i===0?"#F8F9FC":"#8A9BBF"};font-size:11px">${stap}</span></div>`).join("")}
+        </div>
+      </div>
+    </div>
+    <div id="s-err" class="alert-err hidden"></div>
+    <div id="s-ok" class="alert-ok hidden"></div>
+    <div style="display:flex;gap:9px;margin-top:8px">
+      <button class="btn btn-danger" onclick="submitSchade()">⚠️ Schade melden (simulatie)</button>
+      <button class="btn btn-ghost" onclick="toggleXml('s-xml','SCHADEMELDING',{verwCode:'09'})">Bekijk AFD XML</button>
+    </div>
+    <div id="s-xml" class="hidden"></div>
+  </div>`;
+}
+function submitSchade(){
+  const polis=getVal("s-polis"),type=getVal("s-type"),datum=getVal("s-datum");
+  if(!polis||!type||!datum){showErr("s-err","Vul minimaal Polisnummer *, Type schade * en Schadedatum * in.");return;}
+  hideErr("s-err");
+  const pol=STATE.polissen.find(p=>p.id===polis);
+  addMessage({type:"SCHADE",status:"Nieuw",verzekeraar:pol?.verzekeraar||"—",klant:pol?.klant||"—",bsn_kvk:"—",branche:pol?.branche||"—",onderwerp:`${type} – ${datum}`,polisNr:polis});
+  showOk("s-ok","✅ Schademelding vastgelegd (simulatie — niet verzonden)");
+  setTimeout(()=>navigate("berichten"),1800);
+}
+
+// ─── OFFERTE ───────────────────────────────────────────────
+function pageOfferte(){
+  const brOpts=BRANCHES.map(b=>({v:b.code,l:`${b.code} – ${b.label}`}));
+  const vrCheckboxes=VERZEKERAARS.slice(0,10).map(v=>`
+    <div onclick="toggleVerzekr(this,'${v.replace(/'/g,"\\'")}',event)" style="background:#0A1830;border:1px solid #1E3560;border-radius:6px;padding:8px 11px;cursor:pointer;display:flex;align-items:center;gap:7px" data-vr="${v}">
+      <div style="width:14px;height:14px;border-radius:3px;background:#1E3560;flex-shrink:0" class="vr-check"></div>
+      <span style="color:#C8D4EC;font-size:11px">${v.split(" /")[0].split(" ").slice(0,2).join(" ")}</span>
+    </div>`).join("");
+  return `<div class="card" style="max-width:860px">
+    <div class="flex-gap mb-20">
+      <div style="background:#1A1030;border:1px solid #A78BFA;border-radius:7px;padding:8px 11px;font-size:20px">💼</div>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">Offerte aanvragen</div>
+      <div class="t-muted t-sm">Offerteaanvraag bij meerdere verzekeraars (simulatie)</div></div>
+    </div>
+    <div class="grid-2">
+      <div>
+        ${sectionTitle("Klant & Verzekering")}
+        ${inputF("of-naam","Klantnaam","text","Naam klant","",true)}
+        ${inputF("of-bsn","BSN / KvK","text","Identificatienummer")}
+        ${inputF("of-br","Branche","text","","",true,brOpts)}
+        ${inputF("of-ing","Gewenste ingangsdatum","date")}
+        ${inputF("of-dek","Gewenste dekking (€)","text","0")}
+        ${inputF("of-er","Eigen risico voorkeur (€)","text","250","250")}
+        ${textareaF("of-bijz","Bijzonderheden / risicoaspecten","",2)}
+      </div>
+      <div>
+        ${sectionTitle("Verzekeraars selecteren")}
+        <div class="t-muted t-sm mb-8">Selecteer voor vergelijking:</div>
+        <div class="grid-2 mb-12" style="gap:7px" id="vr-grid">${vrCheckboxes}</div>
+        <div id="vr-summary" class="alert-info">Nog geen verzekeraars geselecteerd</div>
+      </div>
+    </div>
+    <div id="of-err" class="alert-err hidden"></div>
+    <div id="of-ok" class="alert-ok hidden"></div>
+    <div style="display:flex;gap:9px;margin-top:8px">
+      <button class="btn btn-purple" onclick="submitOfferte()">💼 Offerte(s) aanvragen</button>
+      <button class="btn btn-ghost" onclick="toggleXml('of-xml','OFFERTE_AANVRAAG',{verwCode:'06'})">Bekijk AFD XML</button>
+    </div>
+    <div id="of-xml" class="hidden"></div>
+  </div>`;
+}
+let selectedVr=[];
+function toggleVerzekr(el,v,e){
+  e.stopPropagation();
+  const idx=selectedVr.indexOf(v);
+  if(idx>=0){selectedVr.splice(idx,1);el.style.borderColor="#1E3560";el.querySelector(".vr-check").style.background="#1E3560";}
+  else{selectedVr.push(v);el.style.borderColor="#F4671F";el.querySelector(".vr-check").style.background="#F4671F";}
+  const s=document.getElementById("vr-summary");
+  if(s) s.innerHTML=selectedVr.length?`✅ <strong>${selectedVr.length}</strong> verzekeraar(s) geselecteerd — offerte verzoeken worden gelijktijdig verstuurd`:"Nog geen verzekeraars geselecteerd";
+}
+function submitOfferte(){
+  const naam=getVal("of-naam"),br=getVal("of-br");
+  if(!naam||!br){showErr("of-err","Vul minimaal Klantnaam * en Branche * in.");return;}
+  hideErr("of-err");
+  const branch=BRANCHES.find(b=>b.code===br);
+  addMessage({type:"OFFERTE",status:"Offerte",verzekeraar:selectedVr.join(", ")||"—",klant:naam,bsn_kvk:getVal("of-bsn"),branche:br,onderwerp:`${branch?.label||br} – Offerte aangevraagd`,polisNr:"—"});
+  showOk("of-ok",`✅ Offerteaanvraag voor ${selectedVr.length||1} verzekeraar(s) vastgelegd (simulatie — niet verzonden)`);
+  selectedVr=[];setTimeout(()=>navigate("berichten"),1800);
+}
+
+// ─── MUTATIE ───────────────────────────────────────────────
+function pageMutatie(){
+  const polOpts=STATE.polissen.map(p=>({v:p.id,l:`${p.id} – ${p.omschrijving}`}));
+  const mutatieTypes=["Adreswijziging","Dekking verhogen","Dekking verlagen","Object wijziging","Betalingswijze wijziging","Intermediair wijziging","Overige mutatie"];
+  return `<div class="card" style="max-width:860px">
+    <div class="flex-gap mb-20">
+      <div style="background:#1A3A6B;border-radius:7px;padding:8px 11px;font-size:20px">✏️</div>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">Mutatie aanvragen</div>
+      <div class="t-muted t-sm">Wijzigingsbericht conform AFD 1.0 / AFD 2.0</div></div>
+    </div>
+    <div class="grid-2">
+      <div>
+        ${sectionTitle("Polisselectie & Mutatietype")}
+        ${inputF("m-polis","Polisnummer","text","","",true,polOpts)}
+        ${inputF("m-type","Type Mutatie","text","","",true,mutatieTypes)}
+        <div id="m-fields">
+          ${inputF("m-straat","Nieuwe straat + nr","text","Nieuwe straat 10")}
+          <div class="grid-2" style="gap:10px">${inputF("m-pc","Postcode","text","5678 CD")}${inputF("m-stad","Woonplaats","text","Rotterdam")}</div>
+          ${inputF("m-dekcode","Dekkingscode","text","bv. 1201")}
+          ${inputF("m-vb","Nieuw verzekerd bedrag (€)","text","0")}
+          ${inputF("m-er","Nieuw eigen risico (€)","text","250")}
+        </div>
+        ${inputF("m-premie","Nieuwe premie (€)","text","0.00")}
+        ${textareaF("m-toel","Toelichting bij mutatie","Reden en details...",3)}
+      </div>
+      <div>
+        ${sectionTitle("AFD Verwerkingscodes")}
+        ${[["01","Nieuw contract"],["02","Mutatie"],["03","Prolongatie"],["04","Royement"],["05","Herstelindicatie"],["06","Offerte"],["07","Afwijzing"],["08","Acceptatie"],["09","Schademelding"]].map(([c,l])=>
+          `<div class="card-dark mb-8" style="display:flex;gap:10px"><span style="color:#F4671F;font-family:'Courier New',monospace;font-weight:700">${c}</span><span class="t-sm">${l}</span></div>`).join("")}
+        <div class="alert-info mt-10">✅ Bij mutatiebevestigingen is het conform AFD-Handboek toegestaan complete polissen uit te wisselen. Verwerkingscode 02 automatisch meegezonden.</div>
+      </div>
+    </div>
+    <div id="m-err" class="alert-err hidden"></div>
+    <div id="m-ok" class="alert-ok hidden"></div>
+    <div style="display:flex;gap:9px;margin-top:8px">
+      <button class="btn btn-primary" onclick="submitMutatie()">📤 Mutatie verzenden</button>
+      <button class="btn btn-ghost" onclick="toggleXml('m-xml','MUTATIE',{verwCode:'02'})">Bekijk AFD XML</button>
+    </div>
+    <div id="m-xml" class="hidden"></div>
+  </div>`;
+}
+function submitMutatie(){
+  const polis=getVal("m-polis"),type=getVal("m-type");
+  if(!polis||!type){showErr("m-err","Selecteer een Polisnummer * en Type Mutatie *.");return;}
+  hideErr("m-err");
+  const pol=STATE.polissen.find(p=>p.id===polis);
+  addMessage({type:"MUTATIE",status:"Nieuw",verzekeraar:pol?.verzekeraar||"—",klant:pol?.klant||"—",bsn_kvk:"—",branche:pol?.branche||"—",onderwerp:`${polis} – ${type}`,polisNr:polis});
+  showOk("m-ok","✅ Mutatiebericht vastgelegd — verwerkingscode 02 (simulatie — niet verzonden)");
+  setTimeout(()=>navigate("berichten"),1800);
+}
+
+// ─── PROLONGATIE ───────────────────────────────────────────
+function pageProlongatie(){
+  const actief=STATE.polissen.filter(p=>p.status==="Actief");
+  const cards=actief.map(p=>`<div class="card-dark mb-8" onclick="selectProlPolis('${p.id}')" id="prol-${p.id}" style="cursor:pointer;transition:border-color .15s;border:1px solid #1E3560;border-radius:8px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+      <div style="color:#F8F9FC;font-size:12px;font-weight:600">${p.omschrijving}</div>
+      <div style="color:#E8A830;font-weight:700;font-size:12px">${fmtEur(p.premie)}/jr</div>
+    </div>
+    <div class="t-muted t-xs">${p.klant} · ${p.id}</div>
+    <div class="t-muted t-xs">📅 Eindigt: ${p.eindDatum}</div>
+  </div>`).join("");
+  return `<div class="card" style="max-width:860px">
+    <div class="flex-gap mb-16">
+      <div style="background:#2A1E0A;border:1px solid #E8A830;border-radius:7px;padding:8px 11px;font-size:20px">🔄</div>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">Prolongatie</div>
+      <div class="t-muted t-sm">Prolongatiebericht AFD 1.0 · NVGA-standaard · Tarieven opvragen via VolmachtBeheer</div></div>
+    </div>
+    <div class="alert-gold mb-16">⚡ In toenemende mate worden tijdens het prolongeren tarieven opgevraagd bij verzekeraars — rechtstreeks of via VolmachtBeheer (NVGA-standaard).</div>
+    ${sectionTitle("Actieve polissen — klik om te selecteren")}
+    <div class="grid-2 mb-16">${cards}</div>
+    <div class="card mb-16" id="prol-form" style="display:none">
+      ${sectionTitle("Prolongatiegegevens")}
+      <div class="grid-2" style="gap:12px">
+        ${inputF("prol-premie","Nieuwe jaarpremie (€)","text","0.00")}
+        ${inputF("prol-eind","Nieuwe einddatum","date")}
+      </div>
+      ${textareaF("prol-notities","Tariefwijzigingen / opmerkingen","Beschrijf wijzigingen voor de nieuwe looptijd...",2)}
+    </div>
+    <input type="hidden" id="prol-selected" value=""/>
+    <div id="prol-err" class="alert-err hidden"></div>
+    <div id="prol-ok" class="alert-ok hidden"></div>
+    <div style="display:flex;gap:9px">
+      <button class="btn btn-gold" onclick="submitProlongatie()">🔄 Prolongatie bevestigen</button>
+      <button class="btn btn-ghost" onclick="toggleXml('prol-xml','PROLONGATIE',{verwCode:'03'})">Bekijk AFD XML</button>
+    </div>
+    <div id="prol-xml" class="hidden"></div>
+  </div>`;
+}
+function selectProlPolis(id){
+  document.querySelectorAll("[id^='prol-']").forEach(el=>{if(el.tagName==="DIV"&&el.id.startsWith("prol-NN")||el.id.startsWith("prol-ASR")||el.id.startsWith("prol-ALZ")||el.id.startsWith("prol-UNI")||el.id.startsWith("prol-ACH"))el.style.borderColor="#1E3560";});
+  const el=document.getElementById("prol-"+id);if(el){el.style.borderColor="#E8A830";}
+  document.getElementById("prol-selected").value=id;
+  const form=document.getElementById("prol-form");if(form)form.style.display="block";
+  const p=STATE.polissen.find(x=>x.id===id);
+  if(p){const pr=document.getElementById("prol-premie");if(pr)pr.value=p.premie;}
+}
+function submitProlongatie(){
+  const id=getVal("prol-selected");
+  if(!id){showErr("prol-err","Selecteer eerst een polis uit de lijst hierboven.");return;}
+  hideErr("prol-err");
+  const pol=STATE.polissen.find(p=>p.id===id);
+  addMessage({type:"PROLONGATIE",status:"Prolongatie",verzekeraar:pol?.verzekeraar||"—",klant:pol?.klant||"—",bsn_kvk:"—",branche:pol?.branche||"—",onderwerp:`${id} – Prolongatie ${new Date().getFullYear()+1}`,polisNr:id,premie:getVal("prol-premie")?`€ ${getVal("prol-premie")} / jaar`:"—"});
+  showOk("prol-ok","✅ Prolongatie vastgelegd (simulatie — niet verzonden)");
+  setTimeout(()=>navigate("berichten"),1800);
+}
+
+// ─── ROYEMENT ──────────────────────────────────────────────
+function pageRoyement(){
+  const polOpts=STATE.polissen.map(p=>({v:p.id,l:`${p.id} – ${p.omschrijving} (${p.klant})`}));
+  const redenen=["Klant opzegging","Premie niet betaald","Risico niet meer acceptabel","Verhuis buiten dekkingsgebied","Dubbele verzekering","Overlijden verzekerde","Bedrijfsbeëindiging","Overige reden"];
+  return `<div class="card" style="max-width:860px">
+    <div class="flex-gap mb-16">
+      <div style="background:#1A0808;border:1px solid #E84545;border-radius:7px;padding:8px 11px;font-size:20px">🚫</div>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">Royement</div>
+      <div class="t-muted t-sm">Royementsbericht conform AFD 2.0 – Verwerkingscode 04</div></div>
+    </div>
+    <div class="alert-err mb-16">⚠️ WAARSCHUWING: Een royement beëindigt de verzekering definitief. Zorg dat u toestemming heeft van de verzekeringnemer.</div>
+    <div class="grid-2">
+      <div>
+        ${sectionTitle("Royementsgegevens")}
+        ${inputF("r-polis","Polisnummer","text","","",true,polOpts)}
+        ${inputF("r-reden","Royementsreden","text","","",true,redenen)}
+        ${inputF("r-datum","Royementsdatum","date")}
+        ${textareaF("r-toel","Toelichting","Aanvullende informatie...",3)}
+      </div>
+      <div>
+        ${sectionTitle("AFD Royement info")}
+        ${[["📋","Verwerkingscode","04 – Royement"],["📡","Protocol","AFD 2.0 (simulatie)"],["⏱️","Verwerking","Binnen 1 werkdag"],["✉️","Bevestiging","GRS-bericht van verzekeraar"]].map(([ic,k,v])=>
+          `<div class="card-dark mb-8" style="display:flex;gap:10px"><span>${ic}</span><div><div class="label">${k}</div><div class="t-sm">${v}</div></div></div>`).join("")}
+      </div>
+    </div>
+    <div id="r-err" class="alert-err hidden"></div>
+    <div id="r-ok" class="alert-ok hidden"></div>
+    <div id="r-confirm" class="hidden" style="background:#1A0808;border:1px solid #E8454544;border-radius:9px;padding:16px;margin-top:12px">
+      <div style="color:#E84545;font-size:13px;font-weight:700;margin-bottom:8px">⚠️ Bevestig royement</div>
+      <div style="color:#C8D4EC;font-size:12px;margin-bottom:12px">Weet u zeker dat u polis <strong id="r-confirm-polis"></strong> wilt royeren? Dit kan niet ongedaan worden gemaakt.</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-danger" onclick="doRoyement()">Ja, royeer definitief</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('r-confirm').classList.add('hidden')">Annuleer</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:9px;margin-top:8px">
+      <button class="btn btn-danger" onclick="submitRoyement()">🚫 Royement indienen</button>
+      <button class="btn btn-ghost" onclick="toggleXml('r-xml','ROYEMENT',{verwCode:'04'})">Bekijk AFD XML</button>
+    </div>
+    <div id="r-xml" class="hidden"></div>
+  </div>`;
+}
+function submitRoyement(){
+  const polis=getVal("r-polis"),reden=getVal("r-reden");
+  if(!polis||!reden){showErr("r-err","Selecteer een Polisnummer * en Royementsreden *.");return;}
+  hideErr("r-err");
+  const conf=document.getElementById("r-confirm");
+  const cp=document.getElementById("r-confirm-polis");
+  if(conf&&cp){cp.textContent=polis;conf.classList.remove("hidden");}
+}
+function doRoyement(){
+  const polis=getVal("r-polis"),reden=getVal("r-reden");
+  const pol=STATE.polissen.find(p=>p.id===polis);
+  addMessage({type:"ROYEMENT",status:"Geroyeerd",verzekeraar:pol?.verzekeraar||"—",klant:pol?.klant||"—",bsn_kvk:"—",branche:pol?.branche||"—",onderwerp:`${polis} – Royement (${reden})`,polisNr:polis});
+  document.getElementById("r-confirm").classList.add("hidden");
+  showOk("r-ok","✅ Royementsbericht vastgelegd — verwerkingscode 04 (simulatie — niet verzonden)");
+  setTimeout(()=>navigate("berichten"),1800);
+}
+
+// ─── POLISOVERZICHT ────────────────────────────────────────
+function pagePolissen(){
+  const tot=STATE.polissen.reduce((a,p)=>a+p.premie,0);
+  const stats=`<div class="grid-4 mb-16">
+    ${[["📋","Totaal polissen",STATE.polissen.length,"#F8F9FC"],["✅","Actieve polissen",STATE.polissen.filter(p=>p.status==="Actief").length,"#26B879"],
+       ["💶","Totale portefeuille","€ "+tot.toLocaleString("nl-NL"),"#E8A830"],["⏳","In behandeling",STATE.polissen.filter(p=>p.status==="In behandeling").length,"#F4A200"]].map(([ic,l,v,c])=>
+      `<div class="stat-card"><div class="stat-label">${ic} ${l}</div><div class="stat-value" style="color:${c}">${v}</div></div>`).join("")}
+  </div>`;
+  const rows=STATE.polissen.map((p,i)=>`<tr>
+    <td><span class="polis-id">${p.id}</span></td>
+    <td style="color:#F8F9FC;font-size:12px">${p.klant}</td>
+    <td style="color:#C8D4EC;font-size:11px">${p.omschrijving}</td>
+    <td style="color:#C8D4EC;font-size:11px">${p.verzekeraar.split(" /")[0]}</td>
+    <td style="color:#E8A830;font-weight:700;font-size:12px">${fmtEur(p.premie)}</td>
+    <td>${badge(p.status)}</td>
+    <td style="color:#8A9BBF;font-size:11px">${p.eindDatum}</td>
+  </tr>`).join("");
+  return `${stats}<div class="tbl-wrap"><table class="tbl">
+    <thead><tr>${["Polisnummer","Klant","Verzekering","Verzekeraar","Premie/jaar","Status","Einddatum"].map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ─── KLANTENBEHEER ─────────────────────────────────────────
+function pageKlanten(){
+  const list=STATE.klanten.map(k=>`<div class="msg-item" onclick="showKlant('${k.id}')">
+    <div style="display:flex;gap:9px;align-items:center">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#F4671F44,#1A3566);display:flex;align-items:center;justify-content:center;color:#F8F9FC;font-weight:800;font-size:13px;flex-shrink:0">${k.naam[0]}</div>
+      <div style="flex:1;min-width:0"><div class="msg-subject">${k.naam}</div><div class="msg-meta">${k.type} · ${k.id}</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:5px">
+      <span class="t-muted t-xs">📋 ${STATE.polissen.filter(p=>p.klantId===k.id).length} polissen</span>
+    </div>
+  </div>`).join("");
+  const detail=STATE.selectedKlant?renderKlantDetail(STATE.klanten.find(k=>k.id===STATE.selectedKlant)):`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#8A9BBF"><div style="font-size:48px;opacity:.15;margin-bottom:12px">👤</div><div style="font-size:14px;font-weight:600;color:#C8D4EC">Klantenbeheer</div><div class="t-sm mt-10">Selecteer een klant</div></div>`;
+  return `<div style="display:flex;gap:14px;height:calc(100vh - 110px)">
+    <div style="width:280px;flex-shrink:0;overflow-y:auto">${list}</div>
+    <div class="card" style="flex:1;overflow:auto">${detail}</div>
+  </div>`;
+}
+function showKlant(id){STATE.selectedKlant=id;renderContent();}
+function renderKlantDetail(k){
+  const pols=STATE.polissen.filter(p=>p.klantId===k.id);
+  return `<div>
+    <div class="flex-gap mb-16">
+      <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#F4671F,#FF8C4A);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px">${k.naam[0]}</div>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">${k.naam}</div><div class="t-muted t-sm">${k.type} · ${k.id}</div></div>
+    </div>
+    <div class="grid-2 mb-16">
+      ${[["BSN / KvK",k.bsn_kvk],["Email",k.email],["Telefoon",k.tel],["Adres",k.adres]].map(([label,v])=>`<div class="card-dark"><div class="label">${label}</div><div style="color:#F8F9FC;font-size:12px">${v||"—"}</div></div>`).join("")}
+    </div>
+    ${sectionTitle("Polissen van "+k.naam)}
+    ${pols.map(p=>`<div class="card-dark mb-8" style="display:flex;gap:10px">
+      <div style="flex:1"><div style="color:#F8F9FC;font-size:12px;font-weight:600">${p.omschrijving}</div>
+      <div class="t-muted t-xs">${p.id} · ${p.verzekeraar}</div></div>
+      <div style="text-align:right"><div style="color:#E8A830;font-weight:700;font-size:12px">${fmtEur(p.premie)}/jr</div>${badge(p.status)}</div>
+    </div>`).join("")||`<div class="t-muted t-sm">Geen polissen gevonden</div>`}
+  </div>`;
+}
+
+// ─── DOCUMENTEN ────────────────────────────────────────────
+const DOC_ICONS={"Polisblad":"📋","Expertiserapport":"🔍","Bevestiging":"✅","Dekkingsverklaring":"📄","Offerte":"💼","Schaderapport":"⚠️","Royeringsbericht":"🚫","Overig":"📁"};
+function pageDocs(){
+  const rows=STATE.docs.map(d=>`<tr>
+    <td><span style="font-size:16px">${DOC_ICONS[d.type]||"📁"}</span></td>
+    <td style="color:#F8F9FC;font-size:12px;font-weight:600">${d.naam}</td>
+    <td style="color:#C8D4EC;font-size:11px">${d.klant}</td>
+    <td class="polis-id">${d.polis}</td>
+    <td style="color:#8A9BBF;font-size:11px">${d.datum}</td>
+    <td style="color:#8A9BBF;font-size:11px">${d.size}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick="removeDoc('${d.id}')">✕ Verwijder</button></td>
+  </tr>`).join("");
+  return `<div>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <input class="form-input" placeholder="🔍  Zoek documenten..." style="flex:1"/>
+      <button class="btn btn-primary" onclick="addFakeDoc()">⬆️ Document uploaden</button>
+    </div>
+    <div style="border:2px dashed #1E3560;border-radius:9px;padding:20px;text-align:center;margin-bottom:16px;color:#8A9BBF;font-size:12px"
+      ondragover="event.preventDefault()" ondrop="event.preventDefault();addFakeDoc()">
+      📂 Sleep documenten hier naartoe of klik 'Document uploaden'<br><span style="font-size:10px;margin-top:4px;display:block">Ondersteund: PDF, DOCX, XML (AFD berichten), JPG</span>
+    </div>
+    <div class="tbl-wrap"><table class="tbl">
+      <thead><tr>${["","Bestandsnaam","Klant","Polis","Datum","Grootte",""].map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+function removeDoc(id){STATE.docs=STATE.docs.filter(d=>d.id!==id);renderContent();}
+function addFakeDoc(){
+  const types=["Polisblad","Expertiserapport","Offerte","Schaderapport"];
+  STATE.docs=[{id:"D"+Date.now(),naam:`Document-${Date.now()}.pdf`,type:types[Math.floor(Math.random()*types.length)],klant:"Demo klant",polis:"POL-DEMO",datum:new Date().toISOString().split("T")[0],size:"342 KB"},...STATE.docs];
+  renderContent();showToast("📁 Document geüpload","#26B879");
+}
+
+// ─── RAPPORTAGES ───────────────────────────────────────────
+function pageRapportages(){
+  const tot=STATE.polissen.reduce((a,p)=>a+p.premie,0);
+  const typeData=Object.keys(MSG_ICONS).map(t=>({type:t,count:STATE.messages.filter(m=>m.type===t).length}));
+  const maxCount=Math.max(...typeData.map(t=>t.count),1);
+  const statusData=[{s:"Nieuw",c:"#8A9BBF"},{s:"In behandeling",c:"#F4A200"},{s:"Goedgekeurd",c:"#26B879"},{s:"Prolongatie",c:"#E8A830"},{s:"Gemuteerd",c:"#FF8C4A"},{s:"Afgewezen",c:"#E84545"}].map(x=>({...x,count:STATE.messages.filter(m=>m.status===x.s).length})).filter(x=>x.count>0);
+  const maand=[3,5,4,6,7,5,8,6,9,7,8,4];
+  const MAANDEN=["Jan","Feb","Mrt","Apr","Mei","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
+  const stats=`<div class="grid-4 mb-16">
+    ${[["✉️","Totaal berichten",STATE.messages.length,"#F8F9FC"],["👥","Klanten",STATE.klanten.length,"#F4671F"],["💶","Portefeuille","€"+Math.round(tot/1000)+"k","#E8A830"],["✅","Actieve polissen",STATE.polissen.filter(p=>p.status==="Actief").length,"#26B879"]].map(([ic,l,v,c])=>
+      `<div class="stat-card"><div class="stat-label">${ic} ${l}</div><div class="stat-value" style="color:${c}">${v}</div></div>`).join("")}
+  </div>`;
+  const barChart=`<div class="card mb-16">
+    ${sectionTitle("Berichten per type")}
+    ${typeData.filter(t=>t.count>0).map(t=>`<div class="mb-8">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span class="t-sm">${MSG_ICONS[t.type]} ${MSG_LABELS[t.type]}</span><span style="color:#F8F9FC;font-size:12px;font-weight:700">${t.count}</span></div>
+      <div style="background:#0A1830;border-radius:4px;height:7px;overflow:hidden"><div style="background:linear-gradient(90deg,#F4671F,#FF8C4A);height:100%;width:${(t.count/maxCount)*100}%;border-radius:4px;transition:width .5s"></div></div>
+    </div>`).join("")}
+  </div>`;
+  const statusChart=`<div class="card mb-16">
+    ${sectionTitle("Status verdeling")}
+    ${statusData.map(s=>`<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+      <div style="width:9px;height:9px;border-radius:50%;background:${s.c};flex-shrink:0"></div>
+      <span class="t-sm" style="flex:1">${s.s}</span>
+      <span style="color:${s.c};font-size:13px;font-weight:700">${s.count}</span>
+      <span class="t-muted t-xs">(${Math.round(s.count/STATE.messages.length*100)}%)</span>
+    </div>`).join("")}
+  </div>`;
+  const volChart=`<div class="card mb-16">
+    ${sectionTitle("Berichtenvolume (voorbeelddata)")}
+    <div style="display:flex;align-items:flex-end;gap:6px;height:90px">
+      ${maand.map((v,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div class="t-xs t-muted">${v}</div>
+        <div style="width:100%;background:linear-gradient(180deg,#F4671F,#1A3566);border-radius:3px 3px 0 0;height:${(v/10)*85}px;min-height:4px"></div>
+        <div class="t-xs t-muted">${MAANDEN[i]}</div>
+      </div>`).join("")}
+    </div>
+  </div>`;
+  return `${stats}<div class="grid-2">${barChart}${statusChart}</div>${volChart}`;
+}
+
+// ─── SIVI PORTAAL ──────────────────────────────────────────
+function pageSivi(){
+  const tabs={ecosysteem:siviEcosysteem,standaarden:siviStandaarden,roadmap:siviRoadmap,aplaza:siviAplaza,branche:siviBranche};
+  const tabBar=`<div class="tab-bar">
+    ${[["ecosysteem","SIVI AFS Ecosysteem"],["standaarden","Standaarden"],["roadmap","Roadmap (stand 2025)"],["aplaza","APLAZA"],["branche","Branchecodes"]].map(([k,l])=>
+      `<button class="tab-btn${STATE.siviTab===k?" active":""}" onclick="STATE.siviTab='${k}';renderContent()">${l}</button>`).join("")}
+  </div>`;
+  const header=`<div class="card mb-16" style="background:linear-gradient(135deg,#0A1F3A,#0D2149)">
+    <div class="flex-gap">
+      <div style="width:48px;height:48px;background:linear-gradient(135deg,#F4671F,#E8A830);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🏛</div>
+      <div style="flex:1"><div style="color:#F8F9FC;font-size:17px;font-weight:800">SIVI — Standaardisatie Instituut Verzekeringsindustrie</div>
+      <div class="t-muted t-sm">Dé standaard voor berichtuitwisseling in de Nederlandse financiële dienstverlening · <span style="color:#F4671F">sivi.org</span></div></div>
+      <div style="display:flex;gap:8px">
+        ${[["AFD 1.0","#F4671F"],["AFD 2.0","#26B879"],["SIVI AFS","#E8A830"]].map(([l,c])=>
+          `<div style="background:#0A1830;border:1px solid ${c}44;border-radius:5px;padding:5px 10px;display:flex;align-items:center;gap:5px"><div class="dot-green" style="background:${c};box-shadow:0 0 6px ${c}"></div><span style="color:${c};font-size:10px;font-weight:700">${l}</span></div>`).join("")}
+      </div>
+    </div>
+  </div>`;
+  return header+tabBar+(tabs[STATE.siviTab]||siviEcosysteem)();
+}
+function siviEcosysteem(){
+  return `<div class="card mb-14">
+    ${sectionTitle("SIVI AFS — All Finance Standaard")}
+    <div style="color:#C8D4EC;font-size:13px;line-height:1.7;margin-bottom:14px"><strong style="color:#F8F9FC">SIVI AFS</strong> is de overkoepelende branchestandaard voor digitale gegevensuitwisseling in de Nederlandse verzekeringssector. Ontstaan in 1985 als Assurantie Data Netwerk (ADN), nu het digitale ecosysteem voor verzekeraars, serviceproviders, intermediairs en gevolmachtigden.</div>
+    <div class="grid-3">
+      ${[["📘","AFD (All Finance Datamodel)","Structuren en duizenden gegevenselementen. Entiteiten, attributen en codelijsten voor alle verzekeringsdomeinen."],
+         ["📋","AFD-definitie Standaard","Specificaties van een correct AFD-bericht. Verzekeraars beschrijven welke polisgegevens zij uitwisselen."],
+         ["🔌","SIVI AFS API-raamwerk","Gepubliceerd 2020. Gebaseerd op AFD 2.0 en REST/JSON. Vervangt het SOAP/XML protocol (2004)."]].map(([ic,t,d])=>
+        `<div class="card-dark"><div style="font-size:20px;margin-bottom:7px">${ic}</div><div style="color:#F8F9FC;font-size:12px;font-weight:700;margin-bottom:5px">${t}</div><div class="t-muted t-sm">${d}</div></div>`).join("")}
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      ${sectionTitle("Ketenpartijen")}
+      ${[["🏢","Verzekeraars","Productontwikkeling, acceptatie, premieberekening, schadeafhandeling"],
+         ["⚙️","Serviceproviders","Tussenliggende verwerkingspartijen, volmachtbeheer"],
+         ["👔","Intermediairs / Adviseurs","Aanvragen, muteren, prolongeren via APLAZA"],
+         ["📝","Gevolmachtigde agenten","Portefeuillebeheer via NVGA Protocol en UIV"],
+         ["💻","Softwareleveranciers","Assurantiesoftware, CRM-systemen, API-integraties"]].map(([ic,r,d])=>
+        `<div style="display:flex;gap:9px;padding:8px 0;border-bottom:1px solid #1E3560"><span style="font-size:14px">${ic}</span><div><div style="color:#F8F9FC;font-size:12px;font-weight:600">${r}</div><div class="t-muted t-xs">${d}</div></div></div>`).join("")}
+    </div>
+    <div class="card">
+      ${sectionTitle("SIVI Domeinen (strategie 2025)")}
+      ${[["Intermediaire Distributie","Provinciale polissen, APLAZA, Raadpleeg Polis API","#F4671F"],
+         ["Volmacht Distributie","UIV, NVGA Protocol 2.0, portefeuillebeheer","#E8A830"],
+         ["Pensioenen","UPA, VBPUO, pensioendomein verzekeraars","#A78BFA"],
+         ["SIVI AFS","Standaardenbeheer, AFD-releases, tooling","#26B879"]].map(([t,d,c])=>
+        `<div class="card-dark mb-8" style="border-left:3px solid ${c}"><div style="color:#F8F9FC;font-size:12px;font-weight:700">${t}</div><div class="t-muted t-xs">${d}</div></div>`).join("")}
+    </div>
+  </div>`;
+}
+function siviStandaarden(){
+  return `<div class="grid-2 mb-14">
+    <div class="card" style="border-color:#F4671F44">
+      <div class="flex-gap mb-12"><span style="font-size:24px">📘</span><div><div style="color:#F8F9FC;font-size:14px;font-weight:800">AFD 1.0</div><div style="color:#F4671F;font-size:10px;font-weight:700">Gegevensstandaard · XML/SOAP</div></div></div>
+      <div class="t-muted t-sm mb-12">Ontstaan 1990. Duizenden definities voor alle verzekeringsdomeinen. Legt datumnotatie en berichtstructuur vast.</div>
+      ${[["Protocol","AFD Webservice Protocol (SOAP/XML, 2004)"],["Berichttypen","Aanvraag, Mutatie, Prolongatie, Schade, Royement"],["Entiteiten","Verzekeringnemer, Verzekerde, Motorrijtuig"],["Verwerkingscodes","01 Nieuw · 02 Mutatie · 03 Prolongatie · 04 Roy."],["GRS","Gecertificeerde documentlevering"]].map(([k,v])=>
+        `<div class="info-row"><span class="t-muted t-xs">${k}</span><span class="t-sm">${v}</span></div>`).join("")}
+    </div>
+    <div class="card" style="border-color:#26B87944">
+      <div class="flex-gap mb-12"><span style="font-size:24px">📗</span><div><div style="color:#F8F9FC;font-size:14px;font-weight:800">AFD 2.0</div><div style="color:#26B879;font-size:10px;font-weight:700">Moderne standaard · REST/JSON · OpenAPI</div></div></div>
+      <div class="t-muted t-sm mb-12">Gebaseerd op REST/JSON via SIVI AFS API-raamwerk (2020). Ondersteunt pakket-, losse en verzamelpolissen.</div>
+      ${[["Protocol","SIVI AFS API-raamwerk (REST/JSON, 2020)"],["Nieuw 2025","JMESPath, AFD custom functions, JSON schema's"],["Pakketpolissen","Losse, verzamel- en pakketpolis volledig gedekt"],["HTTP-codes","Nieuwe codelijst voor OpenAPI-definities (okt. 2025)"],["Autocompletion","Tooling voor analisten en ontwikkelaars"]].map(([k,v])=>
+        `<div class="info-row"><span class="t-muted t-xs">${k}</span><span class="t-sm">${v}</span></div>`).join("")}
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card" style="border-color:#E8A83044">
+      <div class="flex-gap mb-12"><span style="font-size:24px">⚖️</span><div><div style="color:#F8F9FC;font-size:14px;font-weight:800">NVGA Protocol 2.0</div><div style="color:#E8A830;font-size:10px;font-weight:700">Volmacht · Polis + Schade + Financieel</div></div></div>
+      ${[["Bestanden","NVGA File Polis, File Schade, File Financieel"],["UIV","Uniforme Inrichting Volmachtketen (Excel-templates)"],["Werkmaterieel","Nieuwe UIV-template 2025"],["Geslacht","Attribuut verwijderd uit minimale definitie (2025)"],["Speciale risico's","Nieuw Protocol Speciale Risico's Volmacht (2025)"]].map(([k,v])=>
+        `<div class="info-row"><span class="t-muted t-xs">${k}</span><span class="t-sm">${v}</span></div>`).join("")}
+    </div>
+    <div class="card" style="border-color:#A78BFA44">
+      <div class="flex-gap mb-12"><span style="font-size:24px">🏆</span><div><div style="color:#F8F9FC;font-size:14px;font-weight:800">GRS Certificering</div><div style="color:#A78BFA;font-size:10px;font-weight:700">Gecertificeerde documentlevering</div></div></div>
+      ${[["Doel","Geautomatiseerde verwerking documenten"],["Aanduiding","TP (intermediair) of VP (verzekeringnemer)"],["Reactie","Per document J/N aangeven"],["Voordeel","Besparing 5 min/document, 10 min/transactie"],["Certificering","Sinds eind 2019 via SIVI"]].map(([k,v])=>
+        `<div class="info-row"><span class="t-muted t-xs">${k}</span><span class="t-sm">${v}</span></div>`).join("")}
+    </div>
+  </div>`;
+}
+function siviRoadmap(){
+  return `<div class="card mb-14">
+    <div class="flex-gap mb-12">
+      <div style="background:#2A1E0A;border:1px solid #E8A83044;border-radius:9px;padding:10px 14px;font-size:26px">🗺</div>
+      <div><div style="color:#F8F9FC;font-size:15px;font-weight:800">Roadmap Intermediaire Distributie 2024/2025</div>
+      <div class="t-muted t-sm">Stand voorjaar 2025 (versie 1.1) · ter informatie; raadpleeg SIVI voor de actuele roadmap</div>
+      <div style="color:#C8D4EC;font-size:12px;margin-top:6px;line-height:1.6">De Roadmap geeft ketenpartijen inzicht in doelstellingen, ambities en tijdlijnen. SIVI AFS als basis voor het digitale ecosysteem.</div></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    ${[["🔍","Raadpleeg Polis (hoogste prioriteit)","#F4671F",["Sector-breed initiatief 'Kopgroep Raadpleeg Polis'","API voor digitale raadpleging provinciale polissen","20 partijen al aangesloten (april 2025)","REST/JSON · AFD 2.0 · on demand"]],
+       ["📋","AFD-definitie Registratie Polis","#26B879",["Fors uitgebreid 2025","Verzekeraars specificeren polisgegevens","Systeemhuizen richten polisschermen in","Nh1816: eerste implementatie, brede uitrol"]],
+       ["🏷","SBI 2025 / SBIA25","#E8A830",["CBS herziet volledig Standaard Bedrijfsindeling","KvK doorvoer nieuwe coderingen: september 2025","SIVI beheert SBIAFD-uitbreidingslijst","Essentieel voor acceptatie zakelijke verzekeringen"]],
+       ["⚡","Open Insurance & FIDA (~2027)","#A78BFA",["Financial Data Act vergelijkbaar met PSD2","Verplichte datadeling ~2027","SIVI AFS positioneert als basis Open Insurance","Kwantitatieve baten concreter gemaakt 2025"]]].map(([ic,t,c,items])=>
+      `<div class="card mb-10">
+        <div class="flex-gap mb-10"><span style="font-size:18px">${ic}</span><div style="color:#F8F9FC;font-size:12px;font-weight:700;flex:1">${t}</div><div style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0"></div></div>
+        ${items.map(item=>`<div style="display:flex;gap:7px;padding:3px 0;border-bottom:1px solid #1E3560"><span style="color:${c};font-size:9px;margin-top:3px">▸</span><span class="t-sm">${item}</span></div>`).join("")}
+      </div>`).join("")}
+  </div>`;
+}
+function siviAplaza(){
+  return `<div class="card mb-14" style="background:linear-gradient(135deg,#0A1830,#0D2149)">
+    <div class="flex-gap mb-12">
+      <span style="font-size:28px">🔗</span>
+      <div><div style="color:#F8F9FC;font-size:16px;font-weight:800">APLAZA</div>
+      <div class="t-muted t-sm">Digitaal verbonden met 50+ verzekeraars en serviceproviders · ADN / TIME netwerk</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px"><div class="dot-green"></div><span style="color:#26B879;font-size:11px;font-weight:700">Verbonden</span></div>
+    </div>
+    <div class="grid-4">
+      ${[["Verzekeraars","15 actief","#26B879"],["Transacties/dag","~400","#F4671F"],["Tijdsbesparing","5 min/doc","#E8A830"],["GRS","documentlevering","#A78BFA"]].map(([l,v,c])=>
+        `<div class="card-dark" style="text-align:center"><div style="color:${c};font-size:17px;font-weight:800">${v}</div><div class="t-muted t-xs">${l}</div></div>`).join("")}
+    </div>
+  </div>
+  <div class="card mb-14">
+    ${sectionTitle("Aangesloten verzekeraars (actief)")}
+    <div class="grid-5">
+      ${VERZEKERAARS.map(v=>`<div class="card-dark" style="display:flex;align-items:center;gap:5px"><div class="dot-green" style="animation:none"></div><span class="t-sm" style="color:#C8D4EC">${v.split(" /")[0].split(" ").slice(0,2).join(" ")}</span></div>`).join("")}
+    </div>
+  </div>
+  <div class="card">
+    ${sectionTitle("Beschikbare APLAZA transacties")}
+    <div class="grid-3">
+      ${[["📋","Aanvraag","Nieuw contract via AFD 2.0"],["✏️","Mutatie","Wijziging lopende polis"],["🔄","Prolongatie","Verlenging + tarieven opvragen"],["⚠️","Schademelding","Schadedossier aanmaken"],["💼","Offerte","Tarieven bij meerdere mijen"],["🚫","Royement","Beëindigen verzekering"],["🔍","Raadpleeg Polis","Live raadpleging (nieuw 2025)"],["✅","GRS Documenten","Polisblad, nota, bevestiging"],["📊","Volmachtrapportage","NVGA Protocol 2.0"]].map(([ic,t,d])=>
+        `<div class="card-dark" style="display:flex;gap:9px"><span style="font-size:16px">${ic}</span><div><div style="color:#F8F9FC;font-size:11px;font-weight:600">${t}</div><div class="t-muted t-xs">${d}</div></div></div>`).join("")}
+    </div>
+  </div>`;
+}
+function siviBranche(){
+  return `<div class="card mb-14">
+    ${sectionTitle("ADN Branchecodes (ADNBRA) — herziene codelijst 2025")}
+    <div class="t-muted t-sm mb-12">De ADN Branchecode (ADNBRA) is door SIVI uitgebreid in 2025. Essentieel voor correcte rubricering in AFD-berichten.</div>
+    <div class="grid-3">
+      ${BRANCHES.map(b=>`<div class="card-dark" style="display:flex;gap:12px;align-items:center"><span style="color:#F4671F;font-family:'Courier New',monospace;font-size:18px;font-weight:800;width:36px">${b.code}</span><span class="t-sm">${b.label}</span></div>`).join("")}
+    </div>
+  </div>
+  <div class="card">
+    ${sectionTitle("SBIA25 — Nieuwe hoedanigheidscodes (KvK september 2025)")}
+    <div class="grid-2">
+      ${[["SBI 2025","Volledig herziene Standaard Bedrijfsindeling door CBS","#F4671F"],
+         ["SBIA25","Nieuwe AFD-codelijst voor hoedanigheden (SIVI-beheerd)","#E8A830"],
+         ["KvK-update","Doorvoer nieuwe coderingen alle organisaties: sept. 2025","#26B879"],
+         ["SBIAFD","SIVI-beheerde uitbreidingen op standaard SBI-lijst","#A78BFA"]].map(([t,d,c])=>
+        `<div class="card-dark" style="border-left:3px solid ${c}"><div style="color:${c};font-size:11px;font-weight:700">${t}</div><div class="t-muted t-xs">${d}</div></div>`).join("")}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════
+function addMessage(data){
+  const newMsg={
+    id:"MSG-"+new Date().getFullYear()+"-"+String(Math.floor(Math.random()*900)+100),
+    type:data.type,status:data.status||"Nieuw",
+    verzekeraar:data.verzekeraar||"—",klant:data.klant||"—",bsn_kvk:data.bsn_kvk||"—",
+    branche:data.branche||"—",onderwerp:data.onderwerp||data.type,
+    datum:new Date().toISOString().split("T")[0],afdVersie:"AFD 2.0",
+    polisNr:data.polisNr||"—",premie:data.premie||"—",prioriteit:"Normaal",
+    berichten:[{van:"Intermediair",tekst:`${MSG_LABELS[data.type]||"Bericht"} opgebouwd conform AFD 2.0 (simulatie, niet verzonden). Referentie: VOORBEELD-${Date.now()}.`,ts:new Date().toLocaleString("nl-NL")}],
+  };
+  STATE.messages=[newMsg,...STATE.messages];
+  renderNav();
+  const col={AANVRAAG:"#26B879",MUTATIE:"#F4671F",PROLONGATIE:"#E8A830",SCHADE:"#F4A200",OFFERTE:"#A78BFA",ROYEMENT:"#E84545"}[data.type]||"#26B879";
+  showToast(({AANVRAAG:"✅ Aanvraag",MUTATIE:"✅ Mutatiebericht",PROLONGATIE:"🔄 Prolongatie",SCHADE:"⚠️ Schademelding",OFFERTE:"💼 Offerteaanvraag",ROYEMENT:"🚫 Royementsbericht"}[data.type]||"✅ Bericht")+" vastgelegd (simulatie — niet verzonden)",col);
+}
+function showErr(id,msg){const el=document.getElementById(id);if(el){el.innerHTML="⚠️ "+msg;el.classList.remove("hidden");}}
+function hideErr(id){const el=document.getElementById(id);if(el)el.classList.add("hidden");}
+function showOk(id,msg){const el=document.getElementById(id);if(el){el.innerHTML=msg;el.classList.remove("hidden");}}
+function toggleXml(id,type,data){
+  const el=document.getElementById(id);if(!el)return;
+  if(el.classList.contains("hidden")){el.innerHTML=afdXML(type,data);el.classList.remove("hidden");}
+  else el.classList.add("hidden");
+}
+function bindEvents(){}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+STATE.selectedKlant=null;
+renderNav();
+renderContent();
+if(window.innerWidth<=700)toggleSidebar();
+</script>
+</body>
+</html>

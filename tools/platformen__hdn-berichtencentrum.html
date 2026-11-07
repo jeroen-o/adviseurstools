@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src http://localhost:* https://localhost:*; form-action 'none'; base-uri 'none';">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Berichtencentrum HDN-berichten</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bl:#0057B8;--dk:#0A1628;--bg:#F5F7FA;--wh:#fff;
+  --br:#E0E7EF;--brl:#F0F4F8;
+  --tx:#0A1628;--ts:#5A6A80;--th:#8A9BB0;
+  --gn:#2E7D32;--gnb:#E8F5E9;
+  --am:#F57F17;--amb:#FFF8E1;
+  --rd:#C62828;--rdb:#FFEBEE;
+  --ib:#E3F0FF;--r:8px;--rl:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+input,select,textarea{font-family:inherit;font-size:13px;padding:7px 10px;border:0.5px solid var(--br);border-radius:var(--r);background:var(--wh);color:var(--tx);width:100%;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--bl)}
+textarea{resize:vertical;min-height:58px}
+button{font-family:inherit;cursor:pointer;transition:opacity .15s}
+button:active{opacity:.8}
+label{font-size:12px;color:var(--ts);display:block;margin-bottom:3px}
+.req::after{content:" *";color:var(--rd)}
+a{color:var(--bl);text-decoration:none}
+a:hover{text-decoration:underline}
+.app{max-width:1040px;margin:0 auto;padding:0 20px 60px}
+.hdr{background:var(--dk);color:white;padding:0 20px}
+.hdr-in{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:14px 0 8px}
+.logo{width:36px;height:36px;background:var(--bl);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0}
+.hdr-tabs{max-width:1040px;margin:0 auto;display:flex;gap:0;overflow-x:auto}
+.htab{background:none;border:none;color:#6B8CB8;border-bottom:2px solid transparent;padding:9px 16px;font-size:13px;font-weight:400;white-space:nowrap}
+.htab.on{color:white;border-bottom-color:#00B4D8;font-weight:500}
+.card{background:var(--wh);border-radius:var(--rl);border:0.5px solid var(--br);padding:16px 20px;margin-bottom:12px}
+.card-t{font-size:14px;font-weight:500;margin-bottom:12px;padding-bottom:8px;border-bottom:0.5px solid var(--brl)}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.b-blue{background:var(--ib);color:var(--bl)}
+.b-green{background:var(--gnb);color:var(--gn)}
+.b-amber{background:var(--amb);color:var(--am)}
+.b-red{background:var(--rdb);color:var(--rd)}
+.b-gray{background:var(--bg);color:var(--ts)}
+.b-purple{background:#EDE7F6;color:#4A148C}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat{background:var(--bg);border-radius:var(--r);padding:11px 14px}
+.sn{font-size:24px;font-weight:500}
+.sl{font-size:11px;color:var(--th);margin-top:2px}
+.mc{background:var(--wh);border-radius:var(--rl);border:0.5px solid var(--br);padding:13px 16px;margin-bottom:10px}
+.ma{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.btn{font-size:12px;padding:5px 13px;border:0.5px solid var(--br);border-radius:var(--r);background:var(--wh);color:var(--tx)}
+.btn-p{background:var(--bl);color:white;border-color:var(--bl);font-size:13px;padding:8px 18px;border-radius:var(--r)}
+.btn-s{background:var(--bl);color:white;border-color:var(--bl)}
+.btn-w{background:var(--amb);color:var(--am);border-color:var(--am)}
+.btn-d{color:var(--rd);border-color:var(--rd)}
+.btn-g{color:var(--ts);border-color:var(--br)}
+.btn-add{background:var(--ib);color:var(--bl);border:0.5px solid var(--bl);font-size:12px;padding:5px 12px;border-radius:var(--r)}
+.btn-in{background:var(--gnb);color:var(--gn);border:0.5px solid var(--gn);font-size:12px;padding:5px 12px;border-radius:var(--r)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.fb{font-size:12px;padding:4px 12px;border:0.5px solid var(--br);border-radius:20px;background:var(--wh);color:var(--ts)}
+.fb.on{background:var(--dk);color:white;border-color:var(--dk)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.ff{grid-column:1/-1}
+.fn{font-size:10px;color:var(--am);margin-bottom:3px;margin-top:-2px}
+.fi{font-size:10px;color:var(--th);margin-top:3px;font-family:monospace}
+.fs{background:var(--wh);border-radius:var(--rl);border:0.5px solid var(--br);padding:15px 20px;margin-bottom:12px}
+.ft{font-size:14px;font-weight:500;margin-bottom:13px;padding-bottom:7px;border-bottom:0.5px solid var(--brl)}
+.ld-blk{background:var(--bg);border-radius:var(--r);border:0.5px solid var(--br);padding:13px 16px;margin-bottom:10px}
+.hg-blk{background:var(--ib);border-radius:var(--r);border:0.5px solid #B3D4F5;padding:13px 16px;margin-bottom:10px}
+.blk-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.blk-t{font-size:13px;font-weight:500;flex:1}
+.jbox{background:var(--bg);border-radius:var(--r);padding:14px 16px;font-family:"Menlo","Monaco","Courier New",monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;overflow-x:auto;max-height:600px;overflow-y:auto}
+.v-ok{background:var(--gnb);color:var(--gn);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-bottom:8px}
+.v-wn{background:var(--amb);color:var(--am);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-bottom:8px}
+.v-er{background:var(--rdb);color:var(--rd);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-bottom:8px}
+#notif{display:none;padding:10px 14px;border-radius:var(--r);font-size:13px;margin-bottom:12px}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;padding-top:18px}
+.tt{font-size:18px;font-weight:500}
+.ts2{font-size:12px;color:var(--ts);margin-top:2px}
+.empty{text-align:center;padding:40px 20px;color:var(--ts);font-size:14px;background:var(--bg);border-radius:var(--rl)}
+.abar{display:flex;gap:8px;flex-wrap:wrap;padding-top:8px}
+.sep{height:0.5px;background:var(--brl);margin:16px 0}
+.ltv-bar{height:8px;background:var(--br);border-radius:4px;margin:6px 0;overflow:hidden}
+.ltv-fill{height:100%;border-radius:4px;transition:width .3s}
+.dos-card{background:var(--wh);border-radius:var(--rl);border:0.5px solid var(--br);padding:14px 16px;margin-bottom:10px}
+.dos-tl{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-left:3px solid var(--br);padding-left:12px;margin-bottom:6px}
+.sx-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--gnb);color:var(--gn)}
+.blok-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--rdb);color:var(--rd)}
+.rv-badge{font-family:monospace;font-size:11px;background:var(--ib);color:var(--bl);padding:2px 7px;border-radius:4px}
+.in-card{background:var(--gnb);border-radius:var(--rl);border:0.5px solid var(--gn);padding:13px 16px;margin-bottom:10px;opacity:.85}
+.xmlbox{background:#1a1a2e;color:#e0e0e0;border-radius:var(--r);padding:14px 16px;font-family:monospace;font-size:11px;line-height:1.7;white-space:pre-wrap;word-break:break-all;overflow-x:auto;max-height:500px;overflow-y:auto}
+.fld-err input,.fld-err select,.fld-err textarea{border-color:var(--rd)!important;background:var(--rdb)!important}
+.fld-err label{color:var(--rd)!important}
+.fld-err .fn{display:block}
+.val-banner{background:var(--rdb);border:1px solid var(--rd);border-radius:var(--r);padding:12px 16px;margin-bottom:14px}
+.val-banner-t{font-size:13px;font-weight:500;color:var(--rd);margin-bottom:8px}
+.val-item{font-size:12px;color:var(--rd);padding:4px 0;border-bottom:0.5px solid rgba(198,40,40,0.2);display:flex;gap:8px;align-items:baseline}
+.val-item:last-child{border-bottom:none}
+.val-cert{font-weight:500;white-space:nowrap;min-width:140px}
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .fg,.fg3{grid-template-columns:1fr}
+  .ff{grid-column:1}
+  .hdr-tabs{overflow-x:auto}
+}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-in">
+    <div class="logo" aria-hidden="true">✉</div>
+    <div>
+      <div style="font-size:16px;font-weight:600">Berichtencentrum HDN-berichten</div>
+      <div style="font-size:11px;color:#90A4C4;margin-top:2px">Berichten opstellen en volgen volgens de HDN-standaard 26 · uitgaand & inkomend · dossiers · alleen lokaal tenzij u een eigen server koppelt</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <div id="modus-dot" style="width:8px;height:8px;border-radius:50%;background:#F59E0B"></div>
+      <span id="modus-badge" style="font-size:12px;color:#90A4C4">Geen server verbonden</span>
+    </div>
+  </div>
+  <div class="hdr-tabs" id="tabs">
+    <button class="htab on" onclick="nav('list')">Berichten</button>
+    <button class="htab" onclick="nav('dossiers')">Dossiers</button>
+    <button class="htab" onclick="nav('inbox')">Inbox (ontvangen)</button>
+    <button class="htab" onclick="nav('api')">API-koppeling</button>
+    <button class="htab" onclick="nav('new')">+ Nieuw bericht</button>
+  </div>
+</div>
+<div class="app">
+  <div id="notif"></div>
+  <div id="root"></div>
+</div>
+<script>
+// ── HTML escape (XSS-preventie) ───────────────────────────────────────────
+// Alle gebruikersdata die in innerHTML terechtkomt MOET via esc() lopen
+function esc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;')
+    .replace(/`/g,'&#x60;');
+}
+// Meerdere waarden escapen en samenvoegen
+function escJoin(...parts){ return parts.map(esc).join(' ').trim(); }
+
+// ==================== DATA ====================
+const AD=[
+  ["ABN AMRO Bank","306328","ABNAMRO"],["Aegon Nederland","200037","AEGON"],
+  ["Allianz Benelux","321855","ALLIANZ"],["Allianz Vermogen","314781","ALLIANZV"],
+  ["Argenta Spaarbank","304268","ARGENTA"],["ASN Bank","322588","ASNBANK"],
+  ["ASN Bank (v/h SNS Bank)","200028","SNS"],["ASR Hypotheekbank","200044","ASRHYP"],
+  ["ASR Levensverzekering","326965","ASRLEVEN"],["Attens Hypotheken","320747","ATTENS"],
+  ["bijBouwe","320804","BIJBOUWE"],["BLG Wonen","200019","BLG"],
+  ["BNP Paribas Cardif","322538","BNPCARDIF"],["bunq","325820","BUNQ"],
+  ["Centraal Beheer (hypotheken)","321148","CBHYP"],["Centraal Beheer (verzekeren)","321378","CBLEVEN"],
+  ["Centraal Beheer (v/h Woonfonds)","200014","WFONDS"],["Clarian Wonen","323945","CLARIAN"],
+  ["Cooperatieve Rabobank U.A.","321576","RABO"],["Credit Life","321771","CREDITLIFE"],
+  ["Dazure","323324","DAZURE"],["De Goudse Verzekeringen","325321","GOUDSE"],
+  ["De Groene Hart Hypotheek","325444","GROENHART"],["Dynamic Credit Services","323212","DYNCS"],
+  ["Dynamic Hypotheken","321915","DYNHYP"],["Florius","200001","FLORIUS"],
+  ["Hera Life","322772","HERALIFE"],["HollandWoont","323472","HOLLANDW"],
+  ["HQ Hypotheken (Quion)","306881","HQHYP"],["Hypotrust","200003","HYPOTRUST"],
+  ["Impact Hypotheken","324813","IMPACT"],["ING Bank","200006","ING"],
+  ["IQWOON Hypotheken","321420","IQWOON"],["Knab Bank","326879","KNAB"],
+  ["Lloyds Hypotheken","200053","LLOYDS"],["Lot Hypotheken","323807","LOT"],
+  ["Merius Hypotheken","320923","MERIUS"],["MoneYou","319040","MONEYOU"],
+  ["MUNT Hypotheken","319668","MUNT"],["N26 Hypotheken","325514","N26"],
+  ["Nationale Nederlanden (hyp.)","200013","NNHYP"],["Nationale Nederlanden (verz.)","318167","NNLEVEN"],
+  ["Nationale Waarborg","325165","NW"],["NIBC Bank","304373","NIBC"],
+  ["Obvion","200005","OBVION"],["Onderlinge 's-Gravenhage","324374","ONDERLINGE"],
+  ["Oosteroever Hypotheken (Quion)","200056","OOSTEROEVER"],["Orange Credit Hypotheken","326102","ORANGE"],
+  ["RegioBank","303593","REGIOBANK"],["Robuust Hypotheken","322950","ROBUUST"],
+  ["Scildon","317801","SCILDON"],["St. Philips Pensioenfonds","322207","PHILIPS"],
+  ["Syntrus Achmea Hypotheken","200007","SYNTRUS"],["TAF","321183","TAF"],
+  ["Tellius","319265","TELLIUS"],["Triodos Bank","321060","TRIODOS"],
+  ["Tulp Hypotheken","320818","TULP"],["Van Lanschot Kempen","327223","VLK"],
+  ["Vandaag Hypotheken","326955","VANDAAG"],["Venn Hypotheken","321046","VENN"],
+  ["Vista Hypotheken","322610","VISTA"],["WestlandUtrecht bank","327742","WUBANK"],
+  ["Woonnu","324084","WOONNU"],
+];
+const AANBIEDERS=AD.map(a=>a[0]);
+const RCV=Object.fromEntries(AD.map(a=>[a[0],a[2]]));
+const ANR=Object.fromEntries(AD.map(a=>[a[0],a[1]]));
+
+// Serviceproviders
+const SPS=[
+  {naam:"Geen (rechtstreeks naar aanbieder)",code:""},
+  {naam:"Quion Hypotheekbemiddeling [301906]",code:"QUION"},
+  {naam:"DAK Hypotheken [325243]",code:"DAK"},
+  {naam:"HUISMERK [324508]",code:"HUISMERK"},
+  {naam:"HypotheekGo [327092]",code:"HYPOTHEEKGO"},
+  {naam:"MO.servicing [323562]",code:"MOSERV"},
+  {naam:"SPN Servicer [313235]",code:"SPN"},
+  {naam:"Van Kampen Groep [200613]",code:"VKG"},
+  {naam:"VCN Hypotheken [326611]",code:"VCN"},
+];
+
+// SX statuscodes
+const SX_CODES={
+  "01":"Offertetermijn verloopt","02":"Document reeds ontvangen",
+  "03":"DocumentMijNr onbekend","04":"Dossier ter acceptatie",
+  "05":"Dossier finaal akkoord","06":"Voorlopig akkoord",
+  "07":"Document reeds opgevraagd via bron","08":"Informatieverzoek technisch niet te verwerken",
+  "09":"OfferteAanvraag ontvangen","10":"Offerteaanvraag in behandeling genomen",
+  "11":"Offerteaanvraag afgewezen","12":"Wacht op (aanvullende) stukken",
+  "13":"Polis verzonden","14":"Offerteaanvraag niet te verwerken, zie toelichting",
+  "15":"Legitimatie OK","16":"Offerteaanvraag beëindigd",
+  "17":"Garantie gesteld","18":"Garantie niet mogelijk",
+  "20":"Lening in beheer","22":"Renteaanbod verzonden",
+  "23":"Bindende offerte verzonden","24":"Aanvraag wordt aangepast",
+  "25":"Technisch niet te verwerken","26":"Gelden worden uitbetaald",
+  "27":"Renteaanbod verlengd","28":"Bindend aanbod verlengd",
+  "29":"Aangeboden voor finaal akkoord","30":"Herbeoordeling na tweede beoordeling",
+  "31":"Dossier verzonden naar notaris","32":"Ondertekening ontvangen",
+  "33":"Bankgarantie akkoord",
+};
+const SX_BLOKKEER=["16","20"]; // Na deze: geen berichten meer
+
+// MSG TYPES — uitgaand en inkomend
+const MT_UIT={
+  AX:{l:"AX – OfferteAanvraag",c:"#0057B8",bg:"#E3F0FF",d:"Hypotheekaanvraag (Rol 4a)"},
+  LX:{l:"LX – LevenAanvraag",c:"#880E4F",bg:"#FCE4EC",d:"Verzekeringsaanvraag (Rol 4b)"},
+  KX:{l:"KX – KredietAanvraag",c:"#1B5E20",bg:"#E8F5E9",d:"Kredietaanvraag (Rol 4c)"},
+  WX:{l:"WX – WaarborgBericht",c:"#E65100",bg:"#FFF3E0",d:"Bankgarantieaanvraag (Rol 4e)"},
+  IA:{l:"IA – InformatieAanvraag",c:"#006064",bg:"#E0F7FA",d:"Hypotheekinfo opvragen (Rol 4f)"},
+  MX:{l:"MX – BeheerVerzoek",c:"#4A148C",bg:"#EDE7F6",d:"Beheermutatie klant in beheer"},
+  DX:{l:"DX – DocumentBericht",c:"#6A1B9A",bg:"#F3E5F5",d:"Document versturen"},
+  CA:{l:"CA – BronAanvraag",c:"#BF360C",bg:"#FBE9E7",d:"Brondatabevraging (HDN26)"},
+  IVO:{l:"IVO – InkomensverklaringOndernemer",c:"#33691E",bg:"#F1F8E9",d:"IVO voor ZZP/ondernemer (STAN-4798 HDN26)"},
+  STUDIE:{l:"Studie – StudieLeningBericht",c:"#0277BD",bg:"#E1F5FE",d:"Studieschuld brondata (HDN26 STAN-4802)"},
+  DIGIID:{l:"DigiID – DigitaleIdentificatieBericht",c:"#37474F",bg:"#ECEFF1",d:"Digitale identificatie via NFC (STAN-5183 HDN26)"},
+};
+const MT_IN={
+  SX:{l:"SX – StatusMelding",c:"#2E7D32",bg:"#E8F5E9",d:"Statusterugkoppeling van aanbieder"},
+  OX:{l:"OX – OfferteBericht",c:"#1565C0",bg:"#E3F0FF",d:"Indicatief voorstel of bindende offerte"},
+  DA:{l:"DA – DocumentAanvraagBericht",c:"#F57F17",bg:"#FFF8E1",d:"Aanbieder vraagt documenten op"},
+  IX:{l:"IX – InformatieBericht",c:"#00695C",bg:"#E0F2F1",d:"Antwoord op IA"},
+  CX:{l:"CX – BronBericht",c:"#4E342E",bg:"#EFEBE9",d:"Antwoord op CA (brondata)"},
+};
+const ALL_MT={...MT_UIT,...MT_IN};
+
+const SCFG={
+  concept:{l:"Concept",bc:"b-gray"},klaar:{l:"Klaar",bc:"b-amber"},
+  verstuurd:{l:"Verstuurd",bc:"b-green"},ontvangen:{l:"Reactie ontvangen",bc:"b-blue"},
+};
+
+// ==================== FORMULIER VELDEN ====================
+function hgF(i){const p=`hg${i}_`;return[
+  {id:p+"titel",l:"Aanhef",t:"select",opts:["Dhr.","Mevr.","Dhr./Mevr."]},
+  {id:p+"voornaam",l:"Voornaam",r:1,t:"text",ph:"Jan"},
+  {id:p+"tussenv",l:"Tussenvoegsel",t:"text",ph:"de"},
+  {id:p+"achternaam",l:"Achternaam",r:1,t:"text",ph:"Vries"},
+  {id:p+"geboortedatum",l:"Geboortedatum",r:1,t:"date"},
+  {id:p+"bsn",l:"BSN",r:1,t:"text",ph:"123456789",fi:"//PartijNAWData/BSNNr"},
+  {id:p+"geslacht",l:"Geslacht",r:1,t:"select",opts:["M","V","X"]},
+  {id:p+"burgerstaat",l:"Burgerlijke staat",t:"select",opts:["Ongehuwd","Gehuwd","Geregistreerd partnerschap","Gescheiden","Weduwe/Weduwnaar"]},
+  {id:p+"nationaliteit",l:"Nationaliteit",t:"text",ph:"Nederlandse"},
+  {id:p+"email",l:"Emailadres",t:"email",ph:"naam@email.nl"},
+  {id:p+"tel",l:"Telefoonnummer",t:"text",ph:"0612345678"},
+  {id:p+"straat",l:"Straat",r:1,t:"text",ph:"Hoofdstraat"},
+  {id:p+"huisnr",l:"Huisnummer",r:1,t:"text",ph:"12"},
+  {id:p+"huisnrtoev",l:"Huisnr. toevoeging",t:"text",ph:"A"},
+  {id:p+"postcode",l:"Postcode",r:1,t:"text",ph:"1234 AB"},
+  {id:p+"woonplaats",l:"Woonplaats",r:1,t:"text",ph:"Amsterdam"},
+];}
+function inkF(i){const p=`hg${i}_ink_`;return[
+  {id:p+"dienstvb",l:"Soort dienstverband",r:1,t:"select",opts:["Vast","Tijdelijk","Oproep","Zelfstandig","Pensioen","Uitkering"]},
+  {id:p+"brutojaar",l:"Bruto jaarsalaris (€)",r:1,t:"number",ph:"65000",fi:"//DienstBetrekking/BrutoJaarSalaris"},
+  {id:p+"vakantie",l:"Vakantietoeslag (%)",t:"number",ph:"8"},
+  {id:p+"13e",l:"13e maand (€)",t:"number",ph:"0"},
+  {id:p+"onregel",l:"Onregelmatigheidstoelage (€)",t:"number",ph:"0"},
+  {id:p+"werkgever",l:"Naam werkgever",t:"text",ph:"Bedrijf BV"},
+  {id:p+"ingdatum",l:"Ingangsdatum dienstbetrekking",r:1,t:"date",fn:"Mag NIET vóór geboortedatum (cert. #7)"},
+  {id:p+"pensioen",l:"Pensioeninkomen (€/jaar)",t:"number",ph:"0"},
+  {id:p+"ibl",l:"IBL-bedrag (€) — InkomensBepalingLoondienst",t:"number",ph:"",fi:"NIET combineren met DienstBetrekking (cert. #4, KET-005/018)"},
+];}
+function ldF(i){const p=`ld${i}_`;return[
+  {id:p+"bedrag",l:"Leningdeelbedrag (€)",r:1,t:"number",ph:"200000",fn:"Som = HypotheekBedrag (cert. #2, KET-040)"},
+  {id:p+"aflossvorm",l:"Aflossingsvorm",r:1,t:"select",opts:["Annuïteit","Lineair","Aflossingsvrij","Spaarhypotheek","Beleggingshypotheek","Krediethypotheek"]},
+  {id:p+"looptijd",l:"Looptijd (maanden)",r:1,t:"number",ph:"360"},
+  {id:p+"rentevast",l:"Rentevaste periode (jaar)",r:1,t:"number",ph:"10"},
+  {id:p+"rentetype",l:"Rentetype",r:1,t:"select",opts:["Vast","Variabel","Euribor"]},
+  {id:p+"belbox",l:"Belastingbox renteaftrek",t:"select",opts:["Box 1","Box 3","Geen aftrek"],fi:"KET-022"},
+  {id:p+"renteaftr",l:"Renteaftrek toegestaan",t:"select",opts:["J – Ja","N – Nee"]},
+  {id:p+"terugbet",l:"Wijze terugbetaling",r:1,t:"select",opts:["01 – Reguliere terugbetaling","02 – Geen terugbetaling","03 – Gedeeltelijke terugbetaling"],fi:"KET-043: verplicht"},
+  {id:p+"codetype",l:"CodeLeningdeelType",t:"select",opts:["01 – Hypothecair","02 – Persoonlijk","03 – Overig"]},
+  {id:p+"bouwdepot",l:"Bouwdepot (€)",t:"number",ph:"0"},
+];}
+
+const FORMS={
+  AX:{dyn:1,static:[
+    {s:"Lening (algemeen)",f:[
+      {id:"hypotheekbedrag",l:"HypotheekBedrag (€)",r:1,t:"number",ph:"380000",fn:"Moet = som leningdelen (cert. #2, KET-040)"},
+      {id:"regeling",l:"Regeling",r:1,t:"select",opts:["01 – Aankoop","02 – Oversluiting intern","03 – Oversluiting extern","04 – Onderhands","05 – Omzetting","06 – Tweede hypotheek","07 – Interne oversluiting","10 – Meeneemhypotheek","11 – Doorgeefhypotheek"]},
+      {id:"nhg",l:"NHG aangevraagd",r:1,t:"select",opts:["N – Nee","J – Ja"]},
+      {id:"eigenmiddelen",l:"Ingebracht eigen middelen (€)",t:"number",ph:"45000",fn:"KET-047: invullen als beschikbaar"},
+      {id:"besthydpnr",l:"BestaandeHypotheekNr (bij oversluiting)",t:"text",ph:"LN20200001"},
+      {id:"arrangement",l:"Arrangement",t:"text",ph:"",fi:"STAN-647 HDN25"},
+    ]},
+    {s:"Object (woning)",f:[
+      {id:"obj_straat",l:"Straat",r:1,t:"text",ph:"Kerkstraat"},
+      {id:"obj_huisnr",l:"Huisnummer",r:1,t:"text",ph:"5A"},
+      {id:"obj_postcode",l:"Postcode",r:1,t:"text",ph:"2000 AB"},
+      {id:"obj_woonplaats",l:"Woonplaats",r:1,t:"text",ph:"Haarlem"},
+      {id:"bag_id",l:"BAG-ID",t:"text",ph:"0363010012073152",fi:"STAN-2360 HDN25"},
+      {id:"koopsom",l:"Koopsom (€)",r:1,t:"number",ph:"425000"},
+      {id:"koopsomgrond",l:"KoopsomGrond (€)",t:"number",ph:"0",fn:"Cert. #3: Koopsom = KoopsomGrond + Aanneemsom"},
+      {id:"aanneemsom",l:"Aanneemsom (€)",t:"number",ph:"0",fn:"Cert. #3: invullen bij nieuwbouw"},
+      {id:"marktwaarde",l:"MarktWaarde (€)",t:"number",ph:""},
+      {id:"bouwjaar",l:"Bouwjaar",t:"number",ph:"1998"},
+      {id:"woningtype",l:"Soort woning",t:"select",opts:["Eengezinswoning","Appartement","Studio","Vrijstaand","Hoekwoning","Twee-onder-een-kap","Benedenwoning","Bovenwoning"]},
+      {id:"energieklasse",l:"Energieklasse",t:"select",opts:["","A++","A+","A","B","C","D","E","F","G"]},
+      {id:"taxatieaanwezig",l:"TaxatieAanwezigJN",r:1,t:"select",opts:["N – Nee","J – Ja"],fn:"Als Ja: TaxatieDt moet in verleden (cert. #8)"},
+      {id:"taxatiedt",l:"TaxatieDatum",t:"date"},
+      {id:"erfpacht",l:"ErfpachtJN",t:"select",opts:["N – Nee","J – Ja"]},
+      {id:"afkooperfpacht",l:"AfkoopErfpachtJN",t:"select",opts:["N – Nee","J – Ja"],fi:"STAN-3956 HDN26: verplicht binnen Erfpacht"},
+      {id:"erfpachteinddatum",l:"Einddatum erfpacht",t:"date"},
+      {id:"erfpachtcanon",l:"Erfpachtcanon (€/jaar)",t:"number",ph:""},
+    ]},
+    {s:"Dossier",f:[
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"intermediair_nr",l:"IntermediairNr",r:1,t:"text",ph:"INT67890"},
+      {id:"aanvraagsoort",l:"AanvraagSoort",t:"select",opts:["01 – Eerste aanvraag","02 – Herhaalde aanvraag","03 – Wijziging"]},
+      {id:"advieskostenvorm",l:"AdvieskostenVormType",t:"select",opts:["01 – Uurtarief","02 – Vaste prijs","03 – Percentage","04 – Geen"],fi:"STAN-3099 HDN26: generiek gemaakt"},
+      {id:"voorkeurstaal",l:"Voorkeurstaal",t:"select",opts:["NL","EN","DE","FR"],fi:"HDN26"},
+      {id:"opmerkingen",l:"Opmerkingen",t:"textarea",ph:"Aanvullend...",full:1},
+    ]},
+  ]},
+  LX:{dyn:0,static:[
+    {s:"Verzekerde",f:[
+      {id:"voornaam",l:"Voornaam",r:1,t:"text",ph:"Maria"},
+      {id:"achternaam",l:"Achternaam",r:1,t:"text",ph:"Jansen"},
+      {id:"geboortedatum",l:"Geboortedatum",r:1,t:"date"},
+      {id:"geslacht",l:"Geslacht",r:1,t:"select",opts:["M","V","X"]},
+      {id:"bsn",l:"BSN",r:1,t:"text",ph:"987654321"},
+      {id:"straat",l:"Straat",r:1,t:"text",ph:"Hoofdstraat"},
+      {id:"huisnr",l:"Huisnummer",r:1,t:"text",ph:"1"},
+      {id:"postcode",l:"Postcode",r:1,t:"text",ph:"1234 AB"},
+      {id:"woonplaats",l:"Woonplaats",r:1,t:"text",ph:"Amsterdam"},
+      {id:"rookt",l:"Rookt?",r:1,t:"select",opts:["N – Nee","J – Ja"]},
+      {id:"bmi",l:"BMI",t:"number",ph:"24"},
+    ]},
+    {s:"Verzekering",f:[
+      {id:"productsoort",l:"ProductSoort",r:1,t:"select",opts:["ORV – Overlijdensrisicoverzekering","KV – Kapitaalverzekering","WIA – Arbeidsongeschiktheid","AOV – Arbeidsongeschiktheidsverzekering"],fn:"Verplicht KET-046 (HDN26)"},
+      {id:"verzekerd_bedrag",l:"Verzekerd bedrag (€)",r:1,t:"number",ph:"300000"},
+      {id:"looptijd",l:"Looptijd (maanden)",r:1,t:"number",ph:"360"},
+      {id:"ingangsdatum",l:"Ingangsdatum polis",r:1,t:"date"},
+      {id:"premiefreq",l:"Premiefrequentie",t:"select",opts:["Maand","Kwartaal","Halfjaar","Jaar","Koopsom"]},
+      {id:"doelverz",l:"DoelVerzekering",r:1,t:"select",opts:["Hypotheek","Overig"],fi:"HDN25: verplicht bij ORV"},
+      {id:"begunstigde",l:"Begunstigde",t:"text",ph:"Naam of Erfgenamen"},
+      {id:"voorkeurstaal",l:"Voorkeurstaal",t:"select",opts:["NL","EN","DE","FR"],fi:"STAN-3685 HDN26"},
+      {id:"wijzigingwerkkring",l:"WijzigingenWerkkringJN",t:"select",opts:["N – Nee","J – Ja"],fi:"STAN-4511 HDN26"},
+      {id:"beindigingdv",l:"BeeindigingDienstverbandJN",t:"select",opts:["N – Nee","J – Ja"],fi:"STAN-4511 HDN26"},
+    ]},
+    {s:"Gezondheid",f:[
+      {id:"gezondvragen",l:"Gezondheidsverklaring benodigd?",t:"select",opts:["N – Nee","J – Ja"]},
+      {id:"geweigerd",l:"Eerder geweigerd?",t:"select",opts:["N – Nee","J – Ja"]},
+    ]},
+    {s:"Koppeling",f:[
+      {id:"leningdeel_ref",l:"Referentie leningdeel",t:"text",ph:"LN20230001"},
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"intermediair_nr",l:"IntermediairNr",r:1,t:"text",ph:"INT67890"},
+    ]},
+  ]},
+  KX:{dyn:0,static:[
+    {s:"Aanvrager",f:[
+      {id:"voornaam",l:"Voornaam",r:1,t:"text",ph:"Piet"},
+      {id:"achternaam",l:"Achternaam",r:1,t:"text",ph:"Bakker"},
+      {id:"geboortedatum",l:"Geboortedatum",r:1,t:"date"},
+      {id:"bsn",l:"BSN",r:1,t:"text",ph:"456789123"},
+      {id:"geslacht",l:"Geslacht",r:1,t:"select",opts:["M","V","X"]},
+      {id:"straat",l:"Straat",r:1,t:"text",ph:"Hoofdstraat"},
+      {id:"huisnr",l:"Huisnummer",r:1,t:"text",ph:"1"},
+      {id:"postcode",l:"Postcode",r:1,t:"text",ph:"1234 AB"},
+      {id:"woonplaats",l:"Woonplaats",r:1,t:"text",ph:"Amsterdam"},
+      {id:"emailadres",l:"Emailadres",t:"email"},
+    ]},
+    {s:"Krediet",f:[
+      {id:"aanvraagsoort",l:"AanvraagSoort",r:1,t:"select",opts:["01 – Nieuw krediet","02 – Verhoging","03 – Oversluiting"],fn:"KET-014: verplicht"},
+      {id:"kredietbedrag",l:"Kredietbedrag (€)",r:1,t:"number",ph:"15000"},
+      {id:"looptijd",l:"Looptijd (maanden)",r:1,t:"number",ph:"60"},
+      {id:"kredietsoort",l:"Soort krediet",r:1,t:"select",opts:["Persoonlijke lening","Doorlopend krediet","Roodstand","Studielening"]},
+      {id:"doel",l:"Doel krediet",t:"text",ph:"Verbouwing, auto..."},
+      {id:"lopendkrediet",l:"Lopend krediet aanwezig?",t:"select",opts:["N – Nee","J – Ja"],fi:"KET-037"},
+      {id:"lopend_bedrag",l:"Saldo lopend krediet (€)",t:"number",ph:""},
+    ]},
+    {s:"Inkomen",f:[
+      {id:"brutojaar",l:"Bruto jaarsalaris (€)",r:1,t:"number",ph:"48000"},
+      {id:"dienstvb",l:"Soort dienstverband",r:1,t:"select",opts:["Vast","Tijdelijk","Zelfstandig"]},
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+    ]},
+  ]},
+  WX:{dyn:0,static:[
+    {s:"Bankgarantie",f:[
+      {id:"garantiebedrag",l:"Garantiebedrag (€)",r:1,t:"number",ph:"10000"},
+      {id:"ingangsdatum",l:"Ingangsdatum garantie",r:1,t:"date"},
+      {id:"einddatum",l:"Einddatum garantie",r:1,t:"date"},
+      {id:"garantiedoel",l:"Doel bankgarantie",r:1,t:"select",opts:["Waarborgsom koopwoning","Waarborgsom huur","Bouwdepot","Anders"]},
+      {id:"voorkeurstaal",l:"Voorkeurstaal",t:"select",opts:["NL","EN","DE","FR"],fi:"STAN-4595 HDN26"},
+    ]},
+    {s:"Aanvrager",f:[
+      {id:"voornaam",l:"Voornaam",r:1,t:"text",ph:"Kees"},
+      {id:"tussenv",l:"Tussenvoegsel",t:"text",ph:"van"},
+      {id:"achternaam",l:"Achternaam",r:1,t:"text",ph:"Smit"},
+      {id:"geboortedatum",l:"Geboortedatum",r:1,t:"date"},
+      {id:"bsn",l:"BSN",r:1,t:"text",ph:"321654987"},
+      {id:"geslacht",l:"Geslacht",r:1,t:"select",opts:["M","V","X"],fi:"STAN-567 HDN25: X toegevoegd"},
+      {id:"legitimatienr",l:"Legitimatienummer",t:"text",ph:"Identiteitsbewijs nr."},
+      {id:"legitimatietype",l:"Soort legitimatie",t:"select",opts:["Paspoort","ID-kaart","Rijbewijs"]},
+      {id:"bedrijfsnaam",l:"Bedrijfsnaam (bij rechtspersoon)",t:"text",ph:"",fi:"HDN25: verplicht bij rechtspersonen"},
+    ]},
+    {s:"Object",f:[
+      {id:"obj_straat",l:"Straat",r:1,t:"text",ph:"Dorpsstraat"},
+      {id:"obj_huisnr",l:"Huisnummer",r:1,t:"text",ph:"1"},
+      {id:"obj_postcode",l:"Postcode",r:1,t:"text",ph:"3456 CD"},
+      {id:"obj_woonplaats",l:"Woonplaats",r:1,t:"text",ph:"Rotterdam"},
+      {id:"koopsom",l:"Koopsom (€)",t:"number",ph:"350000"},
+    ]},
+    {s:"Dossier",f:[
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"intermediair_nr",l:"IntermediairNr",t:"text",ph:"INT67890"},
+    ]},
+  ]},
+  IA:{dyn:0,static:[
+    {s:"Informatieaanvraag",f:[
+      {id:"leningnummer",l:"Leningnummer / polisnummer",r:1,t:"text",ph:"LN20230001"},
+      {id:"klant_bsn",l:"BSN klant",r:1,t:"text",ph:"123456789"},
+      {id:"klant_voornaam",l:"Voornaam klant",r:1,t:"text",ph:"Jan"},
+      {id:"klant_achternaam",l:"Achternaam klant",r:1,t:"text",ph:"de Vries"},
+      {id:"informatie_type",l:"Soort informatie",r:1,t:"select",opts:["Hypotheekgegevens","Actueel saldo","Renteinformatie","Looptijd","Volledige polisinfo","Beheersignaal"],fi:"STAN-2045 HDN25: Beheersignaal toegevoegd"},
+      {id:"peildatum",l:"Peildatum",t:"date"},
+      {id:"reden",l:"Reden aanvraag",t:"textarea",ph:"Overstap, adviesgesprek...",full:1},
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"intermediair_nr",l:"IntermediairNr",r:1,t:"text",ph:"INT67890"},
+    ]},
+  ]},
+  MX:{dyn:0,static:[
+    {s:"Beheerverzoek",f:[
+      {id:"leningnummer",l:"Leningnummer",r:1,t:"text",ph:"LN20200001"},
+      {id:"klant_bsn",l:"BSN klant",r:1,t:"text",ph:"123456789"},
+      {id:"klant_voornaam",l:"Voornaam klant",r:1,t:"text",ph:"Jan"},
+      {id:"klant_achternaam",l:"Achternaam klant",r:1,t:"text",ph:"de Vries"},
+      {id:"mutatie_soort",l:"Soort mutatie",r:1,t:"select",opts:["01 – Rentewijziging","02 – Aflossing","03 – Adreswijziging","04 – Betalingsregeling","05 – Royement","06 – Omzetting aflossingsvorm","07 – Bouwdepot declaratie","08 – Overig"]},
+      {id:"ingangsdatum",l:"Ingangsdatum mutatie",r:1,t:"date"},
+    ]},
+    {s:"Hypotheekgever (gewijzigde gegevens)",f:[
+      {id:"hg_straat",l:"Straat (nieuw adres)",t:"text",ph:"Kerkstraat"},
+      {id:"hg_huisnr",l:"Huisnummer",t:"text",ph:"1"},
+      {id:"hg_postcode",l:"Postcode",t:"text",ph:"1234 AB"},
+      {id:"hg_woonplaats",l:"Woonplaats",t:"text",ph:"Amsterdam"},
+      {id:"hg_email",l:"Nieuw emailadres",t:"email"},
+      {id:"hg_tel",l:"Nieuw telefoonnummer",t:"text",ph:"0612345678"},
+    ]},
+    {s:"Lening details (bij mutatie)",f:[
+      {id:"nieuw_rente",l:"Nieuwe rentevoet (%)",t:"number",ph:"4.2"},
+      {id:"aflossing_bedrag",l:"Aflossingsbedrag (€)",t:"number",ph:"10000"},
+      {id:"brutojaar",l:"Bruto jaarsalaris (€)",t:"number",ph:"",fi:"STAN-794 HDN26: verduidelijking BrutoJaarSalaris"},
+      {id:"depot_decl",l:"Bouwdepot declaratie (€)",t:"number",ph:"",fi:"STAN-1179 HDN25"},
+      {id:"depot_omschr",l:"Omschrijving declaratie",t:"text",ph:"Factuur aannemer"},
+    ]},
+    {s:"Object",f:[
+      {id:"obj_straat",l:"Straat",t:"text",ph:"Kerkstraat"},
+      {id:"obj_huisnr",l:"Huisnummer",t:"text",ph:"5"},
+      {id:"obj_postcode",l:"Postcode",t:"text",ph:"2000 AB"},
+      {id:"obj_woonplaats",l:"Woonplaats",t:"text",ph:"Haarlem"},
+      {id:"erfpacht_canon",l:"Erfpachtcanon (€/jaar)",t:"number",ph:"",fi:"STAN-4485 HDN25 minor week 51"},
+    ]},
+    {s:"Dossier",f:[
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"opmerkingen",l:"Opmerkingen",t:"textarea",ph:"Toelichting...",full:1},
+    ]},
+  ]},
+  DX:{dyn:0,static:[
+    {s:"Document",f:[
+      {id:"doc_soort",l:"Documentsoort",r:1,t:"select",opts:["003 – Taxatierapport","004 – Bankafschrift","011 – Loonstrook","025 – Bouwkundig rapport","062 – Arbeidscontract","073 – Jaarrekening","088 – IB-aangifte","097 – Woon/Bedrijfstaxatierapport","262 – Perspectiefverklaring","265 – Verklaring gemoedsbezwaren","999 – Overig"]},
+      {id:"dossier_ref",l:"Dossiernummer / requestTraceNumber",r:1,t:"text",ph:"DOS-2026-001"},
+      {id:"doc_omschr",l:"Omschrijving",t:"text",ph:"Loonstrook maart 2026"},
+      {id:"doc_datum",l:"Datum document",t:"date"},
+      {id:"bestandsnaam",l:"Bestandsnaam",t:"text",ph:"document.pdf"},
+      {id:"aanlevermoment",l:"Aanlevermoment",t:"select",opts:["01 – Voor indicatief rentevoorstel","02 – Voor bindende offerte","03 – Na bindende offerte","04 – Na passeren"]},
+    ]},
+    {s:"Validaties",f:[
+      {id:"doc_status",l:"Huidige documentstatus in DA",r:1,t:"select",opts:["01 – Opgevraagd","02 – Ontvangen","03 – In behandeling"],fn:"DX NIET versturen bij status 04/06/08 (cert. #5, #6)"},
+      {id:"bron_check",l:"OpgevraagdViaBronJN in DA?",r:1,t:"select",opts:["N – Nee","J – Ja — dan GEEN DX (KET-026, cert. #9)"]},
+    ]},
+  ]},
+  CA:{dyn:0,static:[
+    {s:"BronAanvraag",f:[
+      {id:"bron_type",l:"Type brondata",r:1,t:"select",opts:["UWV – Loongegevens","Kadaster – Objectgegevens","KvK – Bedrijfsgegevens","CBR – Rijbewijsgegevens","BRP – Basisregistratie Personen","NWWI – Taxatiegegevens","Calcasa – Woningwaarde"],fi:"HDN26 STAN-4432-4436"},
+      {id:"persoons_id",l:"PersoonsID consument",r:1,t:"text",fi:"KET-013"},
+      {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+      {id:"dataleverancier",l:"Dataleverancier",r:1,t:"select",opts:["Ockto","Vidua","Veilig Ophalen","Datakeeper","iWize","Overig"]},
+      {id:"consent",l:"Toestemming klant?",r:1,t:"select",opts:["J – Ja","N – Nee"],fn:"eIDAS: altijd actieve toestemming vereist"},
+    ]},
+    {s:"Klantgegevens",f:[
+      {id:"klant_bsn",l:"BSN klant",r:1,t:"text",ph:"123456789"},
+      {id:"klant_voornaam",l:"Voornaam",r:1,t:"text",ph:"Jan"},
+      {id:"klant_achternaam",l:"Achternaam",r:1,t:"text",ph:"de Vries"},
+      {id:"klant_gebdat",l:"Geboortedatum",r:1,t:"date"},
+    ]},
+    {s:"Dossier",f:[
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"intermediair_nr",l:"IntermediairNr",t:"text",ph:"INT67890"},
+    ]},
+  ]},
+  IVO:{dyn:0,static:[
+    {s:"IVO — InkomensverklaringOndernemer",f:[
+      {id:"voornaam",l:"Voornaam ondernemer",r:1,t:"text",ph:"Jan"},
+      {id:"achternaam",l:"Achternaam ondernemer",r:1,t:"text",ph:"de Vries"},
+      {id:"geboortedatum",l:"Geboortedatum",r:1,t:"date"},
+      {id:"bsn",l:"BSN ondernemer",r:1,t:"text",ph:"123456789"},
+      {id:"geslacht",l:"Geslacht",r:1,t:"select",opts:["M","V","X"]},
+    ]},
+    {s:"Onderneming",f:[
+      {id:"kvk_nr",l:"KvK-nummer",r:1,t:"text",ph:"12345678"},
+      {id:"bedrijfsnaam",l:"Bedrijfsnaam",r:1,t:"text",ph:"Jan de Vries BV"},
+      {id:"ondernemingsvorm",l:"Rechtsvorm",r:1,t:"select",opts:["Eenmanszaak","VOF","BV","CV","Maatschap","NV"]},
+      {id:"oprichtingsdatum",l:"Oprichtingsdatum onderneming",r:1,t:"date"},
+      {id:"sbi_code",l:"SBI-code (branchecode)",t:"text",ph:"6810"},
+    ]},
+    {s:"Inkomen ondernemer",f:[
+      {id:"winst_j1",l:"Winst jaar 1 (meest recent, €)",r:1,t:"number",ph:"65000"},
+      {id:"winst_j2",l:"Winst jaar 2 (€)",t:"number",ph:"58000"},
+      {id:"winst_j3",l:"Winst jaar 3 (€)",t:"number",ph:"52000"},
+      {id:"inkomen_type",l:"Soort inkomen",t:"select",opts:["Winst uit onderneming","DGA-salaris","Resultaat overige werkzaamheden"]},
+      {id:"fictief_loon",l:"Gebruikelijk loon DGA (€/jaar)",t:"number",ph:"",fi:"Alleen invullen bij DGA"},
+      {id:"hg2",l:"Tweede ondernemer (fiscaal partner)?",t:"select",opts:["N – Nee","J – Ja"],fn:"Max 2 hypotheekgevers bij IVO (Q&A HDN26)"},
+    ]},
+    {s:"Dossier",f:[
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"intermediair_nr",l:"IntermediairNr",r:1,t:"text",ph:"INT67890"},
+      {id:"dossier_ref",l:"Dossiernummer",t:"text",ph:"DOS-2026-001"},
+      {id:"opmerkingen",l:"Opmerkingen",t:"textarea",ph:"Bijzonderheden...",full:1},
+    ]},
+  ]},
+  STUDIE:{dyn:0,static:[
+    {s:"Studieschuld — StudieLeningBericht",f:[
+      {id:"klant_bsn",l:"BSN klant",r:1,t:"text",ph:"123456789"},
+      {id:"klant_voornaam",l:"Voornaam",r:1,t:"text",ph:"Jan"},
+      {id:"klant_achternaam",l:"Achternaam",r:1,t:"text",ph:"de Vries"},
+      {id:"klant_gebdat",l:"Geboortedatum",r:1,t:"date"},
+      {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+    ]},
+    {s:"Studieschuld details",f:[
+      {id:"studieschuld",l:"Studieschuld (€)",r:1,t:"number",ph:"25000"},
+      {id:"maandlast",l:"Maandlast studieschuld (€)",t:"number",ph:"",fi:"STAN-4802 HDN26: splitsen wettelijke vs werkelijke termijnbedrag"},
+      {id:"wettelmaandlast",l:"Wettelijke termijnbedrag (€)",t:"number",ph:"",fi:"STAN-4802 HDN26"},
+      {id:"werkelmaandlast",l:"Werkelijke termijnbedrag (€)",t:"number",ph:"",fi:"STAN-4802 HDN26"},
+      {id:"studiefase",l:"Studieschuldfase",t:"select",opts:["Opbouwfase","Aflosfase","Bevriezingsfase"],fi:"STAN-3723 HDN26: studieschuldfase toegevoegd"},
+      {id:"einddatum_rente",l:"Einddatum rentepercentage",t:"date",fi:"STAN-3723 HDN26"},
+      {id:"aanvangsdatum",l:"Aanvangsdatum lening",t:"date"},
+      {id:"einddatum_lening",l:"Einddatum lening",t:"date"},
+      {id:"stelsel",l:"Leenstelsel",t:"select",opts:["Oud stelsel (voor 2015)","Nieuw stelsel (2015-2023)","Huidig stelsel (2023+)"]},
+      {id:"opleiding",l:"Opleidingsniveau",t:"select",opts:["MBO","HBO","WO","Anders"],fi:"STAN-4664 HDN26: waardelijst aangepast"},
+    ]},
+    {s:"Dossier",f:[
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+    ]},
+  ]},
+  DIGIID:{dyn:0,static:[
+    {s:"Digitale Identificatie",f:[
+      {id:"klant_bsn",l:"BSN klant",r:1,t:"text",ph:"123456789"},
+      {id:"klant_voornaam",l:"Voornaam",r:1,t:"text",ph:"Jan"},
+      {id:"klant_achternaam",l:"Achternaam",r:1,t:"text",ph:"de Vries"},
+      {id:"klant_gebdat",l:"Geboortedatum",r:1,t:"date"},
+      {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+    ]},
+    {s:"Identificatie details",f:[
+      {id:"identificatietype",l:"Type identiteitsbewijs",r:1,t:"select",opts:["Paspoort","ID-kaart","Rijbewijs"]},
+      {id:"doc_nummer",l:"Documentnummer",r:1,t:"text",ph:"ABC123456"},
+      {id:"geldig_tot",l:"Geldig tot",r:1,t:"date"},
+      {id:"verificatie_bron",l:"VerificatieBron",r:1,t:"select",opts:["DigiD","iDIN","NFC-chip legitimatiebewijs","Ockto","Vidua"],fi:"STAN-5183 HDN26: NFC-chip toegevoegd"},
+      {id:"verificatie_dt",l:"Verificatiedatum",r:1,t:"date"},
+      {id:"verificatie_resultaat",l:"Verificatieresultaat",r:1,t:"select",opts:["01 – Geslaagd","02 – Mislukt","03 – Twijfelachtig"]},
+    ]},
+    {s:"Dossier",f:[
+      {id:"adviseur_nr",l:"AdviseurNr",r:1,t:"text",ph:"ADV12345"},
+      {id:"intermediair_nr",l:"IntermediairNr",t:"text",ph:"INT67890"},
+    ]},
+  ]},
+};
+
+// Inkomende berichten formulieren
+const INBOX_FORMS={
+  SX:{s:"StatusMelding registreren",f:[
+    {id:"sx_code",l:"Status code",r:1,t:"select",opts:Object.entries(SX_CODES).map(([k,v])=>k+" – "+v)},
+    {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+    {id:"requestversion",l:"requestVersion",t:"text",ph:"1",fi:"Versienummer van de bijbehorende AX"},
+    {id:"leningnummer",l:"Leningnummer (als bekend)",t:"text",ph:"LN20230001"},
+    {id:"offertenummer",l:"Offertenummer (als bekend)",t:"text"},
+    {id:"tekst",l:"StatusTekst / toelichting",t:"textarea",ph:"Toelichting van aanbieder...",full:1},
+  ]},
+  OX:{s:"OfferteBericht registreren",f:[
+    {id:"offerte_soort",l:"Soort offerte",r:1,t:"select",opts:["18 – Indicatief voorstel","00 – Bindende offerte"]},
+    {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+    {id:"offerte_nr",l:"Offertenummer",t:"text"},
+    {id:"rente_perc",l:"Rentevoet (%)",t:"number",ph:"4.1"},
+    {id:"hypotheekbedrag",l:"Hypotheekbedrag (€)",t:"number",ph:"380000"},
+    {id:"looptijd",l:"Looptijd (maanden)",t:"number",ph:"360"},
+    {id:"uiterste_passeerdatum",l:"UiterstePasseerDt",t:"date"},
+    {id:"verlenging_mogelijk",l:"VerlengingMogelijkJN",t:"select",opts:["N – Nee","J – Ja"]},
+    {id:"acceptatiedt",l:"AcceptatieDt",t:"date",fi:"Cert. punt Rol4a #11: mag niet gelijk zijn in indicatief én bindend"},
+    {id:"opmerkingen",l:"Opmerkingen",t:"textarea",ph:"Bijzonderheden...",full:1},
+  ]},
+  DA:{s:"DocumentAanvraag registreren",f:[
+    {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+    {id:"doc_soort",l:"Gevraagd document",r:1,t:"select",opts:["003 – Taxatierapport","004 – Bankafschrift","011 – Loonstrook","025 – Bouwkundig rapport","062 – Arbeidscontract","073 – Jaarrekening","097 – Woon/Bedrijfstaxatierapport","262 – Perspectiefverklaring","999 – Overig"]},
+    {id:"doc_status",l:"DocumentStatus in DA",r:1,t:"select",opts:["01 – Opgevraagd","02 – Ontvangen","03 – In behandeling","04 – Akkoord","05 – Bestandstype niet ondersteund","06 – Voorlopig akkoord","07 – Opgevraagd via bron","08 – Vervallen"]},
+    {id:"bron_jn",l:"OpgevraagdViaBronJN",t:"select",opts:["N – Nee","J – Ja"],fn:"Als Ja: GEEN DX terugsturen (KET-026, cert. #9)"},
+    {id:"aanlevermoment",l:"Aanlevermoment",t:"select",opts:["01 – Voor indicatief rentevoorstel","02 – Voor bindende offerte","03 – Na bindende offerte","04 – Na passeren"]},
+    {id:"opmerkingen",l:"Toelichting aanbieder",t:"textarea",ph:"...",full:1},
+  ]},
+  IX:{s:"InformatieBericht registreren",f:[
+    {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+    {id:"leningnummer",l:"Leningnummer",t:"text",ph:"LN20230001"},
+    {id:"saldo",l:"Actueel saldo (€)",t:"number",ph:""},
+    {id:"rente_perc",l:"Huidige rentevoet (%)",t:"number",ph:""},
+    {id:"looptijd_resterend",l:"Resterende looptijd (maanden)",t:"number",ph:""},
+    {id:"einddatum",l:"Einddatum lening",t:"date"},
+    {id:"beheersignaal",l:"Beheersignaal",t:"select",opts:["","01 – Geen actie","02 – Rentevervaldatum nadert","03 – Oversluiting kans"],fi:"STAN-2045 HDN25: Beheersignaal uitgebreid"},
+    {id:"opmerkingen",l:"Toelichting",t:"textarea",ph:"...",full:1},
+  ]},
+  CX:{s:"BronBericht (CX) registreren",f:[
+    {id:"dossier_ref",l:"Dossiernummer",r:1,t:"text",ph:"DOS-2026-001"},
+    {id:"bron_type",l:"Type brondata ontvangen",r:1,t:"select",opts:["UWV – Loongegevens","Kadaster – Objectgegevens","KvK – Bedrijfsgegevens","BRP – Basisregistratie Personen","NWWI – Taxatiegegevens","Calcasa – Woningwaarde"]},
+    {id:"status",l:"Status bronbevraging",r:1,t:"select",opts:["00 – Succes","04 – Partij niet geautoriseerd","05 – Ongeldig verzoek","06 – Gevraagde data niet beschikbaar"]},
+    {id:"data_samenvatting",l:"Samenvatting ontvangen data",t:"textarea",ph:"Bijv: Bruto jaarloon €62.000 (UWV)...",full:1},
+  ]},
+};
+
+// ==================== STATE ====================
+let S={showValErrors:false,apiModus:false,serverUrl:'http://localhost:3001',apiToken:'',serverStatus:null,
+  view:"list",tab:0,editId:null,msgType:"AX",aanbieder:"ING Bank",sp:"",naam:"",
+  filter:"Alle",berichten:[],inbox:[],
+  jsonId:null,dossierId:null,inboxType:"SX",
+  hgCount:1,ldCount:1,
+};
+
+function ts(){const n=new Date();return n.toLocaleDateString("nl-NL",{day:"2-digit",month:"2-digit",year:"numeric"})+" "+n.toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"});}
+
+function saveBer(){try{localStorage.setItem("hdn_v3_b",JSON.stringify(S.berichten));}catch(e){}}
+function saveInbox(){try{localStorage.setItem("hdn_v3_i",JSON.stringify(S.inbox));}catch(e){}}
+
+function load(){
+  try{const d=localStorage.getItem("hdn_v3_b");if(d)S.berichten=JSON.parse(d);}catch(e){}
+  try{const d=localStorage.getItem("hdn_v3_i");if(d)S.inbox=JSON.parse(d);}catch(e){}
+  render();
+}
+
+function allFlds(){
+  let f=[];
+  if(S.msgType==="AX"){
+    for(let i=0;i<S.hgCount;i++){f=f.concat(hgF(i));f=f.concat(inkF(i));}
+    for(let i=0;i<S.ldCount;i++){f=f.concat(ldF(i));}
+    f=f.concat(FORMS.AX.static.flatMap(s=>s.f));
+  } else if(FORMS[S.msgType]){
+    f=FORMS[S.msgType].static.flatMap(s=>s.f);
+  }
+  return f;
+}
+
+function collectForm(){
+  const data={};
+  allFlds().forEach(f=>{const el=document.getElementById("fld_"+f.id);if(el)data[f.id]=el.value;});
+  data._hgCount=S.hgCount;data._ldCount=S.ldCount;
+  return data;
+}
+
+function validateF(data){return allFlds().filter(f=>f.r&&!data[f.id]).map(f=>f.l);}
+
+function dossierId(b){return b.data?.dossier_ref||b.data?.leningnummer||b.naam||b.id;}
+
+// Controleer of dossier geblokkeerd is (SX 16 of 20 ontvangen)
+function isDossierGeblokkeerd(ref){
+  return S.inbox.some(m=>m.type==="SX"&&m.data?.dossier_ref===ref&&SX_BLOKKEER.includes(m.data?.sx_code?.split(" – ")[0]));
+}
+
+function getRequestVersion(ref){
+  const sent=S.berichten.filter(b=>dossierId(b)===ref).sort((a,b)=>b.id-a.id);
+  return sent.length;
+}
+
+function saveMsg(status){
+  const data=collectForm();
+  const missing=status==="concept"?[]:validateF(data);
+  if(missing.length){notif("Verplichte velden ontbreken: "+missing.slice(0,3).join(", ")+(missing.length>3?" en meer...":""),"w");return;}
+  const aanb=document.getElementById("sel_aanb")?.value||S.aanbieder;
+  const sp=document.getElementById("sel_sp")?.value||"";
+  const naam=document.getElementById("sel_naam")?.value||(S.msgType+" → "+aanb);
+  const dref=data.dossier_ref||data.leningnummer||"";
+  if(dref&&isDossierGeblokkeerd(dref)){notif("Dossier geblokkeerd: SX 16 of SX 20 ontvangen. Geen berichten meer toegestaan.","w");return;}
+  const t=ts();
+  const rv=dref?getRequestVersion(dref)+1:1;
+  if(S.editId){
+    S.berichten=S.berichten.map(b=>b.id===S.editId?{...b,naam,aanbieder:aanb,sp,type:S.msgType,status,data,bijgewerkt:t,rv}:b);
+    notif("Bijgewerkt","ok");
+  } else {
+    S.berichten.unshift({id:Date.now(),type:S.msgType,naam,aanbieder:aanb,sp,status,data,aangemaakt:t,bijgewerkt:t,rv});
+    notif(status==="concept"?"Opgeslagen als concept":"Klaar voor versturen (nog niet verzonden)","ok");
+  }
+  saveBer();S.view="list";S.editId=null;render();
+}
+
+function directVersturen(){
+  const data=collectForm();
+  const missing=validateF(data);
+  if(missing.length){notif("Verplichte velden ontbreken: "+missing.slice(0,3).join(", ")+(missing.length>3?" en meer...":""),"w");return;}
+  const herrs=hardValidate(data,S.msgType,S.hgCount,S.ldCount);
+  if(herrs.length){
+    notif("Geblokkeerd: "+herrs.length+" certificeringsfout"+(herrs.length>1?"en":"")+" — zie rood in formulier","w");
+    S.showValErrors=true;render();return;
+  }
+  const aanb=document.getElementById("sel_aanb")?.value||S.aanbieder;
+  const sp=document.getElementById("sel_sp")?.value||"";
+  const naam=document.getElementById("sel_naam")?.value||(S.msgType+"→"+aanb);
+  const dref=data.dossier_ref||data.leningnummer||"";
+  if(dref&&isDossierGeblokkeerd(dref)){notif("Dossier geblokkeerd: SX 16 of SX 20 ontvangen.","w");return;}
+  const t=ts();const rv=dref?getRequestVersion(dref)+1:1;
+  S.showValErrors=false;
+  // Als API-modus aan staat: stuur via de Node.js server naar HDN
+  if(S.apiModus && S.serverStatus){
+    verstuurViaApi({
+      id:Date.now(),type:S.msgType,naam,aanbieder:aanb,sp,
+      data,aangemaakt:t,bijgewerkt:t,rv
+    });
+    return;
+  }
+  // Geen server verbonden: niets verzenden, bewaren als 'klaar'
+  S.berichten.unshift({id:Date.now(),type:S.msgType,naam,aanbieder:aanb,sp,status:"klaar",data,aangemaakt:t,bijgewerkt:t,rv});
+  saveBer();notif("Geen server verbonden — bericht NIET verzonden, bewaard als 'klaar'. Koppel een eigen server onder API-koppeling.","w");S.view="list";S.editId=null;render();
+}
+function saveInboxMsg(){
+  const frm=INBOX_FORMS[S.inboxType];if(!frm)return;
+  const data={};
+  frm.f.forEach(f=>{const el=document.getElementById("fld_"+f.id);if(el)data[f.id]=el.value;});
+  const missing=frm.f.filter(f=>f.r&&!data[f.id]).map(f=>f.l);
+  if(missing.length){notif("Verplichte velden: "+missing.join(", "),"w");return;}
+  const aanb=document.getElementById("sel_aanb_in")?.value||S.aanbieder;
+  const t=ts();
+  S.inbox.unshift({id:Date.now(),type:S.inboxType,aanbieder:aanb,data,ontvangen:t});
+  saveInbox();notif("Inkomend bericht opgeslagen","ok");
+  render();
+}
+
+function buildPayload(b){
+  const d=b.data||{};
+  const hgC=parseInt(d._hgCount)||1,ldC=parseInt(d._ldCount)||1;
+  const rc=RCV[b.aanbieder]||b.aanbieder.toUpperCase().replace(/ /g,"");
+  const rv=b.rv||1;
+  if(b.type==="AX"){
+    const hb=parseFloat(d.hypotheekbedrag)||0;
+    const lds=[];
+    for(let i=0;i<ldC;i++){const p=`ld${i}_`;lds.push({LeningdeelBedrag:parseFloat(d[p+"bedrag"])||0,AflossingsVorm:d[p+"aflossvorm"],Looptijd:parseInt(d[p+"looptijd"])||null,RentevastPeriode:parseInt(d[p+"rentevast"])||null,RenteType:d[p+"rentetype"],BelastingBox:d[p+"belbox"],RenteAftrek:d[p+"renteaftrek"]?.charAt(0),WijzeTerugbetaling:d[p+"terugbet"]?.split(" – ")[0],CodeLeningdeelType:d[p+"codetype"]?.split(" – ")[0],BouwDepot:parseFloat(d[p+"bouwdepot"])||undefined});}
+    const hgs=[];
+    for(let i=0;i<hgC;i++){const p=`hg${i}_`,ip=`hg${i}_ink_`;hgs.push({PartijNAWData:{Aanhef:d[p+"titel"],Voornaam:d[p+"voornaam"],Tussenvoegsel:d[p+"tussenv"],Achternaam:d[p+"achternaam"],GeboorteDt:d[p+"geboortedatum"],BSNNr:d[p+"bsn"],Geslacht:d[p+"geslacht"],BurgerlijkeStaat:d[p+"burgerstaat"],Nationaliteit:d[p+"nationaliteit"],EmailAdres:d[p+"email"],TelefoonNr:d[p+"tel"],Adres:{Straat:d[p+"straat"],HuisNr:d[p+"huisnr"],HuisNrToev:d[p+"huisnrtoev"],PostCode:d[p+"postcode"],Woonplaats:d[p+"woonplaats"]}},Inkomsten:{DienstBetrekking:d[ip+"ibl"]?undefined:{SoortDienstVerband:d[ip+"dienstvb"],BrutoJaarSalaris:parseFloat(d[ip+"brutojaar"])||null,VakantietoelagePct:parseFloat(d[ip+"vakantie"])||null,DertiendeMaand:parseFloat(d[ip+"13e"])||undefined,OnregelmatigheidsToelageBedrag:parseFloat(d[ip+"onregel"])||undefined,Werkgever:d[ip+"werkgever"],IngangsDt:d[ip+"ingdatum"]},InkomensBepalingLoondienst:d[ip+"ibl"]?{IBLBedag:parseFloat(d[ip+"ibl"])}:undefined,Pensioen:parseFloat(d[ip+"pensioen"])?{PensioenBedrag:parseFloat(d[ip+"pensioen"])}:undefined}});}
+    return {requestVersion:rv,messageType:"OfferteAanvraag",receiverCode:rc,serviceproviderCode:b.sp||undefined,Hypotheekgever:hgs,Object:{Adres:{Straat:d.obj_straat,HuisNr:d.obj_huisnr,PostCode:d.obj_postcode,Woonplaats:d.obj_woonplaats},BAGID:d.bag_id||undefined,Koopsom:parseFloat(d.koopsom)||null,KoopsomGrond:parseFloat(d.koopsomgrond)||undefined,Aanneemsom:parseFloat(d.aanneemsom)||undefined,MarktWaarde:parseFloat(d.marktwaarde)||undefined,BouwJaar:parseInt(d.bouwjaar)||null,SoortWoning:d.woningtype,Energieklasse:d.energieklasse||undefined,TaxatieAanwezigJN:d.taxatieaanwezig?.charAt(0),TaxatieDt:d.taxatiedt||undefined,ErfpachtJN:d.erfpacht?.charAt(0),AfkoopErfpachtJN:d.afkooperfpacht?.charAt(0),Erfpacht:d.erfpacht?.charAt(0)==="J"?{EindDt:d.erfpachteinddatum,Canon:parseFloat(d.erfpachtcanon)||undefined}:undefined},Lening:{HypotheekBedrag:hb,Regeling:d.regeling?.split(" – ")[0],NHGJN:d.nhg?.charAt(0),IngebrachtEigenMiddelen:parseFloat(d.eigenmiddelen)||undefined,BestaandeHypotheekNr:d.besthydpnr||undefined,Arrangement:d.arrangement||undefined,Leningdelen:lds},Tussenpersoon:{AdviseurNr:d.adviseur_nr,IntermediairNr:d.intermediair_nr}};
+  }
+  return {requestVersion:rv,messageType:b.type,receiverCode:rc,serviceproviderCode:b.sp||undefined,...d};
+}
+
+function buildXML(b){
+  const p=buildPayload(b);
+  const clean=JSON.parse(JSON.stringify(p,(k,v)=>(v===null||v===undefined||v==="")?undefined:v));
+  function toXML(obj,tag,indent){
+    const i="  ".repeat(indent);
+    if(typeof obj==="object"&&!Array.isArray(obj)){
+      const inner=Object.entries(obj).map(([k,v])=>toXML(v,k,indent+1)).join("\n");
+      return `${i}<${tag}>\n${inner}\n${i}</${tag}>`;
+    } else if(Array.isArray(obj)){
+      return obj.map(v=>toXML(v,tag,indent)).join("\n");
+    } else {
+      return `${i}<${tag}>${obj}</${tag}>`;
+    }
+  }
+  return `<?xml version="1.0" encoding="UTF-8"?>\n${toXML(clean,b.type,0)}`;
+}
+
+function runValidations(d,ldC){
+  const errs=[],warns=[];
+  const hb=parseFloat(d.hypotheekbedrag)||0;
+  let sumLd=0;for(let i=0;i<ldC;i++)sumLd+=parseFloat(d[`ld${i}_bedrag`])||0;
+  if(hb>0&&sumLd>0&&Math.abs(hb-sumLd)>0.01)errs.push(`HypotheekBedrag (€${hb.toLocaleString("nl-NL")}) \u2260 som leningdelen (€${sumLd.toLocaleString("nl-NL")}) — KET-040`);
+  const ks=parseFloat(d.koopsom)||0,kg=parseFloat(d.koopsomgrond)||0,as=parseFloat(d.aanneemsom)||0;
+  if(kg>0&&as>0&&Math.abs(ks-(kg+as))>0.01)errs.push(`Koopsom (€${ks.toLocaleString("nl-NL")}) \u2260 KoopsomGrond + Aanneemsom — KET-006`);
+  if(d.taxatieaanwezig?.charAt(0)==="J"&&d.taxatiedt&&new Date(d.taxatiedt)>=new Date())errs.push("TaxatieDt moet in het verleden liggen (cert. #8)");
+  if(d.bron_check?.charAt(0)==="J")errs.push("DX NIET versturen: OpgevraagdViaBronJN=Ja (KET-026)");
+  if(["04","06","08"].includes(d.doc_status?.split(" – ")[0]))errs.push("DX NIET versturen: documentstatus = "+d.doc_status);
+  if(hb>0&&ks>0){const ltv=Math.round(hb/ks*100);if(ltv>106)warns.push(`LTV ${ltv}% — boven 106%`);else if(ltv>90)warns.push(`LTV ${ltv}% — boven 90%, check NHG-grens`);}
+  return {errs,warns,hb,ks};
+}
+
+function hardValidate(data,msgType,hgCount,ldCount){
+  const errs=[];
+  if(msgType==="AX"){
+    const hb=parseFloat(data.hypotheekbedrag)||0;
+    const ldC=parseInt(ldCount)||1;
+    const hgC=parseInt(hgCount)||1;
+    let sumLd=0;
+    for(let i=0;i<ldC;i++) sumLd+=parseFloat(data[`ld${i}_bedrag`])||0;
+    if(hb>0&&sumLd>0&&Math.abs(hb-sumLd)>0.01)
+      errs.push({cert:"Cert. #2 \u00b7 KET-040",msg:`HypotheekBedrag \u20ac${hb.toLocaleString("nl-NL")} \u2260 som leningdelen \u20ac${sumLd.toLocaleString("nl-NL")} (verschil: \u20ac${Math.abs(hb-sumLd).toLocaleString("nl-NL")})`});
+    const ks=parseFloat(data.koopsom)||0,kg=parseFloat(data.koopsomgrond)||0,as=parseFloat(data.aanneemsom)||0;
+    if(kg>0&&as>0&&Math.abs(ks-(kg+as))>0.01)
+      errs.push({cert:"Cert. #3 \u00b7 KET-006",msg:`Koopsom \u20ac${ks.toLocaleString("nl-NL")} \u2260 KoopsomGrond (\u20ac${kg.toLocaleString("nl-NL")}) + Aanneemsom (\u20ac${as.toLocaleString("nl-NL")}) = \u20ac${(kg+as).toLocaleString("nl-NL")}`});
+    for(let i=0;i<hgC;i++){
+      const ibl=data[`hg${i}_ink_ibl`];
+      const brutojaar=data[`hg${i}_ink_brutojaar`];
+      if(ibl&&ibl.trim()&&brutojaar&&brutojaar.trim())
+        errs.push({cert:"Cert. #4 \u00b7 KET-005/018",msg:`Hypotheekgever ${i+1}: IBL-bedrag EN BrutoJaarSalaris (DienstBetrekking) zijn allebei ingevuld — kies slechts \u00e9\u00e9n methode`});
+      const gebdat=data[`hg${i}_geboortedatum`];
+      const ingdat=data[`hg${i}_ink_ingdatum`];
+      if(gebdat&&ingdat){
+        if(new Date(ingdat)<new Date(gebdat))
+          errs.push({cert:"Cert. #7",msg:`Hypotheekgever ${i+1}: IngangsDt dienstbetrekking (${ingdat}) ligt v\u00f3\u00f3r geboortedatum (${gebdat})`});
+        const maxFut=new Date();maxFut.setFullYear(maxFut.getFullYear()+1);
+        if(new Date(ingdat)>maxFut)
+          errs.push({cert:"Cert. #7 (check)",msg:`Hypotheekgever ${i+1}: IngangsDt dienstbetrekking (${ingdat}) ligt meer dan 1 jaar in de toekomst — controleer`});
+      }
+    }
+    if(data.taxatieaanwezig?.charAt(0)==="J"){
+      if(!data.taxatiedt)
+        errs.push({cert:"Cert. #8",msg:"TaxatieAanwezigJN = Ja maar TaxatieDt is niet ingevuld"});
+      else if(new Date(data.taxatiedt)>=new Date())
+        errs.push({cert:"Cert. #8",msg:`TaxatieDt (${data.taxatiedt}) moet in het verleden liggen`});
+    }
+  }
+  if(msgType==="DX"){
+    const docSt=data.doc_status?.split(" – ")[0];
+    if(docSt==="04") errs.push({cert:"Cert. #5 \u00b7 KET-024",msg:"DocumentStatus = 04 Akkoord — DX versturen is niet toegestaan"});
+    if(docSt==="08") errs.push({cert:"Cert. #5 \u00b7 KET-024",msg:"DocumentStatus = 08 Vervallen — DX versturen is niet toegestaan"});
+    if(docSt==="06") errs.push({cert:"Cert. #6 \u00b7 KET-024",msg:"DocumentStatus = 06 Voorlopig Akkoord — DX versturen is niet toegestaan"});
+    if(data.bron_check?.charAt(0)==="J") errs.push({cert:"Cert. #9 \u00b7 KET-026",msg:"OpgevraagdViaBronJN = Ja — DX versturen is niet toegestaan"});
+  }
+  return errs;
+}
+
+function updateLiveValidation(){
+  const data=collectForm();
+  const errs=hardValidate(data,S.msgType,S.hgCount,S.ldCount);
+  const el=document.getElementById("live-val");
+  if(!el) return;
+  if(errs.length===0){
+    el.innerHTML='<div class="v-ok" style="margin-bottom:0">Geen validatiefouten</div>';
+    highlightErrFields([]);
+    return;
+  }
+  el.innerHTML='<div class="val-banner"><div class="val-banner-t">Certificeringsblokkades ('+errs.length+') — los op voor je kunt versturen</div>'+errs.map(e=>'<div class="val-item"><span class="val-cert">'+esc(e.cert)+':</span><span>'+esc(e.msg)+'</span></div>').join("")+"</div>";
+  highlightErrFields(errs);
+}
+
+// Markeer specifieke velden rood op basis van het cert-nummer
+function highlightErrFields(errs){
+  // Reset alle velden
+  document.querySelectorAll(".fld-err").forEach(el=>el.classList.remove("fld-err"));
+  if(!errs.length) return;
+  const certs=errs.map(e=>e.cert);
+  const hgC=S.hgCount||1;
+  function markFld(id){const el=document.getElementById("fld_"+id);if(el&&el.parentElement)el.parentElement.classList.add("fld-err");}
+  if(certs.some(c=>c.includes("#2")||c.includes("KET-040"))){
+    markFld("hypotheekbedrag");
+    for(let i=0;i<(S.ldCount||1);i++) markFld("ld"+i+"_bedrag");
+  }
+  if(certs.some(c=>c.includes("#3")||c.includes("KET-006"))){markFld("koopsom");markFld("koopsomgrond");markFld("aanneemsom");}
+  if(certs.some(c=>c.includes("#4")||c.includes("KET-005"))){
+    for(let i=0;i<hgC;i++){markFld("hg"+i+"_ink_ibl");markFld("hg"+i+"_ink_brutojaar");}
+  }
+  if(certs.some(c=>c.includes("#7"))){
+    for(let i=0;i<hgC;i++){markFld("hg"+i+"_geboortedatum");markFld("hg"+i+"_ink_ingdatum");}
+  }
+  if(certs.some(c=>c.includes("#8"))){markFld("taxatieaanwezig");markFld("taxatiedt");}
+  if(certs.some(c=>c.includes("#5")||c.includes("#6"))){markFld("doc_status");}
+  if(certs.some(c=>c.includes("#9")||c.includes("KET-026"))){markFld("bron_check");}
+}
+// ==================== RENDER HELPERS ====================
+function fld(f,sd){
+  const v=sd?sd[f.id]||"":"";
+  const chg='onchange="updateLiveValidation()"';
+  const inp='oninput="updateLiveValidation()"';
+  return `<div class="${f.full?"ff":""}">
+    <label class="${f.r?"req":""}">${f.l}</label>
+    ${f.fn?`<div class="fn">${f.fn}</div>`:""}
+    ${f.t==="select"?`<select id="fld_${f.id}" ${chg}>${f.opts.map(o=>`<option value="${o.split(" – ")[0]}"${v===o.split(" – ")[0]?" selected":""}>${o}</option>`).join("")}</select>`
+    :f.t==="textarea"?`<textarea id="fld_${f.id}" placeholder="${esc(f.ph||"")}" ${inp}>${esc(v)}</textarea>`
+    :`<input id="fld_${f.id}" type="${f.t}" placeholder="${f.ph||""}" value="${v}" ${inp}>`}
+    ${f.fi?`<div class="fi">${f.fi}</div>`:""}
+  </div>`;
+}
+
+// ==================== VIEWS ====================
+function uitlegKaart(){
+  const verb=S.apiModus&&S.serverStatus;
+  return `<div class="card" style="border-left:3px solid ${verb?'var(--gn)':'var(--am)'};font-size:13px;line-height:1.6">
+    <strong>${verb?'Eigen server verbonden':'Geen server verbonden'}</strong> — ${verb?'berichten worden via uw eigen server ('+esc(S.serverUrl)+') verzonden.':'u kunt berichten opstellen, valideren en als JSON/XML bekijken of kopiëren, maar er wordt niets verzonden.'}
+    <div style="color:var(--ts);margin-top:4px">Berichten worden pas echt verstuurd als u onder <a href="#" onclick="nav('api');return false">API-koppeling</a> een eigen server koppelt die op uw eigen computer draait (localhost) en de HDN-aansluiting met uw eigen PKI-certificaat verzorgt. Er gaan <strong>geen klantgegevens naar adviseurstools.nl</strong>: alles blijft in deze browser (lokale opslag) of gaat rechtstreeks naar uw eigen server. Wis lokale gegevens van afgeronde dossiers via API-koppeling → AVG.</div>
+  </div>`;
+}
+function renderList(){
+  const all=Object.entries(MT_UIT);
+  const fl=S.filter==="Alle"?S.berichten:S.berichten.filter(b=>b.status===S.filter||b.type===S.filter);
+  const c={};S.berichten.forEach(b=>{c[b.status]=(c[b.status]||0)+1;});
+  return `
+    ${uitlegKaart()}
+    <div class="stats">
+      <div class="stat"><div class="sn">${S.berichten.length}</div><div class="sl">Totaal</div></div>
+      <div class="stat"><div class="sn" style="color:var(--ts)">${c.concept||0}</div><div class="sl">Concept</div></div>
+      <div class="stat"><div class="sn" style="color:var(--am)">${c.klaar||0}</div><div class="sl">Klaar</div></div>
+      <div class="stat"><div class="sn" style="color:var(--gn)">${(c.verstuurd||0)+(c.ontvangen||0)}</div><div class="sl">Verstuurd</div></div>
+    </div>
+    <div class="filters">
+      ${["Alle","concept","klaar","verstuurd"].map(f=>`<button class="fb${S.filter===f?" on":""}" onclick="setF('${f}')">${f.charAt(0).toUpperCase()+f.slice(1)}</button>`).join("")}
+      ${all.map(([k,v])=>`<button class="fb${S.filter===k?" on":""}" onclick="setF('${k}')" style="font-size:11px">${k}</button>`).join("")}
+    </div>
+    ${fl.length===0?`<div class="empty">Geen berichten. Klik op "+ Nieuw bericht".</div>`
+    :fl.map(b=>{
+      const mt=ALL_MT[b.type]||{l:b.type,c:"#555",bg:"#eee"};
+      const sc=SCFG[b.status]||SCFG.concept;
+      const d=b.data||{};
+      const nm=(d.hg0_voornaam||d.voornaam||"")+" "+(d.hg0_achternaam||d.achternaam||"");
+      const dref=d.dossier_ref||d.leningnummer||"";
+      const geblokkeerd=dref&&isDossierGeblokkeerd(dref);
+      return `<div class="mc" style="${geblokkeerd?"opacity:0.6;border-color:var(--rd)":""}">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="badge" style="background:${mt.bg};color:${mt.c}">${b.type}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.naam)}</div>
+            <div style="font-size:12px;color:var(--ts);margin-top:2px">
+              ${b.aanbieder} ${ANR[b.aanbieder]?`<span style="font-family:monospace;font-size:10px;background:var(--bg);padding:1px 5px;border-radius:3px">[${ANR[b.aanbieder]}]</span>`:""}
+              ${b.sp?`<span style="font-size:10px;color:var(--am)"> via SP: ${esc(b.sp)}</span>`:""}
+              ${nm.trim()?" · "+esc(nm.trim()):""}
+              <span class="rv-badge" style="margin-left:4px">rv${b.rv||1}</span>
+              ${geblokkeerd?`<span class="blok-badge" style="margin-left:4px">GEBLOKKEERD</span>`:""}
+              ${b.verstuurd_op?" · "+b.verstuurd_op:" · "+b.bijgewerkt}
+            </div>
+          </div>
+          <span class="badge ${sc.bc}">${sc.l}</span>
+        </div>
+        <div class="ma">
+          <button class="btn" onclick="editB(${b.id})">Bewerken</button>
+          ${b.status==="concept"&&!geblokkeerd?`<button class="btn btn-w" onclick="markeerKlaar(${b.id})">Klaar</button>`:""}
+          ${b.status==="klaar"&&!geblokkeerd?`<button class="btn btn-s" onclick="verstuurB(${b.id})">${(S.apiModus&&S.serverStatus)?'Versturen → '+b.aanbieder:'Markeer als verstuurd'}</button>`:""}
+          <button class="btn" onclick="dupB(${b.id})">Dup</button>
+          <button class="btn" onclick="showJSON(${b.id})">JSON</button>
+          <button class="btn" onclick="showXML(${b.id})">XML</button>
+          <button class="btn btn-d" onclick="delB(${b.id})" style="margin-left:auto">Verwijder</button>
+        </div>
+      </div>`;
+    }).join("")}`;
+}
+
+function renderDossiers(){
+  const refs=new Set();
+  [...S.berichten,...S.inbox].forEach(b=>{
+    const d=b.data||{};
+    const ref=d.dossier_ref||d.leningnummer||"";
+    if(ref)refs.add(ref);
+  });
+  if(refs.size===0)return`<div class="empty">Geen dossiers gevonden. Maak een bericht aan met een dossiernummer.</div>`;
+  return Array.from(refs).map(ref=>{
+    const berOut=S.berichten.filter(b=>(b.data?.dossier_ref||b.data?.leningnummer||"")===ref);
+    const berIn=S.inbox.filter(b=>(b.data?.dossier_ref||b.data?.leningnummer||"")===ref);
+    const geblokkeerd=isDossierGeblokkeerd(ref);
+    const rxV=berOut.length;
+    // Laatste SX
+    const lastSX=berIn.filter(b=>b.type==="SX").sort((a,b)=>b.id-a.id)[0];
+    const lastSXCode=lastSX?.data?.sx_code||"–";
+    return `<div class="dos-card">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:500">${esc(ref)}</div>
+        <span class="rv-badge">rv${rxV}</span>
+        ${geblokkeerd?`<span class="blok-badge">GEBLOKKEERD — ${esc(lastSXCode)}</span>`:`<span class="badge b-green">Actief</span>`}
+        <span style="font-size:11px;color:var(--ts);margin-left:auto">${berOut.length} verstuurd · ${berIn.length} ontvangen</span>
+      </div>
+      <div style="font-size:12px;color:var(--ts);margin-bottom:8px">Verstuurd</div>
+      ${berOut.map(b=>{const mt=ALL_MT[b.type]||{l:b.type,c:"#555",bg:"#eee"};return`<div class="dos-tl">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge" style="background:${mt.bg};color:${mt.c};font-size:10px">${b.type}</span>
+          <span style="font-size:12px">${esc(b.naam)}</span>
+          <span class="rv-badge" style="font-size:10px">rv${b.rv||1}</span>
+          <span style="font-size:11px;color:var(--ts);margin-left:auto">${b.verstuurd_op||b.bijgewerkt}</span>
+        </div>
+      </div>`;}).join("")}
+      ${berIn.length?`<div style="font-size:12px;color:var(--ts);margin-top:10px;margin-bottom:8px">Ontvangen</div>`:""}
+      ${berIn.map(b=>{const mt=ALL_MT[b.type]||{l:b.type,c:"#2E7D32",bg:"#E8F5E9"};const code=b.data?.sx_code||"";const blokkeer=b.type==="SX"&&SX_BLOKKEER.includes(code.split(" – ")[0]);return`<div class="dos-tl" style="border-left-color:${blokkeer?"var(--rd)":"var(--gn)"}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge" style="background:${mt.bg};color:${mt.c};font-size:10px">${b.type}</span>
+          ${code?`<span class="sx-badge" style="${blokkeer?"background:var(--rdb);color:var(--rd)":""}">${esc(code)}</span>`:""}
+          <span style="font-size:11px;color:var(--ts);margin-left:auto">${b.ontvangen}</span>
+        </div>
+        ${b.data?.tekst?`<div style="font-size:11px;color:var(--ts);margin-top:3px">${esc(b.data.tekst)}</div>`:""}
+      </div>`;}).join("")}
+    </div>`;
+  }).join("");
+}
+
+function renderInbox(){
+  const fl=S.inbox.filter(b=>b.type===S.inboxType||S.inboxType==="Alle");
+  const frm=INBOX_FORMS[S.inboxType];
+  const aanb=S.inbox.length>0?S.inbox[0].aanbieder:S.aanbieder;
+  return `
+    <div class="card">
+      <div class="card-t">Inkomend bericht registreren</div>
+      <div class="fg3">
+        <div>
+          <label>Berichttype (inkomend)</label>
+          <select id="sel_intype" onchange="changeInType(this.value)">
+            ${Object.entries(MT_IN).map(([k,v])=>`<option value="${k}"${S.inboxType===k?" selected":""}>${v.l}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label>Van aanbieder</label>
+          <select id="sel_aanb_in">
+            ${AD.map(([naam,nr])=>`<option value="${naam}"${aanb===naam?" selected":""}>${naam} [${nr}]</option>`).join("")}
+          </select>
+        </div>
+      </div>
+    </div>
+    ${frm?`
+    <div style="background:${MT_IN[S.inboxType]?.bg||"#eee"};border-radius:var(--r);padding:9px 13px;margin-bottom:14px;font-size:13px;font-weight:500;color:${MT_IN[S.inboxType]?.c||"#333"}">${MT_IN[S.inboxType]?.l} — ${MT_IN[S.inboxType]?.d}</div>
+    <div class="fs"><div class="ft">${frm.s}</div><div class="fg">${frm.f.map(f=>fld(f,{})).join("")}</div></div>
+    <div class="abar">
+      <button class="btn-p" onclick="saveInboxMsg()">Inkomend bericht opslaan</button>
+    </div>
+    <div class="sep"></div>`:""}
+    <div style="font-size:14px;font-weight:500;margin-bottom:12px">Ontvangen berichten (${fl.length})</div>
+    ${fl.length===0?`<div class="empty">Nog geen ${S.inboxType} berichten ontvangen.</div>`
+    :fl.map(b=>{
+      const mt=MT_IN[b.type]||{l:b.type,c:"#333",bg:"#eee"};
+      const code=b.data?.sx_code||"";
+      const blokkeer=b.type==="SX"&&SX_BLOKKEER.includes(code.split(" – ")[0]);
+      return `<div class="in-card" style="${blokkeer?"background:var(--rdb);border-color:var(--rd);opacity:1":""}">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="badge" style="background:${mt.bg};color:${mt.c}">${b.type}</span>
+          ${code?`<span class="sx-badge" style="${blokkeer?"background:var(--rdb);color:var(--rd)":""}">${esc(code)}</span>`:""}
+          <span style="font-size:13px;font-weight:500">${esc(b.aanbieder)}</span>
+          <span style="font-size:12px;color:var(--ts);margin-left:auto">${b.ontvangen}</span>
+          <button class="btn btn-d" onclick="delInbox(${b.id})" style="font-size:11px;padding:3px 8px">✕</button>
+        </div>
+        ${b.data?.dossier_ref?`<div style="font-size:11px;color:var(--ts);margin-top:4px">Dossier: ${esc(b.data.dossier_ref||"")}</div>`:""}
+        ${b.data?.tekst?`<div style="font-size:12px;color:var(--ts);margin-top:4px;font-style:italic">"${esc(b.data.tekst)}"</div>`:""}
+        ${blokkeer?`<div class="v-er" style="margin-top:8px;margin-bottom:0">Dossier geblokkeerd: geen berichten meer versturen na SX ${code.split(" – ")[0]}</div>`:""}
+      </div>`;
+    }).join("")}`;
+}
+
+function renderForm(){
+  const mt=MT_UIT[S.msgType];
+  const isEdit=!!S.editId;
+  const saved=isEdit?S.berichten.find(b=>b.id===S.editId)?.data||{}:{};
+  if(isEdit){S.hgCount=parseInt(saved._hgCount)||1;S.ldCount=parseInt(saved._ldCount)||1;}
+  let html="";
+  if(S.msgType==="AX"){
+    html+=`<div class="card"><div class="card-t">Leningdelen <span style="font-size:11px;color:var(--ts);font-weight:400">(${S.ldCount} stuk${S.ldCount>1?"s":""})</span></div>
+      <div class="fn" style="margin-bottom:12px">Som leningdeelbedragen = HypotheekBedrag (KET-040, cert. #2)</div>
+      ${Array.from({length:S.ldCount},(_,i)=>`<div class="ld-blk"><div class="blk-hdr"><div class="blk-t">Leningdeel ${i+1}</div>${i>0?`<button class="btn btn-d" onclick="removeLD(${i})" style="font-size:11px;padding:3px 8px">Verwijder</button>`:""}</div><div class="fg">${ldF(i).map(f=>fld(f,saved)).join("")}</div></div>`).join("")}
+      <button class="btn-add" onclick="addLD()">+ Leningdeel toevoegen</button></div>`;
+    html+=`<div class="card"><div class="card-t">Hypotheekgevers <span style="font-size:11px;color:var(--ts);font-weight:400">(${S.hgCount} aanvrager${S.hgCount>1?"s":""})</span></div>
+      ${Array.from({length:S.hgCount},(_,i)=>`<div class="hg-blk"><div class="blk-hdr"><div class="blk-t">Hypotheekgever ${i+1}${i===0?" (aanvrager)":" (partner)"}</div>${i>0?`<button class="btn btn-d" onclick="removeHG()" style="font-size:11px;padding:3px 8px">Verwijder</button>`:""}</div><div class="fg">${hgF(i).map(f=>fld(f,saved)).join("")}</div><div class="sep"></div><div style="font-size:12px;font-weight:500;color:var(--ts);margin-bottom:10px">Inkomen hypotheekgever ${i+1}</div><div class="fg">${inkF(i).map(f=>fld(f,saved)).join("")}</div></div>`).join("")}
+      ${S.hgCount<2?`<button class="btn-add" onclick="addHG()">+ Tweede hypotheekgever toevoegen</button>`:""}</div>`;
+    FORMS.AX.static.forEach(sec=>{html+=`<div class="fs"><div class="ft">${sec.s}</div><div class="fg">${sec.f.map(f=>fld(f,saved)).join("")}</div></div>`;});
+  } else if(FORMS[S.msgType]){
+    FORMS[S.msgType].static.forEach(sec=>{html+=`<div class="fs"><div class="ft">${sec.s}</div><div class="fg">${sec.f.map(f=>fld(f,saved)).join("")}</div></div>`;});
+  }
+  return `
+    <div class="card">
+      <div class="fg3">
+        <div>
+          <label>Berichttype</label>
+          <select id="sel_type" onchange="changeType(this.value)">
+            ${Object.entries(MT_UIT).map(([k,v])=>`<option value="${k}"${S.msgType===k?" selected":""}>${v.l}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label>Aanbieder <span style="font-size:10px;color:var(--th)">(aansluitnr.)</span></label>
+          <select id="sel_aanb">
+            ${AD.map(([naam,nr])=>`<option value="${naam}"${S.aanbieder===naam?" selected":""}>${naam} [${nr}]</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label>Via serviceprovider (optioneel)</label>
+          <select id="sel_sp">
+            ${SPS.map(s=>`<option value="${s.code}"${S.sp===s.code?" selected":""}>${s.naam}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:11px">
+        <label>Naam / dossierbeschrijving</label>
+        <input id="sel_naam" type="text" placeholder="${S.msgType} → ${S.aanbieder}" value="${isEdit?esc(S.berichten.find(b=>b.id===S.editId)?.naam||""):""}">
+      </div>
+    </div>
+    <div style="background:${mt?.bg||"#eee"};border-radius:var(--r);padding:9px 13px;margin-bottom:14px;font-size:13px;font-weight:500;color:${mt?.c||"#333"}">${mt?.l||S.msgType} — ${mt?.d||""}</div>
+    ${html}
+    <div id="live-val" style="margin-bottom:10px"></div>
+    <div class="abar">
+      <button class="btn" onclick="saveMsg('concept')">Opslaan als concept</button>
+      <button class="btn btn-w" onclick="saveMsg('klaar')">Klaar voor versturen</button>
+      <button class="btn-p" onclick="directVersturen()">${(S.apiModus&&S.serverStatus)?'Direct versturen':'Versturen (vereist eigen server)'}</button>
+      <button class="btn btn-g" onclick="S.view='list';S.editId=null;render()" style="margin-left:auto">Annuleer</button>
+    </div>`;
+  // Toon validatiefouten als flag gezet
+  // Initieel validatie uitvoeren (ook als showValErrors niet gezet)
+  setTimeout(()=>{
+    updateLiveValidation();
+    if(S.showValErrors){
+      document.getElementById("live-val")?.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+  },80);
+}
+
+function renderJSONXML(isXML){
+  const b=S.berichten.find(x=>x.id===S.jsonId);
+  if(!b)return"<div>Niet gevonden</div>";
+  const mt=ALL_MT[b.type];
+  const d=b.data||{};
+  const ldC=parseInt(d._ldCount)||1;
+  const {errs,warns,hb,ks}=runValidations(d,ldC);
+  const ltv=hb&&ks?Math.round(hb/ks*100):null;
+  const raw=buildPayload(b);
+  const clean=JSON.parse(JSON.stringify(raw,(k,v)=>(v===null||v===undefined||v==="")?undefined:v));
+  const content=isXML?buildXML(b):JSON.stringify(clean,null,2);
+  return `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <span class="badge" style="background:${mt?.bg||"#eee"};color:${mt?.c||"#333"}">${b.type}</span>
+      <span style="font-size:15px;font-weight:500">${esc(b.naam)}</span>
+      <span style="font-size:12px;color:var(--ts)">→ ${b.aanbieder} ${ANR[b.aanbieder]?`[${ANR[b.aanbieder]}]`:""}</span>
+      <span class="rv-badge">requestVersion: ${b.rv||1}</span>
+      <button class="btn btn-g" onclick="S.view='list';render()" style="margin-left:auto">Terug</button>
+    </div>
+    ${errs.map(e=>`<div class="v-er">Fout: ${e}</div>`).join("")}
+    ${warns.map(w=>`<div class="v-wn">Let op: ${w}</div>`).join("")}
+    ${!errs.length&&!warns.length?`<div class="v-ok">Alle automatische validaties geslaagd</div>`:""}
+    ${ltv!==null?`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ts);margin-bottom:3px"><span>LTV</span><span style="font-weight:500;color:${ltv>106?"var(--rd)":ltv>90?"var(--am)":"var(--gn)"}">${ltv}%</span></div><div class="ltv-bar"><div class="ltv-fill" style="width:${Math.min(ltv,100)}%;background:${ltv>106?"var(--rd)":ltv>90?"var(--am)":"var(--gn)"}"></div></div></div>`:""}
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn${!isXML?" btn-s":""}" onclick="S.xmlMode=false;render()">JSON</button>
+      <button class="btn${isXML?" btn-s":""}" onclick="S.xmlMode=true;render()">XML</button>
+      <button class="btn" onclick="copyContent('${S.jsonId}',${isXML})" style="margin-left:auto">Kopieer</button>
+    </div>
+    <div class="${isXML?"xmlbox":"jbox"}">${content.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>
+    <div style="font-size:11px;color:var(--th);margin-top:8px">Indicatieve structuur op basis van HDN 26 generiek schema. Org.-specifieke velden via <a href="http://schemabeheer.hdn.nl" target="_blank">schemabeheer.hdn.nl</a>.</div>`;
+}
+
+function renderApi(){
+  const st=S.serverStatus;
+  const verbonden=st?.hdnVerbinding?.verbonden;
+  const statusKleur=!st?'var(--ts)':verbonden?'var(--gn)':'var(--rd)';
+  const statusTekst=!st?'Geen server verbonden':verbonden?'Verbonden':'Server bereikbaar, HDN niet verbonden';
+
+  return `
+  <div class="card">
+    <div class="card-t">API-koppeling naar HDN platform</div>
+    <div style="font-size:13px;color:var(--ts);margin-bottom:16px">
+      Berichten worden alleen verstuurd via een <strong>eigen server</strong> die u zelf op uw computer draait (bijv. een Node.js-proxy op http://localhost:3001) en die de HDN-aansluiting met uw eigen PKI-certificaat (mTLS) verzorgt. Zonder zo'n server verstuurt deze tool niets.<br>
+      Er gaan geen klantgegevens naar adviseurstools.nl. Het API-token wordt alleen in het geheugen van deze pagina gehouden en niet opgeslagen. Om veiligheidsredenen kan deze pagina alleen met een server op localhost verbinden.
+    </div>
+
+    <div class="fg3" style="margin-bottom:16px">
+      <div>
+        <label>Server URL</label>
+        <input id="api-url" type="text" value="${S.serverUrl}" placeholder="http://localhost:3001"
+          oninput="S.serverUrl=this.value">
+      </div>
+      <div>
+        <label>API-token (uit server .env)</label>
+        <input id="api-token" type="password" value="${esc(S.apiToken)}" placeholder="64-tekens token uit .env"
+          oninput="S.apiToken=this.value">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <div style="flex:1">
+          <label>Status</label>
+          <div style="padding:8px 10px;border:0.5px solid var(--br);border-radius:var(--r);background:var(--bg);font-size:13px;display:flex;align-items:center;gap:8px">
+            <span style="width:8px;height:8px;border-radius:50%;background:${statusKleur};display:inline-block;flex-shrink:0"></span>
+            <span style="color:${statusKleur}">${statusTekst}</span>
+            ${st?.omgeving?`<span style="font-size:10px;color:var(--ts);margin-left:4px">${st.omgeving}</span>`:''}
+          </div>
+        </div>
+        <button class="btn btn-s" onclick="testServerVerbinding()" style="padding:8px 14px">Test verbinding</button>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <div style="flex:1">
+          <label>Modus</label>
+          <div style="display:flex;gap:8px">
+            <button class="btn${!S.apiModus?' btn-s':''}" onclick="S.apiModus=false;render()">Lokaal opslaan</button>
+            <button class="btn${S.apiModus?' btn-s':''}" onclick="if(!S.serverStatus){notif('Geen server verbonden — klik eerst op Test verbinding','w');return;}S.apiModus=true;render()" ${!S.serverStatus?'title="Verbind eerst met de server"':''}>Via API versturen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${st?`<div class="fs" style="margin-bottom:0">
+      <div class="ft">Server info</div>
+      <div class="fg" style="font-size:12px">
+        <div><span style="color:var(--ts)">Aansluitnummer</span><div style="font-family:monospace;margin-top:4px">${esc(st.aansluitnummer||'—')}</div></div>
+        <div><span style="color:var(--ts)">HDN API URL</span><div style="font-family:monospace;margin-top:4px;word-break:break-all">${esc(st.hdnVerbinding?.omgeving||'—')}</div></div>
+        <div><span style="color:var(--ts)">Inbox gebufferd</span><div style="font-size:18px;font-weight:500;margin-top:4px">${st.inboxAantal||0}</div></div>
+        <div><span style="color:var(--ts)">Tijdstip meting</span><div style="font-family:monospace;margin-top:4px">${st.tijdstip?new Date(st.tijdstip).toLocaleString('nl-NL'):'—'}</div></div>
+      </div>
+    </div>`:''}
+  </div>
+
+  <div class="card">
+    <div class="card-t">Inkomende berichten ophalen</div>
+    <div style="font-size:13px;color:var(--ts);margin-bottom:14px">
+      De server pollt automatisch elke 30 seconden. Handmatig ophalen voor direct resultaat.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-s" onclick="pollInkomend(['SX','OX','DA','IX','CX'])">Poll alle inkomende</button>
+      <button class="btn" onclick="pollInkomend(['SX'])">Alleen SX</button>
+      <button class="btn" onclick="pollInkomend(['OX'])">Alleen OX</button>
+      <button class="btn" onclick="pollInkomend(['DA'])">Alleen DA</button>
+    </div>
+    ${S.lastPollResultaat?`<div class="v-ok" style="margin-top:12px;margin-bottom:0">${esc(S.lastPollResultaat||"")}</div>`:''}
+  </div>
+
+  <div class="card">
+    <div class="card-t">AVG &amp; Gegevensbeheer</div>
+    <div style="font-size:13px;color:var(--ts);margin-bottom:14px">
+      Persoonsgegevens (BSN, naam, adres, geboortedatum) worden opgeslagen in lokale browseropslag.
+      Exporteer regelmatig voor archivering en verwijder data van afgeronde dossiers.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-d" onclick="if(confirm('Alle berichten en inbox verwijderen?')){try{localStorage.removeItem('hdn_v3_b');localStorage.removeItem('hdn_v3_i');}catch(e){}S.berichten=[];S.inbox=[];render();notif('Alle lokale data verwijderd','ok');}">
+        Verwijder alle lokale data
+      </button>
+      <button class="btn btn-g" onclick="exportData()">Exporteer voor archivering</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-t">Token-rotatie &amp; beveiliging</div>
+    <div style="font-size:13px;color:var(--ts);margin-bottom:14px">
+      Roteer het API-token periodiek (aanbevolen: elke 90 dagen) of na een beveiligingsincident.
+      Na rotatie werkt het oude token nog 24 uur (grace period via API_TOKEN_VORIG in .env).
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-w" onclick="roteerToken()">Token roteren</button>
+      <span style="font-size:11px;color:var(--th);align-self:center">Genereert nieuw token — kopieer naar .env en herstart server</span>
+    </div>
+    <div id="roteer-resultaat" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-t">Setup instructies</div>
+    <div style="font-size:13px;line-height:1.8">
+      <strong>1. Server installeren</strong>
+      <div class="jbox" style="margin:8px 0 14px">cd hdn-api-server
+npm install</div>
+      <strong>2. Configuratie aanmaken</strong>
+      <div class="jbox" style="margin:8px 0 14px">cp .env.example .env
+# Vul in: HDN_CERT_PATH, HDN_CERT_WACHTWOORD, HDN_AANSLUITNUMMER</div>
+      <strong>3. Certificaat aanvragen</strong>
+      <div style="margin:6px 0 14px;color:var(--ts)">
+        GTO: <a href="https://certificaten-pt.hdn.nl/webcert.php" target="_blank">certificaten-pt.hdn.nl/webcert.php</a><br>
+        Productie: <a href="https://hdn.nl/tools/certificaataanvragen/#webcert" target="_blank">hdn.nl/tools/certificaataanvragen</a>
+      </div>
+      <strong>4. Verbinding testen</strong>
+      <div class="jbox" style="margin:8px 0 14px">node test-verbinding.js</div>
+      <strong>5. Server starten</strong>
+      <div class="jbox" style="margin:8px 0 14px">node server.js</div>
+      <strong>6. In deze tool: API-modus activeren</strong>
+      <div style="margin:6px 0;color:var(--ts)">Zet de server-URL op uw lokale server (bijv. http://localhost:3001), klik op "Test verbinding" en daarna op "Via API versturen".</div>
+    </div>
+  </div>`;
+}
+
+async function verstuurViaApi(bericht){
+  notif("Versturen naar HDN via API...","ok");
+  const payload = JSON.parse(JSON.stringify(
+    buildPayload(bericht),(k,v)=>(v===null||v===undefined||v==="")? undefined:v
+  ));
+  const t = ts();
+  try {
+    const verstuurHdrs={'Content-Type':'application/json'};
+    if(S.apiToken) verstuurHdrs['Authorization']='Bearer '+S.apiToken;
+    const r = await fetch(S.serverUrl+'/api/verstuur',{
+      method:'POST',
+      headers:verstuurHdrs,
+      body: JSON.stringify({
+        berichtType:  bericht.type,
+        receiverCode: RCV[bericht.aanbieder]||bericht.aanbieder.toUpperCase().replace(/ /g,""),
+        payload,
+        dossiernaam:  bericht.naam,
+      }),
+      signal: AbortSignal.timeout(30000)
+    });
+    const data = await r.json();
+    if(data.ok){
+      const nieuwBericht = {
+        ...bericht,
+        status:"verstuurd",
+        verstuurd_op:t,
+        bijgewerkt:t,
+        requestTraceNumber: data.requestTraceNumber||null,
+      };
+      if(bericht.id && S.berichten.some(b=>b.id===bericht.id)) {
+        // Update bestaand
+        S.berichten=S.berichten.map(b=>b.id===bericht.id?nieuwBericht:b);
+      } else {
+        S.berichten.unshift(nieuwBericht);
+      }
+      saveBer();
+      notif("Verstuurd naar "+bericht.aanbieder+(data.requestTraceNumber?" — trace: "+esc(data.requestTraceNumber||""):""),"ok");
+      S.view="list";S.editId=null;render();
+    } else {
+      if(data.code==='SESSIE_VERLOPEN'){
+      notif("Sessie verlopen — voer API-token opnieuw in via API-configuratie tab","w");
+      S.apiModus=false; S.view='api'; render(); return;
+    }
+    notif("HDN fout: "+(data.fout||data.error||"onbekende fout"),"w");
+      // Sla op als concept zodat niets verloren gaat
+      S.berichten.unshift({...bericht,status:"concept",aangemaakt:t,bijgewerkt:t});
+      saveBer();render();
+    }
+  } catch(e){
+    notif("Verbinding met server mislukt: "+e.message+" — opgeslagen als concept","w");
+    S.berichten.unshift({...bericht,status:"concept",aangemaakt:t,bijgewerkt:t});
+    saveBer();render();
+  }
+}
+
+function exportData(){
+  const exp={
+    exportDatum: new Date().toISOString(),
+    versie: 'Berichtencentrum HDN-berichten (HDN-standaard 26)',
+    waarschuwing: 'Dit bestand bevat persoonsgegevens. Bewaar veilig en verwijder na verwerking.',
+    berichten: S.berichten,
+    inbox: S.inbox,
+  };
+  const blob=new Blob([JSON.stringify(exp,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='berichten-export-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+window.exportData=exportData;
+window.roteerToken=async function(){
+  if(!S.apiToken){notif("Voer eerst het API-token in","w");return;}
+  if(!confirm("Token roteren? Het nieuwe token moet direct in .env worden gezet.")) return;
+  try {
+    const hdrs={"Content-Type":"application/json"};
+    if(S.apiToken) hdrs["Authorization"]="Bearer "+S.apiToken;
+    const r=await fetch(S.serverUrl+"/api/admin/roteer-token",{method:"POST",headers:hdrs,signal:AbortSignal.timeout(10000)});
+    const d=await r.json();
+    if(d.ok){
+      const el=document.getElementById("roteer-resultaat");
+      if(el) el.innerHTML=`<div class="v-wn" style="font-family:monospace;font-size:12px">
+        <strong>Nieuw token (kopieer nu!):</strong><br>
+        ${esc(d.nieuwToken)}<br><br>
+        <strong>Stappen:</strong><br>
+        ${d.stappenPlan.map(s=>'• '+esc(s)).join('<br>')}
+      </div>`;
+      notif("Nieuw token gegenereerd — zie instructies hieronder","ok");
+    } else { notif("Rotatie mislukt: "+(d.fout||"onbekend"),"w"); }
+  } catch(e){ notif("Server niet bereikbaar: "+e.message,"w"); }
+};
+
+
+async function testServerVerbinding(){
+  notif("Verbinding testen...","ok");
+  try {
+    const hdrs={'Content-Type':'application/json'};
+    if(S.apiToken) hdrs['Authorization']='Bearer '+S.apiToken;
+    if(!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(S.serverUrl||'')) throw new Error('alleen een server op localhost is toegestaan');
+    const r = await fetch(S.serverUrl+'/api/status',{headers:hdrs,signal:AbortSignal.timeout(5000)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    S.serverStatus = await r.json();
+    notif("Verbinding met eigen server geslaagd","ok");
+  } catch(e) {
+    S.serverStatus = null; S.apiModus = false;
+    notif("Geen server verbonden ("+S.serverUrl+"): "+e.message,"w");
+  }
+  render();
+}
+
+async function pollInkomend(types){
+  if(!S.serverStatus){
+    notif("Geen server verbonden — test eerst de verbinding onder API-koppeling","w");
+    return;
+  }
+  try {
+    const pollHdrs={'Content-Type':'application/json'};
+    if(S.apiToken) pollHdrs['Authorization']='Bearer '+S.apiToken;
+    const r = await fetch(S.serverUrl+'/api/poll',{
+      method:'POST',
+      headers:pollHdrs,
+      body: JSON.stringify({berichtTypes:types}),
+      signal: AbortSignal.timeout(15000)
+    });
+    const data = await r.json();
+    const nieuw = data.nieuwAantal||0;
+    S.lastPollResultaat = `${nieuw} nieuw bericht${nieuw!==1?'en':''} ontvangen (${new Date().toLocaleTimeString('nl-NL')})`;
+    if(nieuw>0 && data.nieuweBerichten){
+      // Voeg toe aan lokale inbox
+      data.nieuweBerichten.forEach(b=>{
+        const d=b.data||b;
+        S.inbox.unshift({
+          id:Date.now()+Math.random(),
+          type:b.type,
+          aanbieder:b.aanbieder||'HDN',
+          data:{
+            dossier_ref: d.requestTraceNumber||d.dossierId||'',
+            sx_code:     d.statusCode?d.statusCode+' – '+(SX_CODES[d.statusCode]||''):'',
+            tekst:       d.statusTekst||d.toelichting||'',
+            ...d
+          },
+          ontvangen:new Date().toLocaleString('nl-NL')
+        });
+      });
+      saveInbox();
+    }
+    render();
+    if(nieuw>0) nav('inbox');
+  } catch(e){
+    notif("Poll mislukt: "+e.message,"w");
+  }
+}
+
+// Auto-poll via API als modus actief (elke 30s)
+setInterval(()=>{
+  if(S.apiModus&&S.serverStatus) pollInkomend(['SX','OX','DA','IX','CX']).catch(()=>{});
+}, 30000);
+
+function render(){
+  const views={list:0,dossiers:1,inbox:2,api:3,form:4};
+  document.querySelectorAll(".htab").forEach((el,i)=>el.classList.toggle("on",i===(views[S.view]??3)));
+  const titles={list:"Berichten",dossiers:"Dossiers",inbox:"Inbox (ontvangen)",api:"API-koppeling",form:S.editId?"Bewerken":"Nieuw bericht",json:"JSON / XML"};
+  // Update statische header badge (zit buiten de dynamische root)
+  const badge=document.getElementById('modus-badge');
+  if(badge){
+    badge.innerHTML=(S.apiModus&&S.serverStatus)
+      ?'<span style="color:#4CAF50;font-weight:500">Eigen server verbonden</span>'
+      :'Geen server verbonden · alleen lokaal';
+    const dot=document.getElementById('modus-dot');if(dot)dot.style.background=(S.apiModus&&S.serverStatus)?'#4CAF50':'#F59E0B';
+  }
+  document.getElementById("root").innerHTML=`
+    <div class="topbar">
+      <div>
+        <div class="tt">${titles[S.view]||"Berichtencentrum"}</div>
+        <div class="ts2">${S.berichten.length} bericht${S.berichten.length===1?'':'en'} · ${S.inbox.length} ontvangen${(S.apiModus&&S.serverStatus)?' · <span style="color:var(--gn);font-weight:500">eigen server verbonden</span>':' · <span style="color:var(--am);font-weight:500">geen server verbonden</span> — berichten worden niet verzonden'}</div>
+      </div>
+      ${S.view==="list"?`<button class="btn-p" onclick="nav('new')" style="margin-left:auto">+ Nieuw bericht</button>`:""}
+      ${S.view==="inbox"?`<button class="btn-in" onclick="nav('inbox')" style="margin-left:auto">+ Ontvangen registreren</button>`:""}
+    </div>
+    ${S.view==="list"?renderList():S.view==="dossiers"?renderDossiers():S.view==="inbox"?renderInbox():S.view==="api"?renderApi():S.view==="form"?renderForm():renderJSONXML(S.xmlMode||false)}`;
+}
+
+let ntTO;
+function notif(msg,type){
+  const el=document.getElementById("notif");if(!el)return;
+  el.textContent=msg;el.style.background=type==="ok"?"var(--gnb)":"var(--amb)";
+  el.style.color=type==="ok"?"var(--gn)":"var(--am)";el.style.display="block";
+  clearTimeout(ntTO);ntTO=setTimeout(()=>{if(document.getElementById("notif"))document.getElementById("notif").style.display="none";},3000);
+}
+
+// ==================== HANDLERS ====================
+window.nav=v=>{
+  if(v==="new"){S.view="form";S.editId=null;S.hgCount=1;S.ldCount=1;}
+  else{S.view=v;}
+  render();
+};
+window.testServerVerbinding=testServerVerbinding;
+window.pollInkomend=pollInkomend;
+window.verstuurViaApi=verstuurViaApi;
+window.setF=f=>{S.filter=f;render();};
+window.changeType=v=>{S.msgType=v;render();};
+window.changeInType=v=>{S.inboxType=v;render();};
+// saveMsg, directVersturen en saveInboxMsg zijn al globale functies (zelfverwijzende wrappers gaven oneindige recursie)
+window.editB=id=>{
+  const b=S.berichten.find(x=>x.id===id);if(!b)return;
+  S.editId=id;S.msgType=b.type;S.aanbieder=b.aanbieder;S.sp=b.sp||"";
+  S.hgCount=parseInt(b.data?._hgCount)||1;S.ldCount=parseInt(b.data?._ldCount)||1;
+  S.view="form";render();
+};
+window.delB=id=>{if(confirm("Verwijder?")){{S.berichten=S.berichten.filter(b=>b.id!==id);saveBer();render();}};};
+window.delInbox=id=>{S.inbox=S.inbox.filter(b=>b.id!==id);saveInbox();render();};
+window.verstuurB=id=>{
+  const b=S.berichten.find(x=>x.id===id);if(!b)return;
+  const dref=b.data?.dossier_ref||b.data?.leningnummer||"";
+  if(dref&&isDossierGeblokkeerd(dref)){notif("Dossier geblokkeerd!","w");return;}
+  if(S.apiModus&&S.serverStatus){verstuurViaApi(b);return;}
+  if(!confirm("Geen server verbonden: dit bericht wordt NIET verzonden.\n\nWilt u het alleen lokaal als 'verstuurd' markeren (bijvoorbeeld omdat u het via andere software hebt verstuurd)?"))return;
+  const t=ts();S.berichten=S.berichten.map(b=>b.id===id?{...b,status:"verstuurd",verstuurd_op:t,handmatig:true}:b);
+  saveBer();notif("Lokaal gemarkeerd als verstuurd (niet door deze tool verzonden)","ok");render();
+};
+window.markeerKlaar=id=>{S.berichten=S.berichten.map(b=>b.id===id?{...b,status:"klaar"}:b);saveBer();notif("Klaar","ok");render();};
+window.dupB=id=>{
+  const b=S.berichten.find(x=>x.id===id);if(!b)return;
+  const t=ts();S.berichten.unshift({...b,id:Date.now(),naam:"Kopie van "+b.naam,status:"concept",aangemaakt:t,bijgewerkt:t,verstuurd_op:undefined});
+  saveBer();notif("Gedupliceerd","ok");render();
+};
+window.showJSON=id=>{S.jsonId=id;S.xmlMode=false;S.view="json";render();};
+window.showXML=id=>{S.jsonId=id;S.xmlMode=true;S.view="json";render();};
+window.addLD=()=>{S.ldCount++;reRF();};
+window.removeLD=i=>{if(S.ldCount>1){S.ldCount--;reRF();}};
+window.addHG=()=>{if(S.hgCount<2){S.hgCount++;reRF();}};
+window.removeHG=()=>{if(S.hgCount>1){S.hgCount--;reRF();}};
+window.copyContent=(id,isXML)=>{
+  const b=S.berichten.find(x=>x.id===parseInt(id));if(!b)return;
+  const content=isXML?buildXML(b):JSON.stringify(JSON.parse(JSON.stringify(buildPayload(b),(k,v)=>(v===null||v===undefined||v==="")?undefined:v)),null,2);
+  navigator.clipboard?.writeText(content).then(()=>notif(isXML?"XML gekopieerd":"JSON gekopieerd","ok"));
+};
+function reRF(){
+  const tmp={};
+  allFlds().forEach(f=>{const el=document.getElementById("fld_"+f.id);if(el)tmp[f.id]=el.value;});
+  const aanb=document.getElementById("sel_aanb")?.value||S.aanbieder;
+  const sp=document.getElementById("sel_sp")?.value||"";
+  const naam=document.getElementById("sel_naam")?.value||"";
+  S.aanbieder=aanb;S.sp=sp;
+  render();
+  Object.entries(tmp).forEach(([k,v])=>{const el=document.getElementById("fld_"+k);if(el)el.value=v;});
+  if(document.getElementById("sel_aanb"))document.getElementById("sel_aanb").value=aanb;
+  if(document.getElementById("sel_sp"))document.getElementById("sel_sp").value=sp;
+  if(document.getElementById("sel_naam"))document.getElementById("sel_naam").value=naam;
+}
+
+load();
+function checkAvgMelding(){
+  const k='hdn_avg_akkoord';
+  let gezien=false;try{gezien=!!localStorage.getItem(k);}catch(e){}
+  if(!gezien&&S.berichten.length===0){
+    const banner=document.createElement('div');
+    banner.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#0A1628;color:white;padding:14px 20px;font-size:13px;z-index:9999;display:flex;align-items:center;gap:16px;';
+    banner.innerHTML=`<span>⚠️ <strong>AVG-melding:</strong> Dit programma slaat persoonsgegevens op in lokale browseropslag (localStorage), inclusief BSN-nummers. Gebruik uitsluitend op een beveiligde, beheerde werkplek.</span><button onclick="try{localStorage.setItem('${k}','1')}catch(e){};this.parentElement.remove()" style="background:#0057B8;border:none;color:white;padding:8px 16px;border-radius:6px;cursor:pointer;white-space:nowrap;font-size:12px;flex-shrink:0">Begrepen</button>`;
+    document.body.appendChild(banner);
+  }
+}
+</script>
+</body>
+</html>
