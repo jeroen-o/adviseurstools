@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eigen Risico Impact Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #1f2833;
+  --border: #2d3748;
+  --border2: #3d4f63;
+  --text: #e8edf2;
+  --text2: #9aacbd;
+  --text3: #5a7080;
+  --green: #2dd4a0;
+  --green-bg: rgba(45,212,160,0.1);
+  --green-border: rgba(45,212,160,0.25);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.1);
+  --red-border: rgba(248,113,113,0.25);
+  --amber: #fbbf24;
+  --amber-bg: rgba(251,191,36,0.1);
+  --amber-border: rgba(251,191,36,0.25);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,0.08);
+  --accent: #38bdf8;
+  --r: 14px;
+  --r-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #1a4060, #0d2535);
+  border: 1px solid var(--accent);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text3);
+  font-weight: 300;
+  margin-top: 1px;
+}
+
+.print-btn {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  letter-spacing: 0.2px;
+}
+
+.print-btn:hover {
+  background: var(--border);
+  border-color: var(--accent);
+}
+
+@media print {
+  .print-btn { display: none; }
+}
+
+/* ── Layout ── */
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 28px 80px;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Panel ── */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.panel-icon {
+  font-size: 17px;
+}
+
+.panel-body {
+  padding: 22px;
+}
+
+/* ── Form fields ── */
+.field {
+  margin-bottom: 20px;
+}
+
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.field label .val-display {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Number input with +/- */
+.num-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.num-input-wrap:focus-within { border-color: var(--accent); }
+
+.num-btn {
+  width: 42px;
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+  line-height: 1;
+}
+
+.num-btn:hover { background: var(--border); color: var(--text); }
+
+.num-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  padding: 10px 4px;
+  min-width: 0;
+}
+
+/* Slider */
+.slider-wrap {
+  position: relative;
+}
+
+input[type=range] {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 5px;
+  background: var(--bg3);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--bg2);
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.2);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 5px;
+}
+
+/* Select */
+.styled-select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 11px 14px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+
+.styled-select:focus { border-color: var(--accent); }
+.styled-select option { background: var(--bg3); }
+
+/* Divider */
+.field-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 18px 0;
+}
+
+/* ── Results column ── */
+.results-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Verdict box */
+.verdict {
+  border-radius: var(--r);
+  padding: 24px 26px;
+  border: 1px solid;
+  position: relative;
+  overflow: hidden;
+}
+
+.verdict::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background: radial-gradient(circle at 80% 50%, white, transparent 60%);
+  pointer-events: none;
+}
+
+.verdict.meld { background: var(--green-bg); border-color: var(--green-border); }
+.verdict.zelf { background: var(--red-bg); border-color: var(--red-border); }
+.verdict.twijfel { background: var(--amber-bg); border-color: var(--amber-border); }
+.verdict.leeg { background: var(--bg2); border-color: var(--border); }
+
+.verdict-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+
+.verdict-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.verdict.meld .verdict-label { color: var(--green); }
+.verdict.zelf .verdict-label { color: var(--red); }
+.verdict.twijfel .verdict-label { color: var(--amber); }
+.verdict.leeg .verdict-label { color: var(--text3); }
+
+.verdict-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.verdict-body {
+  font-size: 13.5px;
+  color: var(--text2);
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+/* Metrics grid */
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.metric {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 16px 18px;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.metric-value.green { color: var(--green); }
+.metric-value.red   { color: var(--red); }
+.metric-value.amber { color: var(--amber); }
+.metric-value.blue  { color: var(--blue); }
+.metric-value.muted { color: var(--text3); }
+
+.metric-sub {
+  font-size: 11.5px;
+  color: var(--text3);
+  margin-top: 4px;
+  font-weight: 300;
+}
+
+/* Timeline */
+.timeline-panel .panel-body { padding: 0; }
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 22px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.timeline-row:last-child { border-bottom: none; }
+.timeline-row:hover { background: var(--bg3); }
+
+.tl-year {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text3);
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.tl-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--bg3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tl-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.tl-bar.cumverlies { background: var(--red); }
+.tl-bar.voordeel   { background: var(--green); }
+
+.tl-amount {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  width: 80px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tl-note {
+  font-size: 11px;
+  color: var(--text3);
+  width: 90px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* Break-even badge */
+.be-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(56,189,248,0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-top: 8px;
+}
+
+/* Info box */
+.info-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: var(--text3);
+  line-height: 1.65;
+}
+
+.info-box strong { color: var(--text2); }
+
+/* Leeg state */
+.leeg-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text3);
+}
+
+.leeg-state .le-icon { font-size: 40px; margin-bottom: 12px; }
+.leeg-state p { font-size: 14px; font-weight: 300; line-height: 1.6; }
+
+/* Responsive */
+@media (max-width: 760px) {
+  .page { grid-template-columns: 1fr; padding: 24px 16px 60px; }
+  .header { padding: 16px 20px; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <div class="brand-icon">🧮</div>
+    <div>
+      <div class="brand-name">Eigen Risico Impact</div>
+      <div class="brand-sub">Is schade melden financieel verstandig?</div>
+    </div>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨️ Afdrukken</button>
+</div>
+
+<div class="page">
+
+  <!-- Input panel -->
+  <div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon">⚙️</div>
+        <h2>Vul uw situatie in</h2>
+      </div>
+      <div class="panel-body">
+
+        <!-- Schadebedrag -->
+        <div class="field">
+          <label>Schadebedrag <span class="val-display" id="schadeDisplay">€ 0</span></label>
+          <div class="num-input-wrap">
+            <button class="num-btn" onclick="step('schade', -50)">−</button>
+            <input type="number" class="num-input" id="schade" value="0" min="0" max="100000"
+              oninput="update()" onchange="clamp('schade',0,100000)">
+            <button class="num-btn" onclick="step('schade', 50)">+</button>
+          </div>
+          <input type="range" id="schadeSlider" min="0" max="10000" step="50" value="0"
+            oninput="syncSlider('schade','schadeSlider',0,10000)">
+          <div class="slider-labels"><span>€ 0</span><span>€ 5.000</span><span>€ 10.000+</span></div>
+        </div>
+
+        <!-- Eigen risico -->
+        <div class="field">
+          <label>Eigen risico <span class="val-display" id="erDisplay">€ 250</span></label>
+          <div class="num-input-wrap">
+            <button class="num-btn" onclick="step('er', -50)">−</button>
+            <input type="number" class="num-input" id="er" value="250" min="0" max="5000"
+              oninput="update()" onchange="clamp('er',0,5000)">
+            <button class="num-btn" onclick="step('er', 50)">+</button>
+          </div>
+          <input type="range" id="erSlider" min="0" max="2500" step="50" value="250"
+            oninput="syncSlider('er','erSlider',0,2500)">
+          <div class="slider-labels"><span>€ 0</span><span>€ 1.250</span><span>€ 2.500</span></div>
+        </div>
+
+        <div class="field-divider"></div>
+
+        <!-- Jaarpremie -->
+        <div class="field">
+          <label>Huidige jaarpremie <span class="val-display" id="premieDisplay">€ 600</span></label>
+          <div class="num-input-wrap">
+            <button class="num-btn" onclick="step('premie', -50)">−</button>
+            <input type="number" class="num-input" id="premie" value="600" min="0" max="10000"
+              oninput="update()" onchange="clamp('premie',0,10000)">
+            <button class="num-btn" onclick="step('premie', 50)">+</button>
+          </div>
+          <input type="range" id="premieSlider" min="0" max="3000" step="50" value="600"
+            oninput="syncSlider('premie','premieSlider',0,3000)">
+          <div class="slider-labels"><span>€ 0</span><span>€ 1.500</span><span>€ 3.000</span></div>
+        </div>
+
+        <!-- No-claim korting -->
+        <div class="field">
+          <label>No-claimkorting verlies <span class="val-display" id="nclaimDisplay">10%</span></label>
+          <input type="range" id="nclaim" min="0" max="40" step="5" value="10"
+            oninput="update()">
+          <div class="slider-labels"><span>0%</span><span>20%</span><span>40%</span></div>
+        </div>
+
+        <!-- Schadeverleden -->
+        <div class="field">
+          <label style="text-transform:uppercase;font-size:12.5px;font-weight:600;color:var(--text2);letter-spacing:.3px;margin-bottom:8px;display:block;">Herstelperiode no-claim</label>
+          <select class="styled-select" id="herstel" onchange="update()">
+            <option value="1">1 jaar — lichte schade</option>
+            <option value="2" selected>2 jaar — gemiddeld</option>
+            <option value="3">3 jaar — zware schade</option>
+            <option value="4">4 jaar — meerdere schades</option>
+            <option value="5">5 jaar — ernstige situatie</option>
+          </select>
+        </div>
+
+        <div class="field-divider"></div>
+
+        <!-- Verzekeringsvorm -->
+        <div class="field">
+          <label style="text-transform:uppercase;font-size:12.5px;font-weight:600;color:var(--text2);letter-spacing:.3px;margin-bottom:8px;display:block;">Type verzekering</label>
+          <select class="styled-select" id="type" onchange="update()">
+            <option value="inboedel">Inboedel / woonhuis</option>
+            <option value="auto_wa" selected>Auto WA</option>
+            <option value="auto_wa_bc">Auto WA + Beperkt Casco</option>
+            <option value="auto_ar">Auto All-risk</option>
+            <option value="aansprakelijkheid">Aansprakelijkheid (AVP)</option>
+            <option value="overig">Overig</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Results column -->
+  <div class="results-col" id="results">
+    <div class="verdict leeg">
+      <span class="verdict-icon">🧮</span>
+      <div class="verdict-label">Wacht op invoer</div>
+      <div class="verdict-title">Vul een schadebedrag in</div>
+      <div class="verdict-body">Zodra u een schadebedrag invult, berekenen we direct of melden financieel verstandig is.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function fmt(n) {
+  return '€\u00a0' + Math.round(n).toLocaleString('nl-NL');
+}
+
+function step(id, delta) {
+  const el = document.getElementById(id);
+  el.value = Math.max(0, (parseFloat(el.value) || 0) + delta);
+  update();
+}
+
+function clamp(id, min, max) {
+  const el = document.getElementById(id);
+  el.value = Math.min(max, Math.max(min, parseFloat(el.value) || 0));
+  update();
+}
+
+function syncSlider(inputId, sliderId, min, max) {
+  const val = parseFloat(document.getElementById(sliderId).value);
+  document.getElementById(inputId).value = val;
+  update();
+}
+
+function getVals() {
+  return {
+    schade:  parseFloat(document.getElementById('schade').value)  || 0,
+    er:      parseFloat(document.getElementById('er').value)      || 0,
+    premie:  parseFloat(document.getElementById('premie').value)  || 0,
+    nclaim:  parseFloat(document.getElementById('nclaim').value)  || 0,
+    herstel: parseInt(document.getElementById('herstel').value)   || 2,
+    type:    document.getElementById('type').value,
+  };
+}
+
+function update() {
+  const v = getVals();
+
+  // Sync sliders
+  const schadeSlider = document.getElementById('schadeSlider');
+  schadeSlider.value = Math.min(v.schade, 10000);
+  const erSlider = document.getElementById('erSlider');
+  erSlider.value = Math.min(v.er, 2500);
+  const premieSlider = document.getElementById('premieSlider');
+  premieSlider.value = Math.min(v.premie, 3000);
+
+  // Display labels
+  document.getElementById('schadeDisplay').textContent = fmt(v.schade);
+  document.getElementById('erDisplay').textContent = fmt(v.er);
+  document.getElementById('premieDisplay').textContent = fmt(v.premie);
+  document.getElementById('nclaimDisplay').textContent = v.nclaim + '%';
+
+  if (v.schade === 0) {
+    document.getElementById('results').innerHTML = `
+      <div class="verdict leeg">
+        <span class="verdict-icon">🧮</span>
+        <div class="verdict-label">Wacht op invoer</div>
+        <div class="verdict-title">Vul een schadebedrag in</div>
+        <div class="verdict-body">Zodra u een schadebedrag invult, berekenen we direct of melden financieel verstandig is.</div>
+      </div>`;
+    return;
+  }
+
+  // ── Core berekeningen ──
+  const uitkering      = Math.max(0, v.schade - v.er);      // wat verzekeraar uitkeert
+  const jaarlijksVerlies = v.premie * (v.nclaim / 100);     // extra premie per jaar
+  const totaalVerlies  = jaarlijksVerlies * v.herstel;      // totaal premieverlies
+  const nettoBaat      = uitkering - totaalVerlies;         // financieel voordeel melden
+  const zelfdoenKosten = v.schade;                          // zelf betalen = volledige schade
+
+  // Break-even schade: hoeveel schade moet er zijn zodat melden net loont
+  const breakEvenSchade = v.er + totaalVerlies;
+
+  // Terugverdientijd: hoe lang duurt het tot de uitkering de extra premie compenseert
+  const terugverdien = jaarlijksVerlies > 0 ? uitkering / jaarlijksVerlies : 0;
+
+  // ── Verdict ──
+  let verdictClass, verdictIcon, verdictLabel, verdictTitle, verdictBody;
+
+  if (v.schade <= v.er) {
+    verdictClass = 'zelf';
+    verdictIcon  = '🚫';
+    verdictLabel = 'Niet zinvol om te melden';
+    verdictTitle = 'Schade valt volledig binnen uw eigen risico';
+    verdictBody  = `De schade (${fmt(v.schade)}) is lager dan of gelijk aan uw eigen risico (${fmt(v.er)}). De verzekeraar keert niets uit. U betaalt de schade het best zelf — plus u voorkomt een aantekening in uw schadeverleden.`;
+  } else if (nettoBaat > 200) {
+    verdictClass = 'meld';
+    verdictIcon  = '✅';
+    verdictLabel = 'Melden is financieel verstandig';
+    verdictTitle = `Netto voordeel: ${fmt(nettoBaat)}`;
+    verdictBody  = `De uitkering (${fmt(uitkering)}) weegt ruimschoots op tegen het verwachte premieverlies van ${fmt(totaalVerlies)} over ${v.herstel} jaar. Melden is in dit geval financieel de verstandige keuze.`;
+  } else if (nettoBaat >= -200) {
+    verdictClass = 'twijfel';
+    verdictIcon  = '⚖️';
+    verdictLabel = 'Twijfelgeval — weeg uw opties';
+    verdictTitle = 'Financieel verschil is klein';
+    verdictBody  = `Het nettoverschil tussen melden en zelf betalen is slechts ${fmt(Math.abs(nettoBaat))}. Overweeg ook niet-financiële factoren: uw schadeverleden, relatie met de verzekeraar en of u de schade zelf kunt veroorloven.`;
+  } else {
+    verdictClass = 'zelf';
+    verdictIcon  = '💸';
+    verdictLabel = 'Beter zelf betalen';
+    verdictTitle = `Melden kost u netto ${fmt(Math.abs(nettoBaat))} extra`;
+    verdictBody  = `Het verwachte premieverlies van ${fmt(totaalVerlies)} over ${v.herstel} jaar is hoger dan de uitkering van ${fmt(uitkering)}. U bent financieel beter af de schade zelf te betalen en uw no-claim te beschermen.`;
+  }
+
+  // ── Timeline data ──
+  let timelineRows = '';
+  let cumVerlies = 0;
+  const maxBar = Math.max(uitkering, totaalVerlies, 1);
+
+  for (let j = 1; j <= Math.max(v.herstel, 5); j++) {
+    const isHerstelJaar = j <= v.herstel;
+    cumVerlies += isHerstelJaar ? jaarlijksVerlies : 0;
+    const nettoTotNu = uitkering - cumVerlies;
+    const barPct = Math.min(100, (cumVerlies / maxBar) * 100);
+    const kleur = nettoTotNu >= 0 ? 'var(--green)' : 'var(--red)';
+    const prefix = nettoTotNu >= 0 ? '+' : '';
+    const note = isHerstelJaar ? `${v.nclaim}% premie+` : 'no-claim hersteld';
+    const noteColor = isHerstelJaar ? 'var(--red)' : 'var(--text3)';
+
+    timelineRows += `
+      <div class="timeline-row">
+        <div class="tl-year">Jaar ${j}</div>
+        <div class="tl-bar-wrap">
+          <div class="tl-bar cumverlies" style="width:${barPct}%"></div>
+        </div>
+        <div class="tl-amount" style="color:${kleur}">${prefix}${fmt(nettoTotNu)}</div>
+        <div class="tl-note" style="color:${noteColor}">${note}</div>
+      </div>`;
+  }
+
+  // Break-even info
+  const beText = v.schade > v.er
+    ? `Break-even schadebedrag voor uw situatie: ${fmt(breakEvenSchade)}`
+    : '';
+
+  // Terugverdien tekst
+  const tvText = uitkering > 0 && jaarlijksVerlies > 0
+    ? terugverdien < 1
+      ? 'Uitkering verdient premieverlies terug in minder dan 1 jaar'
+      : `Uitkering verdient premieverlies terug na ${terugverdien.toFixed(1)} jaar`
+    : '';
+
+  document.getElementById('results').innerHTML = `
+
+    <div class="verdict ${verdictClass}">
+      <span class="verdict-icon">${verdictIcon}</span>
+      <div class="verdict-label">${verdictLabel}</div>
+      <div class="verdict-title">${verdictTitle}</div>
+      <div class="verdict-body">${verdictBody}</div>
+      ${beText ? `<div class="be-badge">🎯 ${beText}</div>` : ''}
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Verwachte uitkering</div>
+        <div class="metric-value ${uitkering > 0 ? 'green' : 'muted'}">${fmt(uitkering)}</div>
+        <div class="metric-sub">Na aftrek eigen risico</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Premieverlies totaal</div>
+        <div class="metric-value ${totaalVerlies > 0 ? 'red' : 'muted'}">${fmt(totaalVerlies)}</div>
+        <div class="metric-sub">Over ${v.herstel} jaar · ${v.nclaim}%/jr</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Netto voordeel melden</div>
+        <div class="metric-value ${nettoBaat > 0 ? 'green' : nettoBaat < 0 ? 'red' : 'amber'}">${nettoBaat >= 0 ? '+' : ''}${fmt(nettoBaat)}</div>
+        <div class="metric-sub">Uitkering min premieverlies</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Zelf betalen kost</div>
+        <div class="metric-value amber">${fmt(v.schade)}</div>
+        <div class="metric-sub">Volledige schade, geen risico</div>
+      </div>
+    </div>
+
+    <div class="panel timeline-panel">
+      <div class="panel-header">
+        <div class="panel-icon">📈</div>
+        <h2>Netto positie per jaar (indien gemeld)</h2>
+      </div>
+      ${timelineRows}
+    </div>
+
+    <div class="info-box">
+      ${tvText ? `<strong>⏱ ${tvText}.</strong><br>` : ''}
+      <strong>Tip:</strong> Heeft u meerdere schades in korte tijd? Bedenk dan dat elke extra schade het premieverlies verder vergroot en de herstelperiode verlengt. Bij twijfel: vraag eerst een schadeschatting bij een vakman vóórdat u meldt.
+    </div>
+  `;
+}
+
+// Init
+update();
+</script>
+</body>
+</html>

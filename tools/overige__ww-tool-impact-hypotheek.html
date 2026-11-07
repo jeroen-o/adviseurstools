@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WW-Uitkering Calculator 2026 | Hypotheek.ai</title>
+<style>
+:root{
+  --navy:#002A54;
+  --navy-mid:#003a70;
+  --navy-light:#e8eef5;
+  --orange:#FF6600;
+  --orange-light:#fff2e8;
+  --gray-bg:#d9d9d9;
+  --text:#333332;
+  --border:#d8d8d8;
+  --green:#1a6b3c;
+  --green-light:#e8f5ec;
+  --red:#c0392b;
+  --red-light:#fde8e6;
+  --amber:#b45309;
+  --amber-light:#fef3c7;
+  --blue:#1e40af;
+  --blue-light:#dbeafe;
+  --radius:6px;
+  --radius-lg:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f5f5f5;line-height:1.5;}
+.container{width:100%;}
+
+/* Header */
+.hdr{background:var(--navy);padding:18px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid var(--orange);}
+.hdr-title{color:#fff;font-size:20px;font-weight:700;letter-spacing:0.2px;}
+.hdr-sub{color:rgba(255,255,255,0.72);font-size:13px;margin-top:3px;}
+.hdr-badge{background:var(--orange);color:#fff;padding:6px 14px;border-radius:3px;font-size:13px;font-weight:700;letter-spacing:0.3px;}
+
+/* Mode bar */
+.mode-bar{background:var(--navy-mid);display:flex;overflow-x:auto;padding:0 20px;}
+.mode-tab{padding:13px 22px;color:rgba(255,255,255,0.75);background:transparent;border:none;font-family:Arial,sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.2s;}
+.mode-tab:hover{color:#fff;}
+.mode-tab.active{color:#fff;border-bottom-color:var(--orange);}
+
+/* Panels */
+.panel{display:none;padding:24px 28px 60px;}
+.panel.active{display:block;}
+
+/* Grid layout */
+.grid{display:grid;grid-template-columns:380px 1fr;gap:20px;}
+@media(max-width:960px){.grid{grid-template-columns:1fr;}}
+
+/* Cards */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--border);background:#fafafa;}
+.card-t{font-size:14px;font-weight:700;color:var(--navy);position:relative;padding-left:18px;text-transform:uppercase;letter-spacing:0.5px;}
+.card-t::before{content:'';position:absolute;left:0;top:50%;width:8px;height:8px;background:var(--orange);transform:translateY(-50%) rotate(45deg);}
+.card-b{padding:16px 18px;}
+
+/* Form */
+.f{margin-bottom:14px;}
+.f:last-child{margin-bottom:0;}
+.fl{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.fl-aux{float:right;font-size:13px;color:var(--orange);font-weight:700;}
+.inp,.sel{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color 0.15s;}
+.inp:focus,.sel:focus{border-color:var(--orange);}
+.help{font-size:12px;color:#666;margin-top:4px;line-height:1.4;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* Checkbox */
+.check{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--navy-light);border-radius:var(--radius);cursor:pointer;margin-bottom:8px;}
+.check input{margin-top:3px;flex-shrink:0;accent-color:var(--orange);}
+.check-t{font-size:13.5px;font-weight:600;color:var(--navy);}
+.check-s{font-size:12px;color:#666;margin-top:2px;line-height:1.4;}
+
+/* KPI grid */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px;}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+.kpi-lbl{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.kpi-v{font-size:22px;font-weight:700;color:var(--navy);line-height:1.1;}
+.kpi-v.g{color:var(--green);}
+.kpi-v.r{color:var(--red);}
+.kpi-v.o{color:var(--orange);}
+.kpi-sub{font-size:12px;color:#666;margin-top:4px;}
+
+/* Hero result */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);color:#fff;border-radius:var(--radius-lg);padding:22px 26px;margin-bottom:16px;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;background:var(--orange);opacity:0.18;border-radius:50%;}
+.hero-lbl{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:rgba(255,255,255,0.7);margin-bottom:6px;font-weight:700;position:relative;z-index:1;}
+.hero-v{font-size:34px;font-weight:800;line-height:1;margin-bottom:6px;position:relative;z-index:1;}
+.hero-c{font-size:14px;color:rgba(255,255,255,0.85);position:relative;z-index:1;}
+
+/* Alerts */
+.alert{border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;border-left:3px solid;display:flex;gap:10px;}
+.alert.ok{background:var(--green-light);border-color:var(--green);}
+.alert.wa{background:var(--amber-light);border-color:var(--amber);}
+.alert.er{background:var(--red-light);border-color:var(--red);}
+.alert.in{background:var(--blue-light);border-color:var(--blue);}
+.alert-i{font-size:18px;flex-shrink:0;line-height:1.3;}
+.alert-c strong{display:block;font-size:13px;font-weight:700;margin-bottom:3px;}
+.alert.ok strong{color:var(--green);}
+.alert.wa strong{color:var(--amber);}
+.alert.er strong{color:var(--red);}
+.alert.in strong{color:var(--blue);}
+.alert-c span{display:block;font-size:13px;line-height:1.55;color:var(--text);}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:14px;}
+.tbl th{background:#fafafa;padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);}
+.tbl td{padding:10px 14px;border-bottom:1px solid #f0f0f0;}
+.tbl td.ri,.tbl th.ri{text-align:right;}
+.tbl tr.total td{border-top:2px solid var(--navy);font-weight:700;background:#fafafa;}
+.tbl tr:last-child td{border-bottom:none;}
+
+/* Timeline */
+.timeline-wrap{padding:6px 0;}
+.timeline-bar{display:flex;height:54px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);}
+.timeline-seg{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;padding:0 8px;text-align:center;position:relative;}
+.timeline-seg small{font-size:11px;font-weight:500;opacity:0.85;margin-top:2px;}
+.timeline-seg.p1{background:linear-gradient(135deg,var(--orange),#E55C00);}
+.timeline-seg.p2{background:linear-gradient(135deg,var(--navy-mid),var(--navy));}
+.timeline-seg.p3{background:var(--gray-bg);color:var(--text);}
+.timeline-axis{display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:#666;}
+
+/* Utility */
+.muted{color:#666;font-size:13px;}
+.tag{display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:700;background:var(--navy-light);color:var(--navy);letter-spacing:0.3px;}
+.tag.o{background:var(--orange-light);color:var(--orange);}
+.tag.g{background:var(--green-light);color:var(--green);}
+.tag.r{background:var(--red-light);color:var(--red);}
+.tag.a{background:var(--amber-light);color:var(--amber);}
+
+/* Print */
+@media print{
+  .hdr,.mode-bar{position:static;}
+  .panel{display:block!important;page-break-after:always;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="hdr">
+    <div>
+      <div class="hdr-title">WW-Uitkering Calculator 2026</div>
+      <div class="hdr-sub">UWV-berekening met bruto-netto analyse, tijdlijn en hypotheekimpact</div>
+    </div>
+    <div class="hdr-badge">2026</div>
+  </header>
+
+  <nav class="mode-bar">
+    <button class="mode-tab active" onclick="sw(0)">Berekening</button>
+    <button class="mode-tab" onclick="sw(1)">Tijdlijn</button>
+    <button class="mode-tab" onclick="sw(2)">Vaste lasten</button>
+    <button class="mode-tab" onclick="sw(3)">Hypotheekimpact</button>
+  </nav>
+
+  <!-- TAB 1: BEREKENING -->
+  <div class="panel active" id="p0">
+    <div class="grid">
+      <!-- INPUT -->
+      <div>
+        <div class="card">
+          <div class="card-h"><div class="card-t">Loongegevens</div></div>
+          <div class="card-b">
+            <div class="f">
+              <label class="fl">Bruto maandsalaris <span class="fl-aux" id="wwSalV">€ 4.000</span></label>
+              <input class="inp" type="number" id="wwSal" value="4000" min="0" step="100" oninput="calc()">
+              <div class="help">SV-loon per maand inclusief vakantietoeslag en vaste toeslagen.</div>
+            </div>
+            <div class="f">
+              <label class="fl">Loonheffingskorting toepassen</label>
+              <select class="sel" id="wwLhk" onchange="calc()">
+                <option value="ja" selected>Ja — meest gebruikelijk</option>
+                <option value="nee">Nee — bijv. bij meerdere inkomsten</option>
+              </select>
+              <div class="help">UWV past standaard de heffingskorting toe. Wordt elders toegepast? Kies dan 'Nee'.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><div class="card-t">Arbeidsverleden</div></div>
+          <div class="card-b">
+            <div class="f">
+              <label class="fl">Totaal arbeidsverleden (jaren)</label>
+              <input class="inp" type="number" id="wwArbvl" value="12" min="0" max="50" step="1" oninput="calc()">
+              <div class="help">Feitelijk + fictief arbeidsverleden. Jaren waarin u minimaal 208 uur loon ontving (vanaf 2013).</div>
+            </div>
+            <div class="f">
+              <label class="fl">Leeftijd</label>
+              <input class="inp" type="number" id="wwLft" value="42" min="18" max="67" step="1" oninput="calc()">
+              <div class="help">Voor context; leeftijd beïnvloedt de WW-hoogte niet.</div>
+            </div>
+
+            <label class="check">
+              <input type="checkbox" id="wwWeken" checked onchange="calc()">
+              <div>
+                <div class="check-t">Voldoet aan wekeneis</div>
+                <div class="check-s">Minimaal 26 weken gewerkt in de laatste 36 weken → recht op basisuitkering van 3 maanden.</div>
+              </div>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="wwJaren" checked onchange="calc()">
+              <div>
+                <div class="check-t">Voldoet aan jareneis (4-uit-5)</div>
+                <div class="check-s">Minimaal 4 van de laatste 5 jaren gewerkt → recht op verlengde uitkering.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><div class="card-t">Beëindigingsvorm</div></div>
+          <div class="card-b">
+            <div class="f">
+              <label class="fl">Reden einde dienstverband</label>
+              <select class="sel" id="wwReden" onchange="calc()">
+                <option value="werkgever" selected>Ontslag door werkgever</option>
+                <option value="reorganisatie">Reorganisatie / bedrijfseconomisch</option>
+                <option value="vso">Vaststellingsovereenkomst (VSO)</option>
+                <option value="einde">Einde contract bepaalde tijd</option>
+                <option value="zelf">Zelf opgezegd</option>
+              </select>
+              <div class="help">Verwijtbare werkloosheid (bijv. zelf opzeggen) geeft in principe geen recht op WW.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OUTPUT -->
+      <div id="out0"></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: TIJDLIJN -->
+  <div class="panel" id="p1">
+    <div id="out1"></div>
+  </div>
+
+  <!-- TAB 3: VASTE LASTEN -->
+  <div class="panel" id="p2">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div class="card-h"><div class="card-t">Vaste lasten & netto salaris</div></div>
+          <div class="card-b">
+            <div class="f">
+              <label class="fl">Huidige netto maandsalaris</label>
+              <input class="inp" type="number" id="vlSalNetto" value="2950" min="0" step="50" oninput="calc()">
+              <div class="help">Wat u momenteel per maand op uw rekening ontvangt.</div>
+            </div>
+            <div class="f">
+              <label class="fl">Vaste maandlasten</label>
+              <input class="inp" type="number" id="vlLasten" value="1800" min="0" step="50" oninput="calc()">
+              <div class="help">Hypotheek/huur, energie, verzekeringen, abonnementen, krediet. Zonder boodschappen/vrij besteedbaar.</div>
+            </div>
+            <div class="f">
+              <label class="fl">Huidige spaarbuffer</label>
+              <input class="inp" type="number" id="vlBuffer" value="10000" min="0" step="500" oninput="calc()">
+              <div class="help">Direct opneembaar spaargeld.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="out2"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: HYPOTHEEKIMPACT -->
+  <div class="panel" id="p3">
+    <div id="out3"></div>
+  </div>
+</div>
+
+<script>
+// Format helpers
+function fmt(n){return '€\u00a0'+Math.round(n).toLocaleString('nl-NL');}
+function fmt2(n){return '€\u00a0'+n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtPct(n,d=1){return n.toFixed(d).replace('.',',')+'%';}
+function fmtMnd(n){return Number.isInteger(n)?n+' mnd':n.toString().replace('.',',')+' mnd';}
+
+function alertBlock(cls,icon,title,body){
+  return `<div class="alert ${cls}"><div class="alert-i">${icon}</div><div class="alert-c"><strong>${title}</strong><span>${body}</span></div></div>`;
+}
+
+// Tabs
+function sw(n){
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.mode-tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+}
+
+// WW 2026 constants
+const MAX_DAGLOON = 304.25;
+const WERKDAGEN = 21.75;
+const PCT_12 = 0.75;
+const PCT_3 = 0.70;
+
+// Belastingschijven 2026 (voor AOW-leeftijd)
+const S1 = 38441, S2 = 76817;
+const T1 = 0.3582, T2 = 0.3748, T3 = 0.495;
+const AHK_MAX = 3204, AHK_START = 24813, AHK_AFB = 0.06337;
+
+function calcNetto(jaarBruto, lhk){
+  if(jaarBruto <= 0) return {netto:0, ib:0, ahk:0, heffing:0};
+  let ib = 0;
+  if(jaarBruto <= S1) ib = jaarBruto * T1;
+  else if(jaarBruto <= S2) ib = S1*T1 + (jaarBruto-S1)*T2;
+  else ib = S1*T1 + (S2-S1)*T2 + (jaarBruto-S2)*T3;
+  
+  let ahk = 0;
+  if(lhk){
+    if(jaarBruto <= AHK_START) ahk = AHK_MAX;
+    else if(jaarBruto >= S2) ahk = 0;
+    else ahk = AHK_MAX - (jaarBruto-AHK_START)*AHK_AFB;
+  }
+  const heffing = Math.max(0, ib - ahk);
+  return {netto: jaarBruto - heffing, ib, ahk, heffing};
+}
+
+function calc(){
+  const bruto = +document.getElementById('wwSal').value || 0;
+  const arbvl = +document.getElementById('wwArbvl').value || 0;
+  const lft = +document.getElementById('wwLft').value || 0;
+  const wekeneis = document.getElementById('wwWeken').checked;
+  const jareneis = document.getElementById('wwJaren').checked;
+  const reden = document.getElementById('wwReden').value;
+  const lhk = document.getElementById('wwLhk').value === 'ja';
+  
+  document.getElementById('wwSalV').textContent = fmt(bruto);
+  
+  // Dagloon
+  const dagloonRaw = bruto / WERKDAGEN;
+  const dagloon = Math.min(dagloonRaw, MAX_DAGLOON);
+  const capped = dagloonRaw > MAX_DAGLOON;
+  const maandloon = dagloon * WERKDAGEN;
+  
+  // Bruto WW
+  const ww12_bruto = maandloon * PCT_12;
+  const ww3_bruto = maandloon * PCT_3;
+  
+  // Duur
+  let duur = 0;
+  let duurStatus = '';
+  if(!wekeneis){
+    duur = 0;
+    duurStatus = 'Geen recht op WW';
+  } else {
+    duur = 3;
+    duurStatus = 'Basisuitkering';
+    if(jareneis && arbvl > 3){
+      let m = arbvl <= 10 ? arbvl : 10 + (arbvl - 10) * 0.5;
+      duur = Math.max(3, Math.min(24, m));
+      duurStatus = 'Verlengde uitkering';
+    }
+  }
+  
+  // Netto berekening (op basis van maandbedrag × 12 voor juiste belastingschijf)
+  const netto12_obj = calcNetto(ww12_bruto * 12, lhk);
+  const netto3_obj = calcNetto(ww3_bruto * 12, lhk);
+  const ww12_netto = netto12_obj.netto / 12;
+  const ww3_netto = netto3_obj.netto / 12;
+  
+  // Totalen
+  const duur12 = Math.min(2, duur);
+  const duur3 = Math.max(0, duur - 2);
+  const totBruto = ww12_bruto * duur12 + ww3_bruto * duur3;
+  const totNetto = ww12_netto * duur12 + ww3_netto * duur3;
+  const vakGeld = totBruto * 0.08;
+  
+  // Verwijtbaarheid check
+  const verwijtbaar = reden === 'zelf';
+  
+  // Output TAB 0
+  let out0 = '';
+  
+  if(verwijtbaar){
+    out0 += `<div class="hero" style="background:linear-gradient(135deg,#7a1e15,#c0392b);">
+      <div class="hero-lbl">Verwijtbare werkloosheid</div>
+      <div class="hero-v">Geen recht op WW</div>
+      <div class="hero-c">Bij zelf opzeggen bestaat er in principe geen recht op een WW-uitkering.</div>
+    </div>`;
+    out0 += alertBlock('er','⚠️','Advies bij zelf opzeggen',
+      'UWV toetst of u verwijtbaar werkloos bent. Alleen bij een dringende reden (bijv. onhoudbare situatie) kan er WW worden toegekend. Adviseer klant om de VSO-route met de werkgever te bespreken vóór opzegging.');
+  } else if(!wekeneis){
+    out0 += `<div class="hero" style="background:linear-gradient(135deg,#8a4b05,#b45309);">
+      <div class="hero-lbl">Geen recht op basisuitkering</div>
+      <div class="hero-v">Wekeneis niet voldaan</div>
+      <div class="hero-c">Minimaal 26 van de laatste 36 weken gewerkt is vereist.</div>
+    </div>`;
+    out0 += alertBlock('wa','⚠️','Check referteperiode',
+      'De referteperiode kan worden verlengd met periodes van ziekte, zwangerschapsverlof of onbetaald verlof. Laat UWV dit beoordelen.');
+  } else {
+    // Hero: totaal netto over looptijd
+    out0 += `<div class="hero">
+      <div class="hero-lbl">Totaal netto WW over looptijd</div>
+      <div class="hero-v">${fmt(totNetto)}</div>
+      <div class="hero-c">${fmtMnd(duur)} · Gemiddeld ${fmt(totNetto/Math.max(1,duur))} netto/mnd · Excl. vakantiegeld ${fmt(vakGeld)} bruto (mei)</div>
+    </div>`;
+    
+    // KPIs
+    out0 += `<div class="kpi-grid">
+      <div class="kpi"><div class="kpi-lbl">Bruto mnd 1-2 (75%)</div><div class="kpi-v o">${fmt(ww12_bruto)}</div><div class="kpi-sub">Netto ± ${fmt(ww12_netto)}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Bruto mnd 3+ (70%)</div><div class="kpi-v">${fmt(ww3_bruto)}</div><div class="kpi-sub">Netto ± ${fmt(ww3_netto)}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Duur</div><div class="kpi-v">${fmtMnd(duur)}</div><div class="kpi-sub">${duurStatus}</div></div>
+    </div>`;
+    
+    // Berekening tabel
+    out0 += `<div class="card"><div class="card-h"><div class="card-t">Berekening conform UWV 2026</div></div><div class="card-b" style="padding:0;">
+      <table class="tbl">
+        <tr><td>Bruto maandsalaris (incl. vakantietoeslag)</td><td class="ri">${fmt2(bruto)}</td></tr>
+        <tr><td>Berekend dagloon (bruto/mnd ÷ 21,75)</td><td class="ri">${fmt2(dagloonRaw)}</td></tr>
+        <tr><td>${capped?'<span class="tag r">GEMAXIMEERD</span> ':''}Toegepast dagloon ${capped?'(max 2026: € 304,25)':''}</td><td class="ri">${fmt2(dagloon)}</td></tr>
+        <tr><td>Maandloon (dagloon × 21,75)</td><td class="ri">${fmt2(maandloon)}</td></tr>
+        <tr><td><span class="tag o">MND 1-2</span> Bruto WW (75% × maandloon)</td><td class="ri">${fmt2(ww12_bruto)}</td></tr>
+        <tr><td><span class="tag">MND 3+</span> Bruto WW (70% × maandloon)</td><td class="ri">${fmt2(ww3_bruto)}</td></tr>
+        <tr><td>Netto WW mnd 1-2 (na IB ${fmtPct(netto12_obj.heffing/(ww12_bruto*12)*100)})</td><td class="ri">${fmt2(ww12_netto)}</td></tr>
+        <tr><td>Netto WW mnd 3+ (na IB ${fmtPct(netto3_obj.heffing/Math.max(1,ww3_bruto*12)*100)})</td><td class="ri">${fmt2(ww3_netto)}</td></tr>
+        <tr><td>Duur (${wekeneis?'wekeneis ✓':'—'} · ${jareneis?'jareneis ✓':'alleen basis'})</td><td class="ri">${fmtMnd(duur)}</td></tr>
+        <tr class="total"><td>Totaal bruto WW</td><td class="ri">${fmt(totBruto)}</td></tr>
+        <tr><td>Vakantiegeld 8% (apart uitgekeerd in mei)</td><td class="ri">${fmt(vakGeld)}</td></tr>
+      </table>
+    </div></div>`;
+    
+    // Alerts
+    if(capped){
+      out0 += alertBlock('wa','⚠️',`Dagloon gemaximeerd op € 304,25`,
+        `Bruto maandsalaris van ${fmt(bruto)} levert een rekenkundig dagloon van ${fmt2(dagloonRaw)} op. UWV rekent echter met het wettelijk maximum. Inkomensterugval is daardoor extra groot.`);
+    }
+    if(reden === 'vso'){
+      out0 += alertBlock('in','📋','VSO-route — let op fictieve opzegtermijn',
+        'Bij een vaststellingsovereenkomst moet aan 3 voorwaarden worden voldaan: initiatief werkgever, geen dringende reden, neutrale ontslagreden. Controleer ook de fictieve opzegtermijn om een WW-gat te voorkomen.');
+    }
+    if(arbvl >= 3 && !jareneis){
+      out0 += alertBlock('wa','⚠️','Jareneis niet aangevinkt',
+        'Met ' + arbvl + ' jaar arbeidsverleden zou jareneis normaal voldaan moeten zijn. Controleer of in de laatste 5 jaar minimaal 4 jaar is gewerkt (≥208 uur per jaar).');
+    }
+    if(lft >= 60 && duur < 24){
+      out0 += alertBlock('in','👴','Oudere werkloze — IOW/IOAW aansluitend?',
+        `Bij leeftijd ${lft} kan na afloop van de WW mogelijk recht bestaan op een IOW-uitkering (geboren voor 1965) of IOAW. Controleer aansluiting bij UWV.`);
+    }
+    if(arbvl <= 10 && arbvl >= 3 && duur < 24){
+      out0 += alertBlock('in','ℹ️','Opbouw duur',
+        'Eerste 10 jaar arbeidsverleden: 1 maand WW per jaar. Daarna: 0,5 maand per jaar (max 24 maanden).');
+    }
+  }
+  
+  document.getElementById('out0').innerHTML = out0;
+  
+  // ==== TAB 1: TIJDLIJN ====
+  let out1 = '';
+  if(duur > 0){
+    const pct12 = (duur12/duur)*100;
+    const pct3 = (duur3/duur)*100;
+    
+    out1 += `<div class="kpi-grid">
+      <div class="kpi"><div class="kpi-lbl">Totale duur</div><div class="kpi-v">${fmtMnd(duur)}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Fase 1 (75%)</div><div class="kpi-v o">${fmtMnd(duur12)}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Fase 2 (70%)</div><div class="kpi-v">${fmtMnd(duur3)}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Totaal netto</div><div class="kpi-v g">${fmt(totNetto)}</div></div>
+    </div>`;
+    
+    out1 += `<div class="card"><div class="card-h"><div class="card-t">Visuele tijdlijn</div></div><div class="card-b">
+      <div class="timeline-wrap">
+        <div class="timeline-bar">
+          <div class="timeline-seg p1" style="flex:${pct12};">${fmtMnd(duur12)}<small>75% · ${fmt(ww12_netto)}/mnd</small></div>
+          <div class="timeline-seg p2" style="flex:${pct3};">${fmtMnd(duur3)}<small>70% · ${fmt(ww3_netto)}/mnd</small></div>
+        </div>
+        <div class="timeline-axis"><span>Start WW</span><span>Einde WW</span></div>
+      </div>
+    </div></div>`;
+    
+    // Maand-voor-maand tabel
+    let rijen = '';
+    let cumNetto = 0;
+    for(let m = 1; m <= Math.ceil(duur); m++){
+      const isHalve = (m === Math.ceil(duur) && duur % 1 !== 0);
+      const factor = isHalve ? (duur % 1) : 1;
+      const bruto = m <= 2 ? ww12_bruto * factor : ww3_bruto * factor;
+      const netto = m <= 2 ? ww12_netto * factor : ww3_netto * factor;
+      cumNetto += netto;
+      const tag = m <= 2 ? '<span class="tag o">75%</span>' : '<span class="tag">70%</span>';
+      const mndLabel = isHalve ? `Maand ${m} (${(factor*100).toFixed(0)}% · restant)` : `Maand ${m}`;
+      rijen += `<tr><td>${mndLabel} ${tag}</td><td class="ri">${fmt(bruto)}</td><td class="ri">${fmt(netto)}</td><td class="ri"><strong>${fmt(cumNetto)}</strong></td></tr>`;
+    }
+    // Vakantiegeld regel
+    rijen += `<tr><td>Vakantiegeld 8% (uitbetaling mei)</td><td class="ri">${fmt(vakGeld)}</td><td class="ri">${fmt(vakGeld*0.60)}*</td><td class="ri">${fmt(cumNetto+vakGeld*0.60)}</td></tr>`;
+    
+    out1 += `<div class="card"><div class="card-h"><div class="card-t">Maand-voor-maand overzicht</div></div><div class="card-b" style="padding:0;">
+      <table class="tbl">
+        <tr><th>Periode</th><th class="ri">Bruto</th><th class="ri">Netto ± </th><th class="ri">Cumulatief netto</th></tr>
+        ${rijen}
+      </table>
+      <div style="padding:10px 14px;font-size:12px;color:#666;border-top:1px solid var(--border);">* Vakantiegeld netto is een schatting (~60% na IB).</div>
+    </div></div>`;
+    
+    out1 += alertBlock('in','💡','Betalingsmoment WW',
+      'UWV betaalt de WW-uitkering rond de 20e van de maand, over de voorgaande maand. Vakantiegeld (8% over uitbetaalde WW) wordt in mei apart uitgekeerd.');
+  } else {
+    out1 = alertBlock('wa','⚠️','Geen WW-uitkering',
+      'Er is geen recht op WW berekend. Zie tab "Berekening" voor details.');
+  }
+  document.getElementById('out1').innerHTML = out1;
+  
+  // ==== TAB 2: VASTE LASTEN ====
+  const salNetto = +document.getElementById('vlSalNetto').value || 0;
+  const lasten = +document.getElementById('vlLasten').value || 0;
+  const buffer = +document.getElementById('vlBuffer').value || 0;
+  
+  let out2 = '';
+  if(duur > 0){
+    const inkomensterugval12 = salNetto - ww12_netto;
+    const inkomensterugval3 = salNetto - ww3_netto;
+    const tekort12 = Math.max(0, lasten - ww12_netto);
+    const tekort3 = Math.max(0, lasten - ww3_netto);
+    const totaalTekort = tekort12 * duur12 + tekort3 * duur3;
+    const bufferMaanden = lasten > 0 ? (buffer / lasten) : 0;
+    
+    out2 += `<div class="hero">
+      <div class="hero-lbl">Inkomensterugval per maand (vanaf mnd 3)</div>
+      <div class="hero-v">${fmt(inkomensterugval3)}</div>
+      <div class="hero-c">Van ${fmt(salNetto)} netto naar ${fmt(ww3_netto)} = ${fmtPct((inkomensterugval3/Math.max(1,salNetto))*100)} minder</div>
+    </div>`;
+    
+    out2 += `<div class="kpi-grid">
+      <div class="kpi"><div class="kpi-lbl">Netto terugval mnd 1-2</div><div class="kpi-v r">-${fmt(inkomensterugval12)}</div><div class="kpi-sub">${fmtPct((inkomensterugval12/Math.max(1,salNetto))*100)} minder</div></div>
+      <div class="kpi"><div class="kpi-lbl">Netto terugval mnd 3+</div><div class="kpi-v r">-${fmt(inkomensterugval3)}</div><div class="kpi-sub">${fmtPct((inkomensterugval3/Math.max(1,salNetto))*100)} minder</div></div>
+      <div class="kpi"><div class="kpi-lbl">Maandtekort op lasten</div><div class="kpi-v ${tekort3>0?'r':'g'}">${tekort3>0?fmt(tekort3):'Geen'}</div><div class="kpi-sub">${tekort3>0?'mnd 3+':'WW dekt lasten'}</div></div>
+      <div class="kpi"><div class="kpi-lbl">Totaaltekort looptijd</div><div class="kpi-v ${totaalTekort>0?'r':'g'}">${totaalTekort>0?fmt(totaalTekort):'€ 0'}</div><div class="kpi-sub">Over ${fmtMnd(duur)}</div></div>
+    </div>`;
+    
+    out2 += `<div class="card"><div class="card-h"><div class="card-t">Vergelijking salaris vs WW</div></div><div class="card-b" style="padding:0;">
+      <table class="tbl">
+        <tr><th>Situatie</th><th class="ri">Netto/mnd</th><th class="ri">Saldo na vaste lasten</th><th class="ri">% van salaris</th></tr>
+        <tr><td><span class="tag g">HUIDIG</span> Salaris</td><td class="ri">${fmt(salNetto)}</td><td class="ri" style="color:${salNetto-lasten>=0?'var(--green)':'var(--red)'};font-weight:700;">${fmt(salNetto-lasten)}</td><td class="ri">100%</td></tr>
+        <tr><td><span class="tag o">WW 1-2</span> Eerste 2 mnd</td><td class="ri">${fmt(ww12_netto)}</td><td class="ri" style="color:${ww12_netto-lasten>=0?'var(--green)':'var(--red)'};font-weight:700;">${fmt(ww12_netto-lasten)}</td><td class="ri">${fmtPct((ww12_netto/Math.max(1,salNetto))*100)}</td></tr>
+        <tr><td><span class="tag">WW 3+</span> Vanaf mnd 3</td><td class="ri">${fmt(ww3_netto)}</td><td class="ri" style="color:${ww3_netto-lasten>=0?'var(--green)':'var(--red)'};font-weight:700;">${fmt(ww3_netto-lasten)}</td><td class="ri">${fmtPct((ww3_netto/Math.max(1,salNetto))*100)}</td></tr>
+      </table>
+    </div></div>`;
+    
+    // Buffer analyse
+    out2 += `<div class="card"><div class="card-h"><div class="card-t">Buffer & dekking</div></div><div class="card-b">
+      <table class="tbl">
+        <tr><td>Huidige spaarbuffer</td><td class="ri">${fmt(buffer)}</td></tr>
+        <tr><td>Dekt vaste lasten gedurende</td><td class="ri"><strong>${bufferMaanden.toFixed(1).replace('.',',')} mnd</strong></td></tr>
+        <tr><td>Benodigd voor volledige tekortdekking WW-periode</td><td class="ri">${fmt(totaalTekort)}</td></tr>
+        <tr><td>Saldo na WW-periode (indicatief)</td><td class="ri" style="color:${buffer-totaalTekort>=0?'var(--green)':'var(--red)'};font-weight:700;">${fmt(buffer-totaalTekort)}</td></tr>
+      </table>
+    </div></div>`;
+    
+    // Alerts
+    if(totaalTekort > buffer){
+      out2 += alertBlock('er','🚨','Buffer ontoereikend',
+        `De spaarbuffer van ${fmt(buffer)} dekt het totale tekort van ${fmt(totaalTekort)} niet. Tekort: ${fmt(totaalTekort-buffer)}. Bespreek uitgavenanalyse en tijdelijke lastenverlichting (hypotheekpauze, schulden herstructureren).`);
+    } else if(tekort3 > 0){
+      out2 += alertBlock('wa','⚠️','Maandtekort tijdens WW',
+        `Vanaf maand 3 is er een tekort van ${fmt(tekort3)}/mnd op de vaste lasten. Spaarbuffer dekt dit voor nu, maar bewaak de uitputting.`);
+    } else {
+      out2 += alertBlock('ok','✅','WW dekt vaste lasten',
+        'De WW-uitkering netto is voldoende om de vaste lasten te betalen. Er blijft ruimte over voor overige uitgaven en spaargeld behoud.');
+    }
+    
+    // Toeslagen
+    const maybeToeslag = ww3_netto * 12 < 35000;
+    if(maybeToeslag){
+      out2 += alertBlock('in','💶','Check toeslagen',
+        'Bij een WW-jaarinkomen onder ± € 35.000 kunnen zorgtoeslag en/of huurtoeslag ontstaan die eerder niet werden ontvangen. Laat klant een herberekening doen via toeslagen.nl.');
+    }
+  } else {
+    out2 = alertBlock('wa','⚠️','Geen WW-berekening','Vul de loongegevens in op tab "Berekening" om de vaste-lastenanalyse te zien.');
+  }
+  document.getElementById('out2').innerHTML = out2;
+  
+  // ==== TAB 3: HYPOTHEEKIMPACT ====
+  let out3 = '';
+  if(duur > 0){
+    const wwJaarInk = ww3_bruto * 12;
+    
+    out3 += `<div class="hero" style="background:linear-gradient(135deg,#7a1e15 0%,#c0392b 100%);">
+      <div class="hero-lbl">WW als toetsinkomen nieuwe hypotheek</div>
+      <div class="hero-v">Geen nieuwe financiering</div>
+      <div class="hero-c">WW wordt door geldverstrekkers niet geaccepteerd als toetsbaar inkomen volgens CHF/GHF 2026.</div>
+    </div>`;
+    
+    out3 += `<div class="kpi-grid">
+      <div class="kpi"><div class="kpi-lbl">WW bruto/jr</div><div class="kpi-v">${fmt(wwJaarInk)}</div><div class="kpi-sub">Bij max duur</div></div>
+      <div class="kpi"><div class="kpi-lbl">Terugval bruto vs salaris</div><div class="kpi-v r">-${fmt(bruto*12-wwJaarInk)}</div><div class="kpi-sub">Per jaar</div></div>
+      <div class="kpi"><div class="kpi-lbl">Impact toetsinkomen</div><div class="kpi-v r">€ 0</div><div class="kpi-sub">Geen toetsing mogelijk</div></div>
+      <div class="kpi"><div class="kpi-lbl">Duur overbruggen</div><div class="kpi-v">${fmtMnd(duur)}</div><div class="kpi-sub">Tot terugkeer dienstverband</div></div>
+    </div>`;
+    
+    out3 += `<div class="card"><div class="card-h"><div class="card-t">Impact op lopende hypotheek</div></div><div class="card-b">
+      <div style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:12px;">
+        <strong style="color:var(--navy);">Betaalbaarheid:</strong> De hypotheekmaandlasten blijven contractueel verschuldigd. Controleer of de netto WW-uitkering de maandlasten dekt.
+      </div>
+      <div style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:12px;">
+        <strong style="color:var(--navy);">Betalingsachterstand:</strong> Een achterstand van 2+ maanden leidt tot een BKR A-codering (achterstand). Dit blokkeert vrijwel alle toekomstige financieringen voor 5 jaar na herstel.
+      </div>
+      <div style="font-size:14px;color:var(--text);line-height:1.6;">
+        <strong style="color:var(--navy);">Overlijden/AO-dekkingen:</strong> WW staat los van AO/ODV-verzekeringen. Controleer of werkloosheidsdekking bij de hypotheek is meeverzekerd (WW-verzekering).
+      </div>
+    </div></div>`;
+    
+    out3 += `<div class="card"><div class="card-h"><div class="card-t">Oplossingsrichtingen</div></div><div class="card-b" style="padding:0;">
+      <table class="tbl">
+        <tr><th>Oplossing</th><th>Wanneer</th><th>Effect</th></tr>
+        <tr><td><strong>Betaalpauze/aflossingsvrij omzetten</strong></td><td>Bij tijdelijke terugval</td><td>Maandlasten dalen substantieel</td></tr>
+        <tr><td><strong>Rentemiddeling / renteverlaging</strong></td><td>Bij rentedaling sinds afsluiten</td><td>Structureel lagere maandlasten</td></tr>
+        <tr><td><strong>NHG — Woonlastenfaciliteit</strong></td><td>Bij NHG-hypotheek en acute noodsituatie</td><td>Tijdelijke lastenverlichting door NHG</td></tr>
+        <tr><td><strong>Verhuisregeling / verkoop</strong></td><td>Bij structurele inkomensterugval</td><td>Definitieve oplossing, voorkomt restschuld</td></tr>
+        <tr><td><strong>Overbruggingskrediet familie</strong></td><td>Kort-periode tekort</td><td>Voorkomt BKR-registratie</td></tr>
+      </table>
+    </div></div>`;
+    
+    out3 += alertBlock('er','🚨','Niet doen: nieuwe consumptieve lening',
+      'Een persoonlijke lening of creditcard aanspreken verhoogt de maandlasten én vermindert de hypotheekruimte definitief. De BKR-codering blijft 5 jaar na volledige aflossing zichtbaar.');
+    
+    out3 += alertBlock('in','📞','Proactief contact geldverstrekker',
+      'Neem bij dreigende betalingsproblemen direct contact op met de geldverstrekker. Dit is conform AFM Leidraad Hypotheekadvisering 2026 en vergroot de kans op een coulance-oplossing. Wachten tot er achterstand is, maakt oplossingen moeilijker.');
+    
+    out3 += alertBlock('wa','⚠️','Hersteloptie: terugkeer naar werk',
+      `Na afloop WW (${fmtMnd(duur)}) of bij eerder vinden van werk, herstelt de toetsbaarheid. Let op: nieuwe geldverstrekkers kijken soms naar het gemiddelde inkomen over de laatste 12 maanden. Daarin wordt de WW-periode meegewogen.`);
+    
+    out3 += alertBlock('in','💡','AFM-aandachtspunt — nazorg',
+      'Bij werkloosheid ontstaat een aangepaste klantsituatie. Volgens Wft art. 4:24 en de Principes voor doorlopende ondersteuning is het advies om proactief te toetsen of de hypotheek nog passend is bij de nieuwe inkomenssituatie. Leg dit vast in het dossier.');
+  } else {
+    out3 = alertBlock('wa','⚠️','Geen WW-berekening','Vul de loongegevens in op tab "Berekening" om de hypotheekimpact te zien.');
+  }
+  document.getElementById('out3').innerHTML = out3;
+}
+
+calc();
+</script>
+</body>
+</html>

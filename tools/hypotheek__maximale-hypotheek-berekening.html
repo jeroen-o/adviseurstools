@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maximale hypotheek berekening | Blinqx VH</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#F7F7F7;color:#333;max-width:600px;margin:0 auto}
+.hdr{background:#1A1A2E;padding:20px 24px 16px;color:#fff}
+.hdr-sub{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#FFD200;font-weight:700;margin-bottom:5px}
+.hdr h1{font-size:20px;font-weight:700;line-height:1.3}
+.hdr p{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px}
+.form-body{background:#fff;padding:18px 22px;border-bottom:1px solid #DDDDDD}
+.sl{height:1px;background:#E8E8E8;margin:6px 0 16px}
+.slbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#1A1A2E;font-weight:700;margin-bottom:10px;margin-top:4px}
+.veld{margin-bottom:13px}
+.vh{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.vl{font-size:12px;font-weight:600;color:#333;flex:1}
+.vreq{color:#c0392b}
+.ibtn{width:20px;height:20px;border-radius:50%;border:1.5px solid #1A1A2E;background:#fff;color:#1A1A2E;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-family:inherit;line-height:1}
+.ibtn.open{background:#FFD200;border-color:#FFD200;color:#1A1A2E}
+.ibox{margin-top:7px;padding:10px 12px;background:#FFFDE7;border-left:3px solid #1A1A2E;border-radius:0 5px 5px 0;font-size:11px;color:#1A1A2E;line-height:1.65}
+.iw{display:flex;align-items:stretch;border:1.5px solid #DDDDDD;border-radius:7px;background:#F7F7F7;overflow:hidden;transition:border-color .15s}
+.iw:focus-within{border-color:#1A1A2E}
+.iaf{padding:0 10px;font-size:12px;color:#888888;background:#F7F7F7;display:flex;align-items:center;border-right:1px solid #DDDDDD;white-space:nowrap;flex-shrink:0}
+.iaf.s{border-right:none;border-left:1px solid #DDDDDD}
+.iw input,.iw select{flex:1;padding:9px 10px;font-size:12px;border:none;background:transparent;color:#333;outline:none;min-width:0;font-family:inherit}
+.iw select{cursor:pointer}
+.dw{display:flex;border:1.5px solid #DDDDDD;border-radius:7px;overflow:hidden;background:#F7F7F7}
+.dw button{flex:1;padding:8px 4px;font-size:11px;font-weight:600;border:none;border-right:1px solid #DDDDDD;background:#F7F7F7;color:#888888;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+.dw button:last-child{border-right:none}
+.dw button.act{background:#1A1A2E;color:#fff}
+.fout-box{background:#FFF3F3;border-bottom:2px solid #E05A5A;padding:10px 22px;font-size:12px;color:#C0392B;display:none}
+.btnrow{background:#fff;padding:16px 22px;display:flex;justify-content:flex-end;border-bottom:1px solid #DDDDDD}
+.bbtn{padding:12px 30px;background:#FFD200;color:#1A1A2E;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:background .15s;font-family:inherit}
+.bbtn:hover{background:#E6BD00}
+/* Resultaat */
+#res-blok{display:none;background:#F7F7F7;padding:18px 22px 8px;border-bottom:1px solid #DDDDDD}
+.res-main{background:#1A1A2E;border-radius:8px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap}
+.res-main-lbl{font-size:13px;font-weight:700;color:#fff}
+.res-main-lbl sup{font-size:10px;font-weight:400;opacity:.7;margin-left:2px}
+.res-main-amt{font-size:24px;font-weight:800;color:#FFD200;white-space:nowrap}
+.res-note{font-size:11px;color:#555555;line-height:1.6;padding:0 2px;margin-bottom:12px}
+.res-note strong{color:#1A1A2E;font-weight:600}
+.res-card{border-radius:8px;overflow:hidden;margin-bottom:10px;border:1px solid #DDDDDD}
+.res-card-hdr{background:#1A1A2E;padding:10px 14px;font-size:12px;font-weight:700;color:#fff}
+.res-card-hdr.grijs{background:#555555}
+.res-card-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border-top:1px solid #E8E8E8;gap:12px;font-size:12px}
+.res-card-row span{color:#333;flex:1}
+.res-card-row strong{color:#1A1A2E;font-weight:700;white-space:nowrap}
+.res-card-row.hl{background:#FFFDE7}
+.indicatief{font-size:10px;color:#AAAAAA;text-align:center;padding:8px 4px 4px;line-height:1.65;margin-top:4px}
+.print-btn{display:block;margin:10px auto 12px;padding:8px 20px;background:transparent;border:1.5px solid #1A1A2E;color:#1A1A2E;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.print-btn:hover{background:#1A1A2E;color:#fff}
+.footer{text-align:center;font-size:10px;color:#AAAAAA;padding:12px 16px}
+.uitgebr-sectie{display:none}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:#fff!important;margin:0;padding:0}
+  .form-body,.btnrow,.fout-box,.uitgebr-sectie,.ibtn,.print-btn,.footer{display:none!important}
+  .hdr{background:#1A1A2E!important;color:#fff!important;padding:16px 20px!important;-webkit-print-color-adjust:exact!important}
+  .hdr-sub{color:#FFD200!important}
+  #res-blok{display:block!important;padding:16px 20px!important;background:#fff!important}
+  .res-main{background:#1A1A2E!important;color:#fff!important;-webkit-print-color-adjust:exact!important;padding:12px 16px!important;border-radius:6px!important;margin-bottom:12px!important}
+  .res-main-lbl{color:#fff!important}
+  .res-main-amt{color:#FFD200!important}
+  .res-card{break-inside:avoid;border:1px solid #DDDDDD!important;margin-bottom:10px!important}
+  .res-card-hdr{background:#1A1A2E!important;color:#fff!important;-webkit-print-color-adjust:exact!important;padding:8px 12px!important}
+  .res-card-hdr.grijs{background:#555555!important}
+  .res-card-row{padding:8px 12px!important;border-top:1px solid #E8E8E8!important}
+  .res-card-row strong{color:#1A1A2E!important}
+  .res-note{font-size:10px!important;margin-bottom:10px!important}
+  .indicatief{display:block!important;font-size:9px!important;color:#999!important;text-align:center!important;margin-top:8px!important}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <p class="hdr-sub">Financieringslastnormen 2026</p>
+  <h1>Maximale hypotheek berekening</h1>
+  <p>Indicatieve berekening op basis van officiële normen</p>
+</div>
+
+<div class="form-body">
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Burgerlijke staat</span>
+      <button class="ibtn" onclick="toggleInfo('burg')">i</button>
+    </div>
+    <div class="iw">
+      <select id="burg" onchange="onBurg()">
+        <option value="alleenstaand">Alleenstaand</option>
+        <option value="gehuwd" selected>Gehuwd</option>
+        <option value="samenwonend">Samenwonend</option>
+      </select>
+    </div>
+    <div class="ibox" id="info-burg" style="display:none">Uw burgerlijke staat bepaalt of het partnerinkomen wordt meegenomen. Bij ‘gehuwd’ of ‘samenwonend’ kunt u het inkomen van uw partner invullen.</div>
+  </div>
+
+  <div class="sl"></div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">AOW-leeftijd bereikt <span class="vreq">*</span></span>
+      <button class="ibtn" onclick="toggleInfo('aow')">i</button>
+    </div>
+    <div class="dw">
+      <button id="aow-ja" onclick="setDW('aow','ja')">ja</button>
+      <button id="aow-b10" onclick="setDW('aow','b10')">binnen 10 jaar</button>
+      <button id="aow-nee" onclick="setDW('aow','nee')" class="act">nee</button>
+    </div>
+    <div class="ibox" id="info-aow" style="display:none">Kies:<br><br>• <b>ja</b> – u heeft de AOW-leeftijd (67 jaar en 3 maanden) al bereikt.<br>• <b>binnen 10 jaar</b> – u bereikt die leeftijd binnen 10 jaar.<br>• <b>nee</b> – geen van beide is van toepassing.<br><br>Afhankelijk van uw leeftijd gelden andere financieringslastnormen voor 2026.</div>
+  </div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Bruto jaarinkomen <span class="vreq">*</span></span>
+      <button class="ibtn" onclick="toggleInfo('ink')">i</button>
+    </div>
+    <div class="iw">
+      <span class="iaf">€</span>
+      <input type="number" id="i1" placeholder="65.000" inputmode="decimal">
+    </div>
+    <div class="ibox" id="info-ink" style="display:none">Uw bruto jaarinkomen inclusief vakantiegeld, 13e maand en andere vaste beloningsbestanddelen. Variabele bonussen tellen mee voor zover structureel.</div>
+  </div>
+
+  <div id="partner-velden">
+    <div class="veld">
+      <div class="vh">
+        <span class="vl">Partner heeft AOW-leeftijd bereikt</span>
+        <button class="ibtn" onclick="toggleInfo('aowP')">i</button>
+      </div>
+      <div class="dw">
+        <button id="aowP-ja" onclick="setDW('aowP','ja')">ja</button>
+        <button id="aowP-b10" onclick="setDW('aowP','b10')">binnen 10 jaar</button>
+        <button id="aowP-nee" onclick="setDW('aowP','nee')" class="act">nee</button>
+      </div>
+      <div class="ibox" id="info-aowP" style="display:none">Heeft uw partner de AOW-leeftijd bereikt? Kies: ja, binnen 10 jaar, of nee.</div>
+    </div>
+    <div class="veld">
+      <div class="vh">
+        <span class="vl">Bruto jaarinkomen van uw partner</span>
+        <button class="ibtn" onclick="toggleInfo('inkP')">i</button>
+      </div>
+      <div class="iw">
+        <span class="iaf">€</span>
+        <input type="number" id="i2" placeholder="0" inputmode="decimal">
+      </div>
+      <div class="ibox" id="info-inkP" style="display:none">Het bruto jaarinkomen van uw partner inclusief vakantiegeld en 13e maand. Beide inkomens worden voor 100% meegenomen bij de berekening.</div>
+    </div>
+  </div>
+
+  <div class="sl"></div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Marktwaarde van de woning</span>
+      <button class="ibtn" onclick="toggleInfo('markt')">i</button>
+    </div>
+    <div class="iw">
+      <span class="iaf">€</span>
+      <input type="number" id="markt" placeholder="Optioneel" inputmode="decimal">
+    </div>
+    <div class="ibox" id="info-markt" style="display:none">De koopprijs of getaxeerde waarde van de woning (na eventuele verbouwing). U kunt maximaal 100% van de marktwaarde lenen. Laat dit leeg als u de waarde nog niet weet.</div>
+  </div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Energielabel van de woning</span>
+      <button class="ibtn" onclick="toggleInfo('lbl')">i</button>
+    </div>
+    <div class="iw">
+      <select id="lbl">
+        <option value="EFG" selected>E, F of G</option>
+        <option value="CD">C of D</option>
+        <option value="AB">A of B</option>
+        <option value="A+A++">A+ of A++</option>
+        <option value="A+++">A+++</option>
+        <option value="A++++">A++++</option>
+        <option value="A++++G">A++++ met garantie</option>
+        <option value="geen">Geen geldig label</option>
+      </select>
+    </div>
+    <div class="ibox" id="info-lbl" style="display:none">Het energielabel bepaalt of u extra kunt lenen voor energiebesparende maatregelen. Een beter label geeft recht op een hoger hypotheekbedrag bij aankoop én eventueel extra bij verduurzamende verbouwing.</div>
+  </div>
+
+  <div class="sl"></div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Hypotheekrente <span class="vreq">*</span></span>
+      <button class="ibtn" onclick="toggleInfo('rente')">i</button>
+    </div>
+    <div class="iw">
+      <input type="text" id="rente" placeholder="3,5" inputmode="decimal">
+      <span class="iaf s">%</span>
+    </div>
+    <div class="ibox" id="info-rente" style="display:none">De hypotheekrente die u gaat betalen. Bij een rentevastperiode korter dan 10 jaar geldt wettelijk een toetsrente van minimaal 5% (AFM-norm), ook als de werkelijke rente lager is.</div>
+  </div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Rentevastperiode</span>
+      <button class="ibtn" onclick="toggleInfo('renteLang')">i</button>
+    </div>
+    <div class="dw">
+      <button id="rl-lang" onclick="setRenteLang(true)" class="act">≥ 10 jaar</button>
+      <button id="rl-kort" onclick="setRenteLang(false)">< 10 jaar</button>
+    </div>
+    <div class="ibox" id="info-renteLang" style="display:none">Bij ≥ 10 jaar rentevast wordt de werkelijke rente gebruikt bij de berekening. Bij < 10 jaar geldt de toetsrente van minimaal 5% (AFM-norm).</div>
+  </div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Hypotheekrente aftrekbaar in box 1</span>
+      <button class="ibtn" onclick="toggleInfo('box1')">i</button>
+    </div>
+    <div class="dw">
+      <button id="box1-ja" onclick="setDW('box1','ja')" class="act">ja</button>
+      <button id="box1-deels" onclick="setDW('box1','deels')">deels</button>
+      <button id="box1-nee" onclick="setDW('box1','nee')">nee</button>
+    </div>
+    <div class="ibox" id="info-box1" style="display:none">Hypotheekrente is aftrekbaar in box 1 als de hypotheek annuïtair of lineair wordt afgelost (geldt voor nieuwe hypotheken vanaf 2013). Kies ‘deels’ als een deel niet aftrekbaar is.</div>
+  </div>
+
+  <div class="veld" id="box3d-veld" style="display:none">
+    <div class="vh">
+      <span class="vl">Niet aftrekbaar (box 3) hypotheekdeel</span>
+      <button class="ibtn" onclick="toggleInfo('box3d')">i</button>
+    </div>
+    <div class="iw">
+      <span class="iaf">€</span>
+      <input type="number" id="box3d" placeholder="0" inputmode="decimal">
+    </div>
+    <div class="ibox" id="info-box3d" style="display:none">Het hypotheekdeel dat niet aftrekbaar is in box 1, bijv. een aflossingsvrij hypotheekdeel afgesloten vóór 2013.</div>
+  </div>
+
+  <div class="sl"></div>
+
+  <div class="veld">
+    <div class="vh">
+      <span class="vl">Extra bijdrage bij verduurzamende verbouwing</span>
+      <button class="ibtn" onclick="toggleInfo('verb')">i</button>
+    </div>
+    <div class="dw">
+      <button id="verb-ja" onclick="setVerb(true)">ja</button>
+      <button id="verb-nee" onclick="setVerb(false)" class="act">nee</button>
+    </div>
+    <div class="ibox" id="info-verb" style="display:none">Extra leenruimte voor verduurzamende maatregelen bij verbouwing. Het bedrag is afhankelijk van het energielabel van de woning (bijv. +€20.000 bij label E, F of G).</div>
+  </div>
+
+  <div class="sl"></div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <span style="font-size:12px;font-weight:600;color:#333">Uitgebreide invoer</span>
+    <button onclick="toggleUitgebr()" id="uitgebr-btn" style="padding:5px 14px;font-size:11px;font-weight:600;border:1.5px solid #1A1A2E;border-radius:6px;background:#fff;color:#1A1A2E;cursor:pointer;font-family:inherit;transition:all .15s">Tonen</button>
+  </div>
+
+  <div class="uitgebr-sectie" id="uitgebr-sectie">
+    <div class="sl"></div>
+    <p class="slbl">Looptijd & schulden</p>
+    <div class="veld">
+      <div class="vh"><span class="vl">Looptijd hypotheek (jaren)</span><button class="ibtn" onclick="toggleInfo('lpt')">i</button></div>
+      <div class="iw"><input type="number" id="lpt" placeholder="30" value="30" inputmode="decimal"><span class="iaf s">jaar</span></div>
+      <div class="ibox" id="info-lpt" style="display:none">Normaal wordt de berekening gemaakt voor 30 jaar. Een kortere looptijd leidt tot hogere maandlasten en een lagere maximale hypotheek.</div>
+    </div>
+    <div class="sl"></div>
+    <p class="slbl">Andere financiële verplichtingen</p>
+    <div class="veld">
+      <div class="vh"><span class="vl">Persoonlijke leningen en private lease</span><button class="ibtn" onclick="toggleInfo('pLening')">i</button></div>
+      <div class="iw"><span class="iaf">€</span><input type="number" id="pLening" placeholder="0" inputmode="decimal"><span class="iaf s">p/mnd</span></div>
+      <div class="ibox" id="info-pLening" style="display:none">Maandelijkse betaalverplichting voor aflopende kredieten zoals persoonlijke leningen en private lease. Verlaagt de maximale hypotheek.</div>
+    </div>
+    <div class="veld">
+      <div class="vh"><span class="vl">Andere krediet (doorlopend / creditcard)</span><button class="ibtn" onclick="toggleInfo('aKred')">i</button></div>
+      <div class="iw"><span class="iaf">€</span><input type="number" id="aKred" placeholder="0" inputmode="decimal"></div>
+      <div class="ibox" id="info-aKred" style="display:none">Openstaand bedrag van doorlopend krediet of creditcardlimiet. Hiervan wordt 2% per maand als hypotheeklast meegeteld (norm: 2% × limiet per maand).</div>
+    </div>
+    <div class="veld">
+      <div class="vh"><span class="vl">Termijnbedrag studielening</span><button class="ibtn" onclick="toggleInfo('studie')">i</button></div>
+      <div class="iw"><span class="iaf">€</span><input type="number" id="studie" placeholder="0" inputmode="decimal"><span class="iaf s">p/mnd</span></div>
+      <div class="ibox" id="info-studie" style="display:none">Maandelijkse termijn voor uw studielening. Verlaagt de beschikbare ruimte voor hypotheeklasten.</div>
+    </div>
+    <div id="alim-velden">
+      <div class="veld">
+        <div class="vh"><span class="vl">Zelf te betalen partneralimentatie</span><button class="ibtn" onclick="toggleInfo('alimZ')">i</button></div>
+        <div class="iw"><span class="iaf">€</span><input type="number" id="alimZ" placeholder="0" inputmode="decimal"><span class="iaf s">p/mnd</span></div>
+        <div class="ibox" id="info-alimZ" style="display:none">Partneralimentatie die u zelf betaalt per maand. Dit bedrag wordt vermenigvuldigd met 12 en afgetrokken van uw bruto jaarinkomen vóór de berekening.</div>
+      </div>
+      <div class="veld">
+        <div class="vh"><span class="vl">Door uw partner te betalen partneralimentatie</span><button class="ibtn" onclick="toggleInfo('alimP')">i</button></div>
+        <div class="iw"><span class="iaf">€</span><input type="number" id="alimP" placeholder="0" inputmode="decimal"><span class="iaf s">p/mnd</span></div>
+        <div class="ibox" id="info-alimP" style="display:none">Partneralimentatie die uw partner betaalt per maand. Dit bedrag wordt vermenigvuldigd met 12 en afgetrokken van het bruto jaarinkomen van uw partner vóór de berekening.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="fout-blok" class="fout-box"></div>
+
+<div class="btnrow">
+  <button class="bbtn" onclick="bereken()">Berekenen →</button>
+</div>
+
+<!-- RESULTAAT BLOK -->
+<div id="res-blok">
+  <div class="res-main">
+    <span class="res-main-lbl">Maximale hypotheek <sup>1</sup></span>
+    <span class="res-main-amt" id="res-hoofd"></span>
+  </div>
+  <p class="res-note" id="res-note"></p>
+
+  <div id="res-energie" class="res-card">
+    <div class="res-card-hdr" id="res-energie-hdr"></div>
+    <div class="res-card-row hl">
+      <span id="res-energie-lbl"></span>
+      <strong id="res-energie-amt"></strong>
+    </div>
+  </div>
+
+  <div id="res-nhg" class="res-card">
+    <div class="res-card-hdr grijs">Hypotheek met NHG</div>
+    <div class="res-card-row"><span>Maximale hypotheek</span><strong id="nhg-max"></strong></div>
+    <div class="res-card-row"><span>Maximale hypotheek met energiebesparende voorzieningen (maximaal)</span><strong id="nhg-energie"></strong></div>
+    <div class="res-card-row"><span>Maximale koopsom</span><strong id="nhg-koop"></strong></div>
+  </div>
+
+  <p class="indicatief">ⓘ Deze berekening is indicatief en gebaseerd op de Bijlage financieringslastnormen 2026.<br>Persoonlijke omstandigheden kunnen leiden tot een andere uitkomst. Raadpleeg altijd een gecertificeerd hypotheekadviseur.</p>
+  <button class="print-btn" onclick="afdrukken()">🖶 Afdrukken / Opslaan als PDF</button>
+</div>
+
+<p class="footer">Bron: Tijdelijke regeling hypothecair krediet 2026 · Bijlage financieringslastnormen 2026</p>
+
+<script>
+const NIET_AOW=[[30000,116278.48,115467.48,114455.06,112678.49,110866.96,108504.23,106212.16,103518.21,100506.39,97245.78,94199.09,91350.87],[31000,125580.76,125101.43,123676.87,122129.6,119904.82,118257.01,115529.02,112416.31,109470.47,106684.77,103212.97,99972.03],[32000,133632.73,133615.7,132549.86,131294.94,129287.34,127254.05,124676.48,121665.85,118796.74,115609.67,112172.71,108541.79],[33000,140284.36,140870.32,140289.2,138766.01,136486.99,134199.76,131926.69,129685.32,126493.18,122992.36,119697.81,116173.64],[34000,147086.03,146725.34,145281.62,142971.04,140622.96,138266.42,135924.47,133615.17,130839.4,128175.94,125625.86,122751.93],[35000,152287.3,151040.79,149554.61,147176.07,144758.93,142333.08,139922.24,137545.03,134687.62,131945.82,129320.73,126362.28],[36000,156638.37,155356.24,153827.6,151381.1,148894.9,146399.74,143920.02,141474.89,138535.83,135715.7,133015.61,129972.63],[37000,160989.43,159671.69,158100.59,155586.13,153030.87,150466.39,147917.8,145404.75,142384.05,139485.58,136710.49,133582.98],[38000,165340.5,163987.15,162373.58,159791.16,157166.84,154533.05,151915.58,149334.61,146232.27,143255.46,140405.37,137193.33],[39000,169691.57,168302.6,166646.57,163996.19,161302.8,158599.71,155913.36,153264.47,150080.49,147025.34,144100.25,140803.68],[40000,174042.63,172618.05,170919.55,168201.22,165438.77,162666.37,159911.14,157194.32,153928.7,150795.22,147795.12,144414.03],[41000,178393.7,176933.5,175192.54,172406.26,169574.74,166733.03,163908.91,161124.18,157776.92,154565.11,151490.0,148024.38],[42000,182744.76,181248.95,179465.53,176611.29,173710.71,170799.69,167906.69,165054.04,161625.14,158334.99,155184.88,151634.73],[43000,187095.83,185564.4,183738.52,180816.32,177846.68,174866.35,171904.47,168983.9,165473.36,162104.87,158879.76,155245.09],[44000,191446.89,189879.85,188011.51,185021.35,181982.65,178933.01,175902.25,172913.76,169321.57,165874.75,162574.64,158855.44],[45000,195797.96,194195.3,192284.5,189226.38,186118.62,182999.67,179900.03,176843.61,173169.79,169644.63,166269.51,162465.79],[46000,200149.03,198510.76,196557.49,193431.41,190254.59,187066.33,183897.81,180773.47,177018.01,173414.51,169964.39,166076.14],[47000,204500.09,202826.21,200830.48,197636.44,194390.56,191132.99,187895.58,184703.33,180866.23,177184.39,173659.27,169686.49],[48000,208851.16,207141.66,205103.46,201841.47,198526.53,195199.65,191893.36,188633.19,184714.44,180954.27,177354.15,173296.84],[49000,213202.22,211457.11,209376.45,206046.5,202662.5,199266.31,195891.14,192563.05,188562.66,184724.15,181049.03,176907.19],[50000,217553.29,215772.56,213649.44,210251.53,206798.47,203332.97,199888.92,196492.9,192410.88,188494.03,184743.91,180517.54],[51000,221904.36,220088.01,217922.43,214456.56,210934.44,207399.62,203886.7,200422.76,196259.1,192263.91,188438.78,184127.89],[52000,226255.42,224403.46,222195.42,218661.59,215070.41,211466.28,207884.48,204352.62,200107.31,196033.79,192133.66,187738.24],[53000,230606.49,228718.91,226468.41,222866.62,219206.38,215532.94,211882.25,208282.48,203955.53,199803.67,195828.54,191348.59],[54000,234957.55,233034.37,230741.4,227071.65,223342.35,219599.6,215880.03,212212.34,207803.75,203573.55,199523.42,194958.94],[55000,239308.62,237349.82,235014.39,231276.68,227478.31,223666.26,219877.81,216142.19,211651.97,207343.43,203218.3,198569.29],[56000,243659.68,241665.27,239287.38,235481.71,231614.28,227732.92,223875.59,220072.05,215500.19,211113.31,206913.17,202179.65],[57000,249436.1,245980.72,243560.36,239686.75,235750.25,231799.58,227873.37,224001.91,219348.4,214883.2,210608.05,205790.0],[58000,255262.53,251649.12,247833.35,243891.78,239886.22,235866.24,231871.15,227931.77,223196.62,218653.08,214302.93,209400.35],[59000,259663.6,255987.9,252106.34,248096.81,244022.19,239932.9,235868.93,231861.63,227044.84,222422.96,217997.81,213010.7],[60000,265565.05,261726.28,257687.39,253526.6,248158.16,243999.56,239866.7,235791.48,230893.06,226192.84,221692.69,216621.05],[61000,269991.13,266088.39,261982.18,257752.05,253462.16,248066.22,243864.48,239721.34,234741.27,229962.72,225387.56,220231.4],[62000,275967.6,271896.75,267628.63,261977.49,257617.28,253248.51,247862.26,243651.2,238589.49,233732.6,229082.44,223841.75],[63000,280418.69,277751.77,273318.68,268774.94,262978.72,257333.16,252927.24,247581.06,242437.71,237502.48,232777.32,227452.1],[64000,286470.17,282160.53,277657.07,274347.63,268378.46,262569.44,256941.96,251510.92,246285.93,241272.36,236472.2,231062.45],[65000,292571.66,288085.53,283412.53,278634.31,273816.49,267841.7,262057.76,256479.15,250134.14,245042.24,240167.08,234672.8],[66000,298723.17,294057.18,289211.58,284268.24,279292.82,273149.95,267207.44,260424.99,254978.37,248812.12,243861.95,238283.15],[67000,304924.69,300075.48,295054.24,289942.99,284807.45,278494.19,272391.0,265441.15,259852.78,253538.75,247556.83,241893.5],[68000,311176.22,307726.66,302422.97,297046.63,290360.37,283874.41,277608.44,271575.56,264757.37,259264.97,252172.05,246377.53],[69000,319203.19,313861.6,308374.63,302823.44,297272.8,290532.22,284028.6,276671.59,270733.43,264063.0,257748.2,250887.26],[70000,325579.75,321676.07,315895.96,310069.98,304261.82,297262.0,290516.52,282917.83,276769.85,269889.18,263378.49,256322.06],[71000,333781.76,329583.84,323504.5,317398.16,311327.43,304063.76,297072.2,290362.2,282866.63,275772.48,269062.92,261808.25],[72000,342083.79,335905.39,331200.24,324808.0,318469.64,312233.06,304915.3,296752.21,289023.78,281712.9,274801.48,267345.84],[73000,348660.4,343976.45,338983.18,332299.48,325688.44,319196.77,311623.44,303206.12,296342.94,287710.43,280594.19,273872.73],[74000,357137.48,352140.82,346853.33,339872.62,332983.83,326232.45,318399.33,310906.09,302635.9,294821.8,286441.03,278575.18],[75000,363839.12,358648.99,353175.61,345996.45,340355.81,331990.55,325242.99,316305.65,308989.24,300947.86,292342.0,284266.95],[76000,370590.78,365203.81,359541.49,353712.48,346349.14,339152.19,330866.98,322951.26,315402.93,306045.76,298297.12,290010.1],[77000,377392.44,373601.44,367629.65,359938.37,353855.16,345000.26,337829.21,329660.78,320714.98,312271.78,304306.37,295804.65],[78000,384244.12,380272.9,374104.53,367797.29,359944.22,352287.86,344859.21,336434.19,327234.31,318554.91,310369.76,301650.59],[79000,391145.81,385148.19,380623.02,374125.25,366071.58,358225.9,350618.72,342009.48,332621.82,323767.06,315418.07,306532.92],[80000,398097.51,391889.62,387185.11,378861.01,372237.24,364199.93,356412.11,347616.71,339246.79,330150.15,320493.46,311440.94],[81000,405099.23,398677.71,392024.93,385250.21,376890.21,370209.95,362239.38,353255.9,343487.37,335433.7,325595.91,316374.66],[82000,412150.96,405512.45,398652.42,391680.23,383113.31,374780.44,366711.47,357617.09,348965.43,339574.85,330725.43,321334.07],[83000,417177.19,410457.73,403514.03,396456.82,387785.42,379350.94,371183.56,363304.2,353221.1,344901.24,335882.01,326319.18],[84000,424303.93,417362.45,410206.93,401233.41,394065.97,385432.93,377078.59,367681.36,358744.43,349056.67,339928.79,330250.74],[85000,429355.17,422331.05,415090.35,407745.08,398757.23,390021.42,381567.62,372058.51,363015.19,354425.9,343975.56,335274.39],[86000,434406.41,429305.75,421848.64,412542.08,405095.22,396157.4,386056.65,376435.67,368583.79,358595.61,349186.28,339218.8],[87000,441633.18,434297.68,426753.86,419114.99,409805.63,400763.88,392019.44,382202.66,372869.65,362765.33,353246.59,344281.0],[88000,448909.96,441342.36,431659.08,423932.41,414516.04,405370.36,396525.41,386595.79,377155.51,368191.67,358497.92,348238.25],[89000,456236.75,446357.62,438504.58,430566.56,420930.62,411578.31,401031.38,392410.71,381441.36,372375.67,362571.76,352195.5],[90000,461363.01,453472.28,443431.6,435404.38,425660.18,416202.79,407061.93,396819.82,387085.42,376559.67,366645.6,357309.1],[91000,466489.27,458510.86,450342.5,440242.21,432132.21,422464.72,411584.84,401228.92,391386.37,380743.66,371951.06,361279.2],[92000,473916.08,465695.5,455291.32,446958.01,436880.91,427107.19,417666.2,407107.74,397075.69,386241.41,376038.44,366431.34],[93000,481392.92,470757.41,462267.63,451816.25,441629.62,431749.66,422206.05,411532.82,401391.73,390439.68,380125.81,370414.28],[94000,488919.76,478012.03,467238.25,458593.29,448178.24,438083.57,428338.24,417459.56,405707.77,395980.26,384213.19,374397.23],[95000,494121.03,485313.31,474279.96,463471.94,454765.15,442744.04,432895.03,421900.62,411457.46,400192.82,389586.32,378380.18],[96000,501722.9,490421.87,481365.27,470310.22,459552.15,449131.93,437451.82,427875.28,415788.59,404405.38,393687.23,382363.13],[97000,509374.77,497793.13,486379.5,475209.29,464339.15,453810.39,443651.76,432332.31,421583.56,410003.08,399100.97,387592.36],[98000,514626.06,505211.04,493530.21,482108.8,471002.66,460252.27,448225.49,436789.35,425929.78,414229.91,403215.42,391588.16],[99000,522352.95,510366.25,500724.53,489049.14,475808.81,464948.72,454476.26,442827.91,430276.0,418456.75,407329.86,396855.93],[100000,527629.24,517854.14,505782.35,493989.03,482529.76,469645.17,459066.93,447300.92,436131.33,424111.57,412797.74,400864.57],[101000,535431.15,523032.69,513042.07,500990.61,489289.0,476159.02,463657.59,451773.93,440492.64,428352.69,416925.71,404873.22],[102000,540732.45,530590.56,520345.4,508033.02,494133.45,482708.86,468248.26,457876.39,444853.95,434050.35,421053.69,410192.38],[103000,548609.38,538195.08,525446.82,513013.74,500950.14,487441.3,474583.73,462365.38,450769.64,438305.74,426575.71,414213.88],[104000,553935.69,543420.28,532815.55,520117.38,507805.13,494045.12,480953.07,466854.36,455146.05,442561.14,430717.22,418235.37],[105000,559261.99,551094.78,537938.77,525118.51,512687.87,500684.94,485577.62,473020.72,461107.01,448315.92,434858.73,423605.93],[106000,567238.94,556343.3,545372.9,532283.39,519600.3,505453.36,491997.78,477525.68,465498.51,452585.59,440434.88,427640.27],[107000,572590.25,561591.83,552850.63,539489.1,524502.19,512147.16,498451.82,483739.97,469890.0,458383.21,444589.93,433049.37],[108000,580642.23,569359.64,558017.46,544531.05,531472.06,518876.94,503110.25,489986.21,475911.33,462667.17,450206.69,437096.56],[109000,586018.54,574631.49,563184.29,551798.0,538480.23,523681.35,509615.11,494523.12,480317.92,466951.12,454375.27,441143.76],[110000,594145.53,582469.28,568351.12,556860.37,543420.42,528485.77,516153.85,500817.28,486384.52,471235.08,458543.85,445190.95],[111000,599546.86,587764.45,575937.85,561922.73,550486.03,535287.53,520846.15,505370.16,490806.2,477104.1,462712.43,450664.29],[112000,607748.87,595672.23,581126.48,569271.33,555445.37,540109.94,525538.46,511712.25,496918.07,481402.33,468396.85,454724.33],[113000,613175.2,600990.73,588778.62,574354.11,560404.7,546965.68,532144.96,518086.29,501354.84,487314.19,472578.97,460236.22],[114000,621452.22,608968.48,593989.05,581763.95,565364.03,551806.08,536854.21,522671.12,507511.99,491626.7,476761.08,464309.1],[115000,626903.56,614310.31,601706.59,586867.14,572525.39,556646.49,543511.52,527255.96,511963.85,497581.4,482499.65,468381.99],[116000,632354.89,619652.14,606938.82,591970.33,577503.87,563574.2,548237.71,533693.9,518166.27,501908.2,486695.3,472454.88],[117000,640731.95,627723.2,614721.77,599461.82,584722.67,568432.6,554945.85,538294.71,522633.22,507905.73,492474.47,478031.01],[118000,646208.29,633088.36,619975.8,604585.42,589720.3,575414.3,559688.97,544780.57,528880.92,512246.81,496683.65,482116.74],[119000,654660.36,641229.4,625229.83,612138.15,596996.54,580290.69,564432.1,549397.35,533362.96,518287.19,502503.42,487731.41],[120000,660161.71,646617.88,633099.98,617282.16,602013.32,587326.37,571208.0,554014.14,539655.93,522642.54,508350.26,491830.0],[121000,665663.05,654828.9,638375.81,624896.13,609347.0,592220.76,575968.06,560563.9,544153.06,528725.76,512586.51,497483.22],[122000,674215.15,660240.71,646311.36,630060.56,614382.93,599310.42,582794.78,565196.66,550491.3,533095.39,518473.96,501594.65],[123000,679741.5,665652.52,651609.0,637735.76,621774.06,604222.8,587571.79,571794.35,555003.52,539221.45,522723.74,507286.41],[124000,688368.61,673956.84,659609.95,642920.6,626829.13,611366.45,594449.32,576443.09,559515.75,545376.06,528651.79,511410.69],[125000,693919.97,679391.98,664929.39,650657.04,634277.71,616296.82,599243.27,583088.7,565914.35,549774.26,532915.11,517141.0]];
+const WEL_AOW=[[29000,134157.86,127853.99,122652.22,116618.16,111613.73,106452.9,101689.25,96824.67,92342.13,88206.64,84386.68,80853.87],[30000,144035.28,138560.97,132767.87,127375.68,121206.88,116061.74,110785.89,105914.47,100959.12,96388.99,92168.94,88267.3],[31000,154262.79,148964.71,143275.93,137316.7,131182.99,125508.62,119730.07,114397.21,109470.47,104914.06,100276.01,95989.08],[32000,164040.18,158248.76,152083.52,146318.74,140929.33,134739.58,129013.05,123199.45,117830.91,112867.94,107841.72,103608.07],[33000,172467.25,167042.95,160433.29,154259.3,148492.79,142513.02,136957.79,130739.67,125497.17,120164.94,114784.84,110237.76],[34000,180244.15,174484.19,169001.07,162404.0,156247.73,149890.58,144563.73,138503.53,132891.78,127204.91,121944.51,116636.17],[35000,189046.31,182881.82,176260.79,170752.82,164194.15,158077.89,151780.06,145931.93,139969.48,134444.8,128847.03,123664.15],[36000,196248.07,190626.31,184436.15,178570.91,171642.73,165833.33,159165.79,152976.91,147228.28,141370.52,135939.03,130435.17],[37000,202624.63,197647.67,191979.28,185797.03,179244.49,173102.93,166720.91,160181.65,153551.43,147939.25,142218.97,136910.67],[38000,209051.21,204762.33,198824.79,193145.63,186999.43,179832.71,173801.72,166939.09,160568.77,154108.15,148634.25,142563.89],[39000,215527.79,211060.55,205757.49,199820.61,193414.01,186670.46,180357.4,173824.33,167148.46,160948.2,154657.04,148820.97],[40000,222054.39,217405.43,211905.37,205760.72,199905.19,193616.17,187014.72,180198.37,173848.89,167359.85,160788.1,154692.61],[41000,228631.0,223796.97,218096.84,211741.66,206472.95,199932.09,193773.67,186668.26,180051.31,173300.27,167027.44,160667.04],[42000,235257.63,230235.15,224331.91,218620.77,212313.09,206319.98,199922.8,193234.0,186344.28,179926.12,173375.05,166744.25],[43000,241934.26,236719.99,230610.59,224703.77,219014.9,212006.11,206139.68,199208.66,192727.79,186052.18,179248.96,172924.24],[44000,249761.18,243251.49,237892.11,231725.77,224950.78,218519.96,211678.98,205247.22,198537.85,192263.91,185204.07,178641.7],[45000,256562.84,250879.34,244279.8,237910.83,230924.96,224296.05,218014.44,211349.68,204408.26,197918.73,191240.39,184436.25],[46000,263414.52,257527.47,250711.08,244136.73,236937.43,230935.87,223638.43,216781.2,210339.05,202973.8,196735.34,190307.89],[47000,271491.5,264222.25,258210.61,250403.45,243888.16,236801.93,230092.47,222995.48,215620.91,208728.58,202284.43,195652.75],[48000,277267.92,272083.37,264750.9,257690.81,250915.47,243567.7,235801.17,229273.67,221657.33,214540.48,207887.65,201049.0],[49000,285494.93,278894.78,272403.04,265059.82,258019.38,249523.74,242373.78,234832.98,227754.12,220409.5,213545.01,206496.65],[50000,292571.66,286919.19,279052.33,272510.48,264242.49,257315.17,249014.16,241223.0,233911.27,226335.64,219256.5,211995.69],[51000,300973.72,295036.9,286857.08,279001.74,272456.98,264296.87,256586.23,248491.64,240898.42,233047.17,225712.39,218201.38],[52000,310776.12,303247.92,297016.33,288718.22,279790.67,272286.23,264259.93,255856.13,247976.12,239844.37,232249.48,225152.27],[53000,320728.56,314024.89,306194.53,297516.12,289230.63,280383.56,272933.07,264163.14,255944.2,247484.09,240302.42,232205.94],[54000,330831.04,323728.82,315503.54,307538.79,298823.79,289560.54,280826.99,272597.96,264033.0,256009.17,247759.85,239362.4],[55000,341083.55,333572.71,326142.41,317724.77,308570.12,299871.14,289754.23,281160.58,273072.54,263891.64,255325.55,247328.3],[56000,350085.75,344862.87,336955.69,326930.92,318469.64,309354.01,299765.62,289851.0,280572.79,271888.36,262999.53,255422.68],[57000,359187.98,353680.38,346700.72,337423.09,327430.91,318980.84,308980.84,298669.21,289883.97,279999.31,271553.24,262913.2],[58000,366939.88,362591.21,355312.1,348078.55,337617.65,327707.96,318331.57,308541.78,298470.77,288224.51,278672.31,270506.5],[59000,374741.79,371595.34,365296.94,356488.62,347957.57,337604.7,327817.83,317631.58,307178.31,297406.45,287469.64,277444.54],[60000,382593.72,379293.17,374104.53,366205.09,357301.8,346565.74,336423.22,326849.17,316006.57,305874.4,295590.25,286001.46],[61000,390495.65,387037.66,381669.47,374798.87,366760.91,356732.39,346163.57,335220.09,324955.57,314456.59,303819.13,293903.11],[62000,398447.6,394828.8,390629.66,384739.89,375147.74,365927.36,354989.17,344677.31,334025.29,323153.02,312156.29,301907.56],[63000,406449.56,402666.59,398303.6,392231.38,384817.48,374096.67,363916.41,353255.9,342265.0,331064.06,320601.73,310014.79],[64000,412901.14,412043.95,406021.14,401070.11,393376.64,383489.57,372945.29,361930.34,350595.26,339974.69,328289.24,317402.51],[65000,420978.12,418482.13,413782.29,408663.66,402012.39,392990.44,380974.73,369662.26,359016.06,348071.36,336937.69,325702.47],[66000,427454.7,424920.32,423025.9,416298.03,409460.97,401411.66,390189.95,379566.78,366531.41,356253.72,344801.15,333257.22],[67000,435606.7,432921.4,429435.38,423973.23,416947.84,409904.86,399506.8,387458.45,375118.21,363565.0,352745.82,341749.9],[68000,442108.29,439382.91,437327.33,431689.26,424473.0,417246.44,407773.4,395414.01,384821.76,371904.43,360771.69,349471.68],[69000,450335.31,447453.97,443758.61,439446.11,432036.47,424624.01,416107.75,404535.76,392563.47,380329.55,367944.89,357270.55],[70000,458612.34,455571.69,451715.96,447243.79,439638.22,432037.57,423324.08,412635.1,400365.54,388840.34,376119.64,364247.14],[71000,465163.94,462079.85,458169.05,453632.99,447278.28,439487.11,430574.28,420798.34,409299.44,396422.94,383414.66,371275.12],[72000,473515.99,470267.55,466191.8,461491.9,454956.63,446972.64,437858.37,429025.48,417237.33,405090.81,392712.76,379279.56],[73000,481918.04,476799.04,472666.69,467901.51,462673.28,454494.16,445176.34,434984.17,423032.3,411759.5,400143.12,387361.09],[74000,490370.12,485056.72,479141.58,474311.12,469011.27,462051.67,452528.19,440942.86,428827.26,417400.04,406626.07,395519.71],[75000,496996.74,493361.04,487251.53,480720.73,475349.26,469645.17,458643.43,446901.54,434622.22,423040.58,412121.02,401828.19],[76000,505523.83,501712.02,495405.1,488681.71,483142.49,475907.1,464758.68,452860.23,440417.18,428681.12,417615.97,407185.9],[77000,514100.93,508313.5,503602.26,496683.52,489499.63,482169.04,470873.92,458818.92,446212.15,434321.66,423110.91,412543.61],[78000,522728.04,516734.46,510142.55,503133.96,497350.32,488430.98,476989.17,464777.61,452007.11,439962.2,428605.86,417901.32],[79000,531405.17,525202.08,518405.11,511197.0,503726.6,494692.91,483104.42,470736.29,457802.07,445602.74,434100.81,423259.03],[80000,542132.79,531850.2,524967.2,517667.85,510102.89,500954.85,489219.66,476694.98,463597.04,451243.29,439595.75,428616.74],[81000,550934.95,540387.8,533295.17,525792.13,518030.16,507216.78,495334.91,482653.67,469392.0,456883.83,445090.7,433974.45],[82000,557736.62,550884.84,539879.06,533957.24,524425.6,513478.72,501450.15,488612.35,475186.96,462524.37,450585.65,439332.16],[83000,566613.79,557602.95,548272.43,540468.91,530821.03,519740.65,507565.4,494571.04,480981.93,468164.91,456080.59,444689.86],[84000,575540.98,566280.51,556709.4,546980.58,537216.46,526002.59,513680.64,500529.73,486776.89,473805.45,461575.54,450047.57],[85000,584518.18,575004.71,563336.9,553492.26,543611.9,532264.52,519795.89,506488.42,492571.85,479445.99,467070.49,455405.28],[86000,593545.39,583775.58,571839.27,560003.93,550007.33,538526.46,525911.14,512447.1,498366.81,485086.53,472565.44,460762.99],[87000,602622.61,590563.67,580385.25,568291.52,556402.77,544788.4,532026.38,518405.79,504161.78,490727.07,478060.38,466120.7],[88000,609549.31,599404.51,587056.35,574823.6,562798.2,551050.33,538141.63,524364.48,509956.74,496367.61,483555.33,471478.41],[89000,616476.0,606215.92,593727.44,581355.69,569193.63,557312.27,544256.87,530323.17,515751.7,502008.16,489050.28,476836.12],[90000,623402.7,613027.34,600398.54,589724.93,575589.07,563574.2,550372.12,536281.85,521546.67,507648.7,494545.22,482193.83],[91000,632604.96,619838.75,609053.52,596277.42,581984.5,569836.14,556487.36,542240.54,527341.63,513289.24,500040.17,487551.54],[92000,639556.66,628796.23,615746.41,602829.92,588379.94,576098.07,562602.61,548199.23,533136.59,518929.78,505535.12,492909.25],[93000,646508.36,635630.97,622439.31,609382.42,596556.14,582360.01,568717.86,554157.91,538931.56,524570.32,511030.06,498266.96],[94000,653460.06,642465.71,629132.21,615934.92,602970.72,588621.94,574833.1,560116.6,544726.52,530210.86,516525.01,503624.67],[95000,662787.35,649300.46,637896.19,622487.42,609385.3,594883.88,580948.35,566075.29,550521.48,535851.4,522019.96,508982.38],[96000,669764.06,658374.57,644610.89,630999.55,615799.88,601145.82,587063.59,572033.98,556316.44,541491.94,527514.9,514340.08],[97000,676740.77,665232.64,651325.59,637572.46,622214.46,607407.75,593178.84,577992.66,562111.41,547132.48,533009.85,519697.79],[98000,686168.08,672090.7,658040.28,644145.37,630505.55,613669.69,599294.08,583951.35,567906.37,552773.03,538504.8,525055.5],[99000,693169.79,678948.77,666913.28,650718.28,636939.28,621713.04,605409.33,589910.04,573701.33,558413.57,543999.74,530413.21],[100000,700171.51,688139.52,673649.77,659332.47,643373.01,627992.96,611524.58,595868.73,579496.3,564054.11,549494.69,535770.92],[101000,709698.84,695020.91,680386.27,665925.8,649806.74,634272.89,617639.82,601827.41,585291.26,569694.65,554989.64,541128.63],[102000,716725.56,701902.31,687122.77,672519.12,656240.47,640552.82,623755.07,607786.1,591086.22,575335.19,560484.59,546486.34],[103000,723752.28,711186.36,693859.27,679112.45,664646.45,646832.75,631615.11,613744.79,596881.18,580975.73,565979.53,551844.05],[104000,733379.64,718091.08,702863.06,685705.77,671099.32,654984.07,637747.29,621364.88,604245.62,586616.27,571474.48,557201.76],[105000,740431.37,724995.8,709621.36,694442.44,677552.2,661281.99,643879.48,627339.54,610055.67,592256.81,576969.43,562559.47],[106000,747483.09,731900.52,716379.66,701056.17,684005.08,667579.91,650011.66,633314.2,615865.72,597897.35,582464.37,567917.18],[107000,757210.48,741301.21,725470.66,707669.91,690457.96,673877.84,657956.4,639288.86,621675.78,605065.84,587959.32,573274.89],[108000,764287.21,748229.26,732250.76,716488.23,698978.82,682119.12,664105.53,645263.53,627485.83,610720.66,593454.27,578632.6],[109000,771363.94,755157.31,739030.86,723122.38,705450.85,688435.04,670254.65,652979.47,633295.89,616375.48,598949.21,583990.3],[110000,781191.35,764651.3,748209.07,729756.53,711922.87,694750.96,676403.78,658970.1,640765.96,622030.3,604444.16,589348.01]];
+const BOX3_NIET=[[30000,105025.73,99372.01,94834.19,90020.32,85591.59,81513.13,77245.21,73804.65,70626.11,67258.1,64152.83,61671.47],[31000,112402.53,107023.19,101374.48,96184.97,91412.58,87019.31,82970.84,79236.16,75319.43,72156.09,68808.65,66116.96],[32000,120029.4,114207.83,108132.78,102553.76,98037.79,93281.25,88357.68,84348.17,80646.57,76768.48,73626.87,70305.48],[33000,126255.93,120086.18,113670.22,108453.05,102997.13,97977.7,93354.9,88565.58,84660.79,81052.43,77267.62,74198.49],[34000,132632.49,125311.37,119338.47,113127.57,107420.32,102170.32,97335.74,92878.84,88765.55,84479.6,80989.56,77320.61],[35000,137408.66,130629.87,123611.46,117883.75,111920.1,106434.91,101384.34,96728.82,92432.68,87963.88,84319.01,80494.12],[36000,143135.06,135201.92,128712.89,121986.71,116496.47,110771.48,105500.69,100067.61,95616.89,91505.28,87215.36,83719.02],[37000,147111.03,138957.53,132288.25,125375.23,119732.48,113848.47,108431.27,102847.26,98272.91,94047.1,89638.01,86044.55],[38000,151087.01,142713.14,135863.6,128763.75,122968.5,116925.45,111361.84,105626.92,100928.94,96588.91,92060.66,88370.08],[39000,155062.98,146468.75,139438.96,132152.27,126204.51,120002.44,114292.42,108406.57,103584.96,99130.72,94483.31,90695.61],[40000,159038.96,150224.36,143014.32,135540.79,129440.52,123079.42,117222.99,111186.23,106240.99,101672.54,96905.96,93021.14],[41000,163014.93,153979.96,146589.68,138929.31,132676.54,126156.41,120153.57,113965.88,108897.01,104214.35,99328.61,95346.67],[42000,166990.9,157735.57,150165.04,142317.83,135912.55,129233.39,123084.14,116745.54,111553.04,106756.16,101751.26,97672.2],[43000,170966.88,161491.18,153740.39,145706.35,139148.56,132310.38,126014.72,119525.2,114209.06,109297.98,104173.91,99997.72],[44000,174942.85,165246.79,157315.75,149094.87,142384.57,135387.37,128945.29,122304.85,116865.09,111839.79,106596.56,102323.25],[45000,178918.83,169002.4,160891.11,152483.39,145620.59,138464.35,131875.87,125084.51,119521.11,114381.61,109019.21,104648.78],[46000,182894.8,172758.01,164466.47,155871.91,148856.6,141541.34,134806.44,127864.16,122177.14,116923.42,111441.85,106974.31],[47000,186870.77,176513.62,168041.83,159260.43,152092.61,144618.32,137737.02,130643.82,124833.16,119465.23,113864.5,109299.84],[48000,190846.75,180269.23,171617.18,162648.95,155328.63,147695.31,140667.59,133423.47,127489.19,122007.05,116287.15,111625.37],[49000,194822.72,184024.84,175192.54,166037.47,158564.64,150772.29,143598.17,136203.13,130145.21,124548.86,118709.8,113950.89],[50000,198798.7,187780.44,178767.9,169425.99,161800.65,153849.28,146528.74,138982.79,132801.23,127090.67,121132.45,116276.42],[51000,202774.67,191536.05,182343.26,172814.51,165036.67,156926.26,149459.32,141762.44,135457.26,129632.49,123555.1,118601.95],[52000,206750.64,195291.66,185918.62,176203.03,168272.68,160003.25,152389.89,144542.1,138113.28,132174.3,125977.75,120927.48],[53000,210726.62,200283.59,189493.97,180673.43,171508.69,163080.24,155320.47,148168.43,140769.31,134716.11,128400.4,123253.01],[54000,214702.59,204062.53,194246.59,184082.36,174744.71,166157.22,158251.04,150964.06,144240.25,137257.93,131553.9,125578.54],[55000,220053.9,209124.43,197843.74,188613.99,179033.86,170223.88,162113.3,154638.32,147741.37,140585.13,134734.47,128610.72],[56000,225455.22,212926.7,202661.76,192043.34,183361.31,174326.53,166009.44,158344.53,150427.58,143940.9,137942.12,131668.59],[57000,229481.21,218058.58,207523.37,196636.21,186635.62,178465.16,168973.9,161172.11,153973.98,147325.22,140405.37,134752.17],[58000,234957.55,223237.12,211164.13,201269.91,191020.51,181596.13,172920.86,164926.24,157550.56,149909.87,143653.61,137116.24],[59000,240483.91,227086.04,216091.15,204740.08,195443.7,185788.75,176901.69,168712.32,160266.94,153337.04,146928.93,140238.36],[60000,244559.9,232334.56,221061.77,209435.02,198756.31,188937.71,179900.03,171571.85,163888.8,156792.76,149419.25,143386.17],[61000,250161.28,237629.74,224746.13,214170.78,203236.94,193184.31,183931.69,175405.86,167540.83,159405.97,152735.16,145775.94],[62000,254262.28,241525.31,229782.16,217681.78,207755.87,197466.9,187997.22,179271.82,171223.05,162904.54,156078.15,148962.3],[63000,259938.67,246890.46,234861.78,222478.78,211106.77,201785.48,192096.64,183169.73,173984.71,166431.66,159448.2,152174.36],[64000,265665.07,252302.27,238589.74,227316.61,215683.14,206140.04,196229.94,186077.18,177712.2,169987.34,161979.12,155412.11],[65000,271441.49,257760.73,243734.77,232195.26,220297.81,209360.98,200397.11,190023.02,181469.87,173571.59,165389.78,158675.56],[66000,275617.51,261726.28,248923.4,237114.74,224950.78,213769.52,203480.14,194000.8,185257.72,177184.39,169720.77,161964.71],[67000,281468.95,267254.73,254155.63,242075.04,229642.04,218214.06,208833.1,198010.53,189075.76,180825.75,173199.1,165279.55],[68000,287370.39,274416.04,260913.93,247076.17,235673.66,223918.18,213101.92,203138.52,193950.17,184495.67,176704.5,168620.09],[69000,293321.85,278451.57,266255.17,253526.6,240460.66,228452.68,217404.61,207228.13,197843.66,189179.46,180236.97,172872.85],[70000,301073.75,285752.85,271640.01,258629.8,246626.32,234282.76,222926.96,212467.94,202823.7,193920.37,184743.91,177177.0],[71000,307150.24,291491.23,277068.45,263773.81,251509.06,238907.24,228517.08,217771.65,206792.65,197704.53,189304.98,180620.33],[72000,315077.18,298955.8,284110.16,270428.38,257808.76,244863.27,232955.29,221989.06,211878.33,202545.4,193920.2,185014.42],[73000,323104.14,306513.67,291239.07,275674.46,262787.24,250891.29,238663.98,227404.59,217024.38,207443.39,197601.54,189459.9],[74000,329380.68,312438.67,296841.92,282471.91,269220.97,256991.28,244440.43,232884.03,222230.79,212398.5,202311.49,193956.78],[75000,337582.69,320159.83,304123.44,287820.06,274295.19,261813.69,249014.16,237229.24,226365.74,216339.74,207075.59,198505.05],[76000,343984.26,326201.46,309835.29,294760.4,279407.71,266672.08,254909.19,242820.5,231677.79,221394.81,210865.2,202128.25],[77000,350435.84,334085.9,315590.75,300210.61,286032.92,272952.01,259567.62,247245.58,235888.19,225407.45,215724.04,206766.46],[78000,356937.43,340244.17,323090.28,307293.84,291241.18,277900.38,264259.93,252948.67,241305.88,230562.47,219581.33,210453.9],[79000,365464.52,346449.09,328954.74,312846.11,296487.73,282884.74,270324.35,257453.63,245591.74,234646.51,224534.9,214167.04],[80000,370090.65,352700.66,334862.8,318439.21,303304.42,287905.08,275101.36,261990.54,249907.78,238759.11,228459.86,218933.73],[81000,376742.28,358998.89,340814.46,324073.14,308646.71,292961.42,279912.25,266559.4,255476.37,242900.26,232411.89,222711.11],[82000,383443.92,365343.77,346809.73,329747.89,314027.3,298053.74,284757.01,271160.21,259867.87,248240.93,236390.99,226514.18],[83000,390195.58,369799.18,352848.59,335463.46,319446.19,303182.05,289635.66,275792.97,263036.99,252453.48,240397.16,230342.95],[84000,396997.24,376214.04,358931.06,341219.86,324903.37,308346.35,293125.24,280457.68,267473.76,255495.09,244430.4,234197.42],[85000,403848.92,382675.55,365057.13,347017.09,328771.27,313546.63,298054.71,283796.46,271940.71,259750.49,248490.7,238077.58],[86000,410750.61,389183.72,369351.92,351099.64,334285.89,318782.9,303018.05,288509.09,276437.84,264034.44,252578.08,241983.44],[87000,415526.78,395738.54,375543.4,356958.11,339838.82,322489.68,308015.27,293253.68,279652.24,268346.96,256692.52,244797.2],[88000,422503.49,400287.26,379859.99,362857.4,345430.03,327779.94,313046.38,298030.21,284194.64,272688.03,260834.03,248741.61],[89000,429530.21,406912.06,386116.86,368797.52,349355.37,333106.18,316603.72,302838.7,288767.23,275786.76,263798.06,252711.71],[90000,434356.39,413583.51,392417.34,372941.31,355004.04,338468.41,321685.64,306241.38,293370.0,280170.67,267980.17,256707.51],[91000,441458.13,418178.89,398761.42,378942.66,360690.99,342229.17,326801.44,311097.79,296629.67,283283.68,272189.35,260729.0],[92000,448609.89,424920.32,403143.42,383106.87,364654.63,347645.39,331951.12,315986.15,301277.71,287710.43,275180.45,263594.15],[93000,453486.08,431708.41,409552.9,389169.46,370399.03,353097.59,335559.29,320906.46,305955.94,292165.75,279430.23,267654.19],[94000,460712.85,436350.43,416005.99,395272.88,374381.82,356894.34,340759.79,324357.07,309245.78,295307.31,282434.86,271739.93],[95000,465614.05,443208.5,420431.58,399477.91,380183.66,362400.52,345994.17,329325.3,313969.28,299805.47,286725.25,274630.78],[96000,472915.84,447873.86,426950.07,405642.57,386023.81,367942.7,349636.21,334325.49,318722.96,304332.18,291042.71,277521.63],[97000,477842.05,454801.9,431397.47,409868.01,390044.89,371775.43,354921.41,337808.04,322042.99,308887.45,294074.4,281658.76],[98000,485218.85,461776.61,437981.36,416093.9,395942.47,377371.59,358580.39,342856.15,326841.95,312071.86,298432.46,285821.58],[99000,490170.07,466488.61,442450.55,422360.62,401878.36,381222.32,363916.41,347936.22,331671.08,316669.97,302817.59,288738.13],[100000,497621.89,471200.62,449099.85,426626.89,405937.73,386872.46,369286.31,351450.72,335021.3,319868.66,305876.36,292939.5],[101000,502598.11,478268.63,455792.74,432954.85,411931.06,390741.18,372979.17,356578.71,339895.71,324509.61,310302.09,297166.56],[102000,510124.95,483003.96,460305.54,437241.53,416009.58,396445.3,376672.04,360109.19,344800.3,329179.12,314754.89,300108.81],[103000,517701.81,490141.95,464818.34,443630.73,422060.35,402185.41,382109.69,365285.1,348180.69,332406.37,317840.72,304374.42],[104000,522728.04,497326.59,471598.44,447937.82,426158.03,406090.12,387581.23,368831.56,353130.56,337118.72,322334.13,308665.72],[105000,527754.27,502108.58,476133.04,454388.26,432266.24,411884.21,391307.97,374055.39,356526.04,340360.24,325433.49,311633.66],[106000,535431.15,509363.2,482978.55,458715.77,436383.06,415806.92,396830.32,377617.83,361521.18,345115.43,329967.5,315963.51],[107000,540482.39,514168.52,487534.95,463043.27,442548.72,421654.99,400574.01,382889.59,364931.76,348371.24,333080.4,318944.3],[108000,548234.29,521493.12,494445.85,469575.36,446684.69,425595.69,406147.18,386467.99,368342.33,353169.27,337655.01,323312.7],[109000,553310.53,526321.76,499024.06,473923.28,452907.79,431497.74,409907.8,391787.68,373397.83,356439.36,340781.45,326306.33],[110000,558386.78,531150.4,506000.36,480516.61,457062.91,435456.44,415531.8,395382.06,376823.5,361280.23,345396.66,330713.27],[111000,566238.7,538568.31,510600.37,484884.94,461218.03,439415.13,419309.36,400749.67,381924.28,364564.59,348536.63,333719.76],[112000,571339.95,543420.28,517642.08,491539.5,467517.72,445389.17,424984.17,404360.03,385365.04,367848.96,353192.45,338165.24],[113000,576441.2,548272.24,522263.88,495928.25,471691.99,449365.85,428778.67,407970.39,390511.08,372746.95,356345.95,341184.58],[114000,584393.15,553124.21,526885.69,500316.99,475866.25,455393.87,432573.17,413401.9,393966.93,376045.59,359499.46,344203.91],[115000,589519.4,560658.76,534014.6,507053.21,482242.54,459388.55,438315.75,417028.23,397422.79,380986.42,364209.41,348700.79],[116000,594645.66,565534.05,538658.21,511462.37,486435.95,463383.23,442127.19,422507.67,402629.2,384299.35,367376.45,351732.97],[117000,602697.63,570409.34,543301.81,518259.82,492869.68,467377.92,445938.63,426149.98,406100.14,387612.27,370543.49,356268.39],[118000,607848.89,578037.19,550517.93,522689.39,497082.24,473495.9,451748.96,429792.28,411351.82,392610.22,375307.58,359313.42],[119000,615975.88,582935.81,555183.34,527118.96,501294.8,477508.58,455577.34,435335.62,414837.86,395937.42,378488.15,362358.45],[120000,621152.15,590633.65,559848.74,533998.06,507805.13,481521.25,459405.72,438993.9,418323.89,400978.21,383292.85,366945.26],[121000,626328.42,595555.59,564514.15,538448.05,512036.84,487711.21,465283.81,442652.19,423635.94,404319.7,386486.96,370003.14],[122000,634555.43,600477.54,571839.27,542898.03,518604.6,491741.88,469129.13,448259.42,427137.06,407661.18,389681.06,373061.02],[123000,639756.71,608268.68,576526.48,549858.79,522855.46,497985.83,472974.45,451933.68,432494.38,412759.09,394539.9,377699.23],[124000,644957.98,613213.95,581213.69,554329.18,527106.32,502034.49,478920.3,457588.84,436010.6,416114.85,397747.54,380769.95],[125000,653285.02,618159.23,588626.02,558799.58,533750.68,508332.41,482782.56,461279.07,439526.81,421255.6,402646.97,385446.71]];
+const BOX3_WEL=[[29000,129806.8,123118.66,116962.17,111290.42,105505.51,100712.8,95794.22,91265.36,87090.45,83237.25,79284.23,76010.09],[30000,139534.18,132262.75,125573.55,119414.7,113739.16,107964.41,102654.82,97767.2,93262.69,89106.27,85266.42,81329.26],[31000,148836.46,141010.28,133814.31,127191.97,121091.99,114910.12,109227.44,104492.69,99646.2,95175.21,90626.02,86828.29],[32000,157638.61,149291.29,141619.06,134560.98,128061.87,122071.76,116003.33,110419.43,105275.16,100530.15,96148.04,92096.07],[33000,165040.43,156265.99,148922.38,141460.5,133959.45,127667.91,121305.47,115978.74,110557.03,105556.66,100939.2,96670.03],[34000,171742.07,162587.54,154917.65,147135.25,139320.89,132760.23,126709.25,120579.55,114933.43,109726.37,104918.3,100473.11],[35000,177668.52,169002.4,160237.08,152177.2,144758.93,137924.53,131028.88,124685.13,119370.2,113953.21,108951.53,103877.89],[36000,184545.2,174670.8,165600.12,157259.98,149584.23,142513.02,135382.39,129397.77,123324.06,117723.09,112551.67,107770.9],[37000,190596.69,180385.86,171006.76,163138.86,154447.82,147137.49,140396.56,133583.22,127308.09,121521.53,116178.88,111239.92],[38000,196698.18,186147.57,177285.44,168323.7,160077.33,151797.96,144834.77,137800.63,131322.31,125348.53,119833.15,114734.64],[39000,202849.69,191955.94,181950.84,172753.27,164289.89,156494.41,149306.86,142049.99,135366.71,129204.09,123514.5,118255.05],[40000,208050.96,197810.95,187488.29,177999.35,169268.38,161226.85,153135.24,146331.3,139441.3,133088.21,127222.91,121801.16],[41000,214277.49,203712.62,193069.33,183286.26,174285.15,165995.28,157658.15,150644.56,143546.06,137000.89,130958.39,125372.97],[42000,221604.28,209660.95,199609.62,189471.33,180144.44,170799.69,162926.41,154989.77,148314.83,141541.88,135289.38,129510.09],[43000,227955.84,216658.98,205299.67,194860.3,185256.96,176413.84,168262.43,160053.85,152495.05,145525.96,139092.54,133146.14],[44000,235457.67,222723.94,211992.57,201188.26,191250.29,182099.97,172920.86,165181.84,157369.46,150166.91,143518.27,137373.21],[45000,241934.26,229885.25,217791.63,206679.3,196458.54,187048.33,178375.45,169654.85,161625.14,154864.98,147998.14,141073.49],[46000,248460.86,236066.84,223634.28,213150.14,202585.91,192032.69,183118.58,174894.66,166605.19,158963.3,151909.57,145390.5],[47000,255037.47,242295.09,230545.19,218743.24,207889.9,197898.76,187895.58,179447.54,170936.32,163090.18,155848.06,149155.03],[48000,262864.39,248569.99,236496.85,224377.17,213232.2,202973.08,193519.58,184032.38,175297.63,167931.05,160463.28,153561.97],[49000,269566.03,256034.55,243560.36,231052.14,219551.04,208965.11,199211.33,189431.94,181168.05,172829.03,165132.63,158020.3],[50000,276317.68,262426.09,249621.03,237808.77,225946.47,215029.11,204123.85,194895.4,185619.91,177070.15,169856.12,162530.03],[51000,283119.35,270053.94,256837.15,243606.0,231441.95,220247.39,209934.18,200422.76,190871.59,182068.1,173943.49,166435.89],[52000,291271.35,276562.11,263006.82,250505.51,237971.42,226437.35,215812.27,206014.02,196183.64,187123.17,178761.72,171035.55],[53000,299523.37,284353.24,270375.55,257486.68,244577.48,232699.28,221758.12,210822.51,201556.06,192235.35,183634.09,175686.61],[54000,306525.08,290978.05,276654.23,263447.21,250226.15,238061.52,226856.98,216525.6,206173.92,196633.55,188560.59,180389.06],[55000,313576.81,297649.5,282976.51,269448.56,256966.24,244449.41,231989.72,221413.96,211651.97,201845.69,192796.84,184436.25],[56000,320678.55,304367.61,289342.39,275490.74,262710.65,249901.61,238104.97,227228.87,216345.28,206315.28,197818.09,189228.64],[57000,329255.65,312461.99,295751.87,281573.75,268493.34,255389.8,243322.41,232197.1,221068.78,211627.39,202122.01,193340.07],[58000,336482.42,319296.74,303469.41,287697.58,274314.34,260913.98,248573.73,237197.29,226697.74,216168.38,206453.01,197477.2],[59000,342283.84,326178.13,308701.64,293862.24,280173.63,266474.15,253858.93,242229.42,230606.33,220737.93,210811.07,201640.02],[60000,349585.63,331706.57,315241.93,298842.95,284922.33,270990.66,258161.62,246335.01,235420.37,224479.25,214384.14,205828.54],[61000,355412.06,337235.02,320495.96,305068.85,289671.04,276604.81,263497.64,251415.07,239344.04,229091.65,218782.8,209259.02],[62000,362788.86,344209.72,327101.66,310069.98,295606.92,281139.31,267817.27,255536.63,244203.36,232847.25,222369.4,213486.08],[63000,368640.3,349761.49,332377.49,316357.11,300374.77,285673.82,273204.11,260664.61,249092.86,237502.48,226808.67,216929.41],[64000,376092.12,356806.17,339048.58,322685.07,306368.1,291359.95,278624.83,264802.14,253046.72,242186.27,231275.01,221195.02],[65000,381968.56,363897.51,344346.22,327727.02,312399.72,297082.06,282978.34,269978.06,257981.49,245970.43,235768.41,225486.32],[66000,389495.41,369495.93,351082.72,334116.22,317205.87,302840.16,288449.87,275185.92,262946.44,250697.06,240288.89,229803.33],[67000,397072.26,376657.25,357862.82,340546.24,323294.94,308634.25,293955.29,280425.73,267941.58,255452.25,244836.43,234146.03],[68000,404699.13,383865.22,364686.52,347017.09,329422.3,314464.33,299494.58,284611.19,272966.9,260236.0,249411.04,238514.42],[69000,412376.01,391119.84,371553.82,353528.76,335587.96,320330.39,303898.92,289898.92,276981.12,265048.31,254012.72,242908.51],[70000,418352.47,396788.24,376938.66,360081.26,341791.91,324972.86,309489.03,295218.61,282051.71,269889.18,257694.06,247328.3],[71000,426104.37,404112.85,383871.37,365225.28,348034.16,330892.91,315113.02,300570.24,287152.49,274758.61,262336.35,251773.79],[72000,433906.28,413163.63,390847.67,371839.02,354314.71,338144.52,321990.56,305953.83,292283.44,278628.45,267005.7,256244.97],[73000,443583.66,420604.87,399459.05,379983.71,362031.35,344154.54,327699.25,312535.54,298546.23,284583.15,272690.12,260741.85],[74000,451510.6,429818.94,408157.64,386699.51,368407.64,350200.55,334695.36,319181.16,303752.64,290594.96,277427.15,266215.19],[75000,459487.55,437376.81,415308.36,394987.1,374822.22,357632.1,340488.75,324692.54,310121.06,295592.91,283206.32,271739.93],[76000,467514.52,444981.34,424159.55,401804.96,382730.35,363768.07,347603.44,331449.98,315402.93,301704.69,288011.01,276339.59],[77000,477516.97,454428.68,431419.27,410235.44,389240.67,371325.58,353481.53,337041.24,321876.99,307873.58,293884.92,280964.95],[78000,485668.96,462149.83,438722.59,417155.37,397282.83,377551.53,360714.8,343910.51,328411.42,312985.77,298757.29,286618.17],[79000,495846.46,469917.65,447791.79,425728.73,403888.9,385235.0,366677.59,349581.64,333814.01,319254.62,304725.94,291307.77],[80000,504123.48,477732.11,455204.12,432750.72,412065.1,391550.91,372674.26,356562.73,340454.07,324438.21,310748.72,297050.93],[81000,512450.52,487482.7,462660.05,439813.54,418766.9,397902.82,380076.92,362313.74,345932.12,330807.02,315729.36,301804.77],[82000,520827.58,495413.8,470159.58,446917.19,425507.0,405766.23,386158.29,368096.71,351440.36,336062.01,320737.07,307637.86],[83000,529254.64,503391.55,477702.71,454061.66,432285.39,412208.1,392273.53,373911.62,356978.77,341345.55,326895.2,312455.95],[84000,537731.72,511415.96,485289.45,461246.95,439102.08,418685.97,398422.66,379758.48,363815.02,346657.66,331970.59,317299.73],[85000,546258.81,519487.02,492919.79,468473.07,445957.07,425199.82,404605.66,385637.29,368146.15,351998.32,337073.04,322169.21],[86000,554835.91,527604.73,500593.72,475740.02,452850.35,431749.66,410822.55,391548.05,373775.11,357367.55,342202.56,327064.38],[87000,561287.49,535769.1,508311.27,483047.79,459781.93,438335.49,417073.31,397490.77,379434.25,362765.33,347359.14,331985.25],[88000,569939.61,541927.36,516072.41,490396.39,465066.78,443373.83,423357.96,403465.43,385123.58,366935.05,351351.78,336931.81],[89000,578641.74,548085.63,521936.87,495969.07,472055.8,450013.64,428168.84,408050.26,389499.98,372375.67,356548.97,341904.08],[90000,585143.33,556343.3,527801.33,503378.91,477359.8,455069.97,434504.3,414072.85,395234.58,377844.85,361773.23,345745.7],[91000,593920.48,562524.9,535649.67,508972.01,484406.26,461763.77,439332.13,420127.39,399626.08,382043.13,365792.93,349587.31],[92000,600447.08,568706.49,541535.93,516443.08,489729.41,466838.09,445718.41,424744.17,405405.95,386241.41,369812.63,354610.97],[93000,606973.68,577057.47,547422.19,522056.59,496833.32,471912.42,450563.18,429360.96,409812.54,391767.71,373832.34,358465.44],[94000,615850.85,583262.39,555357.74,527670.1,502175.61,478678.19,455407.94,435479.4,415637.68,395980.26,379124.27,363527.64],[95000,622402.46,591683.35,561265.81,535222.83,509336.97,483770.51,461861.98,440112.15,420059.36,401549.41,383157.51,367394.95],[96000,628954.06,597911.6,567173.87,540856.75,514698.41,488862.83,466723.69,444744.91,424481.04,405776.24,388490.04,371262.27],[97000,637931.26,604139.84,575196.62,546490.68,520059.85,495700.58,471585.39,450927.25,430366.55,411388.22,392536.81,376375.86],[98000,644507.87,612654.11,581126.48,552124.6,525421.29,500810.89,476447.1,455575.99,434803.31,415629.34,396583.58,380256.02],[99000,651084.48,618905.68,587056.35,559779.39,532678.39,507702.62,482985.84,460224.72,439240.08,419870.45,401970.25,384136.19],[100000,660161.71,625157.26,595166.3,565433.73,538058.98,512830.93,487864.48,466470.96,445185.96,425539.55,406030.56,389301.17],[101000,666763.32,633764.83,601117.97,571088.07,543439.57,517959.24,494454.04,471135.67,449637.82,429794.95,411457.84,393194.19],[102000,673364.94,640039.73,607069.63,576742.4,550773.25,523087.55,499349.62,475800.38,454089.68,434050.35,415531.68,397087.2],[103000,682542.19,646314.63,615266.79,584499.26,556172.99,530069.25,504245.21,480465.09,460095.91,438305.74,419605.52,402303.58],[104000,689168.81,655015.51,621240.26,590174.01,561572.73,535215.55,510902.53,486791.2,464562.86,444046.24,425086.93,406209.44],[105000,695795.43,661313.74,627213.72,595848.76,568983.01,540361.85,515815.05,491471.89,469029.81,448315.92,429174.3,410115.3],[106000,705072.71,667611.97,635498.09,603687.26,574401.89,545508.16,520727.58,496152.57,475096.42,452585.59,433261.68,415383.07],[107000,711724.34,676406.16,641493.35,609382.42,579820.78,552579.83,525640.1,502542.58,479578.46,458383.21,437349.05,419301.78],[108000,718375.96,682727.71,647488.62,615077.59,585239.66,557744.12,532382.12,507239.24,484060.5,462667.17,442898.14,423220.48],[109000,725027.59,689049.26,655860.19,622997.74,590658.55,562908.42,537311.58,511935.9,488542.54,466951.12,446999.04,428539.65],[110000,734429.9,695370.81,661877.25,628713.32,598183.72,570052.07,542241.04,516632.56,494684.6,472805.86,451099.95,432471.2]];
+
+const RG=[.015,.02,.025,.03,.035,.04,.045,.05,.055,.06,.065,Infinity];
+const RM=[.0125,.0175,.0225,.0275,.0325,.0375,.0425,.0475,.0525,.0575,.0625,.0675];
+const BA={EFG:0,CD:5000,AB:10000,"A+A++":20000,"A+++":25000,"A++++":30000,"A++++G":40000,geen:0};
+const BV={EFG:20000,CD:15000,AB:10000,"A+A++":10000,"A+++":0,"A++++":0,"A++++G":0,geen:10000};
+const LNAAM={EFG:"E, F of G",CD:"C of D",AB:"A of B","A+A++":"A+ of A++","A+++":"A+++","A++++":"A++++","A++++G":"A++++ met garantie",geen:"geen geldig label"};
+const NHG_GRENS=435000;
+const fmt=v=>new Intl.NumberFormat("nl-NL",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(v);
+
+const S={aow:"nee",aowP:"nee",renteLang:true,box1:"ja",verb:false,uitgebr:false};
+
+function g(id){return document.getElementById(id);}
+function rk(r){for(let i=0;i<RG.length;i++)if(r<=RG[i])return i;return 11;}
+function interp(tbl,ink,r){
+  const k=rk(r),inc=tbl.map(x=>x[0]);
+  if(ink<=inc[0])return tbl[0][k+1];
+  if(ink>=inc[inc.length-1])return tbl[tbl.length-1][k+1];
+  let lo=0;
+  for(let i=0;i<tbl.length-1;i++){if(tbl[i][0]<=ink&&tbl[i+1][0]>ink){lo=i;break;}}
+  const t=(ink-tbl[lo][0])/(tbl[lo+1][0]-tbl[lo][0]);
+  const v0=tbl[lo][k+1]+t*(tbl[lo+1][k+1]-tbl[lo][k+1]);
+  if(k<11){
+    const v1=tbl[lo][k+2]+t*(tbl[lo+1][k+2]-tbl[lo][k+2]);
+    const s=Math.max(0,Math.min(1,(r-RM[k])/(RM[k+1]-RM[k])));
+    return v0+s*(v1-v0);
+  }
+  return v0;
+}
+function afFn(r,j){const rm=r/12,n=j*12;return rm*Math.pow(1+rm,n)/(Math.pow(1+rm,n)-1);}
+
+function toggleInfo(key){
+  const el=g("info-"+key);
+  if(!el)return;
+  const open=el.style.display==="block";
+  el.style.display=open?"none":"block";
+  const veldEl=el.closest(".veld");
+  if(veldEl){
+    veldEl.querySelectorAll(".ibtn").forEach(b=>{
+      open?b.classList.remove("open"):b.classList.add("open");
+    });
+  }
+}
+
+function setDW(key,val){
+  S[key]=val;
+  document.querySelectorAll("[id^='"+key+"-']").forEach(b=>b.classList.remove("act"));
+  const btn=g(key+"-"+val);
+  if(btn)btn.classList.add("act");
+  if(key==="box1")g("box3d-veld").style.display=val==="deels"?"block":"none";
+}
+function setRenteLang(val){
+  S.renteLang=val;
+  g("rl-lang").classList.toggle("act",val);
+  g("rl-kort").classList.toggle("act",!val);
+}
+function setVerb(val){
+  S.verb=val;
+  g("verb-ja").classList.toggle("act",val);
+  g("verb-nee").classList.toggle("act",!val);
+}
+function onBurg(){
+  const v=g("burg").value;
+  const hide=v==="alleenstaand";
+  g("partner-velden").style.display=hide?"none":"block";
+  g("alim-velden").style.display=hide?"none":"block";
+}
+function toggleUitgebr(){
+  S.uitgebr=!S.uitgebr;
+  const sec=g("uitgebr-sectie");
+  const btn=g("uitgebr-btn");
+  sec.style.display=S.uitgebr?"block":"none";
+  btn.textContent=S.uitgebr?"Verbergen":"Tonen";
+  btn.style.background=S.uitgebr?"#1A1A2E":"#fff";
+  btn.style.color=S.uitgebr?"#fff":"#1A1A2E";
+}
+
+function gv(id){const el=g(id);return el?el.value:"";}
+function gn(id){return parseFloat(gv(id))||0;}
+
+function bereken(){
+  const fout=g("fout-blok");
+  fout.style.display="none";
+
+  const i1=parseFloat(gv("i1"));
+  const burg=gv("burg");
+  const i2raw=gv("i2");
+  const i2=burg!=="alleenstaand"&&i2raw?parseFloat(i2raw):0;
+  const renteRaw=gv("rente").replace(",",".");
+  const r=parseFloat(renteRaw)/100;
+  const lpt=parseInt(gv("lpt"))||30;
+
+  const errs=[];
+  if(!i1||i1<1000||isNaN(i1))errs.push("Vul een geldig bruto jaarinkomen in (minimaal €1.000).");
+  if(burg!=="alleenstaand"&&i2raw&&(isNaN(i2)||i2<0))errs.push("Vul een geldig partnerinkomen in.");
+  if(!renteRaw||isNaN(r)||r<=0||r>.15)errs.push("Vul een geldige hypotheekrente in (bijv. 3,5).");
+  if(lpt<5||lpt>40)errs.push("Looptijd moet tussen 5 en 40 jaar liggen.");
+  if(errs.length){fout.innerHTML=errs.join("<br>");fout.style.display="block";return;}
+
+  const tr=S.renteLang?r:Math.max(r,.05);
+  // Alimentatie aftrekken van inkomen (12x maandbedrag)
+  const i1_adj=Math.max(0,i1-12*gn("alimZ"));
+  const i2_adj=Math.max(0,i2-12*gn("alimP"));
+  const reki=Math.max(i1_adj,i2_adj)+Math.min(i1_adj,i2_adj);
+  const isAow=S.aow==="ja"||S.aow==="b10";
+  const tS=isAow?WEL_AOW:NIET_AOW;
+  const tB=isAow?BOX3_WEL:BOX3_NIET;
+
+  let mh;
+  if(S.box1==="nee"){
+    mh=interp(tB,reki,tr);
+  } else if(S.box1==="deels"){
+    const h1=interp(tS,reki,tr),h3=interp(tB,reki,tr);
+    const f=Math.min(1,Math.max(0,gn("box3d")/Math.max(h1,1)));
+    mh=h1*(1-f)+h3*f;
+  } else {
+    mh=interp(tS,reki,tr);
+  }
+
+  if(lpt!==30){const a30=afFn(tr,30),aAct=afFn(tr,lpt);mh*=a30/aAct;}
+  const afv=afFn(tr,lpt);
+  // Schulden: pLening + 2% per maand van kredietlimiet + studielening
+  const totM=gn("pLening")+gn("aKred")*.02+gn("studie");
+  if(totM>0)mh-=totM/afv;
+
+  // Verhoging niet-kwetsbare groep: automatisch van toepassing bij alleenverdieners boven startinkomen
+  const startI=isAow?29000:30000;
+  if(!(i2>0)&&i1>startI)mh+=17000;
+
+  const lbl=gv("lbl");
+  const aankoopB=BA[lbl]||0;
+  const verbouwB=BV[lbl]||0;
+  mh=Math.max(0,mh);
+
+  // Basis + aankoop bonus
+  const mhAankoop=Math.round(mh+aankoopB);
+  // Met verbouwing bonus
+  const mhVerbouw=Math.round(mh+aankoopB+verbouwB);
+
+  // Marktwaarde cap
+  const mv=gn("markt");
+  const hoofd=mv>0?Math.min(mhAankoop,mv):mhAankoop;
+  const metVerbouw=mv>0?Math.min(mhVerbouw,mv+verbouwB):mhVerbouw;
+
+  // --- Resultaat invullen ---
+  g("res-hoofd").textContent=fmt(hoofd);
+  g("res-note").innerHTML="1. Omdat een hypotheek maximaal 100% van de marktwaarde van de woning mag zijn, moet de koopsom van de woning ook <strong>"+fmt(hoofd)+"</strong> of hoger zijn om deze hypotheek te kunnen krijgen.";
+
+  // Energiebesparende maatregelen — toon altijd als verbouwbonus > 0 EN verb=ja
+  const energieCard=g("res-energie");
+  if(S.verb&&verbouwB>0){
+    g("res-energie-hdr").textContent="Energiebesparende maatregelen bij energielabel "+LNAAM[lbl];
+    g("res-energie-lbl").textContent="Maximale hypotheek inclusief "+fmt(verbouwB)+" verhoging";
+    g("res-energie-amt").textContent=fmt(metVerbouw);
+    energieCard.style.display="block";
+  } else if(S.verb&&verbouwB===0){
+    g("res-energie-hdr").textContent="Energiebesparende maatregelen bij energielabel "+LNAAM[lbl];
+    g("res-energie-lbl").textContent="Geen extra verhoging van toepassing bij dit energielabel";
+    g("res-energie-amt").textContent="—";
+    energieCard.style.display="block";
+  } else {
+    energieCard.style.display="none";
+  }
+
+  // NHG — toon als hoofd binnen grens
+  const nhgCard=g("res-nhg");
+  if(hoofd<=NHG_GRENS){
+    g("nhg-max").textContent=fmt(hoofd);
+    g("nhg-energie").textContent=fmt(Math.round(hoofd*1.06));
+    g("nhg-koop").textContent=fmt(hoofd);
+    nhgCard.style.display="block";
+  } else {
+    nhgCard.style.display="none";
+  }
+
+  // Toon het blok en scroll erheen
+  const resBlok=g("res-blok");
+  resBlok.style.display="block";
+  resBlok.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function afdrukken(){
+  if(g("res-blok").style.display==="none"||g("res-blok").style.display===""){
+    alert("Voer eerst de gegevens in en klik op 'Berekenen' voordat u afdrukt.");
+    return;
+  }
+  const hdr=g("res-blok").previousElementSibling;
+  const resHTML=document.querySelector(".hdr").outerHTML+g("res-blok").innerHTML;
+  const win=window.open("","_blank","width=700,height=900");
+  win.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Maximale hypotheek berekening | Blinqx VH</title><style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:#fff;padding:20px;max-width:640px;margin:0 auto}
+.hdr{background:#1A1A2E;padding:16px 20px;color:#fff;margin-bottom:20px;border-radius:6px}
+.hdr-sub{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#FFD200;font-weight:700;margin-bottom:4px}
+.hdr h1{font-size:18px;font-weight:700}
+.hdr p{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px}
+.res-main{background:#1A1A2E;border-radius:8px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;flex-wrap:wrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.res-main-lbl{font-size:13px;font-weight:700;color:#fff}
+.res-main-lbl sup{font-size:10px;opacity:.7}
+.res-main-amt{font-size:22px;font-weight:800;color:#FFD200}
+.res-note{font-size:11px;color:#555555;line-height:1.6;margin-bottom:12px}
+.res-note strong{color:#1A1A2E;font-weight:600}
+.res-card{border-radius:8px;overflow:hidden;margin-bottom:10px;border:1px solid #DDDDDD}
+.res-card-hdr{background:#1A1A2E;padding:9px 14px;font-size:12px;font-weight:700;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.res-card-hdr.grijs{background:#555555}
+.res-card-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:#fff;border-top:1px solid #E8E8E8;gap:12px;font-size:12px}
+.res-card-row span{color:#333;flex:1}
+.res-card-row strong{color:#1A1A2E;font-weight:700;white-space:nowrap}
+.res-card-row.hl{background:#FFFDE7}
+.indicatief{font-size:9px;color:#AAAAAA;text-align:center;padding:10px 4px;line-height:1.65}
+.print-btn{display:none}
+@media print{.no-print{display:none!important}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+</style></head><body>
+${resHTML}
+<p style="text-align:center;margin-top:16px" class="no-print"><button onclick="window.print();window.close()" style="padding:10px 24px;background:#1A1A2E;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Afdrukken / Opslaan als PDF</button></p>
+</body></html>`);
+  win.document.close();
+}
+</script>
+</body>
+</html>

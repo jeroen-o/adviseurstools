@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einde RVP — Betaalbaar? | Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#004580;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#333;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--shadow:0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;margin-top:1px;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:980px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:22px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:14px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:19px;}
+.card-body{padding:22px;}
+
+.fg{display:grid;gap:14px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.s2{grid-column:span 2;}
+.s3{grid-column:1/-1;}
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],input[type=range],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:42px;}
+
+/* SCENARIO RENTE SLIDERS */
+.scenario-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:4px;}
+.scenario-card{border:2px solid var(--border);border-radius:11px;padding:14px 16px;background:#fff;transition:border-color .2s;}
+.scenario-card.opt{border-color:#A7DFC2;}
+.scenario-card.real{border-color:#C5D8E8;}
+.scenario-card.stress{border-color:#F5B7B1;}
+.sc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.sc-label.opt{color:var(--green);}
+.sc-label.real{color:var(--navy);}
+.sc-label.stress{color:var(--red);}
+.sc-rente{font-family:'DM Serif Display',serif;font-size:28px;color:var(--navy);text-align:center;line-height:1;}
+.sc-rente input[type=number]{font-family:'DM Serif Display',serif;font-size:22px;text-align:center;border:none;padding:4px 0;background:transparent;color:var(--navy);width:90px;}
+.sc-rente-unit{font-size:14px;color:var(--muted);}
+
+/* BTN */
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;letter-spacing:.01em;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* SCENARIO RESULTAAT KAARTEN */
+.sc-res-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.sc-res-card{border-radius:12px;overflow:hidden;border:2px solid transparent;transition:transform .2s,box-shadow .2s;}
+.sc-res-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,48,87,.12);}
+.sc-res-card.opt{border-color:var(--green);}
+.sc-res-card.real{border-color:var(--navy);}
+.sc-res-card.stress{border-color:var(--red);}
+.sc-res-head{padding:11px 16px;color:#fff;font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px;}
+.sc-res-head.opt{background:var(--green);}
+.sc-res-head.real{background:var(--navy);}
+.sc-res-head.stress{background:var(--red);}
+.sc-res-body{padding:14px 16px;background:#fff;}
+.sc-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #EEF2F6;}
+.sc-row:last-child{border-bottom:none;}
+.sc-lbl{font-size:11.5px;color:var(--muted);}
+.sc-val{font-size:15px;font-weight:700;color:var(--navy);}
+.sc-val.big{font-family:'DM Serif Display',serif;font-size:22px;}
+
+/* BETAALBAARHEID BADGE */
+.bb{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;font-size:11.5px;font-weight:700;}
+.bb.ok{background:var(--grlt);color:var(--green);}
+.bb.warn{background:var(--orglt);color:var(--orange);}
+.bb.nok{background:var(--redlt);color:var(--red);}
+
+/* INKOMENSMETER */
+.meter-wrap{background:#F0F4F8;border-radius:10px;padding:16px 18px;margin-bottom:4px;}
+.meter-titel{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.meter-bar-bg{height:18px;background:#e2e8f0;border-radius:9px;overflow:hidden;position:relative;margin-bottom:6px;}
+.meter-bar-fill{height:100%;border-radius:9px;transition:width .5s;}
+.meter-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+
+/* GRAFIEK */
+.canvas-wrap{position:relative;height:260px;}
+canvas{width:100%!important;}
+.graf-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.graf-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s;}
+.graf-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* ADVIESBOX */
+.advies-box{background:linear-gradient(135deg,#EFF4F9 0%,#F8FAFB 100%);border:1.5px solid #C5D8E8;border-radius:12px;padding:18px 20px;}
+.advies-titel{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.advies-punten{display:flex;flex-direction:column;gap:7px;}
+.advies-punt{font-size:13px;color:var(--text);display:flex;gap:8px;align-items:flex-start;line-height:1.5;}
+.advies-punt .ap-ico{flex-shrink:0;margin-top:1px;}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .scenario-grid,.sc-res-grid{grid-template-columns:1fr;}
+  .fg2,.fg3,.fg4{grid-template-columns:1fr;}
+  .s2,.s3{grid-column:span 1;}
+  .h-badges{display:none;}
+}
+@media(max-width:420px){
+  .main{padding:14px 10px 60px;}
+  .card-body{padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">📅</div>
+    <div>
+      <div class="h-title">Einde RVP — Betaalbaar?</div>
+      <div class="h-sub">Nieuwe maandlast bij marktrente · drie scenario's · NIBUD-toets 2026</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">3 scenario's</span>
+    <span class="badge gold">NIBUD 2026</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">🏠</div>Hypotheekgegevens</div>
+    <div class="card-body">
+
+      <div class="fg fg3" style="margin-bottom:18px;">
+        <div class="sdiv s3">Huidige hypotheek</div>
+
+        <div class="field">
+          <label>Openstaand saldo nu</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="saldo" value="280000" min="10000" step="5000" oninput="calcSaldoRvpEind()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Huidige contractrente</label>
+          <div class="iw"><span class="pre">%</span>
+            <input type="number" id="crHuidig" value="2.10" min="0.01" max="15" step="0.01" class="rs" style="padding-left:26px;padding-right:42px;">
+          </div>
+        </div>
+        <div class="field">
+          <label>Aflosvorm</label>
+          <select id="aflosvorm">
+            <option value="annuitair" selected>Annuïtair</option>
+            <option value="lineair">Lineair</option>
+            <option value="aflossingsvrij">Aflossingsvrij</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Resterende looptijd hypotheek</label>
+          <div class="iw">
+            <input type="number" id="looptijdJaar" value="23" min="1" max="40" step="1" class="rs" style="padding-right:55px;" oninput="calcSaldoRvpEind()">
+            <span class="suf">jaar</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Resterende RVP</label>
+          <div class="iw">
+            <input type="number" id="rvpJaar" value="3" min="0.5" max="30" step="0.5" class="rs" style="padding-right:55px;" oninput="calcSaldoRvpEind()">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint" id="rvpEindHint"></span>
+        </div>
+        <div class="field">
+          <label>Saldo bij einde RVP (berekend)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="saldoRvpEind" value="260000" min="0" step="1000" style="background:#F4F7F9;" readonly>
+          </div>
+          <span class="hint">Automatisch berekend op basis van aflosvorm</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Inkomen & persoonlijke situatie</div>
+
+        <div class="field">
+          <label>Bruto jaarinkomen (inkomen 1)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="inkomen1" value="65000" min="0" step="1000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Bruto jaarinkomen (inkomen 2)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="inkomen2" value="0" min="0" step="1000">
+          </div>
+          <span class="hint">0 = éénverdiener</span>
+        </div>
+        <div class="field">
+          <label>Verwachte loonstijging tot einde RVP</label>
+          <div class="iw">
+            <input type="number" id="loonstijging" value="2.0" min="-5" max="20" step="0.5" class="rs" style="padding-right:42px;">
+            <span class="suf">%/jr</span>
+          </div>
+          <span class="hint">NIBUD verwacht 4,1% voor 2026</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Nieuwe rentevaste periode</div>
+
+        <div class="field">
+          <label>Nieuwe RVP-duur</label>
+          <div class="iw">
+            <input type="number" id="rvpNieuw" value="10" min="1" max="30" step="1" class="rs" style="padding-right:55px;">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint">Toetsrente <10jr = 5,0% (AFM 2025)</span>
+        </div>
+        <div class="field">
+          <label>Resterende looptijd na RVP</label>
+          <div class="iw">
+            <input type="number" id="looptijdNaRvp" value="20" min="1" max="40" step="1" class="rs" style="padding-right:55px;" readonly style="background:#F4F7F9;">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint" id="ltNaHint">Automatisch berekend</span>
+        </div>
+        <div class="field">
+          <label>Aflosvorm na verlenging</label>
+          <select id="aflosvormNieuw">
+            <option value="annuitair" selected>Annuïtair (zelfde)</option>
+            <option value="lineair">Lineair</option>
+            <option value="aflossingsvrij">Aflossingsvrij</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- RENTESCENARIO'S -->
+      <div class="sdiv" style="margin-bottom:14px;">Rentescenario's bij einde RVP</div>
+      <div class="scenario-grid" id="scenarioGrid">
+        <div class="scenario-card opt">
+          <div class="sc-label opt">🟢 Optimistisch</div>
+          <div class="sc-rente" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            <input type="number" id="rOpt" value="3.20" min="0.5" max="12" step="0.1" oninput="updateScLabels()">
+            <span class="sc-rente-unit">%</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;" id="lOpt"></div>
+        </div>
+        <div class="scenario-card real">
+          <div class="sc-label real">🔵 Realistisch</div>
+          <div class="sc-rente" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            <input type="number" id="rReal" value="4.00" min="0.5" max="12" step="0.1" oninput="updateScLabels()">
+            <span class="sc-rente-unit">%</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;" id="lReal"></div>
+        </div>
+        <div class="scenario-card stress">
+          <div class="sc-label stress">🔴 Stresstest</div>
+          <div class="sc-rente" style="display:flex;align-items:center;justify-content:center;gap:4px;">
+            <input type="number" id="rStress" value="6.00" min="0.5" max="12" step="0.1" oninput="updateScLabels()">
+            <span class="sc-rente-unit">%</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px;" id="lStress"></div>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">📅 Bereken betaalbaarheid bij einde RVP</button>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Resultaat — betaalbaarheid per scenario</div>
+    <div class="card-body">
+
+      <!-- SCENARIO KAARTEN -->
+      <div class="sc-res-grid" id="scResGrid"></div>
+
+      <!-- INKOMENSMETER -->
+      <div class="meter-wrap" id="meterWrap"></div>
+
+    </div>
+  </div>
+
+  <!-- GRAFIEK -->
+  <div class="card res-card" id="grafCard">
+    <div class="card-header"><div class="ico">📈</div>Maandlasten over de tijd</div>
+    <div class="card-body">
+      <div class="graf-tabs">
+        <button class="graf-tab active" onclick="setGraf('maandlast',this)">Maandlasten alle scenario's</button>
+        <button class="graf-tab" onclick="setGraf('saldo',this)">Saldo-afbouw</button>
+        <button class="graf-tab" onclick="setGraf('inkomenspct',this)">% van inkomen</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="grafiek"></canvas></div>
+    </div>
+  </div>
+
+  <!-- STRESSTEST TABEL -->
+  <div class="card res-card" id="tblCard">
+    <div class="card-header"><div class="ico">📋</div>Maandlast bij verschillende rentes (stresstest)</div>
+    <div class="card-body">
+      <div style="overflow-x:auto;">
+        <table id="stressTbl" style="width:100%;border-collapse:collapse;font-size:13.5px;"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADVIESBOX -->
+  <div class="card res-card" id="adviesCard">
+    <div class="card-header"><div class="ico">🧑‍💼</div>Advies & aandachtspunten</div>
+    <div class="card-body">
+      <div class="advies-box" id="adviesBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── NIBUD FINANCIERINGSLASTNORMEN 2026 ─────────────────────────────────────
+// Bron: NIBUD Advies Hypotheeknormen 2026 (sept. 2025)
+// Tabel: bruto-inkomen (€/jr) → maximaal % van bruto inkomen voor hypotheeklasten
+// Per rentekolom (afgerond op 0.5%, nieuw: 0.1% — hier 0.5%-stappen)
+// Weergave: [inkomen, ...flp_per_rentestap] rente-stappen: <1.5, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0
+// Financieringslastnormen 2026 (niet-AOW, annuïtair, aftrekbaar deel 35.75%, schijf 1)
+const NIBUD_RENTES = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0];
+const NIBUD_TABLE = [
+  // inkomen, [flp per rente 1.5% t/m 8.0%]
+  [24000,  [12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0,12.0]],
+  [30000,  [15.5,15.5,15.5,15.0,14.5,14.0,13.5,13.0,13.0,12.5,12.5,12.0,12.0,12.0]],
+  [36000,  [19.0,19.0,18.5,18.0,17.5,17.0,16.5,16.0,15.5,15.0,14.5,14.0,14.0,13.5]],
+  [42000,  [22.0,22.0,21.5,21.0,20.5,20.0,19.0,18.5,18.0,17.5,17.0,16.5,16.0,15.5]],
+  [48000,  [24.5,24.5,24.0,23.5,23.0,22.5,21.5,21.0,20.5,20.0,19.5,19.0,18.5,18.0]],
+  [55000,  [26.5,26.5,26.0,25.5,25.0,24.5,23.5,23.0,22.5,22.0,21.5,21.0,20.5,20.0]],
+  [65000,  [28.0,28.0,27.5,27.0,26.5,26.5,25.5,25.0,24.5,24.0,23.5,23.0,22.5,22.0]],
+  [80000,  [29.0,29.0,28.5,28.5,28.0,27.5,27.0,26.5,26.0,25.5,25.0,24.5,24.0,23.5]],
+  [100000, [30.0,30.0,29.5,29.5,29.0,28.5,28.0,27.5,27.0,26.5,26.0,25.5,25.0,24.5]],
+  [120000, [31.0,31.0,31.0,30.5,30.0,29.5,29.0,28.5,28.0,27.5,27.0,26.5,26.0,25.5]],
+];
+
+function getNibudFlp(inkomen, rente){
+  // Zoek dichtstbijzijnde inkomenband
+  let row = NIBUD_TABLE[0];
+  for(const r of NIBUD_TABLE){ if(inkomen >= r[0]) row = r; }
+  // Interpoleer op rente
+  const ri = Math.max(0, Math.min(NIBUD_RENTES.length-1,
+    Math.round((Math.max(1.5, Math.min(8.0, rente)) - 1.5) / 0.5)));
+  return row[1][ri] / 100;
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n,dec=0){ if(isNaN(n)||n===null) return '—'; const neg=n<0; return (neg?'−\u00A0':'')+' €\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtPct(n,dec=2){ return n.toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+'%'; }
+
+function maandlast(saldo, rJaar, nMnd, vorm){
+  const r = rJaar/100/12;
+  if(vorm==='aflossingsvrij') return saldo * r;
+  if(vorm==='lineair') return saldo/nMnd + saldo*r;
+  if(r===0) return saldo/nMnd;
+  return saldo * r / (1 - Math.pow(1+r, -nMnd));
+}
+
+// Simuleer saldo na X jaar aflossen
+function saldoNa(saldo0, rJaar, nMndTotaal, tMnd, vorm){
+  const r = rJaar/100/12;
+  if(vorm==='aflossingsvrij') return saldo0;
+  if(vorm==='lineair') return Math.max(0, saldo0 - tMnd*(saldo0/nMndTotaal));
+  // annuïtair
+  if(r===0) return Math.max(0, saldo0 - tMnd*(saldo0/nMndTotaal));
+  return saldo0 * (Math.pow(1+r, nMndTotaal) - Math.pow(1+r, tMnd)) / (Math.pow(1+r, nMndTotaal) - 1);
+}
+
+function calcSaldoRvpEind(){
+  const saldo = N('saldo'), cr = N('crHuidig');
+  const lt = N('looptijdJaar'), rvp = N('rvpJaar');
+  const vorm = document.getElementById('aflosvorm').value;
+  const ltMnd = Math.round(lt*12), rvpMnd = Math.round(rvp*12);
+  const s = saldoNa(saldo, cr, ltMnd, rvpMnd, vorm);
+  document.getElementById('saldoRvpEind').value = Math.round(s);
+  const ltNa = Math.max(1, lt - rvp);
+  document.getElementById('looptijdNaRvp').value = Math.round(ltNa);
+  document.getElementById('ltNaHint').textContent = `${Math.round(ltNa)} jaar resterende looptijd na einde RVP`;
+  const eindJaar = new Date().getFullYear() + rvp;
+  document.getElementById('rvpEindHint').textContent = `Einde RVP: ca. ${Math.floor(eindJaar)}`;
+  updateScLabels();
+}
+
+function updateScLabels(){
+  const rHuidig = N('crHuidig');
+  ['Opt','Real','Stress'].forEach(s => {
+    const r = N('r'+s);
+    const diff = r - rHuidig;
+    const el = document.getElementById('l'+s);
+    if(diff > 0.05) el.innerHTML = `<span style="color:var(--red)">▲ +${fmtPct(diff,1)} t.o.v. huidig</span>`;
+    else if(diff < -0.05) el.innerHTML = `<span style="color:var(--green)">▼ ${fmtPct(diff,1)} t.o.v. huidig</span>`;
+    else el.innerHTML = `≈ gelijk aan huidig`;
+  });
+}
+
+// ── BEREKEN ────────────────────────────────────────────────────────────────
+let simResult = null;
+let grafModus = 'maandlast';
+let grafObj = null;
+
+function bereken(){
+  const saldoNu   = N('saldo');
+  const crH       = N('crHuidig');
+  const lt        = N('looptijdJaar');
+  const rvp       = N('rvpJaar');
+  const vorm      = document.getElementById('aflosvorm').value;
+  const vormN     = document.getElementById('aflosvormNieuw').value;
+  const rvpNieuw  = N('rvpNieuw');
+  const inkomen1  = N('inkomen1');
+  const inkomen2  = N('inkomen2');
+  const loonstijging = N('loonstijging') / 100;
+
+  const ltMnd     = Math.round(lt*12);
+  const rvpMnd    = Math.round(rvp*12);
+  const ltNaMnd   = Math.max(12, ltMnd - rvpMnd);
+  const rvpNieuwMnd = Math.round(rvpNieuw*12);
+
+  const saldoEindRvp = saldoNa(saldoNu, crH, ltMnd, rvpMnd, vorm);
+  document.getElementById('saldoRvpEind').value = Math.round(saldoEindRvp);
+
+  const mlHuidig  = maandlast(saldoNu, crH, ltMnd, vorm);
+
+  // Inkomen bij einde RVP (gecorrigeerd voor loonstijging)
+  const inkomenEindRvp = (inkomen1 + inkomen2 * 0.9) * Math.pow(1 + loonstijging, rvp);
+  // Toetsrente: <10jr = max(5%, werkelijke rente); >=10jr = werkelijke rente
+  const toetsrente = rvpNieuw < 10 ? 5.0 : null; // null = gebruik werkelijke rente
+
+  const scenarios = [
+    { id:'opt',    lbl:'Optimistisch', ico:'🟢', cls:'opt',    rente: N('rOpt') },
+    { id:'real',   lbl:'Realistisch',  ico:'🔵', cls:'real',   rente: N('rReal') },
+    { id:'stress', lbl:'Stresstest',   ico:'🔴', cls:'stress', rente: N('rStress') },
+  ];
+
+  const resultaten = scenarios.map(sc => {
+    const rToets = toetsrente ?? sc.rente;
+    const mlNieuw = maandlast(saldoEindRvp, sc.rente, ltNaMnd, vormN);
+    const delta = mlNieuw - mlHuidig;
+    const deltaJaar = delta * 12;
+
+    // NIBUD betaalbaarheidstoets
+    const flp = getNibudFlp(inkomenEindRvp, rToets);
+    const maxJaarLast = inkomenEindRvp * flp;
+    const maxMndLast = maxJaarLast / 12;
+    const gebruiktPct = (mlNieuw * 12) / inkomenEindRvp * 100;
+    const maxPct = flp * 100;
+
+    // Betaalbaarheidsoordeel
+    let oordeel, oordeel_cls;
+    if(mlNieuw <= maxMndLast * 0.90){ oordeel='✓ Ruim betaalbaar'; oordeel_cls='ok'; }
+    else if(mlNieuw <= maxMndLast){ oordeel='~ Krap betaalbaar'; oordeel_cls='warn'; }
+    else { oordeel='✗ Boven NIBUD-norm'; oordeel_cls='nok'; }
+
+    return { ...sc, mlNieuw, mlHuidig, delta, deltaJaar, flp, maxMndLast, maxJaarLast,
+             gebruiktPct, maxPct, oordeel, oordeel_cls, rToets, saldoEindRvp,
+             inkomenEindRvp, ltNaMnd };
+  });
+
+  simResult = { resultaten, mlHuidig, saldoNu, saldoEindRvp, crH, lt, rvp, ltNaMnd,
+                ltMnd, rvpMnd, inkomen1, inkomen2, inkomenEindRvp, vorm, vormN, ltNaMnd };
+
+  // ── SCENARIO KAARTEN ──
+  const grid = document.getElementById('scResGrid');
+  grid.innerHTML = '';
+  resultaten.forEach(sc => {
+    const el = document.createElement('div');
+    el.className = `sc-res-card ${sc.cls}`;
+    el.innerHTML = `
+      <div class="sc-res-head ${sc.cls}">${sc.ico} ${sc.lbl} — ${fmtPct(sc.rente,1)}</div>
+      <div class="sc-res-body">
+        <div class="sc-row"><span class="sc-lbl">Nieuwe maandlast</span><span class="sc-val big">${fmt(sc.mlNieuw,2)}</span></div>
+        <div class="sc-row"><span class="sc-lbl">Huidig</span><span class="sc-val">${fmt(sc.mlHuidig,2)}</span></div>
+        <div class="sc-row"><span class="sc-lbl">Verschil</span>
+          <span class="sc-val" style="color:${sc.delta>0?'var(--red)':'var(--green)'}">
+            ${sc.delta>0?'+':''}${fmt(sc.delta,2)}/mnd</span></div>
+        <div class="sc-row"><span class="sc-lbl">% van inkomen</span>
+          <span class="sc-val" style="color:${sc.gebruiktPct>sc.maxPct?'var(--red)':sc.gebruiktPct>sc.maxPct*0.9?'var(--orange)':'var(--green)'}">
+            ${fmtPct(sc.gebruiktPct,1)}</span></div>
+        <div class="sc-row"><span class="sc-lbl">NIBUD-max</span><span class="sc-val">${fmtPct(sc.maxPct,1)}</span></div>
+        <div class="sc-row"><span class="sc-lbl">Betaalbaarheid</span>
+          <span class="bb ${sc.oordeel_cls}">${sc.oordeel}</span></div>
+      </div>`;
+    grid.appendChild(el);
+  });
+
+  // ── INKOMENSMETER ──
+  const realSc = resultaten[1];
+  const meterHtml = `
+    <div class="meter-titel">Inkomensverdeling bij realistisch scenario</div>
+    ${resultaten.map(sc => `
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="font-weight:600;color:var(--navy)">${sc.ico} ${sc.lbl}</span>
+          <span style="color:var(--muted)">${fmt(sc.mlNieuw,2)}/mnd = ${fmtPct(sc.gebruiktPct,1)} van inkomen · NIBUD-max: ${fmtPct(sc.maxPct,1)}</span>
+        </div>
+        <div class="meter-bar-bg">
+          <div class="meter-bar-fill" style="width:${Math.min(100,sc.gebruiktPct/sc.maxPct*100).toFixed(1)}%;background:${sc.gebruiktPct>sc.maxPct?'var(--red)':sc.gebruiktPct>sc.maxPct*0.9?'var(--orange)':'var(--green)'}"></div>
+          <div style="position:absolute;top:0;left:${Math.min(100,100).toFixed(0)}%;width:2px;height:100%;background:rgba(0,0,0,.25);"></div>
+        </div>
+      </div>`).join('')}
+    <div class="meter-labels"><span>0%</span><span>NIBUD-norm (100%)</span></div>`;
+  document.getElementById('meterWrap').innerHTML = meterHtml;
+
+  // ── STRESSTEST TABEL ──
+  const st = document.getElementById('stressTbl');
+  const rentes = [1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0];
+  let hdr = `<thead style="background:var(--navy);color:#fff;"><tr>
+    <th style="padding:9px 12px;text-align:left;font-size:12px;">Rente bij verlenging</th>
+    <th style="padding:9px 12px;text-align:right;font-size:12px;">Maandlast</th>
+    <th style="padding:9px 12px;text-align:right;font-size:12px;">Verschil huidig</th>
+    <th style="padding:9px 12px;text-align:right;font-size:12px;">% van inkomen</th>
+    <th style="padding:9px 12px;text-align:right;font-size:12px;">NIBUD-max</th>
+    <th style="padding:9px 12px;text-align:right;font-size:12px;">Oordeel</th>
+  </tr></thead><tbody>`;
+  rentes.forEach(r => {
+    const ml = maandlast(saldoEindRvp, r, ltNaMnd, vormN);
+    const delta = ml - mlHuidig;
+    const flp = getNibudFlp(inkomenEindRvp, r);
+    const pct = ml*12/inkomenEindRvp*100;
+    const maxPct = flp*100;
+    const isOk = ml <= flp*inkomenEindRvp/12;
+    const isScen = resultaten.find(sc => Math.abs(sc.rente-r)<0.01);
+    hdr += `<tr style="background:${isScen?'#EFF4F9':''};">
+      <td style="padding:8px 12px;font-weight:${isScen?700:400};">${fmtPct(r,1)}${isScen?' ('+isScen.lbl+')':''}</td>
+      <td style="padding:8px 12px;text-align:right;">${fmt(ml,2)}</td>
+      <td style="padding:8px 12px;text-align:right;color:${delta>0?'var(--red)':'var(--green)'};">${delta>0?'+':''}${fmt(delta,2)}</td>
+      <td style="padding:8px 12px;text-align:right;color:${pct>maxPct?'var(--red)':pct>maxPct*.9?'var(--orange)':'var(--green)'};font-weight:600;">${fmtPct(pct,1)}</td>
+      <td style="padding:8px 12px;text-align:right;">${fmtPct(maxPct,1)}</td>
+      <td style="padding:8px 12px;text-align:right;"><span class="bb ${isOk?'ok':'nok'}">${isOk?'✓ OK':'✗ Te hoog'}</span></td>
+    </tr>`;
+  });
+  st.innerHTML = hdr + '</tbody>';
+
+  // ── ADVIESBOX ──
+  const adv = document.getElementById('adviesBox');
+  const nrOk = resultaten.filter(s=>s.oordeel_cls==='ok').length;
+  const realOk = resultaten[1].oordeel_cls !== 'nok';
+  const stressOk = resultaten[2].oordeel_cls !== 'nok';
+  const punten = [];
+  if(nrOk===3) punten.push({ico:'✅', txt:'<strong>Alle drie scenario\'s zijn betaalbaar</strong> — ook bij een stressrente van '+fmtPct(resultaten[2].rente,1)+'. U zit ruim binnen de NIBUD-normen.'});
+  else if(realOk && !stressOk) punten.push({ico:'⚠️', txt:'<strong>Het realistisch scenario is betaalbaar</strong>, maar bij de stressrente ('+fmtPct(resultaten[2].rente,1)+') overschrijdt de maandlast de NIBUD-norm. Overweeg een langere RVP of extra aflossingen vóór het einde van de huidige RVP.'});
+  else if(!realOk) punten.push({ico:'🔴', txt:'<strong>Ook het realistisch scenario overschrijdt de NIBUD-norm.</strong> Actie is nodig: extra aflossen, langere RVP (renteverlaging), of inkomen verhogen.'});
+  if(N('rvpNieuw') < 10) punten.push({ico:'ℹ️', txt:'<strong>Toetsrente:</strong> bij een nieuwe RVP korter dan 10 jaar geldt de AFM-toetsrente van 5,0%. Dit beïnvloedt de NIBUD-norm.'});
+  punten.push({ico:'📌', txt:`<strong>Saldo bij einde RVP:</strong> ${fmt(saldoEindRvp)} — dit is het bedrag waarop de nieuwe maandlast wordt berekend.`});
+  if(inkomenEindRvp > (inkomen1+inkomen2)){
+    punten.push({ico:'📈', txt:`<strong>Inkomen bij einde RVP</strong> (na ${fmtPct(N('loonstijging'),1)}/jr): ${fmt(inkomenEindRvp)} — gecorrigeerd voor verwachte loonstijging.`});
+  }
+  punten.push({ico:'💡', txt:'<strong>Tip:</strong> Vergelijk rentes minstens 3 maanden voor het einde van uw RVP. Sommige banken bieden al 3–6 maanden van tevoren een renteaanbod aan.'});
+  adv.innerHTML = `<div class="advies-titel">🧑‍💼 Advies & aandachtspunten</div>
+    <div class="advies-punten">${punten.map(p=>`<div class="advies-punt"><span class="ap-ico">${p.ico}</span><span>${p.txt}</span></div>`).join('')}</div>`;
+
+  ['resCard','grafCard','tblCard','adviesCard'].forEach(id=>document.getElementById(id).classList.add('vis'));
+  tekenGrafiek();
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── GRAFIEK ────────────────────────────────────────────────────────────────
+function setGraf(m,btn){ grafModus=m; document.querySelectorAll('.graf-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); tekenGrafiek(); }
+
+function tekenGrafiek(){
+  if(!simResult) return;
+  const {resultaten,mlHuidig,saldoNu,crH,lt,rvp,ltNaMnd,ltMnd,rvpMnd,vorm,vormN,inkomenEindRvp} = simResult;
+  const ctx = document.getElementById('grafiek').getContext('2d');
+  if(grafObj) grafObj.destroy();
+
+  const kleuren = { opt:'#1A8A50', real:'#003057', stress:'#C0392B' };
+
+  if(grafModus==='maandlast'){
+    // Maandlast verloop over volledige looptijd (voor+na RVP)
+    const labels = [];
+    for(let t=0;t<=ltMnd;t+=3) labels.push(t);
+
+    const dsHuidig = {
+      label:`Huidig (${crH}%)`, data: labels.map(t => {
+        if(t > rvpMnd) return null;
+        const s = simResult.saldoNu;
+        return Math.round(maandlastOp(s, crH, ltMnd, vorm, t));
+      }),
+      borderColor:'#6B7280', borderWidth:2, borderDash:[5,3],
+      pointRadius:0, fill:false, tension:.3,
+    };
+
+    const datasets = [dsHuidig, ...resultaten.map(sc => ({
+      label:`${sc.lbl} (${sc.rente}%)`,
+      data: labels.map(t => {
+        if(t <= rvpMnd) return null;
+        return Math.round(maandlast(simResult.saldoEindRvp, sc.rente, ltNaMnd, vormN));
+      }),
+      borderColor:kleuren[sc.cls]||'#888', backgroundColor:'transparent',
+      borderWidth:2.5, pointRadius:0, fill:false, tension:.1,
+    }))];
+
+    grafObj = new Chart(ctx,{
+      type:'line',
+      data:{ labels, datasets },
+      options: gopts('Maandlast over looptijd (€)','Maand','Maandlast (€)')
+    });
+
+  } else if(grafModus==='saldo'){
+    const labels = [];
+    for(let t=0;t<=ltMnd;t+=6) labels.push(t);
+    const dsHuidig = {
+      label:'Saldo huidig scenario',
+      data: labels.map(t => Math.round(saldoNa(saldoNu, crH, ltMnd, t, vorm))),
+      borderColor:'#6B7280', borderWidth:2, borderDash:[5,3],
+      backgroundColor:'rgba(107,114,128,.1)', pointRadius:0, fill:true, tension:.3
+    };
+    const datasets = [dsHuidig, ...resultaten.map(sc => ({
+      label:`Saldo ${sc.lbl} (${sc.rente}%)`,
+      data: labels.map(t => {
+        if(t <= rvpMnd) return Math.round(saldoNa(saldoNu, crH, ltMnd, t, vorm));
+        return Math.round(saldoNa(simResult.saldoEindRvp, sc.rente, ltNaMnd, t-rvpMnd, vormN));
+      }),
+      borderColor:kleuren[sc.cls]||'#888', backgroundColor:'transparent',
+      borderWidth:2, pointRadius:0, fill:false, tension:.3
+    }))];
+    grafObj = new Chart(ctx,{type:'line',data:{labels,datasets},options:gopts('Saldo afbouw (€)','Maand','Saldo (€)')});
+
+  } else {
+    // % van inkomen per scenario
+    const rentes = [1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0];
+    const dataPct = rentes.map(r => (maandlast(simResult.saldoEindRvp,r,ltNaMnd,vormN)*12/inkomenEindRvp*100).toFixed(1));
+    const dataNibud = rentes.map(r => (getNibudFlp(inkomenEindRvp,r)*100).toFixed(1));
+    grafObj = new Chart(ctx,{
+      type:'line',
+      data:{ labels:rentes.map(r=>fmtPct(r,1)), datasets:[
+        { label:'Maandlast als % van inkomen', data:dataPct,
+          borderColor:'#003057', backgroundColor:'rgba(0,48,87,.1)', borderWidth:2.5, fill:true, tension:.3, pointRadius:3 },
+        { label:'NIBUD-max %', data:dataNibud,
+          borderColor:'#E5A138', backgroundColor:'transparent', borderWidth:1.5, borderDash:[5,3], pointRadius:0, fill:false }
+      ]},
+      options:gopts('Woonlast % van inkomen vs. NIBUD-norm','Rente (%)','% van inkomen')
+    });
+  }
+}
+
+function maandlastOp(saldo0, rJaar, ltMnd, vorm, tMnd){
+  const saldo = saldoNa(saldo0, rJaar, ltMnd, tMnd, vorm);
+  const rest = ltMnd - tMnd;
+  return maandlast(saldo, rJaar, rest, vorm);
+}
+
+function gopts(title, xLabel, yLabel){
+  return {
+    responsive:true, maintainAspectRatio:false,
+    spanGaps:true,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{labels:{font:{family:'DM Sans',size:12},color:'#333',boxWidth:14}},
+      tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}`}}
+    },
+    scales:{
+      x:{title:{display:true,text:xLabel,font:{size:11},color:'#6B7280'},ticks:{maxTicksLimit:14,color:'#6B7280'},grid:{color:'#EEF2F6'}},
+      y:{title:{display:true,text:yLabel,font:{size:11},color:'#6B7280'},ticks:{color:'#6B7280'},grid:{color:'#EEF2F6'}}
+    }
+  };
+}
+
+// Init
+calcSaldoRvpEind();
+updateScLabels();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

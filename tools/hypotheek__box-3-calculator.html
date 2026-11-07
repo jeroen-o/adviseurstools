@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Box 3 Calculator 2026 — Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#004580;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#333;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--purple:#6B21A8;--purplt:#F5F3FF;
+  --shadow:0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;margin-top:1px;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:980px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:22px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:14px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:19px;}
+.card-body{padding:22px;}
+
+.fg{display:grid;gap:14px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.s2{grid-column:span 2;}
+.s3{grid-column:1/-1;}
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:42px;}
+
+/* VERMOGEN CATEGORIE-KAARTEN */
+.cat-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:6px;}
+.cat-card{border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;background:#fff;}
+.cat-card.active{border-color:var(--navy);}
+.cat-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.cat-ico{font-size:20px;}
+.cat-title{font-size:13.5px;font-weight:700;color:var(--navy);}
+.cat-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:auto;}
+.cat-badge.spaar{background:#EFF4F9;color:var(--navy);}
+.cat-badge.beleg{background:var(--gold-lt);color:#B87A00;}
+.cat-badge.vast{background:var(--purplt);color:var(--purple);}
+.cat-badge.schuld{background:var(--redlt);color:var(--red);}
+
+/* VERGELIJKINGS TAB */
+.mode-tabs{display:flex;gap:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px;}
+.mode-tab{flex:1;padding:11px 8px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);background:#fff;border:none;transition:all .18s;border-right:1.5px solid var(--border);}
+.mode-tab:last-child{border-right:none;}
+.mode-tab.active{background:var(--navy);color:#fff;}
+
+/* BTN */
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;letter-spacing:.01em;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* VERDICT BANNER */
+.verdict{border-radius:12px;padding:18px 22px;display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;}
+.verdict.beter{background:var(--grlt);border:2px solid #A7DFC2;}
+.verdict.gelijk{background:#EFF4F9;border:2px solid #C5D8E8;}
+.verdict.forfait{background:var(--orglt);border:2px solid #FCD34D;}
+.verdict-ico{font-size:36px;flex-shrink:0;}
+.verdict-titel{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);}
+.verdict-sub{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.55;}
+
+/* RESULTAAT GRID */
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.res-blok{border-radius:12px;overflow:hidden;}
+.res-blok-head{padding:10px 16px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;}
+.res-blok-head.forfait{background:#6B7280;color:#fff;}
+.res-blok-head.werkelijk{background:var(--navy);color:#fff;}
+.res-blok-body{background:#fff;border:1.5px solid var(--border);border-top:none;padding:14px 16px;border-radius:0 0 10px 10px;}
+.res-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #EEF2F6;}
+.res-row:last-child{border-bottom:none;}
+.res-lbl{font-size:12px;color:var(--muted);}
+.res-val{font-size:15px;font-weight:700;color:var(--navy);}
+.res-val.big{font-family:'DM Serif Display',serif;font-size:22px;}
+.res-val.green{color:var(--green);}
+.res-val.red{color:var(--red);}
+.res-val.gold{color:#B87A00;}
+
+/* BESPARING BOX */
+.besparing-box{border-radius:12px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+.besparing-box.pos{background:var(--grlt);border:2px solid #A7DFC2;}
+.besparing-box.neg{background:#EFF4F9;border:2px solid #C5D8E8;}
+.besparing-val{font-family:'DM Serif Display',serif;font-size:32px;color:var(--navy);}
+.besparing-lbl{font-size:13px;color:var(--muted);}
+
+/* DETAIL TABEL */
+.dtbl{width:100%;border-collapse:collapse;font-size:13.5px;}
+.dtbl thead th{background:var(--navy);color:#fff;padding:9px 14px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.dtbl thead th:not(:first-child){text-align:right;}
+.dtbl td{padding:9px 14px;border-bottom:1px solid var(--border);}
+.dtbl td:not(:first-child){text-align:right;}
+.dtbl tr:last-child td{border-bottom:none;}
+.dtbl tr:hover td{background:#F8FAFB;}
+.dtbl tfoot td{background:#F0F4F8;font-weight:700;color:var(--navy);border-top:2px solid var(--border);padding:10px 14px;text-align:right;}
+.dtbl tfoot td:first-child{text-align:left;}
+
+/* GRAFIEK */
+.canvas-wrap{position:relative;height:260px;}
+canvas{width:100%!important;}
+.graf-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.graf-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s;}
+.graf-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* UITLEG BOX */
+.uitleg-box{background:linear-gradient(135deg,#EFF4F9 0%,#F8FAFB 100%);border:1.5px solid #C5D8E8;border-radius:12px;padding:18px 20px;font-size:13px;line-height:1.75;}
+.uitleg-box h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+.uitleg-box ul{padding-left:18px;}
+.uitleg-box li{margin-bottom:4px;}
+.uitleg-box strong{color:var(--navy);}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .fg2,.fg3,.fg4{grid-template-columns:1fr;}
+  .s2,.s3{grid-column:span 1;}
+  .res-grid{grid-template-columns:1fr;}
+  .h-badges{display:none;}
+}
+@media(max-width:420px){.main{padding:14px 10px 60px;}.card-body{padding:14px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">💰</div>
+    <div>
+      <div class="h-title">Box 3 Calculator 2026</div>
+      <div class="h-sub">Forfaitair vs. werkelijk rendement · tegenbewijsregeling · sparen · beleggen · vastgoed</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">Overbruggingswet</span>
+    <span class="badge gold">Tegenbewijsregeling</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- UITLEG BALK -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📋</div>Situatie Box 3 in 2026 (Belastingdienst)</div>
+    <div class="card-body">
+      <div class="uitleg-box">
+        <h3>Hoe werkt Box 3 in 2026?</h3>
+        Na het Kerstarrest (dec. 2021) geldt de <strong>Overbruggingswetgeving</strong>: de Belastingdienst rekent met fictieve rendementen die dicht bij de werkelijkheid liggen.
+        Vanaf <strong>2028</strong> wordt werkelijk rendement belast (Wet werkelijk rendement box 3, wetsvoorstel ingediend mei 2025).
+        <br><br>
+        <strong>Forfaitaire percentages 2026 (definitief vastgesteld):</strong>
+        <ul>
+          <li>🏦 <strong>Banktegoeden (spaargeld):</strong> 1,28% (voorlopig — definitief begin 2027)</li>
+          <li>📈 <strong>Beleggingen & overige bezittingen:</strong> 6,00% (vast)</li>
+          <li>🏠 <strong>Vastgoed (2e woning, verhuurd):</strong> 6,00% (onderdeel overige bezittingen)</li>
+          <li>📉 <strong>Schulden:</strong> 2,70% (voorlopig — definitief begin 2027)</li>
+          <li>🛡️ <strong>Heffingsvrij vermogen:</strong> € 59.357 per persoon (€ 118.714 met partner)</li>
+          <li>📊 <strong>Tarief:</strong> 36% over het belastbaar box 3-inkomen</li>
+        </ul>
+        <br>
+        <strong>Tegenbewijsregeling:</strong> Is uw <em>werkelijk rendement</em> lager dan het forfaitair rendement? Dan betaalt u belasting over het werkelijk rendement. U moet dit zelf aantonen via de Opgaaf werkelijk rendement bij de Belastingdienst.
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Uw vermogen op 1 januari 2026</div>
+    <div class="card-body">
+
+      <!-- BEREKENINGS MODUS -->
+      <div class="sdiv" style="margin-bottom:12px;">Berekeningswijze</div>
+      <div class="mode-tabs" style="margin-bottom:18px;">
+        <button class="mode-tab active" id="tab-forfait" onclick="setMode('forfait',this)">📊 Forfaitair (belastingaanslag)</button>
+        <button class="mode-tab" id="tab-werkelijk" onclick="setMode('werkelijk',this)">🔍 Werkelijk rendement (tegenbewijsregeling)</button>
+        <button class="mode-tab" id="tab-vergelijk" onclick="setMode('vergelijk',this)">⚖️ Vergelijk beide</button>
+      </div>
+
+      <div class="fg fg3" style="margin-bottom:18px;">
+        <div class="sdiv s3">Persoonlijke situatie</div>
+        <div class="field">
+          <label>Fiscale situatie</label>
+          <select id="partner">
+            <option value="0">Alleenstaand</option>
+            <option value="1">Met fiscale partner</option>
+          </select>
+        </div>
+        <div class="field s2">
+          <label>Heffingsvrij vermogen</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="hvv" value="59357" min="0" step="100" style="background:#F4F7F9;" readonly>
+          </div>
+          <span class="hint" id="hvvHint">€ 59.357 per persoon (2026)</span>
+        </div>
+      </div>
+
+      <!-- VERMOGENSCATEGORIEEN -->
+      <div class="sdiv" style="margin-bottom:12px;">Bezittingen & schulden</div>
+      <div class="cat-grid">
+
+        <!-- SPAARGELD -->
+        <div class="cat-card" id="cat-spaar">
+          <div class="cat-head">
+            <span class="cat-ico">🏦</span>
+            <span class="cat-title">Banktegoeden (spaargeld, deposito's)</span>
+            <span class="cat-badge spaar">1,28% forfait</span>
+          </div>
+          <div class="fg fg2" style="gap:10px;">
+            <div class="field">
+              <label>Saldo (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="spaarSaldo" value="50000" min="0" step="1000" oninput="updateTotaal()">
+              </div>
+            </div>
+            <div class="field werkelijk-veld" style="display:none;">
+              <label>Werkelijke rente ontvangen (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="spaarRente" value="640" min="0" step="10">
+              </div>
+              <span class="hint">Werkelijk ontvangen rente op bankrekeningen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BELEGGINGEN -->
+        <div class="cat-card" id="cat-beleg">
+          <div class="cat-head">
+            <span class="cat-ico">📈</span>
+            <span class="cat-title">Beleggingen (aandelen, ETF's, obligaties, crypto)</span>
+            <span class="cat-badge beleg">6,00% forfait</span>
+          </div>
+          <div class="fg fg3" style="gap:10px;">
+            <div class="field">
+              <label>Waarde op 1-1-2026 (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="belegWaarde" value="0" min="0" step="1000" oninput="updateTotaal()">
+              </div>
+            </div>
+            <div class="field werkelijk-veld" style="display:none;">
+              <label>Dividend / rente ontvangen (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="belegInkomen" value="0" min="0" step="100">
+              </div>
+            </div>
+            <div class="field werkelijk-veld" style="display:none;">
+              <label>Koerswinst / -verlies (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="belegKoers" value="0" step="100">
+              </div>
+              <span class="hint">Negatief = verlies (gebruik − teken)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VASTGOED -->
+        <div class="cat-card" id="cat-vast">
+          <div class="cat-head">
+            <span class="cat-ico">🏠</span>
+            <span class="cat-title">Vastgoed (2e woning, verhuurpand)</span>
+            <span class="cat-badge vast">6,00% forfait over WOZ</span>
+          </div>
+          <div class="fg fg4" style="gap:10px;">
+            <div class="field">
+              <label>WOZ-waarde (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="wozWaarde" value="0" min="0" step="5000" oninput="updateTotaal()">
+              </div>
+              <span class="hint">Waarde op 1-1-2026</span>
+            </div>
+            <div class="field">
+              <label>Hypotheek op dit pand (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="wozHyp" value="0" min="0" step="5000" oninput="updateTotaal()">
+              </div>
+              <span class="hint">Aftrekbaar als schuld in box 3</span>
+            </div>
+            <div class="field werkelijk-veld" style="display:none;">
+              <label>Huurinkomsten (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="vastHuur" value="0" min="0" step="100">
+              </div>
+            </div>
+            <div class="field werkelijk-veld" style="display:none;">
+              <label>WOZ waardestijging (€)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="vastStijging" value="0" step="1000">
+              </div>
+              <span class="hint">WOZ eind 2026 minus WOZ begin 2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- OVERIGE SCHULDEN -->
+        <div class="cat-card" id="cat-schuld">
+          <div class="cat-head">
+            <span class="cat-ico">📉</span>
+            <span class="cat-title">Overige schulden (consumptief, beleggingsfinancering)</span>
+            <span class="cat-badge schuld">2,70% forfait</span>
+          </div>
+          <div class="fg fg2" style="gap:10px;">
+            <div class="field">
+              <label>Schulden (excl. drempel € 3.800)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="schulden" value="0" min="0" step="1000" oninput="updateTotaal()">
+              </div>
+              <span class="hint">Schulden boven drempel van € 3.800 (€ 7.600 met partner)</span>
+            </div>
+            <div class="field">
+              <label>Totaal vermogen (automatisch)</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="totaalVermogen" readonly style="background:#F4F7F9;">
+              </div>
+              <span class="hint" id="totaalHint"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">💰 Bereken Box 3 belasting 2026</button>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Resultaat — Box 3 belasting 2026</div>
+    <div class="card-body">
+      <div id="verdictBox" style="margin-bottom:16px;"></div>
+      <div class="res-grid" id="resGrid"></div>
+      <div id="besparingBox" style="margin-bottom:16px;"></div>
+    </div>
+  </div>
+
+  <!-- DETAIL TABEL -->
+  <div class="card res-card" id="tblCard">
+    <div class="card-header"><div class="ico">📋</div>Berekening stap voor stap</div>
+    <div class="card-body">
+      <div style="overflow-x:auto;">
+        <table class="dtbl" id="detailTbl"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAFIEK -->
+  <div class="card res-card" id="grafCard">
+    <div class="card-header"><div class="ico">📊</div>Grafische analyse</div>
+    <div class="card-body">
+      <div class="graf-tabs">
+        <button class="graf-tab active" onclick="setGraf('verdeling',this)">Vermogensverdeling</button>
+        <button class="graf-tab" onclick="setGraf('belasting',this)">Belasting per categorie</button>
+        <button class="graf-tab" onclick="setGraf('scenario',this)">Rendementsscenario's</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="grafiek"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONSTANTEN 2026 (Belastingdienst) ─────────────────────────────────────
+const BOX3_2026 = {
+  tarief:       0.36,
+  hvv:          59357,      // per persoon
+  r_bank:       0.0128,     // banktegoeden (voorlopig)
+  r_beleg:      0.06,       // beleggingen & overige bezittingen (vast)
+  r_schuld:     0.027,      // schulden (voorlopig)
+  schuld_drempel: 3800,     // drempel schulden (7600 met partner)
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let modus = 'forfait';  // forfait | werkelijk | vergelijk
+let grafModus = 'verdeling';
+let grafObj = null;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n, dec=0){ if(isNaN(n)||n===null) return '—'; const neg=n<0; return (neg?'−\u00A0':'')+'\u00A0€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtPct(n,dec=2){ return n.toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+'%'; }
+
+function setMode(m, btn){
+  modus = m;
+  document.querySelectorAll('.mode-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Toon/verberg werkelijk rendement velden
+  document.querySelectorAll('.werkelijk-veld').forEach(el => {
+    el.style.display = (m==='werkelijk'||m==='vergelijk') ? 'flex' : 'none';
+  });
+}
+
+function updateHvv(){
+  const partner = parseInt(document.getElementById('partner').value);
+  const hvv = BOX3_2026.hvv * (partner+1);
+  document.getElementById('hvv').value = hvv;
+  document.getElementById('hvvHint').textContent = partner
+    ? `€ 59.357 × 2 = € 118.714 (met fiscale partner)`
+    : `€ 59.357 per persoon (2026)`;
+  updateTotaal();
+}
+
+function updateTotaal(){
+  const spaar  = N('spaarSaldo');
+  const beleg  = N('belegWaarde');
+  const woz    = N('wozWaarde');
+  const hypVast= N('wozHyp');
+  const schuld = N('schulden');
+  const partner= parseInt(document.getElementById('partner').value||0);
+  const schuldDrempel = BOX3_2026.schuld_drempel * (partner+1);
+
+  const bezittingen = spaar + beleg + woz;
+  const schuldenEffectief = Math.max(0, schuld + hypVast - schuldDrempel);
+  const totaal = bezittingen - schuldenEffectief;
+  document.getElementById('totaalVermogen').value = Math.round(totaal);
+  const hvv = BOX3_2026.hvv * (partner+1);
+  const grondslag = Math.max(0, totaal - hvv);
+  document.getElementById('totaalHint').textContent =
+    totaal <= hvv
+      ? `✓ Vermogen (${fmt(totaal)}) ≤ heffingsvrij (${fmt(hvv)}) — geen box 3 belasting!`
+      : `Grondslag: ${fmt(grondslag)} boven heffingsvrij`;
+}
+
+document.getElementById('partner').addEventListener('change', updateHvv);
+
+// ── FORFAITAIRE BEREKENING ─────────────────────────────────────────────────
+function berekenForfait(){
+  const spaar   = N('spaarSaldo');
+  const beleg   = N('belegWaarde');
+  const woz     = N('wozWaarde');
+  const hypVast = N('wozHyp');
+  const schuld  = N('schulden');
+  const partner = parseInt(document.getElementById('partner').value||0);
+  const hvv     = BOX3_2026.hvv * (partner+1);
+  const schuldDrempel = BOX3_2026.schuld_drempel * (partner+1);
+  const schuldenEff = Math.max(0, schuld + hypVast - schuldDrempel);
+
+  // Rendementen per categorie
+  const rendSpaar  = spaar  * BOX3_2026.r_bank;
+  const rendBeleg  = beleg  * BOX3_2026.r_beleg;
+  const rendVast   = woz    * BOX3_2026.r_beleg; // 6% over WOZ
+  const rendSchuld = schuldenEff * BOX3_2026.r_schuld;
+
+  const totaalBezittingen = spaar + beleg + woz;
+  const rendBelastbaar   = rendSpaar + rendBeleg + rendVast - rendSchuld;
+
+  // Grondslag
+  const totaalVermogen = totaalBezittingen - schuldenEff;
+  const grondslag      = Math.max(0, totaalVermogen - hvv);
+
+  // Belastbaar rendement (naar rato grondslag/bezittingen)
+  let aandeel = totaalBezittingen > 0 ? grondslag / totaalVermogen : 0;
+  aandeel = Math.min(1, Math.max(0, aandeel));
+  const box3Inkomen  = Math.max(0, rendBelastbaar * aandeel);
+  const belasting    = box3Inkomen * BOX3_2026.tarief;
+  const effectiefPct = totaalVermogen > 0 ? belasting / totaalVermogen * 100 : 0;
+
+  return { spaar, beleg, woz, hypVast, schuld, schuldenEff, hvv, grondslag,
+    rendSpaar, rendBeleg, rendVast, rendSchuld, totaalBezittingen,
+    totaalVermogen, aandeel, box3Inkomen, belasting, effectiefPct,
+    rendBelastbaar };
+}
+
+// ── WERKELIJK RENDEMENT BEREKENING ─────────────────────────────────────────
+function berekenWerkelijk(){
+  const partner  = parseInt(document.getElementById('partner').value||0);
+  const hvv      = BOX3_2026.hvv * (partner+1);
+  const schuldenEff = Math.max(0, N('schulden') + N('wozHyp') - BOX3_2026.schuld_drempel*(partner+1));
+  const totaalBez = N('spaarSaldo') + N('belegWaarde') + N('wozWaarde');
+  const totaalVerm = totaalBez - schuldenEff;
+
+  // Werkelijk inkomen per categorie
+  const wSpaar  = N('spaarRente');
+  const wBeleg  = N('belegInkomen') + N('belegKoers');
+  const wVast   = N('vastHuur') + N('vastStijging');
+
+  // Financieringskosten (2,70% over schuld aftrekbaar als kosten)
+  const wSchuld = schuldenEff * BOX3_2026.r_schuld;
+  const werkRend = wSpaar + wBeleg + wVast - wSchuld;
+
+  const grondslag   = Math.max(0, totaalVerm - hvv);
+  const aandeel     = totaalVerm > 0 ? Math.min(1, Math.max(0, grondslag/totaalVerm)) : 0;
+  const box3Inkomen = Math.max(0, werkRend * aandeel);
+  const belasting   = box3Inkomen * BOX3_2026.tarief;
+  const effectiefPct = totaalVerm > 0 ? belasting / totaalVerm * 100 : 0;
+
+  return { wSpaar, wBeleg, wVast, wSchuld, werkRend, hvv, grondslag,
+    totaalVermogen: totaalVerm, aandeel, box3Inkomen, belasting, effectiefPct };
+}
+
+// ── BEREKEN ────────────────────────────────────────────────────────────────
+function bereken(){
+  const ff = berekenForfait();
+  const ww = (modus === 'werkelijk' || modus === 'vergelijk') ? berekenWerkelijk() : null;
+
+  // ── VERDICT ──
+  const vBox = document.getElementById('verdictBox');
+  if(ff.totaalVermogen <= ff.hvv){
+    vBox.innerHTML = `<div class="verdict gelijk"><div class="verdict-ico">✅</div><div>
+      <div class="verdict-titel">Geen box 3 belasting</div>
+      <div class="verdict-sub">Uw vermogen (${fmt(ff.totaalVermogen)}) valt binnen het heffingsvrij vermogen (${fmt(ff.hvv)}). U betaalt geen box 3 belasting in 2026.</div>
+    </div></div>`;
+  } else if(ww && ww.belasting < ff.belasting - 1){
+    const besparing = ff.belasting - ww.belasting;
+    vBox.innerHTML = `<div class="verdict beter"><div class="verdict-ico">💡</div><div>
+      <div class="verdict-titel">Tegenbewijsregeling loont — besparing ${fmt(besparing)}</div>
+      <div class="verdict-sub">Uw werkelijk rendement is lager dan het forfait. U kunt bezwaar maken en belasting terugvragen. Verschil: forfait ${fmt(ff.belasting)} vs. werkelijk ${fmt(ww.belasting)}.</div>
+    </div></div>`;
+  } else if(ww && ww.belasting >= ff.belasting - 1){
+    vBox.innerHTML = `<div class="verdict forfait"><div class="verdict-ico">📊</div><div>
+      <div class="verdict-titel">Forfaitair gunstiger — geen actie nodig</div>
+      <div class="verdict-sub">Uw werkelijk rendement is gelijk aan of hoger dan het forfait. De tegenbewijsregeling levert geen voordeel op. U betaalt ${fmt(ff.belasting)}.</div>
+    </div></div>`;
+  } else {
+    vBox.innerHTML = `<div class="verdict gelijk"><div class="verdict-ico">📊</div><div>
+      <div class="verdict-titel">Box 3 belasting 2026: ${fmt(ff.belasting)}</div>
+      <div class="verdict-sub">Berekend via overbruggingswetgeving (forfaitaire methode). Voeg werkelijk rendement toe om de tegenbewijsregeling te toetsen.</div>
+    </div></div>`;
+  }
+
+  // ── RESULTAAT BLOKKEN ──
+  const grid = document.getElementById('resGrid');
+  const showBoth = modus === 'vergelijk' && ww;
+  grid.style.gridTemplateColumns = showBoth ? '1fr 1fr' : '1fr';
+
+  function blok(titel, cls, data){
+    return `<div class="res-blok">
+      <div class="res-blok-head ${cls}">${titel}</div>
+      <div class="res-blok-body">
+        ${data.map(r=>`<div class="res-row"><span class="res-lbl">${r[0]}</span><span class="res-val ${r[2]||''}">${r[1]}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  const ffRows = [
+    ['Totaal vermogen', fmt(ff.totaalVermogen),''],
+    ['Heffingsvrij vermogen', fmt(ff.hvv),''],
+    ['Grondslag', fmt(ff.grondslag),''],
+    ['Forfaitair rendement', fmt(ff.rendBelastbaar,2),''],
+    ['Box 3 inkomen', fmt(ff.box3Inkomen,2),'big'],
+    ['Belasting (36%)', fmt(ff.belasting,2),'red big'],
+    ['Effectief tarief op vermogen', fmtPct(ff.effectiefPct,2),'gold'],
+  ];
+  let html = blok(modus==='vergelijk'?'📊 Forfaitaire methode':'📊 Belastingaanslag (forfait)', 'forfait', ffRows);
+
+  if(showBoth && ww){
+    const wwRows = [
+      ['Werkelijk rendement sparen', fmt(ww.wSpaar,2),''],
+      ['Werkelijk rendement beleggen', fmt(ww.wBeleg,2),''],
+      ['Werkelijk rendement vastgoed', fmt(ww.wVast,2),''],
+      ['Aftrek financieringskosten', '−'+fmt(ww.wSchuld,2),''],
+      ['Totaal werkelijk rendement', fmt(ww.werkRend,2),'big'],
+      ['Belasting (36%)', fmt(ww.belasting,2), ww.belasting<ff.belasting?'green big':'red big'],
+      ['Voordeel t.o.v. forfait', fmt(ff.belasting-ww.belasting,2), ww.belasting<ff.belasting?'green':''],
+    ];
+    html += blok('🔍 Werkelijk rendement (tegenbewijs)', 'werkelijk', wwRows);
+  } else if(modus==='werkelijk' && ww){
+    const wwRows = [
+      ['Werkelijk rendement sparen', fmt(ww.wSpaar,2),''],
+      ['Werkelijk rendement beleggen', fmt(ww.wBeleg,2),''],
+      ['Werkelijk rendement vastgoed', fmt(ww.wVast,2),''],
+      ['Aftrek financieringskosten', '−'+fmt(ww.wSchuld,2),''],
+      ['Box 3 inkomen (werkelijk)', fmt(ww.box3Inkomen,2),'big'],
+      ['Belasting (36%)', fmt(ww.belasting,2), ww.belasting<ff.belasting?'green big':'red big'],
+      ['Voordeel tegenbewijsregeling', fmt(ff.belasting-ww.belasting,2), ww.belasting<ff.belasting?'green big':''],
+    ];
+    html = blok('🔍 Werkelijk rendement (tegenbewijsregeling)', 'werkelijk', wwRows);
+  }
+  grid.innerHTML = html;
+
+  // Besparingbox
+  const bb = document.getElementById('besparingBox');
+  if(ww && ff.totaalVermogen > ff.hvv){
+    const besparing = ff.belasting - ww.belasting;
+    bb.innerHTML = `<div class="besparing-box ${besparing>0?'pos':'neg'}">
+      <div>
+        <div class="besparing-lbl">${besparing>1?'Potentiële belastingbesparing (tegenbewijsregeling)':'Tegenbewijsregeling levert geen voordeel op'}</div>
+        <div class="besparing-val">${besparing>0?'+':''} ${fmt(besparing,2)}</div>
+        <div class="besparing-lbl" style="margin-top:4px;">${besparing>0?'Vraag de Opgaaf werkelijk rendement aan via Mijn Belastingdienst':'Het forfait is gunstiger dan uw werkelijk rendement'}</div>
+      </div>
+      ${besparing>0?`<a href="https://www.belastingdienst.nl/wps/wcm/connect/nl/box-3/content/opgaaf-werkelijk-rendement" target="_blank" style="background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap;">Opgaaf werkelijk rendement →</a>`:''}
+    </div>`;
+    bb.style.display='block';
+  } else {
+    bb.style.display='none';
+  }
+
+  // ── DETAIL TABEL ──
+  const dt = document.getElementById('detailTbl');
+  const schuldDrempelText = parseInt(document.getElementById('partner').value) ? '€ 7.600' : '€ 3.800';
+  dt.innerHTML = `<thead><tr>
+    <th>Stap</th><th style="text-align:right">Berekening</th><th style="text-align:right">Bedrag</th>
+  </tr></thead><tbody>
+    <tr><td>1. Bezittingen: spaargeld</td><td>${fmt(ff.spaar)} × 1,28%</td><td>${fmt(ff.rendSpaar,2)}</td></tr>
+    <tr><td>1. Bezittingen: beleggingen</td><td>${fmt(ff.beleg)} × 6,00%</td><td>${fmt(ff.rendBeleg,2)}</td></tr>
+    <tr><td>1. Bezittingen: vastgoed (WOZ)</td><td>${fmt(ff.woz)} × 6,00%</td><td>${fmt(ff.rendVast,2)}</td></tr>
+    <tr><td>1. Schulden (boven drempel ${schuldDrempelText})</td><td>−${fmt(ff.schuldenEff)} × 2,70%</td><td>−${fmt(ff.rendSchuld,2)}</td></tr>
+    <tr style="background:#F8FAFB;font-weight:600;"><td>= Belastbaar rendement (stap 1)</td><td></td><td>${fmt(ff.rendBelastbaar,2)}</td></tr>
+    <tr><td>2. Rendementsgrondslag</td><td>${fmt(ff.totaalBezittingen)} − ${fmt(ff.schuldenEff)}</td><td>${fmt(ff.totaalVermogen)}</td></tr>
+    <tr><td>3. Min heffingsvrij vermogen</td><td>${fmt(ff.totaalVermogen)} − ${fmt(ff.hvv)}</td><td>${fmt(ff.grondslag)}</td></tr>
+    <tr><td>4. Aandeel in grondslag</td><td>${fmt(ff.grondslag)} / ${fmt(ff.totaalVermogen)}</td><td>${fmtPct(ff.aandeel*100,1)}</td></tr>
+    <tr><td>5. Box 3-inkomen</td><td>${fmt(ff.rendBelastbaar,2)} × ${fmtPct(ff.aandeel*100,1)}</td><td>${fmt(ff.box3Inkomen,2)}</td></tr>
+    <tr style="background:#F8FAFB;font-weight:700;color:var(--red);"><td>6. Belasting box 3 (36%)</td><td>${fmt(ff.box3Inkomen,2)} × 36%</td><td>${fmt(ff.belasting,2)}</td></tr>
+  </tbody>`;
+
+  // Toon
+  ['resCard','tblCard','grafCard'].forEach(id=>document.getElementById(id).classList.add('vis'));
+  tekenGrafiek(ff, ww);
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── GRAFIEK ────────────────────────────────────────────────────────────────
+function setGraf(m,btn){ grafModus=m; document.querySelectorAll('.graf-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); tekenGrafiek(); }
+
+let lastFf=null, lastWw=null;
+function tekenGrafiek(ff,ww){
+  if(ff) lastFf=ff; if(ww!==undefined) lastWw=ww;
+  if(!lastFf) return;
+  ff=lastFf; ww=lastWw;
+  const ctx=document.getElementById('grafiek').getContext('2d');
+  if(grafObj) grafObj.destroy();
+
+  if(grafModus==='verdeling'){
+    const data=[ff.spaar,ff.beleg,ff.woz,ff.schuldenEff?ff.schuldenEff:0].filter((_,i)=>[ff.spaar,ff.beleg,ff.woz,ff.schuldenEff][i]>0);
+    const labels=['Spaargeld','Beleggingen','Vastgoed','Schulden (eff.)'].filter((_,i)=>[ff.spaar,ff.beleg,ff.woz,ff.schuldenEff][i]>0);
+    grafObj=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:['#003057','#E5A138','#6B21A8','#C0392B'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:12},color:'#333'}},tooltip:{callbacks:{label:c=>` ${c.label}: €\u00A0${Math.round(c.parsed).toLocaleString('nl-NL')},-`}}}}});
+
+  } else if(grafModus==='belasting'){
+    const cats=['Spaargeld\n(1,28%)','Beleggingen\n(6,00%)','Vastgoed\n(6,00%)'];
+    const bels=[ff.rendSpaar*ff.aandeel*BOX3_2026.tarief, ff.rendBeleg*ff.aandeel*BOX3_2026.tarief, ff.rendVast*ff.aandeel*BOX3_2026.tarief].map(v=>Math.round(v));
+    grafObj=new Chart(ctx,{type:'bar',data:{labels:cats,datasets:[{label:'Box 3 belasting (€)',data:bels,backgroundColor:['#003057','#E5A138','#6B21A8'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Belasting: €\u00A0${c.parsed.y.toLocaleString('nl-NL')},-`}}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>'€\u00A0'+(v/1000).toFixed(1)+'k'},grid:{color:'#EEF2F6'}}}}});
+
+  } else {
+    // Rendementsscenario's — wat-als bij verschillende rendementen
+    const rentes=[0,1,2,3,4,5,6,7,8,9,10];
+    const spaar=ff.spaar, beleg=ff.beleg+ff.woz, hvv=ff.hvv;
+    const totaalVerm=ff.totaalVermogen;
+    const bels=rentes.map(r=>{
+      const rend=(spaar*BOX3_2026.r_bank+beleg*(r/100))-ff.rendSchuld;
+      const aandeel=totaalVerm>0?Math.min(1,Math.max(0,(totaalVerm-hvv)/totaalVerm)):0;
+      return Math.max(0,rend*aandeel*BOX3_2026.tarief);
+    });
+    grafObj=new Chart(ctx,{type:'line',data:{labels:rentes.map(r=>r+'%'),datasets:[
+      {label:'Box 3 belasting bij rendement X%',data:bels,borderColor:'#003057',backgroundColor:'rgba(0,48,87,.1)',borderWidth:2.5,fill:true,tension:.3,pointRadius:3},
+      {label:'Forfait (huidig)',data:rentes.map(()=>ff.belasting),borderColor:'#E5A138',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{font:{family:'DM Sans',size:12},color:'#333',boxWidth:14}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: €\u00A0${Math.round(c.parsed.y).toLocaleString('nl-NL')},-`}}},scales:{x:{title:{display:true,text:'Rendement beleggingen/vastgoed'},grid:{color:'#EEF2F6'}},y:{ticks:{callback:v=>'€\u00A0'+(v/1000).toFixed(1)+'k'},grid:{color:'#EEF2F6'}}}}});
+  }
+}
+
+// Init
+updateTotaal();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

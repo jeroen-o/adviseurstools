@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rentevaste Periode Check</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --navy:    #0A1628;
+  --blue:    #1255A3;
+  --sky:     #2B8BE0;
+  --ice:     #E8F3FD;
+  --teal:    #0E7C7B;
+  --amber:   #D4820A;
+  --red:     #C0392B;
+  --green:   #16794C;
+  --bg:      #F0F4FA;
+  --card:    #FFFFFF;
+  --border:  #D6DEF0;
+  --text:    #0D1B2A;
+  --muted:   #5A6A80;
+  --toets:   5; /* 5% toetsrente */
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Sora', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+.shell { max-width: 680px; margin: 0 auto; padding: 0 1rem 3rem; }
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.header {
+  background: var(--navy);
+  padding: 1.75rem 2rem 1.5rem;
+  margin-bottom: 1.75rem;
+  border-radius: 0 0 20px 20px;
+  position: relative; overflow: hidden;
+}
+.header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--sky), var(--teal));
+}
+.header::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: rgba(43,139,224,.08);
+}
+.h-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: .4rem; }
+.h-title { font-family: 'DM Serif Display', serif; font-size: 26px; color: #fff; margin-bottom: .3rem; line-height: 1.2; }
+.h-title em { color: #7EC8F5; font-style: normal; }
+.h-sub { font-size: 13px; color: rgba(255,255,255,.65); }
+.toetsrente-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(43,139,224,.2); border: 1px solid rgba(43,139,224,.4);
+  color: #7EC8F5; font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 20px; margin-top: .75rem;
+  letter-spacing: .04em;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  margin-bottom: 1rem; box-shadow: 0 2px 12px rgba(10,22,40,.07);
+}
+.card-head {
+  background: linear-gradient(135deg, #f8faff 0%, #eef4fc 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 1.1rem 1.5rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.card-head-icon { font-size: 18px; }
+.card-head h2 { font-size: 15px; font-weight: 700; color: var(--navy); }
+.card-body { padding: 1.5rem; }
+
+/* ── Fields ─────────────────────────────────────────────────────────── */
+.field { margin-bottom: 1.25rem; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block; font-size: 12px; font-weight: 700;
+  color: var(--blue); text-transform: uppercase; letter-spacing: .06em;
+  margin-bottom: 7px;
+}
+.hint { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+
+.iw { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
+.iw:focus-within { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(43,139,224,.12); }
+.iw .pre { padding: 0 13px; font-size: 14px; color: var(--muted); background: var(--bg); border-right: 1.5px solid var(--border); height: 42px; display: flex; align-items: center; font-weight: 600; white-space: nowrap; }
+.iw .suf { padding: 0 13px; font-size: 14px; color: var(--muted); background: var(--bg); border-left: 1.5px solid var(--border); height: 42px; display: flex; align-items: center; font-weight: 600; }
+.iw input { border: none; flex: 1; padding: 0 13px; height: 42px; font-size: 15px; color: var(--text); outline: none; background: #fff; width: 100%; font-family: 'Sora', sans-serif; }
+input[type=date], input[type=number], select {
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 0 13px; height: 42px; font-size: 15px; color: var(--text);
+  outline: none; background: #fff; width: 100%;
+  font-family: 'Sora', sans-serif; transition: border-color .2s, box-shadow .2s;
+}
+input:focus, select:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(43,139,224,.12); }
+select {
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235A6A80' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px; cursor: pointer;
+}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* Slider */
+.slider-row { display: flex; align-items: center; gap: 14px; margin-top: 7px; }
+input[type=range] { flex: 1; accent-color: var(--blue); cursor: pointer; }
+.sv { font-size: 16px; font-weight: 700; color: var(--navy); min-width: 56px; text-align: right; }
+
+/* Toggle */
+.tog { display: flex; gap: 8px; margin-top: 7px; }
+.tog-btn {
+  flex: 1; padding: 10px 0; border: 1.5px solid var(--border);
+  border-radius: 8px; font-size: 14px; cursor: pointer;
+  background: #fff; color: var(--muted); transition: all .15s;
+  text-align: center; font-family: 'Sora', sans-serif; font-weight: 500;
+}
+.tog-btn:hover { border-color: var(--sky); color: var(--navy); }
+.tog-btn.on { background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 600; }
+
+/* Callout */
+.callout {
+  background: var(--ice); border-left: 4px solid var(--sky);
+  border-radius: 0 8px 8px 0; padding: 11px 14px;
+  font-size: 13px; color: #1A3A5C; line-height: 1.55; margin-top: 1rem;
+}
+.callout strong { color: var(--blue); }
+
+/* Buttons */
+.btn-calc {
+  background: var(--blue); color: #fff; border: none;
+  border-radius: 8px; padding: 14px 28px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  width: 100%; margin-top: .75rem; transition: background .2s;
+  font-family: 'Sora', sans-serif; letter-spacing: .01em;
+  border-bottom: 3px solid #0A3D7A;
+}
+.btn-calc:hover { background: #0E47A1; }
+.btn-reset {
+  background: transparent; color: var(--muted);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 12px 24px; font-size: 14px; cursor: pointer;
+  font-family: 'Sora', sans-serif; transition: all .2s; width: 100%; margin-top: .5rem;
+}
+.btn-reset:hover { background: var(--bg); color: var(--navy); }
+.err { color: var(--red); font-size: 13px; margin-top: 8px; font-weight: 600; min-height: 18px; }
+
+/* ── Results ─────────────────────────────────────────────────────────── */
+.result-hero {
+  border-radius: 14px; padding: 2rem 1.75rem;
+  margin-bottom: 1rem; text-align: center;
+  box-shadow: 0 4px 24px rgba(10,22,40,.14);
+  position: relative; overflow: hidden;
+}
+.result-hero.ok  { background: linear-gradient(135deg, #0A4A2F 0%, #16794C 100%); }
+.result-hero.warn{ background: linear-gradient(135deg, #6B3A06 0%, #D4820A 100%); }
+.result-hero.fail{ background: linear-gradient(135deg, #5C1A14 0%, #C0392B 100%); }
+.result-hero::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(255,255,255,.06);
+}
+.verdict-icon { font-size: 44px; margin-bottom: .5rem; }
+.verdict-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: #fff; margin-bottom: .4rem; }
+.verdict-sub { font-size: 13px; color: rgba(255,255,255,.75); max-width: 360px; margin: 0 auto; }
+
+/* Metric grid */
+.metric-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 1rem;
+}
+.metric {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: .9rem 1.1rem;
+  box-shadow: 0 1px 6px rgba(10,22,40,.05);
+}
+.metric-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
+.metric-val { font-size: 22px; font-weight: 700; color: var(--navy); line-height: 1; }
+.metric-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.metric.hi { border-top: 3px solid var(--red); }
+.metric.ok { border-top: 3px solid var(--green); }
+.metric.neu { border-top: 3px solid var(--sky); }
+.metric.warn { border-top: 3px solid var(--amber); }
+
+/* Bar comparison */
+.bar-section {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem;
+  margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(10,22,40,.05);
+}
+.bar-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 1.25rem; }
+.bar-row { margin-bottom: 1.1rem; }
+.bar-row:last-child { margin-bottom: 0; }
+.bar-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+.bar-lbl { font-size: 13px; font-weight: 600; color: var(--text); }
+.bar-amt { font-size: 14px; font-weight: 700; color: var(--navy); }
+.bar-track { height: 10px; background: var(--bg); border-radius: 5px; overflow: hidden; border: 1px solid var(--border); }
+.bar-fill { height: 100%; border-radius: 5px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+
+/* Breakdown table */
+.breakdown {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(10,22,40,.05);
+}
+.breakdown-head {
+  background: linear-gradient(135deg, #f0f5ff 0%, #e6eefa 100%);
+  padding: .9rem 1.25rem; border-bottom: 1px solid var(--border);
+  font-size: 14px; font-weight: 700; color: var(--navy);
+}
+.bd-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .75rem 1.25rem; border-bottom: 1px solid #f0f4fa;
+  font-size: 13px;
+}
+.bd-row:last-child { border-bottom: none; }
+.bd-row.total {
+  background: var(--bg); font-weight: 700; font-size: 14px;
+  border-top: 2px solid var(--border);
+}
+.bd-lbl { color: var(--muted); }
+.bd-val { font-weight: 600; color: var(--navy); }
+.bd-row.total .bd-lbl, .bd-row.total .bd-val { color: var(--navy); }
+
+/* Action card */
+.actions {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(10,22,40,.05);
+}
+.actions-head { background: var(--bg); padding: .9rem 1.25rem; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 700; color: var(--navy); }
+.act { display: flex; gap: 12px; align-items: flex-start; padding: .85rem 1.25rem; border-bottom: 1px solid #f0f4fa; }
+.act:last-child { border-bottom: none; }
+.act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.act-text { font-size: 13px; color: var(--text); line-height: 1.55; }
+.act-text strong { color: var(--navy); }
+
+/* Print */
+.print-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: #fff; color: var(--navy); border: 1.5px solid var(--navy);
+  border-radius: 8px; padding: 12px 20px; font-size: 14px; font-weight: 600;
+  cursor: pointer; width: 100%; margin-top: 10px; transition: all .2s;
+  font-family: 'Sora', sans-serif;
+}
+.print-btn:hover { background: var(--navy); color: #fff; }
+.disc { font-size: 11px; color: #aaa; margin-top: 1.5rem; line-height: 1.65; border-top: 1px solid var(--border); padding-top: 1rem; }
+.hidden { display: none !important; }
+.fade-in { animation: fi .35s ease both; }
+@keyframes fi { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+@media (max-width: 480px) {
+  .two-col { grid-template-columns: 1fr; }
+  .metric-grid { grid-template-columns: 1fr; }
+  .tog { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="h-eyebrow">Hypotheekcheck</div>
+    <div class="h-title">Betaalbaar aan het einde van de <em>rentevaste periode?</em></div>
+    <div class="h-sub">Check of je hypotheek doorloopt bij de toetsrente — ruim vóór de verlengingsdatum.</div>
+    <div class="toetsrente-badge">⚡ Toetsrente: 5,0%</div>
+  </div>
+
+  <!-- FORMULIER -->
+  <div id="form-section">
+
+    <!-- HYPOTHEEK -->
+    <div class="card fade-in">
+      <div class="card-head">
+        <span class="card-head-icon">🏠</span>
+        <h2>Jouw hypotheek</h2>
+      </div>
+      <div class="card-body">
+        <div class="two-col">
+          <div class="field">
+            <label>Huidige hypotheekschuld</label>
+            <div class="iw"><div class="pre">€</div><input type="number" id="schuld" placeholder="320.000" min="0" step="1000"></div>
+          </div>
+          <div class="field">
+            <label>Huidige rente</label>
+            <div class="iw"><input type="number" id="rente-huidig" placeholder="3,5" min="0" max="15" step="0.01" style="text-align:right"><div class="suf">%</div></div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Einde rentevaste periode</label>
+            <input type="date" id="einde-rvp" min="2025-01-01" onchange="checkLeeftijd()">
+          </div>
+          <div class="field">
+            <label>Einde looptijd hypotheek</label>
+            <input type="date" id="einde-looptijd" min="2025-01-01" onchange="checkLeeftijd()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Geboortedatum aanvrager</label>
+          <input type="date" id="gebdatum" max="2010-01-01" min="1940-01-01" onchange="checkLeeftijd()">
+        </div>
+        <div class="field">
+          <label>Hypotheekvorm</label>
+          <select id="hyp-vorm">
+            <option value="">— Kies —</option>
+            <option value="ann">Annuïteit</option>
+            <option value="lin">Lineair</option>
+            <option value="vr">Aflossingsvrij</option>
+            <option value="mix">Mix (deel aflossingsvrij)</option>
+          </select>
+        </div>
+        <div class="field hidden" id="mix-wrap">
+          <label>Aflossingsvrij deel</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="schuld-vr" placeholder="150.000" min="0" step="1000"></div>
+          <p class="hint">Het annuïtaire of lineaire deel is het verschil met de totale schuld.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- INKOMEN -->
+    <div class="card fade-in" style="animation-delay:.08s">
+      <div class="card-head">
+        <span class="card-head-icon">💼</span>
+        <h2>Inkomen</h2>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Bruto jaarinkomen aanvrager</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="ink1" placeholder="65.000" min="0" step="1000"></div>
+        </div>
+        <div class="field">
+          <label>Heb je een partner / tweede inkomen?</label>
+          <div class="tog">
+            <div class="tog-btn" id="ptj" onclick="togP('ja')">Ja</div>
+            <div class="tog-btn" id="ptn" onclick="togP('nee')">Nee</div>
+          </div>
+        </div>
+        <div class="field hidden" id="ink2-wrap">
+          <label>Bruto jaarinkomen partner</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="ink2" placeholder="40.000" min="0" step="1000"></div>
+        </div>
+        <!-- Pensioeninkomen — alleen tonen als klant > 57 op einddatum hyp -->
+        <div id="pensioen-wrap" class="hidden">
+          <div style="height:1px;background:var(--border);margin:1.25rem 0"></div>
+          <div class="callout" style="background:#FFF8EC;border-color:var(--amber);color:#4A2800;margin-bottom:1rem">
+            <strong>⚠️ Pensioenleeftijd bereikt:</strong> De aanvrager is ouder dan 57 jaar op de einddatum van de hypotheek. Voer het verwachte pensioeninkomen in — dit wordt gebruikt voor de inkomenstoetsing.
+          </div>
+          <div class="field">
+            <label>Bruto pensioeninkomen aanvrager / jaar</label>
+            <div class="iw"><div class="pre">€</div><input type="number" id="pensioen1" placeholder="28.000" min="0" step="500"></div>
+            <p class="hint">AOW + aanvullend pensioen. Zie mijnpensioenoverzicht.nl.</p>
+          </div>
+          <div id="pensioen2-wrap" class="hidden">
+            <div class="field">
+              <label>Bruto pensioeninkomen partner / jaar</label>
+              <div class="iw"><div class="pre">€</div><input type="number" id="pensioen2" placeholder="18.000" min="0" step="500"></div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>Toetsing:</strong> Bij het einde van de rentevaste periode wordt getoetst of de maandlast bij <strong>5% rente</strong> past binnen de woonlastennorm van jouw inkomen (GHF/Nibud-staffel). Een aflossingsvrije hypotheek wordt bij hertoetsing omgezet naar <strong>annuïtair</strong>.
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="bereken()">Bereken betaalbaarheid →</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div id="results" class="hidden">
+
+    <div id="verdict-hero" class="result-hero fade-in"></div>
+
+    <div class="metric-grid fade-in" id="metric-grid"></div>
+
+    <div class="bar-section fade-in">
+      <div class="bar-title">Maandlastvergelijking</div>
+      <div id="bar-rows"></div>
+    </div>
+
+    <div class="breakdown fade-in">
+      <div class="breakdown-head">Berekening bij toetsrente 5,0%</div>
+      <div id="bd-rows"></div>
+    </div>
+
+    <div class="actions fade-in">
+      <div class="actions-head">Aandachtspunten & aanbevelingen</div>
+      <div id="act-rows"></div>
+    </div>
+
+    <div class="btn-row" style="display:flex;gap:10px;margin-top:.5rem">
+      <button class="btn-reset" onclick="reset()" style="flex:1">Opnieuw berekenen</button>
+    </div>
+    <button class="print-btn" onclick="doPrint()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Resultaat afdrukken / opslaan als PDF
+    </button>
+    <div class="disc">
+      <strong>Disclaimer:</strong> Dit is een indicatieve berekening. De gehanteerde toetsrente van 5% is conform de gangbare marktpraktijk bij het verlengen van hypotheken, maar kan afwijken per geldverstrekker en situatie. De uitkomst vervangt geen professioneel hypotheekadvies. Raadpleeg een erkend hypotheekadviseur voor een volledig beeld. | GHF-woonlastpercentages 2026 zijn indicatief.
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────────────
+var S = { partner: null };
+var TOETS = 5.0; // toetsrente %
+
+// ── GHF woonlastenpercentages 2026 (bruto jaarinkomen → max woonlastnorm %)
+// Bron: GHF staffel — inkomen gestandaardiseerd naar HH
+var GHF = [
+  { tot: 25000,  pct: 19.0 },
+  { tot: 30000,  pct: 22.0 },
+  { tot: 35000,  pct: 25.0 },
+  { tot: 40000,  pct: 27.0 },
+  { tot: 45000,  pct: 28.5 },
+  { tot: 50000,  pct: 30.0 },
+  { tot: 55000,  pct: 31.5 },
+  { tot: 60000,  pct: 33.0 },
+  { tot: 70000,  pct: 34.5 },
+  { tot: 80000,  pct: 35.5 },
+  { tot: 90000,  pct: 36.5 },
+  { tot: 100000, pct: 37.5 },
+  { tot: Infinity, pct: 38.0 }
+];
+
+function ghfNorm(brutoJaar) {
+  for (var i = 0; i < GHF.length; i++) {
+    if (brutoJaar <= GHF[i].tot) return GHF[i].pct;
+  }
+  return 38.0;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function sv(id, outId, suf) { document.getElementById(outId).textContent = document.getElementById(id).value + suf; }
+function iv(id, def) { var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? (def || 0) : v; }
+function fmt(n) { return '€\u00a0' + Math.round(n).toLocaleString('nl-NL'); }
+function fmtK(n) { return '€\u00a0' + (n / 1000).toFixed(0) + 'k'; }
+function fmtPct(n) { return n.toFixed(1).replace('.', ',') + '%'; }
+
+// Annuïtaire maandlast
+function annuMaand(hoofdsom, jaarRentePct, looptijdJaren) {
+  if (looptijdJaren <= 0 || hoofdsom <= 0) return 0;
+  var r = jaarRentePct / 100 / 12;
+  var n = looptijdJaren * 12;
+  if (r === 0) return hoofdsom / n;
+  return hoofdsom * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+}
+
+// Lineaire maandlast (eerste maand = hoogst)
+function linMaand(hoofdsom, jaarRentePct, looptijdJaren) {
+  if (looptijdJaren <= 0 || hoofdsom <= 0) return 0;
+  var n = looptijdJaren * 12;
+  var afloss = hoofdsom / n;
+  var rente = hoofdsom * jaarRentePct / 100 / 12;
+  return afloss + rente; // eerste / hoogste maandlast
+}
+
+// Aflossingsvrij
+function vrMaand(hoofdsom, jaarRentePct) {
+  return hoofdsom * jaarRentePct / 100 / 12;
+}
+
+// Jaren tot datum
+function jarenTot(dateStr) {
+  if (!dateStr) return 0;
+  var nu = new Date();
+  var dan = new Date(dateStr);
+  return Math.max(0, (dan - nu) / (365.25 * 24 * 3600 * 1000));
+}
+
+// Schuld op einddatum RVP (na aflossingen)
+function schuldOpDatum(schuld, vorm, schuldVr, jaarRente, looptijdJaren, jarenVerstreken) {
+  if (jarenVerstreken <= 0) return schuld;
+  var n = looptijdJaren * 12;
+  var k = Math.round(jarenVerstreken * 12);
+  if (k >= n) return 0;
+  if (vorm === 'vr') return schuld;
+  if (vorm === 'lin') return schuld - (schuld / n) * k;
+  if (vorm === 'mix') {
+    var schuldAnn = schuld - schuldVr;
+    var r = jaarRente / 100 / 12;
+    var restAnn = r > 0
+      ? schuldAnn * (Math.pow(1+r,n) - Math.pow(1+r,k)) / (Math.pow(1+r,n) - 1)
+      : schuldAnn * (1 - k/n);
+    return restAnn + schuldVr;
+  }
+  // Annuïteit
+  var r = jaarRente / 100 / 12;
+  if (r === 0) return schuld * (1 - k/n);
+  return schuld * (Math.pow(1+r,n) - Math.pow(1+r,k)) / (Math.pow(1+r,n) - 1);
+}
+
+function togP(val) {
+  S.partner = val;
+  document.getElementById('ptj').className = 'tog-btn' + (val==='ja'?' on':'');
+  document.getElementById('ptn').className = 'tog-btn' + (val==='nee'?' on':'');
+  document.getElementById('ink2-wrap').classList.toggle('hidden', val !== 'ja');
+  // Partner pensioen ook tonen/verbergen
+  var p2 = document.getElementById('pensioen2-wrap');
+  if (p2) p2.classList.toggle('hidden', val !== 'ja');
+}
+
+document.getElementById('hyp-vorm').addEventListener('change', function() {
+  document.getElementById('mix-wrap').classList.toggle('hidden', this.value !== 'mix');
+});
+
+// ── Leeftijdscheck: is aanvrager > 57 op einddatum hypotheek? ─────────
+function checkLeeftijd() {
+  var geb       = document.getElementById('gebdatum').value;
+  var eindHyp   = document.getElementById('einde-looptijd').value;
+  if (!geb || !eindHyp) return;
+  var gebD   = new Date(geb);
+  var eindD  = new Date(eindHyp);
+  var leeftijdOpEind = (eindD - gebD) / (365.25 * 24 * 3600 * 1000);
+  S.ouderDan57 = leeftijdOpEind > 57;
+  var wrap = document.getElementById('pensioen-wrap');
+  if (wrap) wrap.classList.toggle('hidden', !S.ouderDan57);
+  // Bereken resterende looptijd in jaren automatisch
+  var nu = new Date();
+  var looptijdJaren = Math.max(1, Math.round((eindD - nu) / (365.25 * 24 * 3600 * 1000)));
+  S.looptijdJaren = looptijdJaren;
+}
+
+// ── Berekening ────────────────────────────────────────────────────────
+function bereken() {
+  var err = document.getElementById('err');
+  var schuld      = iv('schuld');
+  var renteHuidig = iv('rente-huidig');
+  var eindRVP     = document.getElementById('einde-rvp').value;
+  var eindHyp     = document.getElementById('einde-looptijd').value;
+  var gebdatum    = document.getElementById('gebdatum').value;
+  var vorm        = document.getElementById('hyp-vorm').value;
+  var ink1        = iv('ink1');
+
+  if (!schuld)    { err.textContent = 'Vul de hypotheekschuld in.'; return; }
+  if (!eindRVP)   { err.textContent = 'Vul de einddatum van de rentevaste periode in.'; return; }
+  if (!eindHyp)   { err.textContent = 'Vul de einddatum van de hypotheek in.'; return; }
+  if (!gebdatum)  { err.textContent = 'Vul je geboortedatum in.'; return; }
+  if (!vorm)      { err.textContent = 'Kies de hypotheekvorm.'; return; }
+  if (!ink1)      { err.textContent = 'Vul je bruto jaarinkomen in.'; return; }
+  if (S.partner === null) { err.textContent = 'Geef aan of je een partner hebt.'; return; }
+  err.textContent = '';
+
+  // ── Datumberekeningen ──────────────────────────────────────────────
+  var nu       = new Date();
+  var eindRVPd = new Date(eindRVP);
+  var eindHypd = new Date(eindHyp);
+  var gebD     = new Date(gebdatum);
+
+  // Looptijd totaal in jaren (nu → einde hypotheek)
+  var looptijd = Math.max(1, (eindHypd - nu) / (365.25*24*3600*1000));
+
+  // Jaren tot einde RVP
+  var jaarTotRVP = Math.max(0, (eindRVPd - nu) / (365.25*24*3600*1000));
+
+  // Resterende looptijd na RVP (einde RVP → einde hypotheek)
+  var looptijdRest = Math.max(1, (eindHypd - eindRVPd) / (365.25*24*3600*1000));
+
+  // Leeftijd op einddatum hypotheek
+  var leeftijdOpEind = (eindHypd - gebD) / (365.25*24*3600*1000);
+  var isPensioen = leeftijdOpEind > 57;
+
+  // Leeftijd op einddatum RVP (voor pensioentoetsing)
+  var leeftijdOpRVP = (eindRVPd - gebD) / (365.25*24*3600*1000);
+  var isPensioenOpRVP = leeftijdOpRVP > 57;
+
+  // ── Inkomen ────────────────────────────────────────────────────────
+  var ink2 = S.partner === 'ja' ? iv('ink2') : 0;
+
+  // Gebruik pensioeninkomen als klant > 57 op einddatum RVP
+  var ink1Toets, ink2Toets;
+  if (isPensioenOpRVP) {
+    ink1Toets = iv('pensioen1') || ink1; // fallback naar arbeidsinkomen
+    ink2Toets = S.partner === 'ja' ? (iv('pensioen2') || ink2) : 0;
+  } else {
+    ink1Toets = ink1;
+    ink2Toets = ink2;
+  }
+  var inkTot      = ink1 + ink2;           // huidig inkomen (voor huidige last)
+  var inkTotToets = ink1Toets + ink2Toets; // toetsinkomen op einde RVP
+
+  var schuldVr = (vorm === 'mix') ? iv('schuld-vr') : (vorm === 'vr' ? schuld : 0);
+
+  // Schuld op einde RVP
+  var schuldRVP = schuldOpDatum(schuld, vorm, schuldVr, renteHuidig, looptijd, jaarTotRVP);
+
+  // ── Maandlasten ───────────────────────────────────────────────────
+  // Huidig: zoals contract
+  var mlHuidig = berekenML(schuld, schuldVr, renteHuidig, looptijd, vorm);
+
+  // Bij toetsrente: aflossingsvrij wordt ALTIJD omgezet naar annuïtair
+  // Conform praktijk: geldverstrekker zal bij hertoetsing annuïtaire last hanteren
+  var vormToets;
+  if (vorm === 'vr') {
+    vormToets = 'ann'; // volledig aflossingsvrij → volledig annuïtair
+  } else if (vorm === 'mix') {
+    vormToets = 'mix-ann'; // mix: aflossingsvrij deel ook annuïtair
+  } else {
+    vormToets = vorm;
+  }
+  var mlToets = berekenMLToets(schuldRVP, schuldVr, TOETS, looptijdRest, vorm);
+
+  // ── Norm op toetsinkomen ──────────────────────────────────────────
+  var inkMndToets = inkTotToets / 12;
+  var normPct     = ghfNorm(inkTotToets);
+  var maxML       = inkMndToets * normPct / 100;
+
+  var inkMnd      = inkTot / 12; // huidig (voor display)
+  var wlrToets    = inkMndToets > 0 ? mlToets / inkMndToets * 100 : 100;
+
+  var verschil = maxML - mlToets;
+  var ruimte   = verschil >= 0;
+  var kritisch = !ruimte && Math.abs(verschil) < maxML * 0.10;
+
+  renderResults({
+    schuld, schuldRVP, schuldVr, looptijd, looptijdRest,
+    renteHuidig, vorm, mlHuidig, mlToets, inkTot, inkMnd,
+    inkTotToets, inkMndToets, normPct, maxML, wlrToets,
+    verschil, ruimte, kritisch, jaarTotRVP, eindRVP,
+    ink1, ink2, ink1Toets, ink2Toets,
+    isPensioenOpRVP, leeftijdOpRVP: Math.round(leeftijdOpRVP),
+    leeftijdOpEind: Math.round(leeftijdOpEind),
+    omgezettNaarAnn: (vorm === 'vr' || vorm === 'mix')
+  });
+}
+
+function berekenML(schuld, schuldVr, rente, looptijd, vorm) {
+  if (vorm === 'vr') return vrMaand(schuld, rente);
+  if (vorm === 'lin') return linMaand(schuld, rente, looptijd);
+  if (vorm === 'mix') {
+    var schuldAnn = Math.max(0, schuld - schuldVr);
+    return annuMaand(schuldAnn, rente, looptijd) + vrMaand(schuldVr, rente);
+  }
+  return annuMaand(schuld, rente, looptijd);
+}
+
+// Toets-maandlast: aflossingsvrij (deel) wordt omgezet naar annuïtair
+// Conform geldverstrekkers-praktijk: bij hertoetsing wordt aflossingsvrij
+// niet meer geaccepteerd zonder annuïtaire toetsing
+function berekenMLToets(schuld, schuldVr, rente, looptijd, vorm) {
+  if (vorm === 'vr') {
+    // Volledig aflossingsvrij → volledig annuïtair bij toets
+    return annuMaand(schuld, rente, looptijd);
+  }
+  if (vorm === 'mix') {
+    // Mix: aflossingsvrij deel ook annuïtair toetsen
+    var schuldAfl = Math.max(0, schuld - schuldVr);
+    return annuMaand(schuldAfl, rente, looptijd) + annuMaand(schuldVr, rente, looptijd);
+  }
+  if (vorm === 'lin') return linMaand(schuld, rente, looptijd);
+  return annuMaand(schuld, rente, looptijd);
+}
+
+function renderResults(d) {
+  // ── Verdict hero ─────────────────────────────────────────────────
+  var heroEl = document.getElementById('verdict-hero');
+  var heroClass, icon, title, sub;
+  if (d.ruimte) {
+    heroClass = 'ok';
+    icon = '✅';
+    title = 'Betaalbaar bij toetsrente';
+    sub = 'Bij een rente van 5% past de maandlast ruim binnen jouw inkomensnorm. Je kunt de hypotheek aan het einde van de rentevaste periode verlengen.';
+  } else if (d.kritisch) {
+    heroClass = 'warn';
+    icon = '⚠️';
+    title = 'Krap — aandacht vereist';
+    sub = 'De maandlast bij 5% overschrijdt de norm licht. Overleg met een adviseur over de mogelijkheden voor herfinanciering of extra aflossing.';
+  } else {
+    heroClass = 'fail';
+    icon = '🚨';
+    title = 'Niet betaalbaar bij toetsrente';
+    sub = 'Bij een rente van 5% overstijgt de maandlast de toegestane woonlast voor jouw inkomen. Actie is nodig vóór de verlengingsdatum.';
+  }
+  heroEl.className = 'result-hero fade-in ' + heroClass;
+  heroEl.innerHTML = '<div class="verdict-icon">'+icon+'</div>'
+    + '<div class="verdict-title">'+title+'</div>'
+    + '<div class="verdict-sub">'+sub+'</div>';
+
+  // ── Metrics ───────────────────────────────────────────────────────
+  var jaarRest = Math.round(d.looptijdRest * 10) / 10;
+  var jaarTot  = Math.round(d.jaarTotRVP * 10) / 10;
+  var mlSub = 'toetsrente 5%' + (d.omgezettNaarAnn ? ' — ann. toetsing' : '');
+  var inkSub = d.isPensioenOpRVP
+    ? 'pensioeninkomen (leeftijd '+d.leeftijdOpRVP+'jr)'
+    : d.normPct.toFixed(1)+'% van bruto inkomen';
+  var metricsHtml = [
+    { cls:'neu', lbl:'Maandlast nu',           val:fmt(Math.round(d.mlHuidig)),  sub:'bij '+fmtPct(d.renteHuidig)+' rente' },
+    { cls:d.ruimte?'ok':'hi', lbl:'Maandlast bij 5%', val:fmt(Math.round(d.mlToets)), sub:mlSub },
+    { cls:d.ruimte?'ok':'warn', lbl:'Max. toegestaan',  val:fmt(Math.round(d.maxML)),   sub:inkSub },
+    { cls:d.verschil>=0?'ok':'hi', lbl:d.verschil>=0?'Maandelijkse ruimte':'Maandelijks tekort', val:fmt(Math.round(Math.abs(d.verschil))), sub:'verschil norm vs. last' },
+  ].map(function(m) {
+    return '<div class="metric '+m.cls+'"><div class="metric-lbl">'+m.lbl+'</div><div class="metric-val">'+m.val+'</div><div class="metric-sub">'+m.sub+'</div></div>';
+  }).join('');
+  document.getElementById('metric-grid').innerHTML = metricsHtml;
+
+  // ── Bar rows ──────────────────────────────────────────────────────
+  var maxBar = Math.max(d.mlHuidig, d.mlToets, d.maxML) * 1.1;
+  var bars = [
+    { lbl:'Maandlast huidig ('+fmtPct(d.renteHuidig)+')', amt:d.mlHuidig, col:'#2B8BE0' },
+    { lbl:'Maandlast toetsrente (5%)',                     amt:d.mlToets,  col: d.ruimte ? '#16794C' : '#C0392B' },
+    { lbl:'Max. woonlast ('+fmtPct(d.normPct)+' van inkomen)', amt:d.maxML, col:'#0E7C7B' },
+  ];
+  document.getElementById('bar-rows').innerHTML = bars.map(function(b) {
+    var w = Math.min(100, b.amt / maxBar * 100);
+    return '<div class="bar-row">'
+      + '<div class="bar-meta"><span class="bar-lbl">'+b.lbl+'</span><span class="bar-amt">'+fmt(Math.round(b.amt))+'/mnd</span></div>'
+      + '<div class="bar-track"><div class="bar-fill" style="width:0%;background:'+b.col+'" data-w="'+w.toFixed(0)+'"></div></div>'
+      + '</div>';
+  }).join('');
+  // Animate bars
+  setTimeout(function() {
+    document.querySelectorAll('.bar-fill').forEach(function(el) {
+      el.style.width = el.getAttribute('data-w') + '%';
+    });
+  }, 150);
+
+  // ── Breakdown ─────────────────────────────────────────────────────
+  var vormLbl = {ann:'Annuïteit', lin:'Lineair', vr:'Aflossingsvrij', mix:'Mix'}[d.vorm] || d.vorm;
+  var vormToetsLbl = (d.vorm==='vr') ? 'Annuïteit (omgezet van aflossingsvrij)' :
+                     (d.vorm==='mix') ? 'Mix — aflossingsvrij deel ook ann. getoetst' : vormLbl;
+  var renteComp  = d.schuldRVP * TOETS / 100 / 12;
+  var aflossComp = d.mlToets - renteComp;
+  var rows = [
+    { lbl:'Resterende schuld op einddatum RVP', val:fmt(Math.round(d.schuldRVP)) },
+    { lbl:'Resterende looptijd', val:Math.round(d.looptijdRest) + ' jaar' },
+    { lbl:'Huidige hypotheekvorm', val:vormLbl },
+    { lbl:'Toetsvorm (bij verlenging)', val:vormToetsLbl },
+    { lbl:'Toetsrente', val:fmtPct(TOETS) },
+    { lbl:'Rentecomponent (5%)', val:fmt(Math.round(renteComp)) + '/mnd' },
+    { lbl:'Aflossingscomponent', val:fmt(Math.round(aflossComp)) + '/mnd' },
+  ];
+  if (d.isPensioenOpRVP) {
+    rows.push({ lbl:'Toetsinkomen aanvrager', val:fmt(d.ink1Toets) + '/jr (pensioen)', highlight:true });
+    if (d.ink2Toets > 0) rows.push({ lbl:'Toetsinkomen partner', val:fmt(d.ink2Toets) + '/jr (pensioen)', highlight:true });
+    rows.push({ lbl:'Leeftijd op einddatum RVP', val:d.leeftijdOpRVP + ' jaar' });
+  }
+  document.getElementById('bd-rows').innerHTML = rows.map(function(r) {
+    return '<div class="bd-row'+(r.highlight?' total':'')+'">'
+      + '<span class="bd-lbl">'+r.lbl+'</span>'
+      + '<span class="bd-val">'+r.val+'</span></div>';
+  }).join('')
+  + '<div class="bd-row total"><span class="bd-lbl">Totale maandlast bij 5%</span><span class="bd-val">'+fmt(Math.round(d.mlToets))+'/mnd</span></div>';
+
+  // ── Actions ───────────────────────────────────────────────────────
+  var acts = [];
+  if (!d.ruimte) {
+    acts.push({ col:'#C0392B', txt:'<strong>Verlaag de schuld vóór de verlengingsdatum.</strong> Extra aflossingen verlagen de grondslag voor de toetsrente. Een extra aflossing van '
+      + fmt(Math.round(Math.abs(d.verschil) / (TOETS/100/12)))
+      + ' verlaagt de maandlast bij 5% met circa ' + fmt(Math.round(Math.abs(d.verschil))) + '/mnd.' });
+    acts.push({ col:'#D4820A', txt:'<strong>Overleg nu met een hypotheekadviseur</strong> over herfinanciering, verlengingsopties of de mogelijkheid van een langere looptijd. Hoe eerder je handelt, hoe meer opties er zijn.' });
+  }
+  if (d.wlrToets > 35) {
+    acts.push({ col:'#D4820A', txt:'<strong>Woonlastenratio ligt boven 35%</strong> van het bruto maandinkomen (' + fmtPct(d.wlrToets) + '). De Nibud-richtlijn adviseert maximaal 35% voor een gezonde financiële situatie.' });
+  }
+  if (d.vorm === 'vr') {
+    acts.push({ col:'#C0392B', txt:'<strong>Aflossingsvrij → Annuïtair:</strong> Geldverstrekkers toetsen bij verlenging of de klant de volledige annuïtaire last bij 5% kan dragen. De berekende maandlast van '
+      + fmt(Math.round(d.mlToets)) + '/mnd is gebaseerd op annuïtaire aflossing over de resterende looptijd. Dit is significant hoger dan de huidige rentelast van '
+      + fmt(Math.round(d.mlHuidig)) + '/mnd.' });
+  }
+  if (d.vorm === 'mix') {
+    acts.push({ col:'#D4820A', txt:'<strong>Aflossingsvrij deel (mix):</strong> Het aflossingsvrije deel van '
+      + fmt(d.schuldVr) + ' wordt bij toetsing ook annuïtair gerekend. Controleer of het aflossingsvrije deel maximaal 50% van de woningwaarde bedraagt.' });
+  }
+  if (d.isPensioenOpRVP) {
+    acts.push({ col:'#D4820A', txt:'<strong>Pensioentoetsing:</strong> De klant is '+d.leeftijdOpRVP+' jaar op de einddatum van de rentevaste periode. De inkomenstoets is gebaseerd op het opgegeven pensioeninkomen ('
+      + fmt(d.inkTotToets) + '/jr). Controleer of dit overeenkomt met het te verwachten pensioen via mijnpensioenoverzicht.nl.' });
+  }
+  if (jaarTot < 3) {
+    acts.push({ col:'#C0392B', txt:'<strong>De rentevaste periode eindigt binnen 3 jaar.</strong> Start de oriëntatie op verlengingsopties minimaal 1 jaar van tevoren om de beste rente te kunnen vastleggen.' });
+  }
+  if (d.ruimte && d.verschil > 0) {
+    acts.push({ col:'#16794C', txt:'<strong>Ruimte aanwezig:</strong> Je hebt maandelijks ' + fmt(Math.round(d.verschil)) + ' extra ruimte boven de toetslast. Overweeg dit deels in te zetten voor extra aflossing of opbouw van een rentebuffer.' });
+  }
+  acts.push({ col:'#0E7C7B', txt:'<strong>Blijf uw situatie monitoren.</strong> Inkomensontwikkeling, woningwaarde en rentestand veranderen. Herbereken jaarlijks of bij grote levensgebeurtenissen.' });
+
+  document.getElementById('act-rows').innerHTML = acts.map(function(a) {
+    return '<div class="act"><div class="act-dot" style="background:'+a.col+'"></div><div class="act-text">'+a.txt+'</div></div>';
+  }).join('');
+
+  // Show results
+  document.getElementById('form-section').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────
+function reset() {
+  ['schuld','rente-huidig','einde-rvp','einde-looptijd','gebdatum','ink1','ink2','schuld-vr','pensioen1','pensioen2'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  S.ouderDan57 = false;
+  var pw = document.getElementById('pensioen-wrap');
+  if (pw) pw.classList.add('hidden');
+  document.getElementById('hyp-vorm').value = '';
+  document.getElementById('sl-looptijd').value = 20;
+  document.getElementById('sv-looptijd').textContent = '20 jr';
+  S.partner = null;
+  document.getElementById('ptj').className = 'tog-btn';
+  document.getElementById('ptn').className = 'tog-btn';
+  document.getElementById('ink2-wrap').classList.add('hidden');
+  document.getElementById('mix-wrap').classList.add('hidden');
+  document.getElementById('err').textContent = '';
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('form-section').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Print ─────────────────────────────────────────────────────────────
+function doPrint() {
+  var styles = '';
+  for (var i = 0; i < document.styleSheets.length; i++) {
+    try { var rs = document.styleSheets[i].cssRules; for (var j = 0; j < rs.length; j++) styles += rs[j].cssText + '\n'; } catch(e) {}
+  }
+  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8">'
+    + '<title>Rentevaste Periode Check</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">'
+    + '<style>' + styles
+    + 'body{background:#fff;max-width:680px;margin:0 auto;padding:1.5rem}'
+    + '.hidden{display:block!important}'
+    + '#form-section{display:none!important}'
+    + '.btn-calc,.btn-reset,.print-btn,.btn-row{display:none!important}'
+    + '.result-hero,.metric,.bar-section,.breakdown,.actions{page-break-inside:avoid}'
+    + '.result-hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + '</style></head><body>'
+    + document.querySelector('.header').outerHTML
+    + document.getElementById('results').innerHTML
+    + '<script>window.addEventListener("load",function(){setTimeout(function(){window.print();},600);});<\/script>'
+    + '</body></html>';
+  try {
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click();
+    setTimeout(function() { URL.revokeObjectURL(url); document.body.removeChild(a); }, 10000);
+  } catch(e) {
+    var w = window.open('', '_blank');
+    if (w && w.document) { w.document.open(); w.document.write(html); w.document.close(); }
+  }
+}
+</script>
+</body>
+</html>

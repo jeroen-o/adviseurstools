@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schenkingsvrijstelling 2026 — Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#004580;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#333;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--purple:#6B21A8;--purplt:#F5F3FF;
+  --shadow:0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:960px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:20px;}
+
+/* VRIJSTELLING KAARTJES BOVENAAN */
+.vrijst-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
+.vk{border-radius:12px;padding:15px 16px;border:1.5px solid var(--border);background:#fff;cursor:pointer;transition:all .17s;}
+.vk:hover{border-color:var(--navy);transform:translateY(-2px);}
+.vk.active{border-color:var(--navy);background:#EFF4F9;box-shadow:0 4px 14px rgba(0,48,87,.1);}
+.vk-ico{font-size:22px;margin-bottom:5px;}
+.vk-label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.vk-bedrag{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);line-height:1.1;}
+.vk-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:13px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:18px;}
+.card-body{padding:22px;}
+
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.s2{grid-column:span 2;}
+.s3{grid-column:1/-1;}
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:2px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:48px;}
+
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* HOOFD UITKOMST */
+.uitkomst-wrap{background:var(--navy);color:#fff;border-radius:12px;padding:22px 26px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.uw-main .uw-lbl{font-size:12px;opacity:.7;text-transform:uppercase;letter-spacing:.06em;}
+.uw-main .uw-bedrag{font-family:'DM Serif Display',serif;font-size:44px;line-height:1;}
+.uw-main .uw-sub{font-size:13px;opacity:.75;margin-top:4px;}
+.uw-side{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.uw-stat{text-align:right;}
+.uw-stat .sl{font-size:11px;opacity:.65;text-transform:uppercase;letter-spacing:.05em;}
+.uw-stat .sv{font-family:'DM Serif Display',serif;font-size:20px;}
+
+/* STRATEGIE KAARTEN */
+.strategie-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;}
+.sk{border-radius:12px;overflow:hidden;border:1.5px solid var(--border);}
+.sk.aanbevolen{border-color:var(--green);box-shadow:0 3px 14px rgba(26,138,80,.12);}
+.sk-head{padding:10px 14px;font-size:12.5px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px;}
+.sk-head.jaar{background:#6B7280;}
+.sk-head.eenmalig{background:var(--purple);}
+.sk-head.combo{background:var(--navy);}
+.sk-head.hoog{background:var(--orange);}
+.sk-body{padding:13px 14px;background:#fff;}
+.sk-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px solid #EEF2F6;}
+.sk-row:last-child{border-bottom:none;font-weight:700;color:var(--navy);font-size:13.5px;}
+.sk-row .neg{color:var(--red);}
+.sk-row .pos{color:var(--green);}
+.aanbevolen-badge{background:var(--grlt);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;}
+
+/* HYPOTHEEK EFFECT */
+.hyp-effect{background:#EFF4F9;border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+.hyp-effect h3{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:12px;}
+.hyp-bar-rij{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.hyp-bar-lbl{width:180px;font-size:12px;font-weight:600;color:var(--navy);flex-shrink:0;}
+.hyp-bar-bg{flex:1;height:20px;background:#D1DCE5;border-radius:4px;overflow:hidden;}
+.hyp-bar-fill{height:100%;border-radius:4px;transition:width .5s;}
+.hyp-bar-val{width:120px;text-align:right;font-size:12.5px;font-weight:700;color:var(--navy);flex-shrink:0;}
+
+/* SPREIDING TABEL */
+.stbl{width:100%;border-collapse:collapse;font-size:13px;}
+.stbl thead th{background:var(--navy);color:#fff;padding:8px 12px;text-align:left;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.stbl thead th:not(:first-child){text-align:right;}
+.stbl td{padding:8px 12px;border-bottom:1px solid var(--border);}
+.stbl td:not(:first-child){text-align:right;}
+.stbl tr:last-child td{border-bottom:none;font-weight:700;background:#F0F4F8;color:var(--navy);}
+.stbl .ok{color:var(--green);font-weight:700;}
+.stbl .bel{color:var(--red);}
+
+/* REGELS BOX */
+.regels-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.regel-card{border-radius:10px;padding:14px 16px;border:1.5px solid var(--border);background:#fff;font-size:12.5px;line-height:1.65;}
+.regel-card h4{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:7px;}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .vrijst-grid{grid-template-columns:1fr 1fr;}
+  .fg2,.fg3,.strategie-grid,.regels-grid{grid-template-columns:1fr;}
+  .s2,.s3{grid-column:span 1;}
+  .uw-side{grid-template-columns:1fr;}
+  .h-badges{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🎁</div>
+    <div>
+      <div class="h-title">Schenkingsvrijstelling 2026</div>
+      <div class="h-sub">Belastingvrij schenken · optimale strategie · effect op hypotheek</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">Jubelton weg</span>
+    <span class="badge gold">2026 bedragen</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- VRIJSTELLING KAARTEN (altijd zichtbaar) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;">
+    <div class="vk">
+      <div class="vk-ico">📅</div>
+      <div class="vk-label">Jaarlijks kind</div>
+      <div class="vk-bedrag">€ 6.908</div>
+      <div class="vk-sub">Elke leeftijd · per jaar</div>
+    </div>
+    <div class="vk">
+      <div class="vk-ico">⭐</div>
+      <div class="vk-label">Eenmalig vrij</div>
+      <div class="vk-bedrag">€ 33.129</div>
+      <div class="vk-sub">Kind 18–40 · eenmalig · vrij besteedbaar</div>
+    </div>
+    <div class="vk">
+      <div class="vk-ico">🎓</div>
+      <div class="vk-label">Eenmalig studie</div>
+      <div class="vk-bedrag">€ 69.009</div>
+      <div class="vk-sub">Kind 18–40 · dure studie · notarieel</div>
+    </div>
+    <div class="vk" style="background:var(--redlt);border-color:#F5B7B1;">
+      <div class="vk-ico">🚫</div>
+      <div class="vk-label">Jubelton</div>
+      <div class="vk-bedrag" style="font-size:16px;color:var(--red);text-decoration:line-through;">€ 106.671</div>
+      <div class="vk-sub" style="color:var(--red);">Afgeschaft per 1-1-2024</div>
+    </div>
+  </div>
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Situatie — schenker & ontvanger</div>
+    <div class="card-body">
+      <div class="fg3" style="margin-bottom:16px;">
+        <div class="sdiv s3">Ontvanger (kind / starter)</div>
+
+        <div class="field">
+          <label>Leeftijd kind / ontvanger</label>
+          <div class="iw">
+            <input type="number" id="leeftijd" value="28" min="18" max="50" step="1" class="rs" style="padding-right:50px;" oninput="updateLeeftijdHint()">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint" id="leeftijdHint"></span>
+        </div>
+        <div class="field">
+          <label>Al eenmalig verhoogde vrijstelling gebruikt?</label>
+          <select id="eenmaligGebruikt">
+            <option value="nee">Nee — nog niet eerder gebruikt</option>
+            <option value="ja">Ja — reeds benut</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Gewenst schenk­bedrag (dit jaar)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="schenkBedrag" value="50000" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+          <span class="hint" id="schenkHint"></span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Hypotheeksituatie starter</div>
+
+        <div class="field">
+          <label>Koopsom woning</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="koopsom" value="380000" min="0" step="5000" oninput="liveUpdate()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Eigen spaargeld starter (excl. schenking)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="eigenSpaargeld" value="30000" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Hypotheekrente</label>
+          <div class="iw"><span class="pre">%</span>
+            <input type="number" id="hyprente" value="3.80" min="0.1" max="12" step="0.01" class="rs" style="padding-left:26px;padding-right:42px;" oninput="liveUpdate()">
+          </div>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Spreidingsstrategie</div>
+
+        <div class="field">
+          <label>Jaarlijks spreiden over</label>
+          <div class="iw">
+            <input type="number" id="spreidJaren" value="5" min="1" max="20" step="1" class="rs" style="padding-right:50px;" oninput="liveUpdate()">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint">Elk jaar €6.908 belastingvrij → cumulatief bedrag</span>
+        </div>
+        <div class="field">
+          <label>Extra boven jaarlijkse vrijstelling (dit jaar)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="extraBedrag" value="0" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+          <span class="hint">Belastbaar deel — bereken hoeveel schenkbelasting</span>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="bereken()">🎁 Bereken optimale schenkstrategie</button>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Optimale strategie & belastingberekening</div>
+    <div class="card-body">
+      <div class="uitkomst-wrap" id="uitkomstWrap"></div>
+      <div class="strategie-grid" id="strategieGrid"></div>
+      <div class="hyp-effect" id="hypEffect"></div>
+    </div>
+  </div>
+
+  <!-- SPREIDING TABEL -->
+  <div class="card res-card" id="tblCard">
+    <div class="card-header"><div class="ico">📋</div>Spreidingsschema — jaarlijkse schenkingen</div>
+    <div class="card-body">
+      <div style="overflow-x:auto;"><table class="stbl" id="spreidTbl"></table></div>
+    </div>
+  </div>
+
+  <!-- SPELREGELS -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📚</div>Spelregels schenkingsvrijstelling 2026 (Belastingdienst)</div>
+    <div class="card-body">
+      <div class="regels-grid">
+        <div class="regel-card">
+          <h4>👨‍👩‍👧 Ouders = 1 schenker</h4>
+          Vader én moeder worden als 1 schenker gezien — ook bij scheiding. Je kunt de €6.908 dus maar 1× per jaar belastingvrij schenken per kind, niet 2×. Dit geldt ook voor de eenmalige verhoogde vrijstelling.
+        </div>
+        <div class="regel-card">
+          <h4>⭐ Eenmalige vrijstelling: regels</h4>
+          Kan maar 1× in het leven van het kind gebruikt worden (van dezelfde schenker). In het jaar van de eenmalige schenking komt de jaarlijkse €6.908 te vervallen. Het kind moet 18–40 jaar zijn (ook op 40e verjaardag). Kind moet aangifte doen bij Belastingdienst.
+        </div>
+        <div class="regel-card">
+          <h4>🏠 Jubelton afgeschaft</h4>
+          De verhoogde vrijstelling voor de eigen woning (ooit tot €106.671) is per <strong>1 januari 2024 volledig afgeschaft</strong>. Geen overgangsregeling. Wel kan de eenmalige vrije schenking van €33.129 vrij besteed worden, óók aan een woning.
+        </div>
+        <div class="regel-card">
+          <h4>💑 Partners = 1 ontvanger</h4>
+          Een schenking aan kind én schoonkind telt als 1 schenking. De vrijstelling verdubbelt niet bij partners. Wil je beiden bevoordelen? Doe aparte schenkingen aan ieder individueel, maar let op: de Belastingdienst telt ze bij elkaar op.
+        </div>
+        <div class="regel-card">
+          <h4>📆 Aangifte deadline</h4>
+          Ontvangen schenking boven vrijstelling? Aangifte schenkbelasting vóór <strong>1 maart</strong> van het jaar ná de schenking. Bij eenmalige verhoogde vrijstelling: aangifte ook als er niets betaald wordt (formeel vereist).
+        </div>
+        <div class="regel-card">
+          <h4>⚰️ 180-dagenregel</h4>
+          Overlijdt de schenker binnen 180 dagen na de schenking? Dan wordt de schenking alsnog bij de nalatenschap geteld voor erfbelasting — behalve de eenmalige verhoogde schenkingsvrijstelling. Die blijft buiten schot.
+        </div>
+        <div class="regel-card">
+          <h4>📑 Tarieven schenkbelasting 2026</h4>
+          <strong>Kind (tariefgroep I):</strong> 10% tot €158.669 · 20% daarboven<br>
+          <strong>Kleinkind:</strong> 18% tot €158.669 · 36% daarboven<br>
+          <strong>Overigen:</strong> 30% / 40%<br>
+          <strong>Jaarlijkse vrijstelling overigen:</strong> €2.769
+        </div>
+        <div class="regel-card">
+          <h4>💡 Familiehypotheek als alternatief</h4>
+          Ouders kunnen geld lenen aan het kind (familiehypotheek) in plaats van schenken. Het kind trekt rente af, de ouder ontvangt rente (belastbaar in box 1). Combinatie schenken + familiehypotheek kan zeer voordelig zijn. Vastleggen bij notaris aanbevolen.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── VRIJSTELLINGEN 2026 ───────────────────────────────────────────────────
+const VR = {
+  jaarlijksKind:  6908,
+  eenmaligVrij:  33129,
+  eenmaligStudie: 69009,
+  jaarlijksOverig: 2769,
+  tarief1grens:  158669,
+  tarief1:        0.10,
+  tarief2:        0.20,
+};
+
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n,dec=0){ if(isNaN(n)) return '—'; const neg=n<0; return (neg?'−\u00A0':'')+'\u00A0€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtPct(n,d=1){ return n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%'; }
+
+function updateLeeftijdHint(){
+  const l=N('leeftijd');
+  const el=document.getElementById('leeftijdHint');
+  if(l<18) el.innerHTML='<span style="color:var(--red);">Minimumleeftijd voor schenking is 18 jaar</span>';
+  else if(l>=40) el.innerHTML='<span style="color:var(--orange);">⚠ Leeftijd ≥40 → eenmalige verhoogde vrijstelling NIET meer van toepassing</span>';
+  else el.innerHTML=`<span style="color:var(--green);">✓ Leeftijd ${l}: eenmalig verhoogde vrijstelling beschikbaar (tot 40e verjaardag)</span>`;
+}
+
+function berekenSchenkbelasting(brutoBedrag, vrijstelling){
+  const belastbaar = Math.max(0, brutoBedrag - vrijstelling);
+  if(belastbaar <= 0) return 0;
+  const schijf1 = Math.min(belastbaar, VR.tarief1grens);
+  const schijf2 = Math.max(0, belastbaar - VR.tarief1grens);
+  return schijf1 * VR.tarief1 + schijf2 * VR.tarief2;
+}
+
+function liveUpdate(){
+  const bedrag = N('schenkBedrag');
+  const leeftijd = N('leeftijd');
+  const eenmaligGebruikt = document.getElementById('eenmaligGebruikt').value === 'ja';
+  const kanEenmalig = leeftijd >= 18 && leeftijd < 40 && !eenmaligGebruikt;
+
+  // Bereken belasting bij verschillende vrijstellingen
+  const belJaar = berekenSchenkbelasting(bedrag, VR.jaarlijksKind);
+  const belEenmalig = kanEenmalig ? berekenSchenkbelasting(bedrag, VR.eenmaligVrij) : null;
+
+  let hint = '';
+  if(bedrag <= VR.jaarlijksKind) hint = `<span style="color:var(--green);font-weight:700;">✓ Volledig belastingvrij (binnen jaarlijkse vrijstelling)</span>`;
+  else if(kanEenmalig && bedrag <= VR.eenmaligVrij) hint = `<span style="color:var(--green);font-weight:700;">✓ Belastingvrij met eenmalige vrijstelling (€${VR.eenmaligVrij.toLocaleString('nl-NL')})</span>`;
+  else hint = `Schenkbelasting: ${fmt(belJaar)} (jaarlijks) ${kanEenmalig?`· ${fmt(belEenmalig)} (eenmalig)`:''}<br><span style="color:var(--muted);">Gebruik de strategie-calculator voor optimalisatie</span>`;
+  document.getElementById('schenkHint').innerHTML = hint;
+}
+
+function bereken(){
+  const leeftijd      = N('leeftijd');
+  const schenkBedrag  = N('schenkBedrag');
+  const koopsom       = N('koopsom');
+  const eigenSpaargeld= N('eigenSpaargeld');
+  const hyprente      = N('hyprente');
+  const spreidJaren   = Math.max(1, Math.round(N('spreidJaren')));
+  const extraBedrag   = N('extraBedrag');
+  const eenmaligGebruikt = document.getElementById('eenmaligGebruikt').value === 'ja';
+  const kanEenmalig   = leeftijd >= 18 && leeftijd < 40 && !eenmaligGebruikt;
+
+  // Strategieën
+  const strategieen = [];
+
+  // 1. Alleen jaarlijkse vrijstelling dit jaar
+  const belJaar = berekenSchenkbelasting(schenkBedrag, VR.jaarlijksKind);
+  strategieen.push({
+    naam:'Jaarlijkse vrijstelling', klasse:'jaar',
+    ico:'📅', vrijstelling:VR.jaarlijksKind,
+    vrijBedrag:Math.min(schenkBedrag, VR.jaarlijksKind),
+    belastbaar:Math.max(0,schenkBedrag-VR.jaarlijksKind),
+    schenkbelasting:belJaar,
+    nettoKind:schenkBedrag-belJaar,
+    toelichting:'Elk jaar opnieuw beschikbaar',
+  });
+
+  // 2. Eenmalige vrijstelling (als van toepassing)
+  if(kanEenmalig){
+    const belEenmalig = berekenSchenkbelasting(schenkBedrag, VR.eenmaligVrij);
+    strategieen.push({
+      naam:'Eenmalige vrijstelling', klasse:'eenmalig',
+      ico:'⭐', vrijstelling:VR.eenmaligVrij,
+      vrijBedrag:Math.min(schenkBedrag, VR.eenmaligVrij),
+      belastbaar:Math.max(0,schenkBedrag-VR.eenmaligVrij),
+      schenkbelasting:belEenmalig,
+      nettoKind:schenkBedrag-belEenmalig,
+      toelichting:'Eenmalig (komt in plaats van jaarlijks)',
+    });
+  }
+
+  // 3. Combinatie: eenmalig + jaarlijks voorgaande jaren spreiden
+  if(kanEenmalig){
+    const cumulJaarlijks = VR.jaarlijksKind * spreidJaren;
+    const totaalCombo = cumulJaarlijks + VR.eenmaligVrij;
+    // Spreiding + eenmalige = totaal belastingvrij
+    strategieen.push({
+      naam:`Combo: ${spreidJaren}× jaarlijks + eenmalig`, klasse:'combo',
+      ico:'🔀', vrijstelling:totaalCombo,
+      vrijBedrag:Math.min(schenkBedrag, totaalCombo),
+      belastbaar:Math.max(0,schenkBedrag-totaalCombo),
+      schenkbelasting:berekenSchenkbelasting(schenkBedrag, totaalCombo),
+      nettoKind:schenkBedrag-berekenSchenkbelasting(schenkBedrag, totaalCombo),
+      toelichting:`Over ${spreidJaren} jaar + eenmalig = max ${fmt(totaalCombo)}`,
+      cumulJaarlijks, totaalCombo,
+    });
+  }
+
+  // 4. Hoog schenken met belasting
+  const maxVrijstelling = kanEenmalig && !eenmaligGebruikt ? VR.eenmaligVrij : VR.jaarlijksKind;
+  const belHoog = berekenSchenkbelasting(schenkBedrag+extraBedrag, maxVrijstelling);
+  if(extraBedrag > 0){
+    strategieen.push({
+      naam:'Hoger schenken + belasting', klasse:'hoog',
+      ico:'💸', vrijstelling:maxVrijstelling,
+      vrijBedrag:Math.min(schenkBedrag+extraBedrag, maxVrijstelling),
+      belastbaar:Math.max(0,schenkBedrag+extraBedrag-maxVrijstelling),
+      schenkbelasting:belHoog,
+      nettoKind:schenkBedrag+extraBedrag-belHoog,
+      toelichting:`Totaal ${fmt(schenkBedrag+extraBedrag)} → belasting ${fmtPct(belHoog/(schenkBedrag+extraBedrag)*100)}`,
+    });
+  }
+
+  // Beste strategie = hoogste nettoKind en laagste schenkbelasting
+  const beste = strategieen.reduce((a,b)=>a.schenkbelasting<=b.schenkbelasting&&a.nettoKind>=b.nettoKind?a:b);
+
+  // ── HOOFD UITKOMST ──
+  document.getElementById('uitkomstWrap').innerHTML = `
+    <div class="uw-main">
+      <div class="uw-lbl">Max belastingvrij te schenken</div>
+      <div class="uw-bedrag">${fmt(kanEenmalig?VR.eenmaligVrij:VR.jaarlijksKind)}</div>
+      <div class="uw-sub">${kanEenmalig?`Eenmalig (of €${VR.jaarlijksKind.toLocaleString('nl-NL')} jaarlijks)`:'Jaarlijkse vrijstelling (leeftijd ≥40 of al gebruikt)'}</div>
+    </div>
+    <div class="uw-side">
+      <div class="uw-stat"><div class="sl">Jaarlijks</div><div class="sv">${fmt(VR.jaarlijksKind)}</div></div>
+      ${kanEenmalig?`<div class="uw-stat"><div class="sl">Eenmalig vrij</div><div class="sv">${fmt(VR.eenmaligVrij)}</div></div>`:''}
+      <div class="uw-stat"><div class="sl">Schenkbelasting nu</div><div class="sv">${fmt(beste.schenkbelasting)}</div></div>
+      <div class="uw-stat"><div class="sl">Netto kind ontvangt</div><div class="sv">${fmt(beste.nettoKind)}</div></div>
+    </div>`;
+
+  // ── STRATEGIE KAARTEN ──
+  const sg=document.getElementById('strategieGrid');
+  sg.innerHTML=strategieen.map(s=>`
+    <div class="sk ${s.nettoKind===beste.nettoKind&&s.schenkbelasting===beste.schenkbelasting?'aanbevolen':''}">
+      <div class="sk-head ${s.klasse}">${s.ico} ${s.naam}
+        ${s.nettoKind===beste.nettoKind&&s.schenkbelasting===beste.schenkbelasting?'<span class="aanbevolen-badge">Beste optie</span>':''}
+      </div>
+      <div class="sk-body">
+        <div class="sk-row"><span>Vrijstelling</span><span class="pos">${fmt(s.vrijstelling)}</span></div>
+        <div class="sk-row"><span>Belastbaar deel</span><span class="${s.belastbaar>0?'neg':'pos'}">${fmt(s.belastbaar)}</span></div>
+        <div class="sk-row"><span>Schenkbelasting (10%)</span><span class="${s.schenkbelasting>0?'neg':'pos'}">${fmt(s.schenkbelasting,2)}</span></div>
+        <div class="sk-row"><span><strong>Kind ontvangt netto</strong></span><span><strong>${fmt(s.nettoKind)}</strong></span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">${s.toelichting}</div>
+      </div>
+    </div>`).join('');
+
+  // ── HYPOTHEEK EFFECT ──
+  const bestNettoSchenking = beste.nettoKind;
+  const totaalEigenGeld = eigenSpaargeld + bestNettoSchenking;
+  const hypotheekZonderSchenking = Math.max(0, koopsom - eigenSpaargeld);
+  const hypotheekMetSchenking = Math.max(0, koopsom - totaalEigenGeld);
+  const maandlastZonder = hypotheekZonderSchenking * (hyprente/100/12) / (1-Math.pow(1+hyprente/100/12,-360));
+  const maandlastMet = hypotheekMetSchenking * (hyprente/100/12) / (1-Math.pow(1+hyprente/100/12,-360));
+  const besparingMnd = maandlastZonder - maandlastMet;
+  const maxBars = koopsom;
+
+  document.getElementById('hypEffect').innerHTML = `
+    <h3>🏡 Effect op hypotheek (${fmtPct(hyprente,2)}, annuïtair 30 jaar)</h3>
+    ${[
+      {lbl:'Koopsom', val:koopsom, kleur:'#6B7280'},
+      {lbl:'Eigen geld zonder schenking', val:eigenSpaargeld, kleur:'#1A8A50'},
+      {lbl:'Eigen geld + schenking', val:totaalEigenGeld, kleur:'#003057'},
+      {lbl:'Hypotheek zonder schenking', val:hypotheekZonderSchenking, kleur:'#C0392B'},
+      {lbl:'Hypotheek met schenking', val:hypotheekMetSchenking, kleur:'#E5A138'},
+    ].map(r=>`
+      <div class="hyp-bar-rij">
+        <div class="hyp-bar-lbl">${r.lbl}</div>
+        <div class="hyp-bar-bg"><div class="hyp-bar-fill" style="width:${(r.val/maxBars*100).toFixed(1)}%;background:${r.kleur};"></div></div>
+        <div class="hyp-bar-val">${fmt(r.val)}</div>
+      </div>`).join('')}
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;font-size:13px;">
+      <div><div style="color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:700;">Hypoth. zonder</div><div style="font-weight:700;color:var(--navy);">${fmt(hypotheekZonderSchenking)}</div></div>
+      <div><div style="color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:700;">Hypoth. met</div><div style="font-weight:700;color:var(--green);">${fmt(hypotheekMetSchenking)}</div></div>
+      <div><div style="color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:700;">Maandlast zonder</div><div style="font-weight:700;color:var(--navy);">${fmt(maandlastZonder,2)}</div></div>
+      <div><div style="color:var(--muted);font-size:11px;text-transform:uppercase;font-weight:700;">Besparing/mnd</div><div style="font-weight:700;color:var(--green);">−${fmt(besparingMnd,2)}</div></div>
+    </div>`;
+
+  // ── SPREIDING TABEL ──
+  const maxJaren = Math.min(spreidJaren, 20);
+  let cumul = 0;
+  let html = `<thead><tr>
+    <th>Jaar</th><th>Jaarlijkse schenking</th><th>Belastingvrij</th>
+    <th>Schenkbelasting</th><th>Cumulatief totaal</th><th>Status</th>
+  </tr></thead><tbody>`;
+  for(let jr=1;jr<=maxJaren;jr++){
+    // Jaar 1: kan ook eenmalige schenking zijn
+    const isEenmaligJaar = kanEenmalig && jr === 1 && schenkBedrag > VR.jaarlijksKind;
+    const bedragDitJaar = jr===1 ? schenkBedrag : VR.jaarlijksKind;
+    const vrijstDitJaar = isEenmaligJaar ? VR.eenmaligVrij : VR.jaarlijksKind;
+    const belDitJaar = berekenSchenkbelasting(bedragDitJaar, vrijstDitJaar);
+    const nettoDitJaar = bedragDitJaar - belDitJaar;
+    cumul += nettoDitJaar;
+    html += `<tr>
+      <td>Jaar ${jr}${jr===1?'<span style="font-size:10.5px;color:var(--navy);font-weight:700;"> (nu)</span>':''}</td>
+      <td>${fmt(bedragDitJaar)}</td>
+      <td class="ok">${fmt(Math.min(bedragDitJaar,vrijstDitJaar))}</td>
+      <td class="${belDitJaar>0?'bel':'ok'}">${belDitJaar>0?fmt(belDitJaar,2):'€ 0,-'}</td>
+      <td>${fmt(cumul)}</td>
+      <td style="font-size:12px;">${isEenmaligJaar?'⭐ Eenmalige vrijstelling':'📅 Jaarlijks'}</td>
+    </tr>`;
+  }
+  html += `<tr><td colspan="2"><strong>Totaal ${maxJaren} jaar</strong></td><td colspan="2"></td><td><strong>${fmt(cumul)}</strong></td><td></td></tr>`;
+  document.getElementById('spreidTbl').innerHTML = html + '</tbody>';
+
+  ['resCard','tblCard'].forEach(id=>document.getElementById(id).classList.add('vis'));
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Init
+updateLeeftijdHint();
+liveUpdate();
+</script>
+</body>
+</html>

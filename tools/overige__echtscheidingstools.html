@@ -1,0 +1,2800 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scheidingstools — negen rekenhulpen en checklists</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ede4d3;
+    --bg-deep: #e3d8c2;
+    --bg-tint: #f4ecdc;
+    --surface: #fbf6ea;
+    --surface-2: #f4ecdc;
+    --ink: #0d2818;
+    --ink-soft: #2a3f31;
+    --ink-mute: #6a6356;
+    --line: #d6cab1;
+    --line-strong: #b8a989;
+    --accent: #d4ff5a;
+    --accent-deep: #b8e84a;
+    --accent-tint: #f0fbcc;
+    --warning: #c44a1a;
+    --warning-tint: #f7e3d4;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 0 rgba(13,40,24,0.04), 0 12px 32px -16px rgba(13,40,24,0.12);
+    --shadow-lg: 0 1px 0 rgba(13,40,24,0.04), 0 24px 56px -24px rgba(13,40,24,0.2);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Geist', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'ss01', 'ss02';
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Geist', system-ui, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.4em;
+    color: var(--ink);
+  }
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.6rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+  }
+  h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 500; letter-spacing: -0.025em; line-height: 1.05; }
+  h3 { font-size: 1.05rem; font-weight: 500; letter-spacing: -0.01em; }
+  h4 { font-size: 0.78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); font-family: 'Geist Mono', monospace; }
+  .serif-ital { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
+  p { margin: 0 0 1em; color: var(--ink-soft); max-width: 65ch; }
+  a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: var(--line-strong); }
+  a:hover { text-decoration-color: var(--ink); }
+
+  /* Layout */
+  .page {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 32px 28px 96px;
+  }
+  header.site {
+    position: relative;
+    padding: 56px 0 64px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 8px;
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    margin-bottom: 32px;
+  }
+  .badge-pill::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(212, 255, 90, 0.25);
+  }
+  .badge-pill .sep { opacity: 0.5; margin: 0 2px; }
+  .site-id h1 {
+    max-width: 16ch;
+    margin-bottom: 24px;
+  }
+  .site-id h1 .accent-mark {
+    display: inline-block;
+    color: var(--ink);
+    background: var(--accent);
+    padding: 0 12px 4px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+  .site-id .sub {
+    font-family: 'Geist', sans-serif;
+    font-weight: 400;
+    font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+    color: var(--ink-soft);
+    max-width: 52ch;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+  .site-id .sub em { font-family: 'Instrument Serif', serif; font-style: italic; font-weight: 400; color: var(--ink); }
+  .site-meta {
+    position: absolute;
+    top: 56px;
+    right: 0;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-mute);
+    text-align: right;
+    line-height: 1.8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .site-meta strong { color: var(--ink); font-weight: 500; display: block; margin-bottom: 6px; font-size: 0.7rem; }
+  .site-meta .row { display: flex; gap: 6px; justify-content: flex-end; align-items: baseline; }
+  .site-meta .row .v { color: var(--ink); font-weight: 500; }
+  @media (max-width: 760px) {
+    .site-meta { position: static; text-align: left; margin-top: 24px; }
+    .site-meta .row { justify-content: flex-start; }
+  }
+
+  /* Tab navigation */
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 0 32px;
+    margin-bottom: 16px;
+  }
+  nav.tabs button {
+    appearance: none;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 9px 14px 9px 10px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 100px;
+    line-height: 1;
+    letter-spacing: -0.005em;
+  }
+  nav.tabs button:hover {
+    background: var(--bg-tint);
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+  nav.tabs button.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  nav.tabs button.active .num {
+    background: var(--accent);
+    color: var(--ink);
+  }
+  nav.tabs button .num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.68rem;
+    background: var(--bg-deep);
+    color: var(--ink-mute);
+    padding: 3px 6px;
+    border-radius: 100px;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    font-weight: 500;
+  }
+  nav.tabs button .lbl { font-weight: 500; }
+
+  /* Mobiel: horizontale scroll voor tabs i.p.v. wrap */
+  @media (max-width: 720px) {
+    nav.tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 12px;
+      margin-left: -28px;
+      margin-right: -28px;
+      padding-left: 28px;
+      padding-right: 28px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    nav.tabs::-webkit-scrollbar { height: 4px; }
+    nav.tabs::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
+    nav.tabs button {
+      flex-shrink: 0;
+      scroll-snap-align: start;
+    }
+  }
+
+  /* Tool card */
+  .tool { display: none; }
+  .tool.active { display: block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .tool-header {
+    margin-bottom: 40px;
+    padding: 8px 0 8px;
+  }
+  .tool-header .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tool-header .eyebrow::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-deep);
+  }
+  .tool-header h2 {
+    margin-bottom: 14px;
+    max-width: 18ch;
+  }
+  .tool-header h2 .accent-mark {
+    background: var(--accent);
+    padding: 0 8px 2px;
+    border-radius: 4px;
+    line-height: 1;
+    display: inline-block;
+  }
+  .tool-header .lead {
+    font-family: 'Geist', sans-serif;
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+  .tool-header .lead em { font-family: 'Instrument Serif', serif; font-style: italic; color: var(--ink); }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 880px) {
+    .tool-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Form */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .panel + .panel { margin-top: 16px; }
+  .panel.dark {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .panel.dark .panel-title { color: rgba(237, 228, 211, 0.6); border-bottom-color: rgba(237, 228, 211, 0.15); }
+  .panel.dark .panel-title .hint { color: rgba(237, 228, 211, 0.5); }
+  .panel-title {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-mute);
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .panel-title .hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.72rem;
+    color: var(--ink-mute);
+    font-family: 'Geist', sans-serif;
+  }
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  label {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.005em;
+  }
+  label .help { font-weight: 400; color: var(--ink-mute); font-size: 0.78rem; }
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    width: 100%;
+    appearance: none;
+    background: var(--bg-tint);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 11px 14px;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    transition: all .15s;
+    font-variant-numeric: tabular-nums;
+  }
+  input:hover, select:hover, textarea:hover { border-color: var(--line-strong); }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--ink);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--accent-tint);
+  }
+  input[readonly] { background: var(--bg-deep); color: var(--ink-soft); }
+  .radio-group, .check-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .radio-group label, .check-group label {
+    flex: 1;
+    min-width: 90px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: center;
+    background: var(--bg-tint);
+    transition: all .15s;
+    font-weight: 500;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+  }
+  .radio-group label:hover, .check-group label:hover { border-color: var(--line-strong); color: var(--ink); }
+  .radio-group label.checked, .check-group label.checked {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .radio-group input, .check-group input { display: none; }
+
+  button.btn, .btn {
+    appearance: none;
+    background: var(--ink);
+    color: var(--bg);
+    border: 1px solid var(--ink);
+    padding: 12px 22px;
+    border-radius: 100px;
+    font: inherit;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: -0.005em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  button.btn:hover { background: #1a3826; }
+  button.btn.primary { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+  button.btn.primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+  button.btn.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+  }
+  button.btn.secondary:hover { background: var(--bg-deep); border-color: var(--ink); }
+
+  /* Result */
+  .result-block {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+  }
+  .result-block::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle at top right, var(--accent-deep) 0%, transparent 60%);
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .result-block .panel-title { color: rgba(237, 228, 211, 0.5); border-bottom-color: rgba(237, 228, 211, 0.12); }
+  .result-block .panel-title .hint { color: rgba(237, 228, 211, 0.4); }
+  .result-headline {
+    font-family: 'Geist', sans-serif;
+    font-weight: 400;
+    line-height: 0.95;
+    font-size: clamp(2.6rem, 6vw, 4.4rem);
+    color: var(--bg);
+    margin-bottom: 8px;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-headline .unit { color: rgba(237, 228, 211, 0.4); font-size: 0.45em; font-weight: 400; margin-left: 8px; }
+  .result-sub {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: rgba(237, 228, 211, 0.7);
+    letter-spacing: -0.005em;
+  }
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    margin-top: 28px;
+    background: rgba(237, 228, 211, 0.12);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .result-stat {
+    background: rgba(237, 228, 211, 0.04);
+    padding: 14px 18px;
+  }
+  .result-stat .lbl {
+    font-size: 0.68rem;
+    font-family: 'Geist Mono', monospace;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(237, 228, 211, 0.55);
+    margin-bottom: 6px;
+  }
+  .result-stat .val {
+    font-family: 'Geist', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: var(--bg);
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  /* Tables */
+  table.calc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 0.88rem;
+  }
+  table.calc-table th {
+    text-align: left;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    font-weight: 500;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  table.calc-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  table.calc-table td.num, table.calc-table th.num { text-align: right; }
+  table.calc-table tr:last-child td { border-bottom: none; }
+  table.calc-table tr.final td { font-weight: 600; color: var(--ink); background: var(--accent-tint); }
+  table.calc-table tr.conflict td { background: var(--warning-tint); color: var(--warning); }
+  table.calc-table tr.conflict td:first-child { font-weight: 500; }
+  .ibv-del { background: none; border: none; color: var(--ink-mute); cursor: pointer; font-size: 1.1rem; padding: 0 6px; line-height: 1; border-radius: 4px; transition: all .15s; }
+  .ibv-del:hover { color: var(--warning); background: var(--warning-tint); }
+
+  /* Begrippenlijst */
+  .bg-section { margin-bottom: 32px; }
+  .bg-letter {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 3rem;
+    line-height: 1;
+    color: var(--accent-deep);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .bg-items { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .bg-item {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .bg-item:last-child { border-bottom: none; }
+  .bg-term {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .bg-term h3 {
+    font-family: 'Geist', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+  }
+  .bg-cat-badge {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 100px;
+    background: var(--bg-deep);
+    color: var(--ink-mute);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .bg-cat-vermogen { background: #e2ebe5; color: #2e5043; }
+  .bg-cat-alimentatie { background: #f0fbcc; color: #4a5c1a; }
+  .bg-cat-kinderen { background: #fde6cc; color: #8a4a1a; }
+  .bg-cat-pensioen { background: #e5e0f0; color: #4a3a6a; }
+  .bg-cat-procedure { background: #f0e8e0; color: #6a5040; }
+  .bg-item p {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+    max-width: 72ch;
+  }
+  .bg-wet {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--ink-mute);
+    letter-spacing: 0.02em;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--ink-mute);
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+  }
+
+  /* Notice / disclaimer */
+  .notice {
+    background: var(--warning-tint);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 20px 0 0;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    border: 1px solid color-mix(in srgb, var(--warning) 20%, var(--warning-tint));
+    line-height: 1.5;
+  }
+  .notice strong { color: var(--warning); font-weight: 600; }
+  .info-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin: 16px 0 0;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .info-box p:last-child { margin-bottom: 0; }
+  .info-box strong { color: var(--ink); font-weight: 500; display: block; margin-bottom: 6px; font-family: 'Geist Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .info-box em { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.05em; }
+
+  /* Apply dark "hero result" treatment to panels containing result-headline */
+  .panel:has(.result-headline) {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .panel:has(.result-headline)::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, var(--accent-deep) 0%, transparent 65%);
+    opacity: 0.16;
+    pointer-events: none;
+  }
+  .panel:has(.result-headline) > * { position: relative; }
+  .panel:has(.result-headline) .panel-title {
+    color: rgba(237, 228, 211, 0.55);
+    border-bottom-color: rgba(237, 228, 211, 0.12);
+  }
+  .panel:has(.result-headline) .panel-title .hint { color: rgba(237, 228, 211, 0.45); }
+  .panel:has(.result-headline) table.calc-table th {
+    color: rgba(237, 228, 211, 0.55);
+    border-bottom-color: rgba(237, 228, 211, 0.2);
+  }
+  .panel:has(.result-headline) table.calc-table td {
+    color: rgba(237, 228, 211, 0.85);
+    border-bottom-color: rgba(237, 228, 211, 0.08);
+  }
+  .panel:has(.result-headline) table.calc-table tr.final td {
+    background: rgba(212, 255, 90, 0.12);
+    color: var(--accent);
+  }
+  .panel:has(.result-headline) p { color: rgba(237, 228, 211, 0.75); }
+  .panel:has(.result-headline) p strong { color: var(--bg); }
+
+  /* Checklist */
+  .checklist-section { margin-bottom: 28px; }
+  .checklist-section h3 {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: padding-left .15s;
+  }
+  .check-item:hover { padding-left: 4px; }
+  .check-item:last-child { border-bottom: none; }
+  .check-item input { display: none; }
+  .check-item .box {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 6px;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+    background: var(--bg-tint);
+  }
+  .check-item:hover .box { border-color: var(--ink); }
+  .check-item.done .box { background: var(--accent); border-color: var(--accent); }
+  .check-item.done .box::after { content: '✓'; color: var(--ink); font-size: 13px; font-weight: 700; }
+  .check-item.done .text { color: var(--ink-mute); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+  .check-item .text {
+    font-size: 0.94rem;
+    color: var(--ink);
+    line-height: 1.4;
+    letter-spacing: -0.005em;
+  }
+  .check-item .text .meta { display: block; font-size: 0.82rem; color: var(--ink-mute); font-weight: 400; margin-top: 4px; text-decoration: none !important; }
+  .check-progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding: 16px 20px;
+    background: var(--ink);
+    border-radius: var(--radius);
+    color: var(--bg);
+    box-shadow: var(--shadow);
+  }
+  .check-progress .bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(237, 228, 211, 0.15);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .check-progress .bar > div {
+    height: 100%;
+    background: var(--accent);
+    transition: width .35s cubic-bezier(.4,0,.2,1);
+    border-radius: 100px;
+  }
+  .check-progress .label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--bg);
+    white-space: nowrap;
+    letter-spacing: -0.005em;
+  }
+  .check-progress .label .num {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Footer */
+  footer.site {
+    margin-top: 80px;
+    padding: 32px 0 0;
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+    color: var(--ink-mute);
+    line-height: 1.6;
+  }
+  footer.site .cols {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+  }
+  footer.site strong {
+    color: var(--ink);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  @media (max-width: 700px) {
+    footer.site .cols { grid-template-columns: 1fr; gap: 24px; }
+  }
+
+  ul.clean { padding-left: 18px; margin: 8px 0 12px; }
+  ul.clean li { margin-bottom: 6px; color: var(--ink-soft); }
+
+  /* Mobiele aanpassingen voor smalle schermen */
+  @media (max-width: 600px) {
+    .page { padding: 24px 20px 64px; }
+    header.site { padding: 32px 0 40px; }
+    .field-row { grid-template-columns: 1fr; gap: 16px; }
+    table.calc-table { font-size: 0.78rem; }
+    table.calc-table th, table.calc-table td { padding: 7px 8px; }
+    .panel { padding: 18px; }
+    .result-stats { grid-template-columns: 1fr 1fr; }
+    /* Annuïteit aflossings­tabel (5 kolommen) krijgt horizontale scroll */
+    #annuiteit .panel:nth-child(2) { overflow-x: auto; }
+    #annuiteit table.calc-table { min-width: 460px; }
+    /* Inboedel-tabel idem */
+    #inboedelverdeling .panel:has(#ibv-tabel) { overflow-x: auto; }
+    #inboedelverdeling table.calc-table { min-width: 380px; }
+    /* Begrippenlijst: stapel zoek + categoriefilter */
+    #begrippen .field-row { gap: 14px; }
+  }
+
+  /* Print */
+  @media print {
+    nav.tabs, .btn, footer.site { display: none; }
+    .tool { display: block !important; page-break-after: always; }
+    body { background: white; }
+    .panel { border: 1px solid #ccc; box-shadow: none; }
+    .panel:has(.result-headline) { background: white !important; color: black !important; border: 2px solid black !important; }
+    .panel:has(.result-headline) * { color: black !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="site">
+    <div class="site-id">
+      <div class="badge-pill">Live <span class="sep">·</span> 14 tools <span class="sep">·</span> NL 2026</div>
+      <h1>Veertien tools om je <span class="serif-ital">scheiding</span> door te rekenen.</h1>
+      <div class="sub">Indicatieve rekenhulpen voor alimentatie, vermogen en planning. <em>Niet voor de rechter</em> — wel om je oriëntatie scherp te krijgen.</div>
+    </div>
+    <div class="site-meta">
+      <strong>Geactualiseerd</strong>
+      <div class="row"><span>Indexering</span><span class="v">4,6 %</span></div>
+      <div class="row"><span>WSF-norm</span><span class="v">1 jan 2026</span></div>
+      <div class="row"><span>Bron</span><span class="v">Stcrt. 2025</span></div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="indexeren" class="active"><span class="num">01</span><span class="lbl">Alimentatie indexeren</span></button>
+    <button data-tab="duur"><span class="num">02</span><span class="lbl">Duur partneralimentatie</span></button>
+    <button data-tab="annuiteit"><span class="num">03</span><span class="lbl">Annuïteit</span></button>
+    <button data-tab="contante-waarde"><span class="num">04</span><span class="lbl">Contante waarde</span></button>
+    <button data-tab="behoefte"><span class="num">05</span><span class="lbl">Behoefte jongmeerderjarige</span></button>
+    <button data-tab="huwelijksvermogensrecht"><span class="num">06</span><span class="lbl">Huwelijksvermogensrecht</span></button>
+    <button data-tab="erfrecht"><span class="num">07</span><span class="lbl">Erfrecht & schenking</span></button>
+    <button data-tab="checklist-voor"><span class="num">08</span><span class="lbl">Checklist scheiding</span></button>
+    <button data-tab="checklist-na"><span class="num">09</span><span class="lbl">Checklist na scheiding</span></button>
+    <button data-tab="inboedelverdeling"><span class="num">10</span><span class="lbl">Inboedelverdeling</span></button>
+    <button data-tab="zorgkorting"><span class="num">11</span><span class="lbl">Zorgkorting</span></button>
+    <button data-tab="pensioenverevening"><span class="num">12</span><span class="lbl">Pensioenverevening</span></button>
+    <button data-tab="behoefte-kind"><span class="num">13</span><span class="lbl">Behoefte kind</span></button>
+    <button data-tab="begrippen"><span class="num">14</span><span class="lbl">Begrippenlijst</span></button>
+  </nav>
+
+  <main id="main">
+    <!-- TOOLS COMEN HIER -->
+  </main>
+
+  <footer class="site">
+    <div class="cols">
+      <div>
+        <strong style="color: var(--ink-soft);">Disclaimer.</strong>
+        Deze tools zijn uitsluitend bedoeld voor een eerste oriëntatie. De berekeningen zijn vereenvoudigd en gaan uit van gangbare regels (Wet Herziening Partneralimentatie 2020, artikel 1:402a BW, Tremanormen, WSF 2000). Voor een vaststellings­overeenkomst, beschikking of fiscale planning is maatwerk door een (familierecht-)advocaat, mediator of belastingadviseur nodig. Aan de uitkomsten kunnen geen rechten worden ontleend.
+      </div>
+      <div>
+        <strong style="color: var(--ink-soft);">Bronnen.</strong>
+        LBIO · Rijksoverheid · Staatscourant 2025, nr. 39488 & 39853 · BW Boek 1 art. 157, 395a, 397, 402a · Expertgroep alimentatie­normen
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   Tab navigation
+   ============================================================ */
+const tabs = document.getElementById('tabs');
+const main = document.getElementById('main');
+tabs.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  tabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+  main.querySelectorAll('.tool').forEach(t => t.classList.toggle('active', t.id === btn.dataset.tab));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const euro = n => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(n);
+const euroR = n => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+const pct = n => new Intl.NumberFormat('nl-NL', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(n / 100);
+const num = (n, d=2) => new Intl.NumberFormat('nl-NL', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+function bindRadio(group) {
+  group.addEventListener('click', e => {
+    const lbl = e.target.closest('label');
+    if (!lbl) return;
+    const input = lbl.querySelector('input');
+    if (!input) return;
+    if (input.type === 'radio') {
+      group.querySelectorAll('label').forEach(l => l.classList.remove('checked'));
+      lbl.classList.add('checked');
+      input.checked = true;
+    } else {
+      lbl.classList.toggle('checked');
+      input.checked = lbl.classList.contains('checked');
+    }
+    group.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  // initial state from defaults
+  group.querySelectorAll('input:checked').forEach(i => i.closest('label').classList.add('checked'));
+}
+
+/* registry of tool init functions */
+const TOOLS = {};
+function registerTool(id, html, init) {
+  const wrap = document.createElement('section');
+  wrap.id = id;
+  wrap.className = 'tool';
+  wrap.innerHTML = html;
+  main.appendChild(wrap);
+  TOOLS[id] = { el: wrap, init };
+  init(wrap);
+}
+
+/* activate first tab on load */
+function activate(id) {
+  tabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+  main.querySelectorAll('.tool').forEach(t => t.classList.toggle('active', t.id === id));
+}
+
+/* ============================================================
+   TOOLS WORDEN GEREGISTREERD IN AANSLUITENDE SCRIPTS
+   ============================================================ */
+
+</script>
+
+<!-- Tool registrations -->
+<script id="tool-scripts">
+/* ============================================================
+   TOOL 14 — BEGRIPPENLIJST
+   ============================================================ */
+const BEGRIPPEN = [
+  { term: 'Algehele gemeenschap van goederen', cat: 'vermogen', wet: 'art. 1:94 BW (oud)',
+    def: 'Het wettelijke huwelijksvermogens­regime voor huwelijken gesloten vóór 1 januari 2018. In beginsel valt al het vermogen — van vóór én tijdens het huwelijk — in de gemeenschap, met enkele uitzonderingen (uitsluitings­clausule, verknocht goed, pensioen).' },
+  { term: 'Behoefte', cat: 'alimentatie', wet: 'Tremarapport hfst. 3',
+    def: 'Wat iemand nodig heeft om in zijn of haar levensonderhoud te voorzien. Voor kinderen: gebaseerd op de Nibud-tabel en het gezinsinkomen vóór de scheiding. Voor de ex-partner: vaak 60% van het netto gezinsinkomen (hofnorm) of een specifieke behoeftelijst.' },
+  { term: 'Behoeftigheid', cat: 'alimentatie', wet: '',
+    def: 'De mate waarin iemand níet in zijn eigen behoefte kan voorzien. Een ex-partner met genoeg eigen inkomen heeft wel een behoefte, maar geen behoeftigheid — en dus geen recht op partneralimentatie.' },
+  { term: 'Beperkte gemeenschap van goederen', cat: 'vermogen', wet: 'art. 1:94 BW',
+    def: 'Het wettelijke regime sinds 1 januari 2018. Alleen wat tijdens het huwelijk wordt verworven valt in de gemeenschap. Voor­huwelijks vermogen, erfenissen en schenkingen blijven in beginsel privé.' },
+  { term: 'Bruteren', cat: 'alimentatie', wet: '',
+    def: 'Een netto bedrag terugrekenen naar bruto, met inachtneming van belasting en heffingskortingen. Partneralimentatie wordt vaak bruto vastgesteld omdat de fiscaliteit per persoon verschilt.' },
+  { term: 'Co-ouderschap', cat: 'kinderen', wet: '',
+    def: 'Een zorgregeling waarbij beide ouders ongeveer evenveel zorg dragen voor de kinderen (ruwweg 50/50). Geeft recht op een zorgkorting van 35% en kan gevolgen hebben voor toeslagen en heffingskortingen.' },
+  { term: 'Convenant', cat: 'procedure', wet: '',
+    def: 'De schriftelijke vastlegging van de afspraken tussen de partners over de scheiding: vermogen, alimentatie, pensioen en woning. Wordt mee­gestuurd met het verzoek­schrift en door de rechter bekrachtigd.' },
+  { term: 'Conversie (pensioen)', cat: 'pensioen', wet: 'art. 5 Wet VPS',
+    def: 'In plaats van verevening (mee­profiteren van pensioen van de ex) een eigen, zelfstandig pensioenrecht krijgen. Onomkeerbaar, maar maakt onafhankelijk: bij overlijden ex blijft het recht bestaan.' },
+  { term: 'Draagkracht', cat: 'alimentatie', wet: 'Tremarapport hfst. 4',
+    def: 'Het bedrag dat een ouder of ex-partner maandelijks kan missen voor alimentatie, ná aftrek van vaste lasten van het netto-inkomen. Bepaalt of er kan worden betaald — niet of er behoefte is.' },
+  { term: 'Echtscheidings­beschikking', cat: 'procedure', wet: 'art. 1:163 BW',
+    def: 'Het vonnis van de rechtbank dat het huwelijk ontbindt. Pas na inschrijving in de registers van de burgerlijke stand is de scheiding officieel.' },
+  { term: 'Eigen aandeel kosten kind', cat: 'kinderen', wet: '',
+    def: 'Het deel van de kindbehoefte dat de ouders zelf dragen (in tegenstelling tot wat de overheid via kinderbijslag/KGB bijdraagt). Basis voor de kinderalimentatie. Volgt uit de Nibud-tabel.' },
+  { term: 'Eenvoudige gemeenschap', cat: 'vermogen', wet: 'art. 3:166 BW',
+    def: 'Gezamenlijk eigendom van een specifiek goed (bv. de echtelijke woning) buiten een huwelijks­gemeenschap. Komt voor bij ongehuwde partners en bij huwelijken op huwelijkse voorwaarden met eigen-bezitsclausule.' },
+  { term: 'Finaal verrekenbeding', cat: 'vermogen', wet: 'art. 1:132 BW',
+    def: 'Beding in huwelijkse voorwaarden dat bij einde huwelijk verrekening plaatsvindt alsof er gemeenschap was geweest. Tijdens huwelijk volledige gescheiden vermogens.' },
+  { term: 'Hofnorm', cat: 'alimentatie', wet: 'HR 3-9-2010',
+    def: 'Vuistregel om de behoefte van de ex-partner te bepalen: 60% van het netto gezinsinkomen, minus de kosten van de kinderen. Niet wettelijk maar veel gebruikt; eenvoudig en relatief snel.' },
+  { term: 'Hoofdelijke aansprakelijkheid', cat: 'vermogen', wet: 'art. 6:6 BW',
+    def: 'Beide partners zijn elk voor het geheel aansprakelijk voor een schuld (bv. de hypotheek). Bij scheiding moet vaak "ontslag hoofdelijke aansprakelijkheid" worden geregeld bij de bank.' },
+  { term: 'Huwelijkse voorwaarden', cat: 'vermogen', wet: 'art. 1:114 BW',
+    def: 'Notariële akte waarin partners afwijken van het wettelijke huwelijks­vermogens­regime. Varianten: koude uitsluiting, periodiek/finaal verrekenbeding, of een beperkte gemeenschap op maat.' },
+  { term: 'Indexering alimentatie', cat: 'alimentatie', wet: 'art. 1:402a BW',
+    def: 'Wettelijke jaarlijkse verhoging op 1 januari op basis van de loon­index. Het percentage wordt elk najaar in de Staatscourant gepubliceerd. Geldt van rechtswege — vragen hoeft niet.' },
+  { term: 'Jusvergelijking', cat: 'alimentatie', wet: 'Tremarapport',
+    def: 'Vergelijking van het besteedbaar inkomen van beide partners ná betaling van alimentatie. Bedoeld om te toetsen of de alimentatie­plichtige niet onder het besteedbare van de ontvanger zakt.' },
+  { term: 'Kinderalimentatie', cat: 'alimentatie', wet: 'art. 1:392 BW',
+    def: 'De bijdrage van de niet-verzorgende ouder in de kosten van de kinderen. Loopt door tot het kind 21 is. Heeft voorrang op partner­alimentatie als er onvoldoende draagkracht is.' },
+  { term: 'Koude uitsluiting', cat: 'vermogen', wet: '',
+    def: 'Huwelijkse voorwaarden waarbij elke partner een volledig eigen vermogen behoudt en er geen verrekening plaatsvindt. Bij scheiding is er niets te delen, behoudens eventueel gezamenlijk verworven goederen.' },
+  { term: 'LBIO', cat: 'procedure', wet: '',
+    def: 'Landelijk Bureau Inning Onderhoudsbijdragen. Int onbetaalde alimentatie tegen een opslag van 15%. Kan ook indexering met terugwerkende kracht (max. 5 jaar) opvorderen.' },
+  { term: 'Limitering / nihilstelling', cat: 'alimentatie', wet: 'art. 1:157 lid 3 BW',
+    def: 'Rechterlijke beperking van de duur of hoogte van partneralimentatie. Limitering = einddatum vóór wettelijke termijn; nihilstelling = bedrag op nul, bv. omdat onderhouds­plichtige geen draagkracht heeft.' },
+  { term: 'NBI', cat: 'alimentatie', wet: '',
+    def: 'Netto Besteedbaar Inkomen. Bruto inkomen minus belastingen, sociale premies en zorgpremie. Basis voor draagkracht­berekening; verschilt voor partner- en kinderalimentatie (woonlasten, fiscale effecten).' },
+  { term: 'Nihilbeding', cat: 'alimentatie', wet: 'art. 1:158 BW',
+    def: 'Afspraak tussen ex-partners dat er geen partneralimentatie wordt betaald, ook niet later. Niet aan te tasten zonder zware omstandigheden — sterker dan een gewone limitering.' },
+  { term: 'Ouderschapsplan', cat: 'kinderen', wet: 'art. 815 lid 2 Rv',
+    def: 'Verplicht document bij scheiding met minderjarige kinderen. Bevat afspraken over zorgverdeling, informatie-uitwisseling, kosten en hoe ouders elkaar over de kinderen informeren.' },
+  { term: 'Partneralimentatie', cat: 'alimentatie', wet: 'art. 1:157 BW',
+    def: 'Bijdrage in het levensonderhoud van de ex-partner. Hoofdregel sinds 2020: helft van de huwelijksduur, maximaal 5 jaar — met uitzonderingen voor jonge kinderen, lang huwelijk en AOW-nabijheid.' },
+  { term: 'Partnerpensioen', cat: 'pensioen', wet: '',
+    def: 'Pensioenrecht voor de partner bij overlijden van de pensioen­opbouwende echtgenoot. Bij scheiding wordt het deel opgebouwd vóór scheiding "bijzonder partnerpensioen" — blijft staan, ook bij hertrouwen ex.' },
+  { term: 'Peildatum', cat: 'procedure', wet: 'art. 1:99 BW',
+    def: 'Datum waarop de samenstelling én de omvang van de gemeenschap wordt vastgesteld. Sinds 2012 in beginsel: dag van indiening verzoek­schrift echtscheiding.' },
+  { term: 'Pensioenverevening', cat: 'pensioen', wet: 'Wet VPS art. 2',
+    def: 'Verdeling 50/50 van het tijdens het huwelijk opgebouwde ouderdoms­pensioen. Melden binnen 2 jaar bij elke pensioen­uitvoerder; anders moet je het zelf van de ex innen.' },
+  { term: 'Periodiek verrekenbeding', cat: 'vermogen', wet: 'art. 1:141 BW',
+    def: 'Beding in huwelijkse voorwaarden: jaarlijks het over­gespaarde inkomen verrekenen. In de praktijk vaak niet uitgevoerd — dan kan bij scheiding alsnog over alles worden verrekend (art. 1:141 lid 3).' },
+  { term: 'Tremanormen', cat: 'alimentatie', wet: '',
+    def: 'Richtlijnen van de Expertgroep Alimentatie­normen voor het berekenen van behoefte en draagkracht bij kinder- en partner­alimentatie. Geen wet maar wel breed gevolgd door rechters.' },
+  { term: 'Uitsluitingsclausule', cat: 'vermogen', wet: '',
+    def: 'Bepaling in testament of schenkings­akte dat het verkregen vermogen privé blijft van de ontvanger, niet in de gemeenschap valt. Onder de algehele gemeenschap (vóór 2018) essentieel; onder de beperkte gemeenschap inmiddels standaard.' },
+  { term: 'Verevening', cat: 'pensioen', wet: 'Wet VPS',
+    def: 'Het delen, op gelijke voet, van het tijdens het huwelijk opgebouwde ouderdoms­pensioen. Niet het pensioen zelf wordt verdeeld — een recht op uitbetaling tegen elk pensioen­fonds.' },
+  { term: 'Verknocht goed', cat: 'vermogen', wet: 'art. 1:94 lid 3 BW',
+    def: 'Een goed dat zo persoonlijk is verbonden met één van de partners dat het buiten de gemeenschap blijft (bv. smartengeld voor letsel, een eredecoratie, soms ondernemings­vermogen).' },
+  { term: 'Wet VPS', cat: 'pensioen', wet: 'Stb. 1994, 342',
+    def: 'Wet Verevening Pensioenrechten bij Scheiding (1995). Regelt de standaard 50/50-verdeling van tijdens het huwelijk opgebouwd ouderdoms­pensioen. Geldt voor scheidingen sinds 1 mei 1995.' },
+  { term: 'WSF-norm', cat: 'kinderen', wet: 'art. 3.18 WSF 2000',
+    def: 'De normbedragen uit de Wet Studiefinanciering die de overheid hanteert voor kosten van levensonderhoud van studerenden. Wordt gebruikt om de behoefte van jong­meerderjarigen (18-21) te schatten.' },
+  { term: 'Zorgkorting', cat: 'kinderen', wet: 'Tremarapport § 4.5',
+    def: 'Korting op te betalen kinder­alimentatie voor de ouder die zelf zorgt voor de kinderen. 5/15/25/35% bij respectievelijk <1, 1, 2 of 3+ dagen per week. Co-ouder­schap → 35%.' }
+].sort((a, b) => a.term.localeCompare(b.term, 'nl'));
+
+const CAT_LABELS = {
+  vermogen: 'Vermogen',
+  alimentatie: 'Alimentatie',
+  kinderen: 'Kinderen',
+  pensioen: 'Pensioen',
+  procedure: 'Procedure'
+};
+
+registerTool('begrippen', `
+  <div class="tool-header">
+    <div class="eyebrow">14 · Reference</div>
+    <h2>Begrippenlijst</h2>
+    <div class="lead">De termen die je in de andere tools tegenkomt, met definitie en de wetsbepaling waarin het staat. <em>Geen tool, wel een spiekbriefje.</em></div>
+  </div>
+
+  <div class="panel" style="margin-bottom: 16px;">
+    <div class="field-row">
+      <div class="field" style="margin: 0;">
+        <label for="bg-zoek">Zoeken</label>
+        <input type="text" id="bg-zoek" placeholder="bv. 'pensioen' of 'art. 157'">
+      </div>
+      <div class="field" style="margin: 0;">
+        <label>Filter op categorie</label>
+        <div class="radio-group" id="bg-cat">
+          <label class="checked"><input type="radio" name="bg-c" value="" checked>Alles</label>
+          <label><input type="radio" name="bg-c" value="vermogen">Vermogen</label>
+          <label><input type="radio" name="bg-c" value="alimentatie">Alimentatie</label>
+          <label><input type="radio" name="bg-c" value="kinderen">Kinderen</label>
+          <label><input type="radio" name="bg-c" value="pensioen">Pensioen</label>
+          <label><input type="radio" name="bg-c" value="procedure">Procedure</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bg-lijst"></div>
+  <div class="empty-state" id="bg-empty" style="display:none;">Geen begrippen die aan je zoekopdracht voldoen.</div>
+`, (el) => {
+  bindRadio($('#bg-cat', el));
+
+  function render() {
+    const zoek = $('#bg-zoek', el).value.toLowerCase().trim();
+    const cat = $('#bg-cat input:checked', el).value;
+    const filtered = BEGRIPPEN.filter(b => {
+      if (cat && b.cat !== cat) return false;
+      if (!zoek) return true;
+      return b.term.toLowerCase().includes(zoek)
+          || b.def.toLowerCase().includes(zoek)
+          || b.wet.toLowerCase().includes(zoek);
+    });
+
+    const wrap = $('#bg-lijst', el);
+    const empty = $('#bg-empty', el);
+    if (filtered.length === 0) {
+      wrap.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    // Group alphabetically
+    const groups = {};
+    filtered.forEach(b => {
+      const letter = b.term[0].toUpperCase();
+      (groups[letter] = groups[letter] || []).push(b);
+    });
+
+    wrap.innerHTML = Object.keys(groups).sort().map(letter => `
+      <div class="bg-section">
+        <div class="bg-letter">${letter}</div>
+        <div class="bg-items">
+          ${groups[letter].map(b => `
+            <article class="bg-item">
+              <div class="bg-term">
+                <h3>${b.term}</h3>
+                <span class="bg-cat-badge bg-cat-${b.cat}">${CAT_LABELS[b.cat]}</span>
+              </div>
+              <p>${b.def}</p>
+              ${b.wet ? `<div class="bg-wet">${b.wet}</div>` : ''}
+            </article>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  $('#bg-zoek', el).addEventListener('input', render);
+  $('#bg-cat', el).addEventListener('change', render);
+  render();
+});
+
+/* ============================================================
+   TOOL 13 — BEHOEFTE KIND (Nibud-schatting)
+   ============================================================ */
+registerTool('behoefte-kind', `
+  <div class="tool-header">
+    <div class="eyebrow">13 · Eigen aandeel kosten kind</div>
+    <h2>Behoefte kind</h2>
+    <div class="lead">Een ruwe inschatting van de behoefte op basis van het netto gezinsinkomen, aantal kinderen en leeftijd. <em>Voor de definitieve waarde gebruik je de officiële Behoeftetabel 2026</em> uit het Tremarapport.</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer</div>
+        <div class="field">
+          <label for="bk-nbi">Netto besteedbaar gezinsinkomen <span class="help">— per maand, vlak vóór scheiding</span></label>
+          <input type="number" id="bk-nbi" min="0" step="100" value="4000">
+        </div>
+        <div class="field">
+          <label>Aantal kinderen</label>
+          <div class="radio-group" id="bk-aantal">
+            <label class="checked"><input type="radio" name="bk-a" value="1" checked>1</label>
+            <label><input type="radio" name="bk-a" value="2">2</label>
+            <label><input type="radio" name="bk-a" value="3">3</label>
+            <label><input type="radio" name="bk-a" value="4">4+</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Leeftijdscategorie jongste kind</label>
+          <div class="radio-group" id="bk-leeftijd">
+            <label><input type="radio" name="bk-l" value="0-5">0 – 5 jaar</label>
+            <label class="checked"><input type="radio" name="bk-l" value="6-11" checked>6 – 11 jaar</label>
+            <label><input type="radio" name="bk-l" value="12-17">12 – 17 jaar</label>
+          </div>
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>Hoe het werkt.</strong>
+        <p>Het Nibud onderzoekt jaarlijks wat een kind kost in een gemiddeld huishouden, op basis van inkomensband en leeftijd. De Expertgroep Alimentatie­normen neemt die cijfers over in de jaarlijkse <em>Behoeftetabel</em>. Voor 2026 loopt de tabel van € 1.250 tot € 7.500 netto inkomen.</p>
+        <p>Deze tool benadert die tabel met percentages. De afwijking is doorgaans < 10%. Voor een berekening die de rechter overneemt: gebruik de exacte tabel op <a href="https://www.rechtspraak.nl" target="_blank" rel="noopener">rechtspraak.nl</a>.</p>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Geschatte behoefte <span class="hint">per maand</span></div>
+        <div class="result-headline"><span id="bk-resultaat">—</span></div>
+        <div class="result-sub" id="bk-resultaat-sub">indicatie op basis van Nibud-percentages</div>
+        <div class="result-stats">
+          <div class="result-stat"><div class="lbl">Per kind</div><div class="val" id="bk-stat-perkind">—</div></div>
+          <div class="result-stat"><div class="lbl">% van NBI</div><div class="val" id="bk-stat-pct">—</div></div>
+          <div class="result-stat"><div class="lbl">Per jaar</div><div class="val" id="bk-stat-jaar">—</div></div>
+        </div>
+        <div id="bk-uitleg" style="margin-top: 24px;"></div>
+      </div>
+      <div class="notice">
+        <strong>Volgende stap.</strong> Trek het ontvangen <em>kindgebonden budget</em> af van de gevonden behoefte — de Hoge Raad bepaalde in 2015 dat dit pas verderop in de berekening (bij draagkracht) wordt verwerkt, niet bij behoefte. Vervolgens wordt het bedrag tussen beide ouders verdeeld naar rato van hun <em>draagkracht</em>.
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  bindRadio($('#bk-aantal', el));
+  bindRadio($('#bk-leeftijd', el));
+
+  function schat(nbi, aantal, lft) {
+    if (nbi <= 0) return null;
+    // Basispercentages voor het aandeel van NBI dat naar kinderen gaat
+    const basisPct = { 1: 0.155, 2: 0.235, 3: 0.285, 4: 0.325 }[Math.min(aantal, 4)];
+    // Leeftijdscorrectie — oudere kinderen zijn duurder
+    const lftFactor = { '0-5': 0.92, '6-11': 1.00, '12-17': 1.07 }[lft] || 1.0;
+    // Inkomenscorrectie — bovenkant van de tabel daalt marginaal
+    let inkFactor = 1.0;
+    if (nbi > 6000) {
+      const excess = nbi - 6000;
+      inkFactor = Math.max(0.85, 1.0 - (excess / 50000));
+    } else if (nbi < 2000) {
+      inkFactor = 0.95;
+    }
+    return nbi * basisPct * lftFactor * inkFactor;
+  }
+
+  function bereken() {
+    const nbi = parseFloat($('#bk-nbi', el).value) || 0;
+    const aantal = parseInt($('#bk-aantal input:checked', el).value);
+    const lft = $('#bk-leeftijd input:checked', el).value;
+    const totaal = schat(nbi, aantal, lft);
+    if (totaal === null) {
+      $('#bk-resultaat', el).textContent = '—';
+      $('#bk-resultaat-sub', el).textContent = 'vul het netto inkomen in';
+      return;
+    }
+    const perKind = totaal / aantal;
+    const pct = (totaal / nbi) * 100;
+    $('#bk-resultaat', el).textContent = euroR(totaal);
+    $('#bk-resultaat-sub', el).textContent = `voor ${aantal} kind${aantal===1?'':'eren'}, leeftijd jongste ${lft}`;
+    $('#bk-stat-perkind', el).textContent = euroR(perKind);
+    $('#bk-stat-pct', el).textContent = pct.toFixed(1) + ' %';
+    $('#bk-stat-jaar', el).textContent = euroR(totaal * 12);
+    $('#bk-uitleg', el).innerHTML = `
+      <p style="font-size:0.88rem; color: rgba(237, 228, 211, 0.75);">
+        Bij een netto gezinsinkomen van ${euroR(nbi)} per maand en ${aantal} kind${aantal===1?'':'eren'} schat de tool de behoefte op
+        <strong style="color: var(--bg);">${euroR(totaal)}</strong> per maand. Dat is ${pct.toFixed(1)}% van het NBI.
+      </p>`;
+  }
+
+  $('#bk-nbi', el).addEventListener('input', bereken);
+  $('#bk-aantal', el).addEventListener('change', bereken);
+  $('#bk-leeftijd', el).addEventListener('change', bereken);
+  bereken();
+});
+
+/* ============================================================
+   TOOL 12 — PENSIOENVEREVENING (Wet VPS)
+   ============================================================ */
+registerTool('pensioenverevening', `
+  <div class="tool-header">
+    <div class="eyebrow">12 · Wet Verevening Pensioenrechten bij Scheiding</div>
+    <h2>Pensioenverevening</h2>
+    <div class="lead">Het tijdens het huwelijk opgebouwde ouderdomspensioen wordt 50/50 verdeeld. <em>Twee jaar</em> om het te melden bij de pensioenuitvoerder, anders moet je het zelf regelen.</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer</div>
+        <div class="field">
+          <label for="pv-datum-huw">Datum huwelijk / partnerschap</label>
+          <input type="date" id="pv-datum-huw">
+        </div>
+        <div class="field">
+          <label for="pv-datum-sch">Datum scheiding <span class="help">— inschrijving beschikking</span></label>
+          <input type="date" id="pv-datum-sch">
+        </div>
+        <div class="field">
+          <label for="pv-aanspr-huw">Pensioen­aanspraak op huwelijksdatum <span class="help">— jaarbedrag bruto, € per jaar</span></label>
+          <input type="number" id="pv-aanspr-huw" min="0" step="100" value="0" placeholder="0 als nog niet werkzaam">
+        </div>
+        <div class="field">
+          <label for="pv-aanspr-sch">Pensioen­aanspraak op scheidingsdatum <span class="help">— jaarbedrag bruto, van UPO</span></label>
+          <input type="number" id="pv-aanspr-sch" min="0" step="100" value="12000">
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>Hoe lees ik mijn pensioen­aanspraak af?</strong>
+        <p>Op je Uniform Pensioen­overzicht (UPO) staat <em>"bruto ouderdoms­pensioen per jaar"</em>. Voor de exacte stand op een specifieke datum: vraag bij je pensioen­fonds een opgave. Op <a href="https://www.mijnpensioenoverzicht.nl" target="_blank" rel="noopener">mijnpensioenoverzicht.nl</a> zie je al je opgebouwde aanspraken bij elkaar.</p>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Te verevenen aanspraak <span class="hint">jaarbedrag</span></div>
+        <div class="result-headline"><span id="pv-resultaat">—</span></div>
+        <div class="result-sub" id="pv-resultaat-sub">tijdens huwelijk opgebouwd, 50% voor elke partij</div>
+        <div class="result-stats">
+          <div class="result-stat"><div class="lbl">Opgebouwd tijdens huwelijk</div><div class="val" id="pv-stat-opgebouwd">—</div></div>
+          <div class="result-stat"><div class="lbl">Per maand</div><div class="val" id="pv-stat-maand">—</div></div>
+          <div class="result-stat"><div class="lbl">Melden vóór</div><div class="val" id="pv-stat-deadline" style="font-size: 1rem;">—</div></div>
+        </div>
+        <div id="pv-uitleg" style="margin-top:24px;"></div>
+      </div>
+      <div class="notice">
+        <strong>Twee jaar — anders zelf afwikkelen.</strong> Meld de scheiding bij elk pensioen­fonds binnen twee jaar na inschrijving van de echtscheidings­beschikking, met het formulier "Mededeling van scheiding in verband met verdeling van ouderdoms­pensioen". Na die termijn moet de verevenende partij rechtstreeks bij de ex-partner innen — de uitvoerder werkt dan niet meer mee.
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  function fmtDate(d) {
+    return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function bereken() {
+    const dHuw = $('#pv-datum-huw', el).value;
+    const dSch = $('#pv-datum-sch', el).value;
+    const aHuw = parseFloat($('#pv-aanspr-huw', el).value);
+    const aSch = parseFloat($('#pv-aanspr-sch', el).value);
+
+    if (isNaN(aHuw) || isNaN(aSch)) {
+      $('#pv-resultaat', el).textContent = '—';
+      $('#pv-resultaat-sub', el).textContent = 'vul beide pensioen­aanspraken in';
+      return;
+    }
+    if (aSch < aHuw) {
+      $('#pv-resultaat', el).textContent = '—';
+      $('#pv-resultaat-sub', el).textContent = 'aanspraak op scheidings­datum moet ≥ aanspraak op huwelijks­datum';
+      return;
+    }
+    const opgebouwd = aSch - aHuw;
+    const tevereven = opgebouwd / 2;
+
+    $('#pv-resultaat', el).textContent = euro(tevereven);
+    $('#pv-resultaat-sub', el).textContent = '50% van het tijdens het huwelijk opgebouwde bedrag';
+    $('#pv-stat-opgebouwd', el).textContent = euroR(opgebouwd);
+    $('#pv-stat-maand', el).textContent = euro(tevereven / 12);
+
+    if (dSch) {
+      const d = new Date(dSch);
+      d.setFullYear(d.getFullYear() + 2);
+      $('#pv-stat-deadline', el).textContent = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+    } else {
+      $('#pv-stat-deadline', el).textContent = '—';
+    }
+
+    let uitleg = `<p style="font-size:0.92rem;">
+      Aanspraak op huwelijksdatum: <strong>${euro(aHuw)}</strong>/jaar. Aanspraak op scheidings­datum: <strong>${euro(aSch)}</strong>/jaar.
+      Verschil = tijdens het huwelijk opgebouwd: <strong>${euro(opgebouwd)}</strong>/jaar. De helft (${euro(tevereven)}) komt elke partij toe als verevenings­aanspraak.
+    </p>`;
+    if (dHuw && dSch) {
+      const dh = new Date(dHuw), ds = new Date(dSch);
+      const jaren = (ds - dh) / (1000*60*60*24*365.25);
+      if (jaren > 0) {
+        uitleg += `<p style="font-size:0.88rem; color: var(--ink-mute);">Periode van opbouw: ${fmtDate(dh)} – ${fmtDate(ds)} (${jaren.toFixed(1)} jaar).</p>`;
+      }
+    }
+    $('#pv-uitleg', el).innerHTML = uitleg;
+  }
+
+  ['pv-datum-huw','pv-datum-sch','pv-aanspr-huw','pv-aanspr-sch'].forEach(id => {
+    $('#' + id, el).addEventListener('input', bereken);
+  });
+  bereken();
+});
+
+/* ============================================================
+   TOOL 11 — ZORGKORTING
+   ============================================================ */
+registerTool('zorgkorting', `
+  <div class="tool-header">
+    <div class="eyebrow">11 · Korting voor de niet-verzorgende ouder</div>
+    <h2>Zorgkorting</h2>
+    <div class="lead">De ouder die kinderalimentatie betaalt én zelf voor de kinderen zorgt, krijgt een korting op de te betalen alimentatie. <em>Hoe meer zorgdagen, hoe hoger het percentage.</em></div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer</div>
+        <div class="field">
+          <label for="zk-behoefte">Behoefte van de kinderen <span class="help">— totaal per maand</span></label>
+          <input type="number" id="zk-behoefte" min="0" step="10" value="600">
+        </div>
+        <div class="field">
+          <label>Gemiddeld aantal dagen per week zorg <span class="help">— vakanties meegerekend</span></label>
+          <div class="radio-group" id="zk-dagen">
+            <label><input type="radio" name="zk-d" value="0.5">< 1 dag</label>
+            <label class="checked"><input type="radio" name="zk-d" value="1" checked>1 dag</label>
+            <label><input type="radio" name="zk-d" value="2">2 dagen</label>
+            <label><input type="radio" name="zk-d" value="3">3 dagen / co-ouder</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="zk-aandeel">Aandeel betalende ouder <span class="help">— optioneel, op basis van draagkracht</span></label>
+          <input type="number" id="zk-aandeel" min="0" step="10" placeholder="bv. 360 (60% van behoefte)">
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>De Trema-percentages.</strong>
+        <ul class="clean">
+          <li><strong>< 1 dag</strong> per week → 5%</li>
+          <li><strong>1 dag</strong> per week → 15%</li>
+          <li><strong>2 dagen</strong> per week → 25%</li>
+          <li><strong>3 dagen of co-ouder</strong> → 35%</li>
+        </ul>
+        <p>Bij onvoldoende gezamenlijke draagkracht kan het percentage worden verlaagd. Het hof oordeelt: het gaat om <em>daadwerkelijk gemaakte verblijfskosten</em>, niet om uren-tellen.</p>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Zorgkorting</div>
+        <div class="result-headline"><span id="zk-resultaat">—</span></div>
+        <div class="result-sub" id="zk-resultaat-sub">vul behoefte en zorgdagen in</div>
+        <div class="result-stats">
+          <div class="result-stat"><div class="lbl">Percentage</div><div class="val" id="zk-pct">—</div></div>
+          <div class="result-stat"><div class="lbl">Behoefte</div><div class="val" id="zk-stat-behoefte">—</div></div>
+          <div class="result-stat"><div class="lbl">Netto alimentatie</div><div class="val" id="zk-stat-netto">—</div></div>
+        </div>
+        <div id="zk-uitleg" style="margin-top:24px;"></div>
+      </div>
+      <div class="notice">
+        <strong>Hoe wordt het toegepast?</strong> De zorgkorting wordt afgetrokken van het aandeel dat de betalende ouder zou betalen op basis van draagkracht. Voorbeeld: behoefte €600, aandeel ouder €360 (60%), zorgkorting 25% = €150. Te betalen kinderalimentatie: €360 − €150 = <strong>€210</strong>.
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  bindRadio($('#zk-dagen', el));
+
+  function bereken() {
+    const behoefte = parseFloat($('#zk-behoefte', el).value) || 0;
+    const dagen = parseFloat($('#zk-dagen input:checked', el).value);
+    const aandeel = parseFloat($('#zk-aandeel', el).value);
+
+    const pctMap = { 0.5: 5, 1: 15, 2: 25, 3: 35 };
+    const pct = pctMap[dagen];
+    if (behoefte <= 0) {
+      $('#zk-resultaat', el).textContent = '—';
+      $('#zk-resultaat-sub', el).textContent = 'vul de behoefte in';
+      $('#zk-pct', el).textContent = '—';
+      $('#zk-stat-behoefte', el).textContent = '—';
+      $('#zk-stat-netto', el).textContent = '—';
+      $('#zk-uitleg', el).innerHTML = '';
+      return;
+    }
+    const zk = behoefte * pct / 100;
+    $('#zk-resultaat', el).textContent = euro(zk);
+    $('#zk-resultaat-sub', el).textContent = `${pct}% van de behoefte`;
+    $('#zk-pct', el).textContent = pct + ' %';
+    $('#zk-stat-behoefte', el).textContent = euroR(behoefte);
+
+    if (!isNaN(aandeel) && aandeel > 0) {
+      const netto = Math.max(0, aandeel - zk);
+      $('#zk-stat-netto', el).textContent = euroR(netto);
+      $('#zk-uitleg', el).innerHTML = `
+        <p style="font-size:0.92rem;">
+          Aandeel betalende ouder: <strong>${euro(aandeel)}</strong> per maand. Na zorgkorting van ${euro(zk)} resteert
+          <strong>${euro(netto)}</strong> aan kinderalimentatie.
+        </p>`;
+    } else {
+      $('#zk-stat-netto', el).textContent = '—';
+      $('#zk-uitleg', el).innerHTML = `<p style="font-size:0.88rem; color: var(--ink-mute);"><em>Vul ook het aandeel van de betalende ouder in om de netto te betalen alimentatie te zien.</em></p>`;
+    }
+  }
+
+  ['zk-behoefte', 'zk-aandeel'].forEach(id => $('#' + id, el).addEventListener('input', bereken));
+  $('#zk-dagen', el).addEventListener('change', bereken);
+  bereken();
+});
+
+/* ============================================================
+   TOOL 10 — INBOEDELVERDELING
+   ============================================================ */
+registerTool('inboedelverdeling', `
+  <div class="tool-header">
+    <div class="eyebrow">10 · Eerlijke verdeling van bezittingen</div>
+    <h2>Inboedelverdeling</h2>
+    <div class="lead">Som de bezittingen op, wijs ze toe aan een van beiden, en zie wat één partij aan de ander moet uitkeren om gelijk uit te komen. <em>Items die jullie allebei willen</em> krijgen een aparte rij — daar moet je samen uit zien te komen.</div>
+  </div>
+
+  <div class="panel" style="margin-bottom: 16px;">
+    <div class="panel-title">Wie verdeelt</div>
+    <div class="field-row">
+      <div class="field" style="margin: 0;">
+        <label for="ibv-name-a">Persoon A</label>
+        <input type="text" id="ibv-name-a" value="Persoon A" maxlength="30">
+      </div>
+      <div class="field" style="margin: 0;">
+        <label for="ibv-name-b">Persoon B</label>
+        <input type="text" id="ibv-name-b" value="Persoon B" maxlength="30">
+      </div>
+    </div>
+  </div>
+
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Item toevoegen</div>
+        <div class="field">
+          <label for="ibv-naam">Omschrijving</label>
+          <input type="text" id="ibv-naam" placeholder="bv. Eetkamertafel met stoelen" maxlength="60">
+        </div>
+        <div class="field">
+          <label for="ibv-waarde">Geschatte waarde <span class="help">— in euro's</span></label>
+          <input type="number" id="ibv-waarde" min="0" step="10" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Toewijzen aan</label>
+          <div class="radio-group" id="ibv-toewijs">
+            <label class="checked"><input type="radio" name="ibv-t" value="A" checked><span data-name-a>Persoon A</span></label>
+            <label><input type="radio" name="ibv-t" value="B"><span data-name-b>Persoon B</span></label>
+            <label><input type="radio" name="ibv-t" value="beide">Beiden</label>
+            <label><input type="radio" name="ibv-t" value="geen">Weg / verkopen</label>
+          </div>
+        </div>
+        <button class="btn primary" id="ibv-add">+ Toevoegen</button>
+        <button class="btn secondary" id="ibv-reset" style="margin-left: 8px;">Wissen</button>
+      </div>
+
+      <div class="panel" style="margin-top: 16px;">
+        <div class="panel-title">Bezittingen <span class="hint" id="ibv-count">0 items</span></div>
+        <table class="calc-table" id="ibv-tabel">
+          <thead><tr>
+            <th>Omschrijving</th>
+            <th>Naar</th>
+            <th class="num">Waarde</th>
+            <th></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="ibv-empty">Nog geen items toegevoegd</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-title">Verrekening</div>
+        <div class="result-headline" id="ibv-saldo">—</div>
+        <div class="result-sub" id="ibv-saldo-sub">vul de bezittingen hierboven in</div>
+        <div class="result-stats">
+          <div class="result-stat"><div class="lbl" id="ibv-stat-a-lbl">Persoon A</div><div class="val" id="ibv-stat-a">€ 0</div></div>
+          <div class="result-stat"><div class="lbl" id="ibv-stat-b-lbl">Persoon B</div><div class="val" id="ibv-stat-b">€ 0</div></div>
+          <div class="result-stat"><div class="lbl">Conflict</div><div class="val" id="ibv-stat-conflict">€ 0</div></div>
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>Hoe werkt het?</strong>
+        <p>Items waar één van beiden om vraagt gaan naar die partij. <em>Beiden</em>-items komen in een conflictrij — daar moet je samen uitkomen. Items zonder voorkeur tellen niet mee (typisch: verkopen of weggeven).</p>
+        <p>Als A meer waarde toebedeeld krijgt dan B, betaalt A aan B de helft van het verschil. Zo eindigen beiden op dezelfde netto waarde.</p>
+      </div>
+      <div class="notice" id="ibv-conflict-notice" style="display: none;">
+        <strong>Onopgelost.</strong> <span id="ibv-conflict-tekst"></span>
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  // State
+  let items = [
+    { id: 1, naam: 'Eetkamertafel met stoelen', waarde: 800, toewijs: 'A' },
+    { id: 2, naam: 'Bankstel', waarde: 1200, toewijs: 'B' },
+    { id: 3, naam: 'Vaatwasser', waarde: 400, toewijs: 'beide' }
+  ];
+  let nextId = 4;
+
+  bindRadio($('#ibv-toewijs', el));
+
+  function esc(s) {
+    return String(s).replace(/[<>&"]/g, c => ({'<':'<','>':'>','&':'&','"':'"'}[c]));
+  }
+  function getNames() {
+    return {
+      a: $('#ibv-name-a', el).value.trim() || 'Persoon A',
+      b: $('#ibv-name-b', el).value.trim() || 'Persoon B'
+    };
+  }
+
+  function render() {
+    const { a, b } = getNames();
+    // sync name labels in radio buttons and stats
+    el.querySelectorAll('[data-name-a]').forEach(e => e.textContent = a);
+    el.querySelectorAll('[data-name-b]').forEach(e => e.textContent = b);
+    $('#ibv-stat-a-lbl', el).textContent = a;
+    $('#ibv-stat-b-lbl', el).textContent = b;
+
+    const tbody = $('#ibv-tabel tbody', el);
+    const empty = $('#ibv-empty', el);
+    const tabel = $('#ibv-tabel', el);
+
+    if (items.length === 0) {
+      tabel.style.display = 'none';
+      empty.style.display = 'block';
+    } else {
+      tabel.style.display = '';
+      empty.style.display = 'none';
+      tbody.innerHTML = items.map(it => {
+        const tw = it.toewijs === 'A' ? esc(a)
+                : it.toewijs === 'B' ? esc(b)
+                : it.toewijs === 'beide' ? '⚠ beiden'
+                : '— geen';
+        const cls = it.toewijs === 'beide' ? 'conflict' : '';
+        return `<tr data-id="${it.id}" class="${cls}">
+          <td>${esc(it.naam)}</td>
+          <td>${tw}</td>
+          <td class="num">${euro(it.waarde)}</td>
+          <td style="text-align:right; width: 32px;"><button class="ibv-del" data-id="${it.id}" title="Verwijderen">×</button></td>
+        </tr>`;
+      }).join('');
+      tbody.querySelectorAll('.ibv-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          items = items.filter(i => i.id !== parseInt(btn.dataset.id));
+          render();
+        });
+      });
+    }
+
+    // Sommen
+    const totA = items.filter(i => i.toewijs === 'A').reduce((s, i) => s + i.waarde, 0);
+    const totB = items.filter(i => i.toewijs === 'B').reduce((s, i) => s + i.waarde, 0);
+    const conflict = items.filter(i => i.toewijs === 'beide').reduce((s, i) => s + i.waarde, 0);
+    const totalAll = totA + totB + conflict + items.filter(i => i.toewijs === 'geen').reduce((s, i) => s + i.waarde, 0);
+    const conflictCount = items.filter(i => i.toewijs === 'beide').length;
+
+    $('#ibv-stat-a', el).textContent = euroR(totA);
+    $('#ibv-stat-b', el).textContent = euroR(totB);
+    $('#ibv-stat-conflict', el).textContent = euroR(conflict);
+    $('#ibv-count', el).textContent = `${items.length} item${items.length===1?'':'s'} · totaal ${euroR(totalAll)}`;
+
+    // Verrekening
+    if (items.length === 0 || (totA === 0 && totB === 0)) {
+      $('#ibv-saldo', el).textContent = '—';
+      $('#ibv-saldo-sub', el).textContent = 'vul de bezittingen hierboven in';
+    } else {
+      const diff = totA - totB;
+      const settle = Math.abs(diff) / 2;
+      if (Math.abs(diff) < 0.005) {
+        $('#ibv-saldo', el).innerHTML = '<span class="serif-ital">Gelijk</span>';
+        $('#ibv-saldo-sub', el).textContent = 'geen verrekening nodig — beiden krijgen evenveel waarde';
+      } else if (diff > 0) {
+        $('#ibv-saldo', el).textContent = euro(settle);
+        $('#ibv-saldo-sub', el).innerHTML = `${esc(a)} → ${esc(b)}`;
+      } else {
+        $('#ibv-saldo', el).textContent = euro(settle);
+        $('#ibv-saldo-sub', el).innerHTML = `${esc(b)} → ${esc(a)}`;
+      }
+    }
+
+    // Conflict warning
+    const notice = $('#ibv-conflict-notice', el);
+    if (conflictCount > 0) {
+      notice.style.display = '';
+      $('#ibv-conflict-tekst', el).textContent =
+        `${conflictCount} item${conflictCount===1?'':'s'} ter waarde van ${euroR(conflict)} ${conflictCount===1?'wordt':'worden'} door beiden geclaimd. Maak hier samen afspraken over voordat het saldo definitief is.`;
+    } else {
+      notice.style.display = 'none';
+    }
+  }
+
+  function addItem() {
+    const naam = $('#ibv-naam', el).value.trim();
+    const waarde = parseFloat($('#ibv-waarde', el).value);
+    const toewijs = $('#ibv-toewijs input:checked', el).value;
+    if (!naam || isNaN(waarde) || waarde <= 0) return;
+    items.push({ id: nextId++, naam, waarde, toewijs });
+    $('#ibv-naam', el).value = '';
+    $('#ibv-waarde', el).value = '';
+    $('#ibv-naam', el).focus();
+    render();
+  }
+
+  $('#ibv-add', el).addEventListener('click', addItem);
+  $('#ibv-reset', el).addEventListener('click', () => {
+    if (items.length === 0) return;
+    items = [];
+    render();
+  });
+  $('#ibv-name-a', el).addEventListener('input', render);
+  $('#ibv-name-b', el).addEventListener('input', render);
+
+  [$('#ibv-naam', el), $('#ibv-waarde', el)].forEach(input => {
+    input.addEventListener('keypress', e => {
+      if (e.key === 'Enter') addItem();
+    });
+  });
+
+  render();
+});
+
+/* ============================================================
+   TOOL 08 — CHECKLIST SCHEIDING
+   ============================================================ */
+const CHECKLIST_VOOR = [
+  {
+    titel: 'Persoonlijk',
+    items: [
+      ['Mediator of advocaat kiezen', 'eventueel een gezamenlijke mediator om kosten te delen'],
+      ['Eigen e-mailadres aanmaken', 'voor vertrouwelijke correspondentie buiten de gedeelde inbox'],
+      ['Eigen telefoonabonnement regelen', 'als je in een familiebundel zit'],
+      ['Wachtwoorden van persoonlijke accounts wijzigen', 'mail, social media, cloud-opslag'],
+      ['Vertrouwens­persoon of coach inschakelen', 'voor emotionele ondersteuning'],
+    ]
+  },
+  {
+    titel: 'Documenten verzamelen',
+    items: [
+      ['Trouwakte of partnerschapsregistratie opvragen', ''],
+      ['Eventuele huwelijkse voorwaarden / akte opzoeken', 'bij de notaris of in eigen archief'],
+      ['Geboorteakten van de kinderen', ''],
+      ['Identiteitsbewijzen van beide partners', ''],
+      ['Laatste 3 belastingaangiftes met aanslagen', ''],
+      ['Loonstroken / jaaropgaven van het afgelopen jaar', ''],
+      ['Jaaroverzichten bank- en spaarrekeningen', ''],
+      ['Pensioenoverzicht (mijnpensioenoverzicht.nl)', ''],
+      ['Hypotheekakte en jaaroverzicht hypotheek', ''],
+      ['Polissen verzekeringen (leven, AOV, ORV)', ''],
+    ]
+  },
+  {
+    titel: 'Financieel overzicht maken',
+    items: [
+      ['Inkomsten per partner in kaart brengen', 'loon, uitkering, ondernemerswinst, huurinkomsten'],
+      ['Vaste lasten inventariseren', 'hypotheek/huur, energie, verzekeringen, abonnementen'],
+      ['Schulden in kaart brengen', 'studieschuld, leningen, openstaande rekeningen, BKR'],
+      ['Vermogen inventariseren', 'spaargeld, beleggingen, kapitaalverzekering, woning, auto'],
+      ['Bedrijfs­waarde laten taxeren', 'alleen bij ondernemerschap'],
+      ['WOZ-waarde of recente taxatie van de woning', ''],
+    ]
+  },
+  {
+    titel: 'Kinderen',
+    items: [
+      ['Ouderschapsplan opstellen', 'verplicht bij minderjarige kinderen — zorgregeling, alimentatie, communicatie'],
+      ['Zorgverdeling overeenkomen', 'co-ouderschap, weekenden, vakanties, feestdagen'],
+      ['Schoolinformatie regelen', 'beide ouders op verzendlijst, rapporten, ouderavonden'],
+      ['Aanpak voor moeilijke gesprekken', 'wie vertelt het, wanneer, met wie erbij'],
+      ['Kindbehoefte (Nibud-tabel) berekenen', 'als basis voor kinderalimentatie'],
+    ]
+  },
+  {
+    titel: 'Wonen',
+    items: [
+      ['Bepaal wie in de woning blijft', 'tijdelijk en/of definitief'],
+      ['Mogelijkheden hypotheek na scheiding onderzoeken', 'overname, oversluiten, of verkoop'],
+      ['Tussentijds gebruik regelen', 'wie betaalt welke lasten in de overgangsperiode'],
+      ['Inboedel verdelen', 'lijst maken, foto\'s nemen, waardevolle items taxeren'],
+    ]
+  }
+];
+
+const CHECKLIST_NA = [
+  {
+    titel: 'Inschrijving en administratie',
+    items: [
+      ['Wijziging doorgeven aan de gemeente (BRP)', 'binnen 5 dagen na verhuizing'],
+      ['Echtscheidings­beschikking laten inschrijven', 'in registers burgerlijke stand'],
+      ['Adres wijzigen bij werkgever / uitkerings­instantie', ''],
+      ['Belastingdienst informeren over wijziging', 'fiscaal partnerschap eindigt'],
+      ['Toeslagen opnieuw aanvragen of stopzetten', 'huurtoeslag, zorgtoeslag, kindgebonden budget, kinderopvang­toeslag'],
+    ]
+  },
+  {
+    titel: 'Banken en betalingen',
+    items: [
+      ['En/of-rekeningen omzetten of opheffen', ''],
+      ['Eigen betaalrekening openen', 'als je die nog niet had'],
+      ['Automatische incasso\'s overzetten', 'energie, verzekeringen, abonnementen'],
+      ['Creditcards splitsen of opzeggen', ''],
+      ['Spaarrekeningen verdelen en namen wijzigen', ''],
+      ['Pinpas­bevoegdheden controleren', 'is je ex nog gemachtigd?'],
+    ]
+  },
+  {
+    titel: 'Verzekeringen',
+    items: [
+      ['Zorgverzekering omzetten naar individuele polis', ''],
+      ['Inboedel- en aansprakelijkheids­verzekering aanpassen', 'gezinssamenstelling en woonadres'],
+      ['Autoverzekering op eigen naam zetten', ''],
+      ['Levens-, ORV- en uitvaart­verzekeringen', 'begunstiging wijzigen!'],
+      ['Reisverzekering (bij familie/gezinspolis)', ''],
+      ['Rechtsbijstand­verzekering controleren', ''],
+    ]
+  },
+  {
+    titel: 'Pensioen en oudedag',
+    items: [
+      ['Pensioen­verevening melden binnen 2 jaar', 'art. 2 Wet VPS — formulier naar elke uitvoerder'],
+      ['Eventueel conversie afspreken', 'eigen pensioenrecht in plaats van verevening'],
+      ['Partnerpensioen-afspraken vastleggen', 'bijzonder partnerpensioen — anders verloren bij hertrouwen ex'],
+      ['Lijfrente- en bankspaar­regelingen herzien', ''],
+      ['AOW-prognose opvragen bij SVB', 'mijnsvb.nl'],
+    ]
+  },
+  {
+    titel: 'Wonen en bezit',
+    items: [
+      ['Tenaamstelling woning (kadaster) wijzigen', 'bij overname door één partner'],
+      ['Hypotheek omzetten of ontslag hoofdelijk schuldenaar', ''],
+      ['Tenaamstelling auto wijzigen', 'via RDW'],
+      ['Energie-, water- en internet­contracten op één naam', ''],
+      ['Abonnementen (Netflix, Spotify, krant, sportschool) splitsen', ''],
+    ]
+  },
+  {
+    titel: 'Testament en nalatenschap',
+    items: [
+      ['Testament laten aanpassen bij de notaris', 'ex is geen erfgenaam meer, maar testament-bepaling blijft staan'],
+      ['Voogdij­regeling vastleggen voor minderjarige kinderen', ''],
+      ['Levenstestament overwegen', 'voor het geval je zelf niet meer kan beslissen'],
+      ['Centraal testamenten­register raadplegen', 'om bestaande testamenten te vinden'],
+    ]
+  }
+];
+
+function renderChecklist(el, lijst, sleutel) {
+  const wrap = el;
+  const state = {};
+  lijst.forEach((sec, i) => sec.items.forEach((it, j) => state[`${i}-${j}`] = false));
+
+  function render() {
+    const totaal = Object.keys(state).length;
+    const klaar = Object.values(state).filter(v => v).length;
+    const html = `
+      <div class="check-progress">
+        <div class="bar"><div style="width:${(klaar/totaal)*100}%"></div></div>
+        <div class="label"><span class="num">${klaar} / ${totaal}</span> afgerond</div>
+        <button class="btn secondary" data-action="reset" style="padding:6px 12px;font-size:0.78rem;">Reset</button>
+      </div>
+      ${lijst.map((sec, i) => `
+        <div class="checklist-section">
+          <h3>${sec.titel}</h3>
+          ${sec.items.map(([titel, meta], j) => `
+            <label class="check-item ${state[`${i}-${j}`] ? 'done' : ''}" data-key="${i}-${j}">
+              <input type="checkbox" ${state[`${i}-${j}`] ? 'checked' : ''}>
+              <span class="box"></span>
+              <span class="text">${titel}${meta ? `<span class="meta">${meta}</span>` : ''}</span>
+            </label>
+          `).join('')}
+        </div>
+      `).join('')}
+    `;
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.check-item').forEach(item => {
+      item.addEventListener('click', e => {
+        e.preventDefault();
+        const k = item.dataset.key;
+        state[k] = !state[k];
+        render();
+      });
+    });
+    wrap.querySelector('[data-action="reset"]')?.addEventListener('click', () => {
+      Object.keys(state).forEach(k => state[k] = false);
+      render();
+    });
+  }
+  render();
+}
+
+registerTool('checklist-voor', `
+  <div class="tool-header">
+    <div class="eyebrow">08 · Voorbereiden & afspraken maken</div>
+    <h2>Checklist scheiding</h2>
+    <div class="lead">Een praktische lijst van wat je regelt vóór en tijdens de scheidings­procedure. Werk hem in eigen tempo af.</div>
+  </div>
+  <div id="cl-voor-wrap"></div>
+`, (el) => {
+  renderChecklist($('#cl-voor-wrap', el), CHECKLIST_VOOR, 'voor');
+});
+
+registerTool('checklist-na', `
+  <div class="tool-header">
+    <div class="eyebrow">09 · Praktische zaken nadat de beschikking er is</div>
+    <h2>Checklist na scheiding</h2>
+    <div class="lead">Wat je na de echtscheidings­beschikking nog moet rechttrekken — administratie, banken, verzekeringen, pensioen en testament.</div>
+  </div>
+  <div id="cl-na-wrap"></div>
+`, (el) => {
+  renderChecklist($('#cl-na-wrap', el), CHECKLIST_NA, 'na');
+});
+
+/* ============================================================
+   TOOL 07 — ERFRECHT & SCHENKING
+   ============================================================ */
+registerTool('erfrecht', `
+  <div class="tool-header">
+    <div class="eyebrow">07 · Erfenissen en schenkingen bij scheiding</div>
+    <h2>Erfrecht & schenking</h2>
+    <div class="lead">Een ontvangen erfenis of schenking — valt die in de gemeenschap, of blijft hij privé? En wat verandert er aan je testament bij een scheiding?</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Check: erfenis of schenking</div>
+        <div class="field">
+          <label for="ef-datum-huw">Datum huwelijk / partnerschap</label>
+          <input type="date" id="ef-datum-huw">
+        </div>
+        <div class="field">
+          <label for="ef-datum-ontv">Datum erfenis / schenking</label>
+          <input type="date" id="ef-datum-ontv">
+        </div>
+        <div class="field">
+          <label>Soort verkrijging</label>
+          <div class="radio-group" id="ef-soort">
+            <label class="checked"><input type="radio" name="ef-s" value="erfenis" checked>Erfenis</label>
+            <label><input type="radio" name="ef-s" value="schenking">Schenking</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Was er een uitsluitings­clausule?</label>
+          <div class="radio-group" id="ef-uitsl">
+            <label class="checked"><input type="radio" name="ef-u" value="onbekend" checked>Onbekend</label>
+            <label><input type="radio" name="ef-u" value="ja">Ja</label>
+            <label><input type="radio" name="ef-u" value="nee">Nee</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Uitkomst</div>
+        <div class="result-headline" style="font-size:2rem;"><span id="ef-resultaat">—</span></div>
+        <div class="result-sub" id="ef-sub">vul de gegevens hierboven in</div>
+        <div id="ef-uitleg" style="margin-top:24px;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:24px;">
+    <div class="panel-title">Testament & scheiding</div>
+    <p>Tijdens het huwelijk is je echtgenoot je wettelijk erfgenaam (samen met de kinderen) onder de <strong>wettelijke verdeling</strong> (art. 4:13 e.v. BW). Wat verandert er bij een scheiding?</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:16px;">
+      <div style="background:var(--surface);padding:16px;">
+        <h4>Tijdens scheiding</h4>
+        <p style="font-size:0.88rem;">Tot inschrijving van de echtscheidings­beschikking blijft je (ex-)partner erfgenaam. Pas het testament aan vóór de scheiding rond is — zeker als je nu al ergens anders vermogen zou willen laten.</p>
+      </div>
+      <div style="background:var(--surface);padding:16px;">
+        <h4>Na scheiding</h4>
+        <p style="font-size:0.88rem;">De ex-partner is geen wettelijk erfgenaam meer. Een testament dat de ex met name noemt, blijft echter geldig — actualiseer het testament dus actief bij de notaris.</p>
+      </div>
+      <div style="background:var(--surface);padding:16px;">
+        <h4>Voogdij & bewind</h4>
+        <p style="font-size:0.88rem;">Bij minderjarige kinderen: leg in het testament voogdij­benoeming en eventueel een tweetraps­making of bewind vast, met name als je niet wilt dat de ex-partner als wettelijk vertegenwoordiger het kind­erfdeel beheert.</p>
+      </div>
+      <div style="background:var(--surface);padding:16px;">
+        <h4>Levensverzekering & pensioen</h4>
+        <p style="font-size:0.88rem;">Begunstigingen op levensverzekering, lijfrente en partner­pensioen lopen niet automatisch met de scheiding mee. Controleer en wijzig bij elke verzekeraar/uitvoerder afzonderlijk.</p>
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  bindRadio($('#ef-soort', el));
+  bindRadio($('#ef-uitsl', el));
+
+  function bereken() {
+    const huw = $('#ef-datum-huw', el).value;
+    const ontv = $('#ef-datum-ontv', el).value;
+    if (!huw || !ontv) {
+      $('#ef-resultaat', el).textContent = '—';
+      $('#ef-sub', el).textContent = 'vul beide data hierboven in';
+      $('#ef-uitleg', el).innerHTML = '';
+      return;
+    }
+    const dHuw = new Date(huw), dOntv = new Date(ontv);
+    const cutoff = new Date('2018-01-01');
+    const soort = $('#ef-soort input:checked', el).value;
+    const uitsl = $('#ef-uitsl input:checked', el).value;
+
+    let resultaat, sub, uitleg = [];
+
+    const voorHuwelijk = dOntv < dHuw;
+    const oudeRegime = dHuw < cutoff;
+
+    if (voorHuwelijk) {
+      if (oudeRegime) {
+        if (uitsl === 'ja') {
+          resultaat = 'Privé';
+          sub = 'voorhuwelijkse verkrijging met uitsluitings­clausule';
+          uitleg.push(`Bij een huwelijk vóór 1-1-2018 (algehele gemeenschap) valt voor­huwelijks vermogen normaal in de gemeenschap, <strong>tenzij</strong> de erflater of schenker uitdrukkelijk een uitsluitings­clausule heeft opgenomen. Die heb je hier → blijft privé.`);
+        } else if (uitsl === 'nee') {
+          resultaat = 'In gemeenschap';
+          sub = 'algehele gemeenschap, geen uitsluitings­clausule';
+          uitleg.push(`Bij algehele gemeenschap (huwelijken vóór 1-1-2018) valt deze verkrijging zonder uitsluitings­clausule in de gemeenschap.`);
+        } else {
+          resultaat = 'Hangt af van uitsluitings­clausule';
+          sub = 'controleer testament / schenkings­akte';
+          uitleg.push(`Bij een huwelijk vóór 1-1-2018 maakt de uitsluitings­clausule het verschil. Vraag de notariële akte op of raadpleeg het centrale testamenten­register (CTR).`);
+        }
+      } else {
+        resultaat = 'Privé';
+        sub = 'beperkte gemeenschap — voorhuwelijks vermogen blijft privé';
+        uitleg.push(`Bij een huwelijk vanaf 1-1-2018 blijft voor­huwelijks privévermogen sowieso buiten de gemeenschap.`);
+      }
+    } else {
+      // tijdens huwelijk
+      if (oudeRegime) {
+        if (uitsl === 'ja') {
+          resultaat = 'Privé';
+          sub = 'uitsluitings­clausule van toepassing';
+          uitleg.push(`Onder de algehele gemeenschap (vóór 1-1-2018) valt een tijdens het huwelijk ontvangen ${soort} normaal gesproken in de gemeenschap, <strong>tenzij</strong> de erflater of schenker een uitsluitings­clausule heeft opgenomen. Die geldt hier → privé.`);
+        } else if (uitsl === 'nee') {
+          resultaat = 'In gemeenschap';
+          sub = 'geen uitsluitings­clausule';
+          uitleg.push(`Een tijdens het huwelijk verkregen ${soort} valt onder algehele gemeenschap in beginsel in de gemeenschap.`);
+        } else {
+          resultaat = 'Hangt af van uitsluitings­clausule';
+          sub = 'controleer testament / schenkings­akte';
+          uitleg.push(`Onder de algehele gemeenschap is een uitsluitings­clausule cruciaal. Bij ouders die destijds een notarieel testament hebben gemaakt is die clausule vaak standaard opgenomen.`);
+        }
+      } else {
+        resultaat = 'Privé';
+        sub = 'beperkte gemeenschap — erfenissen en schenkingen blijven privé';
+        uitleg.push(`Onder de beperkte gemeenschap (vanaf 1-1-2018) blijven erfenissen en schenkingen <strong>standaard</strong> buiten de gemeenschap, ongeacht uitsluitings­clausule (art. 1:94 lid 2 onder a BW).`);
+        if (uitsl === 'nee') {
+          uitleg.push(`<em>Let op</em>: een schenker of erflater kan in een akte juist <strong>insluiten</strong> (insluitings­clausule). Dan valt het wél in de gemeenschap. Controleer de akte.`);
+        }
+      }
+    }
+
+    // Algemene waarschuwing vermenging
+    uitleg.push(`<strong>Vermenging.</strong> Wordt de erfenis of schenking op een gezamenlijke rekening gestort, of gebruikt voor de gezamenlijke woning of huishouding, dan kan deze (deels) gemeenschappelijk worden. Een goed bijgehouden administratie — bewijs van herkomst — is essentieel (art. 1:94 lid 8 BW).`);
+
+    $('#ef-resultaat', el).textContent = resultaat;
+    $('#ef-sub', el).textContent = sub;
+    $('#ef-uitleg', el).innerHTML = uitleg.map(u => `<p style="font-size:0.92rem;">${u}</p>`).join('');
+  }
+
+  ['ef-datum-huw','ef-datum-ontv'].forEach(id => {
+    $('#' + id, el).addEventListener('input', bereken);
+  });
+  $('#ef-soort', el).addEventListener('change', bereken);
+  $('#ef-uitsl', el).addEventListener('change', bereken);
+});
+
+/* ============================================================
+   TOOL 06 — HUWELIJKSVERMOGENSRECHT
+   ============================================================ */
+registerTool('huwelijksvermogensrecht', `
+  <div class="tool-header">
+    <div class="eyebrow">06 · BW Boek 1, titel 6–8</div>
+    <h2>Huwelijksvermogensrecht</h2>
+    <div class="lead">Welk vermogensregime is op jouw huwelijk of partnerschap van toepassing — en wat valt wel of niet in de gemeenschap?</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer</div>
+        <div class="field">
+          <label for="hv-datum">Datum huwelijk / geregistreerd partnerschap</label>
+          <input type="date" id="hv-datum">
+        </div>
+        <div class="field">
+          <label>Zijn er huwelijkse voorwaarden / partner­schapsvoorwaarden opgesteld?</label>
+          <div class="radio-group" id="hv-vw">
+            <label class="checked"><input type="radio" name="hv-v" value="nee" checked>Nee</label>
+            <label><input type="radio" name="hv-v" value="ja">Ja</label>
+          </div>
+        </div>
+        <div class="field" id="hv-type-wrap" style="display:none;">
+          <label>Type voorwaarden</label>
+          <div class="radio-group" id="hv-type">
+            <label class="checked"><input type="radio" name="hv-t" value="koud" checked>Koude uitsluiting</label>
+            <label><input type="radio" name="hv-t" value="verreken">Verrekenbeding</label>
+            <label><input type="radio" name="hv-t" value="beperkt">Beperkte gemeenschap</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Toepasselijk regime</div>
+        <div class="result-headline" style="font-size:2.4rem;line-height:1.15;"><span id="hv-regime">—</span></div>
+        <div class="result-sub" id="hv-sub">vul de datum hierboven in</div>
+        <div id="hv-uitleg" style="margin-top:24px;"></div>
+      </div>
+      <div class="info-box">
+        <strong>Twee wettelijke regimes.</strong>
+        <ul class="clean">
+          <li><strong>Vóór 1 januari 2018</strong> — algehele gemeenschap van goederen: in beginsel alles van vóór en tijdens het huwelijk wordt gemeenschappelijk.</li>
+          <li><strong>Vanaf 1 januari 2018</strong> — beperkte gemeenschap: alleen wat tijdens het huwelijk wordt verworven valt in de gemeenschap; voor­huwelijks privévermogen, erfenissen en schenkingen blijven in beginsel privé.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  bindRadio($('#hv-vw', el));
+  bindRadio($('#hv-type', el));
+
+  $('#hv-vw', el).addEventListener('change', () => {
+    const v = $('#hv-vw input:checked', el).value;
+    $('#hv-type-wrap', el).style.display = v === 'ja' ? 'block' : 'none';
+    bereken();
+  });
+
+  function bereken() {
+    const datum = $('#hv-datum', el).value;
+    if (!datum) {
+      $('#hv-regime', el).textContent = '—';
+      $('#hv-sub', el).textContent = 'vul de datum hierboven in';
+      $('#hv-uitleg', el).innerHTML = '';
+      return;
+    }
+    const dHuw = new Date(datum);
+    const cutoff = new Date('2018-01-01');
+    const heeftVw = $('#hv-vw input:checked', el).value === 'ja';
+    const typeVw = $('#hv-type input:checked', el).value;
+
+    let regime, sub, uitleg;
+
+    if (heeftVw) {
+      if (typeVw === 'koud') {
+        regime = 'Koude uitsluiting';
+        sub = 'volledige scheiding van vermogens';
+        uitleg = `
+          <p><strong>Geen gemeenschap.</strong> Alle vermogens­bestand­delen blijven in beginsel privé van degene op wiens naam ze staan. Bij scheiding is er niets te verdelen behalve eventuele eenvoudige gemeenschappen (bv. een gezamenlijk gekochte woning).</p>
+          <p>Let op artikel 1:84 BW (kosten huishouding) en eventuele verzwegen vermogens­vermenging gedurende het huwelijk.</p>
+        `;
+      } else if (typeVw === 'verreken') {
+        regime = 'Huwelijkse voorwaarden met verrekenbeding';
+        sub = 'periodiek of finaal verrekenen';
+        uitleg = `
+          <p><strong>Verrekenbeding.</strong> Tijdens het huwelijk is er geen gemeenschap, maar er moet wel verrekend worden — periodiek (jaarlijks het overgespaarde inkomen) of finaal (alsof er gemeenschap was, alleen bij einde huwelijk).</p>
+          <p>Bij niet-nageleefd <em>periodiek</em> verrekenbeding kan op grond van art. 1:141 lid 3 BW alsnog finaal verrekend worden over het totale tijdens het huwelijk gevormde vermogen. Vaak een belangrijke discussie bij scheiding.</p>
+        `;
+      } else {
+        regime = 'Beperkte gemeenschap (op maat)';
+        sub = 'huwelijkse voorwaarden met afgebakende gemeenschap';
+        uitleg = `<p>De voorwaarden bepalen exact welke goederen wel en niet in de gemeenschap vallen. Raadpleeg de akte voor de details.</p>`;
+      }
+    } else if (dHuw < cutoff) {
+      regime = 'Algehele gemeenschap van goederen';
+      sub = `huwelijk gesloten op ${dHuw.toLocaleDateString('nl-NL')} — vóór 1-1-2018`;
+      uitleg = `
+        <p><strong>Alles in de gemeenschap.</strong> Zowel voor­huwelijks vermogen als tijdens het huwelijk verkregen vermogen valt in beginsel in de gemeenschap. Ook schulden — ook die van vóór het huwelijk — vallen erin.</p>
+        <p><strong>Uitzonderingen</strong>: erfenissen en schenkingen met een <em>uitsluitingsclausule</em>, verknochte goederen (bv. smartengeld), en pensioen­aanspraken (eigen regime via Wet VPS).</p>
+        <p>Bij scheiding wordt het saldo bij helfte verdeeld.</p>
+      `;
+    } else {
+      regime = 'Beperkte gemeenschap van goederen';
+      sub = `huwelijk gesloten op ${dHuw.toLocaleDateString('nl-NL')} — vanaf 1-1-2018`;
+      uitleg = `
+        <p><strong>Alleen wat tijdens het huwelijk wordt verworven</strong> valt in de gemeenschap. Voor­huwelijks privévermogen, erfenissen en schenkingen (ongeacht uitsluitings­clausule) blijven privé.</p>
+        <p>Voor­huwelijks gemeenschappelijk vermogen (bv. samen gekochte woning) valt wél in de gemeenschap. Houd een goede administratie bij — zonder bewijs van herkomst (privé/gemeenschap) wordt vermenging gemeenschappelijk geacht (art. 1:94 lid 8 BW).</p>
+      `;
+    }
+
+    $('#hv-regime', el).textContent = regime;
+    $('#hv-sub', el).textContent = sub;
+    $('#hv-uitleg', el).innerHTML = uitleg;
+  }
+
+  $('#hv-datum', el).addEventListener('input', bereken);
+  $('#hv-vw', el).addEventListener('change', bereken);
+  $('#hv-type', el).addEventListener('change', bereken);
+});
+
+/* ============================================================
+   TOOL 05 — BEHOEFTE JONGMEERDERJARIGE
+   ============================================================ */
+/* Indicatieve WSF-normbedragen per maand vanaf 1-1-2026
+   (Staatscourant 2025, 39853 — art. 3.18 WSF 2000, totale normbudget
+   levensonderhoud + studie). Deze waarden zijn richtinggevend; de
+   Expertgroep Alimentatie­normen beveelt afstemming op de actuele
+   situatie aan. */
+const WSF_NORM_2026 = {
+  // Totaal normbudget per maand (afgerond, indicatief)
+  hbowo_uit: 1320,
+  hbowo_thuis: 1320,   // sinds 2023 gelijk; correctie via basishuur
+  mbo_uit:    1320,
+  mbo_thuis:   780,
+  basishuur:   270     // gemiddelde basishuur bijstandsnorm — indicatief
+};
+
+registerTool('behoefte', `
+  <div class="tool-header">
+    <div class="eyebrow">05 · Bijdrage levensonderhoud & studie (art. 1:395a BW)</div>
+    <h2>Behoefte jongmeerderjarige</h2>
+    <div class="lead">Indicatieve berekening van de behoefte van een kind tussen 18 en 21, op basis van de WSF-norm. Maatwerk blijft nodig — rechtspraak is wisselend.</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Situatie</div>
+        <div class="field">
+          <label>Onderwijsniveau</label>
+          <div class="radio-group" id="bh-niveau">
+            <label class="checked"><input type="radio" name="bh-n" value="hbowo" checked>HBO/WO</label>
+            <label><input type="radio" name="bh-n" value="mbo">MBO</label>
+            <label><input type="radio" name="bh-n" value="geen">Niet studerend</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Woonsituatie</label>
+          <div class="radio-group" id="bh-woon">
+            <label class="checked"><input type="radio" name="bh-w" value="uit" checked>Uitwonend</label>
+            <label><input type="radio" name="bh-w" value="thuis">Thuiswonend</label>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">WSF-normbedrag <span class="hint">per maand, 2026</span></div>
+        <div class="field">
+          <label for="bh-norm">Totaal normbudget</label>
+          <input type="number" id="bh-norm" min="0" step="10" value="1320">
+        </div>
+        <div class="field">
+          <label for="bh-collegegeld">Collegegeld / lesgeld <span class="help">— per maand (jaar ÷ 12)</span></label>
+          <input type="number" id="bh-collegegeld" min="0" step="10" value="200">
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Correcties</div>
+        <div class="field">
+          <label for="bh-basisbeurs">Basisbeurs (gift-deel) <span class="help">— verlaagt behoefte</span></label>
+          <input type="number" id="bh-basisbeurs" min="0" step="10" value="0">
+        </div>
+        <div class="field">
+          <label for="bh-eigen">Structurele eigen inkomsten <span class="help">— alleen vanaf ± € 200/mnd</span></label>
+          <input type="number" id="bh-eigen" min="0" step="10" value="0">
+        </div>
+        <div class="field">
+          <label for="bh-extra">Bijzondere kosten <span class="help">— bv. medisch, topsport</span></label>
+          <input type="number" id="bh-extra" min="0" step="10" value="0">
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Geraamde behoefte <span class="hint">per maand</span></div>
+        <div class="result-headline"><span id="bh-resultaat">—</span></div>
+        <div class="result-sub" id="bh-resultaat-sub">behoefte aan bijdrage van de ouders</div>
+        <table class="calc-table" style="margin-top:24px;">
+          <thead><tr><th>Component</th><th class="num">Bedrag</th></tr></thead>
+          <tbody id="bh-componenten"></tbody>
+        </table>
+      </div>
+      <div class="info-box">
+        <strong>Toelichting.</strong>
+        <p>De Expertgroep Alimentatie­normen beveelt aan om voor jong­meerder­jarigen aan te sluiten bij de WSF-norm uit art. 3.18 WSF 2000. Sinds 1 september 2023 is het normbudget voor HBO/WO gelijk voor thuis- en uitwonend; voor thuis­wonenden wordt vaak een correctie toegepast voor de "ingehouden" basishuur (≈ € 270). Eigen inkomsten worden meestal pas vanaf ongeveer € 200 per maand mee­gerekend.</p>
+      </div>
+      <div class="notice">
+        <strong>Geen vaste lijn.</strong> Of zorgtoeslag, collegegeld­krediet of basisbeurs precies worden verrekend, verschilt per rechtbank. Deze tool geeft een redelijke indicatie, geen vaststaand bedrag.
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  bindRadio($('#bh-niveau', el));
+  bindRadio($('#bh-woon', el));
+
+  // pas norm-default aan op basis van keuzes
+  function pasNormAan() {
+    const niveau = $('#bh-niveau input:checked', el).value;
+    const woon = $('#bh-woon input:checked', el).value;
+    let norm;
+    if (niveau === 'hbowo' || niveau === 'geen') norm = WSF_NORM_2026.hbowo_uit;
+    else norm = woon === 'uit' ? WSF_NORM_2026.mbo_uit : WSF_NORM_2026.mbo_thuis;
+    $('#bh-norm', el).value = norm;
+  }
+  $('#bh-niveau', el).addEventListener('change', () => { pasNormAan(); bereken(); });
+  $('#bh-woon', el).addEventListener('change', () => { pasNormAan(); bereken(); });
+
+  function bereken() {
+    const niveau = $('#bh-niveau input:checked', el).value;
+    const woon = $('#bh-woon input:checked', el).value;
+    const norm = parseFloat($('#bh-norm', el).value) || 0;
+    const cg = parseFloat($('#bh-collegegeld', el).value) || 0;
+    const beurs = parseFloat($('#bh-basisbeurs', el).value) || 0;
+    const eigen = parseFloat($('#bh-eigen', el).value) || 0;
+    const extra = parseFloat($('#bh-extra', el).value) || 0;
+
+    const componenten = [];
+    componenten.push({ lbl: 'WSF-normbudget levensonderhoud + studie', val: norm });
+    if (cg > 0) componenten.push({ lbl: 'Collegegeld / lesgeld', val: cg });
+
+    // Correctie thuiswonend HBO/WO: basishuur eraf
+    if (niveau === 'hbowo' && woon === 'thuis') {
+      componenten.push({ lbl: 'Correctie thuiswonend (− basishuur)', val: -WSF_NORM_2026.basishuur });
+    }
+    // Niet studerend MBO: lesgeld/boeken eraf
+    if (niveau === 'geen') {
+      componenten.push({ lbl: 'Correctie niet-studerend (− studie­component)', val: -100 });
+    }
+    if (beurs > 0) componenten.push({ lbl: 'Af: basisbeurs (gift-deel)', val: -beurs });
+    if (eigen >= 200) componenten.push({ lbl: 'Af: structurele eigen inkomsten', val: -eigen });
+    if (extra > 0) componenten.push({ lbl: 'Bijzondere kosten', val: extra });
+
+    const behoefte = componenten.reduce((a, c) => a + c.val, 0);
+
+    $('#bh-resultaat', el).textContent = euro(Math.max(behoefte, 0));
+    $('#bh-resultaat-sub', el).textContent = 'maandelijkse behoefte aan bijdrage';
+    $('#bh-componenten', el).innerHTML = componenten.map(c => `
+      <tr><td>${c.lbl}</td><td class="num" style="color:${c.val < 0 ? 'var(--warning)' : 'var(--ink-soft)'}">${c.val < 0 ? '−' : ''}${euro(Math.abs(c.val))}</td></tr>
+    `).join('') + `<tr class="final"><td>Behoefte</td><td class="num">${euro(Math.max(behoefte, 0))}</td></tr>`;
+  }
+
+  ['bh-norm','bh-collegegeld','bh-basisbeurs','bh-eigen','bh-extra'].forEach(id => {
+    $('#' + id, el).addEventListener('input', bereken);
+  });
+  bereken();
+});
+
+/* ============================================================
+   TOOL 04 — CONTANTE WAARDE
+   ============================================================ */
+registerTool('contante-waarde', `
+  <div class="tool-header">
+    <div class="eyebrow">04 · Contant maken / NPV</div>
+    <h2>Contante waarde</h2>
+    <div class="lead">Wat is een bedrag dat je later ontvangt vandaag waard? Gebruikt voor afkoop van alimentatie, waardering van pensioen­rechten of vergelijking van betalings­vormen.</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer</div>
+        <div class="field">
+          <label>Soort uitkering</label>
+          <div class="radio-group" id="cw-type">
+            <label class="checked"><input type="radio" name="cw-t" value="eenmalig" checked>Eenmalig</label>
+            <label><input type="radio" name="cw-t" value="reeks">Periodieke reeks</label>
+          </div>
+        </div>
+        <div class="field" id="cw-bedrag-wrap">
+          <label for="cw-bedrag" id="cw-bedrag-lbl">Toekomstig bedrag</label>
+          <input type="number" id="cw-bedrag" min="0" step="100" value="10000">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="cw-rente">Discontovoet <span class="help">— jaarrente %</span></label>
+            <input type="number" id="cw-rente" min="0" max="20" step="0.1" value="3.0">
+          </div>
+          <div class="field">
+            <label for="cw-jaren">Aantal jaren</label>
+            <input type="number" id="cw-jaren" min="1" max="60" step="1" value="10">
+          </div>
+        </div>
+        <div class="field" id="cw-freq-wrap" style="display:none;">
+          <label>Uitkerings­frequentie</label>
+          <div class="radio-group" id="cw-freq">
+            <label><input type="radio" name="cw-f" value="12">Maand</label>
+            <label class="checked"><input type="radio" name="cw-f" value="1" checked>Jaar</label>
+          </div>
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>Formules.</strong>
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:0.85rem;color:var(--ink);">
+          Eenmalig: CW = FV / (1+r)<sup>n</sup><br>
+          Reeks: CW = PMT · (1 − (1+r)<sup>−n</sup>) / r
+        </p>
+        <p>Voorbeeld: € 10.000 dat je over 10 jaar ontvangt bij 3% disconto is vandaag ongeveer € 7.441 waard.</p>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Contante waarde</div>
+        <div class="result-headline"><span id="cw-resultaat">—</span></div>
+        <div class="result-sub" id="cw-resultaat-sub">vandaag</div>
+        <div class="result-stats">
+          <div class="result-stat"><div class="lbl">Nominaal totaal</div><div class="val" id="cw-stat-nom">—</div></div>
+          <div class="result-stat"><div class="lbl">Verschil</div><div class="val" id="cw-stat-diff">—</div></div>
+          <div class="result-stat"><div class="lbl">Disconto-effect</div><div class="val" id="cw-stat-pct">—</div></div>
+        </div>
+      </div>
+      <div class="notice">
+        <strong>Bij afkoop alimentatie.</strong> Voor het bepalen van een afkoopsom partneralimentatie wordt vaak met een lagere discontovoet (1–3%) en met fiscale brutering/netto-bruto-correctie gerekend. Vraag bij een concrete afkoop altijd advies van een fiscalist of mediator.
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  bindRadio($('#cw-type', el));
+  bindRadio($('#cw-freq', el));
+
+  $('#cw-type', el).addEventListener('change', () => {
+    const t = $('#cw-type input:checked', el).value;
+    $('#cw-freq-wrap', el).style.display = t === 'reeks' ? 'block' : 'none';
+    $('#cw-bedrag-lbl', el).textContent = t === 'reeks' ? 'Periodiek bedrag' : 'Toekomstig bedrag';
+    bereken();
+  });
+
+  function bereken() {
+    const pmt = parseFloat($('#cw-bedrag', el).value) || 0;
+    const r = parseFloat($('#cw-rente', el).value) / 100;
+    const jaren = parseFloat($('#cw-jaren', el).value) || 0;
+    const t = $('#cw-type input:checked', el).value;
+    const fr = parseInt($('#cw-freq input:checked', el).value);
+    if (pmt <= 0 || jaren <= 0) return;
+
+    let cw, nominaal;
+    if (t === 'eenmalig') {
+      cw = pmt / Math.pow(1 + r, jaren);
+      nominaal = pmt;
+    } else {
+      const i = Math.pow(1 + r, 1/fr) - 1;
+      const n = Math.round(jaren * fr);
+      cw = i === 0 ? pmt * n : pmt * (1 - Math.pow(1+i, -n)) / i;
+      nominaal = pmt * n;
+    }
+    const diff = nominaal - cw;
+    const effect = (diff / nominaal) * 100;
+
+    $('#cw-resultaat', el).textContent = euro(cw);
+    $('#cw-resultaat-sub', el).textContent = t === 'eenmalig'
+      ? `voor € ${num(pmt,0)} over ${jaren} jaar bij ${num(r*100,1)}% disconto`
+      : `voor ${jaren} jaar × € ${num(pmt,0)} (${fr===12?'per maand':'per jaar'}) bij ${num(r*100,1)}%`;
+    $('#cw-stat-nom', el).textContent = euroR(nominaal);
+    $('#cw-stat-diff', el).textContent = euroR(diff);
+    $('#cw-stat-pct', el).textContent = num(effect, 1) + ' %';
+  }
+
+  ['cw-bedrag','cw-rente','cw-jaren'].forEach(id => {
+    $('#' + id, el).addEventListener('input', bereken);
+  });
+  $('#cw-type', el).addEventListener('change', bereken);
+  $('#cw-freq', el).addEventListener('change', bereken);
+  bereken();
+});
+
+/* ============================================================
+   TOOL 03 — ANNUÏTEIT
+   ============================================================ */
+registerTool('annuiteit', `
+  <div class="tool-header">
+    <div class="eyebrow">03 · Annuïtaire aflossing</div>
+    <h2>Annuïteit</h2>
+    <div class="lead">Bereken de maandelijkse termijn van een annuïtaire lening of hypotheek — even hoge termijn, dalend rente­deel, stijgend aflossings­deel.</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer</div>
+        <div class="field">
+          <label for="ann-hoofdsom">Hoofdsom <span class="help">— bedrag van de lening</span></label>
+          <input type="number" id="ann-hoofdsom" min="0" step="1000" value="250000">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="ann-rente">Jaarrente <span class="help">— %</span></label>
+            <input type="number" id="ann-rente" min="0" max="20" step="0.01" value="4.2">
+          </div>
+          <div class="field">
+            <label for="ann-looptijd">Looptijd <span class="help">— jaren</span></label>
+            <input type="number" id="ann-looptijd" min="1" max="40" step="1" value="30">
+          </div>
+        </div>
+        <div class="field">
+          <label>Termijn­frequentie</label>
+          <div class="radio-group" id="ann-freq">
+            <label class="checked"><input type="radio" name="ann-f" value="12" checked>Maand</label>
+            <label><input type="radio" name="ann-f" value="4">Kwartaal</label>
+            <label><input type="radio" name="ann-f" value="1">Jaar</label>
+          </div>
+        </div>
+      </div>
+      <div class="info-box">
+        <strong>Formule.</strong>
+        <p style="font-family:'IBM Plex Mono',monospace;font-size:0.85rem;color:var(--ink);">
+          T = P · i · (1+i)<sup>n</sup> / ((1+i)<sup>n</sup> − 1)
+        </p>
+        <p>Met <em>P</em> = hoofdsom, <em>i</em> = rente per termijn, <em>n</em> = aantal termijnen.</p>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Resultaat <span class="hint" id="ann-freq-lbl">per maand</span></div>
+        <div class="result-headline"><span id="ann-termijn">—</span></div>
+        <div class="result-sub" id="ann-termijn-sub">per maand · bruto</div>
+        <div class="result-stats" id="ann-stats">
+          <div class="result-stat"><div class="lbl">Totaal te betalen</div><div class="val" id="ann-totaal">—</div></div>
+          <div class="result-stat"><div class="lbl">Totaal rente</div><div class="val" id="ann-rentetotaal">—</div></div>
+          <div class="result-stat"><div class="lbl">Aantal termijnen</div><div class="val" id="ann-n">—</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Aflossings­schema <span class="hint">eerste 12 + laatste 6</span></div>
+        <table class="calc-table" id="ann-tabel">
+          <thead><tr>
+            <th>#</th>
+            <th class="num">Termijn</th>
+            <th class="num">Rente</th>
+            <th class="num">Aflossing</th>
+            <th class="num">Restschuld</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  bindRadio($('#ann-freq', el));
+
+  function bereken() {
+    const P = parseFloat($('#ann-hoofdsom', el).value) || 0;
+    const r = parseFloat($('#ann-rente', el).value) || 0;
+    const jaren = parseFloat($('#ann-looptijd', el).value) || 0;
+    const fr = parseInt($('#ann-freq input:checked', el).value);
+    if (P <= 0 || jaren <= 0) return;
+    const n = Math.round(jaren * fr);
+    const i = r / 100 / fr;
+    const T = i === 0 ? P / n : P * i * Math.pow(1+i, n) / (Math.pow(1+i, n) - 1);
+    const totaal = T * n;
+    const renteTotaal = totaal - P;
+
+    const freqLbl = { 12: 'per maand', 4: 'per kwartaal', 1: 'per jaar' }[fr];
+    $('#ann-termijn', el).textContent = euro(T);
+    $('#ann-termijn-sub', el).textContent = freqLbl + ' · bruto';
+    $('#ann-freq-lbl', el).textContent = freqLbl;
+    $('#ann-totaal', el).textContent = euroR(totaal);
+    $('#ann-rentetotaal', el).textContent = euroR(renteTotaal);
+    $('#ann-n', el).textContent = n;
+
+    // schema
+    let saldo = P;
+    const rijen = [];
+    for (let k = 1; k <= n; k++) {
+      const rente = saldo * i;
+      const aflossing = T - rente;
+      saldo = saldo - aflossing;
+      rijen.push({ k, T, rente, aflossing, saldo: Math.max(saldo, 0) });
+    }
+    const show = n <= 18 ? rijen : [...rijen.slice(0, 12), null, ...rijen.slice(-6)];
+    $('#ann-tabel tbody', el).innerHTML = show.map(r => {
+      if (r === null) return `<tr><td colspan="5" style="text-align:center;color:var(--ink-mute);font-style:italic;">…</td></tr>`;
+      return `<tr ${r.k === n ? 'class="final"' : ''}>
+        <td>${r.k}</td>
+        <td class="num">${euro(r.T)}</td>
+        <td class="num">${euro(r.rente)}</td>
+        <td class="num">${euro(r.aflossing)}</td>
+        <td class="num">${euro(r.saldo)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  ['ann-hoofdsom','ann-rente','ann-looptijd'].forEach(id => {
+    $('#' + id, el).addEventListener('input', bereken);
+  });
+  $('#ann-freq', el).addEventListener('change', bereken);
+  bereken();
+});
+
+/* ============================================================
+   TOOL 02 — DUUR PARTNERALIMENTATIE
+   ============================================================ */
+registerTool('duur', `
+  <div class="tool-header">
+    <div class="eyebrow">02 · Wet herziening partneralimentatie (Stb. 2019, 283)</div>
+    <h2>Duur partneralimentatie</h2>
+    <div class="lead">Voor verzoeken vanaf 1 januari 2020 geldt: de helft van de huwelijksduur, met een maximum van vijf jaar — tenzij een uitzondering geldt.</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer</div>
+        <div class="field">
+          <label for="dur-huwelijk">Datum huwelijk / geregistreerd partnerschap</label>
+          <input type="date" id="dur-huwelijk">
+        </div>
+        <div class="field">
+          <label for="dur-verzoek">Datum indiening echtscheidings­verzoek</label>
+          <input type="date" id="dur-verzoek">
+        </div>
+        <div class="field">
+          <label>Zijn er kinderen jonger dan 12 jaar?</label>
+          <div class="radio-group" id="dur-kinderen">
+            <label class="checked"><input type="radio" name="dur-kind" value="nee" checked>Nee</label>
+            <label><input type="radio" name="dur-kind" value="ja">Ja</label>
+          </div>
+        </div>
+        <div class="field" id="dur-jongste-wrap" style="display:none;">
+          <label for="dur-jongste">Geboortedatum jongste kind</label>
+          <input type="date" id="dur-jongste">
+        </div>
+        <div class="field">
+          <label for="dur-geboorte">Geboortedatum alimentatie­gerechtigde <span class="help">(optioneel)</span></label>
+          <input type="date" id="dur-geboorte">
+        </div>
+        <div class="field">
+          <label for="dur-aow">AOW-datum alimentatie­gerechtigde <span class="help">(optioneel)</span></label>
+          <input type="date" id="dur-aow">
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Resultaat</div>
+        <div class="result-headline"><span id="dur-resultaat">—</span></div>
+        <div class="result-sub" id="dur-resultaat-sub">vul de data hierboven in</div>
+        <div class="result-stats" id="dur-stats" style="display:none;">
+          <div class="result-stat"><div class="lbl">Huwelijksduur</div><div class="val" id="dur-stat-huw">—</div></div>
+          <div class="result-stat"><div class="lbl">Toegepaste regel</div><div class="val" id="dur-stat-regel" style="font-size:0.9rem;">—</div></div>
+          <div class="result-stat"><div class="lbl">Einddatum</div><div class="val" id="dur-stat-eind">—</div></div>
+        </div>
+        <div id="dur-uitleg" style="margin-top:20px;"></div>
+      </div>
+      <div class="info-box">
+        <strong>De drie wettelijke uitzonderingen op het maximum van 5 jaar:</strong>
+        <ul class="clean">
+          <li>Kinderen jonger dan 12 → tot 12e verjaardag jongste kind</li>
+          <li>Huwelijk > 15 jaar én binnen 10 jaar van AOW → tot AOW-datum</li>
+          <li>Huwelijk > 15 jaar, geboren vóór 1-1-1970 én meer dan 10 jaar tot AOW → 10 jaar (overgangsrecht)</li>
+        </ul>
+        <p style="margin-top:8px;">Bij meerdere uitzonderingen geldt de langste termijn. De rechter kan in schrijnende gevallen verlengen via de hardheids­clausule.</p>
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  const kinderenRG = $('#dur-kinderen', el);
+  bindRadio(kinderenRG);
+  kinderenRG.addEventListener('change', () => {
+    const v = kinderenRG.querySelector('input:checked').value;
+    $('#dur-jongste-wrap', el).style.display = v === 'ja' ? 'block' : 'none';
+    bereken();
+  });
+
+  function yearsBetween(d1, d2) {
+    return (d2 - d1) / (1000 * 60 * 60 * 24 * 365.25);
+  }
+  function fmtDuur(jaren) {
+    if (jaren <= 0) return '0';
+    let j = Math.floor(jaren);
+    let m = Math.round((jaren - j) * 12);
+    if (m === 12) { j += 1; m = 0; }
+    if (j === 0) return `${m} maand${m===1?'':'en'}`;
+    if (m === 0) return `${j} jaar`;
+    return `${j} jaar ${m} mnd`;
+  }
+  function addYears(d, y) {
+    const r = new Date(d);
+    const wholeYears = Math.floor(y);
+    const extraMonths = Math.round((y - wholeYears) * 12);
+    r.setFullYear(r.getFullYear() + wholeYears);
+    r.setMonth(r.getMonth() + extraMonths);
+    return r;
+  }
+  function fmtDate(d) {
+    return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function bereken() {
+    const huw = $('#dur-huwelijk', el).value;
+    const verzoek = $('#dur-verzoek', el).value;
+    if (!huw || !verzoek) {
+      $('#dur-resultaat', el).textContent = '—';
+      $('#dur-resultaat-sub', el).textContent = 'vul datum huwelijk én verzoek in';
+      $('#dur-stats', el).style.display = 'none';
+      $('#dur-uitleg', el).innerHTML = '';
+      return;
+    }
+    const dHuw = new Date(huw), dVerz = new Date(verzoek);
+    if (dVerz <= dHuw) {
+      $('#dur-resultaat', el).textContent = '—';
+      $('#dur-resultaat-sub', el).textContent = 'verzoekdatum moet ná huwelijksdatum liggen';
+      return;
+    }
+    const huwJaren = yearsBetween(dHuw, dVerz);
+
+    const oudRegime = dVerz < new Date('2020-01-01');
+    const heeftKind = kinderenRG.querySelector('input:checked').value === 'ja';
+
+    let duur, regel, uitleg = [];
+
+    if (oudRegime) {
+      // Oud recht: max 12 jaar bij kinderen of >5 jaar; anders duur huwelijk
+      if (heeftKind || huwJaren >= 5) {
+        duur = 12;
+        regel = 'Oud recht — max. 12 jaar';
+      } else {
+        duur = huwJaren;
+        regel = 'Oud recht — duur huwelijk';
+      }
+      uitleg.push(`Het verzoek is ingediend vóór 1 januari 2020. Voor die datum gold een maximum van 12 jaar bij huwelijken met kinderen of huwelijken langer dan 5 jaar.`);
+    } else {
+      // Hoofdregel
+      const hoofdregel = Math.min(huwJaren / 2, 5);
+      duur = hoofdregel;
+      regel = 'Hoofdregel — ½ × huwelijksduur (max. 5)';
+      uitleg.push(`<strong>Hoofdregel.</strong> Helft van de huwelijksduur (${fmtDuur(huwJaren)}) = ${fmtDuur(huwJaren/2)}, met maximum 5 jaar → <strong>${fmtDuur(hoofdregel)}</strong>.`);
+
+      // Uitzondering 1: jongste kind <12
+      if (heeftKind) {
+        const jongste = $('#dur-jongste', el).value;
+        if (jongste) {
+          const dJ = new Date(jongste);
+          const twaalf = new Date(dJ); twaalf.setFullYear(twaalf.getFullYear() + 12);
+          if (twaalf > dVerz) {
+            const tot12 = yearsBetween(dVerz, twaalf);
+            if (tot12 > duur) {
+              duur = tot12;
+              regel = 'Uitzondering 1 — jongste kind <12';
+            }
+            uitleg.push(`<strong>Uitzondering 1 (jonge kinderen).</strong> Het jongste kind wordt 12 op ${fmtDate(twaalf)}. De alimentatie­plicht loopt minimaal door tot die datum: <strong>${fmtDuur(tot12)}</strong>.`);
+          }
+        }
+      }
+
+      // Uitzondering 2 & 3: huwelijk > 15 jaar
+      if (huwJaren > 15) {
+        const aow = $('#dur-aow', el).value;
+        const geb = $('#dur-geboorte', el).value;
+        if (aow) {
+          const dAow = new Date(aow);
+          const totAow = yearsBetween(dVerz, dAow);
+          if (totAow > 0 && totAow <= 10) {
+            // Uitz 2
+            if (totAow > duur) {
+              duur = totAow;
+              regel = 'Uitzondering 2 — tot AOW';
+            }
+            uitleg.push(`<strong>Uitzondering 2 (langdurig huwelijk + dicht bij AOW).</strong> Huwelijk > 15 jaar en alimentatie­gerechtigde bereikt AOW binnen 10 jaar (op ${fmtDate(dAow)}). Termijn loopt tot AOW: <strong>${fmtDuur(totAow)}</strong>.`);
+          } else if (totAow > 10 && geb) {
+            // Uitz 3: geboren voor 1-1-1970
+            if (new Date(geb) < new Date('1970-01-01')) {
+              if (10 > duur) {
+                duur = 10;
+                regel = 'Uitzondering 3 — overgangsrecht 10 jaar';
+              }
+              uitleg.push(`<strong>Uitzondering 3 (overgangsrecht).</strong> Huwelijk > 15 jaar, alimentatie­gerechtigde geboren vóór 1-1-1970 en nog meer dan 10 jaar tot AOW → termijn is <strong>10 jaar</strong>.`);
+            }
+          }
+        } else {
+          uitleg.push(`<em>Tip: vul de AOW-datum in om te toetsen of uitzondering 2 of 3 (langdurige huwelijken) van toepassing is.</em>`);
+        }
+      }
+    }
+
+    $('#dur-resultaat', el).innerHTML = `${fmtDuur(duur)}`;
+    $('#dur-resultaat-sub', el).textContent = regel;
+    $('#dur-stat-huw', el).textContent = fmtDuur(huwJaren);
+    $('#dur-stat-regel', el).textContent = regel.split(' — ')[0];
+    $('#dur-stat-eind', el).textContent = fmtDate(addYears(dVerz, duur));
+    $('#dur-stats', el).style.display = 'grid';
+    $('#dur-uitleg', el).innerHTML = uitleg.map(u => `<p style="font-size:0.88rem;">${u}</p>`).join('');
+  }
+
+  ['dur-huwelijk','dur-verzoek','dur-jongste','dur-geboorte','dur-aow'].forEach(id => {
+    $('#' + id, el).addEventListener('input', bereken);
+  });
+});
+
+/* ============================================================
+   TOOL 01 — ALIMENTATIE INDEXEREN
+   ============================================================ */
+const INDEX_PCT = {
+  2026: 4.6, 2025: 6.5, 2024: 6.2, 2023: 3.4, 2022: 1.9,
+  2021: 3.0, 2020: 2.5, 2019: 2.0, 2018: 1.5, 2017: 2.1,
+  2016: 1.3, 2015: 0.8, 2014: 0.9, 2013: 1.7, 2012: 1.3,
+  2011: 0.9, 2010: 2.3, 2009: 3.9, 2008: 2.2, 2007: 1.8,
+  2006: 2.5, 2005: 1.9, 2004: 2.5, 2003: 3.9, 2002: 3.9,
+  2001: 4.3, 2000: 3.3, 1999: 3.0, 1998: 2.5, 1997: 2.0,
+  1996: 1.7, 1995: 2.5, 1994: 2.5, 1993: 4.0, 1992: 4.2
+};
+
+registerTool('indexeren', `
+  <div class="tool-header">
+    <div class="eyebrow">01 · Wettelijke indexering (art. 1:402a BW)</div>
+    <h2>Alimentatie indexeren</h2>
+    <div class="lead">Bereken wat een eerder vastgesteld alimentatie­bedrag waard is na de jaarlijkse wettelijke verhoging.</div>
+  </div>
+  <div class="tool-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Invoer <span class="hint">bruto bedragen</span></div>
+        <div class="field">
+          <label for="idx-bedrag">Alimentatiebedrag <span class="help">— per maand, bruto</span></label>
+          <input type="number" id="idx-bedrag" min="0" step="0.01" placeholder="500,00" value="500">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="idx-jaar-van">Vastgesteld in</label>
+            <select id="idx-jaar-van"></select>
+          </div>
+          <div class="field">
+            <label for="idx-jaar-tot">Indexeren t/m</label>
+            <select id="idx-jaar-tot"></select>
+          </div>
+        </div>
+        <button class="btn" id="idx-bereken">Bereken</button>
+        <button class="btn secondary" id="idx-reset">Reset</button>
+      </div>
+      <div class="info-box">
+        <strong>Hoe werkt het?</strong>
+        <p>Het Ministerie van Justitie stelt jaarlijks in november het indexerings­percentage vast op basis van de gemiddelde loonstijging (CBS). De verhoging geldt van rechtswege vanaf 1 januari. Een bedrag vastgesteld in jaar X wordt voor het eerst verhoogd op 1 januari van jaar X+1.</p>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Resultaat per 1 januari <span class="hint" id="idx-eindjaar-lbl">—</span></div>
+        <div class="result-headline"><span id="idx-resultaat">—</span></div>
+        <div class="result-sub" id="idx-resultaat-sub">vul hierboven gegevens in</div>
+        <div class="result-stats" id="idx-stats" style="display:none;">
+          <div class="result-stat"><div class="lbl">Startbedrag</div><div class="val" id="idx-stat-start">—</div></div>
+          <div class="result-stat"><div class="lbl">Totale stijging</div><div class="val" id="idx-stat-stijging">—</div></div>
+          <div class="result-stat"><div class="lbl">Cumulatief %</div><div class="val" id="idx-stat-pct">—</div></div>
+        </div>
+        <table class="calc-table" id="idx-tabel" style="display:none;">
+          <thead><tr><th>Per 1 jan</th><th class="num">Index</th><th class="num">Nieuw bedrag</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="notice">
+        <strong>Let op.</strong> De indexering geldt van rechtswege; je hoeft er als ontvanger niet om te vragen. Maar als de betaler nalaat te indexeren, kan dit met terugwerkende kracht tot vijf jaar worden ingevorderd (LBIO).
+      </div>
+    </div>
+  </div>
+`, (el) => {
+  const jaren = Object.keys(INDEX_PCT).map(Number).sort((a,b)=>a-b);
+  const minJ = jaren[0], maxJ = jaren[jaren.length-1];
+  const selVan = $('#idx-jaar-van', el), selTot = $('#idx-jaar-tot', el);
+  for (let y = minJ - 1; y <= maxJ; y++) {
+    selVan.appendChild(new Option(y, y));
+  }
+  for (let y = minJ; y <= maxJ; y++) {
+    selTot.appendChild(new Option(y, y));
+  }
+  selVan.value = maxJ - 5;
+  selTot.value = maxJ;
+
+  function bereken() {
+    const bedrag = parseFloat($('#idx-bedrag', el).value) || 0;
+    const van = parseInt(selVan.value);
+    const tot = parseInt(selTot.value);
+    if (bedrag <= 0 || tot <= van) {
+      $('#idx-resultaat', el).textContent = '—';
+      $('#idx-resultaat-sub', el).textContent = 'controleer de jaartallen en het bedrag';
+      $('#idx-stats', el).style.display = 'none';
+      $('#idx-tabel', el).style.display = 'none';
+      return;
+    }
+    let current = bedrag;
+    const rijen = [];
+    for (let y = van + 1; y <= tot; y++) {
+      const p = INDEX_PCT[y];
+      if (p === undefined) continue;
+      const nieuw = current * (1 + p / 100);
+      rijen.push({ jaar: y, pct: p, nieuw });
+      current = nieuw;
+    }
+    $('#idx-resultaat', el).innerHTML = euro(current);
+    $('#idx-eindjaar-lbl', el).textContent = tot;
+    $('#idx-resultaat-sub', el).textContent = `${rijen.length} jaarlijkse indexeringen toegepast`;
+    $('#idx-stat-start', el).textContent = euro(bedrag);
+    $('#idx-stat-stijging', el).textContent = euro(current - bedrag);
+    $('#idx-stat-pct', el).textContent = num((current/bedrag - 1) * 100, 1) + ' %';
+    $('#idx-stats', el).style.display = 'grid';
+    const tbody = $('#idx-tabel tbody', el);
+    tbody.innerHTML = rijen.map((r, i) => `
+      <tr ${i === rijen.length-1 ? 'class="final"' : ''}>
+        <td>${r.jaar}</td>
+        <td class="num">${num(r.pct, 1)} %</td>
+        <td class="num">${euro(r.nieuw)}</td>
+      </tr>
+    `).join('');
+    $('#idx-tabel', el).style.display = 'table';
+  }
+
+  $('#idx-bereken', el).addEventListener('click', bereken);
+  $('#idx-reset', el).addEventListener('click', () => {
+    $('#idx-bedrag', el).value = '500';
+    selVan.value = maxJ - 5;
+    selTot.value = maxJ;
+    bereken();
+  });
+  [$('#idx-bedrag', el), selVan, selTot].forEach(i => i.addEventListener('input', bereken));
+  bereken();
+});
+
+</script>
+
+<script>
+/* Activate the first tool on load */
+window.addEventListener('DOMContentLoaded', () => activate('indexeren'));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financieel Nazorg Hub — Alle Scans</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1c1c2e;--ink-mid:#52526e;--ink-light:#9090b0;
+  --bg:#f0ede8;--surf:#fff;--surf2:#f6f5f1;--surf3:#eeecea;
+  --acc:#1e4d8c;--acc2:#3a6bb5;--acc-pale:#e8eef8;--acc-faint:#f0f4fb;
+  --ok:#1a6b4a;--ok-bg:#e6f4ee;
+  --bd:#dddbd6;--bd2:#b8b6b0;
+  --r:9px;--rlg:15px;
+  --sh:0 2px 12px rgba(28,28,46,.08);
+  --fd:'DM Serif Display',Georgia,serif;
+  --fs:'DM Sans',system-ui,sans-serif;
+  --sidebar:240px;
+}
+body{font-family:var(--fs);background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar);background:var(--surf);border-right:1px solid var(--bd);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;flex-shrink:0}
+.main{margin-left:var(--sidebar);flex:1;padding:24px 20px 80px;max-width:780px}
+@media(max-width:700px){
+  .sidebar{width:100%;height:auto;position:relative;border-right:none;border-bottom:1px solid var(--bd)}
+  .main{margin-left:0}
+  .layout{flex-direction:column}
+}
+
+/* SIDEBAR */
+.sb-head{padding:18px 16px 14px;border-bottom:1px solid var(--bd)}
+.sb-logo{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.sb-dot{width:28px;height:28px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-dot svg{width:14px;height:14px;fill:#fff}
+.sb-title{font-family:var(--fd);font-size:15px;font-weight:400;color:var(--ink);line-height:1.2}
+.sb-sub{font-size:11px;color:var(--ink-light)}
+.sb-search{padding:10px 14px;border-bottom:1px solid var(--bd)}
+.sb-search input{width:100%;padding:7px 10px;border:1.5px solid var(--bd);border-radius:var(--r);font-family:var(--fs);font-size:13px;color:var(--ink);background:var(--surf2);outline:none}
+.sb-search input:focus{border-color:var(--acc);background:var(--surf)}
+.sb-cat{margin:0}
+.cat-head{display:flex;align-items:center;gap:7px;padding:10px 14px 6px;cursor:pointer;user-select:none}
+.cat-head:hover{background:var(--surf2)}
+.cat-icon{width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.cat-icon svg{width:14px;height:14px;stroke:var(--acc2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cat-label{font-size:11px;font-weight:500;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.07em;flex:1}
+.cat-count{font-size:10px;background:var(--acc-pale);color:var(--acc2);padding:1px 6px;border-radius:10px;font-weight:500}
+.cat-caret{margin-left:auto;font-size:10px;color:var(--ink-light);transition:transform .2s}
+.cat-caret.open{transform:rotate(90deg)}
+.cat-items{display:flex;flex-direction:column}
+.sb-item{padding:7px 14px 7px 22px;cursor:pointer;font-size:12.5px;color:var(--ink-mid);border-left:2px solid transparent;transition:all .15s;line-height:1.35;display:flex;align-items:center;gap:6px}
+.sb-item:hover{background:var(--surf2);color:var(--ink)}
+.sb-item.active{background:var(--acc-pale);color:var(--acc);border-left-color:var(--acc);font-weight:500}
+.sb-item .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;opacity:.5}
+.sb-item.active .dot{opacity:1}
+
+/* MAIN HEADER */
+.page-hdr{margin-bottom:20px}
+.page-hdr h1{font-family:var(--fd);font-size:26px;font-weight:400;margin-bottom:3px}
+.page-hdr p{font-size:13px;color:var(--ink-mid)}
+.page-hdr .badge{display:inline-flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--bd);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--ink-mid);margin-bottom:10px}
+.page-hdr .badge svg{width:12px;height:12px;stroke:var(--acc);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* FORM PANEL */
+.form-panel{background:var(--surf);border:1px solid var(--bd);border-radius:var(--rlg);overflow:hidden;box-shadow:var(--sh)}
+.fp-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--bd);background:var(--surf2)}
+.fp-hdr h2{font-family:var(--fd);font-size:20px;font-weight:400;margin-bottom:2px}
+.fp-hdr p{font-size:12px;color:var(--ink-mid)}
+.fp-cat{display:inline-block;font-size:10px;font-weight:500;padding:2px 9px;border-radius:10px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.prog{height:3px;background:var(--bd)}
+.prog-fill{height:100%;background:var(--acc);transition:width .3s}
+.fp-body{padding:24px}
+.fp-act{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid var(--bd);background:var(--surf2);gap:10px}
+
+/* STEPS */
+.step{display:none}
+.step.on{display:block;animation:su .22s ease}
+@keyframes su{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.stlbl{font-size:10px;font-weight:500;color:var(--ink-light);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+
+/* FIELDS */
+.qb{margin-bottom:18px}
+.qb>label{display:block;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:7px;line-height:1.4}
+.req{color:var(--acc)}
+.hint{font-size:11px;color:var(--ink-light);margin:-3px 0 7px}
+input,textarea,select{width:100%;padding:8px 12px;border:1.5px solid var(--bd);border-radius:var(--r);font-family:var(--fs);font-size:13px;color:var(--ink);background:var(--surf);outline:none;appearance:none;-webkit-appearance:none;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(30,77,140,.09)}
+textarea{resize:vertical;min-height:70px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%239090b0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.frow{grid-template-columns:1fr}}
+
+/* RADIO / CHECK */
+.rg,.cg{display:flex;flex-direction:column;gap:6px}
+.rg.row,.cg.row{flex-direction:row;flex-wrap:wrap}
+.rg.row .ro,.cg.row .co{flex:1;min-width:100px}
+.ro,.co{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1.5px solid var(--bd);border-radius:var(--r);cursor:pointer;font-size:12.5px;color:var(--ink);transition:all .14s;user-select:none;line-height:1.3}
+.ro:hover,.co:hover{border-color:var(--acc2);background:var(--acc-faint)}
+.ro.on,.co.on{border-color:var(--acc);background:var(--acc-pale);color:var(--acc);font-weight:500}
+.ro input,.co input{display:none}
+.oi{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--bd2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .14s}
+.co .oi{border-radius:4px}
+.ro.on .oi,.co.on .oi{background:var(--acc);border-color:var(--acc)}
+.ro.on .oi::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.co.on .oi::after{content:'';width:8px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px)}
+
+/* SCALE */
+.srow{display:flex;gap:5px;flex-wrap:wrap}
+.sb{flex:1;min-width:0;height:36px;border:1.5px solid var(--bd);border-radius:var(--r);background:var(--surf);font-size:12px;font-weight:500;color:var(--ink-mid);cursor:pointer;font-family:var(--fs);transition:all .14s}
+.sb:hover{border-color:var(--acc2);background:var(--acc-faint)}
+.sb.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.slbl{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--ink-light)}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{padding:5px 12px;border:1.5px solid var(--bd);border-radius:20px;background:var(--surf);font-size:12px;color:var(--ink-mid);cursor:pointer;transition:all .14s;font-family:var(--fs)}
+.tag:hover{border-color:var(--acc2);background:var(--acc-faint)}
+.tag.on{background:var(--acc);border-color:var(--acc);color:#fff}
+
+/* STARS */
+.stars{display:flex;gap:5px}
+.star{font-size:26px;cursor:pointer;color:var(--bd2);transition:color .14s;user-select:none}
+.star.on{color:#e6a500}
+
+/* BUTTONS */
+.btn{padding:8px 18px;border-radius:var(--r);font-family:var(--fs);font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:6px;transition:all .14s;line-height:1}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn-p:hover{background:#163d74}
+.btn-p:disabled{background:var(--bd2);border-color:var(--bd2);cursor:not-allowed}
+.btn-s{background:transparent;border-color:var(--bd2);color:var(--ink-mid)}
+.btn-s:hover{background:var(--surf3);border-color:var(--acc2);color:var(--ink)}
+
+/* INFO */
+.info{background:var(--acc-faint);border-left:3px solid var(--acc);border-radius:0 var(--r) var(--r) 0;padding:10px 13px;font-size:12px;color:var(--ink-mid);margin-bottom:16px;line-height:1.6}
+.divr{height:1px;background:var(--bd);margin:16px 0}
+.char-c{font-size:10px;color:var(--ink-light);text-align:right;margin-top:2px}
+
+/* ADVICE PANEL */
+.adv-pnl{background:var(--surf2);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;margin-top:14px}
+.adv-hdr{font-size:11px;font-weight:500;color:var(--ink-mid);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.adv-area{width:100%;min-height:120px;padding:10px 12px;border:1.5px solid var(--bd);border-radius:var(--r);font-family:var(--fs);font-size:13px;color:var(--ink);background:var(--surf);outline:none;resize:vertical;line-height:1.6}
+.adv-area:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(30,77,140,.09)}
+.adv-area::placeholder{color:var(--ink-light)}
+.sum-preview{margin-bottom:14px}
+.sum-g-full{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media(max-width:450px){.sum-g-full{grid-template-columns:1fr}}
+
+/* RESULT */
+.res-hdr{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.res-ico{width:46px;height:46px;border-radius:50%;background:var(--ok-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.res-ico svg{width:22px;height:22px;stroke:var(--ok);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.res-hdr div h2{font-family:var(--fd);font-size:19px;font-weight:400;margin-bottom:2px}
+.res-hdr div p{font-size:12px;color:var(--ink-mid)}
+.sum-g{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media(max-width:450px){.sum-g{grid-template-columns:1fr}}
+.sc{background:var(--surf2);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px}
+.sc .sl{font-size:10px;color:var(--ink-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.sc .sv{font-size:12px;font-weight:500}
+.acts{background:var(--acc-pale);border:1px solid #c0d0e8;border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
+.acts h3{font-size:11px;font-weight:500;color:var(--acc);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.acts h3 svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.acts ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.acts li{display:flex;gap:8px;font-size:12px;color:var(--ink-mid)}
+.acts li::before{content:'→';color:var(--acc);font-weight:600;flex-shrink:0}
+.rlnk{font-size:12px;color:var(--ink-light);cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:block;text-align:center;margin-top:14px}
+.rlnk:hover{color:var(--acc)}
+
+/* CATEGORY COLORS */
+.cat-hypotheek{background:#e8f0fc;color:#1e4d8c}
+.cat-schade{background:#fef3e2;color:#7a4a00}
+.cat-bedrijf{background:#eef7f1;color:#1a6b4a}
+.cat-inkomen{background:#fde8ec;color:#8b1a2e}
+.cat-pensioen{background:#f0ebfc;color:#4a2b8c}
+.cat-beheer{background:#e8f5f5;color:#1a5c5c}
+.cat-intake{background:#f5f0e8;color:#5c3d1a}
+.cat-krediet{background:#f5e8e8;color:#6b1a1a}
+.cat-belasting{background:#fafae8;color:#4a4a00}
+
+/* MOBILE SIDEBAR TOGGLE */
+.mob-toggle{display:none;padding:12px 14px;background:var(--surf);border-bottom:1px solid var(--bd);cursor:pointer;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink)}
+@media(max-width:700px){
+  .mob-toggle{display:flex}
+  .sb-nav{display:none}
+  .sb-nav.open{display:block}
+  .sidebar{position:relative;width:100%;height:auto}
+}
+
+/* SEARCH HIGHLIGHT */
+.sb-item.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sb-head">
+    <div class="sb-logo">
+      <div class="sb-dot"><svg viewBox="0 0 16 16"><path d="M8 1L10.5 6H15L11 9.5L12.5 15L8 12L3.5 15L5 9.5L1 6H5.5Z"/></svg></div>
+      <div>
+        <div class="sb-title">Nazorg Hub</div>
+        <div class="sb-sub">75 slimme scans</div>
+      </div>
+    </div>
+  </div>
+  <div class="mob-toggle" onclick="document.querySelector('.sb-nav').classList.toggle('open')">
+    ☰ Formulieren & Scans
+  </div>
+  <div class="sb-search">
+    <input type="text" placeholder="Zoek formulier…" oninput="searchForms(this.value)" id="sb-search-inp">
+  </div>
+  <div class="sb-cat sb-nav" id="sb-nav"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main-area">
+  <div class="page-hdr" id="page-hdr">
+    <h1>Financieel Nazorg Hub</h1>
+    <p>Selecteer een formulier in de navigatie links. Elk formulier duurt 2–4 minuten. De ingevulde gegevens worden overzichtelijk samengevat voor de adviseur.</p>
+  </div>
+  <div id="form-container"></div>
+</div>
+
+</div><!-- layout -->
+
+<script>
+/* ============================================================
+   FORM DEFINITIONS — all 75 forms
+   ============================================================ */
+const CATS = [
+  { id:'hypotheek', label:'Hypotheek & Woning', color:'cat-hypotheek', icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
+  { id:'schade', label:'Schadeverzekeringen', color:'cat-schade', icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
+  { id:'bedrijf', label:'Bedrijf & ZZP', color:'cat-bedrijf', icon:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>' },
+  { id:'inkomen', label:'Inkomen & Leven', color:'cat-inkomen', icon:'<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>' },
+  { id:'pensioen', label:'Pensioen & Vermogen', color:'cat-pensioen', icon:'<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>' },
+  { id:'beheer', label:'Actief Beheer & Nazorg', color:'cat-beheer', icon:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' },
+  { id:'intake', label:'Intake & Advies', color:'cat-intake', icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>' },
+  { id:'krediet', label:'Krediet & Schuld', color:'cat-krediet', icon:'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>' },
+  { id:'belasting', label:'Belasting & Fiscaal', color:'cat-belasting', icon:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>' },
+];
+
+const FORMS = [
+/* ---- HYPOTHEEK & WONING ---- */
+{id:'hyp_basis',cat:'hypotheek',title:'Hypotheekscan',desc:'Is uw hypotheek nog optimaal voor uw situatie?',
+steps:[
+  {t:'Uw gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',p:'Jan',req:1},{T:'text',id:'anaam',l:'Achternaam',p:'de Vries',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'tel',id:'tel',l:'Telefoon'}]},
+  {t:'Uw hypotheek',f:[{T:'radio',id:'type',l:'Type hypotheek',opts:['Annuïtair','Lineair','Aflossingsvrij','Combinatie','Weet ik niet']},{T:'select',id:'bedrag',l:'Openstaand bedrag',opts:['< €100k','€100k–€200k','€200k–€300k','€300k–€400k','> €400k']},{T:'select',id:'rente_verval',l:'Rentevervaldatum',opts:['< 6 maanden','6–12 maanden','1–2 jaar','2–5 jaar','> 5 jaar','Weet ik niet']}]},
+  {t:'Plannen & wijzigingen',f:[{T:'radio',id:'inkomen',l:'Inkomen gewijzigd?',opts:['Gestegen','Gedaald','Gelijk','Met pensioen gegaan']},{T:'check',id:'plannen',l:'Plannen',opts:['Verbouwen','Oversluiten','Extra aflossen','Verkopen/verhuizen','Geen']},{T:'textarea',id:'opmerking',l:'Aanvullende vragen',cc:400}]},
+  {t:'AI Hypotheekcheck',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een hypotheekconsult samenvatting (max 200 woorden, alinea's) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Bedrag: ${d.bedrag||'?'}, Renteverval: ${d.rente_verval||'?'}, Inkomen: ${d.inkomen||'?'}, Plannen: ${d.plannen||'?'}. Opmerking: ${d.opmerking||'geen'}. Geef 2-3 aandachtspunten en advies.`},
+
+{id:'hyp_aflvrij',cat:'hypotheek',title:'Aflossingsvrije hypotheekscan',desc:'Bent u voorbereid op de einddatum van uw aflossingsvrije hypotheek?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw hypotheek',f:[{T:'select',id:'looptijd',l:'Resterende looptijd',opts:['< 5 jaar','5–10 jaar','10–20 jaar','> 20 jaar','Weet ik niet']},{T:'select',id:'bedrag',l:'Aflossingsvrij bedrag',opts:['< €100k','€100k–€200k','€200k–€300k','> €300k']},{T:'select',id:'woz',l:'WOZ-waarde woning',opts:['< €200k','€200k–€350k','€350k–€500k','> €500k']}]},
+  {t:'Voorbereiding',f:[{T:'check',id:'plan',l:'Hoe betaalt u terug bij afloop?',opts:['Spaargeld','Levensverzekering/spaarpolis','Verkoop woning','Herfinancieren','Weet ik niet']},{T:'radio',id:'inkomen_ok',l:'Voldoende inkomen na afloop?',opts:['Ja, geen zorgen','Ik twijfel','Nee, ik maak me zorgen']},{T:'radio',id:'informed',l:'Al eerder geïnformeerd over risico\'s?',opts:['Ja','Nee','Gedeeltelijk']}]},
+  {t:'AI Risicoanalyse',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur gespecialiseerd in aflossingsvrije hypotheken. Schrijf een risicoanalyse (max 200 woorden) voor ${d.vnaam||'klant'}. Looptijd: ${d.looptijd||'?'}, Bedrag: ${d.bedrag||'?'}, WOZ: ${d.woz||'?'}, Plan: ${d.plan||'?'}, Inkomen ok: ${d.inkomen_ok||'?'}. Wees helder over risico's en prioritaire acties.`},
+
+{id:'hyp_rente',cat:'hypotheek',title:'Renteherzieningsscan',desc:'Welke rentevaste periode past bij uw situatie?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Huidige situatie',f:[{T:'select',id:'huidig_rente',l:'Huidige rente',opts:['< 2%','2–3%','3–4%','4–5%','> 5%']},{T:'select',id:'rente_verval',l:'Renteverval over',opts:['< 1 maand','1–3 maanden','3–6 maanden','6–12 maanden']},{T:'radio',id:'lening_hoogte',l:'Hypotheek ten opzichte van woningwaarde',opts:['< 60%','60–80%','80–90%','> 90%']}]},
+  {t:'Wensen & plannen',f:[{T:'radio',id:'verwachting_rente',l:'Verwachting rentestand over 1 jaar',opts:['Lager','Gelijk','Hoger','Geen idee']},{T:'check',id:'plannen',l:'Plannen de komende jaren',opts:['Verhuizen','Extra aflossen','Verbouwen','Geen grote plannen']},{T:'select',id:'voorkeur_periode',l:'Voorkeur rentevaste periode',opts:['1 jaar','5 jaar','10 jaar','20 jaar','Geen voorkeur']}]},
+  {t:'AI Renteadvies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een renteadvies (max 180 woorden) voor ${d.vnaam||'klant'}. Huidige rente: ${d.huidig_rente||'?'}, Vervalt: ${d.rente_verval||'?'}, LTV: ${d.lening_hoogte||'?'}, Renteverwachting: ${d.verwachting_rente||'?'}, Plannen: ${d.plannen||'?'}, Voorkeur: ${d.voorkeur_periode||'?'}. Geef advies over de meest passende rentevaste periode.`},
+
+{id:'hyp_oversluit',cat:'hypotheek',title:'Oversluitscan',desc:'Wanneer loont het om uw hypotheek over te sluiten?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Huidige hypotheek',f:[{T:'select',id:'huidig_rente',l:'Huidige rente',opts:['< 2%','2–3%','3–4%','4–5%','> 5%']},{T:'select',id:'restschuld',l:'Restschuld',opts:['< €100k','€100k–€200k','€200k–€300k','> €300k']},{T:'select',id:'rest_looptijd',l:'Resterende looptijd',opts:['< 5 jaar','5–10 jaar','10–20 jaar','> 20 jaar']}]},
+  {t:'Motief & verwachting',f:[{T:'check',id:'reden',l:'Reden voor oversluiten',opts:['Lagere maandlasten','Betere voorwaarden','Geldverstrekker wisselen','Verbouwingskapitaal ophalen']},{T:'radio',id:'boeterente',l:'Weet u of er boeterente van toepassing is?',opts:['Ja, wel boeterente','Nee, geen boeterente','Weet ik niet']}]},
+  {t:'AI Oversluitadvies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een oversluit-advies (max 180 woorden) voor ${d.vnaam||'klant'}. Rente: ${d.huidig_rente||'?'}, Restschuld: ${d.restschuld||'?'}, Looptijd: ${d.rest_looptijd||'?'}, Redenen: ${d.reden||'?'}, Boeterente: ${d.boeterente||'?'}. Geef aan of oversluiten kansrijk is en welke stappen volgen.`},
+
+{id:'hyp_verbouw',cat:'hypotheek',title:'Verbouwingsfinancieringsscan',desc:'Extra hypotheek voor verbouwing of verduurzaming.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Verbouwingsplan',f:[{T:'check',id:'type_verbouw',l:'Wat wilt u verbouwen/aanpassen?',opts:['Keuken / badkamer','Dakkapel / uitbouw','Zonnepanelen / warmtepomp','Isolatie','Aanbouw / opbouw','Overig']},{T:'select',id:'kosten',l:'Geschatte kosten',opts:['< €10.000','€10k–€25k','€25k–€50k','€50k–€100k','> €100k']},{T:'radio',id:'financiering',l:'Hoe wilt u financieren?',opts:['Extra hypotheek','Eigen geld','Combinatie','Weet ik niet']}]},
+  {t:'Woningsituatie',f:[{T:'select',id:'overwaarde',l:'Geschatte overwaarde woning',opts:['< €25k','€25k–€75k','€75k–€150k','> €150k','Weet ik niet']},{T:'radio',id:'energielabel',l:'Huidig energielabel',opts:['A / A+','B','C','D','E of lager','Weet ik niet']}]},
+  {t:'AI Financieringsadvies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een verbouwingsfinancieringsadvies (max 180 woorden) voor ${d.vnaam||'klant'}. Verbouwing: ${d.type_verbouw||'?'}, Kosten: ${d.kosten||'?'}, Financiering: ${d.financiering||'?'}, Overwaarde: ${d.overwaarde||'?'}, Label: ${d.energielabel||'?'}. Bespreek haalbaarheid en eventuele subsidies.`},
+
+{id:'hyp_verduur',cat:'hypotheek',title:'Verduurzamingsscan',desc:'Wat zijn de mogelijkheden voor een groener en goedkoper huis?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw woning',f:[{T:'radio',id:'label',l:'Huidig energielabel',opts:['A+/A','B','C','D','E','F of G','Onbekend']},{T:'select',id:'type_woning',l:'Type woning',opts:['Vrijstaand','Twee-onder-één-kap','Rijtjeswoning','Appartement']},{T:'radio',id:'bouwjaar',l:'Bouwperiode woning',opts:['Voor 1970','1970–1990','1990–2005','Na 2005']}]},
+  {t:'Verduurzamingswensen',f:[{T:'check',id:'maatregelen',l:'Gewenste maatregelen',opts:['Zonnepanelen','Warmtepomp','Isolatie (dak/muur/vloer)','Dubbel/triple glas','Laadpaal','Alles in één keer']},{T:'select',id:'budget',l:'Beschikbaar budget',opts:['< €5k','€5k–€15k','€15k–€30k','€30k–€60k','> €60k']},{T:'radio',id:'subsidie',l:'Weet u welke subsidies beschikbaar zijn?',opts:['Ja','Nee','Deels']}]},
+  {t:'AI Verduurzamingsadvies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur met kennis van verduurzaming. Schrijf een verduurzamingsadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Label: ${d.label||'?'}, Woning: ${d.type_woning||'?'}, Bouwjaar: ${d.bouwjaar||'?'}, Maatregelen: ${d.maatregelen||'?'}, Budget: ${d.budget||'?'}. Noem relevante subsidies (ISDE, subsidieregeling, energiebespaarfonds) en financieringsmogelijkheden.`},
+
+{id:'hyp_scheiding',cat:'hypotheek',title:'Scheidingsscan hypotheek',desc:'Ontslag hoofdelijke aansprakelijkheid en verdeling hypotheek.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Situatie',f:[{T:'radio',id:'fase',l:'In welke fase bevindt u zich?',opts:['Pas uit elkaar','Scheiding in gang','Scheiding bijna afgerond','Al gescheiden — nog niet geregeld']},{T:'radio',id:'woning_plan',l:'Wat gebeurt er met de woning?',opts:['Ik blijf erin wonen','Partner blijft erin wonen','Woning wordt verkocht','Nog niet besloten']},{T:'select',id:'overwaarde',l:'Overwaarde / restschuld',opts:['Overwaarde < €50k','Overwaarde €50k–€150k','Overwaarde > €150k','Restschuld','Weet ik niet']}]},
+  {t:'Financiële situatie',f:[{T:'radio',id:'kan_alleen',l:'Kunt u de hypotheek alleen dragen?',opts:['Ja, probleemloos','Waarschijnlijk wel','Twijfelachtig','Nee']},{T:'radio',id:'notaris',l:'Heeft u al een notaris ingeschakeld?',opts:['Ja','Nee','In overweging']}]},
+  {t:'AI Scheidingsadvies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een scheidingsadvies m.b.t. de hypotheek (max 200 woorden) voor ${d.vnaam||'klant'}. Fase: ${d.fase||'?'}, Woningplan: ${d.woning_plan||'?'}, Overwaarde: ${d.overwaarde||'?'}, Alleen dragen: ${d.kan_alleen||'?'}. Bespreek ontslag aansprakelijkheid, taxatie, en notaris.`},
+
+{id:'hyp_starter',cat:'hypotheek',title:'Startersscan',desc:'Oriëntatie voor starters op de woningmarkt.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw situatie',f:[{T:'radio',id:'inkomen_situatie',l:'Inkomenssituatie',opts:['Loondienst vast','Loondienst tijdelijk','ZZP / ondernemer','Combinatie met partner']},{T:'select',id:'bruto_inkomen',l:'Bruto jaarinkomen (samen)',opts:['< €30k','€30k–€45k','€45k–€60k','€60k–€80k','> €80k']},{T:'select',id:'eigen_geld',l:'Beschikbaar eigen geld',opts:['< €10k','€10k–€25k','€25k–€50k','€50k–€75k','> €75k']}]},
+  {t:'Woonwensen',f:[{T:'select',id:'max_prijs',l:'Maximale woningprijs',opts:['< €250k','€250k–€350k','€350k–€450k','€450k–€600k','> €600k']},{T:'check',id:'obstakels',l:'Mogelijke obstakels',opts:['Studieschuld','BKR-registratie','Tijdelijk contract','ZZP < 3 jaar','Geen obstakels']},{T:'radio',id:'nhg',l:'Komt u in aanmerking voor NHG?',opts:['Ja (woning < €405k)','Nee','Weet ik niet']}]},
+  {t:'AI Startersadvies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur voor starters. Schrijf een helder startersadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.bruto_inkomen||'?'}, Eigen geld: ${d.eigen_geld||'?'}, Woningprijs: ${d.max_prijs||'?'}, Obstakels: ${d.obstakels||'?'}, NHG: ${d.nhg||'?'}. Geef aan wat haalbaar is en wat de eerste stappen zijn.`},
+
+{id:'hyp_overwaarde',cat:'hypotheek',title:'Overwaardebenutten-scan',desc:'Wat kunt u doen met de opgebouwde overwaarde in uw woning?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Overwaarde',f:[{T:'select',id:'overwaarde',l:'Geschatte overwaarde',opts:['< €50k','€50k–€100k','€100k–€200k','> €200k','Weet ik niet']},{T:'select',id:'leeftijd',l:'Uw leeftijd',opts:['< 40 jaar','40–55 jaar','55–65 jaar','> 65 jaar']},{T:'radio',id:'hypotheek_vrij',l:'Is uw woning (bijna) hypotheekvrij?',opts:['Ja, volledig vrij','Bijna','Nee, nog hypotheek']}]},
+  {t:'Doelen',f:[{T:'check',id:'doel',l:'Waarvoor wilt u de overwaarde gebruiken?',opts:['Verbouwing','Aanvulling pensioen','Schenking aan kinderen','Verduurzaming','Overbrugging inkomen','Recreatiewoning']},{T:'radio',id:'risico',l:'Risicotolerantie',opts:['Laag — zekerheid voorop','Midden — balans','Hoog — rendement voorop']}]},
+  {t:'AI Overwaarde-advies',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een overwaarde-advies (max 200 woorden) voor ${d.vnaam||'klant'}. Overwaarde: ${d.overwaarde||'?'}, Leeftijd: ${d.leeftijd||'?'}, Hypotheekvrij: ${d.hypotheek_vrij||'?'}, Doel: ${d.doel||'?'}, Risico: ${d.risico||'?'}. Bespreek mogelijkheden zoals verzilverhypotheek, opeethypotheek of opnemen.`},
+
+{id:'hyp_aflplan',cat:'hypotheek',title:'Aflossingsplanningscan',desc:'Wanneer en hoe kunt u extra aflossen op uw hypotheek?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Hypotheek',f:[{T:'select',id:'restschuld',l:'Openstaande hypotheek',opts:['< €100k','€100k–€200k','€200k–€300k','> €300k']},{T:'select',id:'rente',l:'Huidige rente',opts:['< 2%','2–3%','3–4%','4–5%','> 5%']},{T:'select',id:'boetevrij',l:'Boetevrij aflosmogelijkheid per jaar',opts:['10% van oorspronkelijk bedrag','20%','Meer','Weet ik niet']}]},
+  {t:'Aflossingsplan',f:[{T:'select',id:'beschikbaar',l:'Extra geld beschikbaar voor aflossing',opts:['< €5k','€5k–€15k','€15k–€30k','> €30k','Nog niet zeker']},{T:'radio',id:'doel_aflossen',l:'Doel van extra aflossen',opts:['Maandlasten verlagen','Hypotheek eerder vrij','Minder renterisico','Fiscaal voordeel']},{T:'radio',id:'alternatief',l:'Heeft u alternatieven overwogen?',opts:['Nee','Ja — sparen','Ja — beleggen','Ja — pensioen storten']}]},
+  {t:'AI Aflossingsadvies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een aflossingsadvies (max 180 woorden) voor ${d.vnaam||'klant'}. Restschuld: ${d.restschuld||'?'}, Rente: ${d.rente||'?'}, Boetevrij: ${d.boetevrij||'?'}, Beschikbaar: ${d.beschikbaar||'?'}, Doel: ${d.doel_aflossen||'?'}, Alternatief: ${d.alternatief||'?'}. Vergelijk aflossen vs. sparen/beleggen.`},
+
+{id:'hyp_2ewoning',cat:'hypotheek',title:'Tweede woning / vakantiehuisscan',desc:'Financieringsmogelijkheden voor een tweede woning.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Plannen',f:[{T:'radio',id:'type',l:'Type tweede woning',opts:['Vakantiewoning Nederland','Vakantiewoning buitenland','Beleggingspand (verhuur)','Woning voor kind']},{T:'select',id:'waarde',l:'Aankoopprijs',opts:['< €150k','€150k–€300k','€300k–€500k','> €500k']},{T:'radio',id:'gebruik',l:'Gebruik',opts:['Alleen privé','Verhuur (bijv. Airbnb)','Combinatie privé & verhuur']}]},
+  {t:'Financiering',f:[{T:'select',id:'eigen_geld',l:'Eigen inbreng',opts:['< €30k','€30k–€75k','€75k–€150k','> €150k']},{T:'radio',id:'overwaarde',l:'Wilt u overwaarde inzetten?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'AI Advies tweede woning',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een advies tweede woning (max 180 woorden) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Waarde: ${d.waarde||'?'}, Gebruik: ${d.gebruik||'?'}, Eigen geld: ${d.eigen_geld||'?'}, Overwaarde: ${d.overwaarde||'?'}. Bespreek fiscale aspecten (Box 3) en financieringsopties.`},
+
+{id:'hyp_financvbehoud',cat:'hypotheek',title:'Financieringsvoorbehoud-check',desc:'Hoe sterk staat u bij een bod op een nieuwe woning?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw bod & situatie',f:[{T:'select',id:'bod_prijs',l:'Hoogte van het bod',opts:['< €250k','€250k–€400k','€400k–€600k','> €600k']},{T:'select',id:'deadline',l:'Deadline financieringsvoorbehoud',opts:['< 2 weken','2–4 weken','4–6 weken','> 6 weken']},{T:'radio',id:'huidige_woning',l:'Heeft u een huidige woning te verkopen?',opts:['Ja — al verkocht','Ja — nog niet verkocht','Nee, eerste woning']}]},
+  {t:'Financiële positie',f:[{T:'select',id:'inkomen',l:'Bruto jaarinkomen (samen)',opts:['< €40k','€40k–€60k','€60k–€80k','€80k–€100k','> €100k']},{T:'radio',id:'pre_goedkeuring',l:'Heeft u al een voorlopige berekening laten maken?',opts:['Ja','Nee','Bezig']}]},
+  {t:'AI Voorbehoud-advies',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een advies over het financieringsvoorbehoud (max 180 woorden) voor ${d.vnaam||'klant'}. Bod: ${d.bod_prijs||'?'}, Deadline: ${d.deadline||'?'}, Huidige woning: ${d.huidige_woning||'?'}, Inkomen: ${d.inkomen||'?'}. Geef aan of de deadline haalbaar is en welke documenten nodig zijn.`},
+
+/* ---- SCHADEVERZEKERINGEN ---- */
+{id:'sch_auto',cat:'schade',title:'Autoverzekeringsscan',desc:'Klopt uw dekking nog bij uw auto en rijgedrag?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw auto',f:[{T:'text',id:'auto',l:'Merk en model auto',p:'VW Golf 2020'},{T:'radio',id:'dekking',l:'Huidige dekking',opts:['WA','WA+Beperkt casco','Allrisk/Volledig casco','Weet ik niet']},{T:'select',id:'waarde',l:'Waarde auto',opts:['< €5k','€5k–€15k','€15k–€30k','> €30k']},{T:'radio',id:'leeftijd_auto',l:'Leeftijd auto',opts:['0–3 jaar','3–8 jaar','Ouder dan 8 jaar']}]},
+  {t:'Gebruik & no-claim',f:[{T:'radio',id:'km',l:'Km per jaar',opts:['< 10.000','10.000–25.000','> 25.000']},{T:'select',id:'noclaim',l:'No-claimkorting',opts:['0 jaar','1–3 jaar','4–7 jaar','8–12 jaar','Max. (>12 jaar)','Weet ik niet']},{T:'radio',id:'schade',l:'Schade geclaimd (3 jaar)',opts:['Nee','1 keer','2 keer of meer']}]},
+  {t:'AI Dekking & bespaaradvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een autoverzekering advies (max 160 woorden) voor ${d.vnaam||'klant'}. Auto: ${d.auto||'?'}, Dekking: ${d.dekking||'?'}, Waarde: ${d.waarde||'?'}, Leeftijd: ${d.leeftijd_auto||'?'}, km/jaar: ${d.km||'?'}, No-claim: ${d.noclaim||'?'}, Schade: ${d.schade||'?'}. Geef aan of dekking passend is en of er bespaarruimte is.`},
+
+{id:'sch_woning',cat:'schade',title:'Woning schadeverzekeringsscan',desc:'Opstal, inboedel en aansprakelijkheid in orde?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'radio',id:'eigenaar',l:'Woonsituatie',opts:['Eigen woning','Huurwoning','Anders']}]},
+  {t:'Verzekeringen',f:[{T:'check',id:'verzekeringen',l:'Welke schadeverzekeringen heeft u?',opts:['Opstal','Inboedel','Aansprakelijkheid (AVP)','Rechtsbijstand','Reis','Geen idee']},{T:'select',id:'inboedel_waarde',l:'Waarde inboedel',opts:['< €25k','€25k–€50k','€50k–€100k','> €100k']}]},
+  {t:'Wijzigingen',f:[{T:'check',id:'wijzigingen',l:'Recente wijzigingen',opts:['Verbouwing','Grote aankopen','Thuiswerken','Tijdelijk verhuren','Zonnepanelen/laadpaal','Geen']},{T:'radio',id:'claims',l:'Claims (3 jaar)',opts:['Nee','1 keer','2 of meer']}]},
+  {t:'AI Dekkingscheck',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een schadecheck (max 180 woorden) voor ${d.vnaam||'klant'}. Wonen: ${d.eigenaar||'?'}, Verzekeringen: ${d.verzekeringen||'?'}, Inboedel: ${d.inboedel_waarde||'?'}, Wijzigingen: ${d.wijzigingen||'?'}. Noem dekkingshiaten en aanbevelingen.`},
+
+{id:'sch_inboedel',cat:'schade',title:'Inboedelhertaxatiescan',desc:'Is uw inboedel nog correct verzekerd na nieuwe aankopen?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Inboedel',f:[{T:'select',id:'verzekerd_bedrag',l:'Huidig verzekerd bedrag inboedel',opts:['< €25k','€25k–€50k','€50k–€75k','€75k–€125k','> €125k','Weet ik niet']},{T:'check',id:'nieuwe_spullen',l:'Nieuwe kostbare aankopen afgelopen 2 jaar',opts:['Televisie / elektronica','Laptop / computer','Sieraden / kunst','Fietsen (ook e-bike)','Muziekinstrumenten','Geen grote aankopen']},{T:'radio',id:'indexering',l:'Is uw verzekering geïndexeerd?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'Woning',f:[{T:'select',id:'woonoppervlak',l:'Woonoppervlak (m²)',opts:['< 60 m²','60–100 m²','100–150 m²','150–200 m²','> 200 m²']},{T:'radio',id:'kostbaarheden',l:'Heeft u aparte kostbaarhedendekking?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'AI Hertaxatieadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een inboedelhertaxatie-advies (max 160 woorden) voor ${d.vnaam||'klant'}. Verzekerd: ${d.verzekerd_bedrag||'?'}, Nieuwe spullen: ${d.nieuwe_spullen||'?'}, Indexering: ${d.indexering||'?'}, m²: ${d.woonoppervlak||'?'}. Geef aan of er onderverzekering dreigt.`},
+
+{id:'sch_reis',cat:'schade',title:'Reisverzekeringsscan',desc:'Doorlopend of kortlopend? Past uw reisverzekering nog?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Reisgedrag',f:[{T:'radio',id:'freq',l:'Hoe vaak reist u per jaar?',opts:['1 keer','2–3 keer','4–6 keer','Meer dan 6 keer']},{T:'check',id:'bestemmingen',l:'Bestemmingen',opts:['Europa','Buiten Europa','Intercontinentaal','Avontuurlijke reizen','Zakelijk reizen']},{T:'radio',id:'huidig',l:'Huidige reisverzekering',opts:['Doorlopend','Per reis','Geen','Weet ik niet']}]},
+  {t:'Gezinssituatie & behoeften',f:[{T:'radio',id:'gezin',l:'Wie meeverzekerd?',opts:['Alleen u','U + partner','Gezin met kinderen']},{T:'check',id:'wensen',l:'Extra dekkingen gewenst?',opts:['Annuleringsverzekering','Medische kosten hoog','Bagagedekking','Avontuurlijke sporten','Werken in het buitenland']}]},
+  {t:'AI Reisadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een reisverzekeringsadvies (max 150 woorden) voor ${d.vnaam||'klant'}. Frequentie: ${d.freq||'?'}, Bestemmingen: ${d.bestemmingen||'?'}, Huidige verzekering: ${d.huidig||'?'}, Gezin: ${d.gezin||'?'}, Wensen: ${d.wensen||'?'}. Geef aan doorlopend of per reis en welke dekking passend is.`},
+
+{id:'sch_rechts',cat:'schade',title:'Rechtsbijstandscan',desc:'Bent u goed beschermd bij juridische conflicten?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Huidige situatie',f:[{T:'radio',id:'huidig',l:'Heeft u rechtsbijstand?',opts:['Ja — via werkgever','Ja — privé','Nee','Weet ik niet']},{T:'check',id:'modules',l:'Welke modules heeft u?',opts:['Verkeers','Wonen/Huren','Arbeidsrecht','Consument','Familie','Weet ik niet']},{T:'radio',id:'loondienst',l:'Werkzaam in loondienst of ZZP?',opts:['Loondienst','ZZP/ondernemer','Gepensioneerd','Anders']}]},
+  {t:'Behoefte',f:[{T:'check',id:'risicos',l:'Waar loopt u mogelijk tegenaan?',opts:['Arbeidsconflict','Burenruzie / VvE','Consumentgeschil','Letselschade','Huurgeschil','Echtscheiding']}]},
+  {t:'AI Rechtsbijstandadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een rechtsbijstand advies (max 150 woorden) voor ${d.vnaam||'klant'}. Huidig: ${d.huidig||'?'}, Modules: ${d.modules||'?'}, Werkend: ${d.loondienst||'?'}, Risico's: ${d.risicos||'?'}. Geef aan of de dekking volledig is.`},
+
+{id:'sch_avp',cat:'schade',title:'Aansprakelijkheidsverzekeringsscan (AVP)',desc:'Bent u afdoende beschermd tegen schadeclaims van derden?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Verzekering',f:[{T:'radio',id:'huidig',l:'Heeft u een AVP?',opts:['Ja','Nee','Weet ik niet']},{T:'select',id:'bedrag',l:'Verzekerd bedrag per aanspraak',opts:['€1 miljoen','€2,5 miljoen','€5 miljoen','Weet ik niet']},{T:'radio',id:'gezin',l:'Wie meeverzekerd?',opts:['Alleen u','U + partner','Gezin met kinderen','Inwonende ouders']}]},
+  {t:'Situatie',f:[{T:'check',id:'risicos',l:'Bijzondere risicosituaties',opts:['Huisdieren (bijv. hond)','Kinderen met grote schade-potentie','Vrijwilligerswerk','Sport (contactsport)','Geen bijzonderheden']}]},
+  {t:'AI AVP-check',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een AVP-advies (max 150 woorden) voor ${d.vnaam||'klant'}. Huidig: ${d.huidig||'?'}, Bedrag: ${d.bedrag||'?'}, Gezin: ${d.gezin||'?'}, Risico's: ${d.risicos||'?'}. Geef aan of de dekking toereikend is.`},
+
+{id:'sch_kostbaar',cat:'schade',title:'Kostbaarhedenscan',desc:'Sieraden, kunst en elektronica correct verzekerd?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Kostbaarheden',f:[{T:'check',id:'type',l:'Welke kostbaarheden bezit u?',opts:['Sieraden (> €2.500)','Kunst / antiek','Verzamelingen (munten, postzegels)','Dure audio/video','Muziekinstrumenten','Elektrische (e-)bikes']},{T:'select',id:'waarde',l:'Totale waarde kostbaarheden',opts:['< €5k','€5k–€15k','€15k–€30k','€30k–€60k','> €60k']},{T:'radio',id:'aparte_dekking',l:'Apart verzekerd?',opts:['Ja, alles','Gedeeltelijk','Nee','Weet ik niet']}]},
+  {t:'Beheer',f:[{T:'radio',id:'taxatie',l:'Zijn kostbaarheden getaxeerd?',opts:['Ja, recent','Ja, ouder dan 5 jaar','Nee']},{T:'radio',id:'buiten_huis',l:'Neemt u kostbaarheden mee buiten?',opts:['Ja, regelmatig','Soms','Zelden']}]},
+  {t:'AI Kostbaarhedenadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een kostbaarhedenadvies (max 150 woorden) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Waarde: ${d.waarde||'?'}, Apart: ${d.aparte_dekking||'?'}, Taxatie: ${d.taxatie||'?'}, Buiten: ${d.buiten_huis||'?'}. Geef aan of aparte verzekering nodig is.`},
+
+{id:'sch_caravan',cat:'schade',title:'Caravan/camperverzekeringsscan',desc:'Is uw caravan of camper optimaal verzekerd?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw voertuig',f:[{T:'radio',id:'type',l:'Type',opts:['Caravan','Camper / motorhome','Vouwwagen','Tentaanhangwagen']},{T:'select',id:'waarde',l:'Cataloguswaarde',opts:['< €10k','€10k–€25k','€25k–€50k','> €50k']},{T:'radio',id:'dekking',l:'Huidige dekking',opts:['WA','WA + Beperkt casco','Allrisk','Geen / weet niet']}]},
+  {t:'Gebruik',f:[{T:'radio',id:'gebruik',l:'Gebruik',opts:['Alleen Nederland','Nederland + Europa','Intercontinentaal']},{T:'radio',id:'permanente_stalling',l:'Permanente stalling?',opts:['Ja, bewaakt','Ja, onbewaakt','Nee, op eigen terrein']}]},
+  {t:'AI Caravan/Camperadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een caravan/camper advies (max 150 woorden) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Waarde: ${d.waarde||'?'}, Dekking: ${d.dekking||'?'}, Gebruik: ${d.gebruik||'?'}, Stalling: ${d.permanente_stalling||'?'}. Geef advies over passende dekking.`},
+
+{id:'sch_fiets',cat:'schade',title:'Fietsverzekeringsscan',desc:'Is uw (elektrische) fiets correct verzekerd?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw fiets',f:[{T:'radio',id:'type',l:'Type fiets',opts:['Gewone fiets','E-bike (speed pedelec)','E-bike (normaal)','Racefiets / mountainbike','Meerdere fietsen']},{T:'select',id:'waarde',l:'Waarde fiets(en)',opts:['< €500','€500–€1.500','€1.500–€3.000','> €3.000']},{T:'radio',id:'verzekerd',l:'Momenteel verzekerd?',opts:['Ja — via inboedel','Ja — aparte fietsverzekering','Nee']}]},
+  {t:'Gebruik',f:[{T:'radio',id:'gebruik',l:'Gebruik',opts:['Woon-werk','Sport / recreatie','Beide']},{T:'radio',id:'slot',l:'Type slot gebruikt',opts:['ART-2 of hoger','Gewoon fietsslot','Wisselend']}]},
+  {t:'AI Fietsverzekeringsadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een fietsverzekering advies (max 130 woorden) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Waarde: ${d.waarde||'?'}, Verzekerd: ${d.verzekerd||'?'}, Gebruik: ${d.gebruik||'?'}, Slot: ${d.slot||'?'}. Geef advies over de juiste dekking.`},
+
+{id:'sch_boot',cat:'schade',title:'Boot/watersportverzekeringsscan',desc:'Vaar veilig met de juiste dekking voor uw boot.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw vaartuig',f:[{T:'radio',id:'type',l:'Type vaartuig',opts:['Zeilboot','Motorboot','Jacht (> 20m)','Sloep / tender','Kano / kajak']},{T:'select',id:'waarde',l:'Nieuwwaarde',opts:['< €5k','€5k–€15k','€15k–€50k','€50k–€150k','> €150k']},{T:'radio',id:'dekking',l:'Huidige dekking',opts:['WA-aansprakelijkheid','Casco + WA','Allrisk','Geen / weet niet']}]},
+  {t:'Gebruik',f:[{T:'radio',id:'vaargebied',l:'Vaargebied',opts:['Binnenwaters Nederland','Kustwateren','Europa','Intercontinentaal']},{T:'radio',id:'ligplaats',l:'Ligplaats',opts:['Jachthaven (bewaakt)','Eigen steiger','Wisselend']}]},
+  {t:'AI Boot/watersportadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een bootverzekering advies (max 150 woorden) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Waarde: ${d.waarde||'?'}, Dekking: ${d.dekking||'?'}, Vaargebied: ${d.vaargebied||'?'}. Geef advies over passende dekking inclusief aansprakelijkheid.`},
+
+/* ---- BEDRIJF & ZZP ---- */
+{id:'bdj_basis',cat:'bedrijf',title:'Bedrijfsverzekeringsscan',desc:'Zijn uw zakelijke risico\'s volledig gedekt?',
+steps:[
+  {t:'Bedrijfsgegevens',f:[{T:'row2',f:[{T:'text',id:'naam',l:'Contactpersoon',req:1},{T:'email',id:'email',l:'E-mailadres',req:1}]},{T:'row2',f:[{T:'text',id:'bedrijf',l:'Bedrijfsnaam'},{T:'select',id:'rechts',l:'Rechtsvorm',opts:['Eenmanszaak/ZZP','VOF','BV','NV','Anders']}]},{T:'select',id:'branche',l:'Branche',opts:['Bouw/installatie','Handel/retail','Zakelijke dienstverlening','Horeca','Transport','Zorg','ICT','Overig']}]},
+  {t:'Omvang & risico\'s',f:[{T:'radio',id:'mw',l:'Medewerkers',opts:['1 (alleen u)','2–10','11–50','> 50']},{T:'radio',id:'pand',l:'Bedrijfspand',opts:['Eigen','Huur','Thuiswerk/mobiel']},{T:'check',id:'huidig',l:'Huidige verzekeringen',opts:['Bedrijfsaansprakelijkheid (AVB)','Inventaris/bedrijfsinhoud','Rechtsbijstand','AOV','Cyberverzekering','Weet ik niet']}]},
+  {t:'Wijzigingen',f:[{T:'check',id:'wijzig',l:'Bedrijfswijzigingen afgelopen jaar',opts:['Omzet sterk gewijzigd','Personeel gewijzigd','Verhuisd','Nieuwe activiteiten','Geen']},{T:'textarea',id:'opmerking',l:'Bijzonderheden',cc:400}]},
+  {t:'AI Bedrijfsrisicoanalyse',ai:1}
+],
+prompt:(d)=>`Zakelijk verzekeringsadviseur. Schrijf een bedrijfsrisicoanalyse (max 200 woorden) voor ${d.naam||'klant'} (${d.bedrijf||'bedrijf'}). Branche: ${d.branche||'?'}, MW: ${d.mw||'?'}, Pand: ${d.pand||'?'}, Verzekeringen: ${d.huidig||'?'}, Wijzigingen: ${d.wijzig||'?'}. Noem dekkingshiaten en aanbevelingen.`},
+
+{id:'bdj_aov',cat:'bedrijf',title:'AOV-scan (arbeidsongeschiktheid ZZP)',desc:'Bent u verzekerd als u ziek wordt en niet meer kunt werken?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'select',id:'branche',l:'Beroep/branche',opts:['Bouw/techniek','ICT','Advies/consultancy','Zorg','Creatief','Transport','Overig']}]},
+  {t:'Uw situatie',f:[{T:'select',id:'omzet',l:'Jaaromzet',opts:['< €25k','€25k–€50k','€50k–€100k','€100k–€200k','> €200k']},{T:'radio',id:'huidig',l:'Heeft u een AOV?',opts:['Ja — privé','Ja — via beroepsorganisatie','Nee','Weet ik niet']},{T:'select',id:'wachttijd',l:'Gewenste wachttijd',opts:['1 maand','3 maanden','6 maanden','12 maanden','Weet ik niet']}]},
+  {t:'Gezondheid & wensen',f:[{T:'radio',id:'gezondheid',l:'Algemene gezondheid',opts:['Goed — geen klachten','Redelijk — kleine kwalen','Verleden met ziekteverzuim']},{T:'select',id:'gewenst_uitkering',l:'Gewenste uitkering per maand',opts:['< €1.500','€1.500–€2.500','€2.500–€3.500','> €3.500']}]},
+  {t:'AI AOV-advies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een AOV-advies voor ZZP (max 200 woorden) voor ${d.vnaam||'klant'}. Branche: ${d.branche||'?'}, Omzet: ${d.omzet||'?'}, Huidig: ${d.huidig||'?'}, Wachttijd: ${d.wachttijd||'?'}, Uitkering: ${d.gewenst_uitkering||'?'}. Bespreek opties (verzekering vs. broodfonds vs. spaarreserve) en fiscale aftrekbaarheid.`},
+
+{id:'bdj_cyber',cat:'bedrijf',title:'Cyberverzekeringsscan',desc:'Is uw bedrijf beschermd tegen datalekken en ransomware?',
+steps:[
+  {t:'Bedrijfsgegevens',f:[{T:'row2',f:[{T:'text',id:'naam',l:'Contactpersoon',req:1},{T:'email',id:'email',l:'E-mailadres',req:1}]},{T:'row2',f:[{T:'text',id:'bedrijf',l:'Bedrijfsnaam'},{T:'radio',id:'mw',l:'Medewerkers',opts:['1','2–10','11–50','> 50']}]}]},
+  {t:'Digitale situatie',f:[{T:'check',id:'data',l:'Soort data die u beheert',opts:['Klantgegevens (NAW)','Betaalgegevens','Medische gegevens','Intellectueel eigendom','Geen gevoelige data']},{T:'radio',id:'cloud',l:'Gebruik van cloud/externe systemen',opts:['Grotendeels cloud','Combinatie','Grotendeels on-premise']},{T:'radio',id:'incident',l:'Ooit een cyberincident gehad?',opts:['Nee','Ja — phishing','Ja — ransomware / hack']}]},
+  {t:'Beveiliging',f:[{T:'check',id:'maatregelen',l:'Huidige beveiligingsmaatregelen',opts:['MFA/2FA','Regelmatige back-ups','Bewustzijnstraining medewerkers','Antivirusbescherming','Geen formele maatregelen']},{T:'radio',id:'huidig',l:'Heeft u een cyberverzekering?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'AI Cyberadvies',ai:1}
+],
+prompt:(d)=>`Zakelijk verzekeringsadviseur. Schrijf een cyberadvies (max 180 woorden) voor ${d.naam||'klant'} (${d.bedrijf||'bedrijf'}). Data: ${d.data||'?'}, Incident: ${d.incident||'?'}, Maatregelen: ${d.maatregelen||'?'}, Huidig: ${d.huidig||'?'}. Geef aan welke cyberrisico's relevant zijn en welke dekking aanbevolen wordt.`},
+
+{id:'bdj_wagenvloot',cat:'bedrijf',title:'Zakelijke autovlootscan',desc:'Zijn alle bedrijfsauto\'s optimaal verzekerd?',
+steps:[
+  {t:'Bedrijfsgegevens',f:[{T:'row2',f:[{T:'text',id:'naam',l:'Contactpersoon',req:1},{T:'email',id:'email',l:'E-mailadres',req:1}]},{T:'row2',f:[{T:'text',id:'bedrijf',l:'Bedrijfsnaam'},{T:'select',id:'aantal_autos',l:'Aantal bedrijfsauto\'s',opts:['1','2–5','6–10','11–25','> 25']}]}]},
+  {t:'Vloot',f:[{T:'radio',id:'type_vloot',l:'Type voertuigen',opts:['Personenauto\'s','Bestelauto\'s','Vrachtwagens','Gemengde vloot']},{T:'radio',id:'gebruik',l:'Gebruik',opts:['Zakelijk only','Zakelijk + privé','Meerdere chauffeurs']},{T:'select',id:'gemiddelde_waarde',l:'Gemiddelde waarde per voertuig',opts:['< €15k','€15k–€30k','€30k–€60k','> €60k']}]},
+  {t:'Huidige verzekering',f:[{T:'radio',id:'huidig',l:'Huidige dekking',opts:['WA','WA + Beperkt casco','Allrisk','Wisselend per voertuig']},{T:'radio',id:'schade_historiek',l:'Schadehistoriek (3 jaar)',opts:['Geen','1–3 claims','> 3 claims']}]},
+  {t:'AI Vlootadvies',ai:1}
+],
+prompt:(d)=>`Zakelijk verzekeringsadviseur. Schrijf een vlootadvies (max 160 woorden) voor ${d.naam||'klant'} (${d.bedrijf||'?'}). Aantal: ${d.aantal_autos||'?'}, Type: ${d.type_vloot||'?'}, Gebruik: ${d.gebruik||'?'}, Waarde: ${d.gemiddelde_waarde||'?'}, Dekking: ${d.huidig||'?'}. Bespreek optimalisatiemogelijkheden en vlootverzekering.`},
+
+{id:'bdj_werknemers',cat:'bedrijf',title:'Werknemersverzekeringsscan',desc:'WGA, ZW en WIA: zijn uw verplichtingen goed geregeld?',
+steps:[
+  {t:'Bedrijfsgegevens',f:[{T:'row2',f:[{T:'text',id:'naam',l:'Contactpersoon',req:1},{T:'email',id:'email',l:'E-mailadres',req:1}]},{T:'row2',f:[{T:'text',id:'bedrijf',l:'Bedrijfsnaam'},{T:'select',id:'mw',l:'Aantal werknemers',opts:['1–5','6–25','26–100','> 100']}]}]},
+  {t:'Situatie',f:[{T:'radio',id:'eigenrisicodrager',l:'Eigenrisicodrager WGA/ZW?',opts:['Ja, voor WGA','Ja, voor ZW','Ja, voor beide','Nee, publiek verzekerd','Weet ik niet']},{T:'check',id:'problemen',l:'Actualiteiten',opts:['Recent ziek personeel','Verwachte uitstroom','Reorganisatie','Arbeidsconflict','Geen']}]},
+  {t:'Wensen',f:[{T:'radio',id:'doel',l:'Doel van scan',opts:['Inzicht huidige kosten','Vergelijken eigenrisicodrager vs. publiek','Optimaliseren WGA-premie','Totaaloverzicht werkgeversrisico']}]},
+  {t:'AI Werknemersverzekeringsadvies',ai:1}
+],
+prompt:(d)=>`Zakelijk verzekeringsadviseur. Schrijf een werknemersverzekeringsadvies (max 180 woorden) voor ${d.naam||'klant'} (${d.bedrijf||'?'}). MW: ${d.mw||'?'}, Eigenrisicodrager: ${d.eigenrisicodrager||'?'}, Problemen: ${d.problemen||'?'}, Doel: ${d.doel||'?'}. Geef concrete aanbevelingen over WGA/ZW eigenrisicodragerschap.`},
+
+{id:'bdj_bav',cat:'bedrijf',title:'Beroepsaansprakelijkheidsscan (BAV)',desc:'Bent u verzekerd als een fout schade veroorzaakt bij een klant?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'naam',l:'Contactpersoon',req:1},{T:'email',id:'email',l:'E-mailadres',req:1}]},{T:'row2',f:[{T:'text',id:'bedrijf',l:'Bedrijfsnaam'},{T:'select',id:'beroep',l:'Beroep',opts:['Adviseur/consultant','Accountant/boekhouder','Architect/ingenieur','Juridisch adviseur','ICT/software','Makelaar','Overig']}]}]},
+  {t:'Omzet & aansprakelijkheid',f:[{T:'select',id:'omzet',l:'Jaaromzet',opts:['< €100k','€100k–€250k','€250k–€500k','> €500k']},{T:'radio',id:'huidig',l:'Heeft u BAV?',opts:['Ja','Nee','Weet ik niet']},{T:'select',id:'verzekerd_bedrag',l:'Huidig verzekerd bedrag',opts:['€250k','€500k','€1 miljoen','€2,5 miljoen','> €2,5 miljoen','Weet ik niet']}]},
+  {t:'Projecten & risico',f:[{T:'radio',id:'max_project',l:'Waarde grootste project/contract',opts:['< €50k','€50k–€150k','€150k–€500k','> €500k']},{T:'radio',id:'buitenland',l:'Werkzaamheden buiten Nederland?',opts:['Nee','Wel eens in EU','Regelmatig internationaal']}]},
+  {t:'AI BAV-advies',ai:1}
+],
+prompt:(d)=>`Zakelijk verzekeringsadviseur. Schrijf een BAV-advies (max 160 woorden) voor ${d.naam||'klant'} (${d.beroep||'?'}). Omzet: ${d.omzet||'?'}, Huidig: ${d.huidig||'?'}, Bedrag: ${d.verzekerd_bedrag||'?'}, Projectwaarde: ${d.max_project||'?'}. Geef aan of de dekking toereikend is.`},
+
+{id:'bdj_pensioen',cat:'bedrijf',title:'Bedrijfspensioenscan',desc:'Pensioen voor DGA, werknemers of als ZZP\'er.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'naam',l:'Naam',req:1},{T:'email',id:'email',l:'E-mailadres',req:1}]},{T:'row2',f:[{T:'text',id:'bedrijf',l:'Bedrijfsnaam'},{T:'radio',id:'rol',l:'Uw rol',opts:['DGA','ZZP','Werkgever met personeel','Werknemer']}]}]},
+  {t:'Pensioenopbouw',f:[{T:'radio',id:'huidig',l:'Huidige pensioenregeling',opts:['Pensioenfonds (verplicht)','Eigen pensioenregeling (PPI/verzekeraar)','Niets geregeld','Weet ik niet']},{T:'select',id:'leeftijd',l:'Gewenste pensioenleeftijd',opts:['< 60','60–62','63–65','66–67 (AOW)','Na 67']}]},
+  {t:'Wensen',f:[{T:'select',id:'gewenst',l:'Gewenst pensioeninkomen (bruto/maand)',opts:['< €1.500','€1.500–€2.500','€2.500–€3.500','> €3.500']},{T:'radio',id:'partner',l:'Partner ook meeverzekeren?',opts:['Ja','Nee','N.v.t.']}]},
+  {t:'AI Bedrijfspensioensadvies',ai:1}
+],
+prompt:(d)=>`Pensioenadviseur. Schrijf een bedrijfspensioenadvies (max 200 woorden) voor ${d.naam||'klant'} als ${d.rol||'?'}. Huidig: ${d.huidig||'?'}, Leeftijd: ${d.leeftijd||'?'}, Gewenst: ${d.gewenst||'?'}. Bespreek opties voor DGA (OR, lijfrente), ZZP (jaarruimte) of werkgeversregeling.`},
+
+/* ---- INKOMEN & LEVEN ---- */
+{id:'ink_orv',cat:'inkomen',title:'Overlijdensrisicoscan',desc:'Zijn uw nabestaanden financieel beschermd?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'row2',f:[{T:'text',id:'geb',l:'Geboortedatum',p:'01-01-1975'},{T:'select',id:'staat',l:'Burgerlijke staat',opts:['Gehuwd','Samenwonend','Alleenstaand']}]}]},
+  {t:'Verzekering',f:[{T:'radio',id:'huidig',l:'Heeft u een ORV?',opts:['Ja — gekoppeld hypotheek','Ja — losse verzekering','Nee','Weet ik niet']},{T:'select',id:'bedrag',l:'Verzekerd bedrag',opts:['< €50k','€50k–€100k','€100k–€200k','> €200k','Weet ik niet']},{T:'select',id:'looptijd',l:'Looptijd',opts:['< 5 jaar','5–10 jaar','10–20 jaar','Tot pensioen','Weet ik niet']}]},
+  {t:'Nabestaanden',f:[{T:'radio',id:'kinderen',l:'Thuiswonende kinderen',opts:['Nee','1–2','3 of meer']},{T:'radio',id:'partner_kan',l:'Kan partner hypotheek alleen dragen?',opts:['Ja','Met moeite','Nee','N.v.t.']},{T:'check',id:'wijziging',l:'Recente wijzigingen',opts:['Huwelijk','Kind gekregen','Inkomenswijziging','Geen']}]},
+  {t:'AI Nabestaandencheck',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een ORV-advies (max 180 woorden) voor ${d.vnaam||'klant'}. Huidig: ${d.huidig||'?'}, Bedrag: ${d.bedrag||'?'}, Looptijd: ${d.looptijd||'?'}, Kinderen: ${d.kinderen||'?'}, Partner: ${d.partner_kan||'?'}. Geef aan of dekking toereikend is.`},
+
+{id:'ink_wia',cat:'inkomen',title:'Arbeidsongeschiktheidsscan (WIA-aanvulling)',desc:'Wat ontvangt u bij arbeidsongeschiktheid en is er een gat?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Werksituatie',f:[{T:'radio',id:'dienstverband',l:'Dienstverband',opts:['Vaste baan','Tijdelijk contract','Via uitzendbureau','Ambtenaar/publieke sector']},{T:'select',id:'bruto_loon',l:'Bruto maandloon',opts:['< €2.000','€2.000–€3.000','€3.000–€4.000','€4.000–€5.000','> €5.000']},{T:'radio',id:'cao',l:'Aanvulling via CAO of werkgever?',opts:['Ja, werkgever vult aan','Nee, alleen wettelijk','Weet ik niet']}]},
+  {t:'Huidig & wensen',f:[{T:'radio',id:'huidig',l:'Heeft u aanvullende verzekering?',opts:['Ja','Nee','Weet ik niet']},{T:'radio',id:'financiele_reserve',l:'Financiële reserve bij langdurige ziekte',opts:['> 12 maanden','6–12 maanden','< 6 maanden','Nagenoeg niets']}]},
+  {t:'AI WIA-advies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een WIA-advies (max 200 woorden) voor ${d.vnaam||'klant'}. Dienstverband: ${d.dienstverband||'?'}, Loon: ${d.bruto_loon||'?'}, CAO: ${d.cao||'?'}, Huidig: ${d.huidig||'?'}, Reserve: ${d.financiele_reserve||'?'}. Bereken het potentiële WIA-gat en adviseer over aanvullingsverzekering.`},
+
+{id:'ink_woonlast',cat:'inkomen',title:'Woonlastenbeschermerscan',desc:'Blijft u uw hypotheek betalen bij arbeidsongeschiktheid of werkloosheid?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Woonlasten & inkomen',f:[{T:'select',id:'maandlast',l:'Maandelijkse hypotheeklasten',opts:['< €600','€600–€900','€900–€1.300','€1.300–€1.800','> €1.800']},{T:'select',id:'inkomen',l:'Netto maandinkomen',opts:['< €1.500','€1.500–€2.500','€2.500–€3.500','> €3.500']},{T:'radio',id:'partner',l:'Dual income?',opts:['Ja — twee inkomens','Nee — enkel inkomen']}]},
+  {t:'Risicoprofiel',f:[{T:'radio',id:'dienstverband',l:'Werkzekerheid',opts:['Vaste baan — stabiel','Tijdelijk contract','ZZP','Twijfelachtig']},{T:'radio',id:'huidig',l:'Betalingsbeschermer aanwezig?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'AI Woonlastadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een woonlastenbeschermingsadvies (max 160 woorden) voor ${d.vnaam||'klant'}. Lasten: ${d.maandlast||'?'}, Inkomen: ${d.inkomen||'?'}, Partner: ${d.partner||'?'}, Zekerheid: ${d.dienstverband||'?'}. Geef aan of betalingsbeschermer zinvol is.`},
+
+{id:'ink_anw',cat:'inkomen',title:'ANW-hiaatscan',desc:'Is er een gat in de nabestaandenuitkering van de overheid?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'row2',f:[{T:'text',id:'geb',l:'Geboortedatum',p:'01-01-1970'},{T:'select',id:'staat',l:'Burgerlijke staat',opts:['Gehuwd','Samenwonend','Alleenstaand']}]}]},
+  {t:'Nabestaandeninkomen',f:[{T:'radio',id:'anw_recht',l:'Heeft uw partner recht op ANW?',opts:['Ja — kind < 18 thuis','Ja — arbeidsongeschikt > 45%','Nee — geen kinderen / AOW-leeftijd','Weet ik niet']},{T:'select',id:'partner_inkomen',l:'Inkomen partner bij uw overlijden',opts:['Geen eigen inkomen','< €1.500 netto','€1.500–€2.500','> €2.500']},{T:'radio',id:'pensioen_anw',l:'ANW-compensatie via pensioenfonds?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'Wensen',f:[{T:'select',id:'gewenst',l:'Gewenste aanvulling per maand',opts:['< €500','€500–€1.000','€1.000–€1.500','> €1.500']}]},
+  {t:'AI ANW-hiaatadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een ANW-hiaatadvies (max 180 woorden) voor ${d.vnaam||'klant'}. ANW-recht: ${d.anw_recht||'?'}, Partner inkomen: ${d.partner_inkomen||'?'}, Pensioen ANW: ${d.pensioen_anw||'?'}, Gewenste aanvulling: ${d.gewenst||'?'}. Leg de ANW-regeling uit en geef advies.`},
+
+{id:'ink_uitvaart',cat:'inkomen',title:'Uitvaartscan',desc:'Is uw uitvaart goed en volledig geregeld?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'row2',f:[{T:'text',id:'jaar',l:'Geboortejaar',p:'1962'},{T:'select',id:'staat',l:'Burgerlijke staat',opts:['Gehuwd','Samenwonend','Alleenstaand']}]}]},
+  {t:'Verzekering',f:[{T:'radio',id:'huidig',l:'Type uitvaartverzekering',opts:['Natura (uitvaartonderneming)','Kapitaal (gelduitkering)','Nee','Weet ik niet']},{T:'select',id:'bedrag',l:'Verzekerd bedrag/waarde',opts:['< €5k','€5k–€8k','€8k–€12k','> €12k','Weet ik niet']},{T:'radio',id:'partner',l:'Partner ook verzekerd?',opts:['Ja','Nee','N.v.t.']}]},
+  {t:'Wensen & vastlegging',f:[{T:'radio',id:'wens',l:'Uitvaartwens',opts:['Begraven','Cremeren','Nog niet bepaald']},{T:'radio',id:'vastgelegd',l:'Wensen vastgelegd?',opts:['In testament','In codicil','Mondeling aan naasten','Nee']}]},
+  {t:'AI Uitvaartcheck',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een uitvaartcheck (max 160 woorden) voor ${d.vnaam||'klant'}. Type: ${d.huidig||'?'}, Bedrag: ${d.bedrag||'?'}, Partner: ${d.partner||'?'}, Wens: ${d.wens||'?'}, Vastgelegd: ${d.vastgelegd||'?'}. Geef aan of dekking toereikend is en of wensen goed zijn geborgd.`},
+
+{id:'ink_spaarleven',cat:'inkomen',title:'Spaarleven/kapitaalverzekeringsscan',desc:'Controleer uw lopende spaarleven- of kapitaalverzekering.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw polis',f:[{T:'radio',id:'type',l:'Type polis',opts:['Spaarleven (gegarandeerd)','Beleggingsverzekering','Kapitaalverzekering Eigen Woning (KEW)','Weet ik niet']},{T:'select',id:'einddatum',l:'Einddatum polis',opts:['< 2 jaar','2–5 jaar','5–10 jaar','> 10 jaar']},{T:'select',id:'kapitaal',l:'Verwacht eindkapitaal',opts:['< €25k','€25k–€50k','€50k–€100k','> €100k']}]},
+  {t:'Bestemming & kosten',f:[{T:'radio',id:'doel',l:'Bestemming eindkapitaal',opts:['Hypotheekaflossing','Aanvulling pensioen','Vrij besteedbaar','Nog niet bepaald']},{T:'radio',id:'kosten_check',l:'Weet u de kosten van uw polis?',opts:['Ja','Nee','Deels']}]},
+  {t:'AI Spaarleven analyse',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een spaarleven/kapitaalverzekering analyse (max 180 woorden) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Einddatum: ${d.einddatum||'?'}, Kapitaal: ${d.kapitaal||'?'}, Doel: ${d.doel||'?'}, Kosten: ${d.kosten_check||'?'}. Bespreek actuele waarde, kosten en of de polis nog past bij het doel.`},
+
+{id:'ink_werkloosheid',cat:'inkomen',title:'Werkloosheidsverzekeringsscan',desc:'Wat ontvangt u bij ontslag en is er aanvulling gewenst?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Werksituatie',f:[{T:'radio',id:'dienstverband',l:'Dienstverband',opts:['Vaste baan','Tijdelijk contract','Uitzendkracht']},{T:'select',id:'inkomen',l:'Bruto maandinkomen',opts:['< €2k','€2k–€3k','€3k–€4k','> €4k']},{T:'select',id:'WW_duur',l:'WW-duur bij ontslag (schatting)',opts:['< 3 maanden','3–6 maanden','6–12 maanden','> 12 maanden','Weet ik niet']}]},
+  {t:'Woonlasten & reserve',f:[{T:'select',id:'woonlast',l:'Maandelijkse woonlasten',opts:['< €700','€700–€1.100','€1.100–€1.500','> €1.500']},{T:'radio',id:'reserve',l:'Spaarbuffer',opts:['> 6 maanden inkomen','3–6 maanden','< 3 maanden','Nagenoeg niets']}]},
+  {t:'AI Werkloosheidsadvies',ai:1}
+],
+prompt:(d)=>`Verzekeringsadviseur. Schrijf een werkloosheidsadvies (max 160 woorden) voor ${d.vnaam||'klant'}. Dienstverband: ${d.dienstverband||'?'}, Inkomen: ${d.inkomen||'?'}, WW: ${d.WW_duur||'?'}, Woonlast: ${d.woonlast||'?'}, Reserve: ${d.reserve||'?'}. Bespreek of aanvullende verzekering zinvol is.`},
+
+/* ---- PENSIOEN & VERMOGEN ---- */
+{id:'pen_basis',cat:'pensioen',title:'Pensioenscan',desc:'Heeft u straks genoeg inkomen bij pensionering?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'row2',f:[{T:'text',id:'geb_jaar',l:'Geboortejaar',p:'1970'},{T:'select',id:'pensioenleeft',l:'Gewenste pensioenleeftijd',opts:['< 60','60–62','63–65','66–67','Na 67']}]}]},
+  {t:'Pensioenopbouw',f:[{T:'check',id:'opbouw',l:'Hoe bouwt u pensioen op?',opts:['Via werkgever','ZZP/zelf','Lijfrente/banksparen','Beleggingen','Niets']},{T:'radio',id:'inzicht',l:'Inzicht via MijnPensioenoverzicht.nl?',opts:['Ja, goed inzicht','Deels','Nee']}]},
+  {t:'Verwachting & zorgen',f:[{T:'select',id:'verwacht',l:'Verwacht pensioeninkomen (bruto/mnd)',opts:['< €1.000','€1.000–€1.500','€1.500–€2.500','> €2.500','Weet ik niet']},{T:'select',id:'gewenst',l:'Gewenst netto maandinkomen',opts:['< €1.500','€1.500–€2.000','€2.000–€3.000','> €3.000']},{T:'radio',id:'zorg',l:'Zorgen over pensioen?',opts:['Nee','Beetje','Ja']}]},
+  {t:'AI Pensioengapcheck',ai:1}
+],
+prompt:(d)=>`Pensioenadviseur. Schrijf een pensioenscan (max 200 woorden) voor ${d.vnaam||'klant'} (geb. ${d.geb_jaar||'?'}). Opbouw: ${d.opbouw||'?'}, Verwacht: ${d.verwacht||'?'}/mnd, Gewenst: ${d.gewenst||'?'}/mnd, Zorgen: ${d.zorg||'?'}. Geef aan of er een pensioengat dreigt en welke opties er zijn.`},
+
+{id:'pen_lijfrente',cat:'pensioen',title:'Lijfrentescan',desc:'Benut u uw jaarruimte voor fiscaal voordelig pensioen sparen?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Inkomen & pensioen',f:[{T:'select',id:'inkomen',l:'Bruto jaarinkomen',opts:['< €30k','€30k–€50k','€50k–€75k','€75k–€100k','> €100k']},{T:'radio',id:'pensioenopbouw',l:'Pensioenopbouw via werkgever?',opts:['Ja, volledig','Beperkt','Nee (ZZP)']},{T:'radio',id:'huidig_lijfrente',l:'Heeft u al een lijfrente?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'Jaarruimte',f:[{T:'radio',id:'jaarruimte_check',l:'Heeft u jaarruimte laten berekenen?',opts:['Ja','Nee']},{T:'select',id:'inleg',l:'Bereid extra te storten per jaar',opts:['< €1.000','€1.000–€3.000','€3.000–€6.000','> €6.000']},{T:'radio',id:'voorkeur',l:'Voorkeur',opts:['Lijfrenterekening (banksparen)','Lijfrenteverzekering','Beide OK','Weet ik niet']}]},
+  {t:'AI Lijfrente-advies',ai:1}
+],
+prompt:(d)=>`Pensioenadviseur. Schrijf een lijfrente-advies (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.inkomen||'?'}, Opbouw: ${d.pensioenopbouw||'?'}, Huidig: ${d.huidig_lijfrente||'?'}, Inleg: ${d.inleg||'?'}, Voorkeur: ${d.voorkeur||'?'}. Leg de jaarruimteberekening uit en adviseer over banksparen vs. verzekering.`},
+
+{id:'pen_dga',cat:'pensioen',title:'DGA-pensioenscan',desc:'Pensioen als directeur-grootaandeelhouder: wat zijn uw opties?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'naam',l:'Naam DGA',req:1},{T:'email',id:'email',l:'E-mailadres',req:1}]},{T:'row2',f:[{T:'text',id:'bedrijf',l:'Bedrijfsnaam'},{T:'text',id:'geb_jaar',l:'Geboortejaar',p:'1968'}]}]},
+  {t:'Pensioenopbouw',f:[{T:'radio',id:'huidig',l:'Huidige pensioenvoorziening',opts:['Pensioen in eigen beheer (BV)','Verzekerd bij verzekeraar','Pensioen in BV al afgestort','Niets geregeld','Weet ik niet']},{T:'select',id:'salaris',l:'DGA-salaris (bruto jaar)',opts:['< €50k','€50k–€75k','€75k–€100k','> €100k']}]},
+  {t:'Planning',f:[{T:'select',id:'pensioenleeft',l:'Beoogde pensioenleeftijd',opts:['< 60','60–62','63–65','66–67','Na 67']},{T:'radio',id:'dividendplan',l:'Plant u dividend voor pensioenaanvulling?',opts:['Ja','Mogelijk','Nee']},{T:'radio',id:'afkoop',l:'PEB afgestort of afgekocht?',opts:['Ja, afgestort','Ja, afgekocht','Nee / nog niet besloten']}]},
+  {t:'AI DGA Pensioenadvies',ai:1}
+],
+prompt:(d)=>`Pensioenadviseur DGA. Schrijf een DGA-pensioensadvies (max 200 woorden) voor ${d.naam||'klant'} (${d.bedrijf||'?'}). Huidig: ${d.huidig||'?'}, Salaris: ${d.salaris||'?'}, Pensioenleeftijd: ${d.pensioenleeft||'?'}, PEB: ${d.afkoop||'?'}. Bespreek opties na afschaffing PEB: OR, lijfrente, banksparen.`},
+
+{id:'pen_vermogen',cat:'pensioen',title:'Vermogensplanningscan',desc:'Hoe beheert en laat u uw vermogen groeien?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Vermogen',f:[{T:'select',id:'spaargeld',l:'Totaal spaargeld / liquide vermogen',opts:['< €10k','€10k–€50k','€50k–€150k','€150k–€500k','> €500k']},{T:'check',id:'bezittingen',l:'Overige bezittingen',opts:['Eigen woning (overwaarde)','Beleggingsportefeuille','Zakelijk vermogen','Erfenis/schenking verwacht','Cryptovaluta']},{T:'radio',id:'doel',l:'Doel van het vermogen',opts:['Aanvulling pensioen','Erfenis nalaten aan kinderen','Aankoop woning','Vrij besteedbaar / groei','Diversificatie']}]},
+  {t:'Beleggingsprofiel',f:[{T:'radio',id:'risico',l:'Risicotolerantie',opts:['Defensief — zekerheid voorop','Neutraal — balans','Offensief — rendement voorop']},{T:'select',id:'horizon',l:'Beleggingshorizon',opts:['< 3 jaar','3–7 jaar','7–15 jaar','> 15 jaar']}]},
+  {t:'AI Vermogensadvies',ai:1}
+],
+prompt:(d)=>`Vermogensadviseur. Schrijf een vermogensplanningsadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Vermogen: ${d.spaargeld||'?'}, Bezittingen: ${d.bezittingen||'?'}, Doel: ${d.doel||'?'}, Risico: ${d.risico||'?'}, Horizon: ${d.horizon||'?'}. Bespreek Box 3 optimalisatie, spreiding en rendement.`},
+
+{id:'pen_schenken',cat:'pensioen',title:'Schenkings- en erfenisscan',desc:'Hoe schenkt u fiscaal slim aan uw kinderen?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Schenkingssituatie',f:[{T:'radio',id:'doel',l:'Doel schenking',opts:['Woning kopen kind','Studie kind','Vrij besteedbaar','Erfbelasting beperken','Alles regelen voor overlijden']},{T:'select',id:'bedrag',l:'Beoogd te schenken (per jaar)',opts:['< €6k (jaarlijkse vrijstelling)','€6k–€30k','€30k–€100k','> €100k']},{T:'radio',id:'ontvanger',l:'Wie ontvangt?',opts:['Kind(eren)','Kleinkind(eren)','Partner','Derde(n)']}]},
+  {t:'Vermogen & testament',f:[{T:'select',id:'vermogen',l:'Totaal vermogen (globaal)',opts:['< €250k','€250k–€500k','€500k–€1 mln','> €1 mln']},{T:'radio',id:'testament',l:'Heeft u een testament?',opts:['Ja, recent','Ja, verouderd','Nee']}]},
+  {t:'AI Schenkingsadvies',ai:1}
+],
+prompt:(d)=>`Financieel/fiscaal adviseur. Schrijf een schenkings- en erfenisadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Doel: ${d.doel||'?'}, Bedrag: ${d.bedrag||'?'}, Ontvanger: ${d.ontvanger||'?'}, Vermogen: ${d.vermogen||'?'}, Testament: ${d.testament||'?'}. Bespreek jaarlijkse vrijstelling, verhoogde vrijstelling, successieplanning.`},
+
+{id:'pen_belegging',cat:'pensioen',title:'Beleggingsprofiel­scan',desc:'Wat is uw risicotolerantie en passend beleggingsprofiel?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Kennis & ervaring',f:[{T:'radio',id:'ervaring',l:'Ervaring met beleggen',opts:['Geen ervaring','Beperkte ervaring','Enige ervaring','Ruime ervaring']},{T:'check',id:'producten',l:'Waarmee heeft u ervaring?',opts:['Spaarrekening','Beleggingsfonds','Aandelen/obligaties','ETF/indexfonds','Vastgoed','Geen']},{T:'radio',id:'kennis',l:'Kennis van financiële risico\'s',opts:['Laag','Gemiddeld','Hoog']}]},
+  {t:'Risicobereidheid',f:[{T:'radio',id:'daling',l:'Hoe reageert u op 20% koersdaling?',opts:['Direct verkopen','Afwachten','Bijkopen']},{T:'select',id:'horizon',l:'Beleggingshorizon',opts:['< 3 jaar','3–7 jaar','7–15 jaar','> 15 jaar']},{T:'radio',id:'doel',l:'Doel belegging',opts:['Kapitaalbehoud','Inflatiebescherming','Groei','Maximaal rendement']}]},
+  {t:'AI Beleggingsprofiel',ai:1}
+],
+prompt:(d)=>`Vermogensadviseur. Schrijf een beleggingsprofiel (max 180 woorden) voor ${d.vnaam||'klant'}. Ervaring: ${d.ervaring||'?'}, Producten: ${d.producten||'?'}, Kennis: ${d.kennis||'?'}, Daling: ${d.daling||'?'}, Horizon: ${d.horizon||'?'}, Doel: ${d.doel||'?'}. Geef een profiel (defensief/neutraal/offensief) met toelichting.`},
+
+{id:'pen_pensgat',cat:'pensioen',title:'Pensioengapberekening',desc:'Hoe groot is het tekort op uw pensioen en hoe dicht u het?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'text',id:'geb_jaar',l:'Geboortejaar',p:'1972'}]},
+  {t:'Pensioeninzicht',f:[{T:'select',id:'aow_aanvulling',l:'Verwachte AOW + pensioenfonds (bruto/mnd)',opts:['< €1.000','€1.000–€1.500','€1.500–€2.000','€2.000–€2.500','> €2.500','Weet ik niet']},{T:'select',id:'gewenst',l:'Gewenst netto maandinkomen',opts:['€1.500','€2.000','€2.500','€3.000','> €3.500']},{T:'radio',id:'partner',l:'Samen of alleen bij pensionering?',opts:['Samen (twee inkomens)','Alleen']}]},
+  {t:'Aanvullende opbouw',f:[{T:'check',id:'aanvulling',l:'Extra pensioenopbouw aanwezig?',opts:['Lijfrente','Beleggingsportefeuille','Spaargeld','Overwaarde woning','Niets extra']},{T:'radio',id:'mogelijkheden',l:'Wilt u meer opbouwen?',opts:['Ja, zo snel mogelijk','Ja, maar geleidelijk','Ik weet niet wat ik kan']},{T:'select',id:'beschikbaar',l:'Extra beschikbaar per maand',opts:['< €100','€100–€250','€250–€500','> €500']}]},
+  {t:'AI Pensioengap analyse',ai:1}
+],
+prompt:(d)=>`Pensioenadviseur. Schrijf een pensioengap analyse (max 200 woorden) voor ${d.vnaam||'klant'} (geb. ${d.geb_jaar||'?'}). Verwacht: ${d.aow_aanvulling||'?'}, Gewenst: ${d.gewenst||'?'}, Partner: ${d.partner||'?'}, Aanvulling: ${d.aanvulling||'?'}, Beschikbaar: ${d.beschikbaar||'?'}. Bereken het gat en geef concrete opties.`},
+
+/* ---- ACTIEF BEHEER & NAZORG ---- */
+{id:'beh_jaarlijks',cat:'beheer',title:'Jaarlijkse nazorgscan',desc:'Jaarlijkse check op alle financiële producten.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'select',id:'laats_gesprek',l:'Laatste adviesgesprek',opts:['< 1 jaar','1–2 jaar','2–3 jaar','> 3 jaar','Weet ik niet']}]},
+  {t:'Persoonlijke situatie',f:[{T:'radio',id:'inkomen',l:'Inkomen gewijzigd?',opts:['Gestegen','Gedaald','Gelijk','Gepensioneerd']},{T:'check',id:'gezin',l:'Gezinswijzigingen',opts:['Huwelijk/samenwonen','Scheiding','Kind gekregen','Overlijden naaste','Geen']},{T:'radio',id:'woning',l:'Woonsituatie',opts:['Zelfde','Verhuisd','Plannen']}]},
+  {t:'Producten & wensen',f:[{T:'tags',id:'check_producten',l:'Controleer deze producten',opts:['Hypotheek','Levensverzekering','Schadeverzekering','Pensioen','Sparen','Beleggingen']},{T:'scale',id:'tevredenheid',l:'Tevredenheid dienstverlening (1–5)',n:5}]},
+  {t:'AI Jaarlijkse analyse',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een jaarlijkse nazorgscan (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.inkomen||'?'}, Gezin: ${d.gezin||'?'}, Producten: ${d.check_producten||'?'}, Tevredenheid: ${d.tevredenheid||'?'}/5. Geef gepersonaliseerde aandachtspunten.`},
+
+{id:'beh_kto',cat:'beheer',title:'Klanttevredenheidsonderzoek',desc:'Hoe beoordeelt u onze dienstverlening?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam'},{T:'text',id:'anaam',l:'Achternaam'}]},{T:'email',id:'email',l:'E-mailadres'},{T:'radio',id:'duur',l:'Hoe lang klant?',opts:['< 1 jaar','1–5 jaar','> 5 jaar']}]},
+  {t:'Beoordeling',f:[{T:'scale',id:'bereik',l:'Bereikbaarheid (1–10)',n:10},{T:'scale',id:'advies',l:'Kwaliteit advies (1–10)',n:10},{T:'scale',id:'snel',l:'Snelheid (1–10)',n:10}]},
+  {t:'NPS & feedback',f:[{T:'scale',id:'nps',l:'Zou u ons aanbevelen? (0–10)',n:10,start:0},{T:'textarea',id:'goed',l:'Wat gaat er goed?',cc:300},{T:'textarea',id:'beter',l:'Wat kan beter?',cc:300}]},
+  {t:'AI Feedbackanalyse',ai:1}
+],
+prompt:(d)=>`Kwaliteitsmanager. Schrijf een warme reactie (max 150 woorden) op feedback van ${d.vnaam||'klant'}. Bereikbaarheid: ${d.bereik||'?'}/10, Advies: ${d.advies||'?'}/10, Snelheid: ${d.snel||'?'}/10, NPS: ${d.nps||'?'}/10. Goed: "${d.goed||'?'}", Beter: "${d.beter||'?'}". Erken feedback en noem 1 verbeteractie.`},
+
+{id:'beh_periodiek',cat:'beheer',title:'Periodieke financiële gezondheidscheck',desc:'Totaalcheck van uw financiële positie.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Inkomsten & lasten',f:[{T:'select',id:'netto_inkomen',l:'Netto maandinkomen (samen)',opts:['< €2k','€2k–€3k','€3k–€4k','€4k–€5k','> €5k']},{T:'select',id:'vaste_lasten',l:'Vaste maandlasten',opts:['< €1k','€1k–€1,5k','€1,5k–€2,5k','> €2,5k']},{T:'select',id:'spaarbuffer',l:'Spaarbuffer',opts:['< 1 mnd','1–3 mnd','3–6 mnd','> 6 mnd']}]},
+  {t:'Zorgen & doelen',f:[{T:'check',id:'zorgen',l:'Financiële zorgen',opts:['Hoge vaste lasten','Te weinig gespaard','Pensioen onduidelijk','Verzekeringen onduidelijk','Geen zorgen']},{T:'textarea',id:'doel',l:'Financiële doel komende 2 jaar',cc:400}]},
+  {t:'AI Financiële gezondheidscheck',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een financiële gezondheidscheck (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.netto_inkomen||'?'}, Lasten: ${d.vaste_lasten||'?'}, Buffer: ${d.spaarbuffer||'?'}, Zorgen: ${d.zorgen||'?'}, Doel: ${d.doel||'?'}. Geef praktische aanbevelingen.`},
+
+{id:'beh_levengebeurtenis',cat:'beheer',title:'Levensgebeurtenissen-scan',desc:'Grote levensgebeurtenis? Meld het en wij checken uw producten.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Levensgebeurtenis',f:[{T:'radio',id:'gebeurtenis',l:'Wat is er veranderd? (meest relevant)',opts:['Huwelijk / geregistreerd partnerschap','Geboorte kind','Scheiding / breuk','Overlijden partner of naaste','Pensionering','Nieuwe baan / ZZP','Aankoop woning','Erfenis ontvangen','Andere grote wijziging']},{T:'textarea',id:'toelichting',l:'Korte toelichting',cc:400}]},
+  {t:'Impact op producten',f:[{T:'check',id:'producten',l:'Welke producten moeten mogelijk worden aangepast?',opts:['Hypotheek','Levensverzekering','Schadeverzekeringen','Pensioen','Testament/codicil','Weet ik niet']}]},
+  {t:'AI Impact analyse',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een impact-analyse (max 200 woorden) voor ${d.vnaam||'klant'} na een levensgebeurtenis. Gebeurtenis: ${d.gebeurtenis||'?'}, Toelichting: ${d.toelichting||'?'}, Producten: ${d.producten||'?'}. Geef concrete actiepunten per product.`},
+
+{id:'beh_portefeuille',cat:'beheer',title:'Portefeuillereviewan',desc:'Overzicht van alle lopende financiële producten.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Producten',f:[{T:'check',id:'hypotheek_prod',l:'Hypotheekproducten',opts:['Aflossingsvrij','Annuïtair','Lineair','Geen hypotheek']},{T:'check',id:'verzekering_prod',l:'Verzekeringen',opts:['ORV','AOV','Uitvaart','Inboedel','Opstal','AVP','Rechtsbijstand']},{T:'check',id:'pensioen_prod',l:'Pensioen & vermogen',opts:['Pensioenfonds','Lijfrente','Beleggingsrekening','Spaargeld','Niets']}]},
+  {t:'Aandachtspunten',f:[{T:'radio',id:'tevredenheid',l:'Algehele tevredenheid financiële situatie',opts:['Goed — alles op orde','Redelijk — twijfels','Matig — verbetering nodig','Slecht — urgentie']},{T:'textarea',id:'opmerking',l:'Specifieke aandachtspunten',cc:400}]},
+  {t:'AI Portefeuilleadvies',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een portefeuilleoverzicht (max 200 woorden) voor ${d.vnaam||'klant'}. Hypotheek: ${d.hypotheek_prod||'?'}, Verzekeringen: ${d.verzekering_prod||'?'}, Pensioen: ${d.pensioen_prod||'?'}, Tevredenheid: ${d.tevredenheid||'?'}. Geef prioritaire aandachtspunten.`},
+
+{id:'beh_afloopdatum',cat:'beheer',title:'Afloopdatumscan',desc:'Welke polissen en contracten verlopen binnenkort?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Afloopdatums',f:[{T:'check',id:'aflopend',l:'Welke producten lopen binnenkort af?',opts:['Rentevaste periode hypotheek','ORV','Spaarleven/kapitaalverzekering','Reisverzekering','AOV','Zakelijk contract','Lease / financiering']},{T:'select',id:'wanneer',l:'Wanneer loopt het af?',opts:['< 3 maanden','3–6 maanden','6–12 maanden','1–2 jaar']},{T:'textarea',id:'details',l:'Welke producten specifiek?',cc:400}]},
+  {t:'Actie',f:[{T:'radio',id:'actie',l:'Wat wilt u?',opts:['Verlenging / hernieuwing','Oversluiten / vergelijken','Advies over alternatieven','Beëindigen']},{T:'radio',id:'urgentie',l:'Urgentie',opts:['Zeer urgent (< 1 mnd)','Binnenkort','Geen haast']}]},
+  {t:'AI Afloopdatum actieplan',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een afloopdatum actieplan (max 150 woorden) voor ${d.vnaam||'klant'}. Aflopend: ${d.aflopend||'?'}, Wanneer: ${d.wanneer||'?'}, Actie: ${d.actie||'?'}, Urgentie: ${d.urgentie||'?'}. Geef concrete deadlines en acties.`},
+
+{id:'beh_wezenlijk',cat:'beheer',title:'Wezenlijke wijziging meldformulier',desc:'Meld een wijziging die uw verzekeringen of hypotheek raakt.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw melding',f:[{T:'radio',id:'type_wijziging',l:'Type wijziging',opts:['Inkomenswijziging','Verhuizing','Gezinswijziging','Gezondheidswijziging','Zakelijke wijziging','Grote aankoop / verkoop','Anders']},{T:'textarea',id:'beschrijving',l:'Beschrijf de wijziging',cc:600}]},
+  {t:'Impact',f:[{T:'check',id:'producten',l:'Welke producten zijn mogelijk geraakt?',opts:['Hypotheek','Inboedel/opstal','Auto','ORV/Levensverzekering','AOV','Pensioen','Weet ik niet']},{T:'radio',id:'urgentie',l:'Urgentie',opts:['Direct actie vereist','Binnenkort bespreken','Ter informatie']}]},
+  {t:'AI Wijzigingsanalyse',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een wijzigingsanalyse (max 180 woorden) voor ${d.vnaam||'klant'}. Wijziging: ${d.type_wijziging||'?'}: "${d.beschrijving||'?'}", Producten: ${d.producten||'?'}, Urgentie: ${d.urgentie||'?'}. Geef aan welke producten moeten worden aangepast.`},
+
+{id:'beh_inkomensupdate',cat:'beheer',title:'Jaarlijkse inkomensupdate',desc:'Actualiseer uw inkomensgegevens voor correcte advisering.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Inkomenssituatie',f:[{T:'select',id:'bruto_inkomen',l:'Bruto jaarinkomen (u)',opts:['< €25k','€25k–€35k','€35k–€45k','€45k–€60k','€60k–€80k','> €80k']},{T:'select',id:'bruto_partner',l:'Bruto jaarinkomen (partner)',opts:['Geen partner','< €25k','€25k–€45k','€45k–€60k','> €60k']},{T:'radio',id:'gewijzigd',l:'Is uw inkomen gewijzigd t.o.v. vorig jaar?',opts:['Ja — gestegen','Ja — gedaald','Gelijk gebleven']}]},
+  {t:'Wijzigingen',f:[{T:'check',id:'oorzaak',l:'Reden voor wijziging (indien van toepassing)',opts:['Loonsverhoging','Promotie','Nieuwe baan','Ontslag/WW','Pensioen','Medisch/arbeidsongeschikt','ZZP gestart/gestopt']},{T:'radio',id:'verwachting',l:'Inkomensverwachting volgend jaar',opts:['Stijgend','Gelijk','Dalend','Onzeker']}]},
+  {t:'AI Inkomensanalyse',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een inkomensupdate analyse (max 150 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.bruto_inkomen||'?'}, Partner: ${d.bruto_partner||'?'}, Gewijzigd: ${d.gewijzigd||'?'}, Oorzaak: ${d.oorzaak||'?'}, Verwachting: ${d.verwachting||'?'}. Geef aan welke producten een hercheck vereisen.`},
+
+/* ---- INTAKE & ADVIES ---- */
+{id:'int_orientatie',cat:'intake',title:'Oriëntatiegesprek hypotheek',desc:'Gratis maar niet vrijblijvend — verken uw mogelijkheden.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'tel',id:'tel',l:'Telefoon',req:1}]},
+  {t:'Uw situatie',f:[{T:'radio',id:'situatie',l:'U wilt',opts:['Eerste woning kopen','Woning verkopen + nieuwe kopen','Huidig huis verbouwen','Hypotheek oversluiten','Gewoon oriënteren']},{T:'select',id:'termijn',l:'Op welke termijn?',opts:['< 3 maanden','3–6 maanden','6–12 maanden','> 1 jaar','Weet ik niet']},{T:'select',id:'inkomen',l:'Bruto jaarinkomen (samen)',opts:['< €35k','€35k–€50k','€50k–€70k','€70k–€90k','> €90k']}]},
+  {t:'Verwachtingen',f:[{T:'check',id:'vragen',l:'Uw belangrijkste vragen',opts:['Hoeveel kan ik lenen?','Welk type hypotheek past?','Wat kost het?','NHG of niet?','Eerste inschatting maandlasten']},{T:'textarea',id:'opmerking',l:'Aanvullende informatie',cc:400}]},
+  {t:'AI Oriëntatieanalyse',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een oriëntatie-samenvatting (max 180 woorden) voor ${d.vnaam||'klant'}. Situatie: ${d.situatie||'?'}, Termijn: ${d.termijn||'?'}, Inkomen: ${d.inkomen||'?'}, Vragen: ${d.vragen||'?'}. Geef een eerste inschatting en stel de juiste vervolgvragen.`},
+
+{id:'int_klantprofiel',cat:'intake',title:'Uitgebreid klantprofiel',desc:'Volledige intake voor nieuwe klanten.',
+steps:[
+  {t:'Persoonlijke gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'row2',f:[{T:'email',id:'email',l:'E-mailadres',req:1},{T:'tel',id:'tel',l:'Telefoon'}]},{T:'row2',f:[{T:'text',id:'geb',l:'Geboortedatum'},{T:'select',id:'staat',l:'Burgerlijke staat',opts:['Gehuwd','Samenwonend','Alleenstaand','Weduwe/weduwnaar']}]}]},
+  {t:'Financiële situatie',f:[{T:'select',id:'inkomen',l:'Bruto jaarinkomen',opts:['< €25k','€25k–€35k','€35k–€50k','€50k–€70k','€70k–€90k','> €90k']},{T:'radio',id:'dienstverband',l:'Werkzaamheid',opts:['Vast dienstverband','Tijdelijk','ZZP/ondernemer','Gepensioneerd','Niet werkend']},{T:'select',id:'spaargeld',l:'Spaargeld/eigen vermogen',opts:['< €10k','€10k–€30k','€30k–€75k','€75k–€150k','> €150k']}]},
+  {t:'Wensen & doelen',f:[{T:'check',id:'advies_behoeften',l:'Adviesbehoefte',opts:['Hypotheek','Schadeverzekeringen','Pensioenplanning','Vermogensbeheer','Alles in samenhang']},{T:'textarea',id:'doel',l:'Financiële doelen (korte beschrijving)',cc:500}]},
+  {t:'AI Klantprofiel analyse',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een klantprofiel samenvatting (max 200 woorden) voor nieuwe klant ${d.vnaam||'klant'}. Inkomen: ${d.inkomen||'?'}, Werk: ${d.dienstverband||'?'}, Vermogen: ${d.spaargeld||'?'}, Behoeften: ${d.advies_behoeften||'?'}, Doelen: ${d.doel||'?'}. Geef aan welke producten en adviezen als eerste prioriteit hebben.`},
+
+{id:'int_risicobereid',cat:'intake',title:'Risicobereidheidsscan',desc:'Hoeveel financieel risico past bij u?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Financiële situatie',f:[{T:'radio',id:'financiele_positie',l:'Financiële positie',opts:['Uitstekend — ruim saldo','Goed — stabiel','Redelijk — krap soms','Precair — weinig buffer']},{T:'radio',id:'schulden',l:'Schulden buiten hypotheek?',opts:['Geen','Kleine schulden','Significante schulden']},{T:'radio',id:'verzorgd',l:'Financieel goed verzorgd bij tegenvaller?',opts:['Ja, ruimschoots','Ja, beperkt','Nee']}]},
+  {t:'Risicoattitude',f:[{T:'radio',id:'attitude',l:'Hoe staat u tegenover risico?',opts:['Risicovermijdend — zekerheid boven alles','Voorzichtig — enig risico acceptabel','Gebalanceerd','Risicobereid — kans op hoog rendement']},{T:'radio',id:'verlies',l:'Acceptabel verlies op beleggingen',opts:['0% — nooit verlies','Tot 10%','10–25%','Meer dan 25%']},{T:'radio',id:'termijn',l:'Beleggingshorizon',opts:['< 3 jaar','3–7 jaar','7–15 jaar','> 15 jaar']}]},
+  {t:'AI Risicoprofiel',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een risicoprofiel (max 150 woorden) voor ${d.vnaam||'klant'}. Positie: ${d.financiele_positie||'?'}, Schulden: ${d.schulden||'?'}, Attitude: ${d.attitude||'?'}, Max verlies: ${d.verlies||'?'}, Horizon: ${d.termijn||'?'}. Geef een duidelijk risicoprofiel (defensief/neutraal/offensief) met uitleg.`},
+
+{id:'int_opdracht',cat:'intake',title:'Opdracht tot dienstverlening',desc:'Digitale bevestiging van de adviesopdracht.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'tel',id:'tel',l:'Telefoonnummer'}]},
+  {t:'Opdracht',f:[{T:'check',id:'dienst',l:'Type opdracht',opts:['Hypotheekadvies & bemiddeling','Schadeverzekering advies','Pensioenadvies','Vermogensadvies','AOV-advies','Complete financiële planning']},{T:'radio',id:'betaling',l:'Betalingswijze',opts:['Vast bedrag (offerte volgt)','Uurtarief','Abonnement','Provisievergoeding van verzekeraar']},{T:'radio',id:'akkoord',l:'Akkoord met aanpak en kosten zoals besproken?',opts:['Ja, ik ga akkoord','Ik heb nog vragen']}]},
+  {t:'Bevestiging',f:[{T:'info',txt:'Door dit formulier in te sturen bevestigt u de opdracht aan het kantoor. U ontvangt een schriftelijke bevestiging per e-mail.'},{T:'textarea',id:'opmerkingen',l:'Eventuele opmerkingen',cc:400}]},
+  {t:'Opdrachtbevestiging',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een warme opdrachtbevestiging (max 150 woorden) voor ${d.vnaam||'klant'}. Dienst: ${d.dienst||'?'}, Betaling: ${d.betaling||'?'}, Opmerkingen: ${d.opmerkingen||'?'}. Bevestig de opdracht en beschrijf de eerste stappen.`},
+
+{id:'int_doelen',cat:'intake',title:'Doelstellingenscan',desc:'Wat zijn uw financiële doelen op korte en lange termijn?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Korte termijn doelen (< 3 jaar)',f:[{T:'check',id:'kt',l:'Wat wilt u bereiken?',opts:['Woning kopen/verbouwen','Schulden aflossen','Spaarbuffer opbouwen','Verzekeringen optimaliseren','Auto aanschaffen']},{T:'select',id:'kt_budget',l:'Beschikbaar budget per maand',opts:['< €100','€100–€250','€250–€500','€500–€1.000','> €1.000']}]},
+  {t:'Lange termijn doelen (> 3 jaar)',f:[{T:'check',id:'lt',l:'Wat wilt u bereiken?',opts:['Eerder met pensioen','Hypotheek afbetaald','Vermogen opbouwen voor kinderen','Financieel onafhankelijk worden','Bedrijf starten/overdragen']},{T:'textarea',id:'droom',l:'Uw financiële droom in één zin',cc:200}]},
+  {t:'AI Doelstellingenanalyse',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een doelstellingenanalyse (max 180 woorden) voor ${d.vnaam||'klant'}. Korte termijn: ${d.kt||'?'}, Budget: ${d.kt_budget||'?'}, Lange termijn: ${d.lt||'?'}, Droom: "${d.droom||'?'}". Geef een haalbaar actieplan per doel.`},
+
+{id:'int_vergelijkingskaart',cat:'intake',title:'Vergelijkingskaart bevestiging',desc:'Bevestig ontvangst vergelijkingskaart en dienstenwijzer.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Bevestiging documenten',f:[{T:'check',id:'ontvangen',l:'Ik bevestig ontvangst van',opts:['Dienstenwijzer','Vergelijkingskaart hypotheek','Vergelijkingskaart verzekeringen','Privacyverklaring','Algemene voorwaarden']},{T:'radio',id:'gelezen',l:'Heeft u de documenten gelezen?',opts:['Ja, volledig','Globaal doorgekeken','Nee, nog niet']},{T:'radio',id:'vragen',l:'Heeft u vragen over de inhoud?',opts:['Nee, alles duidelijk','Ja, ik heb vragen']},{T:'textarea',id:'vragen_tekst',l:'Uw vragen (indien van toepassing)',cc:400}]},
+  {t:'Akkoord',f:[{T:'info',txt:'Door ondertekening van dit formulier bevestigt u de ontvangst en akkoord met de vermelde voorwaarden. Dit formulier wordt opgeslagen in uw digitale dossier.'},{T:'text',id:'datum',l:'Datum',p:'07-04-2026'}]},
+  {t:'AI Bevestiging',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een korte bevestiging (max 100 woorden) voor ${d.vnaam||'klant'} van ontvangst vergelijkingskaart/dienstenwijzer. Ontvangen: ${d.ontvangen||'?'}, Gelezen: ${d.gelezen||'?'}, Vragen: ${d.vragen_tekst||'geen'}. Bevestig akkoord en beantwoord eventuele vragen kort.`},
+
+/* ---- KREDIET & SCHULD ---- */
+{id:'kred_lening',cat:'krediet',title:'Persoonlijke leningscan',desc:'Heeft u een lening? Controleer of oversluiten loont.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw lening',f:[{T:'radio',id:'type',l:'Type lening',opts:['Persoonlijke lening','Doorlopend krediet','Autolening','Studielening','Creditcardschuld']},{T:'select',id:'saldo',l:'Huidig saldo',opts:['< €5k','€5k–€15k','€15k–€30k','> €30k']},{T:'select',id:'rente',l:'Huidige rente',opts:['< 4%','4–6%','6–8%','8–10%','> 10%','Weet ik niet']}]},
+  {t:'Situatie',f:[{T:'select',id:'restlooptijd',l:'Resterende looptijd',opts:['< 1 jaar','1–3 jaar','3–5 jaar','> 5 jaar']},{T:'radio',id:'doel',l:'Doel scan',opts:['Oversluiten naar lager tarief','Samenvoegen meerdere leningen','Aflossen met overwaarde','Algehele herziening']}]},
+  {t:'AI Lening analyse',ai:1}
+],
+prompt:(d)=>`Kredietadviseur. Schrijf een leningsadvies (max 160 woorden) voor ${d.vnaam||'klant'}. Type: ${d.type||'?'}, Saldo: ${d.saldo||'?'}, Rente: ${d.rente||'?'}, Looptijd: ${d.restlooptijd||'?'}, Doel: ${d.doel||'?'}. Geef aan of oversluiten of aflossen voordelig is.`},
+
+{id:'kred_doorlopend',cat:'krediet',title:'Doorlopend kredietscan',desc:'Heeft u een doorlopend krediet? Controleer rente en conditie.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Uw krediet',f:[{T:'select',id:'limiet',l:'Kredietlimiet',opts:['< €5k','€5k–€10k','€10k–€25k','> €25k']},{T:'select',id:'saldo',l:'Huidig opgenomen saldo',opts:['Volledig opgenomen','50–100%','< 50%','Nagenoeg nul']},{T:'select',id:'rente',l:'Huidige rente',opts:['< 6%','6–8%','8–10%','10–12%','> 12%','Weet ik niet']}]},
+  {t:'Gebruik & wensen',f:[{T:'radio',id:'gebruik',l:'Gebruik doorlopend krediet',opts:['Regelmatig opnemen en aflossen','Bijna altijd vol','Vrijwel nooit gebruikt']},{T:'radio',id:'doel',l:'Wens',opts:['Omzetten naar persoonlijke lening','Rente verlagen','Limiet aanpassen','Alleen inzicht']}]},
+  {t:'AI Krediet-optimalisatie',ai:1}
+],
+prompt:(d)=>`Kredietadviseur. Schrijf een krediet-optimalisatie advies (max 150 woorden) voor ${d.vnaam||'klant'}. Limiet: ${d.limiet||'?'}, Saldo: ${d.saldo||'?'}, Rente: ${d.rente||'?'}, Gebruik: ${d.gebruik||'?'}, Doel: ${d.doel||'?'}. Geef advies over omzetten of aflossen.`},
+
+{id:'kred_studie',cat:'krediet',title:'Studieschuld-impactscan',desc:'Wat is de impact van uw studieschuld op uw hypotheekmogelijkheden?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Studieschuld',f:[{T:'select',id:'saldo',l:'Huidig saldo studieschuld',opts:['< €10k','€10k–€20k','€20k–€35k','€35k–€50k','> €50k']},{T:'radio',id:'stelsel',l:'Leenstelsel',opts:['Oud stelsel (voor 2015)','Nieuw stelsel (2015–2023)','Nieuwst stelsel (na 2023)','Weet ik niet']},{T:'select',id:'maandlast',l:'Maandelijkse aflossing',opts:['Nog niet aflossen','< €100','€100–€200','€200–€350','> €350']}]},
+  {t:'Woningwens',f:[{T:'select',id:'woningprijs',l:'Gewenste woningprijs',opts:['< €250k','€250k–€350k','€350k–€450k','> €450k']},{T:'select',id:'inkomen',l:'Bruto jaarinkomen',opts:['< €35k','€35k–€50k','€50k–€65k','> €65k']}]},
+  {t:'AI Studieschuld impact',ai:1}
+],
+prompt:(d)=>`Hypotheekadviseur. Schrijf een studieschuld-impactanalyse (max 180 woorden) voor ${d.vnaam||'klant'}. Saldo: ${d.saldo||'?'}, Stelsel: ${d.stelsel||'?'}, Maandlast: ${d.maandlast||'?'}, Woningprijs: ${d.woningprijs||'?'}, Inkomen: ${d.inkomen||'?'}. Leg uit hoe de studieschuld de hypotheek beïnvloedt en wat de opties zijn.`},
+
+{id:'kred_schuldhulp',cat:'krediet',title:'Schuldhulp-oriëntatieformulier',desc:'Vroegsignalering bij financiële problemen.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'info',txt:'Dit formulier is strikt vertrouwelijk. Wij helpen u zonder oordeel.'}]},
+  {t:'Financiële situatie',f:[{T:'radio',id:'probleem',l:'Situatie',opts:['Moeite vaste lasten te betalen','Achterstand hypotheek/huur','Meerdere schulden / incasso','Dreigende beslaglegging','Nog geen problemen maar ongerust']},{T:'check',id:'schulden',l:'Type schulden',opts:['Hypotheekachterstand','Consumentenkrediet','Belastingschuld','Zorgschuld','Energieschuld','Overig']},{T:'select',id:'hoogte',l:'Totale schuldenlast (schatting)',opts:['< €5k','€5k–€15k','€15k–€30k','> €30k','Weet ik niet']}]},
+  {t:'Hulpbehoefte',f:[{T:'radio',id:'hulp',l:'Wat heeft u nodig?',opts:['Inzicht — overzicht maken','Onderhandelen met schuldeisers','Doorverwijzing schuldhulpverlening','Een goed gesprek / advies']},{T:'textarea',id:'toelichting',l:'Aanvullende toelichting',cc:500}]},
+  {t:'AI Schuldhulpadvies',ai:1}
+],
+prompt:(d)=>`Financieel adviseur. Schrijf een empathisch en praktisch schuldhulpadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Probleem: ${d.probleem||'?'}, Schulden: ${d.schulden||'?'}, Hoogte: ${d.hoogte||'?'}, Hulpbehoefte: ${d.hulp||'?'}. Geef concrete eerste stappen en relevante instanties.`},
+
+/* ---- BELASTING & FISCAAL ---- */
+{id:'bel_aangifte',cat:'belasting',title:'Belastingaangifte oriëntatiescan',desc:'Welke aftrekposten en toeslagen komen voor u in aanmerking?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1},{T:'row2',f:[{T:'select',id:'inkomen',l:'Bruto jaarinkomen',opts:['< €20k','€20k–€35k','€35k–€50k','€50k–€70k','> €70k']},{T:'radio',id:'partner',l:'Fiscaal partner?',opts:['Ja','Nee']}]}]},
+  {t:'Aftrekposten',f:[{T:'check',id:'aftrekposten',l:'Mogelijke aftrekposten',opts:['Hypotheekrente','Lijfrente/jaarruimte','Studiekosten','Zorgkosten (hoge drempel)','Giften/donaties','Alimentatie betaald','Werkruimte thuis']},{T:'check',id:'toeslagen',l:'Mogelijke toeslagen',opts:['Zorgtoeslag','Huurtoeslag','Kinderopvangtoeslag','Kindgebonden budget','Geen']}]},
+  {t:'Bijzonderheden',f:[{T:'check',id:'bijzonder',l:'Bijzondere situaties',opts:['Eigen woning verkocht','Erfenis ontvangen','Gescheiden in belastingjaar','Start of einde onderneming','Buitenlands inkomen']},{T:'radio',id:'aangifte_status',l:'Aangifte zelf doen?',opts:['Ja, zelf','Met hulp adviseur','Nee, volledig uitbesteden']}]},
+  {t:'AI Belastingadvies',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een belasting oriëntatieadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.inkomen||'?'}, Partner: ${d.partner||'?'}, Aftrekposten: ${d.aftrekposten||'?'}, Toeslagen: ${d.toeslagen||'?'}, Bijzonder: ${d.bijzonder||'?'}. Wijs op relevante aftrekposten en toeslagen.`},
+
+{id:'bel_hypotheekrente',cat:'belasting',title:'Hypotheekrenteaftrek-check',desc:'Maximaliseert u uw hypotheekrenteaftrek?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Hypotheekgegevens',f:[{T:'select',id:'hypotheek',l:'Hypotheekschuld',opts:['< €100k','€100k–€200k','€200k–€300k','> €300k']},{T:'select',id:'rente_betaald',l:'Betaalde hypotheekrente per jaar (schatting)',opts:['< €3k','€3k–€6k','€6k–€10k','€10k–€15k','> €15k']},{T:'radio',id:'type',l:'Type hypotheek',opts:['Annuïtair','Lineair','Aflossingsvrij','Combinatie']}]},
+  {t:'Fiscale situatie',f:[{T:'select',id:'inkomen',l:'Inkomen belastingschijf (globaal)',opts:['< €37k (37,07%)','€37k–€73k (37,07%)','> €73k (49,50%)','Weet ik niet']},{T:'radio',id:'eigenwoningforfait',l:'Kent u het eigenwoningforfait?',opts:['Ja','Nee','Weet ik niet']},{T:'radio',id:'bijtelling',l:'Volledig aftrekbaar of is er bijtelling?',opts:['Volledig aftrekbaar','Deels — hypotheek deels niet kwalificerend','Weet ik niet']}]},
+  {t:'AI Renteaftrek-check',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een hypotheekrenteaftrek analyse (max 200 woorden) voor ${d.vnaam||'klant'}. Schuld: ${d.hypotheek||'?'}, Rente betaald: ${d.rente_betaald||'?'}, Type: ${d.type||'?'}, Schijf: ${d.inkomen||'?'}, Forfait: ${d.eigenwoningforfait||'?'}. Leg de renteaftrek uit, noem het eigenwoningforfait en geef optimalisatietips.`},
+
+{id:'bel_box3',cat:'belasting',title:'Box 3 vermogensscan',desc:'Betaalt u te veel belasting over uw vermogen?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Vermogen Box 3',f:[{T:'select',id:'spaargeld',l:'Spaargeld en deposito\'s',opts:['< €25k','€25k–€75k','€75k–€150k','€150k–€500k','> €500k']},{T:'select',id:'beleggingen',l:'Beleggingen (aandelen, fondsen)',opts:['Geen','< €50k','€50k–€150k','€150k–€500k','> €500k']},{T:'check',id:'overig',l:'Overig Box 3 vermogen',opts:['Tweede woning/vakantiewoning','Beleggingspand','Crypto','Vorderingen op derden','Geen']}]},
+  {t:'Vrijstelling & partner',f:[{T:'radio',id:'partner',l:'Fiscaal partner?',opts:['Ja (dubbele vrijstelling)','Nee']},{T:'radio',id:'schulden',l:'Schulden in Box 3?',opts:['Nee','Ja — hypotheek tweede woning','Ja — consumptief krediet','Ja — anders']},{T:'radio',id:'bezwaar',l:'Bezwaar gemaakt (rechtsherstel)?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'AI Box 3 optimalisatie',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een Box 3 optimalisatieadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Sparen: ${d.spaargeld||'?'}, Beleggingen: ${d.beleggingen||'?'}, Overig: ${d.overig||'?'}, Partner: ${d.partner||'?'}, Schulden: ${d.schulden||'?'}, Bezwaar: ${d.bezwaar||'?'}. Bespreek heffingsvrij vermogen, rechtsherstel en optimalisatiemogelijkheden.`},
+
+{id:'bel_schenking',cat:'belasting',title:'Schenkingsbelasting-scan',desc:'Schenk fiscaal slim — benut de vrijstellingen.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Schenkingssituatie',f:[{T:'radio',id:'relatie',l:'Relatie schenker — ontvanger',opts:['Ouder aan kind','Grootouder aan kleinkind','Overig familielid','Derde']},{T:'select',id:'bedrag',l:'Beoogde schenking (dit jaar)',opts:['< €6.633 (jaarlijkse vrijstelling)','€6.633–€25k','€25k–€60k','> €60k']},{T:'radio',id:'doel_schenk',l:'Doel schenking',opts:['Woningkoop','Studie','Vrij besteedbaar','Fiscale planning']}]},
+  {t:'Historie',f:[{T:'radio',id:'eerder',l:'Eerder geschonken (afgelopen 5 jaar)?',opts:['Nee','Ja, kleine bedragen','Ja, gebruik gemaakt van verhoogde vrijstelling']},{T:'radio',id:'testament',l:'Is er een testament met legaten?',opts:['Ja','Nee','In voorbereiding']}]},
+  {t:'AI Schenkingsadvies',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een schenkingsadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Relatie: ${d.relatie||'?'}, Bedrag: ${d.bedrag||'?'}, Doel: ${d.doel_schenk||'?'}, Eerder: ${d.eerder||'?'}. Bespreek de relevante vrijstellingen (jaarlijks, eenmalig, woningkoop) en belastingtarieven.`},
+
+{id:'bel_erfbelasting',cat:'belasting',title:'Erfbelasting-scan',desc:'Hoeveel erfbelasting betalen uw nabestaanden en hoe minimaliseert u dit?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Nalatenschap',f:[{T:'select',id:'vermogen',l:'Geschat totaalvermogen (nalatenschap)',opts:['< €100k','€100k–€300k','€300k–€600k','€600k–€1 mln','> €1 mln']},{T:'check',id:'bezittingen',l:'Vermogensbestanddelen',opts:['Eigen woning (overwaarde)','Spaargeld/beleggingen','Ondernemingsvermogen','Levensverzekeringskapitaal','Pensioenrechten']},{T:'radio',id:'partner',l:'Heeft u een partner?',opts:['Ja — gehuwd','Ja — samenwonend','Nee']}]},
+  {t:'Planning',f:[{T:'radio',id:'testament',l:'Heeft u een testament?',opts:['Ja, recent','Ja, verouderd','Nee']},{T:'radio',id:'schenk_al',l:'Al begonnen met schenken?',opts:['Ja, regelmatig','Af en toe','Nee']},{T:'radio',id:'doel',l:'Doel scan',opts:['Inzicht belastingdruk nabestaanden','Optimaliseren testament','Schenkingsplan opzetten','Algehele erfenisplanning']}]},
+  {t:'AI Erfbelastingadvies',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een erfbelastingadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Vermogen: ${d.vermogen||'?'}, Bezittingen: ${d.bezittingen||'?'}, Partner: ${d.partner||'?'}, Testament: ${d.testament||'?'}, Doel: ${d.doel||'?'}. Bespreek vrijstellingen, tarieven en strategieën om erfbelasting te beperken.`},
+
+{id:'bel_middeling',cat:'belasting',title:'Middelingsverzoekscan',desc:'Bij sterk wisselend inkomen kunt u belasting terugvragen via middeling.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Inkomen afgelopen jaren',f:[{T:'radio',id:'situatie',l:'Inkomenssituatie afgelopen 3 jaar',opts:['Sterk wisselend (pieken en dalen)','Geleidelijk gestegen','Fors gedaald (bijv. ontslag/ZZP)','Stabiel']},{T:'select',id:'jaar1',l:'Inkomen jaar 1 (globaal)',opts:['< €20k','€20k–€35k','€35k–€50k','€50k–€70k','> €70k']},{T:'select',id:'jaar2',l:'Inkomen jaar 2 (globaal)',opts:['< €20k','€20k–€35k','€35k–€50k','€50k–€70k','> €70k']},{T:'select',id:'jaar3',l:'Inkomen jaar 3 (globaal)',opts:['< €20k','€20k–€35k','€35k–€50k','€50k–€70k','> €70k']}]},
+  {t:'Aanleiding',f:[{T:'radio',id:'oorzaak',l:'Oorzaak inkomenswisseling',opts:['Start ZZP / ondernemer','Ontslag en nieuw werk','Ziekte / arbeidsongeschiktheid','Ontvangen bonus/uitkering','Echtscheiding']}]},
+  {t:'AI Middelingsadvies',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een middelingsadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen jaar 1: ${d.jaar1||'?'}, jaar 2: ${d.jaar2||'?'}, jaar 3: ${d.jaar3||'?'}, Oorzaak: ${d.oorzaak||'?'}. Leg de middelingsregeling uit en bereken of een verzoek kansrijk is.`},
+
+{id:'bel_voorlopig',cat:'belasting',title:'Voorlopige teruggaaf-scan',desc:'Ontvang uw belastingvoordeel maandelijks in plaats van achteraf.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Aftrekposten',f:[{T:'check',id:'aftrekposten',l:'Welke aftrekposten zijn van toepassing?',opts:['Hypotheekrente','Lijfrentepremie','Alimentatie betaald','Studiekosten','Zorgkosten hoog','Giften']},{T:'radio',id:'huidig',l:'Heeft u al een voorlopige teruggaaf?',opts:['Ja, actueel','Ja, maar verouderd','Nee']}]},
+  {t:'Inkomenssituatie',f:[{T:'select',id:'inkomen',l:'Bruto jaarinkomen',opts:['< €30k','€30k–€45k','€45k–€65k','> €65k']},{T:'radio',id:'verandering',l:'Verandering in inkomen/aftrekposten dit jaar?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'AI Voorlopige teruggaaf advies',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een voorlopige teruggaaf-advies (max 180 woorden) voor ${d.vnaam||'klant'}. Aftrekposten: ${d.aftrekposten||'?'}, Huidig: ${d.huidig||'?'}, Inkomen: ${d.inkomen||'?'}, Verandering: ${d.verandering||'?'}. Leg uit wat een voorlopige teruggaaf is, welk bedrag globaal te verwachten is en hoe aan te vragen.`},
+
+{id:'bel_fiscaalpartner',cat:'belasting',title:'Fiscaal partnerscan',desc:'Optimaliseer de belasting als fiscale partners.',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Partnergegevens',f:[{T:'radio',id:'partnertype',l:'Type fiscaal partnerschap',opts:['Gehuwd','Geregistreerd partnerschap','Samenwonend met notarieel samenlevingscontract','Samenwonend zonder contract']},{T:'select',id:'inkomen_u',l:'Uw bruto jaarinkomen',opts:['< €20k','€20k–€35k','€35k–€50k','€50k–€70k','> €70k']},{T:'select',id:'inkomen_p',l:'Inkomen partner',opts:['Geen inkomen','< €20k','€20k–€35k','€35k–€50k','> €50k']}]},
+  {t:'Verdeling',f:[{T:'check',id:'gemeenschappelijk',l:'Gemeenschappelijke inkomsten/aftrekposten',opts:['Hypotheekrente','Eigenwoningforfait','Spaargeld (Box 3)','Lijfrente','Kinderopvangtoeslag']},{T:'radio',id:'huidig_verdeling',l:'Huidige verdeling aangifte geoptimaliseerd?',opts:['Ja','Nee','Weet ik niet']}]},
+  {t:'AI Fiscaal partneradvies',ai:1}
+],
+prompt:(d)=>`Fiscaal adviseur. Schrijf een fiscaal partner optimalisatieadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Partner: ${d.partnertype||'?'}, Inkomen u: ${d.inkomen_u||'?'}, Partner: ${d.inkomen_p||'?'}, Gemeenschappelijk: ${d.gemeenschappelijk||'?'}, Geoptimaliseerd: ${d.huidig_verdeling||'?'}. Leg uit hoe aftrekposten en vermogen het best te verdelen zijn.`},
+
+{id:'bel_toeslagen',cat:'belasting',title:'Toelagenscan',desc:'Ontvangt u alle toeslagen waar u recht op heeft?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Situatie',f:[{T:'select',id:'inkomen',l:'Toetsingsinkomen (samen)',opts:['< €20k','€20k–€30k','€30k–€40k','€40k–€60k','> €60k']},{T:'check',id:'huishouden',l:'Huishoudsituatie',opts:['Huurwoning','Eigen woning','Kinderen < 18','Kinderen in opvang','Zorgkosten vergoed']},{T:'radio',id:'partner',l:'Toeslagpartner?',opts:['Ja','Nee']}]},
+  {t:'Huidige toeslagen',f:[{T:'check',id:'huidig',l:'Toeslagen die u nu ontvangt',opts:['Zorgtoeslag','Huurtoeslag','Kinderopvangtoeslag','Kindgebonden budget','Geen toeslagen']},{T:'radio',id:'check_nodig',l:'Weet u zeker dat u alles ontvangt?',opts:['Ja','Nee','Twijfel']}]},
+  {t:'AI Toelagencheck',ai:1}
+],
+prompt:(d)=>`Fiscaal/toelagen adviseur. Schrijf een toelagencheck (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.inkomen||'?'}, Huishouden: ${d.huishouden||'?'}, Partner: ${d.partner||'?'}, Huidig: ${d.huidig||'?'}, Check: ${d.check_nodig||'?'}. Bespreek zorgtoeslag, huurtoeslag, KOT en kindgebonden budget met globale bedragen.`},
+
+{id:'bel_jaarruimte',cat:'belasting',title:'Jaarruimteberekening',desc:'Hoeveel kunt u fiscaal voordelig inleggen voor uw pensioen?',
+steps:[
+  {t:'Gegevens',f:[{T:'row2',f:[{T:'text',id:'vnaam',l:'Voornaam',req:1},{T:'text',id:'anaam',l:'Achternaam',req:1}]},{T:'email',id:'email',l:'E-mailadres',req:1}]},
+  {t:'Inkomen & opbouw',f:[{T:'select',id:'inkomen',l:'Bruto inkomen vorig belastingjaar',opts:['< €20k','€20k–€35k','€35k–€50k','€50k–€75k','€75k–€100k','> €100k']},{T:'radio',id:'pensioenopbouw',l:'Pensioenopbouw via werkgever?',opts:['Ja, volledig (pensioenfonds)','Beperkt','Nee (ZZP/geen)']},{T:'select',id:'factor_a',l:'Pensioeninformatie Factor A (uit UPO)',opts:['Weet ik niet','< €1.000','€1.000–€3.000','€3.000–€5.000','> €5.000']}]},
+  {t:'Benutting',f:[{T:'radio',id:'al_gestort',l:'Al eerder jaarruimte benut?',opts:['Ja, regelmatig','Ja, soms','Nee, nooit']},{T:'radio',id:'reserveringsruimte',l:'Wist u dat u onbenutte ruimte van 7 jaar kunt inhalen?',opts:['Ja','Nee']},{T:'select',id:'inleg',l:'Bereid te storten dit jaar',opts:['< €1.000','€1.000–€3.000','€3.000–€7.000','> €7.000']}]},
+  {t:'AI Jaarruimte berekening',ai:1}
+],
+prompt:(d)=>`Fiscaal/pensioenadviseur. Schrijf een jaarruimteadvies (max 200 woorden) voor ${d.vnaam||'klant'}. Inkomen: ${d.inkomen||'?'}, Opbouw: ${d.pensioenopbouw||'?'}, Factor A: ${d.factor_a||'?'}, Al benut: ${d.al_gestort||'?'}, Inleg: ${d.inleg||'?'}. Leg de jaarruimteformule uit, schat globale jaarruimte en adviseer over inleg.`},
+
+];// end FORMS
+
+/* ============================================================
+   RENDER ENGINE
+   ============================================================ */
+const state = {};
+
+function buildSidebar(){
+  const nav=document.getElementById('sb-nav');
+  CATS.forEach(cat=>{
+    const catForms=FORMS.filter(f=>f.cat===cat.id);
+    const div=document.createElement('div');
+    div.className='sb-cat-group';
+    div.innerHTML=`
+      <div class="cat-head" onclick="toggleCat('${cat.id}')">
+        <div class="cat-icon"><svg viewBox="0 0 24 24">${cat.icon}</svg></div>
+        <span class="cat-label">${cat.label}</span>
+        <span class="cat-count">${catForms.length}</span>
+        <span class="cat-caret open" id="caret-${cat.id}">▶</span>
+      </div>
+      <div class="cat-items" id="items-${cat.id}">
+        ${catForms.map(f=>`<div class="sb-item" id="si-${f.id}" onclick="openForm('${f.id}')"><span class="dot"></span>${f.title}</div>`).join('')}
+      </div>`;
+    nav.appendChild(div);
+  });
+}
+
+function toggleCat(catId){
+  const items=document.getElementById('items-'+catId);
+  const caret=document.getElementById('caret-'+catId);
+  const hidden=items.style.display==='none';
+  items.style.display=hidden?'':'none';
+  caret.classList.toggle('open',hidden);
+}
+
+function searchForms(q){
+  const lq=q.toLowerCase();
+  document.querySelectorAll('.sb-item').forEach(el=>{
+    const match=el.textContent.toLowerCase().includes(lq);
+    el.classList.toggle('hidden',!match);
+  });
+}
+
+let currentForm=null;
+
+function openForm(fid){
+  const form=FORMS.find(f=>f.id===fid);
+  if(!form)return;
+  currentForm=fid;
+  // sidebar highlight
+  document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('active'));
+  const si=document.getElementById('si-'+fid);
+  if(si){si.classList.add('active');si.scrollIntoView({block:'nearest'});}
+  // init state
+  if(!state[fid]) state[fid]={cur:1,data:{}};
+  renderForm(form);
+  document.getElementById('main-area').scrollTop=0;
+  window.scrollTo(0,0);
+}
+
+function renderForm(form){
+  const cat=CATS.find(c=>c.id===form.cat);
+  const s=state[form.id];
+  const container=document.getElementById('form-container');
+  container.innerHTML=`
+    <div class="form-panel">
+      <div class="fp-hdr">
+        <div class="fp-cat ${cat.color}">${cat.label}</div>
+        <h2>${form.title}</h2>
+        <p>${form.desc}</p>
+      </div>
+      <div class="prog"><div class="prog-fill" id="pf-${form.id}" style="width:${Math.round(s.cur/(form.steps.length+1)*100)}%"></div></div>
+      <div class="fp-body" id="fb-${form.id}">
+        ${form.steps.map((step,i)=>renderStep(form,step,i+1)).join('')}
+        ${renderResult(form)}
+      </div>
+      <div class="fp-act" id="fa-${form.id}">
+        <button class="btn btn-s" id="fp-prev-${form.id}" onclick="fPrev('${form.id}')" style="visibility:hidden">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Vorige
+        </button>
+        <button class="btn btn-p" id="fp-next-${form.id}" onclick="fNext('${form.id}')">
+          Volgende<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>`;
+  showStep(form.id, s.cur);
+}
+
+function renderStep(form,step,stepN){
+  const total=form.steps.length;
+  let html=`<div class="step" id="st-${form.id}-${stepN}"><div class="stlbl">Stap ${stepN} van ${total} — ${step.t.replace(/^AI /,'')}</div>`;
+  if(step.ai){
+    html+=`<div class="sum-preview" id="sp-${form.id}"></div>
+    <div class="adv-pnl">
+      <div class="adv-hdr">Advies van de adviseur</div>
+      <textarea class="adv-area" id="adv-${form.id}" placeholder="Noteer hier uw advies naar aanleiding van de scan…" oninput="saveField('${form.id}','adviseur_advies',this.value)"></textarea>
+    </div>`;
+  } else {
+    html+=renderFields(form,step.f);
+  }
+  html+=`</div>`;
+  return html;
+}
+
+function renderFields(form,fields){
+  let h='';
+  fields.forEach(f=>{
+    if(!f) return;
+    if(f.T==='row2'){
+      h+=`<div class="frow">${renderFields(form,f.f)}</div>`;
+    } else if(f.T==='info'){
+      h+=`<div class="info">${f.txt}</div>`;
+    } else if(f.T==='text'||f.T==='email'||f.T==='tel'||f.T==='number'){
+      h+=`<div class="qb"><label>${f.l||''}${f.req?'<span class="req"> *</span>':''}</label><input type="${f.T}" id="fi-${form.id}-${f.id}" placeholder="${f.p||''}" oninput="saveField('${form.id}','${f.id}',this.value)"></div>`;
+    } else if(f.T==='select'){
+      h+=`<div class="qb"><label>${f.l||''}</label><select id="fi-${form.id}-${f.id}" onchange="saveField('${form.id}','${f.id}',this.value)"><option value="">Kies…</option>${f.opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+    } else if(f.T==='textarea'){
+      h+=`<div class="qb"><label>${f.l||''}</label><textarea id="fi-${form.id}-${f.id}" maxlength="${f.cc||500}" oninput="saveField('${form.id}','${f.id}',this.value);document.getElementById('cc-${form.id}-${f.id}').textContent=this.value.length"></textarea><div class="char-c"><span id="cc-${form.id}-${f.id}">0</span>/${f.cc||500}</div></div>`;
+    } else if(f.T==='radio'){
+      h+=`<div class="qb"><label>${f.l||''}</label><div class="rg${f.row?' row':''}" id="rg-${form.id}-${f.id}">${f.opts.map(o=>`<div class="ro" onclick="selRadio('${form.id}','${f.id}',this,'${o}')"><div class="oi"></div>${o}</div>`).join('')}</div></div>`;
+    } else if(f.T==='check'){
+      h+=`<div class="qb"><label>${f.l||''}</label><div class="cg${f.row?' row':''}" id="cg-${form.id}-${f.id}">${f.opts.map(o=>`<div class="co" onclick="togCheck('${form.id}','${f.id}',this,'${o}')"><div class="oi"></div>${o}</div>`).join('')}</div></div>`;
+    } else if(f.T==='tags'){
+      h+=`<div class="qb"><label>${f.l||''}</label><div class="tags" id="tg-${form.id}-${f.id}">${f.opts.map(o=>`<span class="tag" onclick="togTag('${form.id}','${f.id}',this,'${o}')">${o}</span>`).join('')}</div></div>`;
+    } else if(f.T==='scale'){
+      const st=f.start||1;
+      const n=f.n||5;
+      const btns=Array.from({length:n},(_,i)=>i+st).map(v=>`<button class="sb" onclick="selScale('${form.id}','${f.id}',this,'${v}')">${v}</button>`).join('');
+      h+=`<div class="qb"><label>${f.l||''}</label><div class="srow" id="sc-${form.id}-${f.id}">${btns}</div></div>`;
+    } else if(f.T==='stars'){
+      h+=`<div class="qb"><label>${f.l||''}</label><div class="stars" id="sr-${form.id}-${f.id}">${[1,2,3,4,5].map(v=>`<span class="star" onclick="selStar('${form.id}','${f.id}',${v})">★</span>`).join('')}</div></div>`;
+    }
+  });
+  return h;
+}
+
+function renderResult(form){
+  return `<div class="step" id="st-${form.id}-res">
+    <div class="res-hdr">
+      <div class="res-ico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div><h2>Scan ingediend!</h2><p>Uw adviseur neemt binnen 2 werkdagen contact op.</p></div>
+    </div>
+    <div id="res-${form.id}"></div>
+    <span class="rlnk" onclick="resetForm('${form.id}')">Nieuwe scan invullen</span>
+  </div>`;
+}
+
+function showStep(fid,step){
+  const form=FORMS.find(f=>f.id===fid);
+  if(!form)return;
+  document.querySelectorAll(`#fb-${fid} .step`).forEach(s=>s.classList.remove('on'));
+  const isRes=step>form.steps.length;
+  const el=isRes?document.getElementById(`st-${fid}-res`):document.getElementById(`st-${fid}-${step}`);
+  if(el) el.classList.add('on');
+  const pb=document.getElementById(`fp-prev-${fid}`);
+  const nb=document.getElementById(`fp-next-${fid}`);
+  const act=document.getElementById(`fa-${fid}`);
+  if(isRes){if(act)act.style.display='none';}
+  else{
+    if(act)act.style.display='';
+    if(pb) pb.style.visibility=step>1?'visible':'hidden';
+    if(nb){
+      nb.innerHTML=step===form.steps.length
+        ?'Verzenden <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>'
+        :'Volgende <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>';
+    }
+  }
+  const prog=document.getElementById(`pf-${fid}`);
+  if(prog) prog.style.width=Math.min(Math.round(step/(form.steps.length+1)*100),100)+'%';
+}
+
+function saveField(fid,key,val){state[fid]={...state[fid]||{},cur:state[fid]?.cur||1,data:{...state[fid]?.data||{}}};state[fid].data[key]=val;}
+
+function selRadio(fid,key,el,val){
+  document.querySelectorAll(`#rg-${fid}-${key} .ro`).forEach(r=>r.classList.remove('on'));
+  el.classList.add('on');
+  saveField(fid,key,val);
+}
+
+function togCheck(fid,key,el,val){
+  const isExcl=/^(geen|niets|weet ik niet|niet van toepassing)/i.test(val.trim());
+  if(isExcl){
+    document.querySelectorAll(`#cg-${fid}-${key} .co`).forEach(c=>c.classList.remove('on'));
+    el.classList.add('on');
+  } else {
+    document.querySelectorAll(`#cg-${fid}-${key} .co`).forEach(c=>{
+      if(/^(geen|niets|weet ik niet|niet van toepassing)/i.test(c.textContent.trim())) c.classList.remove('on');
+    });
+    el.classList.toggle('on');
+  }
+  const vals=Array.from(document.querySelectorAll(`#cg-${fid}-${key} .co.on`)).map(c=>c.textContent.trim()).join(', ');
+  saveField(fid,key,vals);
+}
+
+function togTag(fid,key,el,val){
+  el.classList.toggle('on');
+  const vals=Array.from(document.querySelectorAll(`#tg-${fid}-${key} .tag.on`)).map(t=>t.textContent.trim()).join(', ');
+  saveField(fid,key,vals);
+}
+
+function selScale(fid,key,btn,val){
+  document.querySelectorAll(`#sc-${fid}-${key} .sb`).forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  saveField(fid,key,val);
+}
+
+function selStar(fid,key,n){
+  document.querySelectorAll(`#sr-${fid}-${key} .star`).forEach((s,i)=>s.classList.toggle('on',i<n));
+  saveField(fid,key,n+'/5');
+}
+
+async function fNext(fid){
+  const form=FORMS.find(f=>f.id===fid);
+  const s=state[fid];
+  s.cur++;
+  const aiStep=form.steps.findIndex(st=>st.ai)+1;
+  if(s.cur===aiStep){
+    showStep(fid,s.cur);
+    buildSummaryPreview(fid,form);
+    return;
+  }
+  if(s.cur>form.steps.length){finalizeForm(fid,form);return;}
+  showStep(fid,s.cur);
+}
+
+function fPrev(fid){
+  const s=state[fid];
+  if(s.cur>1){s.cur--;showStep(fid,s.cur);}
+}
+
+function resetForm(fid){
+  state[fid]={cur:1,data:{}};
+  const form=FORMS.find(f=>f.id===fid);
+  renderForm(form);
+}
+
+function buildSummaryPreview(fid,form){
+  const el=document.getElementById(`sp-${fid}`);
+  if(!el)return;
+  const d=state[fid]?.data||{};
+  const skip=['adviseur_advies'];
+  const rows=Object.entries(d).filter(([k,v])=>v&&!skip.includes(k)).map(([k,v])=>{
+    const label=k.replace(/_/g,' ');
+    return `<div class="sc"><div class="sl">${label}</div><div class="sv">${v}</div></div>`;
+  }).join('');
+  el.innerHTML=rows?`<div class="sum-g-full">${rows}</div>`:'';
+}
+
+function finalizeForm(fid,form){
+  const d=state[fid]?.data||{};
+  const naam=(d.vnaam||d.naam||'')+(d.anaam?' '+d.anaam:'');
+  const advies=d.adviseur_advies||'';
+  const skip=['adviseur_advies','vnaam','anaam','naam','email','tel'];
+  const antwoorden=Object.entries(d).filter(([k,v])=>v&&!skip.includes(k)).map(([k,v])=>`<div class="sc"><div class="sl">${k.replace(/_/g,' ')}</div><div class="sv">${v}</div></div>`).join('');
+  document.getElementById(`res-${fid}`).innerHTML=`
+    <div class="sum-g">
+      <div class="sc"><div class="sl">Naam</div><div class="sv">${naam||'—'}</div></div>
+      <div class="sc"><div class="sl">E-mail</div><div class="sv">${d.email||'—'}</div></div>
+    </div>
+    ${antwoorden?`<div class="sum-g-full" style="margin-bottom:14px">${antwoorden}</div>`:''}
+    ${advies?`<div class="acts"><h3><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Advies adviseur</h3><ul><li>${advies.replace(/\n/g,'</li><li>')}</li></ul></div>`:''}
+    <div class="acts">
+      <h3><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Vervolgstappen</h3>
+      <ul>
+        <li>Scan is ingediend — sla dit overzicht op of print het voor het dossier</li>
+        <li>Houd relevante polissen, contracten of documenten bij de hand</li>
+        <li>Plan een vervolgafspraak indien actie vereist is</li>
+      </ul>
+    </div>`;
+  showStep(fid,form.steps.length+1);
+}
+
+buildSidebar();
+// open first form by default
+openForm(FORMS[0].id);
+</script>
+</body>
+</html>

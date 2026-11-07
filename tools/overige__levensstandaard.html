@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Levensstandaard Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #0D1B2A;
+    --navy-mid: #1B2E45;
+    --teal: #1A7A8A;
+    --teal-light: #24A0B5;
+    --gold: #C9963A;
+    --gold-light: #E8B45A;
+    --cream: #FAF8F4;
+    --white: #FFFFFF;
+    --gray-light: #F0EDE8;
+    --gray: #9A9590;
+    --text: #1C1A18;
+    --text-muted: #6B6660;
+    --green: #2D7D52;
+    --red: #C0392B;
+    --orange: #E07B39;
+    --shadow: 0 4px 24px rgba(13,27,42,0.10);
+    --shadow-lg: 0 12px 48px rgba(13,27,42,0.16);
+    --radius: 16px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--navy);
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-icon {
+    width: 44px; height: 44px;
+    background: var(--gold);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    color: var(--white);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header p {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  /* ── STEPPER ── */
+  .stepper {
+    background: var(--navy-mid);
+    padding: 16px 32px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .step-item:hover { background: rgba(255,255,255,0.06); }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.4);
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+  .step-item.active .step-dot {
+    background: var(--gold); border-color: var(--gold); color: var(--navy);
+  }
+  .step-item.done .step-dot {
+    background: var(--teal); border-color: var(--teal); color: white;
+  }
+  .step-label {
+    color: rgba(255,255,255,0.45);
+    font-size: 12px; font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.3s;
+  }
+  .step-item.active .step-label { color: var(--gold-light); }
+  .step-item.done .step-label { color: rgba(255,255,255,0.7); }
+  .step-divider {
+    width: 24px; height: 2px;
+    background: rgba(255,255,255,0.12);
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main { padding: 28px 32px 40px; max-width: 900px; margin: 0 auto; }
+
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .screen-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .screen-sub {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-weight: 600; font-size: 14px;
+    color: var(--navy);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--gray-light);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .icon { font-size: 16px; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media(max-width:600px) { .grid-2,.grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── FORM ── */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--text-muted); margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    border: 1.5px solid var(--gray-light);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text);
+    background: var(--white);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(26,122,138,0.10);
+  }
+  .field .prefix-wrap { position: relative; }
+  .field .prefix {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--gray); font-size: 14px; font-weight: 500;
+    pointer-events: none;
+  }
+  .field .prefix-wrap input { padding-left: 26px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    transition: all 0.2s; text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--teal); color: white;
+  }
+  .btn-primary:hover { background: var(--teal-light); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,122,138,0.3); }
+  .btn-gold {
+    background: var(--gold); color: var(--navy);
+  }
+  .btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--navy);
+    border: 1.5px solid var(--gray-light);
+  }
+  .btn-outline:hover { border-color: var(--navy); background: var(--gray-light); }
+  .btn-nav { display: flex; gap: 12px; margin-top: 28px; justify-content: space-between; align-items: center; }
+
+  /* ── KPI CHIPS ── */
+  .kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+  .kpi {
+    flex: 1; min-width: 140px;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--teal);
+  }
+  .kpi.warn { border-left-color: var(--orange); }
+  .kpi.danger { border-left-color: var(--red); }
+  .kpi.good { border-left-color: var(--green); }
+  .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted); margin-bottom: 6px; }
+  .kpi-value { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--navy); }
+  .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── SCENARIO CARDS ── */
+  .scenario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 16px; }
+  .scenario-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 2px solid var(--gray-light);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .scenario-card:hover { border-color: var(--teal); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .scenario-card.selected { border-color: var(--teal); background: rgba(26,122,138,0.04); }
+  .sc-icon { font-size: 28px; margin-bottom: 10px; }
+  .sc-title { font-weight: 600; font-size: 15px; color: var(--navy); margin-bottom: 6px; }
+  .sc-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── RESULT CARD ── */
+  .result-block {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .result-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .result-icon.green { background: rgba(45,125,82,0.12); }
+  .result-icon.red { background: rgba(192,57,43,0.10); }
+  .result-icon.orange { background: rgba(224,123,57,0.12); }
+  .result-title { font-weight: 600; font-size: 14px; color: var(--navy); margin-bottom: 4px; }
+  .result-text { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── PROGRESS BAR ── */
+  .prog-wrap { margin: 12px 0; }
+  .prog-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+  .prog-bar { height: 8px; background: var(--gray-light); border-radius: 99px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+  .prog-fill.green { background: var(--green); }
+  .prog-fill.orange { background: var(--orange); }
+  .prog-fill.red { background: var(--red); }
+  .prog-fill.teal { background: var(--teal); }
+
+  /* ── AI ADVICE ── */
+  .ai-box {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+    border-radius: var(--radius);
+    padding: 24px 26px;
+    margin-bottom: 20px;
+  }
+  .ai-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .ai-badge {
+    background: var(--gold); color: var(--navy);
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .ai-title { color: white; font-weight: 600; font-size: 15px; }
+  .ai-text { color: rgba(255,255,255,0.8); font-size: 13px; line-height: 1.8; }
+  .ai-loading { color: rgba(255,255,255,0.5); font-size: 13px; display: flex; align-items: center; gap: 10px; }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TABLE ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { 
+    text-align: left; padding: 10px 14px;
+    background: var(--gray-light); color: var(--text-muted);
+    font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .data-table th:first-child { border-radius: 6px 0 0 6px; }
+  .data-table th:last-child { border-radius: 0 6px 6px 0; }
+  .data-table td { padding: 11px 14px; border-bottom: 1px solid var(--gray-light); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table .amount { font-weight: 600; font-family: 'Playfair Display', serif; }
+  .data-table .positive { color: var(--green); }
+  .data-table .negative { color: var(--red); }
+
+  /* ── ACTIEPLAN ── */
+  .action-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--gray-light);
+  }
+  .action-item:last-child { border-bottom: none; }
+  .action-num {
+    width: 28px; height: 28px; flex-shrink: 0;
+    background: var(--teal); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .action-content .action-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+  .action-content .action-desc { font-size: 12px; color: var(--text-muted); }
+  .priority-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    margin-left: 8px;
+  }
+  .priority-hoog { background: rgba(192,57,43,0.1); color: var(--red); }
+  .priority-mid { background: rgba(224,123,57,0.1); color: var(--orange); }
+  .priority-laag { background: rgba(45,125,82,0.1); color: var(--green); }
+
+  /* ── CHART WRAP ── */
+  .chart-wrap { position: relative; height: 220px; margin-top: 10px; }
+  canvas { max-height: 220px; }
+
+  /* ── TOOLTIP / INFO ── */
+  .info-tip {
+    display: inline-block; width: 16px; height: 16px;
+    background: var(--gray-light); border-radius: 50%;
+    text-align: center; line-height: 16px;
+    font-size: 10px; font-weight: 700; color: var(--gray);
+    cursor: help; margin-left: 4px; vertical-align: middle;
+  }
+
+  /* ── TOGGLE ── */
+  .toggle-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .toggle-btn {
+    padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--gray-light);
+    background: white; color: var(--text-muted);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .toggle-btn.active { background: var(--teal); border-color: var(--teal); color: white; }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--gray-light); margin: 20px 0; }
+
+  /* ── PRINT / SHARE ── */
+  .share-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+  @media print {
+    .header, .stepper, .btn-nav, .share-row { display: none !important; }
+    body { background: white; }
+    .card, .result-block { box-shadow: none; border: 1px solid #ddd; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-icon">🏠</div>
+  <div>
+    <h1>Levensstandaard Planner</h1>
+    <p>Bereken of u en uw partner uw huidige levensstijl kunt voortzetten</p>
+  </div>
+</div>
+
+<!-- STEPPER -->
+<div class="stepper">
+  <div class="step-item active" onclick="goTo(0)" id="si0">
+    <div class="step-dot">1</div>
+    <span class="step-label">Profiel</span>
+  </div>
+  <div class="step-divider"></div>
+  <div class="step-item" onclick="goTo(1)" id="si1">
+    <div class="step-dot">2</div>
+    <span class="step-label">Inkomsten & Uitgaven</span>
+  </div>
+  <div class="step-divider"></div>
+  <div class="step-item" onclick="goTo(2)" id="si2">
+    <div class="step-dot">3</div>
+    <span class="step-label">Overzicht</span>
+  </div>
+  <div class="step-divider"></div>
+  <div class="step-item" onclick="goTo(3)" id="si3">
+    <div class="step-dot">4</div>
+    <span class="step-label">Scenario's</span>
+  </div>
+  <div class="step-divider"></div>
+  <div class="step-item" onclick="goTo(4)" id="si4">
+    <div class="step-dot">5</div>
+    <span class="step-label">Actieplan</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ══════════════════════════════ STAP 1: PROFIEL ══════════════════════════════ -->
+  <div class="screen active" id="screen0">
+    <div class="screen-title">Uw persoonlijk profiel</div>
+    <div class="screen-sub">Vul de basisgegevens in van u en uw partner. Alle gegevens blijven lokaal op uw apparaat.</div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">👤</span> Partner 1</div>
+        <div class="field">
+          <label>Naam (optioneel)</label>
+          <input type="text" id="naam1" placeholder="Voornaam">
+        </div>
+        <div class="field">
+          <label>Leeftijd</label>
+          <input type="number" id="leeftijd1" value="38" min="18" max="80">
+        </div>
+        <div class="field">
+          <label>Werksituatie</label>
+          <select id="werk1">
+            <option value="loondienst">Loondienst (fulltime)</option>
+            <option value="loondienst-part">Loondienst (parttime)</option>
+            <option value="zzp">ZZP / Ondernemer</option>
+            <option value="geen">Niet werkend</option>
+            <option value="pensioen">Met pensioen</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>AOW-leeftijd bereikt op</label>
+          <input type="number" id="aow1" value="67" min="60" max="75" readonly style="background:#f5f5f5">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span class="icon">👤</span> Partner 2</div>
+        <div class="field">
+          <label>Naam (optioneel)</label>
+          <input type="text" id="naam2" placeholder="Voornaam">
+        </div>
+        <div class="field">
+          <label>Leeftijd</label>
+          <input type="number" id="leeftijd2" value="36" min="18" max="80">
+        </div>
+        <div class="field">
+          <label>Werksituatie</label>
+          <select id="werk2">
+            <option value="loondienst">Loondienst (fulltime)</option>
+            <option value="loondienst-part" selected>Loondienst (parttime)</option>
+            <option value="zzp">ZZP / Ondernemer</option>
+            <option value="geen">Niet werkend</option>
+            <option value="pensioen">Met pensioen</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>AOW-leeftijd bereikt op</label>
+          <input type="number" id="aow2" value="67" min="60" max="75" readonly style="background:#f5f5f5">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">👨‍👩‍👧</span> Gezinssituatie</div>
+      <div class="grid-3">
+        <div class="field">
+          <label>Aantal kinderen</label>
+          <select id="kinderen">
+            <option value="0">Geen kinderen</option>
+            <option value="1">1 kind</option>
+            <option value="2" selected>2 kinderen</option>
+            <option value="3">3 kinderen</option>
+            <option value="4">4 of meer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Woning</label>
+          <select id="woning">
+            <option value="koop" selected>Koopwoning</option>
+            <option value="huur">Huurwoning</option>
+            <option value="anders">Anders</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Provincie</label>
+          <select id="provincie">
+            <option>Noord-Holland</option>
+            <option>Zuid-Holland</option>
+            <option>Utrecht</option>
+            <option>Noord-Brabant</option>
+            <option>Gelderland</option>
+            <option>Overige provincies</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-nav">
+      <div></div>
+      <button class="btn btn-primary" onclick="next()">Volgende: Inkomsten & Uitgaven →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ STAP 2: FINANCIËN ══════════════════════════════ -->
+  <div class="screen" id="screen1">
+    <div class="screen-title">Inkomsten & Uitgaven</div>
+    <div class="screen-sub">Vul uw maandelijkse bedragen in (netto, na belasting).</div>
+
+    <div class="grid-2">
+      <!-- INKOMSTEN -->
+      <div class="card">
+        <div class="card-title"><span class="icon">💰</span> Inkomsten per maand (netto)</div>
+        <div class="field">
+          <label>Salaris partner 1</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="sal1" value="3200" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Salaris partner 2</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="sal2" value="2100" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Toeslagen (huur/zorg/kind)</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="toeslagen" value="180" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Overig inkomen (verhuur, dividend…)</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="overig_ink" value="0" min="0">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;font-weight:600;color:var(--navy)">
+          <span>Totaal inkomen</span>
+          <span id="total_ink_disp">€ 5.480</span>
+        </div>
+      </div>
+
+      <!-- VASTE LASTEN -->
+      <div class="card">
+        <div class="card-title"><span class="icon">🏠</span> Vaste lasten per maand</div>
+        <div class="field">
+          <label>Hypotheek / huur</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="hyp" value="1450" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Verzekeringen</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="verzekering" value="280" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Energie / water</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="energie" value="200" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Auto / transport</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="auto" value="350" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Kinderopvang / school</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="kinderopvang" value="400" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Abonnementen & telecom</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="abonnementen" value="120" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- VARIABELE UITGAVEN -->
+      <div class="card">
+        <div class="card-title"><span class="icon">🛒</span> Variabele uitgaven per maand</div>
+        <div class="field">
+          <label>Boodschappen</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="boodschappen" value="600" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Uit eten / horeca</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="uiteten" value="200" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Kleding & persoonlijk</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="kleding" value="150" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Vrije tijd & hobby's</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="vrijetijd" value="200" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Vakantie (per maand gereserveerd)</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="vakantie" value="250" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Overige uitgaven</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="overig_uit" value="100" min="0">
+          </div>
+        </div>
+      </div>
+
+      <!-- VERMOGEN -->
+      <div class="card">
+        <div class="card-title"><span class="icon">📊</span> Vermogen & pensioen</div>
+        <div class="field">
+          <label>Spaargeld totaal</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="spaar" value="45000" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Maandelijkse inleg sparen</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="spaar_inleg" value="300" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Verwacht pensioen p1 (bruto/mnd)</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="pensioen1" value="1600" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Verwacht pensioen p2 (bruto/mnd)</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="pensioen2" value="900" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>AOW per persoon (standaard)</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="aow_bedrag" value="950" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Schulden / leningen (totaal)</label>
+          <div class="prefix-wrap"><span class="prefix">€</span>
+            <input type="number" id="schulden" value="0" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-nav">
+      <button class="btn btn-outline" onclick="prev()">← Terug</button>
+      <button class="btn btn-primary" onclick="calcAndNext()">Bereken overzicht →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ STAP 3: OVERZICHT ══════════════════════════════ -->
+  <div class="screen" id="screen2">
+    <div class="screen-title">Uw financieel overzicht</div>
+    <div class="screen-sub">Dit is de actuele situatie van uw huishouden.</div>
+
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">📈</span> Inkomsten vs Uitgaven</div>
+        <div class="chart-wrap">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">💼</span> Uitsplitsing uitgaven</div>
+        <div id="uitspTable"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">📅</span> Spaarbuffer ontwikkeling (komende 10 jaar)</div>
+      <div class="chart-wrap">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🔍</span> Bufferanalyse</div>
+      <div id="bufferAnalyse"></div>
+    </div>
+
+    <div class="btn-nav">
+      <button class="btn btn-outline" onclick="prev()">← Terug</button>
+      <button class="btn btn-primary" onclick="next()">Scenario's bekijken →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ STAP 4: SCENARIO'S ══════════════════════════════ -->
+  <div class="screen" id="screen3">
+    <div class="screen-title">Wat-als scenario's</div>
+    <div class="screen-sub">Selecteer een scenario om te zien wat er verandert voor uw huishouden.</div>
+
+    <div class="scenario-grid">
+      <div class="scenario-card" onclick="selectScenario('inkomen_weg')" id="sc_inkomen_weg">
+        <div class="sc-icon">⚠️</div>
+        <div class="sc-title">Één inkomen wegvalt</div>
+        <div class="sc-desc">Wat als partner 1 zijn/haar baan verliest? Hoe lang redt u het?</div>
+      </div>
+      <div class="scenario-card" onclick="selectScenario('pensioen')" id="sc_pensioen">
+        <div class="sc-icon">🏖️</div>
+        <div class="sc-title">Pensionering</div>
+        <div class="sc-desc">Kunt u uw levensstandaard handhaven als u stopt met werken?</div>
+      </div>
+      <div class="scenario-card" onclick="selectScenario('kind')" id="sc_kind">
+        <div class="sc-icon">👶</div>
+        <div class="sc-title">Kind erbij</div>
+        <div class="sc-desc">Hoeveel kost een extra kind en wat betekent dit voor uw financiën?</div>
+      </div>
+      <div class="scenario-card" onclick="selectScenario('scheiding')" id="sc_scheiding">
+        <div class="sc-icon">💔</div>
+        <div class="sc-title">Scheiding</div>
+        <div class="sc-desc">Wat zijn de financiële gevolgen als de relatie eindigt?</div>
+      </div>
+      <div class="scenario-card" onclick="selectScenario('vervroegd')" id="sc_vervroegd">
+        <div class="sc-icon">⏩</div>
+        <div class="sc-title">Eerder stoppen met werken</div>
+        <div class="sc-desc">Wat als u 5 jaar eerder met pensioen wilt? Wat moet u daarvoor doen?</div>
+      </div>
+      <div class="scenario-card" onclick="selectScenario('zorg')" id="sc_zorg">
+        <div class="sc-icon">🏥</div>
+        <div class="sc-title">Langdurige ziekte</div>
+        <div class="sc-desc">Impact van WIA / arbeidsongeschiktheid op uw huishouden.</div>
+      </div>
+    </div>
+
+    <div id="scenarioResult" style="margin-top:24px; display:none;"></div>
+
+    <div class="btn-nav">
+      <button class="btn btn-outline" onclick="prev()">← Terug</button>
+      <button class="btn btn-primary" onclick="next()">Naar actieplan →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ STAP 5: ACTIEPLAN ══════════════════════════════ -->
+  <div class="screen" id="screen4">
+    <div class="screen-title">Uw persoonlijk actieplan</div>
+    <div class="screen-sub">Op basis van uw situatie geven wij u concrete aanbevelingen.</div>
+
+    <div class="ai-box" id="aiAdviceBox">
+      <div class="ai-header">
+        <div class="ai-badge">AI Analyse</div>
+        <div class="ai-title">Persoonlijk advies wordt geladen…</div>
+      </div>
+      <div class="ai-loading" id="aiLoading">
+        <div class="spinner"></div>
+        <span>Claude analyseert uw situatie…</span>
+      </div>
+      <div class="ai-text" id="aiText" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">✅</span> Concrete acties</div>
+      <div id="actieplanContent"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span> Prioriteiten</div>
+      <div id="prioriteitenContent"></div>
+    </div>
+
+    <div class="share-row">
+      <button class="btn btn-outline" onclick="window.print()">🖨️ Afdrukken</button>
+      <button class="btn btn-gold" onclick="restartTool()">🔄 Opnieuw beginnen</button>
+    </div>
+
+    <div class="btn-nav">
+      <button class="btn btn-outline" onclick="prev()">← Terug</button>
+      <div></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE & NAVIGATION
+// ═══════════════════════════════════════════════════
+let currentStep = 0;
+let data = {};
+let charts = {};
+let selectedScenario = null;
+
+function goTo(n) {
+  if (n > currentStep && n > 2) return; // must calc first
+  currentStep = n;
+  renderStep();
+}
+function next() {
+  if (currentStep < 4) { currentStep++; renderStep(); }
+}
+function prev() {
+  if (currentStep > 0) { currentStep--; renderStep(); }
+}
+
+function renderStep() {
+  document.querySelectorAll('.screen').forEach((s,i) => {
+    s.classList.toggle('active', i === currentStep);
+  });
+  document.querySelectorAll('.step-item').forEach((s,i) => {
+    s.classList.remove('active','done');
+    if (i === currentStep) s.classList.add('active');
+    else if (i < currentStep) s.classList.add('done');
+  });
+  window.scrollTo(0,0);
+  if (currentStep === 4) loadAiAdvice();
+}
+
+function calcAndNext() {
+  calcData();
+  renderOverzicht();
+  currentStep = 2;
+  renderStep();
+}
+
+// ═══════════════════════════════════════════════════
+//  LIVE UPDATE INCOME TOTAL
+// ═══════════════════════════════════════════════════
+document.addEventListener('input', e => {
+  if (['sal1','sal2','toeslagen','overig_ink'].includes(e.target.id)) {
+    const t = v('sal1')+v('sal2')+v('toeslagen')+v('overig_ink');
+    document.getElementById('total_ink_disp').textContent = fmt(t);
+  }
+});
+
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+function v(id) { return parseFloat(document.getElementById(id)?.value)||0; }
+function fmt(n) { return '€ '+Math.round(n).toLocaleString('nl-NL'); }
+function fmtK(n) { return n>=1000 ? '€ '+(n/1000).toFixed(1).replace('.',',')+'k' : fmt(n); }
+
+// ═══════════════════════════════════════════════════
+//  CALCULATIONS
+// ═══════════════════════════════════════════════════
+function calcData() {
+  data.naam1 = document.getElementById('naam1').value || 'Partner 1';
+  data.naam2 = document.getElementById('naam2').value || 'Partner 2';
+  data.leeftijd1 = v('leeftijd1');
+  data.leeftijd2 = v('leeftijd2');
+  data.aow_leeftijd = 67;
+
+  // Inkomsten
+  data.sal1 = v('sal1');
+  data.sal2 = v('sal2');
+  data.toeslagen = v('toeslagen');
+  data.overig_ink = v('overig_ink');
+  data.totaal_ink = data.sal1 + data.sal2 + data.toeslagen + data.overig_ink;
+
+  // Vaste lasten
+  data.hyp = v('hyp');
+  data.verzekering = v('verzekering');
+  data.energie = v('energie');
+  data.auto = v('auto');
+  data.kinderopvang = v('kinderopvang');
+  data.abonnementen = v('abonnementen');
+  data.vaste = data.hyp + data.verzekering + data.energie + data.auto + data.kinderopvang + data.abonnementen;
+
+  // Variabel
+  data.boodschappen = v('boodschappen');
+  data.uiteten = v('uiteten');
+  data.kleding = v('kleding');
+  data.vrijetijd = v('vrijetijd');
+  data.vakantie = v('vakantie');
+  data.overig_uit = v('overig_uit');
+  data.variabel = data.boodschappen + data.uiteten + data.kleding + data.vrijetijd + data.vakantie + data.overig_uit;
+
+  data.totaal_uit = data.vaste + data.variabel;
+  data.saldo = data.totaal_ink - data.totaal_uit;
+  data.spaar_inleg = v('spaar_inleg');
+  data.spaar = v('spaar');
+
+  // Pensioen
+  data.pensioen1 = v('pensioen1');
+  data.pensioen2 = v('pensioen2');
+  data.aow_bedrag = v('aow_bedrag');
+  data.schulden = v('schulden');
+
+  // AOW jaren weg
+  data.jaren1 = Math.max(0, data.aow_leeftijd - data.leeftijd1);
+  data.jaren2 = Math.max(0, data.aow_leeftijd - data.leeftijd2);
+
+  // Buffer maanden
+  data.buffer_mnd = data.totaal_uit > 0 ? data.spaar / data.totaal_uit : 999;
+
+  // Pensioen inkomen (netto ca 70%)
+  data.pensioen_ink = (data.pensioen1 + data.pensioen2 + data.aow_bedrag*2) * 0.70;
+  data.pensioen_gap = data.totaal_uit * 0.80 - data.pensioen_ink; // assume 80% expenses in retirement
+
+  // Score 0-100
+  data.score = calcScore();
+}
+
+function calcScore() {
+  let s = 50;
+  if (data.saldo > 0) s += Math.min(20, data.saldo/100);
+  if (data.buffer_mnd >= 6) s += 15; else if (data.buffer_mnd >= 3) s += 7;
+  if (data.pensioen_gap <= 0) s += 15; else s -= Math.min(15, data.pensioen_gap/100);
+  if (data.schulden === 0) s += 5;
+  return Math.max(0, Math.min(100, Math.round(s)));
+}
+
+// ═══════════════════════════════════════════════════
+//  OVERZICHT RENDER
+// ═══════════════════════════════════════════════════
+function renderOverzicht() {
+  renderKPI();
+  renderPie();
+  renderLine();
+  renderUitsp();
+  renderBuffer();
+}
+
+function renderKPI() {
+  const saldoClass = data.saldo >= 0 ? (data.saldo > 500 ? 'good' : '') : 'danger';
+  const bufClass = data.buffer_mnd >= 6 ? 'good' : data.buffer_mnd >= 3 ? 'warn' : 'danger';
+  const gapClass = data.pensioen_gap <= 0 ? 'good' : data.pensioen_gap < 500 ? 'warn' : 'danger';
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi ${saldoClass}">
+      <div class="kpi-label">Maandsaldo</div>
+      <div class="kpi-value">${fmt(data.saldo)}</div>
+      <div class="kpi-sub">${data.saldo>=0?'Positief':'Tekort'} per maand</div>
+    </div>
+    <div class="kpi ${bufClass}">
+      <div class="kpi-label">Buffer</div>
+      <div class="kpi-value">${data.buffer_mnd.toFixed(1)} mnd</div>
+      <div class="kpi-sub">${fmt(data.spaar)} spaargeld</div>
+    </div>
+    <div class="kpi ${gapClass}">
+      <div class="kpi-label">Pensioen gap</div>
+      <div class="kpi-value">${fmt(Math.abs(data.pensioen_gap))}</div>
+      <div class="kpi-sub">${data.pensioen_gap>0?'Tekort per maand':'Voldoende'}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Financieel welzijn</div>
+      <div class="kpi-value">${data.score}/100</div>
+      <div class="kpi-sub">${data.score>=70?'Goed op schema':data.score>=50?'Verbetering mogelijk':'Aandacht nodig'}</div>
+    </div>
+  `;
+}
+
+function renderPie() {
+  if (charts.pie) charts.pie.destroy();
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  charts.pie = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Vaste lasten','Variabele uitgaven','Saldo/besparing'],
+      datasets:[{
+        data: [data.vaste, data.variabel, Math.max(0,data.saldo)],
+        backgroundColor: ['#1A7A8A','#C9963A','#2D7D52'],
+        borderWidth: 0, hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'DM Sans' }, padding: 14, boxWidth: 12 } },
+        tooltip: { callbacks: { label: c => ' '+fmt(c.parsed) } }
+      },
+      cutout: '62%'
+    }
+  });
+}
+
+function renderLine() {
+  if (charts.line) charts.line.destroy();
+  const ctx = document.getElementById('lineChart').getContext('2d');
+  const labels = [];
+  const spaarData = [];
+  const now = new Date().getFullYear();
+  let saldo = data.spaar;
+  for (let i=0; i<=10; i++) {
+    labels.push(now+i);
+    spaarData.push(Math.round(saldo));
+    saldo += (data.saldo > 0 ? data.saldo : 0) * 12 * (1 + 0.02 * i/10);
+  }
+  charts.line = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets:[{
+        label:'Spaarvermogen',
+        data: spaarData,
+        borderColor:'#1A7A8A', backgroundColor:'rgba(26,122,138,0.08)',
+        borderWidth:2.5, fill:true, tension:0.4,
+        pointBackgroundColor:'#1A7A8A', pointRadius:4
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => ' '+fmt(c.parsed.y) } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ font:{family:'DM Sans',size:11} } },
+        y:{ grid:{color:'#F0EDE8'}, ticks:{ font:{family:'DM Sans',size:11}, callback: v => fmtK(v) } }
+      }
+    }
+  });
+}
+
+function renderUitsp() {
+  const cats = [
+    ['Hypotheek/huur', data.hyp],
+    ['Boodschappen', data.boodschappen],
+    ['Auto/transport', data.auto],
+    ['Vakantie', data.vakantie],
+    ['Verzekeringen', data.verzekering],
+    ['Energie', data.energie],
+    ['Uit eten', data.uiteten],
+    ['Kinderopvang', data.kinderopvang],
+    ['Vrije tijd', data.vrijetijd],
+    ['Kleding', data.kleding],
+    ['Abonnementen', data.abonnementen],
+    ['Overig', data.overig_uit],
+  ].sort((a,b)=>b[1]-a[1]);
+
+  const colors = ['teal','teal','teal','orange','orange','orange','teal','orange','teal','orange','teal','teal'];
+  let html = cats.map((c,i)=>{
+    const pct = data.totaal_ink > 0 ? Math.round(c[1]/data.totaal_ink*100) : 0;
+    return `<div class="prog-wrap">
+      <div class="prog-label"><span>${c[0]}</span><span><strong>${fmt(c[1])}</strong> (${pct}%)</span></div>
+      <div class="prog-bar"><div class="prog-fill ${colors[i]}" style="width:${Math.min(100,pct)}%"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('uitspTable').innerHTML = html;
+}
+
+function renderBuffer() {
+  const mnd = data.buffer_mnd;
+  const aanbeveling = 3;
+  const pct = Math.min(100, mnd/6*100);
+  const cls = mnd>=6?'green':mnd>=3?'orange':'red';
+  document.getElementById('bufferAnalyse').innerHTML = `
+    <div class="prog-wrap" style="margin-bottom:16px">
+      <div class="prog-label">
+        <span>Noodbuffer (aanbevolen: 3-6 maanden)</span>
+        <span><strong>${mnd.toFixed(1)} maanden</strong></span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill ${cls}" style="width:${pct}%"></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="result-block">
+        <div class="result-icon ${mnd>=3?'green':'red'}">${mnd>=3?'✅':'❌'}</div>
+        <div><div class="result-title">Basisbuffer</div>
+        <div class="result-text">U heeft ${mnd.toFixed(1)} maanden buffer. ${mnd>=3?'Dit voldoet aan de minimale richtlijn van 3 maanden.':'De aanbeveling is minimaal 3 maanden. Bouw dit zo snel mogelijk op.'}</div></div>
+      </div>
+      <div class="result-block">
+        <div class="result-icon ${data.saldo>0?'green':'red'}">${data.saldo>0?'📈':'⚠️'}</div>
+        <div><div class="result-title">Maandelijks ${data.saldo>=0?'overschot':'tekort'}</div>
+        <div class="result-text">${data.saldo>=0?'U houdt '+fmt(data.saldo)+' per maand over. Goed voor sparen en onvoorziene uitgaven.':'U heeft een maandelijks tekort van '+fmt(Math.abs(data.saldo))+'. Dit is niet houdbaar op de lange termijn.'}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+//  SCENARIO'S
+// ═══════════════════════════════════════════════════
+function selectScenario(type) {
+  document.querySelectorAll('.scenario-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('sc_'+type).classList.add('selected');
+  selectedScenario = type;
+
+  const r = document.getElementById('scenarioResult');
+  r.style.display = 'block';
+
+  const scenarios = {
+    inkomen_weg: inkomenWeg,
+    pensioen: pensioenScenario,
+    kind: kindScenario,
+    scheiding: scheidingScenario,
+    vervroegd: vervroegdScenario,
+    zorg: zorgScenario,
+  };
+  r.innerHTML = scenarios[type]();
+}
+
+function inkomenWeg() {
+  const nieuw_ink = data.totaal_ink - data.sal1;
+  const ww = data.sal1 * 0.75 * 0.7; // WW ca 70% van 75%
+  const nieuw_ink_ww = nieuw_ink + ww;
+  const saldo_ww = nieuw_ink_ww - data.totaal_uit;
+  const buffer_ww = saldo_ww < 0 ? data.spaar / Math.abs(saldo_ww) : 999;
+  const cls = saldo_ww >= 0 ? 'green' : 'red';
+
+  return `<div class="card">
+    <div class="card-title"><span class="icon">⚠️</span> Scenario: Inkomen ${data.naam1} wegvalt</div>
+    <div class="kpi-row">
+      <div class="kpi ${saldo_ww>=0?'good':'danger'}">
+        <div class="kpi-label">Nieuw maandsaldo (met WW)</div>
+        <div class="kpi-value">${fmt(saldo_ww)}</div>
+        <div class="kpi-sub">WW ca. ${fmt(ww)}/mnd (eerste 2 jaar)</div>
+      </div>
+      <div class="kpi ${buffer_ww>=6?'good':buffer_ww>=3?'warn':'danger'}">
+        <div class="kpi-label">Buffer houdt het uit</div>
+        <div class="kpi-value">${buffer_ww===999?'∞':buffer_ww.toFixed(1)+' mnd'}</div>
+        <div class="kpi-sub">Bij tekort op spaargeld</div>
+      </div>
+    </div>
+    <div class="result-block">
+      <div class="result-icon ${cls}">${saldo_ww>=0?'✅':'⚠️'}</div>
+      <div><div class="result-title">Oordeel</div>
+      <div class="result-text">${saldo_ww>=0
+        ? 'Met WW-uitkering kunt u uw huishouden draaiende houden. Na 2 jaar vervalt de WW — zorg voor een buffer of nieuw inkomen.'
+        : 'Er ontstaat een maandelijks tekort van '+fmt(Math.abs(saldo_ww))+'. Uw spaarbuffer is toereikend voor ca. '+buffer_ww.toFixed(0)+' maanden. Snij snel in variabele uitgaven en zoek aanvullend inkomen.'
+      }</div></div>
+    </div>
+    <div class="divider"></div>
+    <strong style="font-size:13px;color:var(--navy)">Aanbevelingen:</strong>
+    <ul style="margin-top:10px;padding-left:20px;font-size:13px;color:var(--text-muted);line-height:2">
+      <li>Zorg voor minstens 6 maanden noodbuffer (${fmt(data.totaal_uit*6)})</li>
+      <li>Overweeg een arbeidsongeschiktheidsverzekering (AOV)</li>
+      <li>Bekijk welke vaste lasten u direct kunt verlagen</li>
+      <li>WW duurt maximaal 24 maanden — plan tijdig</li>
+    </ul>
+  </div>`;
+}
+
+function pensioenScenario() {
+  const pensioen_netto = data.pensioen_ink;
+  const gewenst = data.totaal_uit * 0.80;
+  const gap = gewenst - pensioen_netto;
+  const extra_spaar_needed = gap > 0 ? gap * 12 * Math.max(data.jaren1, data.jaren2) : 0;
+
+  return `<div class="card">
+    <div class="card-title"><span class="icon">🏖️</span> Scenario: Pensionering (bij AOW-leeftijd 67)</div>
+    <div class="kpi-row">
+      <div class="kpi ${pensioen_netto>=gewenst?'good':'danger'}">
+        <div class="kpi-label">Pensioeninkomen (netto)</div>
+        <div class="kpi-value">${fmt(pensioen_netto)}</div>
+        <div class="kpi-sub">AOW + aanvullend pensioen</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Gewenste levensstandaard</div>
+        <div class="kpi-value">${fmt(gewenst)}</div>
+        <div class="kpi-sub">80% van huidige uitgaven</div>
+      </div>
+      <div class="kpi ${gap<=0?'good':'danger'}">
+        <div class="kpi-label">${gap>0?'Pensioen tekort':'Pensioen overschot'}</div>
+        <div class="kpi-value">${fmt(Math.abs(gap))}</div>
+        <div class="kpi-sub">per maand</div>
+      </div>
+    </div>
+    ${gap > 0 ? `
+    <div class="result-block">
+      <div class="result-icon red">⚠️</div>
+      <div><div class="result-title">Er is een pensioengat van ${fmt(gap)} per maand</div>
+      <div class="result-text">Om dit op te vangen heeft u ca. ${fmt(extra_spaar_needed)} extra nodig vóór pensionering, of u moet maandelijks ${fmt(extra_spaar_needed/Math.max(1,data.jaren1*12))} extra sparen.</div></div>
+    </div>` : `
+    <div class="result-block">
+      <div class="result-icon green">✅</div>
+      <div><div class="result-title">Pensioen ziet er goed uit!</div>
+      <div class="result-text">Uw verwachte pensioeninkomen dekt uw gewenste levensstandaard. Houd dit regelmatig bij via Mijn Pensioen Overzicht (mijnpensioenoverzicht.nl).</div></div>
+    </div>`}
+    <div class="divider"></div>
+    <strong style="font-size:13px;color:var(--navy)">Aanbevelingen:</strong>
+    <ul style="margin-top:10px;padding-left:20px;font-size:13px;color:var(--text-muted);line-height:2">
+      <li>Check uw actuele pensioenopbouw op mijnpensioenoverzicht.nl</li>
+      <li>Overweeg extra storten in een lijfrente of bankspaarrekening</li>
+      <li>Beleg het overschot voor lange termijn groei</li>
+      <li>AOW: ${data.naam1} bereikt dit over ${data.jaren1} jaar, ${data.naam2} over ${data.jaren2} jaar</li>
+    </ul>
+  </div>`;
+}
+
+function kindScenario() {
+  const kind_kosten = 750; // gemiddeld NL
+  const nieuw_saldo = data.saldo - kind_kosten;
+  return `<div class="card">
+    <div class="card-title"><span class="icon">👶</span> Scenario: Extra kind</div>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Extra kosten per maand</div>
+        <div class="kpi-value">€ 750</div>
+        <div class="kpi-sub">Gemiddeld in Nederland</div>
+      </div>
+      <div class="kpi ${nieuw_saldo>=0?'good':'danger'}">
+        <div class="kpi-label">Nieuw maandsaldo</div>
+        <div class="kpi-value">${fmt(nieuw_saldo)}</div>
+        <div class="kpi-sub">${nieuw_saldo>=0?'Positief':'Negatief — actie nodig'}</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Kinderbijslag (extra)</div>
+        <div class="kpi-value">± €125</div>
+        <div class="kpi-sub">Per kwartaal (afhankelijk leeftijd)</div>
+      </div>
+    </div>
+    <div class="result-block">
+      <div class="result-icon ${nieuw_saldo>=0?'green':'orange'}">${nieuw_saldo>=0?'✅':'⚠️'}</div>
+      <div><div class="result-title">Impact van een extra kind</div>
+      <div class="result-text">${nieuw_saldo>=0
+        ? 'Financieel is een extra kind haalbaar. Denk ook aan eenmalige kosten (inrichting baby) van ca. €3.000-€5.000.'
+        : 'Een extra kind zorgt voor een maandelijks tekort. Bekijk of een van de partners meer uren kan werken, of bespaar op variabele kosten.'
+      }</div></div>
+    </div>
+    <div class="divider"></div>
+    <strong style="font-size:13px;color:var(--navy)">Aanbevelingen:</strong>
+    <ul style="margin-top:10px;padding-left:20px;font-size:13px;color:var(--text-muted);line-height:2">
+      <li>Bouw voor de bevalling minstens €5.000 extra buffer op</li>
+      <li>Check recht op kinderopvangtoeslag (kan oplopen tot 95%)</li>
+      <li>Overweeg uitbreiding levensverzekering</li>
+      <li>Vraag tijdig kinderopvang aan (wachtlijsten!)</li>
+    </ul>
+  </div>`;
+}
+
+function scheidingScenario() {
+  const ink1_only = data.sal1;
+  const ink2_only = data.sal2;
+  const helft_vaste = data.vaste * 0.70; // vaste lasten stijgen per persoon
+  const saldo1 = ink1_only - helft_vaste - data.variabel*0.55;
+  const saldo2 = ink2_only - helft_vaste - data.variabel*0.55;
+  return `<div class="card">
+    <div class="card-title"><span class="icon">💔</span> Scenario: Scheiding</div>
+    <div class="kpi-row">
+      <div class="kpi ${saldo1>=0?'good':'danger'}">
+        <div class="kpi-label">${data.naam1} solo</div>
+        <div class="kpi-value">${fmt(saldo1)}</div>
+        <div class="kpi-sub">Maandsaldo na scheiding</div>
+      </div>
+      <div class="kpi ${saldo2>=0?'good':'danger'}">
+        <div class="kpi-label">${data.naam2} solo</div>
+        <div class="kpi-value">${fmt(saldo2)}</div>
+        <div class="kpi-sub">Maandsaldo na scheiding</div>
+      </div>
+    </div>
+    <div class="result-block">
+      <div class="result-icon orange">⚠️</div>
+      <div><div class="result-title">Financiële impact scheiding</div>
+      <div class="result-text">Bij een scheiding stijgen vaste lasten per persoon aanzienlijk — twee huishoudens draaien is duurder dan één. Alimentatie, pensioenverevening en woningverdeling spelen een grote rol.</div></div>
+    </div>
+    <div class="divider"></div>
+    <strong style="font-size:13px;color:var(--navy)">Aanbevelingen:</strong>
+    <ul style="margin-top:10px;padding-left:20px;font-size:13px;color:var(--text-muted);line-height:2">
+      <li>Laat een echtscheidingsconvenant opstellen door een mediator</li>
+      <li>Denk aan pensioenverevening (wet verevening pensioenrechten)</li>
+      <li>Bekijk recht op bijstand of huurtoeslag</li>
+      <li>Regel tijdig wie de woning overneemt of verkoopt</li>
+    </ul>
+  </div>`;
+}
+
+function vervroegdScenario() {
+  const vervroegd_leeftijd = Math.min(data.leeftijd1, data.leeftijd2) + 5;
+  const extra_jaren = 67 - vervroegd_leeftijd;
+  const extra_spaar = data.totaal_uit * 0.80 * 12 * extra_jaren;
+  const huidige_spaar_proj = data.spaar + (Math.max(0,data.saldo)*12*5);
+  const gap = extra_spaar - huidige_spaar_proj;
+  const maand_extra = gap > 0 ? gap / (5*12) : 0;
+
+  return `<div class="card">
+    <div class="card-title"><span class="icon">⏩</span> Scenario: 5 jaar eerder met pensioen</div>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">Doel: stoppen op leeftijd</div>
+        <div class="kpi-value">${vervroegd_leeftijd}</div>
+        <div class="kpi-sub">i.p.v. 67 jaar</div>
+      </div>
+      <div class="kpi danger">
+        <div class="kpi-label">Extra vermogen nodig</div>
+        <div class="kpi-value">${fmtK(Math.max(0,gap))}</div>
+        <div class="kpi-sub">Bovenop huidige koers</div>
+      </div>
+      <div class="kpi ${maand_extra<500?'warn':'danger'}">
+        <div class="kpi-label">Extra sparen per maand</div>
+        <div class="kpi-value">${fmt(maand_extra)}</div>
+        <div class="kpi-sub">De komende 5 jaar</div>
+      </div>
+    </div>
+    <div class="result-block">
+      <div class="result-icon ${maand_extra<=500?'orange':'red'}">${maand_extra<=500?'⚠️':'❌'}</div>
+      <div><div class="result-title">Eerder stoppen is ${maand_extra===0?'realistisch':'een flinke uitdaging'}</div>
+      <div class="result-text">${maand_extra===0
+        ? 'Op basis van uw huidige koers lijkt eerder stoppen haalbaar. Houd rekening met inflatie en onvoorziene kosten.'
+        : 'U moet de komende 5 jaar '+fmt(maand_extra)+' extra per maand sparen/beleggen om dit te realiseren. Belegen met gematigd risico kan helpen.'
+      }</div></div>
+    </div>
+    <div class="divider"></div>
+    <strong style="font-size:13px;color:var(--navy)">Aanbevelingen:</strong>
+    <ul style="margin-top:10px;padding-left:20px;font-size:13px;color:var(--text-muted);line-height:2">
+      <li>Open een beleggingsrekening naast uw spaarrekening</li>
+      <li>Bekijk fiscale voordelen van lijfrente (box 1 aftrek)</li>
+      <li>Bereken uw FIRE-getal (25× jaaruitgaven = vrij)</li>
+      <li>Let op: vroegpensioen kan pensioenopbouw verminderen</li>
+    </ul>
+  </div>`;
+}
+
+function zorgScenario() {
+  const wia = data.sal1 * 0.75; // WIA ca 75% van sal
+  const nieuw_ink = data.totaal_ink - data.sal1 + wia;
+  const saldo_wia = nieuw_ink - data.totaal_uit;
+  return `<div class="card">
+    <div class="card-title"><span class="icon">🏥</span> Scenario: Langdurige ziekte / WIA</div>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-label">WIA-uitkering p1</div>
+        <div class="kpi-value">${fmt(wia)}</div>
+        <div class="kpi-sub">Ca. 75% van huidig salaris</div>
+      </div>
+      <div class="kpi ${saldo_wia>=0?'good':'danger'}">
+        <div class="kpi-label">Maandsaldo met WIA</div>
+        <div class="kpi-value">${fmt(saldo_wia)}</div>
+        <div class="kpi-sub">${saldo_wia>=0?'Positief':'Tekort'}</div>
+      </div>
+    </div>
+    <div class="result-block">
+      <div class="result-icon ${saldo_wia>=0?'green':'red'}">${saldo_wia>=0?'✅':'⚠️'}</div>
+      <div><div class="result-title">Impact langdurige arbeidsongeschiktheid</div>
+      <div class="result-text">${saldo_wia>=0
+        ? 'Met WIA-uitkering kunt u uw levensstandaard grotendeels handhaven. Zorg toch voor een AOV voor de eerste 2 jaar (Ziektewet/WW).'
+        : 'Er ontstaat een maandelijks tekort van '+fmt(Math.abs(saldo_wia))+'. Een arbeidsongeschiktheidsverzekering (AOV) kan dit gat dichten.'
+      }</div></div>
+    </div>
+    <div class="divider"></div>
+    <strong style="font-size:13px;color:var(--navy)">Aanbevelingen:</strong>
+    <ul style="margin-top:10px;padding-left:20px;font-size:13px;color:var(--text-muted);line-height:2">
+      <li>Sluit een arbeidsongeschiktheidsverzekering (AOV) af</li>
+      <li>Check uw aanvullende verzekering bij de werkgever</li>
+      <li>WIA treedt in na 2 jaar ziekte — de eerste 2 jaar ontvangt u 70% loon</li>
+      <li>ZZP'ers zijn eigen verantwoordelijk — AOV is cruciaal</li>
+    </ul>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  ACTIEPLAN + AI ADVIES
+// ═══════════════════════════════════════════════════
+function renderActieplan() {
+  const acties = buildActies();
+  document.getElementById('actieplanContent').innerHTML = acties.map((a,i)=>`
+    <div class="action-item">
+      <div class="action-num">${i+1}</div>
+      <div class="action-content">
+        <div class="action-title">${a.title}<span class="priority-badge priority-${a.p==='Hoog'?'hoog':a.p==='Middel'?'mid':'laag'}">${a.p}</span></div>
+        <div class="action-desc">${a.desc}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('prioriteitenContent').innerHTML = `
+    <div class="prog-wrap">
+      <div class="prog-label"><span>Financieel welzijn score</span><span><strong>${data.score}/100</strong></span></div>
+      <div class="prog-bar"><div class="prog-fill ${data.score>=70?'green':data.score>=50?'orange':'red'}" style="width:${data.score}%"></div></div>
+    </div>
+    <div style="margin-top:14px;font-size:13px;color:var(--text-muted)">
+      ${data.score>=70?'✅ Jullie financiën staan er goed voor. Focus op optimalisatie en lange-termijn planning.':
+        data.score>=50?'⚠️ Er zijn verbeterpunten. Pak de hoog-prioriteit acties als eerste aan.':
+        '❌ Uw financiële situatie vraagt om directe actie. Raadpleeg een financieel adviseur.'}
+    </div>
+  `;
+}
+
+function buildActies() {
+  const acties = [];
+  if (data.buffer_mnd < 3) acties.push({title:'Noodbuffer opbouwen', p:'Hoog', desc:`Uw buffer is slechts ${data.buffer_mnd.toFixed(1)} maand. Streef naar minimaal 3 maanden (${fmt(data.totaal_uit*3)}).`});
+  if (data.saldo < 0) acties.push({title:'Maandbudget in evenwicht brengen', p:'Hoog', desc:`U heeft een maandelijks tekort van ${fmt(Math.abs(data.saldo))}. Kijk naar vaste lasten die omlaag kunnen.`});
+  if (data.pensioen_gap > 200) acties.push({title:'Pensioengat dichten', p:'Hoog', desc:`Er is een verwacht pensioen tekort van ${fmt(data.pensioen_gap)}/mnd. Extra storten in lijfrente of beleggen is nodig.`});
+  if (data.saldo > 300) acties.push({title:'Maandelijks overschot beleggen', p:'Middel', desc:`U heeft ${fmt(data.saldo)} overschot per maand. Beleg een deel voor lange-termijn vermogensgroei.`});
+  if (data.schulden > 5000) acties.push({title:'Schulden afbouwen', p:'Hoog', desc:`${fmt(data.schulden)} aan schulden. Los duurdere leningen als eerste af.`});
+  acties.push({title:'Jaarlijks pensioen checken', p:'Laag', desc:'Check uw pensioenopbouw op mijnpensioenoverzicht.nl en pas zo nodig uw inleg aan.'});
+  acties.push({title:'Verzekeringen doorlichten', p:'Middel', desc:'Controleer of uw verzekeringen nog actueel zijn. Mogelijk betaalt u te veel of bent u onderverzekerd.'});
+  if (data.buffer_mnd >= 6 && data.saldo > 0) acties.push({title:'Vermogensplan opstellen', p:'Laag', desc:'Uw basis is op orde. Tijd voor een lange-termijn vermogensplan. Overweeg advies van een onafhankelijk financieel planner.'});
+  return acties;
+}
+
+async function loadAiAdvice() {
+  renderActieplan();
+
+  const naam1 = data.naam1 || 'Partner 1';
+  const naam2 = data.naam2 || 'Partner 2';
+  const prompt = `Je bent een vriendelijke maar eerlijke Nederlandse financieel adviseur. Geef persoonlijk, concreet advies (max 200 woorden) op basis van deze situatie:
+
+Stel: ${naam1} (${data.leeftijd1}jr) en ${naam2} (${data.leeftijd2}jr)
+Gezamenlijk inkomen: ${fmt(data.totaal_ink)}/mnd
+Totale uitgaven: ${fmt(data.totaal_uit)}/mnd  
+Maandsaldo: ${fmt(data.saldo)}
+Spaarbuffer: ${data.buffer_mnd.toFixed(1)} maanden
+Pensioen gap: ${data.pensioen_gap > 0 ? fmt(data.pensioen_gap)+'/mnd tekort' : 'geen tekort'}
+Welzijn score: ${data.score}/100
+
+Geef 3-4 concrete, persoonlijke aanbevelingen. Spreek hen direct aan (jullie/u). Wees positief maar eerlijk. Geen opsomming — schrijf in vloeiende tekst.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const d = await resp.json();
+    const txt = d.content?.[0]?.text || '';
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('aiText').style.display = 'block';
+    document.getElementById('aiText').textContent = txt;
+    document.querySelector('#aiAdviceBox .ai-title').textContent = `Persoonlijk advies voor ${naam1} & ${naam2}`;
+  } catch(e) {
+    document.getElementById('aiLoading').innerHTML = '<span style="color:rgba(255,255,255,0.5);font-size:13px">AI advies tijdelijk niet beschikbaar. Bekijk de acties hieronder.</span>';
+  }
+}
+
+function restartTool() {
+  currentStep = 0;
+  selectedScenario = null;
+  renderStep();
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+renderStep();
+</script>
+</body>
+</html>

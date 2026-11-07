@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Factuurtool verhuur</title>
+<style>
+  :root{
+    --ink:#1c2733; --muted:#5c6b7a; --line:#d8dee5; --bg:#eef1f4; --panel:#ffffff;
+    --accent:#1f4e79; --accent-soft:#e7eef6; --ok:#1e7a46; --warn:#9a6a00; --danger:#a33;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{background:var(--accent);color:#fff;padding:14px 22px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{margin:0;font-size:18px;font-weight:600;letter-spacing:.3px}
+  header .sub{opacity:.8;font-size:12.5px}
+  nav{display:flex;gap:2px;background:#16395a;padding:0 22px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  nav button{white-space:nowrap;flex-shrink:0}
+  nav button{background:none;border:none;color:#cfdcea;padding:10px 16px;font-size:13.5px;cursor:pointer;border-bottom:3px solid transparent}
+  nav button.active{color:#fff;border-bottom-color:#fff;font-weight:600}
+  main{max-width:1100px;margin:0 auto;padding:20px 22px 60px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-bottom:18px;overflow-x:auto}
+  .panel h2{margin:0 0 12px;font-size:15.5px;color:var(--accent)}
+  .panel h3{margin:18px 0 4px;font-size:13.5px;color:var(--accent)}
+  .panel p{margin:4px 0 0;line-height:1.55}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  .fld{display:flex;flex-direction:column;gap:4px}
+  .fld label{font-size:12px;color:var(--muted);font-weight:600}
+  input,select{padding:7px 9px;border:1px solid var(--line);border-radius:5px;font-size:13.5px;font-family:inherit;background:#fff;color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  input.num{text-align:right;width:110px}
+  button.btn{background:var(--accent);color:#fff;border:none;border-radius:5px;padding:8px 16px;font-size:13.5px;cursor:pointer;font-weight:600}
+  button.btn.sec{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  button.btn.small{padding:5px 10px;font-size:12.5px}
+  button.btn.danger{background:#fff;color:var(--danger);border:1px solid var(--danger)}
+  button.btn:disabled{opacity:.45;cursor:not-allowed}
+  table{border-collapse:collapse;width:100%;margin-top:8px}
+  th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:middle}
+  th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  td.r,th.r{text-align:right}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .notice{background:#fff8e6;border:1px solid #e8d79a;border-radius:6px;padding:10px 12px;font-size:12.5px;color:#6b5400;margin-bottom:16px}
+  .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:1px 7px;font-size:11.5px;font-weight:600}
+  .newval{color:var(--ok);font-weight:600}
+  .totalbar{margin-top:10px;font-weight:600}
+  .flash{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 18px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+  .flash.show{opacity:1}
+  .prevwrap{border:1px solid var(--line);background:#f7f8fa;padding:18px;overflow:auto;max-height:640px;border-radius:6px}
+  td.acts{white-space:nowrap}
+  @media(max-width:640px){
+    input,select,textarea{font-size:16px}
+    input.num{width:100px}
+    main{padding:14px 10px 50px}
+    header{padding:12px 14px} nav{padding:0 10px}
+    nav button{padding:10px 11px;font-size:13px}
+    .panel{padding:14px 12px}
+    th,td{padding:6px 5px}
+    td.acts{white-space:normal}
+    td.acts .btn{margin:2px 0}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Factuurtool verhuur</h1>
+  <span class="sub">Huurfacturen, indexering, gebruikersbelasting en borg — voor verhuurders</span>
+</header>
+<nav>
+  <button class="active" data-tab="facturen" onclick="showTab('facturen',this)">Facturen maken</button>
+  <button data-tab="overzicht" onclick="showTab('overzicht',this)">Overzicht</button>
+  <button data-tab="borg" onclick="showTab('borg',this)">Borg</button>
+  <button data-tab="emails" onclick="showTab('emails',this)">E-mails</button>
+  <button data-tab="huurders" onclick="showTab('huurders',this)">Huurders</button>
+  <button data-tab="indexeren" onclick="showTab('indexeren',this)">Indexeren</button>
+  <button data-tab="instellingen" onclick="showTab('instellingen',this)">Instellingen & gegevens</button>
+  <button data-tab="handleiding" onclick="showTab('handleiding',this)">Handleiding</button>
+</nav>
+<main>
+
+<div class="notice">
+  Nieuw hier? Ga eerst naar <b>Instellingen & gegevens</b> om je afzendergegevens en pand(en) in te voeren, en daarna naar <b>Huurders</b>. Deze tool bewaart wijzigingen alleen in het geheugen van dit venster. Sla na aanpassingen (huurders, indexering) je gegevens op via
+  <b>Instellingen & gegevens → Gegevens exporteren</b> en laad dat bestand de volgende keer weer in.
+</div>
+
+<!-- ============ TAB FACTUREN ============ -->
+<section id="tab-facturen">
+  <div class="panel">
+    <h2>1. Wat wil je factureren?</h2>
+    <div class="row">
+      <div class="fld"><label>Soort factuur</label>
+        <select id="fType" onchange="typeChanged()">
+          <option value="huur">Jaarhuur (1 factuur voor 12 maanden)</option>
+          <option value="maand">Maandhuur (1 maand)</option>
+          <option value="gb">Gebruikersbelasting (1 regel)</option>
+        </select>
+      </div>
+      <div class="fld"><label>Pand</label><select id="fPand" onchange="renderTenantPick()"></select></div>
+      <div class="fld" id="fMaandWrap" style="display:none"><label>Maand</label><select id="fMaand" onchange="maandChanged()"></select></div>
+      <div class="fld"><label id="lblJaar">Huurjaar</label><input type="number" id="fJaar" style="width:90px" onchange="jaarChanged()"></div>
+      <div class="fld"><label>Factuurdatum</label><input type="date" id="fDatum"></div>
+      <div class="fld"><label>Eerste factuurnummer</label><input type="number" id="fNum" style="width:80px" value="1" min="1"></div>
+    </div>
+    <div class="hint" id="typeHint"></div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Huurders selecteren</h2>
+    <table id="tenantPick"></table>
+    <div class="row" style="margin-top:12px">
+      <button class="btn sec" onclick="toggleAll(true)">Alles aanvinken</button>
+      <button class="btn sec" onclick="toggleAll(false)">Alles uitvinken</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>3. Facturen genereren</h2>
+    <div class="row">
+      <button class="btn" onclick="buildPreview()">Voorbeeld tonen</button>
+      <button class="btn" onclick="printInvoices()">Afdrukken / opslaan als PDF</button>
+    </div>
+    <div class="hint">Afdrukken opent een nieuw venster met alle geselecteerde nota's, elk op een eigen A4-pagina. Kies daar “Opslaan als PDF” om per huurder (of gebundeld) een PDF te maken.</div>
+    <div id="previewArea" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- ============ TAB OVERZICHT ============ -->
+<section id="tab-overzicht" style="display:none">
+  <div class="panel">
+    <h2>Overzicht alle huurders</h2>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn" onclick="printOverzicht()">Overzicht afdrukken</button>
+      <button class="btn sec" onclick="printAlles()">Alle gegevens per huurder afdrukken</button>
+    </div>
+    <table id="overviewTable"></table>
+    <div class="hint">Alleen actieve huurders tellen mee in de (sub)totalen. Inactieve huurders staan grijs weergegeven.</div>
+  </div>
+</section>
+
+<!-- ============ TAB BORG ============ -->
+<section id="tab-borg" style="display:none">
+  <div class="panel">
+    <h2>Ontvangen borg per huurder</h2>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn" onclick="printBorg()">Borgoverzicht afdrukken</button>
+    </div>
+    <table id="borgTable"></table>
+    <div class="hint">Vul per huurder het ontvangen borgbedrag in, met eventueel de ontvangstdatum en een opmerking (bijv. rekening waarop de borg staat, of afspraken over rente). Wijzigingen tellen direct mee in de (sub)totalen. Ook borg van inactieve huurders telt mee zolang die niet is terugbetaald — zet het bedrag op 0 na terugbetaling. Vergeet niet daarna je gegevens te exporteren via Instellingen & gegevens.</div>
+  </div>
+</section>
+
+<!-- ============ TAB E-MAILS ============ -->
+<section id="tab-emails" style="display:none">
+  <div class="panel">
+    <h2>E-mails per huurder</h2>
+    <div class="row">
+      <div class="fld"><label>Soort mail</label>
+        <select id="mType" onchange="mTypeChanged()">
+          <option value="huur">Mail 1 — Factuur huur</option>
+          <option value="gb">Mail 2 — Gebruikersbelasting</option>
+        </select>
+      </div>
+      <div class="fld"><label>Pand</label><select id="mPand" onchange="renderMailTable()"></select></div>
+      <div class="fld"><label id="mLblJaar">Huurjaar</label><input type="number" id="mJaar" style="width:90px" onchange="mJaarChanged()"></div>
+      <div class="fld"><label>Factuurdatum</label><input type="date" id="mDatum"></div>
+      <div class="fld"><label>Factuurnummer</label><input type="number" id="mNum" style="width:80px" value="1" min="1"></div>
+    </div>
+    <table id="mailTable"></table>
+    <div class="hint">
+      <b>Gmail + PDF</b> opent een nieuw Gmail-opstelvenster met adres, onderwerp en mailtekst al ingevuld, en downloadt tegelijk de factuur-PDF —
+      sleep de gedownloade PDF in het Gmail-venster (of klik op het paperclip-icoon) en verzend. Gmail kan een bijlage niet automatisch toevoegen vanuit een lokaal bestand; dit is de snelste route.
+      <b>E-mail + PDF (.eml)</b> is voor desktop-mailprogramma's (Outlook, Apple Mail, Thunderbird): dubbelklik en het bericht staat klaar mét bijlage.
+      Bij gebruikersbelasting worden alleen huurders met een GB-bedrag getoond. Teksten en onderwerpen pas je aan via Instellingen & gegevens.
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB HUURDERS ============ -->
+<section id="tab-huurders" style="display:none">
+  <div class="panel">
+    <h2>Huurders per pand</h2>
+    <div class="row" style="margin-bottom:6px">
+      <div class="fld"><label>Filter op pand</label><select id="hPand" onchange="renderTenantTable()"></select></div>
+      <button class="btn" onclick="addTenant()">+ Nieuwe huurder</button>
+      <button class="btn sec" onclick="addParking()">+ Nieuwe parkeerplaats</button>
+    </div>
+    <table id="tenantTable"></table>
+    <div class="hint">Maandhuur en gebruikersbelasting kun je hier direct aanpassen (Nederlandse notatie, bijv. 1.479,69). Zet een huurder op “inactief” als het contract is beëindigd — die verschijnt dan niet meer bij het factureren, maar de gegevens blijven bewaard.</div>
+  </div>
+</section>
+
+<!-- ============ TAB INDEXEREN ============ -->
+<section id="tab-indexeren-real" style="display:none">
+  <div class="panel">
+    <h2>Jaarlijkse huurindexering</h2>
+    <div class="row">
+      <div class="fld"><label>Pand</label><select id="iPand" onchange="renderIndexPreview()"></select></div>
+      <div class="fld"><label>Wat indexeren?</label>
+        <select id="iTarget" onchange="renderIndexPreview()">
+          <option value="huur">Maandhuur</option>
+          <option value="gb">Gebruikersbelasting</option>
+          <option value="beide">Beide</option>
+        </select>
+      </div>
+      <div class="fld"><label>Indexeringspercentage</label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="text" id="iPct" class="num" style="width:80px" value="3,0" oninput="renderIndexPreview()"> <span>%</span>
+        </div>
+      </div>
+      <div class="fld"><label>Afronding</label>
+        <select id="iRound" onchange="renderIndexPreview()">
+          <option value="cent">Op de cent (2 decimalen)</option>
+          <option value="euro">Op hele euro's</option>
+        </select>
+      </div>
+    </div>
+    <table id="indexTable"></table>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="applyIndex()">Indexering toepassen op geselecteerde huurders</button>
+    </div>
+    <div class="hint">
+      Vink aan welke huurders meegaan in deze indexering (standaard: alle actieve huurders van het gekozen pand).
+      Voor commercieel vastgoed wordt doorgaans de CPI (alle huishoudens) van het CBS gebruikt conform de ROZ-huurovereenkomst; controleer het percentage en de indexeringsmaand in het huurcontract per huurder.
+      Na toepassen worden de nieuwe maandbedragen direct gebruikt bij het maken van de jaarfacturen. Vergeet niet daarna je gegevens te exporteren.
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB INSTELLINGEN ============ -->
+<section id="tab-instellingen" style="display:none">
+  <div class="panel">
+    <h2>Panden</h2>
+    <div class="row" style="margin-bottom:6px"><button class="btn" onclick="addPand()">+ Pand toevoegen</button></div>
+    <table id="pandenTable"></table>
+    <div class="hint">De korte naam wordt gebruikt in het e-mailonderwerp, bijv. “Factuur voor de huur van de Dorpsstraat”. Een pand met huurders kan niet worden verwijderd; verplaats of verwijder eerst de huurders.</div>
+  </div>
+  <div class="panel">
+    <h2>Verhuurder / afzender (kantoorblok op de nota)</h2>
+    <div class="row">
+      <div class="fld"><label>Naam</label><input id="sNaam" placeholder="Uw naam of bedrijfsnaam"></div>
+      <div class="fld"><label>Adres</label><input id="sAdres" placeholder="Straat en huisnummer"></div>
+      <div class="fld"><label>Postcode + plaats</label><input id="sPcPlaats" placeholder="1234 AB Plaats"></div>
+      <div class="fld"><label>Telefoon</label><input id="sTel" placeholder="06 - 12 345 678"></div>
+      <div class="fld"><label>IBAN</label><input id="sIban" style="width:220px" placeholder="NL00BANK0123456789"></div>
+      <div class="fld"><label>Gemeente (voor gebruikersbelasting)</label><input id="sGemeente"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="fld" style="flex:1;min-width:320px"><label>Betaaltekst onderaan de nota</label><input id="sFooter" style="width:100%"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="saveSettings()">Instellingen opslaan (in dit venster)</button></div>
+  </div>
+  <div class="panel">
+    <h2>E-mailteksten</h2>
+    <div class="row">
+      <div class="fld" style="flex:1;min-width:300px"><label>Onderwerp mail 1 (huur) — {OBJECT} wordt per huurder de korte naam van het pand (bijv. Dorpsstraat, parkeerplaats Dorpsstraat)</label><input id="sMailHuurOnd" style="width:100%"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="fld" style="flex:1;min-width:300px"><label>Tekst mail 1 (huur) — {AANHEF} wordt per huurder ingevuld</label>
+        <textarea id="sMailHuur" rows="10" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px;font-family:inherit;font-size:13.5px"></textarea></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <div class="fld" style="flex:1;min-width:300px"><label>Onderwerp mail 2 (gebruikersbelasting)</label><input id="sMailGbOnd" style="width:100%"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="fld" style="flex:1;min-width:300px"><label>Tekst mail 2 (gebruikersbelasting)</label>
+        <textarea id="sMailGb" rows="10" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:5px;font-family:inherit;font-size:13.5px"></textarea></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" onclick="saveSettings()">Instellingen opslaan (in dit venster)</button></div>
+  </div>
+  <div class="panel">
+    <h2>Gegevens bewaren en terugzetten</h2>
+    <div class="row">
+      <button class="btn" onclick="exportData()">Gegevens exporteren (JSON)</button>
+      <button class="btn sec" onclick="document.getElementById('importFile').click()">Gegevens importeren</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+    <div class="hint">Het exportbestand bevat de verhuurdergegevens en alle huurders met actuele huurbedragen. Bewaar dit bestand lokaal; het is je administratiebron voor volgend jaar.</div>
+  </div>
+</section>
+
+
+<!-- ============ TAB HANDLEIDING ============ -->
+<section id="tab-handleiding" style="display:none">
+  <div class="panel" style="max-width:820px">
+    <h2>Handleiding</h2>
+    <h3>1. Eerste gebruik</h3>
+    <p>Ga naar <b>Instellingen & gegevens</b> en vul je afzendergegevens in (naam, adres, telefoon, IBAN en eventueel de gemeente voor de gebruikersbelasting) — deze komen in het kantoorblok op elke nota. Voeg daarna je <b>pand(en)</b> toe. De “korte naam” van een pand wordt gebruikt in het e-mailonderwerp, bijvoorbeeld “Factuur voor de huur van de Dorpsstraat”. Voer vervolgens op het tabblad <b>Huurders</b> je huurders in met maandhuur, relatienummer en e-mailadres. Klaar? Klik dan meteen op <b>Gegevens exporteren</b> (zie punt 8).</p>
+    <h3>2. Huurders beheren</h3>
+    <p>Op het tabblad <b>Huurders</b> beheer je per huurder de naam, het adres, e-mailadres, de aanhef voor e-mails (bijv. “Beste Jan,”), het relatienummer, de maandhuur en de jaarlijkse gebruikersbelasting. Met <b>+ Nieuwe parkeerplaats</b> voeg je een parkeerplaatshuurder toe, met eigen velden voor plaatsnummer, auto en kenteken. Zet een vertrokken huurder op <b>Inactief</b> in plaats van verwijderen: de gegevens (en eventuele openstaande borg) blijven dan bewaard, maar de huurder verschijnt niet meer bij het factureren.</p>
+    <h3>3. Facturen maken</h3>
+    <p>Op het tabblad <b>Facturen maken</b> kies je het soort factuur: <b>Jaarhuur</b> (één nota met 12 maandregels; deze verstuur je doorgaans begin december voor het komende jaar), <b>Maandhuur</b> (één nota voor één maand naar keuze) of <b>Gebruikersbelasting</b> (één regel per jaar, meestal in augustus). Kies het pand, controleer jaar, factuurdatum en het eerste factuurnummer, vink de huurders aan en klik op <b>Voorbeeld tonen</b> om te controleren. Met <b>Afdrukken / opslaan als PDF</b> opent een venster met alle nota's, elk op een eigen A4 — kies daar je printer of “Opslaan als PDF”.</p>
+    <h3>4. Facturen e-mailen</h3>
+    <p>Het tabblad <b>E-mails</b> maakt het versturen makkelijk. <b>Gmail + PDF</b> opent een Gmail-venster met adres, onderwerp en tekst ingevuld en downloadt tegelijk de factuur-PDF: sleep die in het venster en verzend. <b>E-mail + PDF (.eml)</b> is voor desktop-mailprogramma's (Outlook, Apple Mail, Thunderbird): dubbelklik het gedownloade bestand en het bericht staat klaar mét bijlage. Verder kun je per huurder de PDF los downloaden, of het adres en de mailtekst kopiëren. Het onderwerp en de teksten (met aanhef per huurder) pas je aan via Instellingen & gegevens.</p>
+    <h3>5. Jaarlijks indexeren</h3>
+    <p>Op het tabblad <b>Indexeren</b> voer je het indexeringspercentage in (voor bedrijfsruimte doorgaans de CPI van het CBS — controleer je huurcontract), kies je of je de maandhuur, de gebruikersbelasting of beide indexeert, en zie je per huurder het oude en nieuwe bedrag naast elkaar. Vink aan wie meegaat, kies de afronding en klik op <b>Toepassen</b>. De nieuwe bedragen worden direct gebruikt bij het factureren — exporteer daarna je gegevens.</p>
+    <h3>6. Borg bijhouden</h3>
+    <p>Op het tabblad <b>Borg</b> registreer je per huurder de ontvangen borg, de ontvangstdatum en een opmerking. Borg telt mee in de totalen zolang die uitstaat, ook bij inactieve huurders — zet het bedrag op € 0,00 zodra je de borg hebt terugbetaald.</p>
+    <h3>7. Overzichten en afdrukken</h3>
+    <p>Het tabblad <b>Overzicht</b> toont alle huurders per pand met maandhuur, jaarhuur en gebruikersbelasting, inclusief subtotalen en eindtotaal. Van daaruit print je het overzicht of een volledig dossier met alle gegevens per huurder; het borgoverzicht print je vanaf het tabblad Borg. Alle prints openen in een nieuw venster waar je ook “Opslaan als PDF” kunt kiezen.</p>
+    <h3>8. Gegevens bewaren (belangrijk)</h3>
+    <p>De tool slaat niets automatisch op: alles staat alleen in het geheugen van dit browservenster en is weg zodra je het sluit of ververst. Klik daarom na elke wijziging op <b>Instellingen & gegevens → Gegevens exporteren</b>. Je krijgt dan een JSON-bestand met al je panden, huurders, bedragen en instellingen — bewaar dat op een vaste plek. De volgende keer laad je het weer in via <b>Gegevens importeren</b> en ga je verder waar je was. Dit bestand is ook je back-up: deel het nooit met anderen, want al je gegevens staan erin.</p>
+    <h3>9. Problemen oplossen</h3>
+    <p><b>Er opent geen venster bij afdrukken, Gmail of downloaden</b> — je browser blokkeert pop-ups; sta pop-ups toe voor deze pagina. <b>De bijlage zit niet automatisch in Gmail</b> — dat staat Gmail technisch niet toe; de PDF wordt daarom apart gedownload zodat je hem er in één beweging in sleept. <b>Een bedrag wordt niet herkend</b> — gebruik de Nederlandse notatie met een komma, bijv. 1.479,69. <b>Op mijn telefoon zie ik niet alle kolommen</b> — veeg zijwaarts binnen een tabel; ook de tabbladbalk kun je opzij vegen.</p>
+  </div>
+</section>
+
+</main>
+<div class="flash" id="flash"></div>
+
+<script>
+/* ================= DATA ================= */
+const MAANDEN=["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+
+let settings={
+  naam:"",
+  adres:"",
+  pcplaats:"",
+  tel:"",
+  iban:"",
+  gemeente:"",
+  footer:"Vriendelijk verzoeken wij u het notabedrag binnen 14 dagen onder vermelding van het relatienummer over te maken op rekeningnummer {IBAN}.",
+  mailHuurOnderwerp:"Factuur voor de huur van de {OBJECT}",
+  mailHuur:"{AANHEF}\n\nBijgaand ontvang je de factuur van de huur.\n\nMet vriendelijke groet,\n\n{AFZENDER}",
+  mailGbOnderwerp:"Factuur gebruikersbelasting",
+  mailGb:"{AANHEF}\n\nBijgaand ontvang je de factuur voor de gebruikersbelasting.\n\nMet vriendelijke groet,\n\n{AFZENDER}"
+};
+
+let panden=[];
+let nextPandId=1;
+
+/* Voorgeladen op basis van de nota's 2026 en gebruikersbelasting 2023 */
+let tenants=[];
+let nextId=1;
+
+/* Parkeerplaatsen die bij bestaande huurcontracten horen (geen aparte factuur) */
+
+/* ================= HELPERS ================= */
+const eur=v=>"€ "+new Intl.NumberFormat("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+function parseNL(s){ if(typeof s==="number")return s; s=(s||"").trim().replace(/\./g,"").replace(",","."); const v=parseFloat(s); return isNaN(v)?0:v; }
+function fmtNL(v){ return new Intl.NumberFormat("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2}).format(v); }
+function fmtDate(iso){ const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("nl-NL",{day:"2-digit",month:"2-digit",year:"numeric"}); }
+function esc(s){ return String(s).replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">"); }
+function flash(msg){ const f=document.getElementById("flash"); f.textContent=msg; f.classList.add("show"); setTimeout(()=>f.classList.remove("show"),2500); }
+function pandNaam(id){ const p=panden.find(p=>p.id===id); return p?p.naam:""; }
+function isPP(t){ return t.cat==="pp"; }
+function dispName(t){ return isPP(t) ? `${t.naam} — parkeerplaats ${t.pp}` : t.naam; }
+
+/* ================= TABS ================= */
+function showTab(id,btn){
+  ["facturen","overzicht","borg","emails","huurders","indexeren-real","instellingen","handleiding"].forEach(t=>{
+    const el=document.getElementById("tab-"+t); if(el) el.style.display="none";
+  });
+  const map={facturen:"tab-facturen",overzicht:"tab-overzicht",borg:"tab-borg",emails:"tab-emails",huurders:"tab-huurders",indexeren:"tab-indexeren-real",instellingen:"tab-instellingen",handleiding:"tab-handleiding"};
+  document.getElementById(map[id]).style.display="";
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  if(id==="overzicht")renderOverview();
+  if(id==="borg")renderBorg();
+  if(id==="emails")renderMailTable();
+  if(id==="huurders")renderTenantTable();
+  if(id==="indexeren")renderIndexPreview();
+}
+
+/* ================= BORG TAB ================= */
+function renderBorg(){
+  let html=`<tr><th>Huurder</th><th class="r">Borg ontvangen</th><th>Ontvangen op</th><th>Opmerking</th></tr>`;
+  let tot=0,totN=0;
+  panden.forEach(p=>{
+    const list=tenants.filter(t=>t.pand===p.id);
+    if(!list.length)return;
+    html+=`<tr><td colspan="4" style="background:#f2f5f8;font-weight:600;color:var(--accent);border-bottom:2px solid var(--line)">${esc(p.naam)}, ${esc(p.pcplaats)}</td></tr>`;
+    let sub=0,subN=0;
+    list.forEach(t=>{
+      const borg=t.borg||0;
+      if(borg>0){ sub+=borg; subN++; }
+      html+=`<tr style="${t.actief?"":"opacity:.45"}">
+        <td>${esc(dispName(t))}${t.actief?"":" <span class='tag'>inactief</span>"}</td>
+        <td class="r"><input class="num" value="${fmtNL(borg)}" onchange="borgEditNum(${t.id},this)"></td>
+        <td><input type="date" value="${esc(t.borgDatum||"")}" onchange="borgEdit(${t.id},'borgDatum',this.value)"></td>
+        <td><input value="${esc(t.borgNotitie||"")}" style="width:240px" placeholder="Opmerking" onchange="borgEdit(${t.id},'borgNotitie',this.value)"></td>
+      </tr>`;
+    });
+    html+=`<tr style="font-weight:600"><td>Subtotaal ${esc(p.naam)} (${subN} met borg)</td><td class="r">${eur(sub)}</td><td></td><td></td></tr>`;
+    tot+=sub; totN+=subN;
+  });
+  html+=`<tr style="font-weight:700;background:var(--accent-soft);font-size:14.5px"><td>Totaal ontvangen borg (${totN} huurders)</td><td class="r">${eur(tot)}</td><td></td><td></td></tr>`;
+  document.getElementById("borgTable").innerHTML=html;
+}
+function borgEdit(id,f,v){ tenants.find(t=>t.id===id)[f]=v; }
+function borgEditNum(id,inp){
+  const t=tenants.find(t=>t.id===id);
+  t.borg=parseNL(inp.value);
+  renderBorg();
+}
+
+/* ================= PRINTOVERZICHTEN ================= */
+const PRINT_CSS=`
+  body{font-family:"Segoe UI",Arial,sans-serif;color:#111;margin:14mm;font-size:11pt}
+  h1{font-size:15pt;margin:0 0 2mm}
+  .sub{color:#555;font-size:9.5pt;margin-bottom:8mm}
+  table{border-collapse:collapse;width:100%}
+  th{text-align:left;font-size:8.5pt;letter-spacing:.5px;text-transform:uppercase;border-bottom:1.5px solid #111;padding:4px 6px}
+  td{padding:4px 6px;border-bottom:.5px solid #bbb;vertical-align:top}
+  td.r,th.r{text-align:right;white-space:nowrap}
+  tr.groep td{background:#eee;font-weight:600;border-bottom:1.5px solid #111;padding-top:8px}
+  tr.sub td{font-weight:600}
+  tr.tot td{font-weight:700;border-top:2px solid #111;border-bottom:none;font-size:11.5pt}
+  .kaart{border:1px solid #999;border-radius:4px;padding:5mm 6mm;margin-bottom:5mm;page-break-inside:avoid}
+  .kaart h3{margin:0 0 3mm;font-size:12pt;border-bottom:1px solid #999;padding-bottom:1.5mm}
+  .kaart table{width:100%} .kaart td{border:none;padding:1.5px 6px 1.5px 0}
+  .kaart td.lbl{color:#555;width:38mm;font-size:9.5pt}
+  h2.pand{font-size:12.5pt;margin:8mm 0 3mm;page-break-after:avoid}
+  @media print{ .kaart{page-break-inside:avoid} }`;
+function openPrint(titel,body){
+  const w=window.open("","_blank");
+  if(!w){ flash("Pop-up geblokkeerd — sta pop-ups toe voor deze pagina."); return; }
+  w.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>${esc(titel)}</title><style>${PRINT_CSS}</style></head><body>
+    <h1>${esc(titel)}</h1><div class="sub">Afgedrukt op ${new Date().toLocaleDateString("nl-NL",{day:"2-digit",month:"2-digit",year:"numeric"})} — ${esc(settings.naam)}</div>
+    ${body}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+function printOverzicht(){
+  let body=`<table><tr><th>Huurder</th><th>Relatienr.</th><th class="r">Maandhuur</th><th class="r">Jaarhuur</th><th class="r">Gebr.belasting</th></tr>`;
+  let totH=0,totG=0,totN=0;
+  panden.forEach(p=>{
+    const list=tenants.filter(t=>t.pand===p.id);
+    if(!list.length)return;
+    body+=`<tr class="groep"><td colspan="5">${esc(p.naam)}, ${esc(p.pcplaats)}</td></tr>`;
+    let subH=0,subG=0,subN=0;
+    list.forEach(t=>{
+      if(t.actief){ subH+=t.huur; subG+=t.gb; subN++; }
+      body+=`<tr><td>${esc(dispName(t))}${t.actief?"":" (inactief)"}</td><td>${esc(t.rel)}</td>
+        <td class="r">${eur(t.huur)}</td><td class="r">${eur(t.huur*12)}</td><td class="r">${t.gb>0?eur(t.gb):"—"}</td></tr>`;
+    });
+    body+=`<tr class="sub"><td>Subtotaal ${esc(p.naam)} (${subN} actief)</td><td></td><td class="r">${eur(subH)}</td><td class="r">${eur(subH*12)}</td><td class="r">${eur(subG)}</td></tr>`;
+    totH+=subH; totG+=subG; totN+=subN;
+  });
+  body+=`<tr class="tot"><td>Totaal alle panden (${totN} actieve huurders)</td><td></td><td class="r">${eur(totH)}</td><td class="r">${eur(totH*12)}</td><td class="r">${eur(totG)}</td></tr></table>`;
+  openPrint("Overzicht huurders en huren",body);
+}
+function printBorg(){
+  let body=`<table><tr><th>Huurder</th><th class="r">Borg ontvangen</th><th>Ontvangen op</th><th>Opmerking</th></tr>`;
+  let tot=0,totN=0;
+  panden.forEach(p=>{
+    const list=tenants.filter(t=>t.pand===p.id);
+    if(!list.length)return;
+    body+=`<tr class="groep"><td colspan="4">${esc(p.naam)}, ${esc(p.pcplaats)}</td></tr>`;
+    let sub=0,subN=0;
+    list.forEach(t=>{
+      const borg=t.borg||0;
+      if(borg>0){ sub+=borg; subN++; }
+      body+=`<tr><td>${esc(dispName(t))}${t.actief?"":" (inactief)"}</td>
+        <td class="r">${borg>0?eur(borg):"—"}</td>
+        <td>${t.borgDatum?fmtDate(t.borgDatum):""}</td>
+        <td>${esc(t.borgNotitie||"")}</td></tr>`;
+    });
+    body+=`<tr class="sub"><td>Subtotaal ${esc(p.naam)} (${subN} met borg)</td><td class="r">${eur(sub)}</td><td></td><td></td></tr>`;
+    tot+=sub; totN+=subN;
+  });
+  body+=`<tr class="tot"><td>Totaal ontvangen borg (${totN} huurders)</td><td class="r">${eur(tot)}</td><td></td><td></td></tr></table>`;
+  openPrint("Overzicht ontvangen borg",body);
+}
+function printAlles(){
+  let body="";
+  panden.forEach(p=>{
+    const list=tenants.filter(t=>t.pand===p.id);
+    if(!list.length)return;
+    body+=`<h2 class="pand">${esc(p.naam)}, ${esc(p.pcplaats)}</h2>`;
+    list.forEach(t=>{
+      const r=(l,v)=>v?`<tr><td class="lbl">${l}</td><td>${esc(v)}</td></tr>`:"";
+      body+=`<div class="kaart"><h3>${esc(dispName(t))}${t.actief?"":" — inactief"}</h3><table>
+        ${r("T.a.v. / referentie",t.tav)}
+        ${r("Adres",[t.adres,t.pcplaats].filter(Boolean).join(", "))}
+        ${r("E-mail",t.email)}
+        ${r("Aanhef e-mails",t.aanhef)}
+        ${r("Relatienummer",t.rel)}
+        ${isPP(t)?r("Parkeerplaats",t.pp):""}
+        ${isPP(t)?r("Auto",t.auto):""}
+        ${isPP(t)?r("Kenteken",t.kenteken):""}
+        <tr><td class="lbl">Maandhuur</td><td>${eur(t.huur)}  (jaarhuur ${eur(t.huur*12)})</td></tr>
+        ${t.gb>0?`<tr><td class="lbl">Gebruikersbelasting</td><td>${eur(t.gb)} per jaar</td></tr>`:""}
+        ${(t.borg||0)>0?`<tr><td class="lbl">Borg ontvangen</td><td>${eur(t.borg)}${t.borgDatum?" op "+fmtDate(t.borgDatum):""}${t.borgNotitie?" — "+esc(t.borgNotitie):""}</td></tr>`:""}
+      </table></div>`;
+    });
+  });
+  openPrint("Alle gegevens per huurder",body);
+}
+
+/* ================= E-MAILS TAB ================= */
+function huurObject(t){
+  const p=panden.find(p=>p.id===t.pand);
+  const kort=p?p.kort:"";
+  return isPP(t) ? "parkeerplaats "+kort : kort;
+}
+function afzenderBlok(){
+  const r1=[settings.naam,settings.tel].filter(Boolean).join("\n");
+  const r2=[settings.adres,settings.pcplaats].filter(Boolean).join("\n");
+  return [r1,r2].filter(Boolean).join("\n\n");
+}
+function mailBody(t,type){
+  const tpl = type==="huur" ? settings.mailHuur : settings.mailGb;
+  return tpl.replace("{AANHEF}", t.aanhef || "Beste,").replace(/\{OBJECT\}/g, huurObject(t)).replace(/\{AFZENDER\}/g, afzenderBlok());
+}
+function mailSubject(type,t){
+  const tpl = type==="huur" ? settings.mailHuurOnderwerp : settings.mailGbOnderwerp;
+  return tpl.replace(/\{OBJECT\}/g, huurObject(t));
+}
+function mTypeChanged(){
+  const t=document.getElementById("mType").value;
+  const jaar=parseInt(document.getElementById("mJaar").value);
+  document.getElementById("mLblJaar").textContent = t==="huur" ? "Huurjaar" : "Belastingjaar";
+  document.getElementById("mDatum").value = t==="huur" ? `${jaar-1}-12-01` : `${jaar}-08-01`;
+  renderMailTable();
+}
+function mJaarChanged(){ mTypeChanged(); }
+function renderMailTable(){
+  const type=document.getElementById("mType").value;
+  const pid=document.getElementById("mPand").value;
+  const list=tenants.filter(t=>t.actief && (pid==="alle"||t.pand===pid) && (type==="huur"||t.gb>0));
+  let html=`<tr><th>Huurder</th><th>E-mailadres</th><th></th></tr>`;
+  list.forEach(t=>{
+    html+=`<tr>
+      <td>${esc(dispName(t))}<br><span style="color:var(--muted);font-size:12px">${esc(t.aanhef||"Beste,")}</span></td>
+      <td>${t.email?esc(t.email):"<span style='color:var(--warn)'>geen e-mailadres</span>"}</td>
+      <td class="acts">
+        <button class="btn small" ${t.email?"":"disabled"} onclick="openGmail(${t.id},'${type}')">Gmail + PDF</button>
+        <button class="btn small sec" onclick="downloadEml(${t.id},'${type}')">E-mail + PDF (.eml)</button>
+        <button class="btn small sec" onclick="downloadPdf(${t.id},'${type}')">PDF</button>
+        <button class="btn small sec" ${t.email?"":"disabled"} onclick="copyText('${esc(t.email)}','E-mailadres gekopieerd.')">Kopieer adres</button>
+        <button class="btn small sec" onclick="copyMail(${t.id},'${type}')">Kopieer mail</button>
+      </td>
+    </tr>`;
+  });
+  if(!list.length) html+=`<tr><td colspan="3" style="color:var(--muted)">Geen huurders in deze selectie.</td></tr>`;
+  document.getElementById("mailTable").innerHTML=html;
+}
+function copyMail(id,type){
+  const t=tenants.find(x=>x.id===id);
+  copyText(mailBody(t,type),"Mailtekst gekopieerd.");
+}
+function openGmail(id,type){
+  const t=tenants.find(x=>x.id===id); const o=mailOpts(); o.type=type;
+  if(!o.datum){ flash("Vul een factuurdatum in."); return; }
+  const url="https://mail.google.com/mail/?view=cm&fs=1"
+    +"&to="+encodeURIComponent(t.email)
+    +"&su="+encodeURIComponent(mailSubject(type,t))
+    +"&body="+encodeURIComponent(mailBody(t,type));
+  const w=window.open(url,"_blank");
+  if(!w){ flash("Pop-up geblokkeerd — sta pop-ups toe voor deze pagina."); return; }
+  downloadPdf(id,type);
+  flash("Gmail geopend en PDF gedownload — sleep de PDF in het Gmail-venster.");
+}
+function copyText(text,msg){
+  const done=()=>flash(msg);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>copyFallback(text,done));
+  }else copyFallback(text,done);
+}
+function copyFallback(text,done){
+  const ta=document.createElement("textarea");
+  ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); done(); }catch(e){ flash("Kopiëren niet gelukt — selecteer de tekst handmatig."); }
+  document.body.removeChild(ta);
+}
+
+/* ================= PDF-GENERATOR (zonder externe bibliotheken) ================= */
+function pdfStr(s){
+  let out="";
+  for(const ch of String(s)){
+    let code=ch.codePointAt(0);
+    if(code===0x20AC) code=0x80;                 /* euroteken in WinAnsi */
+    else if(code>255) code=63;                   /* niet-Latin-1 -> ? */
+    if(ch==="\\"||ch==="("||ch===")") out+="\\"+ch;
+    else if(code<32||code>126) out+="\\"+code.toString(8).padStart(3,"0");
+    else out+=ch;
+  }
+  return out;
+}
+const HELV_W={" ":278,"!":278,'"':355,"#":556,"$":556,"%":889,"&":667,"'":191,"(":333,")":333,"*":389,"+":584,",":278,"-":333,".":278,"/":278,
+"0":556,"1":556,"2":556,"3":556,"4":556,"5":556,"6":556,"7":556,"8":556,"9":556,":":278,";":278,"<":584,"=":584,">":584,"?":556,"@":1015,
+"A":667,"B":667,"C":722,"D":722,"E":667,"F":611,"G":778,"H":722,"I":278,"J":500,"K":667,"L":556,"M":833,"N":722,"O":778,"P":667,"Q":778,"R":722,"S":667,"T":611,"U":722,"V":667,"W":944,"X":667,"Y":667,"Z":611,
+"a":556,"b":556,"c":500,"d":556,"e":556,"f":278,"g":556,"h":556,"i":222,"j":222,"k":500,"l":222,"m":833,"n":556,"o":556,"p":556,"q":556,"r":333,"s":500,"t":278,"u":556,"v":500,"w":722,"x":500,"y":500,"z":500,"€":556};
+function textW(s,size){ let w=0; for(const c of String(s)) w+=(HELV_W[c]||556); return w*size/1000; }
+
+function buildInvoicePdf(t,opts){
+  const {type,jaar,datum,num}=opts;
+  const objectOms = isPP(t) ? `parkeerplaats ${t.pp} ${pandNaam(t.pand)}` : pandNaam(t.pand);
+  const maandNaam = MAANDEN[opts.maand||0];
+  const ref = type==="huur" ? `Huur ${objectOms}` : type==="maand" ? `Huur ${objectOms} ${maandNaam} ${jaar}` : `Gebruikersbelasting ${objectOms}`;
+  const titel = type==="gb" ? "Nota" : "Nota huur";
+  const RIGHT=538, LEFT=57;
+  const ops=[];
+  const T =(x,y,size,font,txt)=>ops.push(`BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td (${pdfStr(txt)}) Tj ET`);
+  const TR=(xr,y,size,font,txt)=>T(xr-textW(txt,size),y,size,font,txt);
+  const L =(x,y,w,h)=>ops.push(`${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${(h||0.8).toFixed(2)} re f`);
+  /* Kantoorblok rechtsboven */
+  let ky=790, kx=380;
+  T(kx,ky,8.5,"F1","KANTOOR"); ky-=14;
+  T(kx,ky,11,"F2",settings.naam); ky-=14;
+  T(kx,ky,11,"F1",settings.adres); ky-=14;
+  T(kx,ky,11,"F1",settings.pcplaats); ky-=20;
+  T(kx,ky,11,"F1","Telefoon  "+settings.tel); ky-=14;
+  T(kx,ky,11,"F1","IBAN  "+settings.iban);
+  /* Geadresseerde */
+  let ay=700;
+  T(LEFT,ay,11.5,"F2",t.naam); ay-=15;
+  if(t.tav){ T(LEFT,ay,11.5,"F1",t.tav); ay-=15; }
+  if(t.adres){ T(LEFT,ay,11.5,"F1",t.adres); ay-=15; }
+  if(t.pcplaats){ T(LEFT,ay,11.5,"F1",t.pcplaats); }
+  /* Titel + meta */
+  T(LEFT,608,16,"F2",titel);
+  let my=584;
+  [["Relatienummer",t.rel],["Factuurnummer",String(num)],["Factuurdatum",fmtDate(datum)],["Onze referentie",ref]].forEach(([l,v])=>{
+    T(LEFT,my,10.5,"F1",l); T(160,my,10.5,"F1",v||""); my-=15;
+  });
+  /* Tabel */
+  let y=505;
+  T(LEFT,y,9.5,"F2","OMSCHRIJVING"); TR(RIGHT,y,9.5,"F2","BEDRAG");
+  y-=5; L(LEFT,y,RIGHT-LEFT); y-=15;
+  if(type==="huur"){
+    MAANDEN.forEach(m=>{
+      T(LEFT,y,10.5,"F1","Huur "+objectOms);
+      T(300,y,10.5,"F1",m);
+      TR(RIGHT,y,10.5,"F1",eur(t.huur));
+      y-=15.5;
+    });
+  }else{
+    T(LEFT,y,10.5,"F1",`Gebruikersbelasting ${jaar}`);
+    TR(RIGHT,y,10.5,"F1",eur(t.gb)); y-=14;
+    if(settings.gemeente){ T(LEFT,y,10,"F1","Gemeente "+settings.gemeente); y-=14; }
+    y-=8;
+    L(LEFT,y+8,RIGHT-LEFT,0.8);
+    T(LEFT,y-6,11,"F2","Totaalbedrag"); TR(RIGHT,y-6,11,"F2",eur(t.gb));
+  }
+  /* Voetregel */
+  const footer=settings.footer.replace("{IBAN}",settings.iban);
+  L(LEFT,88,RIGHT-LEFT,0.6);
+  /* eenvoudige woordafbreking op paginabreedte */
+  const words=footer.split(" "); let line="",fy=74;
+  const flushLine=()=>{ if(line){ T(LEFT,fy,9.5,"F1",line); fy-=12; line=""; } };
+  words.forEach(w=>{
+    const probe=line?line+" "+w:w;
+    if(textW(probe,9.5)>RIGHT-LEFT){ flushLine(); line=w; } else line=probe;
+  });
+  flushLine();
+  /* PDF samenstellen */
+  const content=ops.join("\n");
+  const objs=[];
+  objs[1]="<< /Type /Catalog /Pages 2 0 R >>";
+  objs[2]="<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
+  objs[3]="<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>";
+  objs[4]=`<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
+  objs[5]="<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+  objs[6]="<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+  let pdf="%PDF-1.4\n"; const off=[0];
+  for(let i=1;i<=6;i++){ off[i]=pdf.length; pdf+=`${i} 0 obj\n${objs[i]}\nendobj\n`; }
+  const xref=pdf.length;
+  pdf+="xref\n0 7\n0000000000 65535 f \n";
+  for(let i=1;i<=6;i++) pdf+=String(off[i]).padStart(10,"0")+" 00000 n \n";
+  pdf+=`trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return pdf; /* puur ASCII, dus veilig voor btoa */
+}
+function mailOpts(){
+  return { type:document.getElementById("mType").value,
+           jaar:parseInt(document.getElementById("mJaar").value),
+           datum:document.getElementById("mDatum").value,
+           num:parseInt(document.getElementById("mNum").value)||1 };
+}
+function pdfFileName(t,o){
+  const wie=t.naam.replace(/[^A-Za-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
+  return (o.type==="huur"?`Nota_huur_${o.jaar}_`:`Nota_gebruikersbelasting_${o.jaar}_`)+wie+".pdf";
+}
+function downloadBlob(data,mime,name){
+  const blob=new Blob([data],{type:mime});
+  const url=URL.createObjectURL(blob);
+  let inFrame=false; try{ inFrame = window.self!==window.top; }catch(e){ inFrame=true; }
+  if(inFrame){
+    /* In een iframe (bijv. Google Sites) worden directe downloads soms geblokkeerd;
+       open het bestand dan in een nieuw tabblad zodat het daar kan worden opgeslagen. */
+    const w=window.open(url,"_blank");
+    if(!w) flash("Pop-up geblokkeerd — sta pop-ups toe om te kunnen downloaden.");
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    return;
+  }
+  const a=document.createElement("a");
+  a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function downloadPdf(id,type){
+  const t=tenants.find(x=>x.id===id); const o=mailOpts(); o.type=type;
+  if(!o.datum){ flash("Vul een factuurdatum in."); return; }
+  const pdf=buildInvoicePdf(t,o);
+  const bytes=new Uint8Array(pdf.length);
+  for(let i=0;i<pdf.length;i++) bytes[i]=pdf.charCodeAt(i)&0xFF;
+  downloadBlob(bytes,"application/pdf",pdfFileName(t,o));
+  flash("PDF gedownload.");
+}
+/* ---- .eml met PDF-bijlage ---- */
+function b64utf8(s){ return btoa(unescape(encodeURIComponent(s))); }
+function wrap76(s){ return s.replace(/(.{76})/g,"$1\r\n"); }
+function downloadEml(id,type){
+  const t=tenants.find(x=>x.id===id); const o=mailOpts(); o.type=type;
+  if(!o.datum){ flash("Vul een factuurdatum in."); return; }
+  const pdf=buildInvoicePdf(t,o);
+  const pdfB64=wrap76(btoa(pdf));
+  const body=mailBody(t,type);
+  const subject="=?UTF-8?B?"+b64utf8(mailSubject(type,t))+"?=";
+  const fname=pdfFileName(t,o);
+  const B="=_factuurtool_"+Date.now();
+  const eml=
+`To: ${t.email||""}\r
+Subject: ${subject}\r
+X-Unsent: 1\r
+MIME-Version: 1.0\r
+Content-Type: multipart/mixed; boundary="${B}"\r
+\r
+--${B}\r
+Content-Type: text/plain; charset=utf-8\r
+Content-Transfer-Encoding: base64\r
+\r
+${wrap76(b64utf8(body))}\r
+--${B}\r
+Content-Type: application/pdf; name="${fname}"\r
+Content-Disposition: attachment; filename="${fname}"\r
+Content-Transfer-Encoding: base64\r
+\r
+${pdfB64}\r
+--${B}--\r
+`;
+  downloadBlob(eml,"message/rfc822",fname.replace(/\.pdf$/,".eml"));
+  flash("E-mailbestand gedownload — dubbelklik om te openen en verzenden."+(t.email?"":" Let op: nog geen e-mailadres ingevuld."));
+}
+
+function renderOverview(){
+  let html=`<tr><th>Huurder</th><th>Relatienr.</th><th class="r">Maandhuur</th><th class="r">Jaarhuur</th><th class="r">Gebr.belasting</th></tr>`;
+  let totH=0,totG=0,totN=0;
+  panden.forEach(p=>{
+    const ruimtes=tenants.filter(t=>t.pand===p.id && !isPP(t));
+    const pp=tenants.filter(t=>t.pand===p.id && isPP(t));
+    if(!ruimtes.length && !pp.length)return;
+    html+=`<tr><td colspan="5" style="background:#f2f5f8;font-weight:600;color:var(--accent);border-bottom:2px solid var(--line)">${esc(p.naam)}, ${esc(p.pcplaats)}</td></tr>`;
+    let subH=0,subG=0,subN=0;
+    const row=t=>{
+      if(t.actief){ subH+=t.huur; subG+=t.gb; subN++; }
+      const extra = isPP(t) ? [t.auto,t.kenteken].filter(Boolean).join(", ") : "";
+      html+=`<tr style="${t.actief?"":"opacity:.45"}">
+        <td>${esc(dispName(t))}${extra?` <span style="color:var(--muted);font-size:12px">(${esc(extra)})</span>`:""}${t.actief?"":" <span class='tag'>inactief</span>"}</td>
+        <td>${esc(t.rel)}</td>
+        <td class="r">${eur(t.huur)}</td>
+        <td class="r">${eur(t.huur*12)}</td>
+        <td class="r">${t.gb>0?eur(t.gb):"—"}</td>
+      </tr>`;
+    };
+    ruimtes.forEach(row);
+    if(pp.length){
+      html+=`<tr><td colspan="5" style="font-size:12px;color:var(--muted);letter-spacing:.5px;padding-top:10px">PARKEERPLAATSEN</td></tr>`;
+      pp.forEach(row);
+    }
+    html+=`<tr style="font-weight:600"><td>Subtotaal ${esc(p.naam)} (${subN} actief)</td><td></td>
+      <td class="r">${eur(subH)}</td><td class="r">${eur(subH*12)}</td><td class="r">${eur(subG)}</td></tr>`;
+    totH+=subH; totG+=subG; totN+=subN;
+  });
+  html+=`<tr style="font-weight:700;background:var(--accent-soft);font-size:14.5px"><td>Totaal alle panden (${totN} actieve huurders)</td><td></td>
+    <td class="r">${eur(totH)}</td><td class="r">${eur(totH*12)}</td><td class="r">${eur(totG)}</td></tr>`;
+  document.getElementById("overviewTable").innerHTML=html;
+}
+
+
+/* ================= PANDENBEHEER ================= */
+function renderPanden(){
+  const el=document.getElementById("pandenTable"); if(!el)return;
+  let html=`<tr><th>Pand (straat + huisnummer)</th><th>Korte naam (voor e-mailonderwerp)</th><th>Postcode en plaats</th><th class="r">Huurders</th><th></th></tr>`;
+  panden.forEach(p=>{
+    const n=tenants.filter(t=>t.pand===p.id).length;
+    html+=`<tr>
+      <td><input value="${esc(p.naam)}" style="width:190px" onchange="pandEdit('${p.id}','naam',this.value)"></td>
+      <td><input value="${esc(p.kort)}" style="width:150px" onchange="pandEdit('${p.id}','kort',this.value)"></td>
+      <td><input value="${esc(p.pcplaats)}" style="width:170px" onchange="pandEdit('${p.id}','pcplaats',this.value)"></td>
+      <td class="r">${n}</td>
+      <td><button class="btn small danger" ${n?"disabled":""} onclick="pandDelete('${p.id}')">Verwijderen</button></td>
+    </tr>`;
+  });
+  if(!panden.length) html+=`<tr><td colspan="5" style="color:var(--muted)">Nog geen panden — voeg je eerste pand toe.</td></tr>`;
+  el.innerHTML=html;
+}
+function addPand(){
+  panden.push({id:"p"+(nextPandId++), naam:"Nieuw pand", kort:"", pcplaats:""});
+  renderPanden(); fillPandSelects(); renderTenantPick();
+}
+function pandEdit(id,f,v){
+  const p=panden.find(x=>x.id===id); p[f]=v;
+  if(f==="naam" && !p.kort) p.kort=v.replace(/\s*\d+\s*$/,"");
+  fillPandSelects(); renderPanden(); renderTenantPick();
+}
+function pandDelete(id){
+  if(tenants.some(t=>t.pand===id)){ flash("Dit pand heeft nog huurders."); return; }
+  if(!confirm("Pand verwijderen?"))return;
+  panden=panden.filter(p=>p.id!==id);
+  renderPanden(); fillPandSelects(); renderTenantPick();
+}
+
+/* ================= FACTUREN TAB ================= */
+const GB_HINT="Eén regel “Gebruikersbelasting {jaar}” per huurder (met de gemeentenaam uit je instellingen). Deze gaat meestal in augustus de deur uit. Het bedrag per huurder stel je hieronder in bij de selectie.";
+function fillPandSelects(){
+  ["fPand","hPand","iPand","mPand"].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML = ((id==="hPand"||id==="mPand") ? "<option value='alle'>Alle panden</option>" : "") +
+      panden.map(p=>`<option value="${p.id}">${p.naam}</option>`).join("");
+  });
+}
+function typeChanged(){
+  const t=document.getElementById("fType").value;
+  const jaar=parseInt(document.getElementById("fJaar").value);
+  document.getElementById("fMaandWrap").style.display = t==="maand" ? "" : "none";
+  if(t==="huur"){
+    document.getElementById("lblJaar").textContent="Huurjaar";
+    document.getElementById("typeHint").innerHTML="Eén jaarfactuur met 12 maandregels (januari t/m december). De factuur gaat er doorgaans begin december uit; ingangsdatum is 1 januari van het huurjaar. Pas de factuurdatum aan naar wens.";
+    document.getElementById("fDatum").value=`${jaar-1}-12-01`;
+  }else if(t==="maand"){
+    document.getElementById("lblJaar").textContent="Huurjaar";
+    const m=parseInt(document.getElementById("fMaand").value);
+    document.getElementById("typeHint").innerHTML="Eén factuur voor één maand huur. Kies de maand; de factuurdatum staat standaard op de eerste van die maand.";
+    document.getElementById("fDatum").value=`${jaar}-${String(m+1).padStart(2,"0")}-01`;
+  }else{
+    document.getElementById("lblJaar").textContent="Belastingjaar";
+    document.getElementById("typeHint").innerHTML=GB_HINT;
+    document.getElementById("fDatum").value=`${jaar}-08-01`;
+  }
+  renderTenantPick();
+}
+function jaarChanged(){ typeChanged(); }
+function maandChanged(){ typeChanged(); }
+
+function activeTenantsForPand(pid){ return tenants.filter(t=>t.pand===pid && t.actief); }
+
+function renderTenantPick(){
+  const pid=document.getElementById("fPand").value;
+  const type=document.getElementById("fType").value;
+  const list=activeTenantsForPand(pid);
+  let html=`<tr><th style="width:36px"></th><th>Huurder</th><th>Relatienummer</th><th class="r">${type==="gb"?"Gebruikersbelasting":"Maandhuur"}</th>${type==="huur"?'<th class="r">Jaarhuur</th>':""}</tr>`;
+  list.forEach(t=>{
+    const bedrag = type==="gb" ? t.gb : t.huur;
+    const checked = type==="gb" ? (t.gb>0?"checked":"") : "checked";
+    html+=`<tr>
+      <td><input type="checkbox" class="pick" data-id="${t.id}" ${checked} onchange="updatePickTotals()"></td>
+      <td>${esc(dispName(t))}</td>
+      <td>${esc(t.rel)}</td>
+      <td class="r">${type==="gb"
+        ? `<input class="num gbedit" data-id="${t.id}" value="${fmtNL(bedrag)}" onchange="gbEdit(this)">`
+        : eur(bedrag)}</td>
+      ${type==="huur"?`<td class="r">${eur(bedrag*12)}</td>`:""}
+    </tr>`;
+  });
+  if(!panden.length) html+=`<tr><td colspan="5" style="color:var(--muted)">Voeg eerst een pand toe via Instellingen & gegevens.</td></tr>`;
+  else if(!list.length) html+=`<tr><td colspan="5" style="color:var(--muted)">Geen actieve huurders voor dit pand.</td></tr>`;
+  html+=`<tr id="pickTotals" style="font-weight:600;background:var(--accent-soft)"><td></td><td>Totaal geselecteerd</td><td id="ptCount"></td><td class="r" id="ptA"></td>${type==="huur"?'<td class="r" id="ptB"></td>':""}</tr>`;
+  document.getElementById("tenantPick").innerHTML=html;
+  updatePickTotals();
+  document.getElementById("previewArea").innerHTML="";
+}
+function updatePickTotals(){
+  const type=document.getElementById("fType").value;
+  const sel=selectedTenants();
+  const som=sel.reduce((s,t)=>s+(type==="gb"?t.gb:t.huur),0);
+  const c=document.getElementById("ptCount"); if(!c)return;
+  c.textContent=`${sel.length} huurder(s)`;
+  document.getElementById("ptA").textContent=eur(som);
+  const b=document.getElementById("ptB"); if(b)b.textContent=eur(som*12);
+}
+function gbEdit(inp){
+  const t=tenants.find(x=>x.id==inp.dataset.id);
+  t.gb=parseNL(inp.value); inp.value=fmtNL(t.gb);
+  updatePickTotals();
+}
+function toggleAll(v){ document.querySelectorAll("#tenantPick .pick").forEach(c=>c.checked=v); updatePickTotals(); }
+
+function selectedTenants(){
+  const ids=[...document.querySelectorAll("#tenantPick .pick:checked")].map(c=>parseInt(c.dataset.id));
+  return tenants.filter(t=>ids.includes(t.id));
+}
+
+/* ---- Nota-HTML (klassieke opmaak, zoals de bestaande nota's) ---- */
+function invoiceHTML(t, opts){
+  const {type,jaar,datum,num}=opts;
+  const footer=settings.footer.replace("{IBAN}",settings.iban);
+  const objectOms = isPP(t) ? `parkeerplaats ${t.pp} ${pandNaam(t.pand)}` : pandNaam(t.pand);
+  const maandNaam = MAANDEN[opts.maand||0];
+  const ref = type==="huur" ? `Huur ${objectOms}` : type==="maand" ? `Huur ${objectOms} ${maandNaam} ${jaar}` : `Gebruikersbelasting ${objectOms}`;
+  const titel = type==="gb" ? "Nota" : "Nota huur";
+  let rows="", totaal=0;
+  if(type==="huur"){
+    MAANDEN.forEach(m=>{
+      rows+=`<tr><td>Huur ${esc(objectOms)}</td><td>${m}</td><td class="ir">${eur(t.huur)}</td></tr>`;
+      totaal+=t.huur;
+    });
+  }else if(type==="maand"){
+    rows+=`<tr><td>Huur ${esc(objectOms)}</td><td>${maandNaam} ${jaar}</td><td class="ir">${eur(t.huur)}</td></tr>`;
+    totaal=t.huur;
+  }else{
+    rows+=`<tr><td>Gebruikersbelasting ${jaar}${settings.gemeente?`<br><span class="sub2">Gemeente ${esc(settings.gemeente)}</span>`:""}</td><td></td><td class="ir">${eur(t.gb)}</td></tr>`;
+    totaal=t.gb;
+  }
+  const totRow = type==="huur" ? "" : `<tr class="tot"><td>Totaalbedrag</td><td></td><td class="ir">${eur(totaal)}</td></tr>`;
+  return `
+  <div class="nota">
+    <div class="kantoor">
+      <div class="klbl">Kantoor</div>
+      <div class="kname">${esc(settings.naam)}</div>
+      <div>${esc(settings.adres)}</div>
+      <div>${esc(settings.pcplaats)}</div>
+      <div style="margin-top:6px">Telefoon  ${esc(settings.tel)}</div>
+      <div>IBAN  ${esc(settings.iban)}</div>
+    </div>
+    <div class="adressee">
+      <div class="aname">${esc(t.naam)}</div>
+      <div>${esc(t.tav)}</div>
+      <div>${esc(t.adres)}</div>
+      <div>${esc(t.pcplaats)}</div>
+    </div>
+    <div class="ntitel">${titel}</div>
+    <table class="meta">
+      <tr><td>Relatienummer</td><td>${esc(t.rel)}</td></tr>
+      <tr><td>Factuurnummer</td><td>${num}</td></tr>
+      <tr><td>Factuurdatum</td><td>${fmtDate(datum)}</td></tr>
+      <tr><td>Onze referentie</td><td>${esc(ref)}</td></tr>
+    </table>
+    <table class="lines">
+      <tr><th>OMSCHRIJVING</th><th></th><th class="ir">BEDRAG</th></tr>
+      ${rows}
+      ${totRow}
+    </table>
+    <div class="nfooter">${esc(footer)}</div>
+  </div>`;
+}
+
+const NOTA_CSS=`
+  .nota{background:#fff;color:#111;width:210mm;min-height:280mm;padding:22mm 20mm;margin:0 auto 24px;
+    font-family:Georgia,'Times New Roman',serif;font-size:12.5pt;line-height:1.45;position:relative;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+  .nota .kantoor{position:absolute;top:20mm;right:20mm;text-align:left;font-size:11pt}
+  .nota .klbl{font-size:9.5pt;letter-spacing:1px;color:#555;text-transform:uppercase}
+  .nota .kname{font-weight:bold}
+  .nota .adressee{margin-top:26mm;font-size:12pt}
+  .nota .aname{font-weight:bold}
+  .nota .ntitel{margin-top:16mm;font-size:17pt;font-weight:bold;letter-spacing:.5px}
+  .nota table.meta{margin-top:6mm;border-collapse:collapse;font-size:11.5pt}
+  .nota table.meta td{padding:1px 18px 1px 0;border:none}
+  .nota table.lines{width:100%;border-collapse:collapse;margin-top:10mm}
+  .nota table.lines th{border-bottom:1.5px solid #111;text-align:left;font-size:10.5pt;letter-spacing:1px;padding:4px 2px}
+  .nota table.lines td{padding:3.5px 2px;border:none}
+  .nota table.lines .ir{text-align:right;white-space:nowrap}
+  .nota .sub2{font-size:11pt;color:#333}
+  .nota tr.tot td{border-top:1.5px solid #111;font-weight:bold;padding-top:7px}
+  .nota .nfooter{position:absolute;bottom:18mm;left:20mm;right:20mm;font-size:10.5pt;border-top:1px solid #999;padding-top:6px;color:#222}
+  @media print{
+    body{background:#fff}
+    .nota{box-shadow:none;margin:0;page-break-after:always;min-height:auto}
+    .nota:last-child{page-break-after:auto}
+  }`;
+
+function gatherOpts(){
+  return {
+    type:document.getElementById("fType").value,
+    jaar:parseInt(document.getElementById("fJaar").value),
+    datum:document.getElementById("fDatum").value,
+    maand:parseInt(document.getElementById("fMaand").value)||0,
+    startNum:parseInt(document.getElementById("fNum").value)||1
+  };
+}
+function buildAll(){
+  const o=gatherOpts();
+  const sel=selectedTenants();
+  if(!sel.length){ flash("Selecteer eerst minimaal één huurder."); return null; }
+  if(!o.datum){ flash("Vul een factuurdatum in."); return null; }
+  let html="",num=o.startNum;
+  sel.forEach(t=>{ html+=invoiceHTML(t,{...o,num}); num++; });
+  return html;
+}
+function buildPreview(){
+  const html=buildAll(); if(html===null)return;
+  document.getElementById("previewArea").innerHTML=
+    `<style>${NOTA_CSS} #previewArea .nota{transform:scale(.72);transform-origin:top left;margin-bottom:-70mm}</style>
+     <div class="prevwrap">${html}</div>`;
+}
+function printInvoices(){
+  const html=buildAll(); if(html===null)return;
+  const w=window.open("","_blank");
+  if(!w){ flash("Pop-up geblokkeerd — sta pop-ups toe voor deze pagina."); return; }
+  w.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Nota's</title><style>body{margin:0;background:#fff}${NOTA_CSS}</style></head><body>${html}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ================= HUURDERS TAB ================= */
+function renderTenantTable(){
+  const pid=document.getElementById("hPand").value;
+  const list=tenants.filter(t=>pid==="alle"||t.pand===pid);
+  let html=`<tr><th>Huurder</th><th>Pand</th><th>Relatienr.</th><th class="r">Maandhuur</th><th class="r">Jaarhuur</th><th class="r">Gebr.belasting</th><th>Status</th><th></th></tr>`;
+  list.forEach(t=>{
+    const ppExtra = isPP(t) ? `
+          <div style="margin-top:5px;display:flex;gap:4px;align-items:center">
+            <span class="tag">P</span>
+            <input value="${esc(t.pp||"")}" style="width:44px" title="Parkeerplaatsnummer" onchange="tEdit(${t.id},'pp',this.value)">
+            <input value="${esc(t.auto||"")}" style="width:76px" placeholder="Auto" title="Auto" onchange="tEdit(${t.id},'auto',this.value)">
+            <input value="${esc(t.kenteken||"")}" style="width:68px" placeholder="Kenteken" title="Kenteken" onchange="tEdit(${t.id},'kenteken',this.value)">
+          </div>` : "";
+    html+=`<tr style="${t.actief?"":"opacity:.5"}">
+      <td><input value="${esc(t.naam)}" style="width:200px" onchange="tEdit(${t.id},'naam',this.value)"><br>
+          <input value="${esc(t.tav)}" style="width:200px;margin-top:3px" title="T.a.v. / uw referentie" onchange="tEdit(${t.id},'tav',this.value)"><br>
+          <input value="${esc(t.adres)}" style="width:200px;margin-top:3px" title="Adres" placeholder="Adres" onchange="tEdit(${t.id},'adres',this.value)"><br>
+          <input value="${esc(t.pcplaats)}" style="width:200px;margin-top:3px" title="Postcode en plaats" placeholder="Postcode en plaats" onchange="tEdit(${t.id},'pcplaats',this.value)"><br>
+          <input value="${esc(t.email||"")}" style="width:200px;margin-top:3px" title="E-mailadres" placeholder="E-mailadres" onchange="tEdit(${t.id},'email',this.value)"><br>
+          <input value="${esc(t.aanhef||"")}" style="width:200px;margin-top:3px" title="Aanhef in e-mails" placeholder="Aanhef (bijv. Beste Jan,)" onchange="tEdit(${t.id},'aanhef',this.value)">${ppExtra}</td>
+      <td><select onchange="tEdit(${t.id},'pand',this.value)">${panden.map(p=>`<option value="${p.id}" ${p.id===t.pand?"selected":""}>${p.naam}</option>`).join("")}</select></td>
+      <td><input value="${esc(t.rel)}" style="width:110px" onchange="tEdit(${t.id},'rel',this.value)"></td>
+      <td class="r"><input class="num" value="${fmtNL(t.huur)}" onchange="tEditNum(${t.id},'huur',this)"></td>
+      <td class="r">${eur(t.huur*12)}</td>
+      <td class="r"><input class="num" value="${fmtNL(t.gb)}" onchange="tEditNum(${t.id},'gb',this)"></td>
+      <td><button class="btn small sec" onclick="tToggle(${t.id})">${t.actief?"Actief":"Inactief"}</button></td>
+      <td><button class="btn small danger" onclick="tDelete(${t.id})">Verwijderen</button></td>
+    </tr>`;
+  });
+  const act=list.filter(t=>t.actief);
+  const somH=act.reduce((s,t)=>s+t.huur,0), somG=act.reduce((s,t)=>s+t.gb,0);
+  html+=`<tr style="font-weight:600;background:var(--accent-soft)">
+    <td>Totaal (${act.length} actieve huurder(s))</td><td></td><td></td>
+    <td class="r">${eur(somH)}</td><td class="r">${eur(somH*12)}</td><td class="r">${eur(somG)}</td><td></td><td></td></tr>`;
+  document.getElementById("tenantTable").innerHTML=html;
+}
+function tEdit(id,f,v){ tenants.find(t=>t.id===id)[f]=v; renderTenantPick(); }
+function tEditNum(id,f,inp){ const t=tenants.find(t=>t.id===id); t[f]=parseNL(inp.value); inp.value=fmtNL(t[f]); renderTenantPick(); }
+function tToggle(id){ const t=tenants.find(t=>t.id===id); t.actief=!t.actief; renderTenantTable(); renderTenantPick(); }
+function tDelete(id){
+  const t=tenants.find(t=>t.id===id);
+  if(confirm(`Huurder "${t.naam}" definitief verwijderen? (Overweeg “Inactief” als je de gegevens wilt bewaren.)`)){
+    tenants=tenants.filter(x=>x.id!==id); renderTenantTable(); renderTenantPick();
+  }
+}
+function addTenant(){
+  if(!panden.length){ flash("Voeg eerst een pand toe via Instellingen & gegevens."); return; }
+  const pid=document.getElementById("hPand").value;
+  const pand = pid==="alle" ? panden[0] : panden.find(p=>p.id===pid);
+  tenants.push({id:nextId++, pand:pand.id, naam:"Nieuwe huurder", tav:"T.a.v. de directie", adres:pand.naam, pcplaats:pand.pcplaats, rel:"", huur:0, gb:0, actief:true});
+  renderTenantTable(); renderTenantPick();
+}
+function addParking(){
+  if(!panden.length){ flash("Voeg eerst een pand toe via Instellingen & gegevens."); return; }
+  const pid=document.getElementById("hPand").value;
+  const pand = pid==="alle" ? panden[0] : panden.find(p=>p.id===pid);
+  tenants.push({id:nextId++, pand:pand.id, cat:"pp", pp:"", naam:"Nieuwe parkeerplaatshuurder", kenteken:"", auto:"", tav:"", adres:"", pcplaats:"", rel:"", huur:0, gb:0, actief:true, email:"", aanhef:""});
+  document.getElementById("hPand").value=pand.id;
+  renderTenantTable(); renderTenantPick();
+}
+
+/* ================= INDEXEREN TAB ================= */
+function renderIndexPreview(){
+  const pid=document.getElementById("iPand").value;
+  const target=document.getElementById("iTarget").value;
+  const pct=parseNL(document.getElementById("iPct").value);
+  const round=document.getElementById("iRound").value;
+  const doH = target==="huur"||target==="beide";
+  const doG = target==="gb"||target==="beide";
+  const list=activeTenantsForPand(pid).filter(t=>doH || t.gb>0);
+  let html=`<tr><th style="width:36px"></th><th>Huurder</th>`;
+  if(doH) html+=`<th class="r">Maandhuur nu</th><th class="r">Maandhuur nieuw (+${fmtNL(pct)}%)</th><th class="r">Jaarhuur nieuw</th>`;
+  if(doG) html+=`<th class="r">Gebr.belasting nu</th><th class="r">Gebr.belasting nieuw (+${fmtNL(pct)}%)</th>`;
+  html+=`</tr>`;
+  let somH=0,somHn=0,somG=0,somGn=0;
+  list.forEach(t=>{
+    const nH=roundVal(t.huur*(1+pct/100),round);
+    const nG=roundVal(t.gb*(1+pct/100),round);
+    somH+=t.huur; somHn+=nH; somG+=t.gb; somGn+=nG;
+    html+=`<tr><td><input type="checkbox" class="ipick" data-id="${t.id}" checked></td><td>${esc(t.naam)}</td>`;
+    if(doH) html+=`<td class="r">${eur(t.huur)}</td><td class="r newval">${eur(nH)}</td><td class="r">${eur(nH*12)}</td>`;
+    if(doG) html+=`<td class="r">${eur(t.gb)}</td><td class="r newval">${eur(nG)}</td>`;
+    html+=`</tr>`;
+  });
+  if(!list.length) html+=`<tr><td colspan="7" style="color:var(--muted)">Geen actieve huurders (met gebruikersbelasting) voor dit pand.</td></tr>`;
+  else{
+    html+=`<tr style="font-weight:600;background:var(--accent-soft)"><td></td><td>Totaal</td>`;
+    if(doH) html+=`<td class="r">${eur(somH)}</td><td class="r newval">${eur(somHn)}</td><td class="r">${eur(somHn*12)}</td>`;
+    if(doG) html+=`<td class="r">${eur(somG)}</td><td class="r newval">${eur(somGn)}</td>`;
+    html+=`</tr>`;
+  }
+  document.getElementById("indexTable").innerHTML=html;
+}
+function roundVal(v,mode){ return mode==="euro" ? Math.round(v) : Math.round(v*100)/100; }
+function applyIndex(){
+  const target=document.getElementById("iTarget").value;
+  const pct=parseNL(document.getElementById("iPct").value);
+  const round=document.getElementById("iRound").value;
+  const ids=[...document.querySelectorAll("#indexTable .ipick:checked")].map(c=>parseInt(c.dataset.id));
+  if(!ids.length){ flash("Geen huurders geselecteerd."); return; }
+  const wat = target==="huur"?"de maandhuur":target==="gb"?"de gebruikersbelasting":"maandhuur én gebruikersbelasting";
+  if(!confirm(`Indexering van ${fmtNL(pct)}% toepassen op ${wat} van ${ids.length} huurder(s)?`))return;
+  ids.forEach(id=>{
+    const t=tenants.find(x=>x.id===id);
+    if(target==="huur"||target==="beide") t.huur=roundVal(t.huur*(1+pct/100),round);
+    if(target==="gb"||target==="beide")  t.gb=roundVal(t.gb*(1+pct/100),round);
+  });
+  renderIndexPreview(); renderTenantPick(); renderTenantTable();
+  flash("Indexering toegepast. Exporteer je gegevens om dit te bewaren.");
+}
+
+/* ================= INSTELLINGEN / DATA ================= */
+function loadSettingsForm(){
+  document.getElementById("sNaam").value=settings.naam;
+  document.getElementById("sAdres").value=settings.adres;
+  document.getElementById("sPcPlaats").value=settings.pcplaats;
+  document.getElementById("sTel").value=settings.tel;
+  document.getElementById("sIban").value=settings.iban;
+  document.getElementById("sFooter").value=settings.footer;
+  document.getElementById("sGemeente").value=settings.gemeente||"";
+  document.getElementById("sMailHuurOnd").value=settings.mailHuurOnderwerp||"";
+  document.getElementById("sMailHuur").value=settings.mailHuur||"";
+  document.getElementById("sMailGbOnd").value=settings.mailGbOnderwerp||"";
+  document.getElementById("sMailGb").value=settings.mailGb||"";
+}
+function saveSettings(){
+  settings.naam=document.getElementById("sNaam").value;
+  settings.adres=document.getElementById("sAdres").value;
+  settings.pcplaats=document.getElementById("sPcPlaats").value;
+  settings.tel=document.getElementById("sTel").value;
+  settings.iban=document.getElementById("sIban").value;
+  settings.footer=document.getElementById("sFooter").value;
+  settings.gemeente=document.getElementById("sGemeente").value;
+  settings.mailHuurOnderwerp=document.getElementById("sMailHuurOnd").value;
+  settings.mailHuur=document.getElementById("sMailHuur").value;
+  settings.mailGbOnderwerp=document.getElementById("sMailGbOnd").value;
+  settings.mailGb=document.getElementById("sMailGb").value;
+  flash("Instellingen bijgewerkt.");
+}
+function exportData(){
+  downloadBlob(JSON.stringify({versie:1, geexporteerd:new Date().toISOString(), settings, panden, tenants},null,2),"application/json",`verhuur_gegevens_${new Date().toISOString().slice(0,10)}.json`);
+}
+function importData(ev){
+  const file=ev.target.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+      const d=JSON.parse(r.result);
+      if(!d.tenants||!d.settings) throw new Error("ongeldig bestand");
+      settings=d.settings; tenants=d.tenants;
+      if(d.panden){ panden=d.panden; nextPandId=panden.length+1; }
+      fillPandSelects(); renderPanden();
+      nextId=Math.max(...tenants.map(t=>t.id),0)+1;
+      loadSettingsForm(); renderTenantPick(); renderTenantTable(); renderIndexPreview();
+      flash("Gegevens ingeladen.");
+    }catch(e){ flash("Importeren mislukt: geen geldig exportbestand."); }
+  };
+  r.readAsText(file); ev.target.value="";
+}
+
+/* ================= INIT ================= */
+(function init(){
+  fillPandSelects();
+  const now=new Date();
+  /* Standaard: facturatie voor het aankomende jaar */
+  document.getElementById("fJaar").value = now.getMonth()>=8 ? now.getFullYear()+1 : now.getFullYear();
+  document.getElementById("fMaand").innerHTML=MAANDEN.map((m,i)=>`<option value="${i}">${m.charAt(0).toUpperCase()+m.slice(1)}</option>`).join("");
+  document.getElementById("fMaand").value=(now.getMonth()+1)%12;
+  document.getElementById("mJaar").value = document.getElementById("fJaar").value;
+  typeChanged();
+  mTypeChanged();
+  loadSettingsForm();
+  renderPanden();
+  renderTenantTable();
+  renderIndexPreview();
+})();
+</script>
+</body>
+</html>

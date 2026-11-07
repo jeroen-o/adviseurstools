@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rentemix Optimizer — sweet spot bereken-tool</title>
+<style>
+:root{
+  --navy:#002A54;
+  --navy-mid:#003a70;
+  --navy-light:#e8eef5;
+  --orange:#FF6600;
+  --orange-light:#fff2e8;
+  --text:#333332;
+  --border:#d8d8d8;
+  --green:#1a6b3c;
+  --green-light:#e7f3ec;
+  --red:#c0392b;
+  --red-light:#fbe9e6;
+  --yellow:#b8860b;
+  --yellow-light:#fff7d6;
+  --radius:6px;
+  --radius-lg:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:Arial,sans-serif;
+  font-size:15px;
+  color:var(--text);
+  background:#f5f5f5;
+  line-height:1.45;
+}
+.app{width:100%;background:#fff;min-height:100vh}
+
+.hero{
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);
+  color:#fff;
+  padding:24px 32px 22px;
+}
+.hero h1{margin:0 0 6px;font-size:24px;font-weight:700;letter-spacing:-0.3px}
+.hero .sub{margin:0;opacity:0.92;font-size:14px;max-width:880px}
+.hero .meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px}
+.hero .meta span{background:rgba(255,255,255,0.13);padding:5px 10px;border-radius:3px}
+.hero .meta b{color:var(--orange)}
+@media(max-width:700px){
+  .hero{padding:18px 16px 16px}
+  .hero h1{font-size:19px}
+  .hero .sub{font-size:13px}
+  .hero .meta{gap:6px;font-size:11px}
+}
+
+.content{padding:22px 32px 50px}
+@media(max-width:700px){.content{padding:14px 14px 40px}}
+
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:20px 22px;
+  margin-bottom:18px;
+}
+@media(max-width:700px){.card{padding:14px 14px 16px;margin-bottom:14px;border-radius:var(--radius)}}
+
+.card h2{
+  position:relative;
+  margin:0 0 14px;
+  padding-left:18px;
+  font-size:17px;
+  color:var(--navy);
+  font-weight:700;
+}
+.card h2::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:6px;
+  width:8px;
+  height:8px;
+  background:var(--orange);
+  transform:rotate(45deg);
+}
+
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.grid-3,.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{
+  font-size:12px;
+  font-weight:700;
+  color:var(--navy);
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+}
+.field .hint{font-size:11px;color:#777;font-weight:400;text-transform:none;letter-spacing:0}
+
+input[type=number],select{
+  padding:9px 11px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  font:inherit;
+  background:#fff;
+  color:var(--text);
+  width:100%;
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--navy-mid);
+  box-shadow:0 0 0 2px rgba(0,58,112,0.15);
+}
+.input-prefix,.input-suffix{position:relative}
+.input-prefix span,.input-suffix span{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  color:#888;
+  font-size:14px;
+  pointer-events:none;
+}
+.input-prefix span{left:11px}
+.input-suffix span{right:11px}
+.input-prefix input{padding-left:24px}
+.input-suffix input{padding-right:30px}
+
+.btn{
+  background:var(--navy);
+  color:#fff;
+  border:none;
+  border-radius:3px;
+  padding:9px 16px;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  transition:background 0.15s;
+}
+.btn:hover{background:var(--navy-mid)}
+.btn-orange{background:var(--orange)}
+.btn-orange:hover{background:#e85d00}
+
+.toggle-row{
+  display:flex;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  width:fit-content;
+  flex-wrap:wrap;
+}
+.toggle-row button{
+  background:#fff;
+  border:none;
+  padding:8px 14px;
+  cursor:pointer;
+  font:inherit;
+  font-size:13px;
+  color:var(--text);
+  border-right:1px solid var(--border);
+}
+.toggle-row button:last-child{border-right:none}
+.toggle-row button.active{background:var(--navy);color:#fff;font-weight:700}
+
+.row-flex{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.spacer{flex:1}
+.muted{color:#888;font-size:12px}
+
+/* ============ LENINGDELEN ============ */
+.leningdeel{
+  display:grid;
+  grid-template-columns:auto 1.2fr 0.9fr 1fr auto;
+  gap:10px;
+  align-items:end;
+  padding:12px;
+  background:var(--navy-light);
+  border-radius:var(--radius);
+  margin-bottom:10px;
+}
+.leningdeel .num{
+  width:28px;
+  height:28px;
+  background:var(--navy);
+  color:#fff;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:13px;
+  margin-bottom:4px;
+  flex-shrink:0;
+}
+.leningdeel input{background:#fff}
+.leningdeel .remove{
+  background:transparent;
+  color:var(--red);
+  border:1px solid transparent;
+  border-radius:3px;
+  cursor:pointer;
+  padding:6px 10px;
+  font-size:18px;
+  font-weight:700;
+}
+.leningdeel .remove:hover{background:var(--red-light);border-color:var(--red)}
+.leningdeel .deel-header{display:none}
+.rvp-tag{
+  display:inline-block;
+  font-size:10px;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:3px;
+  margin-left:6px;
+  letter-spacing:0.4px;
+}
+.rvp-tag.lang{background:#cfe7d8;color:var(--green)}
+.rvp-tag.kort{background:#ffe4cc;color:var(--orange)}
+
+@media(max-width:900px){
+  .leningdeel{
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    padding:14px 12px 12px;
+  }
+  .leningdeel .deel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    grid-column:1 / -1;
+    margin-bottom:2px;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .leningdeel .deel-header .deel-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:700;
+    color:var(--navy);
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    flex-wrap:wrap;
+  }
+  .leningdeel > .num,.leningdeel > .remove{display:none}
+  .leningdeel .deel-header .num{margin-bottom:0}
+  .leningdeel .deel-header .remove{padding:4px 10px;font-size:20px;line-height:1}
+}
+@media(max-width:560px){
+  .leningdeel{grid-template-columns:1fr 1fr;gap:8px}
+}
+
+input[type=date]{
+  padding:9px 11px;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  font:inherit;
+  background:#fff;
+  color:var(--text);
+  width:100%;
+}
+
+.btn-ghost{background:transparent;color:var(--navy);border:1px solid var(--border);padding:9px 16px;border-radius:3px;font:inherit;font-weight:700;cursor:pointer}
+.btn-ghost:hover{background:var(--navy-light);border-color:var(--navy)}
+.btn-sm{padding:6px 12px;font-size:13px}
+
+/* ============ TOELICHTING ============ */
+.toelichting{
+  margin-top:16px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  background:#fff;
+  overflow:hidden;
+}
+.toelichting summary{
+  padding:14px 18px;
+  cursor:pointer;
+  font-weight:700;
+  color:var(--navy);
+  font-size:14px;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  user-select:none;
+}
+.toelichting summary::-webkit-details-marker{display:none}
+.toelichting summary::before{
+  content:"▶";
+  font-size:10px;
+  color:var(--orange);
+  transition:transform 0.15s;
+}
+.toelichting[open] summary::before{transform:rotate(90deg)}
+.toelichting summary:hover{background:var(--navy-light)}
+.toelichting .body{
+  padding:0 18px 18px;
+  font-size:13px;
+  line-height:1.55;
+}
+.toelichting h4{
+  margin:14px 0 6px;
+  font-size:12px;
+  color:var(--navy);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  font-weight:700;
+}
+.toelichting h4:first-child{margin-top:6px}
+.toelichting .formule{
+  background:var(--navy-light);
+  padding:10px 14px;
+  border-left:3px solid var(--orange);
+  border-radius:0 var(--radius) var(--radius) 0;
+  font-family:Consolas,monospace;
+  font-size:12px;
+  margin:6px 0;
+  white-space:pre-wrap;
+  word-break:break-word;
+  color:var(--navy);
+}
+.toelichting table{width:100%;border-collapse:collapse;margin:6px 0;font-size:12px}
+.toelichting table th,.toelichting table td{padding:5px 8px;border-bottom:1px solid var(--border);text-align:left}
+.toelichting table th{background:var(--navy-light);font-weight:700;color:var(--navy)}
+.toelichting table td.num,.toelichting table th.num{text-align:right;font-variant-numeric:tabular-nums}
+.toelichting .conclusie{
+  margin-top:10px;
+  padding:8px 12px;
+  background:var(--green-light);
+  border-left:3px solid var(--green);
+  border-radius:0 var(--radius) var(--radius) 0;
+  color:var(--green);
+  font-size:12px;
+}
+.toelichting .conclusie.warn{background:var(--yellow-light);border-left-color:var(--yellow);color:var(--yellow)}
+.toelichting .bron{
+  margin-top:14px;
+  padding-top:10px;
+  border-top:1px solid var(--border);
+  font-size:11px;
+  color:#888;
+}
+
+.banner{
+  padding:12px 16px;
+  border-radius:var(--radius);
+  margin-top:14px;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  font-size:14px;
+}
+.banner .icon{font-size:18px;line-height:1;flex-shrink:0;margin-top:1px}
+.banner.warn{background:var(--yellow-light);color:var(--yellow);border:1px solid #e6d28a}
+.banner.err{background:var(--red-light);color:var(--red);border:1px solid #e8b4ad}
+
+.opt-card{
+  background:linear-gradient(135deg,#fff 0%,var(--orange-light) 100%);
+  border:2px solid var(--orange);
+  border-radius:var(--radius-lg);
+  padding:18px 20px;
+  margin-top:16px;
+}
+.opt-card h3{
+  color:var(--orange);
+  margin:0 0 12px;
+  font-size:15px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.opt-mix{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:700px){.opt-mix{grid-template-columns:1fr}}
+.opt-mix .part{
+  background:#fff;
+  padding:12px 14px;
+  border-radius:var(--radius);
+  border:1px solid var(--orange);
+}
+.opt-mix .part b{display:block;color:var(--orange);font-size:12px;margin-bottom:4px;letter-spacing:0.4px}
+.opt-mix .part .amt{font-size:20px;font-weight:700;color:var(--navy)}
+.opt-mix .part .det{font-size:12px;color:#666;margin-top:3px}
+
+.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:900px){.result-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.result-grid{grid-template-columns:1fr}}
+
+.metric{
+  background:var(--navy-light);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  border-left:3px solid var(--navy);
+}
+.metric .label{
+  font-size:11px;
+  font-weight:700;
+  color:var(--navy);
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+  margin-bottom:4px;
+}
+.metric .value{
+  font-size:20px;
+  font-weight:700;
+  color:var(--navy);
+  letter-spacing:-0.3px;
+}
+.metric .sub{font-size:11px;color:#666;margin-top:2px}
+.metric.highlight{background:var(--orange-light);border-left-color:var(--orange)}
+.metric.highlight .label,.metric.highlight .value{color:var(--orange)}
+.metric.success{background:var(--green-light);border-left-color:var(--green)}
+.metric.success .label,.metric.success .value{color:var(--green)}
+
+.cta{
+  background:var(--orange);
+  color:#fff;
+  border:none;
+  padding:9px 16px;
+  border-radius:3px;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  font-size:13px;
+}
+.cta:hover{background:#e85d00}
+
+footer{
+  margin-top:24px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+  font-size:11px;
+  color:#888;
+  line-height:1.5;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hero">
+  <h1>Rentemix Optimizer</h1>
+  <p class="sub">Bereken de hoofdsom-verdeling die je gewogen rente precies op een sweet spot landt — terwijl elk leningdeel een rentevastperiode van minstens 10 jaar houdt. Werkt zowel voor starters als voor doorstromers met meeneem-hypotheek (bestaande leningdelen).</p>
+  <div class="meta">
+    <span>Toetsrente <span id="heroToetsrente"><b>5,000%</b></span> <span class="muted" style="opacity:0.7">(instelbaar)</span></span>
+    <span>Drempel werkelijke rente: <b>RVP ≥ 10 jaar</b></span>
+    <span>Afronding: <b>3 decimalen</b></span>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ====================== BESTAANDE LENINGDELEN ====================== -->
+<div class="card">
+  <h2>Bestaande leningdelen <span style="font-weight:400;color:#888;font-size:13px;text-transform:none;letter-spacing:0">(optioneel — voor doorstromers met meeneem-hypotheek)</span></h2>
+  <p class="muted" style="margin:0 0 12px">Voeg per bestaand leningdeel toe: hoofdsom, contractrente en de datum waarop de rentevastperiode afloopt. De resterende RVP wordt automatisch berekend op basis van vandaag.</p>
+  <div id="bestaandeDelen"></div>
+  <div class="row-flex" style="margin-top:10px">
+    <button class="btn btn-ghost btn-sm" onclick="addBestaandDeel()">+ Bestaand leningdeel toevoegen</button>
+    <span class="spacer"></span>
+    <span class="muted">Bestaand totaal: <b id="bestaandTotaal" style="color:var(--navy)">€ 0</b></span>
+  </div>
+</div>
+
+<!-- ====================== NIEUW + MARKTRENTES ====================== -->
+<div class="card">
+  <h2>Nieuw bij te financieren</h2>
+  <div class="field" style="max-width:280px;margin-bottom:18px">
+    <label>Bij te financieren bedrag <span class="hint">aanvullend op bestaand</span></label>
+    <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="bijFinancieren" value="200000" min="0" step="1000"></div>
+  </div>
+
+  <h3 style="margin:0 0 6px;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px">Marktrentes voor het nieuwe deel</h3>
+  <p class="muted" style="margin:0 0 12px">Rente en RVP voor het lange deel (≥10 jaar vast) en het korte deel (<10 jaar vast). De toetsrente wordt toegepast als niet alle leningdelen RVP ≥ 10 jaar hebben — dan moet je toetsen met max(werkelijke rente, toetsrente).</p>
+  <div class="grid grid-4">
+    <div class="field">
+      <label>Lang — RVP <span class="hint">≥10 jaar</span></label>
+      <div class="input-suffix"><input type="number" inputmode="numeric" id="rvpLang" value="20" min="10" max="30" step="1"><span>jr</span></div>
+    </div>
+    <div class="field">
+      <label>Lang — rente</label>
+      <div class="input-suffix"><input type="number" inputmode="decimal" id="rLang" value="4.20" step="0.01" min="0"><span>%</span></div>
+    </div>
+    <div class="field">
+      <label>Kort — RVP <span class="hint"><10 jaar</span></label>
+      <div class="input-suffix"><input type="number" inputmode="numeric" id="rvpKort" value="5" min="1" max="9" step="1"><span>jr</span></div>
+    </div>
+    <div class="field">
+      <label>Kort — rente</label>
+      <div class="input-suffix"><input type="number" inputmode="decimal" id="rKort" value="3.30" step="0.01" min="0"><span>%</span></div>
+    </div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top:14px">
+    <div class="field">
+      <label>Toetsrente <span class="hint">Q1 2026 default 5,000%</span></label>
+      <div class="input-suffix"><input type="number" inputmode="decimal" id="toetsrente" value="5.000" step="0.001" min="0"><span>%</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:18px">
+    <div style="font-weight:700;font-size:13px;color:var(--navy);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">Doel — optimale rente voor max. hypotheek</div>
+    <div class="toggle-row" id="targetToggle">
+      <button data-target="3.001">3,001%</button>
+      <button data-target="3.501">3,501%</button>
+      <button class="active" data-target="4.001">4,001%</button>
+      <button data-target="4.501">4,501%</button>
+      <button data-target="5.001">5,001%</button>
+      <button data-target="5.501">5,501%</button>
+      <button data-target="6.001">6,001%</button>
+      <button data-target="6.501">6,501%</button>
+      <button data-target="7.001">7,001%</button>
+      <button data-target="7.501">7,501%</button>
+    </div>
+  </div>
+
+  <div class="row-flex" style="margin-top:18px">
+    <span class="spacer"></span>
+    <button class="btn btn-orange" onclick="run()">Bereken</button>
+  </div>
+</div>
+
+<!-- ====================== RESULTAAT ====================== -->
+<div id="result"></div>
+
+<!-- ====================== INFO: OVER DE TOETSRENTE ====================== -->
+<details class="card" style="padding:0;margin-top:18px;cursor:default">
+  <summary style="padding:18px 22px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none">
+    <span style="font-size:10px;color:var(--orange);transition:transform 0.15s" class="info-marker">▶</span>
+    <span style="font-weight:700;color:var(--navy);font-size:15px;position:relative;padding-left:18px">
+      <span style="position:absolute;left:0;top:6px;width:8px;height:8px;background:var(--orange);transform:rotate(45deg)"></span>
+      Over de toetsrente — achtergrond & wettelijk kader
+    </span>
+  </summary>
+  <div style="padding:0 22px 20px;font-size:14px;line-height:1.6;color:var(--text)">
+    <p style="margin:0 0 12px">In de <b>Tijdelijke regeling hypothecair krediet (Trhk)</b> is bepaald dat bij een rentevastperiode korter dan 10 jaar de maximale hypotheek wordt berekend op basis van een toetsrente. Deze toetsrente wordt elk kwartaal door de <b>AFM</b> vastgesteld en bedraagt op dit moment <b id="infoToetsrente">5,000%</b>. Is de werkelijke rente hoger dan de toetsrente, dan geldt de werkelijke rente als toetsrente — de hoogste van beide is dus altijd bindend.</p>
+
+    <p style="margin:0 0 12px">De achterliggende gedachte is bescherming tegen een renteschok: zou de maximale lening worden bepaald op basis van een lage actuele rente, dan kan een aanzienlijk hogere rente bij een nieuwe rentevastperiode tot betalings­problemen leiden. Door bij korte rentevast­periodes met de toetsrente te rekenen, wordt geborgd dat de klant ook bij een rente­stijging de lasten nog kan dragen.</p>
+
+    <p style="margin:0 0 12px">Bij een rentevastperiode van 10 jaar of langer mag worden getoetst op de werkelijke contractrente — de klant heeft dan immers minimaal 10 jaar zekerheid over de hoogte van de last.</p>
+
+    <h4 style="margin:18px 0 6px;font-size:12px;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px">Bij meerdere leningdelen</h4>
+    <p style="margin:0 0 12px">Wanneer een hypotheek uit meerdere leningdelen bestaat, wordt voor de toetsing per leningdeel beoordeeld of de rentevastperiode minimaal 10 jaar is. De toetsregel wordt vervolgens toegepast op de <b>gewogen werkelijke rente</b> (gewogen op hoofdsom):</p>
+    <ul style="margin:0 0 12px;padding-left:20px">
+      <li>Heeft <b>elk</b> leningdeel RVP ≥ 10 jaar → toetsen op de gewogen werkelijke rente.</li>
+      <li>Heeft minstens één deel RVP < 10 jaar → toetsen op <b>max(gewogen werkelijke rente, toetsrente)</b>.</li>
+    </ul>
+    <p style="margin:0 0 12px">Het gewogen gemiddelde van de rente wordt afgerond op 3 decimalen (NHG C.7.3). Sommige geldverstrekkers hanteren een eigen acceptatie­beleid dat hier nog strenger of soepeler in kan zijn — toets altijd aan de specifieke voorwaarden van de geldverstrekker.</p>
+
+    <div style="margin-top:14px;padding:10px 14px;background:var(--navy-light);border-left:3px solid var(--navy);border-radius:0 var(--radius) var(--radius) 0;font-size:12px;color:var(--navy)">
+      <b>Bronnen:</b> Trhk art. 3 lid 2 (Ministerie van Financiën) · AFM kwartaalpublicatie toetsrente · NHG Voorwaarden & Normen 2026 §C.7.3 · NHG-toets v7.0 hoofdstuk 2.
+    </div>
+  </div>
+</details>
+
+<style>
+details[open] > summary .info-marker{transform:rotate(90deg)}
+</style>
+
+<footer>
+  <b>Bron:</b> Tijdelijke regeling hypothecair krediet (Trhk) bijlage 1 — Financieringslastpercentages 2026, AFM toetsrente (Q1 2026 default 5,000%, instelbaar in de tool).<br>
+  <b>Disclaimer:</b> Indicatief op basis van CHF 2026 normtabellen. Geldverstrekkers kunnen aanvullende eisen stellen (NHG, LTV, financiële verplichtingen, passendheid). Toets altijd aan eigen acceptatiekaders en Wft-eisen.
+</footer>
+
+</div>
+</div>
+
+<script>
+const KOLOMMEN = [
+  {idx:0,  label:"≤ 1,500%",       lo:0.000, hi:1.500, mid:1.250},
+  {idx:1,  label:"1,501 – 2,000%", lo:1.501, hi:2.000, mid:1.750},
+  {idx:2,  label:"2,001 – 2,500%", lo:2.001, hi:2.500, mid:2.250},
+  {idx:3,  label:"2,501 – 3,000%", lo:2.501, hi:3.000, mid:2.750},
+  {idx:4,  label:"3,001 – 3,500%", lo:3.001, hi:3.500, mid:3.250},
+  {idx:5,  label:"3,501 – 4,000%", lo:3.501, hi:4.000, mid:3.750},
+  {idx:6,  label:"4,001 – 4,500%", lo:4.001, hi:4.500, mid:4.250},
+  {idx:7,  label:"4,501 – 5,000%", lo:4.501, hi:5.000, mid:4.750},
+  {idx:8,  label:"5,001 – 5,500%", lo:5.001, hi:5.500, mid:5.250},
+  {idx:9,  label:"5,501 – 6,000%", lo:5.501, hi:6.000, mid:5.750},
+  {idx:10, label:"6,001 – 6,500%", lo:6.001, hi:6.500, mid:6.250},
+  {idx:11, label:"≥ 6,501%",       lo:6.501, hi:7.500, mid:6.750},
+];
+
+let optimizerTarget = 4.001;
+// Bestaande (vaste) leningdelen: hoofdsom, rente, einddatum rentevast
+let bestaandeDelen = [];
+
+// ===================== HELPERS =====================
+function fmtEur(v){if(!isFinite(v))return"–";return"€ "+Math.round(v).toLocaleString("nl-NL")}
+function fmtPct(v,dec){if(dec===undefined)dec=3;if(!isFinite(v))return"–";return v.toFixed(dec).replace(".",",")+"%"}
+function round3(v){return Math.round(v*1000)/1000}
+
+function getKolomVoorRente(r){
+  r = round3(r);
+  for(const k of KOLOMMEN){
+    if(k.idx === 0 && r <= 1.500 + 1e-9) return k;
+    if(r >= k.lo - 1e-9 && r <= k.hi + 1e-9) return k;
+  }
+  return KOLOMMEN[11];
+}
+
+// Bereken resterende RVP in jaren obv einddatum (vandaag tot einddatum)
+function rvpUitDatum(einddatumStr){
+  if(!einddatumStr) return 0;
+  const eind = new Date(einddatumStr);
+  const nu = new Date();
+  if(isNaN(eind.getTime())) return 0;
+  const diffMs = eind - nu;
+  if(diffMs <= 0) return 0;
+  const diffJr = diffMs / (1000*60*60*24*365.25);
+  return Math.round(diffJr*10)/10;  // 1 decimaal
+}
+
+function totaalBestaand(){
+  return bestaandeDelen.reduce((s,d) => s + (parseFloat(d.som)||0), 0);
+}
+
+// Som*rente en som*rvp voor bestaande delen
+function sumProdRenteBestaand(){
+  return bestaandeDelen.reduce((s,d)=> s + (parseFloat(d.som)||0)*(parseFloat(d.rente)||0), 0);
+}
+
+// Check of alle leningdelen met som > 0 een RVP ≥ 10 jaar hebben.
+// Conform Trhk art. 3 lid 2: per leningdeel toetsen op werkelijke rente
+// alleen toegestaan als RVP van dát deel ≥ 10 jaar is.
+function alleDelenLangGenoeg(somL, rvpL, somK, rvpK){
+  if(somL > 1e-6 && rvpL < 10 - 1e-9) return false;
+  if(somK > 1e-6 && rvpK < 10 - 1e-9) return false;
+  for(const d of bestaandeDelen){
+    const dSom = parseFloat(d.som)||0;
+    const dRvp = rvpUitDatum(d.einddatum);
+    if(dSom > 1e-6 && dRvp < 10 - 1e-9) return false;
+  }
+  return true;
+}
+
+// ===================== UI: BESTAANDE DELEN =====================
+function renderBestaandeDelen(){
+  const wrap = document.getElementById("bestaandeDelen");
+  wrap.innerHTML = "";
+  if(bestaandeDelen.length === 0){
+    wrap.innerHTML = `<div class="muted" style="padding:14px;background:#fafafa;border:1px dashed var(--border);border-radius:var(--radius);text-align:center">Geen bestaande leningdelen — klik hieronder om er één toe te voegen, of laat leeg voor een pure starter-berekening.</div>`;
+    document.getElementById("bestaandTotaal").textContent = fmtEur(0);
+    return;
+  }
+  bestaandeDelen.forEach((d,i)=>{
+    const rvp = rvpUitDatum(d.einddatum);
+    const rvpTag = rvp >= 10 ? '<span class="rvp-tag lang">RVP ≥ 10 jr</span>' : (rvp > 0 ? '<span class="rvp-tag kort">RVP < 10 jr</span>' : '');
+    const div = document.createElement("div");
+    div.className = "leningdeel";
+    div.innerHTML = `
+      <div class="deel-header">
+        <div class="deel-title"><div class="num">${i+1}</div>Bestaand deel ${i+1} ${rvpTag}${rvp>0?' · '+rvp.toFixed(1).replace('.',',')+' jr':''}</div>
+        <button class="remove" onclick="removeBestaandDeel(${i})">×</button>
+      </div>
+      <div class="num">${i+1}</div>
+      <div class="field">
+        <label>Hoofdsom</label>
+        <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" data-i="${i}" data-k="som" value="${d.som||''}" min="0" step="1000"></div>
+      </div>
+      <div class="field">
+        <label>Contractrente</label>
+        <div class="input-suffix"><input type="number" inputmode="decimal" data-i="${i}" data-k="rente" value="${d.rente||''}" step="0.01" min="0"><span>%</span></div>
+      </div>
+      <div class="field">
+        <label>Rentevast tot <span class="hint">${rvp>0?'resterend '+rvp.toFixed(1).replace('.',',')+' jr':'einddatum'}</span></label>
+        <input type="date" data-i="${i}" data-k="einddatum" value="${d.einddatum||''}">
+      </div>
+      <button class="remove" onclick="removeBestaandDeel(${i})">×</button>
+    `;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll("input[data-i]").forEach(inp=>{
+    inp.addEventListener("input",()=>{
+      const i = +inp.dataset.i;
+      const k = inp.dataset.k;
+      bestaandeDelen[i][k] = inp.value;
+      updateBestaandTotaal();
+      // Re-render alleen om de RVP-tag bij te werken bij datum wijziging
+      if(k === "einddatum") renderBestaandeDelen();
+    });
+  });
+  updateBestaandTotaal();
+}
+
+function updateBestaandTotaal(){
+  document.getElementById("bestaandTotaal").textContent = fmtEur(totaalBestaand());
+}
+
+function addBestaandDeel(){
+  // Default: vandaag + 5 jaar
+  const d = new Date();
+  d.setFullYear(d.getFullYear()+5);
+  const def = d.toISOString().slice(0,10);
+  bestaandeDelen.push({som:100000, rente:2.50, einddatum:def});
+  renderBestaandeDelen();
+}
+
+function removeBestaandDeel(i){
+  bestaandeDelen.splice(i,1);
+  renderBestaandeDelen();
+}
+
+// ===================== CORE OPTIMIZER =====================
+function run(){
+  const rvpL = parseFloat(document.getElementById("rvpLang").value)||10;
+  const rL = parseFloat(document.getElementById("rLang").value)||0;
+  const rvpK = parseFloat(document.getElementById("rvpKort").value)||5;
+  const rK = parseFloat(document.getElementById("rKort").value)||0;
+  const toetsrente = parseFloat(document.getElementById("toetsrente").value)||5.000;
+  const bijFin = parseFloat(document.getElementById("bijFinancieren").value)||0;
+  const target = optimizerTarget;
+  const targetCol = getKolomVoorRente(target);
+  const out = document.getElementById("result");
+
+  // Bestaande totalen
+  const sB = totaalBestaand();
+  const sumRenteB = sumProdRenteBestaand();
+
+  // ===== Validaties =====
+  if(bijFin <= 0 && sB <= 0){
+    out.innerHTML = `<div class="banner err"><span class="icon">!</span><div>Vul een bij te financieren bedrag in (en/of bestaande leningdelen).</div></div>`;
+    return;
+  }
+  if(rvpL < 10){
+    out.innerHTML = `<div class="banner err"><span class="icon">!</span><div>Lange deel moet RVP ≥ 10 jaar hebben.</div></div>`;
+    return;
+  }
+  if(rvpK >= 10){
+    out.innerHTML = `<div class="banner warn"><span class="icon">!</span><div>Korte deel heeft RVP ≥ 10 jaar — geen mix nodig.</div></div>`;
+    return;
+  }
+
+  // Effectieve toetsrente per deel (Trhk art. 3 lid 2): bij RVP < 10 jr toetsen op
+  // max(werkelijke, toetsrente). De optimizer optimaliseert op de gewogen TOETSRENTE
+  // (= wat de bank gebruikt om de woonquota op te zoeken), niet op de werkelijke rente.
+  function eff(rente, rvp){
+    return rvp >= 10 - 1e-9 ? rente : Math.max(rente, toetsrente);
+  }
+  const rL_eff = eff(rL, rvpL);
+  const rK_eff = eff(rK, rvpK);
+
+  // Bestaande delen — werkelijk en effectief
+  let sumRenteB_werk = 0;
+  let sumRenteB_eff = 0;
+  bestaandeDelen.forEach(d => {
+    const sm = parseFloat(d.som)||0;
+    const rt = parseFloat(d.rente)||0;
+    if(sm <= 0) return;
+    const rvp = rvpUitDatum(d.einddatum);
+    sumRenteB_werk += sm * rt;
+    sumRenteB_eff  += sm * eff(rt, rvp);
+  });
+
+  if(Math.abs(rL_eff - rK_eff) < 1e-9){
+    out.innerHTML = `<div class="banner warn"><span class="icon">!</span><div>De effectieve toetsrente van het lange en het korte deel zijn gelijk (${fmtPct(rL_eff,2)}). Een mix levert dan geen verschillende uitkomst — alle verdelingen geven dezelfde gewogen toetsrente.</div></div>`;
+    return;
+  }
+
+  // ===== Verdeling =====
+  const totaal = sB + bijFin;
+  if(bijFin <= 0){
+    const gemRenteVast = sumRenteB / sB;
+    out.innerHTML = `<div class="banner warn"><span class="icon">!</span><div>Geen bij te financieren bedrag opgegeven. Met alleen de bestaande delen is de gewogen rente <b>${fmtPct(round3(gemRenteVast))}</b>. Vul een bij te financieren bedrag in om te kunnen optimaliseren.</div></div>`;
+    return;
+  }
+
+  // Optimizer-formule: target = gewogen TOETSRENTE op basis van effectieve rentes per deel
+  // target = (sumRenteB_eff + bijFin*xL*rL_eff + bijFin*(1-xL)*rK_eff) / totaal
+  // → xL = (target*totaal - sumRenteB_eff - bijFin*rK_eff) / (bijFin*(rL_eff - rK_eff))
+  const xLang = (target*totaal - sumRenteB_eff - bijFin*rK_eff) / (bijFin * (rL_eff - rK_eff));
+  const xKort = 1 - xLang;
+
+  if(xLang < -1e-6 || xLang > 1 + 1e-6){
+    const minToetsR = (sumRenteB_eff + bijFin*Math.min(rL_eff, rK_eff)) / totaal;
+    const maxToetsR = (sumRenteB_eff + bijFin*Math.max(rL_eff, rK_eff)) / totaal;
+    out.innerHTML = `<div class="banner err"><span class="icon">!</span><div>Doel <b>${fmtPct(target)}</b> ligt buiten het bereikbare interval voor de gewogen toetsrente: <b>${fmtPct(round3(minToetsR))}</b> tot <b>${fmtPct(round3(maxToetsR))}</b>. Kies een ander doel of pas rentes/RVP's aan.</div></div>`;
+    return;
+  }
+
+  const somL = bijFin * xLang;
+  const somK = bijFin * xKort;
+
+  // De optimizer landt per definitie op `target` als gewogen TOETSRENTE.
+  // Bereken apart de gewogen werkelijke rente ter info.
+  const werkelijkeGemRente = (sumRenteB_werk + somL*rL + somK*rK) / totaal;
+
+  // Welke delen krijgen toets-opslag? (= delen met RVP < 10 én werkelijke < toetsrente)
+  const opslagDelen = [];
+  if(somL > 1e-6 && rvpL < 10 - 1e-9 && rL < toetsrente){
+    opslagDelen.push(`nieuw lang (${fmtPct(rL,2)} → ${fmtPct(toetsrente,2)})`);
+  }
+  if(somK > 1e-6 && rvpK < 10 - 1e-9 && rK < toetsrente){
+    opslagDelen.push(`nieuw kort (${fmtPct(rK,2)} → ${fmtPct(toetsrente,2)})`);
+  }
+  bestaandeDelen.forEach((d,i) => {
+    const dSom = parseFloat(d.som)||0;
+    const dRente = parseFloat(d.rente)||0;
+    const dRvp = rvpUitDatum(d.einddatum);
+    if(dSom > 1e-6 && dRvp < 10 - 1e-9 && dRente < toetsrente){
+      opslagDelen.push(`bestaand ${i+1} (${fmtPct(dRente,2)} → ${fmtPct(toetsrente,2)})`);
+    }
+  });
+  const heeftOpslag = opslagDelen.length > 0;
+
+  const effectieveToetsrente = target;
+  const effectieveKolom = targetCol;
+
+  // Status-banner
+  let statusBanner = '';
+  if(!heeftOpslag){
+    statusBanner = `<div style="background:var(--green-light);border-left:3px solid var(--green);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin-top:10px"><b style="color:var(--green)">✓ Geen toets-opslag.</b> Alle leningdelen worden getoetst op de werkelijke rente (RVP ≥ 10 jr, of werkelijke rente ≥ toetsrente). Gewogen toetsrente = werkelijke gewogen rente = ${fmtPct(target)}.</div>`;
+  } else {
+    statusBanner = `<div style="background:var(--orange-light);border-left:3px solid var(--orange);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin-top:10px"><b style="color:var(--orange)">⚙ Toets-opslag toegepast.</b> Voor ${opslagDelen.length === 1 ? 'dit deel' : 'deze delen'} geldt RVP < 10 jr én werkelijke rente < toetsrente, dus toetsen op ${fmtPct(toetsrente,2)}: ${opslagDelen.join(', ')}. Werkelijke gewogen rente is <b>${fmtPct(round3(werkelijkeGemRente))}</b>; gewogen toetsrente landt op <b>${fmtPct(target)}</b>.</div>`;
+  }
+
+  // ===== Render =====
+  const heeftBestaand = sB > 0;
+  let bestaandHtml = '';
+  if(heeftBestaand){
+    const rows = bestaandeDelen.map((d,i) => {
+      const rvp = rvpUitDatum(d.einddatum);
+      return `<tr>
+        <td>${i+1}</td>
+        <td class="num">${fmtEur(d.som||0)}</td>
+        <td class="num">${fmtPct(parseFloat(d.rente)||0,2)}</td>
+        <td class="num">${rvp>0?rvp.toFixed(1).replace('.',',')+' jr':'–'}</td>
+      </tr>`;
+    }).join('');
+    bestaandHtml = `
+      <div style="margin-top:14px">
+        <div style="font-weight:700;font-size:12px;color:var(--navy);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Bestaande delen (vast)</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:var(--radius);overflow:hidden">
+          <thead><tr style="background:var(--navy);color:#fff"><th style="padding:6px 10px;text-align:left">#</th><th style="padding:6px 10px;text-align:right">Hoofdsom</th><th style="padding:6px 10px;text-align:right">Rente</th><th style="padding:6px 10px;text-align:right">Rest. RVP</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // ===== Toelichting (stap-voor-stap berekening) =====
+  function buildToelichting(){
+    // Stap 1: Leningdelen overzicht
+    let stap1 = '<table><thead><tr><th>#</th><th>Leningdeel</th><th class="num">Hoofdsom</th><th class="num">Rente</th><th class="num">RVP / looptijd</th></tr></thead><tbody>';
+    let teller = 0;
+    bestaandeDelen.forEach(d => {
+      const sm = parseFloat(d.som)||0;
+      if(sm <= 0) return;
+      teller++;
+      const rvp = rvpUitDatum(d.einddatum);
+      stap1 += `<tr><td>${teller}</td><td>Bestaand</td><td class="num">${fmtEur(sm)}</td><td class="num">${fmtPct(parseFloat(d.rente)||0,2)}</td><td class="num">${rvp.toFixed(1).replace('.',',')} jr</td></tr>`;
+    });
+    if(somL > 1e-6){
+      teller++;
+      stap1 += `<tr><td>${teller}</td><td>Nieuw — lang</td><td class="num">${fmtEur(somL)}</td><td class="num">${fmtPct(rL,2)}</td><td class="num">${rvpL} jr</td></tr>`;
+    }
+    if(somK > 1e-6){
+      teller++;
+      stap1 += `<tr><td>${teller}</td><td>Nieuw — kort</td><td class="num">${fmtEur(somK)}</td><td class="num">${fmtPct(rK,2)}</td><td class="num">${rvpK} jr</td></tr>`;
+    }
+    stap1 += `<tr style="font-weight:700"><td colspan="2">Totaal</td><td class="num">${fmtEur(totaal)}</td><td></td><td></td></tr>`;
+    stap1 += '</tbody></table>';
+
+    // Stap 2: Gewogen TOETSRENTE uitwerken met effectieve rentes per deel
+    let teller2numer = [];
+    let teller2denom = [];
+    bestaandeDelen.forEach(d => {
+      const sm = parseFloat(d.som)||0;
+      const rt = parseFloat(d.rente)||0;
+      if(sm <= 0) return;
+      const dRvp = rvpUitDatum(d.einddatum);
+      const rt_eff = eff(rt, dRvp);
+      teller2numer.push(`${fmtEur(sm).replace('€ ','')} × ${fmtPct(rt_eff,2)}`);
+      teller2denom.push(`${fmtEur(sm).replace('€ ','')}`);
+    });
+    if(somL > 1e-6){
+      teller2numer.push(`${fmtEur(somL).replace('€ ','')} × ${fmtPct(rL_eff,2)}`);
+      teller2denom.push(`${fmtEur(somL).replace('€ ','')}`);
+    }
+    if(somK > 1e-6){
+      teller2numer.push(`${fmtEur(somK).replace('€ ','')} × ${fmtPct(rK_eff,2)}`);
+      teller2denom.push(`${fmtEur(somK).replace('€ ','')}`);
+    }
+    const sumKR_eff = sumRenteB_eff + somL*rL_eff + somK*rK_eff;
+    const stap2formule = `Gewogen toetsrente = Σ(Hoofdsom × effectieve toetsrente per deel) / Σ Hoofdsom`;
+    const stap2invul = `= (${teller2numer.join(' + ')}) / (${teller2denom.join(' + ')})`;
+    const stap2tussen = `= ${fmtEur(sumKR_eff).replace('€ ','')} / ${fmtEur(totaal).replace('€ ','')}`;
+    const stap2uitkomst = `= ${fmtPct(round3(sumKR_eff/totaal))}`;
+
+    // Stap 3: RVP + effectieve rente per deel
+    let stap3rows = '<table><thead><tr><th>Leningdeel</th><th class="num">RVP</th><th class="num">Werkelijke rente</th><th class="num">Effectieve toetsrente</th></tr></thead><tbody>';
+    bestaandeDelen.forEach((d,i) => {
+      const sm = parseFloat(d.som)||0;
+      const rt = parseFloat(d.rente)||0;
+      if(sm <= 0) return;
+      const rvp = rvpUitDatum(d.einddatum);
+      const rt_eff = eff(rt, rvp);
+      const opslag = rt_eff > rt + 1e-9;
+      stap3rows += `<tr><td>Bestaand ${i+1}</td><td class="num">${rvp.toFixed(1).replace('.',',')} jr</td><td class="num">${fmtPct(rt,2)}</td><td class="num"${opslag?' style="color:var(--orange);font-weight:700"':''}>${fmtPct(rt_eff,2)}${opslag?' ↑':''}</td></tr>`;
+    });
+    if(somL > 1e-6){
+      const opslag = rL_eff > rL + 1e-9;
+      stap3rows += `<tr><td>Nieuw — lang</td><td class="num">${rvpL} jr</td><td class="num">${fmtPct(rL,2)}</td><td class="num"${opslag?' style="color:var(--orange);font-weight:700"':''}>${fmtPct(rL_eff,2)}${opslag?' ↑':''}</td></tr>`;
+    }
+    if(somK > 1e-6){
+      const opslag = rK_eff > rK + 1e-9;
+      stap3rows += `<tr><td>Nieuw — kort</td><td class="num">${rvpK} jr</td><td class="num">${fmtPct(rK,2)}</td><td class="num"${opslag?' style="color:var(--orange);font-weight:700"':''}>${fmtPct(rK_eff,2)}${opslag?' ↑':''}</td></tr>`;
+    }
+    stap3rows += '</tbody></table>';
+
+    // Stap 4: Toetsregel-conclusie
+    let stap4tekst = '';
+    if(!heeftOpslag){
+      stap4tekst = `<p>Geen leningdeel krijgt toets-opslag (alle delen hebben óf RVP ≥ 10 jaar, óf werkelijke rente ≥ toetsrente). De gewogen toetsrente is daarom gelijk aan de werkelijke gewogen rente.</p>
+        <div class="conclusie">→ <b>Gewogen toetsrente = ${fmtPct(target)}</b> · toets-kolom <b>${effectieveKolom.label}</b></div>`;
+    } else {
+      stap4tekst = `<p>De volgende ${opslagDelen.length === 1 ? 'deel krijgt' : 'delen krijgen'} toets-opslag (RVP < 10 jr én werkelijke < toetsrente): ${opslagDelen.join(', ')}. Werkelijke gewogen rente: <b>${fmtPct(round3(werkelijkeGemRente))}</b>.</p>
+        <div class="conclusie">→ <b>Gewogen toetsrente = ${fmtPct(target)}</b> · toets-kolom <b>${effectieveKolom.label}</b></div>`;
+    }
+
+    return `
+      <details class="toelichting">
+        <summary>📐 Toelichting op de berekening</summary>
+        <div class="body">
+          <h4>Stap 1 — Leningdelen</h4>
+          ${stap1}
+
+          <h4>Stap 2 — Gewogen toetsrente (op hoofdsom)</h4>
+          <div class="formule">${stap2formule}\n${stap2invul}\n${stap2tussen}\n${stap2uitkomst}</div>
+          <div style="font-size:11px;color:#888;margin-top:4px">Per leningdeel: effectieve toetsrente = werkelijke rente, of max(werkelijke, toetsrente) als RVP < 10 jaar (Trhk art. 3 lid 2). Afronding op 3 decimalen (NHG C.7.3).</div>
+
+          <h4>Stap 3 — Effectieve toetsrente per leningdeel</h4>
+          ${stap3rows}
+          <div style="font-size:11px;color:#888;margin-top:4px">Een ↑ betekent dat dit deel een toets-opslag krijgt: de werkelijke rente is < toetsrente én RVP < 10 jr.</div>
+
+          <h4>Stap 4 — Toetsregel toepassen</h4>
+          <p style="margin:6px 0">Conform Trhk art. 3 lid 2: heeft elk leningdeel RVP ≥ 10 jaar? → toetsen op werkelijke rente. Anders: toetsen op <b>max(werkelijke gewogen rente, toetsrente)</b>.</p>
+          ${stap4tekst}
+
+          <div class="bron">
+            <b>Bronnen:</b> Trhk art. 3 lid 2 · NHG Voorwaarden & Normen 2026 §C.7.3 (afronding gewogen rente op 3 decimalen) · NHG-toets v7.0 hoofdstuk 2 (zie <a href="https://www.status.nhg.nl/media/15ah4i4d/beschrijving-berekeningen-nhg-toets-v7-0-definitief.pdf" target="_blank" rel="noopener">officiële beschrijving</a>).
+          </div>
+        </div>
+      </details>
+    `;
+  }
+
+  out.innerHTML = `
+    <div class="opt-card">
+      <h3>Optimale verdeling voor doel ${fmtPct(target)}</h3>
+      ${bestaandHtml}
+      ${statusBanner}
+      <div style="font-weight:700;font-size:12px;color:var(--orange);text-transform:uppercase;letter-spacing:0.4px;margin:14px 0 6px">${heeftBestaand?'Nieuw bij te financieren — verdeling':'Verdeling bij-financiering'}</div>
+      <div class="opt-mix">
+        <div class="part">
+          <b>Lang — ${rvpL} jr vast @ ${fmtPct(rL,2)}</b>
+          <div class="amt">${fmtEur(somL)}</div>
+          <div class="det">${(xLang*100).toFixed(1).replace(".",",")}% van bij te financieren</div>
+        </div>
+        <div class="part">
+          <b>Kort — ${rvpK} jr vast @ ${fmtPct(rK,2)}</b>
+          <div class="amt">${fmtEur(somK)}</div>
+          <div class="det">${(xKort*100).toFixed(1).replace(".",",")}% van bij te financieren</div>
+        </div>
+      </div>
+      <div class="result-grid">
+        <div class="metric success">
+          <div class="label">Gewogen toetsrente</div>
+          <div class="value">${fmtPct(target)}</div>
+          <div class="sub">precies in ${targetCol.label}</div>
+        </div>
+        <div class="metric">
+          <div class="label">Werkelijke gewogen rente</div>
+          <div class="value">${fmtPct(round3(werkelijkeGemRente))}</div>
+          <div class="sub">${heeftOpslag?'lager dan toetsrente — opslag toegepast':'gelijk aan toetsrente — geen opslag'}</div>
+        </div>
+        <div class="metric ${heeftOpslag?'highlight':'success'}">
+          <div class="label">Toets-opslag</div>
+          <div class="value" style="font-size:18px">${heeftOpslag?opslagDelen.length+' deel'+(opslagDelen.length>1?'en':''):'Geen'}</div>
+          <div class="sub">${heeftOpslag?'op '+fmtPct(toetsrente,2):'alle delen op werkelijke rente'}</div>
+        </div>
+        <div class="metric">
+          <div class="label">Totale hypotheek</div>
+          <div class="value">${fmtEur(totaal)}</div>
+          <div class="sub">${heeftBestaand?fmtEur(sB)+' bestaand + '+fmtEur(bijFin)+' nieuw':fmtEur(bijFin)+' nieuw'}</div>
+        </div>
+      </div>
+    </div>
+    ${buildToelichting()}
+  `;
+}
+
+// ===================== INIT =====================
+document.querySelectorAll("#targetToggle button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("#targetToggle button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    optimizerTarget = parseFloat(btn.dataset.target);
+  });
+});
+
+// Sync hero meta én info-card met toetsrente-input
+function syncHeroToetsrente(){
+  const v = parseFloat(document.getElementById("toetsrente").value);
+  if(isFinite(v)){
+    document.getElementById("heroToetsrente").innerHTML = "<b>"+fmtPct(v)+"</b>";
+    const info = document.getElementById("infoToetsrente");
+    if(info) info.textContent = fmtPct(v);
+  }
+}
+document.getElementById("toetsrente").addEventListener("input", () => { syncHeroToetsrente(); run(); });
+syncHeroToetsrente();
+
+renderBestaandeDelen();
+run();
+
+</script>
+</body>
+</html>

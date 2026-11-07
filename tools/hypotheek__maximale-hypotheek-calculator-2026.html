@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maximale Hypotheek 2026 — Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#004580;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#333;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--shadow:0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;margin-top:1px;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:980px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:22px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:14px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:19px;}
+.card-body{padding:22px;}
+
+.fg{display:grid;gap:14px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.s2{grid-column:span 2;}
+.s3{grid-column:1/-1;}
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:48px;}
+
+/* ENERGIELABEL GRID */
+.label-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:4px;}
+.label-btn{border:2px solid var(--border);border-radius:9px;padding:9px 6px;background:#fff;cursor:pointer;text-align:center;transition:all .17s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.label-btn:hover{border-color:var(--navy);}
+.label-btn.active{border-color:var(--navy);background:#EFF4F9;}
+.label-btn .lv{font-size:14px;font-weight:800;color:var(--navy);}
+.label-btn .ls{font-size:10px;color:var(--muted);}
+.label-btn .le{font-size:11px;font-weight:600;color:var(--green);}
+
+/* BTN */
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;letter-spacing:.01em;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* HOOFD RESULTAAT */
+.hoofd-res{background:var(--navy);color:#fff;border-radius:14px;padding:26px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;margin-bottom:20px;}
+.hr-main{display:flex;flex-direction:column;gap:4px;}
+.hr-label{font-size:13px;opacity:.75;text-transform:uppercase;letter-spacing:.07em;}
+.hr-bedrag{font-family:'DM Serif Display',serif;font-size:48px;line-height:1;}
+.hr-sub{font-size:13px;opacity:.8;margin-top:4px;}
+.hr-sub-vals{display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+.hr-sub-val{text-align:right;}
+.hr-sub-lbl{font-size:11px;opacity:.65;text-transform:uppercase;letter-spacing:.06em;}
+.hr-sub-num{font-family:'DM Serif Display',serif;font-size:22px;}
+
+/* OPBOUW GRID */
+.opbouw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.ob-box{border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;}
+.ob-box.navy{background:#EFF4F9;border:1.5px solid #C5D8E8;}
+.ob-box.gold{background:var(--gold-lt);border:1.5px solid #F4C878;}
+.ob-box.green{background:var(--grlt);border:1.5px solid #A7DFC2;}
+.ob-box.orange{background:var(--orglt);border:1.5px solid #FCD34D;}
+.ob-box.red{background:var(--redlt);border:1.5px solid #F5B7B1;}
+.ob-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.ob-val{font-family:'DM Serif Display',serif;font-size:21px;color:var(--navy);line-height:1.1;}
+.ob-sub{font-size:11px;color:var(--muted);}
+
+/* STAP-VOOR-STAP */
+.stap-tbl{width:100%;border-collapse:collapse;font-size:13.5px;}
+.stap-tbl thead th{background:var(--navy);color:#fff;padding:9px 14px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.stap-tbl thead th:not(:first-child){text-align:right;}
+.stap-tbl td{padding:9px 14px;border-bottom:1px solid var(--border);}
+.stap-tbl td:not(:first-child){text-align:right;}
+.stap-tbl tr:last-child td{border-bottom:none;}
+.stap-tbl tr:hover td{background:#F8FAFB;}
+.stap-tbl .totaal td{font-weight:700;color:var(--navy);background:#F0F4F8;border-top:2px solid var(--border);}
+.stap-tbl .pos{color:var(--green);font-weight:700;}
+.stap-tbl .neg{color:var(--red);font-weight:700;}
+
+/* GRAFIEK */
+.canvas-wrap{position:relative;height:270px;}
+canvas{width:100%!important;}
+.graf-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.graf-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s;}
+.graf-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* RVP OPTIMALISATIE */
+.rvp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.rvp-card{border-radius:10px;border:1.5px solid var(--border);padding:11px 10px;text-align:center;background:#fff;transition:all .15s;}
+.rvp-card.best{border-color:var(--green);background:var(--grlt);}
+.rvp-card.actief{border-color:var(--navy);background:#EFF4F9;}
+.rvp-lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.rvp-rente{font-size:13px;font-weight:700;color:var(--navy);}
+.rvp-max{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy);}
+.rvp-badge{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--grlt);color:var(--green);display:inline-block;margin-top:2px;}
+
+/* ADVIES */
+.advies-box{background:linear-gradient(135deg,#EFF4F9 0%,#F8FAFB 100%);border:1.5px solid #C5D8E8;border-radius:12px;padding:18px 20px;font-size:13px;line-height:1.75;}
+.advies-box h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px;}
+.ap{display:flex;gap:9px;margin-bottom:7px;align-items:flex-start;}
+.ap .ai{flex-shrink:0;margin-top:1px;}
+
+/* RESPONSIVE */
+@media(max-width:720px){
+  .fg2,.fg3{grid-template-columns:1fr;}
+  .s2,.s3{grid-column:span 1;}
+  .opbouw-grid{grid-template-columns:1fr 1fr;}
+  .label-grid{grid-template-columns:repeat(3,1fr);}
+  .rvp-grid{grid-template-columns:1fr 1fr;}
+  .hr-bedrag{font-size:36px;}
+  .hr-sub-vals{align-items:flex-start;}
+  .h-badges{display:none;}
+}
+@media(max-width:420px){.main{padding:14px 10px 60px;}.card-body{padding:14px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🏡</div>
+    <div>
+      <div class="h-title">Maximale Hypotheek Calculator 2026</div>
+      <div class="h-sub">NIBUD FLP-normen 2026 · toetsrente · energielabel · tweeverdieners · studielening</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">NIBUD 2026</span>
+    <span class="badge gold">Officiële normen</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Uw situatie</div>
+    <div class="card-body">
+
+      <div class="fg fg3" style="margin-bottom:18px;">
+        <div class="sdiv s3">Inkomen</div>
+
+        <div class="field">
+          <label>Bruto jaarinkomen (u)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="ink1" value="75000" min="10000" step="1000" oninput="liveUpdate()">
+          </div>
+          <span class="hint" id="ink1Hint"></span>
+        </div>
+        <div class="field">
+          <label>Bruto jaarinkomen (partner)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="ink2" value="0" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+          <span class="hint">0 = alleenstaand · partner: 90% wordt meegenomen</span>
+        </div>
+        <div class="field">
+          <label>Type inkomen</label>
+          <select id="inkomensType">
+            <option value="1.0">Vast dienstverband</option>
+            <option value="1.0">Tijdelijk dienstverband + intentieverklaring</option>
+            <option value="0.9">Tijdelijk dienstverband (geen verklaring)</option>
+            <option value="0.667">ZZP / zelfstandige (3jr-gemiddelde)</option>
+          </select>
+          <span class="hint">ZZP: gemiddelde afgelopen 3 jaar telt mee</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Rente & rentevaste periode</div>
+
+        <div class="field">
+          <label>Hypotheekrente</label>
+          <div class="iw"><span class="pre">%</span>
+            <input type="number" id="rente" value="3.80" min="0.5" max="12" step="0.01" class="rs" style="padding-left:26px;padding-right:42px;" oninput="liveUpdate()">
+          </div>
+          <span class="hint" id="renteHint"></span>
+        </div>
+        <div class="field">
+          <label>Rentevaste periode</label>
+          <select id="rvp" onchange="liveUpdate()">
+            <option value="1">1 jaar</option>
+            <option value="2">2 jaar</option>
+            <option value="3">3 jaar</option>
+            <option value="5">5 jaar</option>
+            <option value="7">7 jaar</option>
+            <option value="10" selected>10 jaar</option>
+            <option value="15">15 jaar</option>
+            <option value="20">20 jaar</option>
+            <option value="30">30 jaar</option>
+          </select>
+          <span class="hint" id="toetsRenteHint"></span>
+        </div>
+        <div class="field">
+          <label>Hypotheeklooptijd</label>
+          <select id="looptijd">
+            <option value="30" selected>30 jaar</option>
+            <option value="25">25 jaar</option>
+            <option value="20">20 jaar</option>
+            <option value="15">15 jaar</option>
+          </select>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Energielabel woning</div>
+      </div>
+
+      <!-- ENERGIELABEL -->
+      <div class="label-grid" id="labelGrid" style="margin-bottom:18px;">
+        <button class="label-btn active" data-label="EFG" data-extra="0" onclick="setLabel(this)">
+          <span class="lv">E/F/G</span><span class="ls">Slecht label</span><span class="le">+€ 0</span>
+        </button>
+        <button class="label-btn" data-label="CD" data-extra="5000" onclick="setLabel(this)">
+          <span class="lv">C / D</span><span class="ls">Gemiddeld</span><span class="le">+€ 5.000</span>
+        </button>
+        <button class="label-btn" data-label="AB" data-extra="10000" onclick="setLabel(this)">
+          <span class="lv">A / B</span><span class="ls">Goed label</span><span class="le">+€ 10.000</span>
+        </button>
+        <button class="label-btn" data-label="APP" data-extra="20000" onclick="setLabel(this)">
+          <span class="lv">A+/A++</span><span class="ls">Zeer goed</span><span class="le">+€ 20.000</span>
+        </button>
+        <button class="label-btn" data-label="APPP" data-extra="25000" onclick="setLabel(this)">
+          <span class="lv">A+++</span><span class="ls">Bijna nul</span><span class="le">+€ 25.000</span>
+        </button>
+        <button class="label-btn" data-label="APPPP" data-extra="30000" onclick="setLabel(this)">
+          <span class="lv">A++++</span><span class="ls">Nul-energie</span><span class="le">+€ 30.000</span>
+        </button>
+        <button class="label-btn" data-label="APPPP_G" data-extra="40000" onclick="setLabel(this)">
+          <span class="lv">A++++ +G</span><span class="ls">Met garantie</span><span class="le">+€ 40.000</span>
+        </button>
+        <button class="label-btn" data-label="ONBEKEND" data-extra="0" onclick="setLabel(this)">
+          <span class="lv">?</span><span class="ls">Onbekend</span><span class="le">+€ 0</span>
+        </button>
+      </div>
+
+      <div class="fg fg3" style="margin-bottom:18px;">
+        <div class="sdiv s3">Verplichtingen & correcties</div>
+
+        <div class="field">
+          <label>Studieschuld (huidig saldo)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="studieschuld" value="0" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+          <span class="hint">Telt mee als 0,65% van oorspronkelijk leenbedrag per jaar (DUO: 0,75% voor OV-leners)</span>
+        </div>
+        <div class="field">
+          <label>Oorspronkelijke studieschuld</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="studieOor" value="0" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+          <span class="hint">NIBUD gebruikt 0,65% × oorspronkelijk bedrag als toetslast</span>
+        </div>
+        <div class="field">
+          <label>Andere leningen (bijv. autolening)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="andereLening" value="0" min="0" step="500" oninput="liveUpdate()">
+          </div>
+          <span class="hint">2% per jaar van openstaand saldo telt mee als last</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Overige factoren</div>
+
+        <div class="field">
+          <label>Alleenstaande toeslag</label>
+          <select id="alleenstaand">
+            <option value="0">Nee</option>
+            <option value="17000">Ja — +€ 17.000 extra leenruimte</option>
+          </select>
+          <span class="hint">Alleenstaanden mogen €17.000 extra lenen (NIBUD 2026)</span>
+        </div>
+        <div class="field">
+          <label>NHG gewenst</label>
+          <select id="nhg">
+            <option value="1">Ja — grens €435.000 (2026)</option>
+            <option value="0" selected>Nee — boven NHG-grens</option>
+          </select>
+          <span class="hint">Bij NHG: lagere rente, borgtochtprovisie 0,6%</span>
+        </div>
+        <div class="field">
+          <label>WOZ-waarde / koopprijs woning</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="woningWaarde" value="400000" min="0" step="5000" oninput="liveUpdate()">
+          </div>
+          <span class="hint">Max hypotheek = min(NIBUD-inkomen, 100% WOZ-waarde)</span>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">🏡 Bereken maximale hypotheek</button>
+    </div>
+  </div>
+
+  <!-- LIVE INDICATOR -->
+  <div class="card" id="liveCard" style="display:none;">
+    <div class="card-header"><div class="ico">⚡</div>Live indicatie (pas rente/inkomen aan voor direct resultaat)</div>
+    <div class="card-body">
+      <div class="opbouw-grid" id="liveGrid"></div>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Maximale hypotheek 2026</div>
+    <div class="card-body">
+      <div id="hoofdRes"></div>
+      <div class="opbouw-grid" id="opbouwGrid"></div>
+    </div>
+  </div>
+
+  <!-- STAP-VOOR-STAP -->
+  <div class="card res-card" id="stapCard">
+    <div class="card-header"><div class="ico">📋</div>Berekening stap voor stap (NIBUD-methodiek)</div>
+    <div class="card-body">
+      <div style="overflow-x:auto;">
+        <table class="stap-tbl" id="stapTbl"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAFIEK -->
+  <div class="card res-card" id="grafCard">
+    <div class="card-header"><div class="ico">📈</div>Analyse & scenario's</div>
+    <div class="card-body">
+      <div class="graf-tabs">
+        <button class="graf-tab active" onclick="setGraf('inkomen',this)">Max hyp. per inkomen</button>
+        <button class="graf-tab" onclick="setGraf('rente',this)">Effect hypotheekrente</button>
+        <button class="graf-tab" onclick="setGraf('maandlast',this)">Maandlasten</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="grafiek"></canvas></div>
+    </div>
+  </div>
+
+  <!-- RVP OPTIMALISATIE -->
+  <div class="card res-card" id="rvpCard">
+    <div class="card-header"><div class="ico">🔍</div>RVP-optimalisatie — welke looptijd geeft meer leenruimte?</div>
+    <div class="card-body">
+      <div class="rvp-grid" id="rvpGrid"></div>
+      <div style="margin-top:14px;font-size:12px;color:var(--muted);line-height:1.65;">
+        💡 <strong style="color:var(--navy);">Toetsrente-truc:</strong> Bij een RVP ≥10 jaar wordt de werkelijke rente gebruikt voor toetsing.
+        Bij een RVP <10 jaar geldt de AFM-minimumtoetsrente van 5,0%. Dit kan grote impact hebben op de leenruimte.
+        Een RVP van 10 jaar of langer geeft bij lage rentes doorgaans de meeste leenruimte.
+      </div>
+    </div>
+  </div>
+
+  <!-- ADVIES -->
+  <div class="card res-card" id="adviesCard">
+    <div class="card-header"><div class="ico">🧑‍💼</div>Aandachtspunten & tips</div>
+    <div class="card-body">
+      <div class="advies-box" id="adviesBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── NIBUD FINANCIERINGSLASTPERCENTAGES 2026 ───────────────────────────────
+// Bron: NIBUD Advies Hypotheeknormen 2026 (sept 2025) — Tijdelijke Regeling Hypothecair Krediet 2026
+// Tabel voor NIET-AOW-gerechtigden, annuïtair, box-1-aftrekbaar deel (35,75%)
+// Kolommen: rente 1.5% t/m 9.0% in stappen van 0.5%
+// Nieuwe afronding 2026: 0,1% ipv 0,5% — hier gepresenteerd op 0,5%-stap niveau (conservatief)
+const NIBUD_R = [1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0];
+// Gecalibreerd op NIBUD 2026 definitief (factor 0.938 t.o.v. 2025-basis)
+// Kalibratiebenchmark: 2×€37k, rente 4%, RVP 10jr, label C → max €321.461 (bron: VCN, jan 2026)
+// Afronding 0,1% conform nieuw NIBUD-advies 2026 (voorheen 0,5%)
+const NIBUD_T = [
+  // [inkomen, [flp per rentekolom 1.5% t/m 9.0%]]
+  [20000,  [ 9.5, 9.5, 9.0, 8.5, 8.0, 8.0, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 7.5]],
+  [24000,  [11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3,11.3]],
+  [28000,  [15.5,15.5,15.0,14.5,14.1,13.6,13.1,12.7,12.2,12.2,11.7,11.7,11.3,11.3,11.3,11.3]],
+  [32000,  [18.3,18.3,17.8,17.4,16.9,16.4,15.9,15.5,15.0,14.5,14.1,13.6,13.1,12.7,12.7,12.2]],
+  [36000,  [20.6,20.6,20.2,19.7,19.2,18.8,18.3,17.8,17.4,16.9,16.4,15.9,15.5,15.0,14.5,14.5]],
+  [40000,  [22.5,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2,18.8,18.3,17.8,17.4,16.9,16.4,15.9]],
+  [44000,  [23.9,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2,18.8,18.3,17.8,17.4]],
+  [48000,  [24.9,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2,18.8,18.3]],
+  [52000,  [25.8,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7,19.2]],
+  [56000,  [26.3,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2,19.7]],
+  [60000,  [26.7,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6,20.2]],
+  [65000,  [27.2,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1,20.6]],
+  [70000,  [27.7,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1,21.6,21.1]],
+  [80000,  [28.1,28.1,27.7,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5,22.1]],
+  [90000,  [28.6,28.6,28.1,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0,22.5]],
+  [100000, [29.1,29.1,28.6,28.6,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5,23.0]],
+  [115000, [29.5,29.5,29.1,29.1,28.6,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9,23.5]],
+  [130000, [30.0,30.0,29.5,29.5,29.1,28.6,28.1,27.7,27.2,26.7,26.3,25.8,25.3,24.9,24.4,23.9]],
+];
+
+// Energielabel extra bedragen 2026
+const LABEL_EXTRA = {
+  EFG:0, CD:5000, AB:10000, APP:20000, APPP:25000, APPPP:30000, APPPP_G:40000, ONBEKEND:0
+};
+const TOETSRENTE_MIN = 5.0; // AFM minimum 2026 voor RVP < 10jr
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let energielabel = 'EFG';
+let grafModus = 'inkomen';
+let grafObj = null;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n,dec=0){ if(isNaN(n)||n===null) return '—'; const neg=n<0; return (neg?'−\u00A0':'')+'\u00A0€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtK(n){ return n>=1000?'\u00A0€\u00A0'+(n/1000).toFixed(0)+'k,-':fmt(n); }
+function fmtPct(n,d=2){ return n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%'; }
+
+function setLabel(btn){
+  document.querySelectorAll('.label-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  energielabel = btn.dataset.label;
+  liveUpdate();
+}
+
+function liveUpdate(){
+  const r = N('rente'), rvp = parseInt(document.getElementById('rvp').value);
+  const toets = rvp < 10 ? Math.max(TOETSRENTE_MIN, r) : r;
+  document.getElementById('renteHint').textContent = r>0 ? `Annuïteit: ${fmt(berekenAnnuiteit(r,30)/100000,2)} per €100.000` : '';
+  document.getElementById('toetsRenteHint').innerHTML = rvp<10
+    ? `<span style="color:var(--orange);font-weight:700;">⚠ RVP <10jr → toetsrente: ${fmtPct(toets,1)} (AFM-minimum)</span>`
+    : `<span style="color:var(--green);font-weight:700;">✓ RVP ≥10jr → werkelijke rente ${fmtPct(r,2)} als toetsrente</span>`;
+  // Live preview
+  const res = berekenMax(N('ink1'), N('ink2'), r, rvp, N('looptijd')||30, energielabel, N('studieschuld'), N('studieOor'), N('andereLening'), parseInt(document.getElementById('alleenstaand').value||0), N('woningWaarde'));
+  const lc = document.getElementById('liveCard');
+  if(res){ lc.style.display='block'; renderOpbouw(res, 'liveGrid', true); }
+  const ink1h = document.getElementById('ink1Hint');
+  const i1 = N('ink1');
+  ink1h.textContent = i1>0 ? `${fmt(i1/12,2)}/mnd bruto` : '';
+}
+
+function berekenAnnuiteit(rPct, looptijdJaar){
+  const r=rPct/100/12, n=looptijdJaar*12;
+  if(r===0) return 1/n;
+  return r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+}
+
+function getFLP(inkomen, rente){
+  let row = NIBUD_T[0];
+  for(const r of NIBUD_T){ if(inkomen >= r[0]) row = r; }
+  const ri = Math.max(0,Math.min(NIBUD_R.length-1, Math.round((Math.max(1.5,Math.min(9.0,rente))-1.5)/0.5)));
+  return row[1][ri]/100;
+}
+
+function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschuld, studieOor, andereLening, alleenstaandExtra, woningWaarde){
+  if(ink1<=0) return null;
+  // Toetsrente
+  const toetsRente = rvpJaar < 10 ? Math.max(TOETSRENTE_MIN, rente) : rente;
+  // Inkomstenfactor
+  const inkomensTypeFactor = parseFloat(document.getElementById('inkomensType').value||1);
+  const i1 = ink1 * inkomensTypeFactor;
+  const i2 = Math.max(0, ink2 * inkomensTypeFactor);
+  // Tweeverdieners: 100% hoogste + 90% laagste
+  const hoogste = Math.max(i1, i2);
+  const laagste = Math.min(i1, i2);
+  const toetsInkomen = hoogste + laagste * 0.90;
+  // FLP
+  const flp = getFLP(toetsInkomen, toetsRente);
+  const maxJaarLast = toetsInkomen * flp;
+  // Aftrek verplichtingen
+  const studieLastJaar = (studieOor||studieschuld) > 0 ? Math.max(studieOor, studieschuld) * 0.0065 : 0;
+  const andereLastJaar = andereLening * 0.02;
+  const beschikbaarJaar = Math.max(0, maxJaarLast - studieLastJaar - andereLastJaar);
+  const beschikbaarMnd = beschikbaarJaar / 12;
+  // Max hypotheek op inkomen
+  const annFactor = berekenAnnuiteit(toetsRente, looptijdJaar);
+  const maxOpInkomen = beschikbaarMnd / annFactor;
+  // Energielabel bonus
+  const labelExtra = LABEL_EXTRA[label] || 0;
+  // Alleenstaand bonus
+  const maxVoorEnergielabel = maxOpInkomen + labelExtra + alleenstaandExtra;
+  // NHG grens
+  const nhg = document.getElementById('nhg').value==='1';
+  const nhgGrens = 435000;
+  const maxOpWoning = woningWaarde * 1.00; // max 100% van woningwaarde
+  const maxFinal = Math.min(maxVoorEnergielabel, maxOpWoning);
+  const maxNhgGegeven = nhg ? Math.min(maxFinal, nhgGrens) : maxFinal;
+  // Maandlast bij werkelijke rente
+  const maandlastAnn = berekenAnnuiteit(rente, looptijdJaar) * maxNhgGegeven;
+  const maandlastRente = maxNhgGegeven * rente/100/12;
+  return {
+    toetsInkomen, toetsRente, flp, maxJaarLast, studieLastJaar, andereLastJaar,
+    beschikbaarJaar, beschikbaarMnd, annFactor, maxOpInkomen, labelExtra,
+    alleenstaandExtra, maxVoorEnergielabel, maxOpWoning, maxFinal: maxNhgGegeven,
+    maandlastAnn, maandlastRente, ink1:i1, ink2:i2, hoogste, laagste,
+    nhg, nhgGrens, woningWaarde, label
+  };
+}
+
+function renderOpbouw(r, gridId, compact=false){
+  const g=document.getElementById(gridId);
+  g.innerHTML = `
+    <div class="ob-box navy">
+      <div class="ob-lbl">Maximale hypotheek</div>
+      <div class="ob-val">${fmtK(Math.round(r.maxFinal/1000)*1000)}</div>
+      <div class="ob-sub">${r.nhg&&r.maxFinal<=r.nhgGrens?'✓ Binnen NHG-grens':r.nhg?'⚠ Boven NHG (€435k)':''}</div>
+    </div>
+    <div class="ob-box gold">
+      <div class="ob-lbl">Toetsinkomen</div>
+      <div class="ob-val">${fmt(Math.round(r.toetsInkomen))}</div>
+      <div class="ob-sub">FLP: ${fmtPct(r.flp*100)} · ${fmtPct(r.toetsRente,2)} toetsrente</div>
+    </div>
+    <div class="ob-box green">
+      <div class="ob-lbl">Maandlast (ann.)</div>
+      <div class="ob-val">${fmt(r.maandlastAnn,2)}</div>
+      <div class="ob-sub">Rente-only: ${fmt(r.maandlastRente,2)}</div>
+    </div>
+    <div class="ob-box ${r.maxFinal<r.maxVoorEnergielabel?'red':'navy'}">
+      <div class="ob-lbl">Beperkende factor</div>
+      <div class="ob-val" style="font-size:16px;">${r.maxFinal<r.maxVoorEnergielabel?(r.nhg&&r.maxFinal<=r.nhgGrens?'NHG-grens':'Woningwaarde'):'Inkomen'}</div>
+      <div class="ob-sub">${r.labelExtra>0?'Label bonus: +'+fmt(r.labelExtra):''}</div>
+    </div>`;
+}
+
+// ── BEREKEN (volledig) ────────────────────────────────────────────────────
+function bereken(){
+  const ink1=N('ink1'), ink2=N('ink2'), rente=N('rente');
+  const rvp=parseInt(document.getElementById('rvp').value);
+  const looptijd=parseInt(document.getElementById('looptijd').value)||30;
+  const studieschuld=N('studieschuld'), studieOor=N('studieOor');
+  const andereLening=N('andereLening');
+  const alleenstaandExtra=parseInt(document.getElementById('alleenstaand').value||0);
+  const woningWaarde=N('woningWaarde');
+
+  if(ink1<=0){alert('Vul een inkomen in.'); return;}
+  const r = berekenMax(ink1, ink2, rente, rvp, looptijd, energielabel, studieschuld, studieOor, andereLening, alleenstaandExtra, woningWaarde);
+  if(!r) return;
+
+  // ── HOOFD RESULTAAT ──
+  document.getElementById('hoofdRes').innerHTML = `
+    <div class="hoofd-res">
+      <div class="hr-main">
+        <div class="hr-label">Maximale hypotheek 2026</div>
+        <div class="hr-bedrag">${fmt(Math.round(r.maxFinal/1000)*1000)}</div>
+        <div class="hr-sub">NIBUD-norm · FLP ${fmtPct(r.flp*100)} · toetsrente ${fmtPct(r.toetsRente,2)}</div>
+      </div>
+      <div class="hr-sub-vals">
+        <div class="hr-sub-val"><div class="hr-sub-lbl">Maandlast</div><div class="hr-sub-num">${fmt(r.maandlastAnn,2)}/mnd</div></div>
+        <div class="hr-sub-val"><div class="hr-sub-lbl">Bruto jaarlast</div><div class="hr-sub-num">${fmt(r.maxJaarLast)}</div></div>
+        ${r.ink2>0?`<div class="hr-sub-val"><div class="hr-sub-lbl">Toetsinkomen</div><div class="hr-sub-num">${fmt(r.toetsInkomen)}</div></div>`:''}
+      </div>
+    </div>`;
+
+  renderOpbouw(r, 'opbouwGrid');
+
+  // ── STAP TABEL ──
+  const ink2Meegenomen = r.laagste * 0.90;
+  document.getElementById('stapTbl').innerHTML = `<thead><tr>
+    <th>Stap</th><th style="text-align:right">Bedrag/jaar</th><th style="text-align:right">Toelichting</th>
+  </tr></thead><tbody>
+    <tr><td>1. Inkomen 1 (u)</td><td>${fmt(r.hoogste)}</td><td style="text-align:right">100% wordt meegenomen</td></tr>
+    ${ink2>0?`<tr><td>1b. Inkomen 2 (partner, 90%)</td><td class="pos">+${fmt(ink2Meegenomen)}</td><td style="text-align:right">90% van ${fmt(r.laagste)}</td></tr>`:''}
+    <tr class="totaal"><td>= Toetsinkomen</td><td>${fmt(r.toetsInkomen)}</td><td style="text-align:right">Basis voor NIBUD-norm</td></tr>
+    <tr><td>2. FLP (financieringslast%)</td><td>${fmtPct(r.flp*100)}</td><td style="text-align:right">Bij toetsrente ${fmtPct(r.toetsRente,2)}</td></tr>
+    <tr><td>= Max. bruto jaarlijkse hypotheeklast</td><td>${fmt(r.maxJaarLast)}</td><td style="text-align:right">${fmt(r.toetsInkomen)} × ${fmtPct(r.flp*100)}</td></tr>
+    ${r.studieLastJaar>0?`<tr><td>3a. Aftrek studieschuld</td><td class="neg">−${fmt(r.studieLastJaar)}</td><td style="text-align:right">0,65% van €${Math.max(r.beschikbaarJaar,N('studieschuld')).toLocaleString('nl-NL')}</td></tr>`:''}
+    ${r.andereLastJaar>0?`<tr><td>3b. Aftrek andere lening</td><td class="neg">−${fmt(r.andereLastJaar)}</td><td style="text-align:right">2% van ${fmt(N('andereLening'))}</td></tr>`:''}
+    <tr class="totaal"><td>= Beschikbare jaarlijkse hypotheeklast</td><td>${fmt(r.beschikbaarJaar)}</td><td style="text-align:right">${fmt(r.beschikbaarMnd,2)}/mnd</td></tr>
+    <tr><td>4. Max. hypotheek op inkomen</td><td>${fmt(r.maxOpInkomen)}</td><td style="text-align:right">Annuïteitsfactor ${fmtPct(r.annFactor*100*12,3)}/mnd per €100k</td></tr>
+    ${r.labelExtra>0?`<tr><td>4b. Energielabel bonus (${r.label})</td><td class="pos">+${fmt(r.labelExtra)}</td><td style="text-align:right">NIBUD 2026 energietoeslag</td></tr>`:''}
+    ${r.alleenstaandExtra>0?`<tr><td>4c. Alleenstaandetoeslag</td><td class="pos">+${fmt(r.alleenstaandExtra)}</td><td style="text-align:right">NIBUD 2026 standaard</td></tr>`:''}
+    <tr><td>5. Max. op woningwaarde (100%)</td><td>${fmt(r.maxOpWoning)}</td><td style="text-align:right">${r.maxFinal<r.maxVoorEnergielabel?'⚠ Beperkende factor':'—'}</td></tr>
+    ${r.nhg&&r.maxFinal<r.maxVoorEnergielabel?`<tr><td>5b. NHG-grens</td><td>${fmt(r.nhgGrens)}</td><td style="text-align:right">Maximumgrens NHG 2026</td></tr>`:''}
+    <tr class="totaal"><td><strong>= Maximale hypotheek</strong></td><td><strong>${fmt(r.maxFinal)}</strong></td><td style="text-align:right">Maandlast: ${fmt(r.maandlastAnn,2)}/mnd</td></tr>
+  </tbody>`;
+
+  // ── RVP OPTIMALISATIE ──
+  const rvpOpties=[{jr:1,r:null},{jr:2,r:null},{jr:5,r:null},{jr:10,r:null},{jr:15,r:null},{jr:20,r:null},{jr:30,r:null}];
+  const maxPerRvp = rvpOpties.map(o=>{
+    const toets = o.jr<10 ? Math.max(TOETSRENTE_MIN,rente) : rente;
+    const res2 = berekenMax(ink1,ink2,rente,o.jr,looptijd,energielabel,studieschuld,studieOor,andereLening,alleenstaandExtra,woningWaarde);
+    return {jr:o.jr, toets, max:res2?res2.maxFinal:0};
+  });
+  const maxMax = Math.max(...maxPerRvp.map(x=>x.max));
+  document.getElementById('rvpGrid').innerHTML = maxPerRvp.map(x=>{
+    const isBest = x.max===maxMax;
+    const isActief = x.jr===rvp;
+    return `<div class="rvp-card ${isBest?'best':''} ${isActief?'actief':''}">
+      <div class="rvp-lbl">${x.jr} jaar RVP</div>
+      <div class="rvp-rente">${x.jr<10?fmtPct(TOETSRENTE_MIN)+' toets':'Welijk rente'}</div>
+      <div class="rvp-max">${fmt(Math.round(x.max/1000)*1000)}</div>
+      ${isBest?'<span class="rvp-badge">Meeste leenruimte</span>':''}
+      ${isActief?'<span style="font-size:9.5px;font-weight:700;color:var(--navy);">← uw keuze</span>':''}
+    </div>`;
+  }).join('');
+
+  // ── ADVIESBOX ──
+  const adv = document.getElementById('adviesBox');
+  const punten=[];
+  if(rvp<10) punten.push({ico:'⚠️',txt:`<strong>RVP korter dan 10 jaar → toetsrente 5,0%</strong>. Uw werkelijke rente is ${fmtPct(rente,2)} maar er wordt getoetst op ${fmtPct(TOETSRENTE_MIN,1)}. Overweeg een RVP van 10 jaar: dan geldt uw werkelijke rente als toetsrente, wat mogelijk meer leenruimte geeft.`});
+  if(r.maxFinal<r.maxVoorEnergielabel) punten.push({ico:'🏠',txt:`<strong>Woningwaarde beperkt uw hypotheek.</strong> Op basis van inkomen kunt u ${fmt(r.maxVoorEnergielabel)} lenen, maar de woningwaarde (${fmt(r.woningWaarde)}) stelt de grens op ${fmt(r.maxOpWoning)}. Een hogere woningprijs biedt meer leenruimte.`});
+  if(r.labelExtra===0&&r.label==='EFG') punten.push({ico:'💚',txt:`<strong>Energielabel verbetert leenruimte.</strong> Bij label C/D kunt u €5.000 extra lenen; bij A/B zelfs €10.000. Dit bedrag is geoormerkt voor verduurzaming.`});
+  if(r.studieLastJaar>0) punten.push({ico:'📚',txt:`<strong>Studieschuld vermindert leenruimte met ${fmt(r.studieLastJaar)}/jaar.</strong> Let op: ook als u de schuld niet heeft opgegeven, zijn banken verplicht dit bij DUO te controleren.`});
+  if(ink2>0) punten.push({ico:'👥',txt:`<strong>Partner telt mee voor 90%:</strong> ${fmt(r.laagste)} × 90% = ${fmt(r.laagste*0.9)} extra inkomen. Het gezamenlijk toetsinkomen is ${fmt(r.toetsInkomen)}.`});
+  if(N('alleenstaand')===0&&ink2===0) punten.push({ico:'💡',txt:`<strong>Alleenstaand?</strong> Bij NIBUD kunt u als alleenstaande €17.000 extra lenen (selecteer bovenaan). Vraag uw adviseur of u hiervoor in aanmerking komt.`});
+  punten.push({ico:'📌',txt:`<strong>Let op:</strong> dit is een indicatieve berekening op basis van NIBUD-normen 2026. Geldverstrekkers hanteren eigen acceptatiecriteria die kunnen afwijken. Voor een bindende uitkomst raadpleegt u een hypotheekadviseur.`});
+  adv.innerHTML=`<h3>🧑‍💼 Aandachtspunten & tips</h3>${punten.map(p=>`<div class="ap"><span class="ai">${p.ico}</span><span>${p.txt}</span></div>`).join('')}`;
+
+  ['resCard','stapCard','grafCard','rvpCard','adviesCard'].forEach(id=>document.getElementById(id).classList.add('vis'));
+  tekenGrafiek(r, ink1, ink2, rente, rvp, looptijd, studieschuld, studieOor, andereLening, alleenstaandExtra, woningWaarde);
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── GRAFIEK ────────────────────────────────────────────────────────────────
+function setGraf(m,btn){ grafModus=m; document.querySelectorAll('.graf-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); tekenGrafiek(window._lastR,window._lastInk1,window._lastInk2,window._lastRente,window._lastRvp,window._lastLt,window._lastSS,window._lastSSO,window._lastAL,window._lastAS,window._lastWv); }
+
+function tekenGrafiek(r,ink1,ink2,rente,rvp,looptijd,ss,sso,al,as_,wv){
+  if(!r) return;
+  window._lastR=r;window._lastInk1=ink1;window._lastInk2=ink2;window._lastRente=rente;window._lastRvp=rvp;window._lastLt=looptijd;window._lastSS=ss;window._lastSSO=sso;window._lastAL=al;window._lastAS=as_;window._lastWv=wv;
+  const ctx=document.getElementById('grafiek').getContext('2d');
+  if(grafObj) grafObj.destroy();
+
+  if(grafModus==='inkomen'){
+    const inkomens=[30000,40000,50000,60000,70000,80000,90000,100000,120000,150000];
+    const maxHyps=inkomens.map(i=>{
+      const res=berekenMax(i,ink2,rente,rvp,looptijd,energielabel,ss,sso,al,as_,wv);
+      return res?Math.round(res.maxFinal/1000)*1000:0;
+    });
+    grafObj=new Chart(ctx,{type:'bar',data:{labels:inkomens.map(i=>'€'+(i/1000).toFixed(0)+'k'),datasets:[
+      {label:'Max hypotheek',data:maxHyps,backgroundColor:inkomens.map(i=>Math.abs(i-ink1)<5000?'#E5A138':'#003057'),borderRadius:5}
+    ]},options:gopts('Max. hypotheek per inkomensniveau','Bruto jaarinkomen','Max. hypotheek (€)')});
+
+  } else if(grafModus==='rente'){
+    const rentes=[2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0];
+    const maxRvpKort=rentes.map(re=>{ const res=berekenMax(ink1,ink2,re,5,looptijd,energielabel,ss,sso,al,as_,wv); return res?Math.round(res.maxFinal/1000)*1000:0; });
+    const maxRvpLang=rentes.map(re=>{ const res=berekenMax(ink1,ink2,re,10,looptijd,energielabel,ss,sso,al,as_,wv); return res?Math.round(res.maxFinal/1000)*1000:0; });
+    grafObj=new Chart(ctx,{type:'line',data:{labels:rentes.map(r=>fmtPct(r)),datasets:[
+      {label:'RVP 10+ jaar (werkelijke rente als toetsrente)',data:maxRvpLang,borderColor:'#003057',backgroundColor:'rgba(0,48,87,.1)',borderWidth:2.5,fill:true,tension:.3,pointRadius:4},
+      {label:'RVP < 10 jaar (toetsrente min. 5%)',data:maxRvpKort,borderColor:'#D97706',backgroundColor:'rgba(217,119,6,.1)',borderWidth:2,fill:true,tension:.3,pointRadius:4},
+    ]},options:gopts('Max. hypotheek bij verschillende rentes','Rente','Max. hypotheek (€)')});
+
+  } else {
+    // Maandlasten per hypotheekbedrag
+    const bedragen=[200000,250000,300000,350000,400000,450000,500000];
+    const mlAnn=bedragen.map(h=>berekenAnnuiteit(rente,looptijd)*h);
+    const mlRente=bedragen.map(h=>h*rente/100/12);
+    grafObj=new Chart(ctx,{type:'bar',data:{labels:bedragen.map(h=>'€'+(h/1000).toFixed(0)+'k'),datasets:[
+      {label:'Maandlast annuïtair',data:mlAnn.map(v=>Math.round(v)),backgroundColor:'#003057',borderRadius:5},
+      {label:'Rente-only',data:mlRente.map(v=>Math.round(v)),backgroundColor:'#E5A138',borderRadius:5},
+    ]},options:gopts('Maandlast bij hypotheekbedrag ('+fmtPct(rente,2)+', '+looptijd+' jaar)','Hypotheekbedrag','Maandlast (€)')});
+  }
+}
+
+function gopts(title,xLabel,yLabel){
+  return {responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{font:{family:'DM Sans',size:12},color:'#333',boxWidth:14}},
+      tooltip:{callbacks:{label:c=>` ${c.dataset.label}: €\u00A0${Math.round(c.parsed.y||0).toLocaleString('nl-NL')},-`}}},
+    scales:{
+      x:{ticks:{color:'#6B7280'},grid:{color:'#EEF2F6'}},
+      y:{ticks:{callback:v=>'€ '+(v/1000).toFixed(0)+'k',color:'#6B7280'},grid:{color:'#EEF2F6'}}
+    }
+  };
+}
+
+// Init
+liveUpdate();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

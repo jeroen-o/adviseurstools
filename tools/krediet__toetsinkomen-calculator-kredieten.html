@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toetsinkomen Calculator – Hypotheek.ai</title>
+<style>
+:root{--navy:#002A54;--navy-mid:#003a70;--navy-light:#e8eef5;--orange:#FF6600;--orange-light:#fff2e8;--gray-bg:#d9d9d9;--text:#333332;--border:#d8d8d8;--green:#1a6b3c;--red:#c0392b;--green-bg:#eaf5ee;--red-bg:#fdecea;--amber:#b45309;--amber-bg:#fffbe6;--radius:6px;--radius-lg:10px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f4f6f9;min-height:100vh;}
+.header{background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:12px;}
+.header-logo{font-size:20px;font-weight:700;}
+.header-logo span{color:var(--orange);}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-left:auto;}
+.sticky-bar{position:sticky;top:0;z-index:100;background:var(--navy-mid);color:#fff;display:flex;align-items:center;padding:0 24px;height:48px;gap:20px;box-shadow:0 2px 8px rgba(0,0,0,0.18);overflow-x:auto;}
+.si{display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap;}
+.sl{color:rgba(255,255,255,0.6);}
+.sv{font-weight:700;font-size:14px;color:#fff;transition:color 0.2s;}
+.sv.g{color:#4cdb87;}.sv.r{color:#ff7f6e;}.sv.o{color:#ffad5c;}
+.sdiv{width:1px;height:28px;background:rgba(255,255,255,0.2);flex-shrink:0;}
+.main{padding:20px 24px 80px;width:100%;display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+@media(max-width:820px){.main{grid-template-columns:1fr;}.sidebar{order:-1;}}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden;}
+.ch{background:var(--navy-light);padding:10px 16px;font-weight:700;font-size:14px;color:var(--navy);display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.ch::before{content:'';display:inline-block;width:8px;height:8px;background:var(--orange);transform:rotate(45deg);flex-shrink:0;}
+.ch .ti{margin-left:auto;font-size:12px;transition:transform 0.2s;}
+.ch.col .ti{transform:rotate(-90deg);}
+.cb{padding:16px;}
+.cb.hid{display:none;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 20px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px 16px;}
+@media(max-width:700px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+.f{display:flex;flex-direction:column;gap:4px;}
+.f label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;}
+.f label span.req{color:var(--orange);}
+.f input,.f select{border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:14px;font-family:Arial,sans-serif;color:var(--text);background:#fff;width:100%;transition:border-color 0.15s;appearance:none;}
+.f select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.f input:focus,.f select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 2px rgba(0,42,84,0.1);}
+.f input[readonly]{background:#f5f5f5;font-weight:700;color:var(--navy);}
+.f .hint{font-size:11px;color:#888;margin-top:2px;line-height:1.4;}
+.f .cr{font-size:11px;color:var(--orange);font-weight:700;margin-top:2px;}
+.st{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid var(--orange);display:inline-block;}
+.ib{background:var(--navy-light);border-left:3px solid var(--navy);border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--navy);margin-bottom:14px;line-height:1.55;}
+.ib strong{display:block;margin-bottom:3px;}
+.ap-tabs{display:flex;border-bottom:2px solid var(--border);margin:-16px -16px 16px;background:var(--navy-light);}
+.ap-tab{padding:10px 18px;border:none;background:none;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:border-color 0.15s;}
+.ap-tab.on{border-bottom-color:var(--orange);}
+.ap-pane{display:none;}.ap-pane.on{display:block;}
+.chips{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+@media(max-width:600px){.chips{grid-template-columns:repeat(3,1fr);}}
+.chip{border:1px solid var(--border);border-radius:var(--radius);padding:8px 6px;text-align:center;cursor:pointer;background:#fff;transition:all 0.15s;}
+.chip:hover,.chip.on{border-color:var(--orange);background:var(--orange-light);}
+.chip .ci{font-size:16px;display:block;margin-bottom:3px;}
+.chip .cl{font-size:10px;font-weight:700;color:var(--text);}
+.chip.on .cl{color:var(--navy);}
+.wf{display:flex;flex-direction:column;}
+.wr{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #eee;gap:12px;}
+.wlabel{flex:1;font-size:14px;}
+.wsub{font-size:11px;color:#888;display:block;}
+.wamt{font-size:15px;font-weight:700;min-width:120px;text-align:right;}
+.wicon{width:22px;text-align:center;font-size:16px;}
+.wr.tot{background:var(--navy);border-radius:0 0 8px 8px;margin:0 -16px -16px -16px;padding:12px 30px;}
+.wr.tot .wlabel{color:#fff;font-weight:700;font-size:15px;}
+.wr.tot .wamt{color:#fff;font-size:18px;}
+.gv{color:#4cdb87!important;}.rv{color:#ff7f6e!important;}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+.tbl th{background:var(--navy);color:#fff;padding:6px 8px;text-align:left;font-size:11px;}
+.tbl td{padding:5px 8px;border-bottom:1px solid #eee;}
+.tbl tr:nth-child(even) td{background:#f8f9fb;}
+.tbl tr.tot-row td{background:var(--orange-light);font-weight:700;color:var(--navy);border-top:2px solid var(--orange);}
+.toeslag-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.tg{background:var(--navy-light);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;}
+.tg-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:#666;}
+.tg-value{font-size:18px;font-weight:700;color:var(--navy);margin:3px 0 1px;}
+.tg-note{font-size:10px;color:#888;}
+.rc{background:var(--navy);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;}
+.rc-head{padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.rc-head h2{font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+.rc-total{font-size:38px;font-weight:700;color:#fff;line-height:1;font-variant-numeric:tabular-nums;transition:color 0.2s;}
+.rc-total.neg{color:#ff7f6e;}
+.rc-meta{font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px;}
+.prog-wrap{padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.prog-labels{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:5px;}
+.prog-track{height:4px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--orange);border-radius:3px;transition:width 0.4s ease;}
+.prog-fill.danger{background:#ff7f6e;}
+.bd{padding:12px 20px 16px;}
+.brow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.brow:last-child{border-bottom:none;}
+.bico{width:18px;text-align:center;font-size:12px;flex-shrink:0;}
+.blbl{flex:1;font-size:12px;color:rgba(255,255,255,0.5);}
+.bval{font-size:12px;font-weight:700;color:#fff;min-width:90px;text-align:right;font-variant-numeric:tabular-nums;}
+.bval.add{color:#4cdb87;}.bval.tot{color:var(--orange);}.bval.sub{color:#ff7f6e;}
+.ai-panel{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;}
+.ai-head{background:var(--navy-mid);padding:10px 16px;display:flex;align-items:center;gap:8px;}
+.ai-head h3{font-size:13px;font-weight:700;color:#fff;flex:1;display:flex;align-items:center;gap:8px;}
+.ai-head h3::before{content:'';display:inline-block;width:8px;height:8px;background:var(--orange);transform:rotate(45deg);flex-shrink:0;}
+.ai-badge{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;background:rgba(255,102,0,0.2);color:var(--orange);border:1px solid rgba(255,102,0,0.3);padding:2px 7px;border-radius:3px;}
+.ai-body{padding:14px 16px;}
+.ai-out{font-size:13px;color:var(--text);line-height:1.7;min-height:56px;}
+.ai-out p{margin-bottom:6px;}.ai-out p:last-child{margin-bottom:0;}
+.ai-out strong{color:var(--navy);}
+.ai-out .tag{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:3px;margin:1px;}
+.ai-out .tag-ok{background:var(--green-bg);color:var(--green);}
+.ai-out .tag-warn{background:var(--amber-bg);color:var(--amber);}
+.ai-out .tag-err{background:var(--red-bg);color:var(--red);}
+.ai-btn{margin-top:10px;width:100%;padding:9px;border-radius:3px;border:none;background:var(--orange);color:#fff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.ai-btn:hover{opacity:0.88;}.ai-btn:disabled{opacity:0.45;cursor:default;}
+.spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pen-ok{background:var(--green-bg);border-left:3px solid var(--green);color:var(--green);border-radius:var(--radius);padding:10px 14px;font-size:13px;margin-top:10px;}
+.pen-warn{background:var(--amber-bg);border-left:3px solid var(--amber);color:var(--amber);border-radius:var(--radius);padding:10px 14px;font-size:13px;margin-top:10px;}
+.pen-err{background:var(--red-bg);border-left:3px solid var(--red);color:var(--red);border-radius:var(--radius);padding:10px 14px;font-size:13px;margin-top:10px;}
+.disclaimer{background:var(--orange-light);border:1px solid #ffd6aa;border-radius:var(--radius);padding:12px 14px;font-size:12px;color:#7a3800;line-height:1.6;margin-top:12px;}
+.disclaimer strong{display:block;margin-bottom:3px;font-size:13px;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}
+.hid{display:none;}
+.fb{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:flex;align-items:center;justify-content:flex-end;padding:10px 24px;gap:10px;z-index:200;box-shadow:0 -2px 12px rgba(0,0,0,0.18);}
+.btn{padding:9px 20px;border-radius:3px;border:none;font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.15s;}
+.btn:hover{opacity:0.88;}
+.btn-p{background:var(--orange);color:#fff;}
+.btn-s{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);}
+@media print{.sticky-bar,.fb,.ai-panel{display:none!important}.cb.hid{display:block!important}body{background:#fff}.main{grid-template-columns:1fr}.sidebar{position:static}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">Toetsinkomen <span>Calculator</span></div>
+  <div class="header-sub">VFN Leennormenmethodiek CK v1.7 – art. 4:34 Wft</div>
+</div>
+
+<div class="sticky-bar">
+  <div class="si"><span class="sl">Netto inkomen</span><span class="sv o" id="sb-netto">–</span></div>
+  <div class="sdiv"></div>
+  <div class="si"><span class="sl">Vakantietoeslag</span><span class="sv" id="sb-vak">–</span></div>
+  <div class="sdiv"></div>
+  <div class="si"><span class="sl">Zorgtoeslag</span><span class="sv" id="sb-zorg">–</span></div>
+  <div class="sdiv"></div>
+  <div class="si"><span class="sl">Overige toeslagen</span><span class="sv" id="sb-ov">–</span></div>
+  <div class="sdiv"></div>
+  <div class="si"><span class="sl">Toetsinkomen</span><span class="sv g" id="sb-tot">–</span></div>
+  <div class="sdiv"></div>
+  <div class="si"><span class="sl">Pensioentoets</span><span class="sv" id="sb-pen">–</span></div>
+</div>
+
+<div class="main">
+<div class="left-col">
+
+<!-- STAP 1 -->
+<div class="card">
+  <div class="ch" onclick="tog(this)">Stap 1 – Woonsituatie<span class="ti">▼</span></div>
+  <div class="cb">
+    <div class="g3 mb12">
+      <div class="f">
+        <label>Woonsituatie <span class="req">*</span></label>
+        <select id="wtype" onchange="onWtype()">
+          <option value="koop" selected>Koopwoning (hypotheek)</option>
+          <option value="huur">Huurwoning</option>
+          <option value="inwonend">Inwonend / kostgeld</option>
+        </select>
+      </div>
+      <div class="f">
+        <label>Gezinssamenstelling <span class="req">*</span></label>
+        <select id="gezin" onchange="herbereken()">
+          <option value="een">Alleenstaand</option>
+          <option value="een-k">Alleenstaand + kinderen</option>
+          <option value="paar" selected>Paar (geen kinderen)</option>
+          <option value="paar-k">Paar met kinderen</option>
+        </select>
+      </div>
+      <div class="f">
+        <label>Aantal kinderen</label>
+        <select id="nkind" onchange="herbereken()">
+          <option value="0">Geen</option>
+          <option value="1">1 kind</option>
+          <option value="2">2 kinderen</option>
+          <option value="3">3 of meer</option>
+        </select>
+      </div>
+    </div>
+    <div id="blk-koop">
+      <div class="st mb12">Hypotheekgegevens</div>
+      <div class="g3">
+        <div class="f"><label>Bruto hypotheeklast/mnd</label><input type="number" id="hyp-bruto" value="1450" min="0" step="25" oninput="herbereken()"><span class="hint">Rente + aflossing</span></div>
+        <div class="f"><label>Netto hypotheeklast/mnd</label><input type="text" id="hyp-netto-disp" readonly><span class="cr" id="hyp-aftrek-note">5% renteaftrekkorting (art. 8.1.2)</span></div>
+        <div class="f"><label>Eigenwoningsurplus/mnd</label><input type="text" id="hyp-surplus-disp" readonly><span class="hint">Tabel 6 • afhankelijk inkomensniveau</span></div>
+      </div>
+    </div>
+    <div id="blk-huur" class="hid">
+      <div class="g3">
+        <div class="f"><label>Kale huur per maand</label><input type="number" id="huur" value="950" min="0" step="25" oninput="herbereken()"></div>
+        <div class="f"><label>Huurtoeslag per maand</label><input type="number" id="htoeslag" value="0" min="0" step="10" oninput="herbereken()"><span class="hint">Huur − toeslag = woonlast</span></div>
+      </div>
+    </div>
+    <div id="blk-inwonend" class="hid">
+      <div class="ib" style="margin-bottom:10px;">Inwonend: woonlast = 30% × netto inkomen, max €750 (art. 8.3.2).</div>
+      <div class="f" style="max-width:220px;"><label>Werkelijk kostgeld (optioneel)</label><input type="number" id="kostgeld" value="0" min="0" step="25" oninput="herbereken()"><span class="hint">Alleen indien bestendig inwonend ≥30 jaar</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- STAP 2 -->
+<div class="card">
+  <div class="ch" onclick="tog(this)">Stap 2 – Inkomen aanvragers<span class="ti">▼</span></div>
+  <div class="cb">
+    <div class="ap-tabs">
+      <button class="ap-tab on" onclick="swAp(0,this)">Aanvrager 1</button>
+      <button class="ap-tab" onclick="swAp(1,this)">Aanvrager 2  <span style="font-size:10px;opacity:.5;">(optioneel)</span></button>
+    </div>
+    <!-- A1 -->
+    <div class="ap-pane on" id="ap0">
+      <div class="st mb12">Inkomenstype</div>
+      <div class="chips" id="chips0">
+        <div class="chip on" data-v="loon" onclick="setType(0,'loon',this)"><span class="ci">💼</span><span class="cl">Loondienst</span></div>
+        <div class="chip" data-v="zzp" onclick="setType(0,'zzp',this)"><span class="ci">🔧</span><span class="cl">ZZP/DGA</span></div>
+        <div class="chip" data-v="uitk" onclick="setType(0,'uitk',this)"><span class="ci">🏛</span><span class="cl">Uitkering</span></div>
+        <div class="chip" data-v="pen" onclick="setType(0,'pen',this)"><span class="ci">🎓</span><span class="cl">Pensioen</span></div>
+        <div class="chip" data-v="ov" onclick="setType(0,'ov',this)"><span class="ci">📋</span><span class="cl">Overig</span></div>
+      </div>
+      <div class="g3 mb12">
+        <div class="f"><label>Netto maandinkomen <span class="req">*</span></label><input type="number" id="a0-netto" value="3800" min="0" step="50" oninput="herbereken()"><span class="hint">Na belasting, excl. vakantietoeslag</span></div>
+        <div class="f"><label>Bruto maandinkomen</label><input type="number" id="a0-bruto" value="5800" min="0" step="50" oninput="herbereken()"><span class="hint">Excl. vakantietoeslag</span></div>
+        <div class="f"><label>Correctiefactor (%)</label><input type="number" id="a0-corr" value="100" min="0" max="100" step="5" oninput="herbereken()"><span class="hint" id="a0-corr-hint">100% = geen correctie</span></div>
+      </div>
+      <div class="g4 mb12">
+        <div class="f"><label>13e maand / EJU (bruto/jr)</label><input type="number" id="a0-13e" value="0" min="0" step="100" oninput="herbereken()"><span class="hint">Jaarlijks ÷ 12</span></div>
+        <div class="f"><label>ORT netto/mnd</label><input type="number" id="a0-ort" value="0" min="0" step="50" oninput="herbereken()"><span class="hint">Bewezen ≥2 jaar</span></div>
+        <div class="f"><label>Alimentatie ontvangen</label><input type="number" id="a0-ali" value="0" min="0" step="50" oninput="herbereken()"><span class="hint">Netto/mnd • 100%</span></div>
+        <div class="f"><label>Verhuurinkomen netto</label><input type="number" id="a0-ver" value="0" min="0" step="50" oninput="herbereken()"><span class="hint">70% wordt meegeteld</span></div>
+      </div>
+      <div id="a0-zzp" class="hid">
+        <div class="st mb12">ZZP / DGA – gemiddelde winst</div>
+        <div class="ib mb12"><strong>ZZP-methodiek</strong>Gemiddelde nettowinst laatste 3 boekjaren. Lager gemiddelde 2jr/3jr is leidend.</div>
+        <div class="g3 mb12">
+          <div class="f"><label>Nettowinst T-1</label><input type="number" id="a0-z1" value="0" min="0" step="500" oninput="berekenZZP()"></div>
+          <div class="f"><label>Nettowinst T-2</label><input type="number" id="a0-z2" value="0" min="0" step="500" oninput="berekenZZP()"></div>
+          <div class="f"><label>Nettowinst T-3</label><input type="number" id="a0-z3" value="0" min="0" step="500" oninput="berekenZZP()"></div>
+        </div>
+        <div class="f" style="max-width:200px;"><label>Gem. ZZP inkomen/mnd</label><input type="text" id="a0-zgem" readonly><span class="cr">Automatisch (÷12)</span></div>
+      </div>
+      <div class="st mb12 mt12">Pensioentoets</div>
+      <div class="g3">
+        <div class="f"><label>Geboortejaar aanvrager 1</label><input type="number" id="gbj0" value="1985" min="1940" max="2005" oninput="herbereken()"></div>
+        <div class="f"><label>Contract / dienstverband</label>
+          <select id="contract0" onchange="herbereken()">
+            <option value="vast">Vast / onbepaald tijd</option>
+            <option value="bepaald">Bepaald tijd (>6 mnd)</option>
+            <option value="flex">Flex / oproep / 0-uren</option>
+            <option value="proeftijd">Proeftijd</option>
+          </select></div>
+        <div class="f"><label>AOW-leeftijd</label>
+          <select id="aow0" onchange="herbereken()">
+            <option value="67" selected>67 jaar (2025)</option>
+            <option value="68">68 jaar</option>
+          </select></div>
+      </div>
+      <div id="pen0-result"></div>
+    </div>
+    <!-- A2 -->
+    <div class="ap-pane" id="ap1">
+      <div class="f mb12" style="max-width:220px;margin-bottom:14px;"><label>Tweede aanvrager actief?</label>
+        <select id="a1-actief" onchange="togA2()">
+          <option value="n">Nee – geen tweede aanvrager</option>
+          <option value="j">Ja – toevoegen</option>
+        </select></div>
+      <div id="a1-fields" class="hid">
+        <div class="chips" id="chips1">
+          <div class="chip on" data-v="loon" onclick="setType(1,'loon',this)"><span class="ci">💼</span><span class="cl">Loondienst</span></div>
+          <div class="chip" data-v="zzp" onclick="setType(1,'zzp',this)"><span class="ci">🔧</span><span class="cl">ZZP/DGA</span></div>
+          <div class="chip" data-v="uitk" onclick="setType(1,'uitk',this)"><span class="ci">🏛</span><span class="cl">Uitkering</span></div>
+          <div class="chip" data-v="pen" onclick="setType(1,'pen',this)"><span class="ci">🎓</span><span class="cl">Pensioen</span></div>
+          <div class="chip" data-v="ov" onclick="setType(1,'ov',this)"><span class="ci">📋</span><span class="cl">Overig</span></div>
+        </div>
+        <div class="g3 mb12">
+          <div class="f"><label>Netto maandinkomen <span class="req">*</span></label><input type="number" id="a1-netto" value="0" min="0" step="50" oninput="herbereken()"></div>
+          <div class="f"><label>Correctiefactor (%)</label><input type="number" id="a1-corr" value="100" min="0" max="100" step="5" oninput="herbereken()"></div>
+          <div class="f"><label>Geboortejaar</label><input type="number" id="gbj1" value="0" min="1940" max="2005" oninput="herbereken()"></div>
+        </div>
+        <div class="g2 mb12">
+          <div class="f"><label>ORT netto/mnd</label><input type="number" id="a1-ort" value="0" min="0" step="50" oninput="herbereken()"></div>
+          <div class="f"><label>Alimentatie ontvangen</label><input type="number" id="a1-ali" value="0" min="0" step="50" oninput="herbereken()"></div>
+        </div>
+        <div id="pen1-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STAP 3 -->
+<div class="card">
+  <div class="ch" onclick="tog(this)">Stap 3 – Toeslagen 2025 – specificatie<span class="ti">▼</span></div>
+  <div class="cb">
+    <div class="ib mb12"><strong>Methode: overige inkomstenbronnen (VFN v1.7)</strong>Toetsinkomen = netto inkomen + vakantietoeslag + zorgtoeslag + kinderbijslag + kindgebonden budget.</div>
+    <table class="tbl"><thead><tr><th>Toeslag</th><th>Grondslag</th><th>Bedrag/mnd</th><th>Toelichting</th></tr></thead><tbody id="toeslag-tbody"></tbody></table>
+  </div>
+</div>
+
+<!-- STAP 4 -->
+<div class="card">
+  <div class="ch" onclick="tog(this)">Stap 4 – Volledige specificatie toetsinkomen<span class="ti">▼</span></div>
+  <div class="cb">
+    <div class="st mb12">Opbouw toetsinkomen</div>
+    <div class="wf" id="waterfall"></div>
+    <div class="mt16"><div class="st mb12">Tabel per aanvrager</div>
+      <table class="tbl"><thead><tr><th>Component</th><th>Aanvrager 1</th><th>Aanvrager 2</th><th>Gecombineerd</th></tr></thead><tbody id="spec-tbody"></tbody></table>
+    </div>
+    <div class="disclaimer mt12">
+      <strong>⚖ Grondslag – VFN Leennormenmethodiek CK v1.7 • art. 4:34 Wft</strong>
+      Toetsinkomen = netto inkomen + vakantietoeslag + zorgtoeslag + kinderbijslag + kindgebonden budget. Bij koopwoning: eigenwoningsurplus (Tabel 6). <strong>Aan deze berekening kunnen geen rechten worden ontleend.</strong>
+    </div>
+  </div>
+</div>
+</div><!-- /left-col -->
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="rc">
+    <div class="rc-head">
+      <h2>Toetsinkomen</h2>
+      <div class="rc-total" id="rc-val">–</div>
+      <div class="rc-meta" id="rc-meta">per maand • gecombineerd</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-labels"><span>Min. (€2.033)</span><span id="prog-pct">–</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.25);margin-top:4px;"><span>Modaal (€2.812)</span><span>1,5× (€3.633)</span></div>
+    </div>
+    <div class="bd" id="bd-body"></div>
+  </div>
+  <div class="card">
+    <div class="ch" style="cursor:default;">Toeslagen breakdown</div>
+    <div class="cb"><div class="toeslag-grid" id="toeslag-grid"></div></div>
+  </div>
+  <div class="card" id="hyp-side-card">
+    <div class="ch" style="cursor:default;">Hypotheek – woonlastencheck</div>
+    <div class="cb" id="hyp-side-body"></div>
+  </div>
+  <div class="ai-panel">
+    <div class="ai-head"><h3>AI-analyse</h3><span class="ai-badge">✦ Claude</span></div>
+    <div class="ai-body">
+      <div class="ai-out" id="ai-out"><p style="color:#888;">Klik op <strong>Analyseer</strong> voor een AI-toelichting op het berekende toetsinkomen.</p></div>
+      <button class="ai-btn" id="ai-btn" onclick="runAI()">✦ Analyseer toetsinkomen</button>
+    </div>
+  </div>
+</div>
+</div><!-- /main -->
+
+<div class="fb">
+  <button class="btn btn-s" onclick="resetAlles()">↻ Reset</button>
+  <button class="btn btn-s" onclick="window.open(location.href,'_blank')">↗ Nieuw tabblad</button>
+  <button class="btn btn-p" onclick="window.print()">⌦ Afdrukken</button>
+</div>
+
+<script>
+const MININ=2033,MODAAL=2812,MOD15=3633,SURPLUS_WON=[95,108,122];
+const inkType=['loon','loon'];let a2Actief=false;
+const el=id=>document.getElementById(id),v=id=>parseFloat(el(id)?.value)||0,sel=id=>el(id)?.value||'';
+const fmt=n=>'€\u00a0'+Math.round(n).toLocaleString('nl-NL');
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),inkBand=n=>n<=MODAAL?0:n<=MOD15?1:2;
+
+function toeslagen(netto,gezin){
+  const vak=(netto/0.95)*0.05,paar=gezin==='paar'||gezin==='paar-k',knd=gezin==='een-k'||gezin==='paar-k';
+  const zorg=paar?clamp(250-.24*Math.max(0,netto-MININ),0,250):clamp(131-.21*Math.max(0,netto-MININ),0,131);
+  const kb=knd?252:0;let kgb=0;
+  if(gezin==='een-k')kgb=clamp(760-.14*Math.max(0,netto-MININ),0,760);
+  if(gezin==='paar-k')kgb=clamp(477-.16*Math.max(0,netto-2544),0,477);
+  return{vak,zorg,kb,kgb,tot:vak+zorg+kb+kgb};
+}
+function inkAanvrager(idx){
+  let base=v(`a${idx}-netto`);
+  if(inkType[idx]==='zzp'&&idx===0){const f=[v('a0-z1'),v('a0-z2'),v('a0-z3')].filter(x=>x>0);if(f.length)base=f.reduce((a,b)=>a+b,0)/f.length/12;}
+  const corr=v(`a${idx}-corr`)/100,base_c=base*corr;
+  const ort=v(`a${idx}-ort`)||0,ali=v(`a${idx}-ali`)||0,ver=(v(`a${idx}-ver`)||0)*.7,x13=(v(`a${idx}-13e`)||0)/12*.85;
+  return{base,base_c,ort,ali,ver,x13,tot:base_c+ort+ali+ver+x13};
+}
+function nettoHyp(bruto,netto){if(bruto<=350)return bruto;const pct=netto>MOD15?.07:.05;return Math.max(350,bruto*(1-pct));}
+function pensioenCheck(idx){
+  const gbj=v(`gbj${idx}`),aow=idx===0?v('aow0'):67;if(!gbj||gbj<1940)return;
+  const nu=new Date().getFullYear(),leeft=nu-gbj,pjaar=gbj+aow;
+  let cls,msg;
+  if(leeft>=aow){cls='pen-err';msg=`\u26D4 Aanvrager ${idx+1}: reeds met pensioen (${leeft} jaar).`;}
+  else if(pjaar-nu<=7){cls='pen-warn';msg=`\u26A0 Aanvrager ${idx+1}: pensionering binnen ${pjaar-nu} jaar (${pjaar}).`;}
+  else{cls='pen-ok';msg=`\u2713 Aanvrager ${idx+1}: ${leeft} jaar \u2014 ruim voor pensioendatum (${pjaar}).`;}
+  el(`pen${idx}-result`).innerHTML=`<div class="${cls}">${msg}</div>`;
+}
+function onWtype(){
+  const wt=sel('wtype');
+  el('blk-koop').classList.toggle('hid',wt!=='koop');
+  el('blk-huur').classList.toggle('hid',wt!=='huur');
+  el('blk-inwonend').classList.toggle('hid',wt!=='inwonend');
+  el('hyp-side-card').style.display=wt==='koop'?'block':'none';
+  herbereken();
+}
+function herbereken(){
+  pensioenCheck(0);if(a2Actief)pensioenCheck(1);
+  const gezin=sel('gezin'),wt=sel('wtype');
+  const a1=inkAanvrager(0),a2o=a2Actief?inkAanvrager(1):{base_c:0,ort:0,ali:0,ver:0,x13:0,tot:0,base:0};
+  const nettoTot=a1.tot+(a2Actief?a2o.tot:0),ts=toeslagen(nettoTot,gezin),tiTot=nettoTot+ts.tot;
+  const hypBruto=v('hyp-bruto'),nHyp=nettoHyp(hypBruto,nettoTot),pctAft=nettoTot>MOD15?7:5;
+  const surplusWon=wt==='koop'?SURPLUS_WON[inkBand(nettoTot)]:0;
+  el('hyp-netto-disp').value=fmt(nHyp);
+  el('hyp-aftrek-note').textContent=hypBruto>350?`${pctAft}% renteaftrekkorting (art. 8.1.2)`:'Bruto \u2264 \u20AC350: geen aftrek';
+  el('hyp-surplus-disp').value=fmt(surplusWon);
+  el('sb-netto').textContent=fmt(nettoTot);el('sb-vak').textContent=fmt(ts.vak);
+  el('sb-zorg').textContent=fmt(ts.zorg);el('sb-ov').textContent=fmt(ts.kb+ts.kgb);
+  const totEl=el('sb-tot');totEl.textContent=fmt(tiTot);totEl.className='sv '+(tiTot>=MININ?'g':'r');
+  const rcEl=el('rc-val');rcEl.textContent=fmt(tiTot);rcEl.className='rc-total'+(tiTot<MININ?' neg':'');
+  el('rc-meta').textContent=`per maand \u00b7 netto ${fmt(nettoTot)} + toeslagen ${fmt(ts.tot)}`;
+  const prog=Math.min(100,(tiTot/(MOD15*1.5))*100);
+  el('prog-bar').style.width=prog+'%';el('prog-bar').className='prog-fill'+(tiTot<MININ?' danger':'');
+  el('prog-pct').textContent=`${Math.round(tiTot/MININ*100)}% v. min.inkomen`;
+  const bdRows=[{i:'\ud83d\udcbc',l:'Netto basisinkomen',v:fmt(nettoTot),c:''},{i:'\u2600\ufe0f',l:'Vakantietoeslag',v:fmt(ts.vak),c:'add'},{i:'\ud83c\udfe5',l:'Zorgtoeslag',v:fmt(ts.zorg),c:'add'}];
+  if(ts.kb>0)bdRows.push({i:'\ud83d\udc76',l:'Kinderbijslag',v:fmt(ts.kb),c:'add'});
+  if(ts.kgb>0)bdRows.push({i:'\ud83c\udf81',l:'Kindg. budget',v:fmt(ts.kgb),c:'add'});
+  if(wt==='koop')bdRows.push({i:'\ud83c\udfe1',l:'Eigenwoningsurplus',v:`\u2212 ${fmt(surplusWon)}`,c:'sub'});
+  bdRows.push({i:'=',l:'Toetsinkomen totaal',v:fmt(tiTot),c:'tot'});
+  el('bd-body').innerHTML=bdRows.map(r=>`<div class="brow"><span class="bico">${r.i}</span><span class="blbl">${r.l}</span><span class="bval ${r.c}">${r.v}</span></div>`).join('');
+  el('toeslag-grid').innerHTML=[{l:'Vakantietoeslag',v:fmt(ts.vak),n:'(netto\xf70,95)\xd75%'},{l:'Zorgtoeslag',v:fmt(ts.zorg),n:ts.zorg===0?'Inkomen te hoog':'Inkomensafh. 2025'},{l:'Kinderbijslag',v:fmt(ts.kb),n:ts.kb>0?'\u20ac252/mnd forfait':'n.v.t.'},{l:'KGB',v:fmt(ts.kgb),n:ts.kgb>0?'Inkomensafh.':'n.v.t.'}].map(r=>`<div class="tg"><div class="tg-label">${r.l}</div><div class="tg-value">${r.v}</div><div class="tg-note">${r.n}</div></div>`).join('');
+  const gezinL={een:'Alleenstaand','een-k':'Alleenst.+kind',paar:'Paar','paar-k':'Paar+kind'}[gezin];
+  el('toeslag-tbody').innerHTML=[['Vakantietoeslag','(netto \xf7 0,95) \xd7 5%',fmt(ts.vak),'Alle situaties'],['Zorgtoeslag',`${gezinL} \u00b7 netto ${fmt(nettoTot)}`,fmt(ts.zorg),ts.zorg===0?'Inkomen te hoog':'Inkomensafh.'],['Kinderbijslag','\u20ac252/mnd bij kinderen',fmt(ts.kb),ts.kb>0?'Bij kinderen':'n.v.t.'],['Kindgebonden budget','Inkomensafh. afbouw',fmt(ts.kgb),ts.kgb>0?'Inkomensafh.':'n.v.t.'],['TOTAAL','',fmt(ts.tot),'']].map((r,i)=>`<tr class="${i===4?'tot-row':''}"><td>${r[0]}</td><td style="font-size:11px;color:#888;">${r[1]}</td><td style="font-weight:700;color:var(--navy);">${r[2]}</td><td style="font-size:11px;color:#888;">${r[3]}</td></tr>`).join('');
+  if(wt==='koop'){el('hyp-side-body').innerHTML=[{i:'\ud83d\udcb6',l:'Bruto hypotheeklast',v:fmt(hypBruto),c:''},{i:'\ud83d\udcc9',l:`Na ${pctAft}% renteaftrek`,v:fmt(nHyp),c:'g'},{i:'\ud83c\udfe0',l:'Eigenwoningsurplus',v:`\u2212 ${fmt(surplusWon)}`,c:'r'},{i:'\u2696',l:'Netto woonlast',v:fmt(nHyp+surplusWon),c:'b'}].map(r=>{const col=r.c==='g'?'color:var(--green)':r.c==='r'?'color:var(--red)':r.c==='b'?'color:var(--navy)':'';return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);"><span style="width:20px;text-align:center;">${r.i}</span><span style="flex:1;font-size:13px;">${r.l}</span><span style="font-weight:700;font-size:13px;${col}">${r.v}</span></div>`;}).join('');}
+  const nu=new Date().getFullYear(),gbj=v('gbj0'),aow=v('aow0');
+  if(gbj>1940){const leeft=nu-gbj,pjaar=gbj+aow,cls=leeft>=aow?'r':(pjaar-nu<=7?'o':'g');el('sb-pen').textContent=leeft>=aow?'\u26d4 Pensioen':(pjaar-nu<=7)?`\u26a0 ${pjaar-nu}jr`:'\u2713 OK';el('sb-pen').className='sv '+cls;}
+  const share1=nettoTot>0?a1.tot/nettoTot:1,ti1=a1.tot+ts.tot*share1,ti2=a2Actief?a2o.tot+ts.tot*(1-share1):0;
+  const wfRows=[{lbl:'Netto basisinkomen',sub:`A1: ${fmt(a1.base_c)}${a2Actief?` \u00b7 A2: ${fmt(a2o.base_c)}`:''}`,icon:'',amt:nettoTot},{lbl:'+ Vakantietoeslag',sub:'(netto \xf7 0,95) \xd7 5%',icon:'+',amt:ts.vak},{lbl:'+ Zorgtoeslag',sub:`${gezinL} \u00b7 inkomensafhankelijk`,icon:'+',amt:ts.zorg}];
+  if(ts.kb>0)wfRows.push({lbl:'+ Kinderbijslag',sub:'\u20ac252/mnd forfait',icon:'+',amt:ts.kb});
+  if(ts.kgb>0)wfRows.push({lbl:'+ Kindgebonden budget',sub:'Inkomensafhankelijk afbouw',icon:'+',amt:ts.kgb});
+  wfRows.push({lbl:'Toetsinkomen',sub:`Per maand \u00b7 ${gezinL}${wt==='koop'?' \u00b7 koopwoning':''}`,icon:'=',amt:tiTot,tot:true});
+  el('waterfall').innerHTML=wfRows.map(r=>{const ic=r.icon==='+'?'color:var(--green);font-weight:700':r.icon==='='?'color:var(--navy);font-weight:700':'';const ac=r.tot?(tiTot>=MININ?'gv':'rv'):'';return`<div class="wr ${r.tot?'tot':''}"><div class="wicon" style="${ic}">${r.icon||''}</div><div class="wlabel">${r.lbl}<span class="wsub">${r.sub}</span></div><div class="wamt ${ac}">${r.icon==='+'?'+ ':r.icon==='='?'= ':''}${fmt(Math.abs(r.amt))}</div></div>`;}).join('');
+  const a2v=x=>a2Actief?fmt(x):'–';
+  el('spec-tbody').innerHTML=[['Netto basisinkomen',fmt(a1.base),a2v(a2o.base),fmt(a1.base+(a2Actief?a2o.base:0))],['Correctiefactor',`${v('a0-corr')}%`,a2Actief?`${v('a1-corr')}%`:'–',''],['Na correctie',fmt(a1.base_c),a2v(a2o.base_c),fmt(a1.base_c+a2o.base_c)],['ORT',fmt(a1.ort),a2v(a2o.ort),fmt(a1.ort+a2o.ort)],['13e maand/EJU',fmt(a1.x13),a2v(a2o.x13),fmt(a1.x13+a2o.x13)],['Alimentatie ontvangen',fmt(a1.ali),a2v(a2o.ali),fmt(a1.ali+a2o.ali)],['Verhuurinkomen (70%)',fmt(a1.ver),a2v(a2o.ver),fmt(a1.ver+a2o.ver)],['Vakantietoeslag',fmt(ts.vak),'–',fmt(ts.vak)],['Zorgtoeslag',fmt(ts.zorg),'–',fmt(ts.zorg)],['Kinderbijslag + KGB',fmt(ts.kb+ts.kgb),'–',fmt(ts.kb+ts.kgb)]].map(r=>`<tr><td>${r[0]}</td><td style="text-align:right;font-variant-numeric:tabular-nums;">${r[1]}</td><td style="text-align:right;color:${a2Actief?'inherit':'#aaa'};font-variant-numeric:tabular-nums;">${r[2]}</td><td style="text-align:right;font-variant-numeric:tabular-nums;">${r[3]}</td></tr>`).join('')+`<tr class="tot-row"><td>TOETSINKOMEN</td><td style="text-align:right;">${fmt(ti1)}</td><td style="text-align:right;">${a2Actief?fmt(ti2):'–'}</td><td style="text-align:right;color:var(--navy);">${fmt(tiTot)}</td></tr>`;
+  window._last={gezin,wt,tiTot,nettoTot,ts,a1,a2:a2Actief?a2o:null,hypBruto,nHyp,surplusWon,pctAft};
+}
+function tog(h){h.classList.toggle('col');h.nextElementSibling.classList.toggle('hid');}
+function swAp(idx){document.querySelectorAll('.ap-tab').forEach((t,i)=>t.classList.toggle('on',i===idx));el('ap0').classList.toggle('on',idx===0);el('ap1').classList.toggle('on',idx===1);}
+function togA2(){a2Actief=sel('a1-actief')==='j';el('a1-fields').classList.toggle('hid',!a2Actief);herbereken();}
+function setType(idx,type,chip){inkType[idx]=type;document.querySelectorAll(`#chips${idx} .chip`).forEach(c=>c.classList.remove('on'));chip.classList.add('on');if(idx===0)el('a0-zzp').classList.toggle('hid',type!=='zzp');herbereken();}
+function berekenZZP(){const f=[v('a0-z1'),v('a0-z2'),v('a0-z3')].filter(x=>x>0);if(f.length)el('a0-zgem').value=fmt(f.reduce((a,b)=>a+b,0)/f.length/12);herbereken();}
+async function runAI(){
+  const btn=el('ai-btn'),out=el('ai-out');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analyseren...';out.style.opacity='.5';
+  const r=window._last||{},gezinL={een:'alleenstaand','een-k':'alleenstaand met kinderen',paar:'paar zonder kinderen','paar-k':'paar met kinderen'}[r.gezin]||r.gezin;
+  const wtL={koop:'koopwoning (hypotheek)',huur:'huurwoning',inwonend:'inwonend'}[r.wt]||r.wt;
+  const prompt=`Je bent een Nederlandse financieel adviseur gespecialiseerd in hypotheken (VFN v1.7, art. 4:34 Wft). Analyseer dit toetsinkomen in 4-5 korte alinea's. Gebruik HTML-tags <p>, <strong> en <span class="tag tag-ok/tag-warn/tag-err">label</span>. Focus op: hoogte t.o.v. normen (min €2.033/modaal €2.812/1,5× €3.633), hypotheekeffect, toeslagensamenstelling, risico's.\n\nGegevens:\n- Woonsituatie: ${wtL}\n- Gezin: ${gezinL}\n- Netto inkomen: €${Math.round(r.nettoTot||0)}\n- Toeslagen: €${Math.round(r.ts?.tot||0)} (vak €${Math.round(r.ts?.vak||0)}, zorg €${Math.round(r.ts?.zorg||0)}, KB €${Math.round((r.ts?.kb||0)+(r.ts?.kgb||0))})\n- Toetsinkomen: €${Math.round(r.tiTot||0)}\n${r.wt==='koop'?`- Bruto hyp: €${Math.round(r.hypBruto||0)} | Netto hyp: €${Math.round(r.nHyp||0)} (${r.pctAft||5}% aftrek) | Surplus: €${Math.round(r.surplusWon||0)}`:''}`;
+  try{const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});const data=await resp.json();const txt=data.content?.find(c=>c.type==='text')?.text||'Geen resultaat.';out.style.opacity='1';out.innerHTML=txt;}catch(e){out.style.opacity='1';out.innerHTML=`<p style="color:var(--red);">Fout: ${e.message}</p>`;}
+  btn.disabled=false;btn.innerHTML='↻ Heranalyseer';
+}
+function resetAlles(){
+  el('wtype').value='koop';el('gezin').value='paar';el('nkind').value='0';el('hyp-bruto').value=1450;el('huur').value=950;el('htoeslag').value=0;el('kostgeld').value=0;
+  el('a0-netto').value=3800;el('a0-bruto').value=5800;el('a0-corr').value=100;['a0-13e','a0-ort','a0-ali','a0-ver','a0-z1','a0-z2','a0-z3'].forEach(i=>el(i).value=0);
+  el('a1-actief').value='n';a2Actief=false;el('a1-fields').classList.add('hid');['a1-netto','a1-ort','a1-ali'].forEach(i=>el(i)&&(el(i).value=0));el('a1-corr')&&(el('a1-corr').value=100);
+  el('gbj0').value=1985;el('gbj1').value=0;el('aow0').value=67;el('contract0').value='vast';
+  inkType[0]='loon';inkType[1]='loon';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  document.querySelectorAll('#chips0 .chip[data-v="loon"],#chips1 .chip[data-v="loon"]').forEach(c=>c.classList.add('on'));
+  el('a0-zzp').classList.add('hid');el('ai-out').innerHTML='<p style="color:#888;">Klik op <strong>Analyseer</strong> voor een AI-toelichting.</p>';el('ai-btn').innerHTML='✦ Analyseer toetsinkomen';
+  onWtype();
+}
+const ps=document.createElement('style');ps.media='print';ps.textContent='.sticky-bar,.fb,.ai-panel{display:none!important}.cb.hid{display:block!important}body{background:#fff}.main{grid-template-columns:1fr}.sidebar{position:static}';document.head.appendChild(ps);
+onWtype();
+</script>
+</body>
+</html>

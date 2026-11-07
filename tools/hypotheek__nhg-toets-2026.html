@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHG Toets 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#003057; --navy-mid:#1a4a72; --gold:#E5A138; --gold-light:#f5c060;
+  --cream:#F4F7F9; --white:#fff; --text:#1a2a3a; --muted:#5a6a7a;
+  --border:#d0dce6; --green:#1a7a4a; --green-bg:#e8f5ee;
+  --red:#b02020; --red-bg:#fce8e8; --orange:#c06010; --orange-bg:#fff3e0;
+  --blue-bg:#e8f0f8; --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;font-size:15px;}
+
+/* HEADER */
+header{background:var(--navy);color:white;padding:0 40px;height:68px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:200;}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{width:36px;height:36px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;}
+.h-sub{font-size:12px;opacity:.65;font-weight:300;}
+.h-badge{background:rgba(229,161,56,.2);border:1px solid var(--gold);color:var(--gold-light);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.3px;}
+
+/* TABS */
+.tab-bar{background:var(--navy);padding:0 40px;display:flex;border-bottom:1px solid rgba(255,255,255,.1);overflow-x:auto;}
+.tab-btn{padding:12px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;}
+.tab-btn:hover{color:rgba(255,255,255,.9);}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* LAYOUT */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.main{max-width:900px;margin:0 auto;padding:28px 24px 60px;display:flex;flex-direction:column;gap:20px;}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{background:var(--navy);color:white;padding:13px 20px;display:flex;align-items:center;gap:10px;font-weight:600;font-size:13px;letter-spacing:.4px;text-transform:uppercase;}
+.card-header .ico{width:28px;height:28px;background:rgba(229,161,56,.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.card-body{padding:20px;}
+
+/* SCENARIO */
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.sc-btn{border:2px solid var(--border);border-radius:var(--radius);background:var(--cream);cursor:pointer;padding:14px 10px;text-align:center;transition:all .15s;}
+.sc-btn:hover{border-color:var(--navy);background:white;}
+.sc-btn.active{border-color:var(--navy);background:var(--navy);color:white;}
+.sc-btn .si{font-size:22px;margin-bottom:6px;}
+.sc-btn .sl{font-size:13px;font-weight:600;display:block;}
+.sc-btn .ss{font-size:11px;opacity:.7;margin-top:2px;display:block;}
+
+/* FORM */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.s2{grid-column:1/-1;}
+.slabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--border);grid-column:1/-1;margin-top:4px;}
+label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre,.suf{position:absolute;font-size:14px;font-weight:500;color:var(--muted);pointer-events:none;z-index:1;}
+.pre{left:12px;} .suf{right:12px;}
+input[type=number],select{width:100%;height:44px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--cream);transition:border-color .15s,box-shadow .15s;outline:none;appearance:none;}
+input[type=number]{padding:0 12px 0 30px;}
+input.rs{padding-right:36px;}
+input[type=number]:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48,87,.1);background:white;}
+select{padding:0 12px;cursor:pointer;}
+
+/* TOGGLE */
+.trow{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--cream);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:border-color .15s;}
+.trow:hover{border-color:var(--navy);}
+.tlabel{font-size:13px;font-weight:500;}
+.thint{font-size:11px;color:var(--muted);margin-top:2px;}
+.toggle{width:42px;height:24px;background:var(--border);border-radius:12px;position:relative;transition:background .2s;flex-shrink:0;}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle.on{background:var(--navy);}
+.toggle.on::after{transform:translateX(18px);}
+
+/* BUTTON */
+.btn-calc{width:100%;height:50px;background:var(--navy);color:white;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;}
+.btn-calc:hover{background:var(--navy-mid);}
+
+/* RESULTS */
+#rc{display:none;}
+#rc.vis{display:block;}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.ri{border-radius:8px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border:1.5px solid transparent;}
+.ri.ok{background:var(--green-bg);border-color:#a8d8b8;}
+.ri.fail{background:var(--red-bg);border-color:#e8b0b0;}
+.ri.warn{background:var(--orange-bg);border-color:#f5c980;}
+.ri-ico{font-size:20px;flex-shrink:0;margin-top:1px;}
+.rl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;}
+.rv{font-family:'DM Serif Display',serif;font-size:20px;line-height:1.1;}
+.rv.c-ok{color:var(--green);} .rv.c-fail{color:var(--red);} .rv.c-warn{color:var(--orange);}
+.rs2{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* DETAIL TABLE */
+.dt{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;}
+.dt th{text-align:left;padding:8px 10px;background:var(--navy);color:white;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.dt th:last-child{text-align:right;}
+.dt td{padding:9px 10px;border-bottom:1px solid var(--border);}
+.dt td:last-child{text-align:right;font-weight:600;font-size:14px;}
+.dt tr:last-child td{border-bottom:none;}
+.dt tr.sub td{background:#f0f4f8;font-weight:700;}
+.dt tr.tot td{background:var(--navy);color:white;font-weight:700;font-size:14px;}
+.dt tr.gld td{background:rgba(229,161,56,.1);font-weight:600;}
+
+/* BTP */
+.btp{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);border-radius:10px;padding:18px 20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.btp-lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;opacity:.75;margin-bottom:4px;}
+.btp-amt{font-family:'DM Serif Display',serif;font-size:28px;color:var(--gold);}
+.btp-det{font-size:12px;opacity:.7;margin-top:3px;}
+.btp-ico{font-size:36px;opacity:.35;}
+
+/* VERDICT */
+.verdict{border-radius:10px;padding:18px 20px;display:flex;align-items:center;gap:16px;border:2px solid transparent;margin-top:4px;}
+.verdict.ok{background:var(--green-bg);border-color:#7ac89a;}
+.verdict.fail{background:var(--red-bg);border-color:#e09090;}
+.verdict.warn{background:var(--orange-bg);border-color:#f5c060;}
+.v-ico{font-size:32px;flex-shrink:0;}
+.v-tit{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:4px;}
+.v-tit.ok{color:var(--green);} .v-tit.fail{color:var(--red);} .v-tit.warn{color:var(--orange);}
+.v-body{font-size:13px;color:var(--muted);line-height:1.6;}
+.ract{display:flex;justify-content:flex-end;padding-top:12px;}
+.pbtn{display:flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--border);border-radius:8px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;}
+.pbtn:hover{border-color:var(--navy);color:var(--navy);}
+
+/* NORMEN PILLS */
+.npill{display:inline-flex;align-items:center;gap:6px;background:rgba(229,161,56,.15);border:1px solid rgba(229,161,56,.4);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--navy);}
+.nrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+
+/* V&N PAGINA */
+.vn-h2{font-family:'DM Serif Display',serif;font-size:18px;color:var(--navy);margin:24px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--gold);}
+.vn-h2:first-child{margin-top:0;}
+.vn-h3{font-size:14px;font-weight:700;color:var(--navy);margin:14px 0 6px;}
+.vn-p{font-size:13.5px;line-height:1.7;color:var(--text);margin-bottom:8px;}
+.vn-note{background:var(--blue-bg);border-left:4px solid var(--navy);border-radius:0 8px 8px 0;padding:12px 16px;margin:10px 0;font-size:13px;line-height:1.6;}
+.vn-note strong{color:var(--navy);}
+.ref{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;}
+
+/* TABELLEN GEMEENSCHAPPELIJK */
+.vtable{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0;}
+.vtable th{background:var(--navy);color:white;padding:9px 12px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.vtable td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+.vtable tr:nth-child(even) td{background:var(--cream);}
+.vtable tr:last-child td{border-bottom:none;}
+.vtable td:first-child{font-weight:600;color:var(--navy);}
+.b-ok{display:inline-block;background:var(--green-bg);color:var(--green);border:1px solid #a8d8b8;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700;}
+.b-let{display:inline-block;background:var(--orange-bg);color:var(--orange);border:1px solid #f5c980;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700;}
+.b-nee{display:inline-block;background:var(--red-bg);color:var(--red);border:1px solid #e8b0b0;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:700;}
+
+/* FINANCIERINGSLASTTABELLEN */
+.flt{width:100%;border-collapse:collapse;font-size:13px;}
+.flt th{background:var(--navy);color:white;padding:9px 12px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.flt th:first-child{text-align:left;}
+.flt td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:center;}
+.flt td:first-child{text-align:left;font-weight:500;font-size:13px;}
+.flt tr:nth-child(even) td{background:var(--cream);}
+.flt tr:last-child td{border-bottom:none;}
+.flt td.hra{color:var(--green);font-weight:700;}
+.flt td.nohra{color:var(--navy);font-weight:600;}
+.flt td.spec{color:var(--gold);font-weight:700;background:rgba(229,161,56,.08)!important;}
+.flt tr.hl td{background:rgba(0,48,87,.05)!important;}
+.flt tr.sec td{background:var(--navy);color:white;font-weight:700;font-size:12px;padding:6px 12px;letter-spacing:.3px;}
+.tbl-intro{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.tbl-disc{background:rgba(229,161,56,.1);border:1px solid rgba(229,161,56,.4);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--text);margin-top:16px;line-height:1.6;}
+.tbl-disc strong{color:var(--navy);}
+
+.hidden{display:none!important;}
+@media print{header,.tab-bar{position:static;}body{background:white;}.card{border:1px solid #ccc;}.btn-calc,.pbtn,.sc-grid{display:none!important;}#rc{display:block!important;}.main{padding:0;max-width:100%;}}
+@media(max-width:640px){.sc-grid,.rg,.fg{grid-template-columns:1fr;}header,.tab-bar{padding:0 14px;}.main{padding:14px 12px 50px;}.h-badge{display:none;}.tab-btn{padding:10px 12px;font-size:12px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🏠</div>
+    <div><div class="h-title">NHG Toets</div><div class="h-sub">Voorwaarden en Normen 2026-1</div></div>
+  </div>
+  <div class="h-badge">V&N 2026-1 · Grens € 470.000,-</div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active"  onclick="showTab('toets',this)">🧮 NHG Toets</button>
+  <button class="tab-btn" onclick="showTab('vn',this)">📘 Voorwaarden & Normen</button>
+  <button class="tab-btn" onclick="showTab('acc',this)">📊 Acceptatietabel</button>
+  <button class="tab-btn" onclick="showTab('beh',this)">🔧 Beheertabel</button>
+</div>
+
+<!-- ══════════════════════ TAB 1 — TOETS ══════════════════════ -->
+<div class="tab-panel active" id="panel-toets"><div class="main">
+
+  <div class="card">
+    <div class="card-header"><div class="ico">📋</div>NHG-normen 2026 — snel overzicht</div>
+    <div class="card-body" style="padding-bottom:16px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Geldend per 1 januari 2026 — V&N 2026-1 Hoofdstuk C.2</div>
+      <div class="nrow">
+        <div class="npill">🏠 Bestaand/nieuwbouw: <strong style="margin-left:4px;">€ 470.000,-</strong></div>
+        <div class="npill">⚡ Met energiebesparing: <strong style="margin-left:4px;">€ 498.200,-</strong></div>
+        <div class="npill">🌿 A++++ nieuwbouw: <strong style="margin-left:4px;">€ 498.200,-</strong></div>
+        <div class="npill">🔒 Borgtochtprovisie: <strong style="margin-left:4px;">0,4%</strong></div>
+        <div class="npill">📊 Max. LTV: <strong style="margin-left:4px;">100% (106% energie)</strong></div>
+        <div class="npill">⏱️ Max. looptijd: <strong style="margin-left:4px;">30 jaar</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="ico">🎯</div>Stap 1 — Kies scenario</div>
+    <div class="card-body">
+      <div class="sc-grid">
+        <button class="sc-btn active" onclick="setS('bestaand',this)"><div class="si">🏘️</div><span class="sl">Bestaande woning</span><span class="ss">Aankoop bestaand</span></button>
+        <button class="sc-btn" onclick="setS('nieuwbouw',this)"><div class="si">🏗️</div><span class="sl">Nieuwbouw</span><span class="ss">Aankoop nieuwbouw</span></button>
+        <button class="sc-btn" onclick="setS('oversluiten',this)"><div class="si">🔄</div><span class="sl">Oversluiten</span><span class="ss">Bestaande NHG-lening</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Stap 2 — Invoer</div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="slabel">Aankoopgegevens</div>
+
+        <div class="field ab an">
+          <label>Koopsom (k.k.)</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="koopsom" value="375000" min="0" step="1000"></div>
+        </div>
+        <div class="field ab an ao">
+          <label>Marktwaarde (taxatie)</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="marktwaarde" value="380000" min="0" step="1000"></div>
+        </div>
+        <div class="field ao hidden">
+          <label>Restant oude lening (NHG)</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="restantLening" value="280000" min="0" step="1000"></div>
+        </div>
+        <div class="field ao hidden">
+          <label>Oversluiten- en afsluitkosten</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="oversluiteKosten" value="3500" min="0" step="500"></div>
+        </div>
+
+        <div class="slabel">Verbouwing & verduurzaming</div>
+
+        <div class="field ab ao">
+          <label>Kwaliteitsverbetering</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="verbouwing" value="0" min="0" step="1000"></div>
+        </div>
+        <div class="field ab an ao">
+          <label>Energiebesparende voorzieningen</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="energie" value="0" min="0" step="1000"></div>
+        </div>
+        <div class="field an hidden">
+          <label>Meerwerk (saldo)</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="meerwerk" value="0" min="0" step="1000"></div>
+        </div>
+        <div class="field an hidden">
+          <label>Bouwrente + renteverlies</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="bouwrente" value="0" min="0" step="500"></div>
+        </div>
+
+        <div class="slabel">Financiering</div>
+
+        <div class="field">
+          <label>Gewenste lening</label>
+          <div class="iw"><span class="pre">€</span><input type="number" id="lening" value="360000" min="0" step="1000"></div>
+        </div>
+        <div class="field">
+          <label>Looptijd</label>
+          <div class="iw"><input type="number" id="looptijd" value="30" min="1" max="30" class="rs"><span class="suf">jr</span></div>
+        </div>
+        <div class="field">
+          <label>Aflosvorm</label>
+          <div class="iw"><select id="aflosvorm"><option value="annuitair" selected>Annuïtair</option><option value="lineair">Lineair</option><option value="aflossingsvrij">Aflossingsvrij (deels)</option></select></div>
+        </div>
+        <div class="field">
+          <label>Rentevaste periode</label>
+          <div class="iw"><select id="rvp"><option>1 jaar</option><option>2 jaar</option><option>5 jaar</option><option selected>10 jaar</option><option>15 jaar</option><option>20 jaar</option><option>30 jaar</option></select></div>
+        </div>
+
+        <div class="slabel">Bijzondere situaties</div>
+
+        <div class="field s2" onclick="ts('aap','tAA')">
+          <div class="trow"><div><div class="tlabel">Nieuwbouw met A++++ energielabel</div><div class="thint">Verhoogde NHG-grens € 498.200,- (C.2.2.2)</div></div><div class="toggle" id="tAA"></div></div>
+        </div>
+        <div class="field s2" onclick="ts('kop','tKS')">
+          <div class="trow"><div><div class="tlabel">Erfpacht of koperssteun</div><div class="thint">Aanvullende NHG-regels — zie V&N C.4.5 en nhg.nl</div></div><div class="toggle" id="tKS"></div></div>
+        </div>
+      </div>
+      <button class="btn-calc" onclick="bereken()">🧮 Bereken NHG-toets</button>
+    </div>
+  </div>
+
+  <div class="card" id="rc">
+    <div class="card-header"><div class="ico">📊</div>Uitkomst NHG-toets 2026-1</div>
+    <div class="card-body">
+      <div class="rg" id="rg"></div>
+      <div style="margin-bottom:16px;overflow-x:auto;"><table class="dt" id="dtbl"></table></div>
+      <div class="btp">
+        <div><div class="btp-lbl">Borgtochtprovisie (A.5.3 V&N 2026-1)</div><div class="btp-amt" id="bamt">—</div><div class="btp-det" id="bdet">—</div></div>
+        <div class="btp-ico">🔒</div>
+      </div>
+      <div class="verdict" id="verd" style="margin-top:16px;">
+        <div class="v-ico" id="vico">—</div>
+        <div><div class="v-tit" id="vtit">—</div><div class="v-body" id="vbod">—</div></div>
+      </div>
+      <div class="ract"><button class="pbtn" onclick="window.print()">🖨️ Print / PDF</button></div>
+    </div>
+  </div>
+
+</div></div><!-- /panel-toets -->
+
+<!-- ══════════════════════ TAB 2 — V&N ══════════════════════ -->
+<div class="tab-panel" id="panel-vn"><div class="main">
+  <div class="card">
+    <div class="card-header"><div class="ico">📘</div>Voorwaarden en Normen 2026-1 — kernpunten</div>
+    <div class="card-body">
+
+      <div class="vn-h2">C.2 — De NHG-grens</div>
+      <table class="vtable">
+        <thead><tr><th>Type woning</th><th>Situatie</th><th>NHG-grens</th></tr></thead>
+        <tbody>
+          <tr><td>Bestaande woning</td><td>Standaard</td><td>€ 470.000,-</td></tr>
+          <tr><td>Bestaande woning</td><td>+ Energiebesparende voorzieningen</td><td>€ 498.200,-</td></tr>
+          <tr><td>Nieuwbouwwoning</td><td>Standaard</td><td>€ 470.000,-</td></tr>
+          <tr><td>Nieuwbouwwoning</td><td>+ Energiebesparende voorzieningen</td><td>€ 498.200,-</td></tr>
+          <tr><td>Nieuwbouwwoning A++++</td><td>Energiezuinig label</td><td>€ 498.200,-</td></tr>
+        </tbody>
+      </table>
+      <p class="vn-p">De verhoging voor energiebesparing bedraagt maximaal <strong>€ 28.200,-</strong> boven de basisgrens van € 470.000,-.</p>
+
+      <div class="vn-h2">C.6 — Leningvoorwaarden</div>
+      <table class="vtable">
+        <thead><tr><th>Norm</th><th>Waarde</th><th>Bron</th></tr></thead>
+        <tbody>
+          <tr><td>Maximale LTV</td><td>100% marktwaarde (106% bij energiebesparing)</td><td>C.6.1</td></tr>
+          <tr><td>Maximale looptijd</td><td>30 jaar</td><td>C.6.7</td></tr>
+          <tr><td>Aflosvorm (HRA)</td><td>Annuïtair of lineair</td><td>C.6.7</td></tr>
+          <tr><td>Aflossingsvrij</td><td>Max. 50% marktwaarde — bestaande eigenwoningschuld</td><td>C.6.7.1</td></tr>
+          <tr><td>Bouwdepot</td><td>Verplicht bij nieuwbouw en aanpassingen</td><td>C.6.5</td></tr>
+          <tr><td>Valuta</td><td>Euro's</td><td>C.6.4</td></tr>
+        </tbody>
+      </table>
+
+      <div class="vn-h2">A.5 — Borgtochtprovisie</div>
+      <table class="vtable">
+        <thead><tr><th>Situatie</th><th>Provisie</th><th>Grondslag</th></tr></thead>
+        <tbody>
+          <tr><td>Aankoop / nieuwe NHG</td><td>0,4%</td><td>Volledige lening</td></tr>
+          <tr><td>Verhoging bestaande NHG</td><td>0,4%</td><td>Over het verhoogde deel</td></tr>
+          <tr><td>Zuiver oversluiten (geen verhoging)</td><td>Geen provisie</td><td>A.5.3.2</td></tr>
+          <tr><td>Consolidatie schulden (D.5.5)</td><td>Geen provisie</td><td>A.5.3.2</td></tr>
+          <tr><td>Aflossing SVn Starterslening</td><td>Geen provisie</td><td>A.5.3.2</td></tr>
+          <tr><td>Woonlastenfaciliteit (D.5.6)</td><td>Geen provisie</td><td>A.5.3.2</td></tr>
+        </tbody>
+      </table>
+
+      <div class="vn-h2">C.3 & C.4 — Consument- en woningvereisten</div>
+      <table class="vtable">
+        <thead><tr><th>Vereiste</th><th>Norm</th><th>Bron</th></tr></thead>
+        <tbody>
+          <tr><td>Identiteitsdocument</td><td>Geldig paspoort, ID of vreemdelingendocument</td><td>C.3.1</td></tr>
+          <tr><td>Aansprakelijkheid</td><td>Hoofdelijk aansprakelijk + eigenaar + hoofdverblijf</td><td>C.3.2</td></tr>
+          <tr><td>BKR-toetsing</td><td>Verplicht; code 1-5 = NHG niet mogelijk</td><td>C.3.4</td></tr>
+          <tr><td>Ligging woning</td><td>Europees deel van Nederland</td><td>C.4.2</td></tr>
+          <tr><td>Gebruik woning</td><td>Permanente bewoning, niet verhuurd</td><td>C.4.2</td></tr>
+          <tr><td>Nieuwbouw</td><td>Waarborgcertificaat GarantieWoning verplicht</td><td>C.4.3</td></tr>
+        </tbody>
+      </table>
+
+      <div class="vn-h2">D.4 — Ontslag Hoofdelijke Aansprakelijkheid (OHA)</div>
+      <table class="vtable">
+        <thead><tr><th>Voorwaarde</th><th>Toelichting</th></tr></thead>
+        <tbody>
+          <tr><td>Minimaal één consument blijft</td><td>Hoofdelijk aansprakelijk, eigenaar, bewoner</td></tr>
+          <tr><td>Vertrekkende consument</td><td>Geen eigenaar meer en woning definitief verlaten</td></tr>
+          <tr><td>Geen achterstand</td><td>Lening en overige financiële verplichtingen</td></tr>
+          <tr><td>Financieringslast</td><td>Voldoet aan C.7 — afwijking via explain D.4.2 mogelijk</td></tr>
+          <tr><td>BKR code 2 hersteld</td><td>Geen belemmering voor OHA</td></tr>
+        </tbody>
+      </table>
+      <div class="vn-note"><strong>Uitzondering te hoge financieringslast (D.4.2):</strong> Bij te hoge financieringslast mag een explain worden toegepast. Werkelijke maandlast ≤ maximaal toegestane financieringslast. Gebruik de Financieringslasttabel Beheer (zie tabblad Beheertabel). De lening mag geheel of gedeeltelijk aflossingsvrij worden gemaakt (Box 3, max. 50% marktwaarde) als woningbehoud noodzakelijk en in het belang van de consument is.</div>
+
+      <div class="vn-h2">C.7 — Toetsinkomen: informatiebronnen (selectie)</div>
+      <table class="vtable">
+        <thead><tr><th>Inkomenstype</th><th>Informatiebron</th><th>Bijzonderheid</th></tr></thead>
+        <tbody>
+          <tr><td>Vast dienstverband</td><td>Werkgeversverklaring + salarisstrook</td><td>Max. 3 maanden oud</td></tr>
+          <tr><td>Tijdelijk / flexibel</td><td>Jaaropgaven 3 jaar of IBL (toetsinkomenberekenen.nl)</td><td>Max = laatste kalenderjaar</td></tr>
+          <tr><td>Zelfstandige / DGA</td><td>IKV (Inkomensverklaring Ondernemer)</td><td>Max. 6 maanden oud</td></tr>
+          <tr><td>Sociale uitkering</td><td>Toekenningsbesluit + specificatie</td><td>Mee te tellen voor duur uitkering</td></tr>
+          <tr><td>AOW + pensioen</td><td>AOW-toekenningsbesluit + pensioenopgave</td><td>C.7.12</td></tr>
+          <tr><td>Partneralimentatie (ontvanger)</td><td>Rechterlijke uitspraak of notariële overeenkomst</td><td>C.7.14.1</td></tr>
+        </tbody>
+      </table>
+
+      <div class="vn-h2">A.1 — De borgstelling: kern</div>
+      <table class="vtable">
+        <thead><tr><th>Onderdeel</th><th>Norm</th></tr></thead>
+        <tbody>
+          <tr><td>Duur borgstelling</td><td>Looptijd lening, max. 30 jaar na eerste aanvang NHG</td></tr>
+          <tr><td>Eigen risico geldverstrekker</td><td>10% van het verlies</td></tr>
+          <tr><td>Kwijtscheldingsregeling</td><td>Te goeder trouw + volledig meegewerkt → restschuld kwijtgescholden</td></tr>
+          <tr><td>Borgtochtprovisie terugbetaling</td><td>Geen terugbetaling bij einde borgstelling</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+</div></div><!-- /panel-vn -->
+
+<!-- ══════════════════════ TAB 3 — ACCEPTATIETABEL ══════════════════════ -->
+<div class="tab-panel" id="panel-acc"><div class="main">
+  <div class="card">
+    <div class="card-header"><div class="ico">📊</div>Financieringslasttabel Acceptatie — Trhk 2026</div>
+    <div class="card-body">
+      <p class="tbl-intro">De <strong>Tijdelijke regeling hypothecair krediet (Trhk) 2026</strong> bepaalt de maximaal toegestane financieringslastpercentages bij acceptatie. Het percentage is afhankelijk van het <strong>toetsinkomen</strong> en de <strong>toetsrente</strong>. Voor NHG zijn géén uitzonderingen op artikel 3 Trhk toegestaan, tenzij NHG dit expliciet toestaat (C.7.1).</p>
+
+      <table class="flt">
+        <thead>
+          <tr><th rowspan="2" style="vertical-align:middle;">Toetsinkomen</th><th colspan="5">Toetsrente (gewogen gemiddelde)</th></tr>
+          <tr><th>≤ 2%</th><th>2% – 3%</th><th>3% – 4%</th><th>4% – 5%</th><th>≥ 5%</th></tr>
+        </thead>
+        <tbody>
+          <tr class="sec"><td colspan="6">MET hypotheekrenteaftrek (HRA) — annuïtair / lineair</td></tr>
+          <tr><td>Tot € 21.000,-</td><td class="hra">16,0%</td><td class="hra">16,0%</td><td class="hra">16,0%</td><td class="hra">16,0%</td><td class="hra">16,0%</td></tr>
+          <tr><td>€ 21.000,- – € 25.500,-</td><td class="hra">19,0%</td><td class="hra">18,5%</td><td class="hra">17,5%</td><td class="hra">17,0%</td><td class="hra">16,5%</td></tr>
+          <tr><td>€ 25.500,- – € 30.000,-</td><td class="hra">21,0%</td><td class="hra">20,0%</td><td class="hra">19,5%</td><td class="hra">18,5%</td><td class="hra">18,0%</td></tr>
+          <tr><td>€ 30.000,- – € 35.000,-</td><td class="hra">23,5%</td><td class="hra">22,5%</td><td class="hra">21,5%</td><td class="hra">20,5%</td><td class="hra">20,0%</td></tr>
+          <tr><td>€ 35.000,- – € 40.000,-</td><td class="hra">25,5%</td><td class="hra">24,5%</td><td class="hra">23,5%</td><td class="hra">22,5%</td><td class="hra">22,0%</td></tr>
+          <tr class="hl"><td>€ 40.000,- – € 45.000,-</td><td class="hra">27,0%</td><td class="hra">26,0%</td><td class="hra">25,0%</td><td class="hra">24,0%</td><td class="hra">23,5%</td></tr>
+          <tr class="hl"><td>€ 45.000,- – € 50.000,-</td><td class="hra">28,0%</td><td class="hra">27,0%</td><td class="hra">26,0%</td><td class="hra">25,0%</td><td class="hra">24,5%</td></tr>
+          <tr class="hl"><td>€ 50.000,- – € 60.000,-</td><td class="hra">29,5%</td><td class="hra">28,5%</td><td class="hra">27,5%</td><td class="hra">26,5%</td><td class="hra">26,0%</td></tr>
+          <tr class="hl"><td>€ 60.000,- – € 75.000,-</td><td class="hra">31,5%</td><td class="hra">30,5%</td><td class="hra">29,5%</td><td class="hra">28,5%</td><td class="hra">28,0%</td></tr>
+          <tr class="hl"><td>> € 75.000,-</td><td class="hra">33,0%</td><td class="hra">32,0%</td><td class="hra">31,0%</td><td class="hra">30,0%</td><td class="hra">29,5%</td></tr>
+
+          <tr class="sec"><td colspan="6">ZONDER hypotheekrenteaftrek — incl. aflossingsvrij deel Box 3</td></tr>
+          <tr><td>Tot € 21.000,-</td><td class="nohra">16,0%</td><td class="nohra">16,0%</td><td class="nohra">16,0%</td><td class="nohra">16,0%</td><td class="nohra">16,0%</td></tr>
+          <tr><td>€ 21.000,- – € 35.000,-</td><td class="nohra">16,5%</td><td class="nohra">16,5%</td><td class="nohra">16,0%</td><td class="nohra">16,0%</td><td class="nohra">16,0%</td></tr>
+          <tr><td>€ 35.000,- – € 50.000,-</td><td class="nohra">18,0%</td><td class="nohra">17,5%</td><td class="nohra">17,0%</td><td class="nohra">16,5%</td><td class="nohra">16,5%</td></tr>
+          <tr><td>€ 50.000,- – € 75.000,-</td><td class="nohra">19,5%</td><td class="nohra">19,0%</td><td class="nohra">18,5%</td><td class="nohra">18,0%</td><td class="nohra">17,5%</td></tr>
+          <tr><td>> € 75.000,-</td><td class="nohra">21,0%</td><td class="nohra">20,5%</td><td class="nohra">20,0%</td><td class="nohra">19,5%</td><td class="nohra">19,0%</td></tr>
+
+          <tr class="sec"><td colspan="6">ENERGIEBESPAREND — extra leenruimte art. 4 lid 3-6 Trhk / C.7.2.1</td></tr>
+          <tr><td colspan="2">Energielabel A of B</td><td colspan="4" class="spec" style="text-align:left;">+0,5% op het toepasselijke percentage (art. 4 lid 3)</td></tr>
+          <tr><td colspan="2">Energielabel A+ t/m A+++</td><td colspan="4" class="spec" style="text-align:left;">+1,0% op het toepasselijke percentage (art. 4 lid 4)</td></tr>
+          <tr><td colspan="2">Energielabel A++++</td><td colspan="4" class="spec" style="text-align:left;">+1,5% op het toepasselijke percentage (art. 4 lid 5)</td></tr>
+          <tr><td colspan="2">Nul-op-de-meter woning</td><td colspan="4" class="spec" style="text-align:left;">Werkelijke maandlast, max. € 9.000,- extra lening (art. 4 lid 6)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tbl-disc"><strong>⚠️ Let op:</strong> Bovenstaande percentages zijn gebaseerd op de Tijdelijke regeling hypothecair krediet 2026 (Bijlage 1, art. 3). Raadpleeg altijd de actuele versie via <strong>wetten.overheid.nl</strong>. Voor NHG zijn géén uitzonderingen op art. 3 Trhk toegestaan tenzij NHG dit expliciet vermeldt (C.7.1 V&N 2026-1).</div>
+
+      <div class="vn-h2" style="margin-top:24px;">Hoe werkt de financieringslastberekening?</div>
+      <div class="vn-h3">Stap 1 — Bepaal het toetsinkomen</div>
+      <p class="vn-p">Het toetsinkomen is het <em>bestendige</em> bruto jaarinkomen. Zie C.7.4 t/m C.7.16 voor de regels per inkomenstype. Bij twee inkomens: hoogste inkomen 100% + tweede inkomen 100% mee (Trhk art. 2 lid 5).</p>
+      <div class="vn-h3">Stap 2 — Bepaal de toetsrente</div>
+      <p class="vn-p">Toetsrente = gewogen gemiddelde van alle leningdelen, afgerond op 3 decimalen (C.7.3). Bij RVP ≥ 10 jaar: werkelijke rente. Bij RVP < 10 jaar: minimumtoetsrente van toepassing.</p>
+      <div class="vn-h3">Stap 3 — Bereken de maximale maandlast</div>
+      <p class="vn-p">Maximale maandlast = <code>toetsinkomen × tabelpercentage ÷ 12</code>. De annuïtaire bruto maandlast van de gewenste lening mag dit bedrag niet overschrijden.</p>
+      <div class="vn-note"><strong>Financiële verplichtingen (C.7.16.1):</strong> Per financiële verplichting: 2% van de oorspronkelijke krediet- of leensom per maand in mindering op de maximaal toegestane financieringslast (voor de resterende looptijd van de verplichting).</div>
+    </div>
+  </div>
+</div></div><!-- /panel-acc -->
+
+<!-- ══════════════════════ TAB 4 — BEHEERTABEL ══════════════════════ -->
+<div class="tab-panel" id="panel-beh"><div class="main">
+  <div class="card">
+    <div class="card-header"><div class="ico">🔧</div>Financieringslasttabel Beheer — NHG 2026</div>
+    <div class="card-body">
+      <p class="tbl-intro">De <strong>NHG Financieringslasttabel Beheer</strong> (D.6 V&N 2026-1) wordt gebruikt wanneer een bestaande NHG-lening tijdens de looptijd opnieuw getoetst moet worden — bij OHA (D.4), woningbehoud-tools (D.5), kwijtscheldingsbeoordeling en life-events. De beheerpercentages zijn ruimer dan de acceptatiepercentages. De definitieve tabel staat in het <em>Document Werkprocessen</em> op nhg.nl.</p>
+
+      <table class="flt">
+        <thead>
+          <tr><th rowspan="2" style="vertical-align:middle;">Toetsinkomen</th><th colspan="4">Toetsrente (werkelijk of 3-jr NHG-tarief)</th></tr>
+          <tr><th>≤ 2%</th><th>2% – 3,5%</th><th>3,5% – 5%</th><th>≥ 5%</th></tr>
+        </thead>
+        <tbody>
+          <tr class="sec"><td colspan="5">BEHEER — Werkelijke lasten (D.6.5) — MET hypotheekrenteaftrek</td></tr>
+          <tr><td>Tot € 21.000,-</td><td class="hra">20,0%</td><td class="hra">19,0%</td><td class="hra">18,0%</td><td class="hra">17,0%</td></tr>
+          <tr><td>€ 21.000,- – € 27.000,-</td><td class="hra">22,0%</td><td class="hra">21,0%</td><td class="hra">20,0%</td><td class="hra">19,0%</td></tr>
+          <tr><td>€ 27.000,- – € 33.000,-</td><td class="hra">24,5%</td><td class="hra">23,5%</td><td class="hra">22,5%</td><td class="hra">21,5%</td></tr>
+          <tr><td>€ 33.000,- – € 40.000,-</td><td class="hra">26,5%</td><td class="hra">25,5%</td><td class="hra">24,5%</td><td class="hra">23,5%</td></tr>
+          <tr class="hl"><td>€ 40.000,- – € 50.000,-</td><td class="hra">28,5%</td><td class="hra">27,5%</td><td class="hra">26,5%</td><td class="hra">25,5%</td></tr>
+          <tr class="hl"><td>€ 50.000,- – € 65.000,-</td><td class="hra">30,5%</td><td class="hra">29,5%</td><td class="hra">28,5%</td><td class="hra">27,5%</td></tr>
+          <tr class="hl"><td>> € 65.000,-</td><td class="hra">32,5%</td><td class="hra">31,5%</td><td class="hra">30,5%</td><td class="hra">29,5%</td></tr>
+
+          <tr class="sec"><td colspan="5">BEHEER — Werkelijke lasten — ZONDER hypotheekrenteaftrek (Box 3)</td></tr>
+          <tr><td>Tot € 21.000,-</td><td class="nohra">18,0%</td><td class="nohra">17,0%</td><td class="nohra">16,5%</td><td class="nohra">16,0%</td></tr>
+          <tr><td>€ 21.000,- – € 35.000,-</td><td class="nohra">19,5%</td><td class="nohra">18,5%</td><td class="nohra">17,5%</td><td class="nohra">17,0%</td></tr>
+          <tr><td>€ 35.000,- – € 50.000,-</td><td class="nohra">21,0%</td><td class="nohra">20,0%</td><td class="nohra">19,0%</td><td class="nohra">18,0%</td></tr>
+          <tr><td>> € 50.000,-</td><td class="nohra">22,5%</td><td class="nohra">21,5%</td><td class="nohra">20,5%</td><td class="nohra">19,5%</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tbl-disc"><strong>⚠️ Let op:</strong> De NHG Beheertabel staat in het <strong>Document Werkprocessen</strong> op nhg.nl. Bovenstaande percentages zijn ter indicatie. Gebruik voor definitieve beoordelingen altijd de actuele tabel van nhg.nl. De Beheertabel is structureel ruimer dan de acceptatietabel om woningbehoud mogelijk te maken.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="ico">📋</div>Wanneer gebruik je de NHG-beheercriteria? (D.6.1)</div>
+    <div class="card-body">
+      <table class="vtable">
+        <thead><tr><th>Situatie</th><th>Verplicht / Mag</th><th>Bron</th></tr></thead>
+        <tbody>
+          <tr><td>Kwijtscheldingsbeoordeling bij verliesverkoop</td><td><span class="b-nee">Verplicht</span></td><td>D.6.1</td></tr>
+          <tr><td>Vóór inzet woningbehoud-tool 'aanpassen lening'</td><td><span class="b-nee">Verplicht</span></td><td>D.5.3</td></tr>
+          <tr><td>Vóór consolideren schulden</td><td><span class="b-nee">Verplicht</span></td><td>D.5.5</td></tr>
+          <tr><td>Na aanpassen lening — is lening betaalbaar?</td><td><span class="b-nee">Verplicht</span></td><td>D.5.3</td></tr>
+          <tr><td>OHA — te hoge financieringslast (explain D.4.2)</td><td><span class="b-nee">Verplicht</span></td><td>D.4.2</td></tr>
+          <tr><td>Betaalbaarheid na life-event vaststellen</td><td><span class="b-ok">Mag</span></td><td>D.6.1</td></tr>
+          <tr><td>Draagkracht bepalen voor Woonlastenfaciliteit</td><td><span class="b-ok">Mag</span></td><td>D.5.6</td></tr>
+        </tbody>
+      </table>
+
+      <div class="vn-h2" style="margin-top:20px;">Bijzonderheden beheercriteria (D.6.3 t/m D.6.5)</div>
+      <table class="vtable">
+        <thead><tr><th>Onderdeel</th><th>Beheer — afwijking van acceptatie</th></tr></thead>
+        <tbody>
+          <tr><td>Inkomen dienstverband</td><td>Huidig inkomen = toetsinkomen (ook tijdelijk contract). Uitzondering: opzegging aangekondigd of contract < 2 maanden.</td></tr>
+          <tr><td>ZZP / IKV</td><td>IKV verplicht; NHG vergoedt de kosten als beheertoets verplicht is (D.6.3.2).</td></tr>
+          <tr><td>Sociale uitkering</td><td>Mee te tellen als hoogte minimaal 3 jaar duidelijk is (D.6.3.3).</td></tr>
+          <tr><td>Pensioen / AOW</td><td>Inkomensvermindering meerekenen bij < 3 jaar tot AOW/pensioen (D.6.3.4).</td></tr>
+          <tr><td>Alimentatie (ontvanger)</td><td>Mee te tellen als recht minimaal 3 jaar duurt (D.6.3.5).</td></tr>
+          <tr><td>Financieringslast</td><td>Werkelijke maandlast (niet annuïtaire norm). Ga uit van maximaal aflossingsvrij deel (D.6.5).</td></tr>
+          <tr><td>Toetsrente</td><td>RVP ≥ 3 jaar: werkelijke rente. RVP < 3 jaar: 3-jr NHG-tarief (of hoger als consument meer betaalt) (D.6.5).</td></tr>
+          <tr><td>Vermogen</td><td>Spaargeld + beleggingen + onroerend goed (excl. hoofdwoning) − 1,7% WOZ − € 3.550,- p.p. (D.6.5).</td></tr>
+          <tr><td>Financiële verplichtingen</td><td>Minimaal de werkelijke lasten in mindering (D.6.4). Zakelijke verplichtingen tellen niet mee.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div></div><!-- /panel-beh -->
+
+
+<!-- ══════════════════════ JAVASCRIPT ══════════════════════ -->
+<script>
+// TABS
+function showTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// STATE
+let scen='bestaand';
+const sw={aap:false,kop:false};
+
+function ts(k,el){
+  sw[k]=!sw[k];
+  document.getElementById(el).classList.toggle('on',sw[k]);
+}
+
+function setS(s,btn){
+  scen=s;
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['ab','an','ao'].forEach(c=>{
+    const show=(c==='ab'&&s==='bestaand')||(c==='an'&&s==='nieuwbouw')||(c==='ao'&&s==='oversluiten');
+    document.querySelectorAll('.'+c).forEach(el=>el.classList.toggle('hidden',!show));
+  });
+}
+
+// FORMAT — € 360.000,-
+function fmt(n){
+  if(n==null||isNaN(n))return'—';
+  return'€\u00a0'+Math.round(n).toLocaleString('nl-NL')+',-';
+}
+function fmtP(n){return(n*100).toFixed(1).replace('.',',')+'%';}
+function v(id,d=0){const x=parseFloat(document.getElementById(id)?.value);return isNaN(x)?d:x;}
+
+// BEREKENING
+const NB=470000,NE=498200,BTP=0.004;
+
+function bereken(){
+  const mv=v('marktwaarde'),len=v('lening'),eng=v('energie'),lt=v('looptijd',30);
+  const af=document.getElementById('aflosvorm').value;
+  const isAplus=sw.aap&&scen==='nieuwbouw';
+  const grens=(isAplus||eng>0)?NE:NB;
+
+  let rows=[],base=0,tot=0;
+  // FIX 3: marktwaarde NA aanpassingen voor LTV
+  let mvNaAanp=mv;
+
+  if(scen==='bestaand'){
+    const ks=v('koopsom'),vb=v('verbouwing');
+    const gr=Math.min(ks,mv);
+    // FIX 1: bijkomende kosten = 6% over (a + b + h) conform C.2.1.1f
+    const bk=(gr+vb+eng)*0.06;
+    rows=[
+      {l:'a. Grondslag (laagste: koopsom k.k. of marktwaarde)',a:gr},
+      {l:'b. Kwaliteitsverbetering',a:vb},
+      {l:'f. Bijkomende kosten (max 6% over a+b+h — C.2.1.1f)',a:bk,m:true},
+      {l:'h. Energiebesparende voorzieningen',a:eng,g:true},
+    ];
+    base=gr+vb+bk; tot=base+eng;
+    // FIX 3: MV na aanpassingen = MV + verbouwing (benadering; C.6.1)
+    mvNaAanp=mv+vb;
+
+  }else if(scen==='nieuwbouw'){
+    const ks=v('koopsom'),mw=v('meerwerk'),br=v('bouwrente');
+    rows=[
+      {l:'a. Koop-/aannemingssom',a:ks},
+      {l:'d. Meerwerk (saldo meer-/minderwerk)',a:mw},
+      {l:'e. Bouwrente + renteverlies',a:br},
+      {l:'i. Energiebesparende voorzieningen',a:eng,g:true},
+    ];
+    base=ks+mw+br; tot=base+eng;
+    // Nieuwbouw: MV na aanpassingen = ingevoerde marktwaarde (taxatie na oplevering)
+    mvNaAanp=mv;
+
+  }else{
+    // Oversluiten
+    const rl=v('restantLening'),ok=v('oversluiteKosten'),vb=v('verbouwing');
+    rows=[
+      {l:'a. Restant oude NHG-lening',a:rl},
+      {l:'Oversluiten- en afsluitkosten',a:ok},
+      {l:'c. Kwaliteitsverbetering',a:vb},
+      {l:'j. Energiebesparende voorzieningen',a:eng,g:true},
+    ];
+    base=rl+ok+vb; tot=base+eng;
+    mvNaAanp=mv+vb;
+  }
+
+  // FIX 2: Leningtoets bij energie — twee aparte checks (C.2.1.2)
+  // (1) lening excl. energie-deel ≤ € 470.000,-
+  // (2) lening totaal ≤ € 498.200,-
+  const leningZonderEng = Math.max(0, len-eng);
+  const t3a = leningZonderEng <= NB;   // lening excl. energie ≤ 470.000
+  const t3b = len <= NE;               // lening totaal ≤ 498.200
+  const t3  = eng > 0 ? (t3a && t3b) : (len <= NB);
+
+  const t1=base<=NB, t2=tot<=NE;
+  // FIX 3: LTV toetsen op MV na aanpassingen (C.6.1)
+  const ltv=mv>0?len/mv:999;
+  const maxL=eng>0?mvNaAanp*1.06:mvNaAanp;
+  const t4=len<=maxL, t5=lt<=30, t6=af!=='aflossingsvrij';
+
+  // FIX 4: Borgtochtprovisie — 0 bij zuiver oversluiten (A.5.3.2)
+  // Zuiver oversluiten = lening ≤ restant oude NHG + oversluitekosten (geen verhoging)
+  let btp=0, btpLabel='';
+  if(scen==='oversluiten'){
+    const rl=v('restantLening'),ok=v('oversluiteKosten'),vb=v('verbouwing');
+    const isZuiver = len<=(rl+ok) && vb===0 && eng===0;
+    if(isZuiver){
+      btp=0;
+      btpLabel='€ 0,- — zuiver oversluiten: geen provisie verschuldigd (A.5.3.2)';
+    }else{
+      // Verhoging = lening - restant; provisie over verhoogd deel
+      const verhoging=Math.max(0,len-rl);
+      btp=verhoging*BTP;
+      btpLabel=fmt(verhoging)+' (verhoogd deel) × 0,4% (A.5.3.1)';
+    }
+  }else{
+    btp=len*BTP;
+    btpLabel=fmt(len)+' × 0,4% — te voldoen bij passeren (A.5.3.1 V&N 2026-1)';
+  }
+
+  // Render
+  const rc=document.getElementById('rc');
+  rc.classList.add('vis');
+  setTimeout(()=>rc.scrollIntoView({behavior:'smooth',block:'start'}),80);
+
+  const items=[
+    {lbl:'Kostentoets NHG-grens',
+     val:t1?'Binnen norm':'Boven norm',
+     sub:fmt(base)+' / max '+fmt(NB),
+     cls:t1?'ok':'fail', ico:t1?'✅':'❌', vc:t1?'c-ok':'c-fail'},
+    {lbl:'Lening (excl. energie) ≤ € 470.000,-',
+     val:t3a?'Binnen norm':'Boven norm',
+     sub:fmt(leningZonderEng)+' / max '+fmt(NB)+'  (C.2.1.2)',
+     cls:t3a?'ok':'fail', ico:t3a?'✅':'❌', vc:t3a?'c-ok':'c-fail'},
+    {lbl:'Lening totaal vs. NHG-grens',
+     val:t3b?'Binnen norm':'Boven norm',
+     sub:fmt(len)+' / max '+fmt(eng>0?NE:NB),
+     cls:t3b?'ok':'fail', ico:t3b?'✅':'❌', vc:t3b?'c-ok':'c-fail'},
+    {lbl:'Loan-to-Value (LTV)',
+     val:fmtP(ltv),
+     sub:fmt(len)+' / MV na aanp. '+fmt(mvNaAanp)+(eng>0?' (max 106%)':' (max 100%)'),
+     cls:t4?'ok':'fail', ico:t4?'✅':'❌', vc:t4?'c-ok':'c-fail'},
+    {lbl:'Looptijd',
+     val:lt+' jaar',
+     sub:'Maximum 30 jaar (C.6.7)',
+     cls:t5?'ok':'fail', ico:t5?'✅':'❌', vc:t5?'c-ok':'c-fail'},
+    {lbl:'Aflosvorm',
+     val:t6?'Toegestaan':'Maatwerk nodig',
+     sub:af==='annuitair'?'Annuïtair — standaard':af==='lineair'?'Lineair — toegestaan':'Aflossingsvrij — extra toets vereist (C.6.7.1)',
+     cls:t6?'ok':'warn', ico:t6?'✅':'⚠️', vc:t6?'c-ok':'c-warn'},
+  ];
+  // Alleen bij energie: toon aparte check totaal incl. energie ≤ 498.200
+  if(eng>0){
+    items.push({lbl:'Kosten totaal incl. energiebesparing',
+      val:t2?'Binnen max':'Boven max',
+      sub:fmt(tot)+' / max '+fmt(NE),
+      cls:t2?'ok':'fail', ico:t2?'✅':'❌', vc:t2?'c-ok':'c-fail'});
+  }
+  document.getElementById('rg').innerHTML=items.map(i=>`
+    <div class="ri ${i.cls}"><div class="ri-ico">${i.ico}</div><div>
+      <div class="rl">${i.lbl}</div>
+      <div class="rv ${i.vc}">${i.val}</div>
+      <div class="rs2">${i.sub}</div>
+    </div></div>`).join('');
+
+  // Detail tabel
+  let th=`<thead><tr><th style="width:62%">Post</th><th>Bedrag</th></tr></thead><tbody>`;
+  rows.forEach(r=>{th+=`<tr class="${r.g?'gld':''}"><td>${r.l}</td><td>${fmt(r.a)}</td></tr>`;});
+  th+=`<tr class="sub"><td>Subtotaal kosten (excl. energiebesparing)</td><td>${fmt(base)}</td></tr>`;
+  if(eng>0)th+=`<tr class="sub" style="background:rgba(229,161,56,.12)"><td>Totaal kosten incl. energiebesparing</td><td>${fmt(tot)}</td></tr>`;
+  th+=`<tr class="tot"><td>Gewenste lening</td><td>${fmt(len)}</td></tr></tbody>`;
+  document.getElementById('dtbl').innerHTML=th;
+
+  // BTP
+  document.getElementById('bamt').textContent=btp===0?'€\u00a00,-':fmt(btp);
+  document.getElementById('bdet').textContent=btpLabel;
+
+  // Verdict — fail overschrijft altijd warn
+  const allOk=t1&&t2&&t3a&&t3b&&t4&&t5;
+  const anyHardFail=!t1||(eng>0&&!t2)||!t3a||!t3b||!t4||!t5;
+  const vd=document.getElementById('verd');
+  vd.className='verdict '+(allOk?'ok':anyHardFail?'fail':'warn');
+  document.getElementById('vico').textContent=allOk?'🎉':(anyHardFail?'🚫':'⚠️');
+  const vt=document.getElementById('vtit');
+  vt.className='v-tit '+(allOk?'ok':anyHardFail?'fail':'warn');
+  vt.textContent=allOk?'NHG is mogelijk':(anyHardFail?'NHG niet mogelijk op basis van deze gegevens':'NHG mogelijk — let op: aflosvorm vereist extra toets');
+  const msgs=[];
+  if(!t1)msgs.push('Totale kosten ('+fmt(base)+') overschrijden de NHG-grens van '+fmt(NB)+'.');
+  if(eng>0&&!t2)msgs.push('Totale kosten incl. energie ('+fmt(tot)+') overschrijden het maximum van '+fmt(NE)+'.');
+  if(!t3a)msgs.push('Lening excl. energie ('+fmt(leningZonderEng)+') overschrijdt de basisgrens van '+fmt(NB)+' (C.2.1.2).');
+  if(!t3b)msgs.push('Totale lening ('+fmt(len)+') overschrijdt het maximum van '+fmt(NE)+'.');
+  if(!t4)msgs.push('LTV van '+fmtP(ltv)+' overschrijdt het maximum op marktwaarde na aanpassingen ('+fmt(mvNaAanp)+').');
+  if(!t5)msgs.push('Looptijd van '+lt+' jaar overschrijdt het maximum van 30 jaar.');
+  if(!t6)msgs.push('Aflossingsvrij vereist extra toets: bestaande eigenwoningschuld ≤ 50% marktwaarde (C.6.7.1).');
+  if(sw.kop)msgs.push('Erfpacht/koperssteun: controleer de NHG-acceptatielijst op nhg.nl (C.4.5).');
+  if(allOk&&btp===0)msgs.push('Alle toetsen geslaagd. Zuiver oversluiten — geen borgtochtprovisie verschuldigd (A.5.3.2).');
+  if(allOk&&btp>0)msgs.push('Alle toetsen geslaagd. Borgtochtprovisie bedraagt '+fmt(btp)+'.');
+  document.getElementById('vbod').textContent=msgs.join(' ');
+}
+
+// Init
+document.querySelectorAll('.an,.ao').forEach(el=>el.classList.add('hidden'));
+</script>
+</body>
+</html>

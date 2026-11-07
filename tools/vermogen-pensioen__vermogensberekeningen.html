@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vermogensberekeningen</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--navy:#002A54;--navy-mid:#003a70;--navy-light:#e8eef5;--orange:#FF6600;--orange-light:#fff2e8;--text:#333332;--border:#d8d8d8;--green:#1a6b3c;--red:#c0392b;--radius:6px;--radius-lg:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f4f6f9;}
+.nav-bar{background:var(--navy-mid);}
+.nav-row{display:grid;gap:0;}
+.nav-row-1{grid-template-columns:repeat(5,1fr);border-bottom:1px solid rgba(255,255,255,.1);}
+.nav-row-2{grid-template-columns:repeat(5,1fr);}
+.mode-tab{padding:9px 6px;color:rgba(255,255,255,.7);font-size:12px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;white-space:nowrap;text-align:center;width:100%;transition:color .15s;overflow:hidden;text-overflow:ellipsis;}
+.mode-tab:hover{color:#fff;background:rgba(255,255,255,.05);}.mode-tab.active{color:#fff;border-bottom-color:var(--orange);background:rgba(255,255,255,.07);}
+.main{padding:20px;}
+.section{display:none;}.section.active{display:block;}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden;}
+.card-header{background:var(--navy-light);padding:10px 18px;font-size:14px;font-weight:700;color:var(--navy);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-header::before{content:'';display:inline-block;width:8px;height:8px;background:var(--orange);transform:rotate(45deg);flex-shrink:0;}
+.card-body{padding:18px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.g3c{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+@media(max-width:900px){.g3c{grid-template-columns:1fr 1fr;}}
+@media(max-width:800px){.g2{grid-template-columns:1fr;}.g3,.g4{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.g3,.g4,.g3c{grid-template-columns:1fr;}}
+.field{margin-bottom:12px;}
+.field label{display:flex;align-items:center;gap:5px;font-size:13px;color:#666;margin-bottom:3px;}
+.field-row{display:flex;gap:8px;align-items:center;}
+.iw{position:relative;flex:1;}
+.iw .pre,.iw .suf{position:absolute;top:50%;transform:translateY(-50%);color:#888;font-size:14px;pointer-events:none;}
+.iw .pre{left:9px;}.iw .suf{right:9px;}
+.iw input{padding:7px 9px;width:100%;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);background:#fff;}
+.iw input.hp{padding-left:20px;}.iw input.hs{padding-right:22px;}
+.iw input:focus{outline:none;border-color:var(--navy);}
+select{padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text);background:#fff;cursor:pointer;width:100%;}
+select:focus{outline:none;border-color:var(--navy);}
+.sc{background:var(--navy-light);border-radius:var(--radius);padding:11px 13px;}
+.sc-lbl{font-size:11px;color:#666;margin-bottom:2px;}
+.sc-val{font-size:17px;font-weight:700;color:var(--navy);}
+.sc.hi{background:var(--orange-light);}.sc.hi .sc-val{color:var(--orange);}
+.sc.gn{background:#eaf3ee;}.sc.gn .sc-val{color:var(--green);}
+.sc.rd{background:#fdf3f3;}.sc.rd .sc-val{color:var(--red);}
+.sc.pu{background:#f0eeff;}.sc.pu .sc-val{color:#5533cc;}
+.cbadge{display:inline-block;background:var(--orange);color:#fff;font-size:10px;padding:2px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;}
+.tbl-wrap{overflow-x:auto;max-height:400px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:var(--navy);color:#fff;padding:6px 9px;text-align:right;font-weight:600;position:sticky;top:0;z-index:1;}
+thead th:first-child{text-align:left;}
+tbody tr:nth-child(even){background:var(--navy-light);}
+tbody td{padding:5px 9px;text-align:right;border-bottom:1px solid var(--border);}
+tbody td:first-child{text-align:left;font-weight:600;color:var(--navy);}
+td.tax{color:var(--red);}
+.chart-area{position:relative;height:240px;margin-bottom:6px;}
+.chart-area.tall{height:300px;}
+.vt{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.bv{padding:4px 10px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;cursor:pointer;color:#555;}
+.bv.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.leg{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#666;margin-top:5px;margin-bottom:3px;}
+.leg span{display:flex;align-items:center;gap:3px;}
+.lsq{width:9px;height:9px;border-radius:2px;display:inline-block;}
+.lln{width:16px;height:2px;border-radius:2px;display:inline-block;}
+.sub-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border);}
+.sub-tab{padding:7px 16px;font-size:13px;cursor:pointer;border:none;background:none;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.sub-tab.active{color:var(--orange);border-bottom-color:var(--orange);font-weight:700;}
+.ib{background:var(--orange-light);border-left:3px solid var(--orange);border-radius:0 var(--radius) var(--radius) 0;padding:9px 13px;font-size:13px;color:#555;margin-bottom:14px;}
+.hvv{background:var(--navy-light);border-radius:var(--radius);padding:13px 15px;margin-top:4px;}
+.hvv-t{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:9px;display:flex;align-items:center;gap:5px;}
+.tip-wrap{position:relative;display:inline-flex;}
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--navy);color:#fff;font-size:9px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.tip-box{display:none;position:absolute;z-index:300;left:20px;top:-4px;width:300px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px;font-size:12px;line-height:1.5;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.tip-box ul{margin:7px 0 0 14px;}.tip-box li{margin-bottom:3px;}
+.tip-icon:hover+.tip-box,.tip-box:hover{display:block;}
+.divider{border:none;border-top:2px solid var(--navy-light);margin:16px 0;}
+.fase-label{background:var(--navy);color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:3px;display:inline-block;margin-bottom:10px;}
+/* Scenario columns */
+.sc-col{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;}
+.sc-col-header{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sc-col-header input[type=text]{border:none;border-bottom:2px solid var(--orange);font-size:14px;font-weight:700;color:var(--navy);background:transparent;width:120px;padding:2px 0;}
+.sc-col-header input[type=text]:focus{outline:none;}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="nav-row nav-row-1">
+    <button class="mode-tab active" onclick="switchTab('vrij')" id="tab-vrij">🏦 Vrij sparen</button>
+    <button class="mode-tab" onclick="switchTab('doel')" id="tab-doel">🎯 Doelvermogen</button>
+    <button class="mode-tab" onclick="switchTab('duur')" id="tab-duur">💰 Verm. voor inkomen</button>
+    <button class="mode-tab" onclick="switchTab('inkomen')" id="tab-inkomen">📤 Inkomen uit verm.</button>
+    <button class="mode-tab" onclick="switchTab('groei')" id="tab-groei">📈 Groeiende inleg</button>
+  </div>
+  <div class="nav-row nav-row-2">
+    <button class="mode-tab" onclick="switchTab('reeel')" id="tab-reeel">🔄 Reële waarde</button>
+    <button class="mode-tab" onclick="switchTab('scenario')" id="tab-scenario">⚖️ Scenario's</button>
+    <button class="mode-tab" onclick="switchTab('pensioen')" id="tab-pensioen">🏖️ Pensioenplanning</button>
+    <button class="mode-tab" onclick="switchTab('hypotheek')" id="tab-hypotheek">🏠 Hypotheek & verm.</button>
+    <button class="mode-tab" onclick="switchTab('breakeven')" id="tab-breakeven">🧮 Break-even & box 3</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ VRIJ SPAREN ═══ -->
+<div class="section active" id="sec-vrij">
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header">Invoer — Vrij sparen</div><div class="card-body">
+        <div class="field"><label>Aanvangsinleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="v-aanvang" value="0" min="0" oninput="calcVrij()"></div></div>
+        <div class="field"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="v-inleg" value="200" min="0" oninput="calcVrij()"></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="v-rente" value="4" min="0" max="30" step="0.1" oninput="calcVrij()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Looptijd (maanden)</label>
+          <div class="field-row"><div class="iw"><input type="number" id="v-looptijd" value="60" min="1" max="600" oninput="calcVrij()"></div><span id="v-ltlbl" style="font-size:12px;color:#888;white-space:nowrap">= 5 jaar</span></div>
+        </div>
+        <div class="hvv"><div class="hvv-t">Box 3 heffing <div class="tip-wrap"><span class="tip-icon">i</span><div class="tip-box"><strong>Box 3 heffing 2026</strong><br>Heffing = max(0, vermogen − vrijstelling) × fictief rendement × 36%, beoordeeld op 1 jan elk jaar. De heffing wordt direct afgetrokken van het vermogen.<ul><li><strong>N.v.t.:</strong> geen heffing</li><li><strong>Alleenstaand:</strong> vrijstelling € 59.357</li><li><strong>Met fiscaal partner:</strong> € 118.714</li></ul></div></div></div>
+          <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="v-hvv" onchange="calcVrij()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+          <div id="v-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="v-fictief" onchange="calcVrij()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div class="g3" style="margin-bottom:10px"><div class="sc"><div class="sc-lbl">Totale inleg</div><div class="sc-val" id="v-r-inleg">—</div></div><div class="sc gn"><div class="sc-lbl">Rendement</div><div class="sc-val" id="v-r-rend">—</div></div><div class="sc hi"><div class="sc-lbl">Eindwaarde</div><div class="sc-val" id="v-r-eind">—</div></div></div>
+        <div id="v-tax-row" style="display:none"><div class="g3"><div class="sc"><div class="sc-lbl">Vrijgesteld peildatum jaar 1</div><div class="sc-val" id="v-r-vrij">—</div></div><div class="sc rd"><div class="sc-lbl">Belastingplichtig peildatum jaar 1</div><div class="sc-val" id="v-r-belast">—</div></div><div class="sc rd"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="v-r-heffing">—</div></div></div></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek / Tabel</div><div class="card-body">
+      <div class="vt"><button class="bv active" onclick="setView('vrij','chart',this)">Grafiek</button><button class="bv" onclick="setView('vrij','year',this)">Per jaar</button><button class="bv" onclick="setView('vrij','month',this)">Per maand</button></div>
+      <div id="vrij-chart-area" class="chart-area"><canvas id="vrij-chart" role="img" aria-label="Spaargrafiek"></canvas></div>
+      <div id="vrij-legend" class="leg"></div>
+      <div id="vrij-year-area" style="display:none" class="tbl-wrap"><table id="vrij-year-tbl"><thead></thead><tbody></tbody></table></div>
+      <div id="vrij-month-area" style="display:none" class="tbl-wrap"><table id="vrij-month-tbl"><thead></thead><tbody></tbody></table></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ DOELVERMOGEN ═══ -->
+<div class="section" id="sec-doel">
+  <div class="sub-tabs"><button class="sub-tab active" onclick="setDoelMode('inleg',this)">Bereken maandinleg</button><button class="sub-tab" onclick="setDoelMode('looptijd',this)">Bereken looptijd</button></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header">Invoer — Doelvermogen</div><div class="card-body">
+        <div class="field"><label>Doelvermogen</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="d-doel" value="50000" oninput="calcDoel()"></div></div>
+        <div class="field"><label>Aanvangsinleg (eenmalig)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="d-aanvang" value="0" min="0" oninput="calcDoel()"></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="d-rente" value="4" step="0.1" oninput="calcDoel()"><span class="suf">%</span></div></div>
+        <div class="field" id="d-fld-lt"><label>Looptijd (maanden)</label>
+          <div class="field-row"><div class="iw"><input type="number" id="d-looptijd" value="60" min="1" max="600" oninput="calcDoel()"></div><span id="d-ltlbl" style="font-size:12px;color:#888;white-space:nowrap">= 5 jaar</span></div>
+        </div>
+        <div class="field" id="d-fld-inleg" style="display:none"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="d-inleg" value="200" oninput="calcDoel()"></div></div>
+        <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+          <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="d-hvv" onchange="calcDoel()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+          <div id="d-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="d-fictief" onchange="calcDoel()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div class="g2" style="margin-bottom:10px"><div class="sc hi" id="d-res-card"><div class="sc-lbl">Maandelijkse inleg <span class="cbadge">berekend</span></div><div class="sc-val" id="d-r-computed">—</div></div><div class="sc"><div class="sc-lbl">Totale inleg</div><div class="sc-val" id="d-r-inleg">—</div></div></div>
+        <div class="g2"><div class="sc gn"><div class="sc-lbl">Rendement</div><div class="sc-val" id="d-r-rend">—</div></div><div class="sc rd" id="d-tax-card" style="display:none"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="d-r-heffing">—</div></div></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek / Tabel</div><div class="card-body">
+      <div class="vt"><button class="bv active" onclick="setView('doel','chart',this)">Grafiek</button><button class="bv" onclick="setView('doel','year',this)">Per jaar</button><button class="bv" onclick="setView('doel','month',this)">Per maand</button></div>
+      <div id="doel-chart-area" class="chart-area"><canvas id="doel-chart" role="img" aria-label="Doelvermogen grafiek"></canvas></div>
+      <div id="doel-legend" class="leg"></div>
+      <div id="doel-year-area" style="display:none" class="tbl-wrap"><table id="doel-year-tbl"><thead></thead><tbody></tbody></table></div>
+      <div id="doel-month-area" style="display:none" class="tbl-wrap"><table id="doel-month-tbl"><thead></thead><tbody></tbody></table></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ VERMOGEN VOOR INKOMEN ═══ -->
+<div class="section" id="sec-duur">
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header">Invoer — Vermogen voor inkomen</div><div class="card-body">
+        <div class="ib">Hoe lang kun je een bedrag per maand opnemen?</div>
+        <div class="field"><label>Beschikbaar vermogen</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="i-vermogen" value="200000" oninput="calcDuur()"></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="i-rente" value="3" step="0.1" oninput="calcDuur()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Maandelijkse onttrekking</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="i-onttrekking" value="1000" oninput="calcDuur()"></div></div>
+        <div class="field"><label>Restwaarde (0 = leegmaken)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="i-restwaarde" value="0" min="0" oninput="calcDuur()"></div></div>
+        <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+          <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="i-hvv" onchange="calcDuur()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+          <div id="i-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="i-fictief" onchange="calcDuur()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div class="g2" style="margin-bottom:10px"><div class="sc hi"><div class="sc-lbl">Duur onttrekking <span class="cbadge">berekend</span></div><div class="sc-val" id="i-r-duur">—</div></div><div class="sc"><div class="sc-lbl">Totaal onttrokken</div><div class="sc-val" id="i-r-totaal">—</div></div></div>
+        <div class="g3"><div class="sc gn"><div class="sc-lbl">Rendement-bijdrage</div><div class="sc-val" id="i-r-rend">—</div></div><div class="sc"><div class="sc-lbl">Restwaarde</div><div class="sc-val" id="i-r-rest">—</div></div><div class="sc rd" id="i-tax-card" style="display:none"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="i-r-heffing">—</div></div></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek / Tabel</div><div class="card-body">
+      <div class="vt"><button class="bv active" onclick="setView('duur','chart',this)">Grafiek</button><button class="bv" onclick="setView('duur','year',this)">Per jaar</button><button class="bv" onclick="setView('duur','month',this)">Per maand</button></div>
+      <div id="duur-chart-area" class="chart-area"><canvas id="duur-chart" role="img" aria-label="Onttrekkingsgrafiek"></canvas></div>
+      <div id="duur-legend" class="leg"></div>
+      <div id="duur-year-area" style="display:none" class="tbl-wrap"><table id="duur-year-tbl"><thead></thead><tbody></tbody></table></div>
+      <div id="duur-month-area" style="display:none" class="tbl-wrap"><table id="duur-month-tbl"><thead></thead><tbody></tbody></table></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ INKOMEN UIT VERMOGEN ═══ -->
+<div class="section" id="sec-inkomen">
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header">Invoer — Inkomen uit vermogen</div><div class="card-body">
+        <div class="ib">Bereken wat je maandelijks kunt opnemen gedurende een bepaalde looptijd.</div>
+        <div class="field"><label>Beschikbaar vermogen</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="m-vermogen" value="200000" oninput="calcInkomen()"></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="m-rente" value="3" step="0.1" oninput="calcInkomen()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Looptijd (maanden)</label>
+          <div class="field-row"><div class="iw"><input type="number" id="m-looptijd" value="120" min="1" max="600" oninput="calcInkomen()"></div><span id="m-ltlbl" style="font-size:12px;color:#888;white-space:nowrap">= 10 jaar</span></div>
+        </div>
+        <div class="field"><label>Restwaarde (0 = leegmaken)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="m-restwaarde" value="0" min="0" oninput="calcInkomen()"></div></div>
+        <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+          <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="m-hvv" onchange="calcInkomen()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+          <div id="m-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="m-fictief" onchange="calcInkomen()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div class="g3" style="margin-bottom:10px"><div class="sc hi"><div class="sc-lbl">Maandelijkse opname <span class="cbadge">berekend</span></div><div class="sc-val" id="m-r-opname">—</div></div><div class="sc"><div class="sc-lbl">Totaal opgenomen</div><div class="sc-val" id="m-r-totaal">—</div></div><div class="sc gn"><div class="sc-lbl">Rendement-bijdrage</div><div class="sc-val" id="m-r-rend">—</div></div></div>
+        <div id="m-tax-row" style="display:none"><div class="sc rd"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="m-r-heffing">—</div></div></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek / Tabel</div><div class="card-body">
+      <div class="vt"><button class="bv active" onclick="setView('inkomen','chart',this)">Grafiek</button><button class="bv" onclick="setView('inkomen','year',this)">Per jaar</button><button class="bv" onclick="setView('inkomen','month',this)">Per maand</button></div>
+      <div id="inkomen-chart-area" class="chart-area"><canvas id="inkomen-chart" role="img" aria-label="Inkomengrafiek"></canvas></div>
+      <div id="inkomen-legend" class="leg"></div>
+      <div id="inkomen-year-area" style="display:none" class="tbl-wrap"><table id="inkomen-year-tbl"><thead></thead><tbody></tbody></table></div>
+      <div id="inkomen-month-area" style="display:none" class="tbl-wrap"><table id="inkomen-month-tbl"><thead></thead><tbody></tbody></table></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ GROEIENDE INLEG ═══ -->
+<div class="section" id="sec-groei">
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header">Invoer — Groeiende inleg</div><div class="card-body">
+        <div class="ib">Maandelijkse inleg groeit jaarlijks mee — bijv. met inflatie of salarisstijging.</div>
+        <div class="field"><label>Aanvangsinleg (eenmalig)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="gr-aanvang" value="0" min="0" oninput="calcGroei()"></div></div>
+        <div class="field"><label>Startinleg per maand</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="gr-inleg" value="300" min="0" oninput="calcGroei()"></div></div>
+        <div class="field"><label>Jaarlijkse inleggroei</label><div class="iw"><input type="number" class="hs" id="gr-groei" value="2" min="0" max="20" step="0.1" oninput="calcGroei()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="gr-rente" value="5" step="0.1" oninput="calcGroei()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Looptijd (maanden)</label>
+          <div class="field-row"><div class="iw"><input type="number" id="gr-looptijd" value="120" min="1" max="600" oninput="calcGroei()"></div><span id="gr-ltlbl" style="font-size:12px;color:#888;white-space:nowrap">= 10 jaar</span></div>
+        </div>
+        <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+          <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="gr-hvv" onchange="calcGroei()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+          <div id="gr-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="gr-fictief" onchange="calcGroei()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div class="g3" style="margin-bottom:10px"><div class="sc"><div class="sc-lbl">Totale inleg</div><div class="sc-val" id="gr-r-inleg">—</div></div><div class="sc gn"><div class="sc-lbl">Rendement</div><div class="sc-val" id="gr-r-rend">—</div></div><div class="sc hi"><div class="sc-lbl">Eindwaarde</div><div class="sc-val" id="gr-r-eind">—</div></div></div>
+        <div class="g2"><div class="sc"><div class="sc-lbl">Inleg jaar 1 (mnd gem.)</div><div class="sc-val" id="gr-r-inleg1">—</div></div><div class="sc"><div class="sc-lbl">Inleg laatste jaar (mnd gem.)</div><div class="sc-val" id="gr-r-inlegN">—</div></div></div>
+        <div style="margin-top:10px" id="gr-tax-row" style="display:none"></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek / Tabel</div><div class="card-body">
+      <div class="vt"><button class="bv active" onclick="setView('groei','chart',this)">Grafiek</button><button class="bv" onclick="setView('groei','year',this)">Per jaar</button><button class="bv" onclick="setView('groei','month',this)">Per maand</button></div>
+      <div id="groei-chart-area" class="chart-area"><canvas id="groei-chart" role="img" aria-label="Groeiende inleg grafiek"></canvas></div>
+      <div id="groei-legend" class="leg"></div>
+      <div id="groei-year-area" style="display:none" class="tbl-wrap"><table id="groei-year-tbl"><thead></thead><tbody></tbody></table></div>
+      <div id="groei-month-area" style="display:none" class="tbl-wrap"><table id="groei-month-tbl"><thead></thead><tbody></tbody></table></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ REËLE WAARDE ═══ -->
+<div class="section" id="sec-reeel">
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header">Invoer — Reële waarde & netto rendement</div><div class="card-body">
+        <div class="ib">Berekent nominale eindwaarde, koopkracht na inflatie, en het effectieve netto rendement na box 3 heffing.</div>
+        <div class="field"><label>Aanvangsinleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="rr-aanvang" value="10000" min="0" oninput="calcReeel()"></div></div>
+        <div class="field"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="rr-inleg" value="200" min="0" oninput="calcReeel()"></div></div>
+        <div class="field"><label>Bruto jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="rr-rente" value="5" step="0.1" oninput="calcReeel()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Verwachte inflatie per jaar</label><div class="iw"><input type="number" class="hs" id="rr-inflatie" value="2.5" step="0.1" oninput="calcReeel()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Looptijd (maanden)</label>
+          <div class="field-row"><div class="iw"><input type="number" id="rr-looptijd" value="120" min="1" max="600" oninput="calcReeel()"></div><span id="rr-ltlbl" style="font-size:12px;color:#888;white-space:nowrap">= 10 jaar</span></div>
+        </div>
+        <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+          <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="rr-hvv" onchange="calcReeel()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+          <div id="rr-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="rr-fictief" onchange="calcReeel()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div class="g2" style="margin-bottom:10px"><div class="sc hi"><div class="sc-lbl">Nominale eindwaarde</div><div class="sc-val" id="rr-r-nom">—</div></div><div class="sc pu"><div class="sc-lbl">Reële eindwaarde (koopkracht)</div><div class="sc-val" id="rr-r-reel">—</div></div></div>
+        <div class="g3"><div class="sc gn"><div class="sc-lbl">Bruto rendement totaal</div><div class="sc-val" id="rr-r-bruto">—</div></div><div class="sc"><div class="sc-lbl">Koopkrachtverlies</div><div class="sc-val" id="rr-r-inflv">—</div></div><div class="sc rd" id="rr-tax-sc" style="display:none"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="rr-r-heffing">—</div></div></div>
+        <div style="margin-top:10px"><div class="g3"><div class="sc"><div class="sc-lbl">Bruto rendement % /jaar</div><div class="sc-val" id="rr-r-brutopct">—</div></div><div class="sc gn"><div class="sc-lbl">Netto reëel rendement % /jaar</div><div class="sc-val" id="rr-r-nettopct">—</div></div><div class="sc pu"><div class="sc-lbl">Inflatie-effect % /jaar</div><div class="sc-val" id="rr-r-infpct">—</div></div></div></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek — nominaal vs reëel</div><div class="card-body">
+      <div id="reeel-chart-area" class="chart-area"><canvas id="reeel-chart" role="img" aria-label="Nominaal vs reëel vermogen"></canvas></div>
+      <div id="reeel-legend" class="leg"></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ SCENARIO VERGELIJKER ═══ -->
+<div class="section" id="sec-scenario">
+  <div class="card"><div class="card-header">Invoer — Scenario vergelijker</div><div class="card-body">
+    <div class="g3c">
+      <div class="sc-col" id="sc1-col">
+        <div class="sc-col-header"><input type="text" id="sc1-naam" value="Scenario A" oninput="calcScenario()"></div>
+        <div class="field"><label>Aanvangsinleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="sc1-aanvang" value="5000" oninput="calcScenario()"></div></div>
+        <div class="field"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="sc1-inleg" value="200" oninput="calcScenario()"></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="sc1-rente" value="3" step="0.1" oninput="calcScenario()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Looptijd (maanden)</label><div class="iw"><input type="number" id="sc1-lt" value="120" min="1" max="600" oninput="calcScenario()"></div></div>
+      </div>
+      <div class="sc-col" id="sc2-col">
+        <div class="sc-col-header"><input type="text" id="sc2-naam" value="Scenario B" oninput="calcScenario()"></div>
+        <div class="field"><label>Aanvangsinleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="sc2-aanvang" value="5000" oninput="calcScenario()"></div></div>
+        <div class="field"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="sc2-inleg" value="200" oninput="calcScenario()"></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="sc2-rente" value="5" step="0.1" oninput="calcScenario()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Looptijd (maanden)</label><div class="iw"><input type="number" id="sc2-lt" value="120" min="1" max="600" oninput="calcScenario()"></div></div>
+      </div>
+      <div class="sc-col" id="sc3-col">
+        <div class="sc-col-header"><input type="text" id="sc3-naam" value="Scenario C" oninput="calcScenario()"></div>
+        <div class="field"><label>Aanvangsinleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="sc3-aanvang" value="20000" oninput="calcScenario()"></div></div>
+        <div class="field"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="sc3-inleg" value="0" oninput="calcScenario()"></div></div>
+        <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="sc3-rente" value="5" step="0.1" oninput="calcScenario()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Looptijd (maanden)</label><div class="iw"><input type="number" id="sc3-lt" value="120" min="1" max="600" oninput="calcScenario()"></div></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="g2">
+    <div><div class="card"><div class="card-header">Vergelijking resultaten</div><div class="card-body">
+      <div class="tbl-wrap"><table id="scenario-tbl">
+        <thead><tr><th>Scenario</th><th>Looptijd</th><th>Totale inleg</th><th>Rendement</th><th>Eindwaarde</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div></div></div>
+    <div><div class="card"><div class="card-header">Grafiek</div><div class="card-body">
+      <div id="scenario-chart-area" class="chart-area"><canvas id="scenario-chart" role="img" aria-label="Scenario vergelijker grafiek"></canvas></div>
+      <div id="scenario-legend" class="leg"></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ PENSIOENPLANNING ═══ -->
+<div class="section" id="sec-pensioen">
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header">Invoer — Pensioenplanning</div><div class="card-body">
+        <div class="fase-label">Fase 1 — Vermogensopbouw</div>
+        <div class="field"><label>Aanvangsinleg (eenmalig)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="pp-aanvang" value="0" min="0" oninput="calcPensioen()"></div></div>
+        <div class="field"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="pp-inleg" value="400" min="0" oninput="calcPensioen()"></div></div>
+        <div class="field"><label>Rendement fase 1</label><div class="iw"><input type="number" class="hs" id="pp-rente1" value="6" step="0.1" oninput="calcPensioen()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Duur fase 1 (maanden)</label>
+          <div class="field-row"><div class="iw"><input type="number" id="pp-lt1" value="360" min="1" max="600" oninput="calcPensioen()"></div><span id="pp-lt1lbl" style="font-size:12px;color:#888;white-space:nowrap">= 30 jaar</span></div>
+        </div>
+        <hr class="divider">
+        <div class="fase-label">Fase 2 — Vermogensgebruik</div>
+        <div class="field"><label>Rendement fase 2</label><div class="iw"><input type="number" class="hs" id="pp-rente2" value="3" step="0.1" oninput="calcPensioen()"><span class="suf">%</span></div></div>
+        <div class="field"><label>Gewenste maandelijkse opname</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="pp-opname" value="2000" min="0" oninput="calcPensioen()"></div></div>
+        <div class="field"><label>Gewenste restwaarde</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="pp-rest" value="0" min="0" oninput="calcPensioen()"></div></div>
+        <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+          <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="pp-hvv" onchange="calcPensioen()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+          <div id="pp-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="pp-fictief" onchange="calcPensioen()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--navy)">Fase 1 — Opbouw</div>
+        <div class="g3" style="margin-bottom:12px"><div class="sc"><div class="sc-lbl">Totale inleg</div><div class="sc-val" id="pp-r-inleg">—</div></div><div class="sc gn"><div class="sc-lbl">Rendement fase 1</div><div class="sc-val" id="pp-r-rend1">—</div></div><div class="sc hi"><div class="sc-lbl">Vermogen bij pensionering</div><div class="sc-val" id="pp-r-verm">—</div></div></div>
+        <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--navy)">Fase 2 — Gebruik</div>
+        <div class="g3"><div class="sc hi"><div class="sc-lbl">Duur opname <span class="cbadge">berekend</span></div><div class="sc-val" id="pp-r-duur">—</div></div><div class="sc gn"><div class="sc-lbl">Totaal opgenomen</div><div class="sc-val" id="pp-r-totaal">—</div></div><div class="sc rd" id="pp-tax-sc" style="display:none"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="pp-r-heffing">—</div></div></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek — vermogensverloop</div><div class="card-body">
+      <div id="pensioen-chart-area" class="chart-area tall"><canvas id="pensioen-chart" role="img" aria-label="Pensioenplanning grafiek"></canvas></div>
+      <div id="pensioen-legend" class="leg"></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ HYPOTHEEK & VERMOGEN ═══ -->
+<div class="section" id="sec-hypotheek">
+  <div class="sub-tabs"><button class="sub-tab active" onclick="setHypoMode('aflossingsvrij',this)">Aflossingsvrij sparen</button><button class="sub-tab" onclick="setHypoMode('overwaarde',this)">Overwaarde benutten</button></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header" id="hypo-invoer-title">Invoer — Aflossingsvrij sparen</div><div class="card-body" id="hypo-body">
+        <div id="hypo-afl">
+          <div class="ib">Bereken hoeveel je maandelijks moet sparen/beleggen om aan het einde van de looptijd je aflossingsvrije hypotheek af te lossen.</div>
+          <div class="field"><label>Hypotheekbedrag (doelvermogen)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="ha-bedrag" value="200000" oninput="calcHypo()"></div></div>
+          <div class="field"><label>Aanvangsinleg (bijv. spaargeld nu)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="ha-aanvang" value="0" oninput="calcHypo()"></div></div>
+          <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="ha-rente" value="5" step="0.1" oninput="calcHypo()"><span class="suf">%</span></div></div>
+          <div class="field"><label>Resterende looptijd (maanden)</label>
+            <div class="field-row"><div class="iw"><input type="number" id="ha-lt" value="240" min="1" max="600" oninput="calcHypo()"></div><span id="ha-ltlbl" style="font-size:12px;color:#888;white-space:nowrap">= 20 jaar</span></div>
+          </div>
+          <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+            <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="ha-hvv" onchange="calcHypo()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+            <div id="ha-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="ha-fictief" onchange="calcHypo()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+          </div>
+        </div>
+        <div id="hypo-ov" style="display:none">
+          <div class="ib">Bereken hoe lang overwaarde (bijv. na woningverkoop of erfenis) aangevuld met eventuele maandelijkse inleg volstaat als inkomensaanvulling.</div>
+          <div class="field"><label>Beschikbare overwaarde</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="hv-verm" value="150000" oninput="calcHypo()"></div></div>
+          <div class="field"><label>Aanvullende maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="hv-inleg" value="0" oninput="calcHypo()"></div></div>
+          <div class="field"><label>Jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="hv-rente" value="3" step="0.1" oninput="calcHypo()"><span class="suf">%</span></div></div>
+          <div class="field"><label>Maandelijkse onttrekking</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="hv-ont" value="1200" oninput="calcHypo()"></div></div>
+          <div class="field"><label>Restwaarde</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="hv-rest" value="0" min="0" oninput="calcHypo()"></div></div>
+          <div class="hvv"><div class="hvv-t">Box 3 heffing</div>
+            <div class="field" style="margin-bottom:0"><label>Heffingsvrij vermogen</label><select id="hv-hvv" onchange="calcHypo()"><option value="0">N.v.t.</option><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+            <div id="hv-fr" style="display:none"><div class="field" style="margin:9px 0 0"><label>Fictief rendement box 3</label><select id="hv-fictief" onchange="calcHypo()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option><option value="werkelijk">Werkelijk rendement</option></select></div></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body" id="hypo-res">
+        <div id="hypo-res-afl"><div class="g3"><div class="sc hi"><div class="sc-lbl">Benodigde maandinleg <span class="cbadge">berekend</span></div><div class="sc-val" id="ha-r-inleg">—</div></div><div class="sc"><div class="sc-lbl">Totale inleg</div><div class="sc-val" id="ha-r-totinleg">—</div></div><div class="sc gn"><div class="sc-lbl">Rendement</div><div class="sc-val" id="ha-r-rend">—</div></div></div><div style="margin-top:10px" id="ha-tax-row" class="sc rd" style="display:none"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="ha-r-heffing">—</div></div></div>
+        <div id="hypo-res-ov" style="display:none"><div class="g2"><div class="sc hi"><div class="sc-lbl">Duur beschikbaar <span class="cbadge">berekend</span></div><div class="sc-val" id="hv-r-duur">—</div></div><div class="sc"><div class="sc-lbl">Totaal onttrokken</div><div class="sc-val" id="hv-r-totaal">—</div></div></div><div style="margin-top:10px" id="hv-tax-row" class="sc rd" style="display:none"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val" id="hv-r-heffing">—</div></div></div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek / Tabel</div><div class="card-body">
+      <div class="vt"><button class="bv active" onclick="setView('hypotheek','chart',this)">Grafiek</button><button class="bv" onclick="setView('hypotheek','year',this)">Per jaar</button><button class="bv" onclick="setView('hypotheek','month',this)">Per maand</button></div>
+      <div id="hypotheek-chart-area" class="chart-area"><canvas id="hypotheek-chart" role="img" aria-label="Hypotheek vermogen grafiek"></canvas></div>
+      <div id="hypotheek-legend" class="leg"></div>
+      <div id="hypotheek-year-area" style="display:none" class="tbl-wrap"><table id="hypotheek-year-tbl"><thead></thead><tbody></tbody></table></div>
+      <div id="hypotheek-month-area" style="display:none" class="tbl-wrap"><table id="hypotheek-month-tbl"><thead></thead><tbody></tbody></table></div>
+    </div></div></div>
+  </div>
+</div>
+
+<!-- ═══ BREAK-EVEN & BOX 3 ═══ -->
+<div class="section" id="sec-breakeven">
+  <div class="sub-tabs"><button class="sub-tab active" onclick="setBEMode('breakeven',this)">Break-even rendement</button><button class="sub-tab" onclick="setBEMode('box3opt',this)">Box 3 optimalisatie</button></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="card-header" id="be-invoer-title">Invoer — Break-even rendement</div><div class="card-body">
+        <div id="be-body-breakeven">
+          <div class="ib">Welk jaarlijks rendement heb je minimaal nodig om een doelvermogen te bereiken?</div>
+          <div class="field"><label>Aanvangsinleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="be-aanvang" value="0" oninput="calcBE()"></div></div>
+          <div class="field"><label>Maandelijkse inleg</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="be-inleg" value="300" oninput="calcBE()"></div></div>
+          <div class="field"><label>Doelvermogen</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="be-doel" value="50000" oninput="calcBE()"></div></div>
+          <div class="field"><label>Looptijd (maanden)</label>
+            <div class="field-row"><div class="iw"><input type="number" id="be-lt" value="120" min="1" max="600" oninput="calcBE()"></div><span id="be-ltlbl" style="font-size:12px;color:#888;white-space:nowrap">= 10 jaar</span></div>
+          </div>
+        </div>
+        <div id="be-body-box3opt" style="display:none">
+          <div class="ib">Analyse van box 3 impact: bij welk vermogen overschrijd je de vrijstelling, hoeveel kost de heffing, en wat is het break-even punt waar heffing groter wordt dan rendement?</div>
+          <div class="field"><label>Vermogen (startpunt analyse)</label><div class="iw"><span class="pre">€</span><input type="number" class="hp" id="bo-verm" value="100000" oninput="calcBO()"></div></div>
+          <div class="field"><label>Bruto jaarlijks rendement</label><div class="iw"><input type="number" class="hs" id="bo-rente" value="4" step="0.1" oninput="calcBO()"><span class="suf">%</span></div></div>
+          <div class="field"><label>Fictief rendement box 3</label><select id="bo-fictief" onchange="calcBO()"><option value="1.44">Spaargeld — 1,44%</option><option value="5.88">Overig — 5,88%</option></select></div>
+          <div class="field"><label>Situatie</label><select id="bo-hvv" onchange="calcBO()"><option value="1">Alleenstaand (€ 59.357)</option><option value="2">Met fiscaal partner (€ 118.714)</option></select></div>
+        </div>
+      </div></div>
+      <div class="card"><div class="card-header">Resultaat</div><div class="card-body">
+        <div id="be-res-breakeven"><div class="g3"><div class="sc hi"><div class="sc-lbl">Break-even rendement <span class="cbadge">berekend</span></div><div class="sc-val" id="be-r-rend">—</div></div><div class="sc"><div class="sc-lbl">Inleg zonder rendement</div><div class="sc-val" id="be-r-inleg0">—</div></div><div class="sc gn"><div class="sc-lbl">Rendement nodig</div><div class="sc-val" id="be-r-rendnodig">—</div></div></div></div>
+        <div id="be-res-box3opt" style="display:none">
+          <div class="g3" style="margin-bottom:10px">
+            <div class="sc"><div class="sc-lbl">Vrijgesteld vermogen</div><div class="sc-val" id="bo-r-vrij">—</div></div>
+            <div class="sc rd"><div class="sc-lbl">Belastingplichtig</div><div class="sc-val" id="bo-r-belast">—</div></div>
+            <div class="sc rd"><div class="sc-lbl">Jaarlijkse box 3 heffing</div><div class="sc-val" id="bo-r-heffing">—</div></div>
+          </div>
+          <div class="g3">
+            <div class="sc gn"><div class="sc-lbl">Bruto rendement /jaar</div><div class="sc-val" id="bo-r-brutorend">—</div></div>
+            <div class="sc"><div class="sc-lbl">Netto rendement /jaar</div><div class="sc-val" id="bo-r-nettorend">—</div></div>
+            <div class="sc pu"><div class="sc-lbl">Effectief netto rendement %</div><div class="sc-val" id="bo-r-effectief">—</div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div><div class="card"><div class="card-header">Grafiek</div><div class="card-body">
+      <div id="be-chart-area" class="chart-area"><canvas id="be-chart" role="img" aria-label="Break-even grafiek"></canvas></div>
+      <div id="be-legend" class="leg"></div>
+    </div></div></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const charts={};
+const HVV_PP=59357;
+let hypoMode='aflossingsvrij', beMode='breakeven';
+
+// ─── FORMATTERING ───────────────────────────────────────────
+function fmt(n){if(n===null||isNaN(n)||!isFinite(n))return'—';return'€\u202F'+Math.round(n).toLocaleString('nl-NL');}
+function fmtP(n,d=2){if(n===null||isNaN(n)||!isFinite(n))return'—';return n.toFixed(d)+'%';}
+function fmtMnd(n){if(!n||n<1)return'—';n=Math.round(n);const j=Math.floor(n/12),m=n%12;let s=n+' mnd';if(j>0)s+=' ('+j+(m>0?' jr '+m+' mnd':' jaar')+')';return s;}
+function updLL(lid,lbl){const v=parseFloat(document.getElementById(lid).value)||0;const j=Math.floor(v/12),m=v%12;let s='';if(j>0&&m>0)s=`= ${j} jr ${m} mnd`;else if(j>0)s=`= ${j} jaar`;else if(m>0)s=`= ${m} mnd`;document.getElementById(lbl).textContent=s;}
+
+// ─── HVV ────────────────────────────────────────────────────
+function getHvv(pfx,jaarRente){
+  const k=parseInt(document.getElementById(pfx+'-hvv').value)||0;
+  const row=document.getElementById(pfx+'-fr');
+  if(row)row.style.display=k>0?'':'none';
+  if(!k)return{vrijstelling:0,fictief:0,active:false};
+  const vrijstelling=k*HVV_PP;
+  const fsel=document.getElementById(pfx+'-fictief');
+  const fval=fsel?fsel.value:'1.44';
+  const fictief=fval==='werkelijk'?jaarRente:parseFloat(fval);
+  return{vrijstelling,fictief,active:true};
+}
+
+// ─── KERN: BUILD DATA ────────────────────────────────────────
+// mode: 'spaar' | 'onttrek' | 'groei' (variabele inleg)
+function buildData(mode,p){
+  const now=new Date();
+  const rows=[];
+  let verm=p.startVermogen||0;
+  const mr=p.jaarRente/100/12;
+  const totalYears=Math.ceil(p.looptijd/12);
+  const jaarHeff=new Array(totalYears).fill(0);
+  // jaarlijkse inleggroei voor 'groei' modus
+  const inlegGroeiMr = p.inlegGroei ? p.inlegGroei/100/12 : 0;
+
+  for(let mnd=1;mnd<=p.looptijd;mnd++){
+    const jaarIdx=Math.floor((mnd-1)/12);
+    const isJS=(mnd-1)%12===0;
+    if(isJS&&p.hvv&&p.hvv.active){
+      const belastbaar=Math.max(0,verm-p.hvv.vrijstelling);
+      jaarHeff[jaarIdx]=belastbaar*(p.hvv.fictief/100)*0.36;
+      verm=Math.max(0,verm-jaarHeff[jaarIdx]);
+    }
+    const d=new Date(now.getFullYear(),now.getMonth()+mnd,1);
+    const datum=d.toLocaleDateString('nl-NL',{month:'2-digit',year:'numeric'});
+    const rendement=verm*mr;
+    let inleg=0,onttrekking=0;
+    if(mode==='spaar'){inleg=p.inleg||0;verm+=rendement+inleg;}
+    else if(mode==='groei'){
+      // inleg groeit jaarlijks: inleg * (1 + groei%)^jaar
+      inleg=(p.inleg||0)*Math.pow(1+(p.inlegGroei||0)/100,jaarIdx);
+      verm+=rendement+inleg;
+    }
+    else{
+      const gepland=p.onttrekking||0;
+      const beschikbaar=verm+rendement;
+      onttrekking=Math.min(gepland,Math.max(0,beschikbaar));
+      verm=Math.max(0,beschikbaar-gepland);
+    }
+    const maandHeffing=(jaarHeff[jaarIdx]||0)/12;
+    rows.push({mnd,datum,inleg,rendement,onttrekking,vermogen:verm,jaarIdx,maandHeffing});
+  }
+  return rows;
+}
+
+function aggYear(rows,mode){
+  const map={};
+  rows.forEach(r=>{
+    const yr=Math.ceil(r.mnd/12);
+    if(!map[yr])map[yr]={jaar:yr,datum:r.datum,inleg:0,rendement:0,onttrekking:0,vermogen:0,resterend:0,heffing:0};
+    const e=map[yr];
+    if(mode==='spaar'||mode==='groei'){e.inleg+=r.inleg;e.rendement+=r.rendement;e.vermogen=r.vermogen;}
+    else{e.onttrekking+=r.onttrekking;e.rendement+=r.rendement;e.resterend=r.vermogen;}
+    e.heffing+=r.maandHeffing||0;e.datum=r.datum;
+  });
+  return Object.values(map);
+}
+
+function fillTable(tblId,rows,mode,showHef){
+  const tbl=document.getElementById(tblId);if(!tbl)return;
+  const isSpaar=mode==='spaar'||mode==='groei';
+  const col2=mode==='onttrek_duur'?'Onttrokken':mode==='onttrek_ink'?'Opgenomen':mode==='onttrek_ov'?'Onttrokken':'Inleg';
+  const col4=isSpaar?'Vermogen':'Resterend';
+  const hh=showHef?'<th style="color:#ffa0a0">Box 3 heffing</th>':'';
+  tbl.querySelector('thead').innerHTML=`<tr><th>Nr</th><th>Datum</th><th>${col2}</th><th>Rendement</th><th>${col4}</th>${hh}</tr>`;
+  const tbody=tbl.querySelector('tbody');tbody.innerHTML='';
+  const slice=rows.length>300?rows.slice(0,300):rows;
+  slice.forEach(r=>{
+    const nr=r.jaar||r.mnd;
+    const c2=isSpaar?fmt(r.inleg):fmt(r.onttrekking);
+    const c4=isSpaar?fmt(r.vermogen):fmt(r.resterend!==undefined?r.resterend:r.vermogen);
+    const hef=showHef?`<td class="tax">${fmt(r.heffing!==undefined?r.heffing:r.maandHeffing)}</td>`:'';
+    tbody.insertAdjacentHTML('beforeend',`<tr><td>${nr}</td><td>${r.datum}</td><td>${c2}</td><td>${fmt(r.rendement)}</td><td>${c4}</td>${hef}</tr>`);
+  });
+}
+
+function makeChart(id,labels,datasets,type){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(canvas,{
+    type:type||'bar',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{stacked:true,ticks:{maxTicksLimit:14,color:'#888',font:{size:10}},grid:{display:false}},
+        y:{stacked:true,ticks:{color:'#888',font:{size:10},callback:v=>'€'+(Math.abs(v)>=1000?Math.round(v/1000)+'k':v)},grid:{color:'#eee'}}
+      }}
+  });
+}
+function makeLineChart(id,labels,datasets){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(canvas,{
+    type:'line',data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{maxTicksLimit:14,color:'#888',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#888',font:{size:10},callback:v=>'€'+(Math.abs(v)>=1000?Math.round(v/1000)+'k':v)},grid:{color:'#eee'}}
+      }}
+  });
+}
+
+function setLeg(id,items){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=items.map(it=>{
+    const sw=it.line?`<span class="lln" style="background:${it.c}"></span>`:`<span class="lsq" style="background:${it.c};${it.b?'border:1px solid '+it.b+';':''}"></span>`;
+    return`<span>${sw}${it.l}</span>`;
+  }).join('');
+}
+
+function switchTab(n){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+n).classList.add('active');
+  document.getElementById('tab-'+n).classList.add('active');
+}
+
+function setView(pfx,view,btn){
+  ['chart','year','month'].forEach(a=>{const el=document.getElementById(pfx+'-'+a+'-area');if(el)el.style.display=a===view?'':'none';});
+  const leg=document.getElementById(pfx+'-legend');if(leg)leg.style.display=view==='chart'?'':'none';
+  btn.parentElement.querySelectorAll('.bv').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  if(view==='chart'){
+    if(pfx==='vrij')calcVrij();if(pfx==='doel')calcDoel();if(pfx==='duur')calcDuur();
+    if(pfx==='inkomen')calcInkomen();if(pfx==='groei')calcGroei();
+    if(pfx==='hypotheek')calcHypo();
+  }
+}
+
+// Gedeelde chart helper voor spaar-tabs
+function spaarChart(chartId,legendId,yr,looptijd,aanvang,inleg,hvv,extraDs){
+  const lbl=yr.map(r=>r.datum);
+  const cumI=yr.map((_,i)=>aanvang+inleg*Math.min(12*(i+1),looptijd));
+  const cumR=yr.map(r=>r.vermogen-(aanvang+inleg*Math.min(12*r.jaar,looptijd)));
+  const ds=[
+    {label:'Inleg',data:cumI,backgroundColor:'#e8eef5',borderColor:'#d8d8d8',borderWidth:1},
+    {label:'Rendement',data:cumR,backgroundColor:'#003a70',borderColor:'#003a70',borderWidth:0},
+    ...(extraDs||[])
+  ];
+  const li=[{l:'Inleg',c:'#e8eef5',b:'#d8d8d8'},{l:'Rendement',c:'#003a70'}];
+  if(hvv&&hvv.active){
+    const cumH=yr.map((_,i)=>yr.slice(0,i+1).reduce((s,r)=>s+r.heffing,0));
+    ds.push({label:'Box 3 heffing',data:cumH,type:'line',borderColor:'#c0392b',borderWidth:2,pointRadius:0,fill:false,order:-1});
+    li.push({l:'Box 3 heffing (cumulatief)',c:'#c0392b',line:true});
+  }
+  makeChart(chartId,lbl,ds);setLeg(legendId,li);
+}
+
+function onttrekChart(chartId,legendId,yr,ont,looptijd,hvv,colLabel){
+  const lbl=yr.map(r=>r.datum);
+  const ds=[
+    {label:'Resterend',data:yr.map(r=>r.resterend),backgroundColor:'#003a70',borderColor:'#003a70',borderWidth:0},
+    {label:colLabel,data:yr.map((_,i)=>ont*Math.min(12*(i+1),looptijd)),type:'line',borderColor:'#FF6600',borderWidth:2,pointRadius:0,fill:false,order:-1}
+  ];
+  const li=[{l:'Resterend',c:'#003a70'},{l:colLabel+' (cumulatief)',c:'#FF6600',line:true}];
+  if(hvv&&hvv.active){
+    const cumH=yr.map((_,i)=>yr.slice(0,i+1).reduce((s,r)=>s+r.heffing,0));
+    ds.push({label:'Box 3',data:cumH,type:'line',borderColor:'#c0392b',borderWidth:2,pointRadius:0,fill:false,order:-2});
+    li.push({l:'Box 3 heffing (cumulatief)',c:'#c0392b',line:true});
+  }
+  makeChart(chartId,lbl,ds);setLeg(legendId,li);
+}
+
+// ─── VRIJ SPAREN ─────────────────────────────────────────────
+function calcVrij(){
+  updLL('v-looptijd','v-ltlbl');
+  const aanvang=parseFloat(document.getElementById('v-aanvang').value)||0;
+  const inleg=parseFloat(document.getElementById('v-inleg').value)||0;
+  const rente=parseFloat(document.getElementById('v-rente').value)||0;
+  const looptijd=parseFloat(document.getElementById('v-looptijd').value)||0;
+  const hvv=getHvv('v',rente);
+  const rows=buildData('spaar',{inleg,jaarRente:rente,looptijd,startVermogen:aanvang,hvv});
+  if(!rows.length)return;
+  const eind=rows[rows.length-1].vermogen;
+  const totInleg=aanvang+inleg*looptijd;
+  const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+  document.getElementById('v-r-inleg').textContent=fmt(totInleg);
+  document.getElementById('v-r-rend').textContent=fmt(eind-totInleg);
+  document.getElementById('v-r-eind').textContent=fmt(eind);
+  // Label aanpassen: netto bij box3 actief
+  document.querySelector('#sec-vrij .sc.gn .sc-lbl').textContent=hvv.active?'Rendement (netto na box 3)':'Rendement';
+  const tr=document.getElementById('v-tax-row');
+  if(hvv.active){
+    tr.style.display='';
+    // Toon peildatum jaar 1 (startVermogen na eerste heffing) als indicatie belastingplichtig deel
+    const jaar1Belastbaar=Math.max(0,aanvang-hvv.vrijstelling);
+    document.getElementById('v-r-vrij').textContent=fmt(Math.min(aanvang,hvv.vrijstelling));
+    document.getElementById('v-r-belast').textContent=fmt(jaar1Belastbaar);
+    document.getElementById('v-r-heffing').textContent=fmt(totH);
+  }else tr.style.display='none';
+  const yr=aggYear(rows,'spaar');
+  fillTable('vrij-year-tbl',yr,'spaar',hvv.active);fillTable('vrij-month-tbl',rows,'spaar',hvv.active);
+  spaarChart('vrij-chart','vrij-legend',yr,looptijd,aanvang,inleg,hvv);
+}
+
+// ─── DOELVERMOGEN ────────────────────────────────────────────
+let doelMode='inleg';
+function setDoelMode(mode,btn){
+  doelMode=mode;
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('d-fld-lt').style.display=mode==='inleg'?'':'none';
+  document.getElementById('d-fld-inleg').style.display=mode==='looptijd'?'':'none';
+  const lbl=document.querySelector('#d-res-card .sc-lbl');
+  lbl.innerHTML=mode==='inleg'?'Maandelijkse inleg <span class="cbadge">berekend</span>':'Benodigde looptijd <span class="cbadge">berekend</span>';
+  calcDoel();
+}
+function calcDoel(){
+  updLL('d-looptijd','d-ltlbl');
+  const doel=parseFloat(document.getElementById('d-doel').value)||0;
+  const aanvang=parseFloat(document.getElementById('d-aanvang').value)||0;
+  const rente=parseFloat(document.getElementById('d-rente').value)||0;
+  const mr=rente/100/12;
+  const hvv=getHvv('d',rente);
+  let inleg,looptijd;
+  if(doelMode==='inleg'){
+    looptijd=parseFloat(document.getElementById('d-looptijd').value)||0;
+    if(mr>0){const f=Math.pow(1+mr,looptijd);inleg=Math.max(0,(doel-aanvang*f)*mr/(f-1));}
+    else inleg=Math.max(0,(doel-aanvang)/looptijd);
+    document.getElementById('d-r-computed').textContent=fmt(inleg);
+  }else{
+    inleg=parseFloat(document.getElementById('d-inleg').value)||0;
+    if(mr>0){const A=aanvang+inleg/mr,B=doel+inleg/mr;looptijd=(A>0&&B>0&&B>A)?Math.log(B/A)/Math.log(1+mr):Infinity;}
+    else looptijd=inleg>0?(doel-aanvang)/inleg:Infinity;
+    document.getElementById('d-r-computed').textContent=isFinite(looptijd)?fmtMnd(Math.ceil(looptijd)):'Onbereikbaar';
+    looptijd=isFinite(looptijd)?Math.ceil(looptijd):600;
+  }
+  const lt=Math.ceil(looptijd);
+  const rows=buildData('spaar',{inleg,jaarRente:rente,looptijd:lt,startVermogen:aanvang,hvv});
+  if(!rows.length)return;
+  const eind=rows[rows.length-1].vermogen;
+  const totInleg=aanvang+inleg*lt;
+  const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+  document.getElementById('d-r-inleg').textContent=fmt(totInleg);
+  document.getElementById('d-r-rend').textContent=fmt(eind-totInleg);
+  const tc=document.getElementById('d-tax-card');
+  if(hvv.active){tc.style.display='';document.getElementById('d-r-heffing').textContent=fmt(totH);}else tc.style.display='none';
+  const yr=aggYear(rows,'spaar');
+  fillTable('doel-year-tbl',yr,'spaar',hvv.active);fillTable('doel-month-tbl',rows,'spaar',hvv.active);
+  spaarChart('doel-chart','doel-legend',yr,lt,aanvang,inleg,hvv,[{label:'Doel',data:yr.map(()=>doel),type:'line',borderColor:'#FF6600',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false,order:-1}]);
+}
+
+// ─── VERMOGEN VOOR INKOMEN ────────────────────────────────────
+function solveN(pv,r,pmt,fv){if(r===0)return(pv-fv)/pmt;let lo=0,hi=1200;for(let i=0;i<60;i++){const mid=(lo+hi)/2;const c=pmt*(1-Math.pow(1+r,-mid))/r+fv*Math.pow(1+r,-mid);if(c>pv)lo=mid;else hi=mid;}return(lo+hi)/2;}
+function calcDuur(){
+  const verm=parseFloat(document.getElementById('i-vermogen').value)||0;
+  const rente=parseFloat(document.getElementById('i-rente').value)||0;
+  const ont=parseFloat(document.getElementById('i-onttrekking').value)||0;
+  const rest=parseFloat(document.getElementById('i-restwaarde').value)||0;
+  const mr=rente/100/12;const hvv=getHvv('i',rente);if(ont<=0)return;
+  // solveN geeft schatting zonder box3; we simuleren altijd de volledige looptijd
+  let ltEstimate=mr>0?solveN(verm,mr,ont,rest):ont>0?(verm-rest)/ont:Infinity;
+  // Simuleer tot max 1200 mnd of geschatte looptijd + buffer voor box3-effect
+  const simMnd=Math.min(Math.ceil(isFinite(ltEstimate)?ltEstimate*1.2+24:1200),1200);
+  const rows=buildData('onttrek',{startVermogen:verm,jaarRente:rente,onttrekking:ont,looptijd:simMnd,hvv});
+  // Werkelijke looptijd = laatste maand met positieve onttrekking
+  const werkLt=rows.reduce((last,r,i)=>r.onttrekking>0?i+1:last,0);
+  const totOnt=rows.reduce((s,r)=>s+r.onttrekking,0);
+  const restVal=werkLt>0?rows[werkLt-1].vermogen:0;
+  const totH=rows.slice(0,werkLt).reduce((s,r)=>s+r.maandHeffing,0);
+  const duurtOneindig=!hvv.active&&!isFinite(ltEstimate);
+  document.getElementById('i-r-duur').textContent=duurtOneindig?'Oneindig':fmtMnd(werkLt||simMnd);
+  document.getElementById('i-r-totaal').textContent=fmt(totOnt);
+  document.getElementById('i-r-rend').textContent=fmt(Math.max(0,totOnt+restVal-verm));
+  document.getElementById('i-r-rest').textContent=fmt(restVal);
+  const tc=document.getElementById('i-tax-card');
+  if(hvv.active){tc.style.display='';document.getElementById('i-r-heffing').textContent=fmt(totH);}else tc.style.display='none';
+  const activeRows=rows.slice(0,werkLt||simMnd);
+  const yr=aggYear(activeRows,'onttrek');
+  fillTable('duur-year-tbl',yr,'onttrek_duur',hvv.active);fillTable('duur-month-tbl',activeRows,'onttrek_duur',hvv.active);
+  onttrekChart('duur-chart','duur-legend',yr,ont,werkLt||simMnd,hvv,'Onttrokken');
+}
+
+// ─── INKOMEN UIT VERMOGEN ────────────────────────────────────
+function calcInkomen(){
+  updLL('m-looptijd','m-ltlbl');
+  const verm=parseFloat(document.getElementById('m-vermogen').value)||0;
+  const rente=parseFloat(document.getElementById('m-rente').value)||0;
+  const looptijd=parseFloat(document.getElementById('m-looptijd').value)||0;
+  const rest=parseFloat(document.getElementById('m-restwaarde').value)||0;
+  const mr=rente/100/12;const hvv=getHvv('m',rente);
+  let opname=mr>0?(verm-rest*Math.pow(1+mr,-looptijd))*mr/(1-Math.pow(1+mr,-looptijd)):(verm-rest)/looptijd;
+  const rows=buildData('onttrek',{startVermogen:verm,jaarRente:rente,onttrekking:opname,looptijd,hvv});
+  if(!rows.length)return;
+  const totOp=rows.reduce((s,r)=>s+r.onttrekking,0);
+  const restVal=rows[rows.length-1].vermogen;
+  const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+  document.getElementById('m-r-opname').textContent=fmt(opname);
+  document.getElementById('m-r-totaal').textContent=fmt(totOp);
+  document.getElementById('m-r-rend').textContent=fmt(Math.max(0,totOp+restVal-verm));
+  const tr=document.getElementById('m-tax-row');
+  if(hvv.active){tr.style.display='';document.getElementById('m-r-heffing').textContent=fmt(totH);}else tr.style.display='none';
+  const yr=aggYear(rows,'onttrek');
+  fillTable('inkomen-year-tbl',yr,'onttrek_ink',hvv.active);fillTable('inkomen-month-tbl',rows,'onttrek_ink',hvv.active);
+  onttrekChart('inkomen-chart','inkomen-legend',yr,opname,looptijd,hvv,'Opgenomen');
+}
+
+// ─── GROEIENDE INLEG ─────────────────────────────────────────
+function calcGroei(){
+  updLL('gr-looptijd','gr-ltlbl');
+  const aanvang=parseFloat(document.getElementById('gr-aanvang').value)||0;
+  const inleg=parseFloat(document.getElementById('gr-inleg').value)||0;
+  const groei=parseFloat(document.getElementById('gr-groei').value)||0;
+  const rente=parseFloat(document.getElementById('gr-rente').value)||0;
+  const looptijd=parseFloat(document.getElementById('gr-looptijd').value)||0;
+  const hvv=getHvv('gr',rente);
+  const rows=buildData('groei',{inleg,inlegGroei:groei,jaarRente:rente,looptijd,startVermogen:aanvang,hvv});
+  if(!rows.length)return;
+  const eind=rows[rows.length-1].vermogen;
+  const totInleg=aanvang+rows.reduce((s,r)=>s+r.inleg,0);
+  const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+  const jaarN=Math.floor((looptijd-1)/12);
+  const inlegJaar1=inleg;
+  const inlegJaarN=inleg*Math.pow(1+groei/100,jaarN);
+  document.getElementById('gr-r-inleg').textContent=fmt(totInleg);
+  document.getElementById('gr-r-rend').textContent=fmt(eind-totInleg);
+  document.getElementById('gr-r-eind').textContent=fmt(eind);
+  document.getElementById('gr-r-inleg1').textContent=fmt(inlegJaar1);
+  document.getElementById('gr-r-inlegN').textContent=fmt(inlegJaarN);
+  const taxRow=document.getElementById('gr-tax-row');
+  if(hvv.active){taxRow.style.display='';taxRow.innerHTML=`<div class="sc rd"><div class="sc-lbl">Totale box 3 heffing</div><div class="sc-val">${fmt(totH)}</div></div>`;}else taxRow.style.display='none';
+  const yr=aggYear(rows,'groei');
+  fillTable('groei-year-tbl',yr,'groei',hvv.active);fillTable('groei-month-tbl',rows,'groei',hvv.active);
+  // Grafiek: cumulatieve inleg (variabel) + rendement
+  const lbl=yr.map(r=>r.datum);
+  const cumI=yr.map((_,i)=>aanvang+yr.slice(0,i+1).reduce((s,r)=>s+r.inleg,0));
+  const cumR=yr.map((r,i)=>r.vermogen-(aanvang+yr.slice(0,i+1).reduce((s,r2)=>s+r2.inleg,0)));
+  const ds=[{label:'Inleg',data:cumI,backgroundColor:'#e8eef5',borderColor:'#d8d8d8',borderWidth:1},{label:'Rendement',data:cumR,backgroundColor:'#003a70',borderColor:'#003a70',borderWidth:0}];
+  const li=[{l:'Inleg (groeiend)',c:'#e8eef5',b:'#d8d8d8'},{l:'Rendement',c:'#003a70'}];
+  if(hvv.active){const cumH=yr.map((_,i)=>yr.slice(0,i+1).reduce((s,r)=>s+r.heffing,0));ds.push({label:'Heffing',data:cumH,type:'line',borderColor:'#c0392b',borderWidth:2,pointRadius:0,fill:false,order:-1});li.push({l:'Box 3 heffing (cumulatief)',c:'#c0392b',line:true});}
+  makeChart('groei-chart',lbl,ds);setLeg('groei-legend',li);
+}
+
+// ─── REËLE WAARDE ────────────────────────────────────────────
+function calcReeel(){
+  updLL('rr-looptijd','rr-ltlbl');
+  const aanvang=parseFloat(document.getElementById('rr-aanvang').value)||0;
+  const inleg=parseFloat(document.getElementById('rr-inleg').value)||0;
+  const rente=parseFloat(document.getElementById('rr-rente').value)||0;
+  const inflatie=parseFloat(document.getElementById('rr-inflatie').value)||0;
+  const looptijd=parseFloat(document.getElementById('rr-looptijd').value)||0;
+  const hvv=getHvv('rr',rente);
+  const rows=buildData('spaar',{inleg,jaarRente:rente,looptijd,startVermogen:aanvang,hvv});
+  if(!rows.length)return;
+  const eindNom=rows[rows.length-1].vermogen;
+  const jaren=looptijd/12;
+  const eindReel=eindNom/Math.pow(1+inflatie/100,jaren);
+  const totInleg=aanvang+inleg*looptijd;
+  const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+  const totBruto=eindNom-totInleg;
+  const koopkrachtverlies=eindNom-eindReel;
+  // Netto reëel rendement: Fisher vergelijking op bruto rendement
+  const reelRendPct=((1+rente/100)/(1+inflatie/100)-1)*100;
+  // Als box3 actief: effectief jaarrendement na heffing benaderen
+  let effectiefPct=rente;
+  if(hvv.active&&totInleg>0){
+    // Benadering: netto rendement per jaar = (eindNom - totInleg) / totInleg / jaren * 100
+    // Maar correcter: CAGR benadering
+    const totVerloop=aanvang>0||inleg>0?eindNom:0;
+    if(totVerloop>0&&totInleg>0){
+      const cagr=(Math.pow(eindNom/totInleg,1/jaren)-1)*100;
+      effectiefPct=cagr;
+    }
+  }
+  const reelNettoPct=hvv.active
+    ?((1+effectiefPct/100)/(1+inflatie/100)-1)*100
+    :reelRendPct;
+  document.getElementById('rr-r-nom').textContent=fmt(eindNom);
+  document.getElementById('rr-r-reel').textContent=fmt(eindReel);
+  document.getElementById('rr-r-bruto').textContent=fmt(totBruto);
+  document.getElementById('rr-r-inflv').textContent=fmt(koopkrachtverlies);
+  document.getElementById('rr-r-brutopct').textContent=fmtP(rente,2);
+  document.getElementById('rr-r-nettopct').textContent=fmtP(reelNettoPct,2);
+  document.getElementById('rr-r-infpct').textContent=fmtP(inflatie,2);
+  const taxSc=document.getElementById('rr-tax-sc');
+  if(hvv.active){taxSc.style.display='';document.getElementById('rr-r-heffing').textContent=fmt(totH);}else taxSc.style.display='none';
+  // Grafiek
+  const yr=aggYear(rows,'spaar');
+  const lbl=yr.map(r=>r.datum);
+  // Nominaal en reëel vermogen per jaar
+  const nomData=yr.map(r=>r.vermogen);
+  const reelData=yr.map((r,i)=>r.vermogen/Math.pow(1+inflatie/100,(i+1)));
+  const ds=[
+    {label:'Nominaal',data:nomData,borderColor:'#003a70',backgroundColor:'rgba(0,58,112,0.1)',borderWidth:2,pointRadius:0,fill:true,tension:0.3},
+    {label:'Reëel (koopkracht)',data:reelData,borderColor:'#5533cc',backgroundColor:'rgba(85,51,204,0.07)',borderWidth:2,borderDash:[5,3],pointRadius:0,fill:true,tension:0.3}
+  ];
+  const li=[{l:'Nominale waarde',c:'#003a70',line:true},{l:'Reële waarde (koopkracht)',c:'#5533cc',line:true}];
+  if(hvv.active){const cumH=yr.map((_,i)=>yr.slice(0,i+1).reduce((s,r)=>s+r.heffing,0));ds.push({label:'Box 3 heffing',data:cumH,borderColor:'#c0392b',borderWidth:1.5,borderDash:[3,2],pointRadius:0,fill:false,tension:0.3});li.push({l:'Box 3 heffing (cumulatief)',c:'#c0392b',line:true});}
+  makeLineChart('reeel-chart',lbl,ds);setLeg('reeel-legend',li);
+}
+
+// ─── SCENARIO VERGELIJKER ────────────────────────────────────
+const SCKLEUREN=['#003a70','#FF6600','#1a6b3c'];
+function calcScenario(){
+  const scenarios=[];
+  for(let i=1;i<=3;i++){
+    const naam=document.getElementById('sc'+i+'-naam').value||'Scenario '+i;
+    const aanvang=parseFloat(document.getElementById('sc'+i+'-aanvang').value)||0;
+    const inleg=parseFloat(document.getElementById('sc'+i+'-inleg').value)||0;
+    const rente=parseFloat(document.getElementById('sc'+i+'-rente').value)||0;
+    const lt=parseFloat(document.getElementById('sc'+i+'-lt').value)||0;
+    const mr=rente/100/12;
+    const rows=buildData('spaar',{inleg,jaarRente:rente,looptijd:lt,startVermogen:aanvang,hvv:{active:false}});
+    const eind=rows.length?rows[rows.length-1].vermogen:0;
+    const totInleg=aanvang+inleg*lt;
+    scenarios.push({naam,aanvang,inleg,rente,lt,mr,rows,eind,totInleg});
+  }
+  // Resultaten tabel
+  const tbody=document.querySelector('#scenario-tbl tbody');tbody.innerHTML='';
+  scenarios.forEach((s,i)=>{
+    tbody.insertAdjacentHTML('beforeend',`<tr><td><span style="display:inline-block;width:10px;height:10px;background:${SCKLEUREN[i]};border-radius:2px;margin-right:6px;"></span>${s.naam}</td><td style="text-align:right">${fmtMnd(s.lt)}</td><td style="text-align:right">${fmt(s.totInleg)}</td><td style="text-align:right">${fmt(s.eind-s.totInleg)}</td><td style="text-align:right;font-weight:700">${fmt(s.eind)}</td></tr>`);
+  });
+  // Grafiek — max looptijd bepalen
+  const maxLt=Math.max(...scenarios.map(s=>s.lt));
+  // Gebruik de langste looptijd als x-as
+  const refRows=buildData('spaar',{inleg:0,jaarRente:0,looptijd:maxLt,startVermogen:0,hvv:{active:false}});
+  const refYr=aggYear(refRows,'spaar');
+  const lbl=refYr.map(r=>r.datum);
+  const ds=scenarios.map((s,i)=>{
+    const yr=aggYear(s.rows,'spaar');
+    // pad kortere scenario's met laatste waarde
+    const data=lbl.map((_,idx)=>idx<yr.length?yr[idx].vermogen:yr[yr.length-1]?.vermogen||0);
+    return{label:s.naam,data,borderColor:SCKLEUREN[i],backgroundColor:'transparent',borderWidth:2,pointRadius:0,fill:false,tension:0.3,type:'line'};
+  });
+  const li=scenarios.map((s,i)=>({l:s.naam,c:SCKLEUREN[i],line:true}));
+  makeChart('scenario-chart',lbl,ds);setLeg('scenario-legend',li);
+}
+
+// ─── PENSIOENPLANNING ────────────────────────────────────────
+function calcPensioen(){
+  updLL('pp-lt1','pp-lt1lbl');
+  const aanvang=parseFloat(document.getElementById('pp-aanvang').value)||0;
+  const inleg=parseFloat(document.getElementById('pp-inleg').value)||0;
+  const rente1=parseFloat(document.getElementById('pp-rente1').value)||0;
+  const lt1=parseFloat(document.getElementById('pp-lt1').value)||0;
+  const rente2=parseFloat(document.getElementById('pp-rente2').value)||0;
+  const opname=parseFloat(document.getElementById('pp-opname').value)||0;
+  const rest=parseFloat(document.getElementById('pp-rest').value)||0;
+  const hvv=getHvv('pp',rente1);
+  // Fase 1
+  const rows1=buildData('spaar',{inleg,jaarRente:rente1,looptijd:lt1,startVermogen:aanvang,hvv});
+  const vermPensioen=rows1.length?rows1[rows1.length-1].vermogen:0;
+  const totInleg=aanvang+inleg*lt1;
+  const heff1=rows1.reduce((s,r)=>s+r.maandHeffing,0);
+  document.getElementById('pp-r-inleg').textContent=fmt(totInleg);
+  document.getElementById('pp-r-rend1').textContent=fmt(vermPensioen-totInleg);
+  document.getElementById('pp-r-verm').textContent=fmt(vermPensioen);
+  // Fase 2 — zelfde aanpak als calcDuur: simuleer ruim en bepaal werkelijke looptijd uit rows
+  const mr2=rente2/100/12;
+  let lt2est=mr2>0?solveN(vermPensioen,mr2,opname,rest):opname>0?(vermPensioen-rest)/opname:Infinity;
+  const sim2=Math.min(Math.ceil(isFinite(lt2est)?lt2est*1.2+24:1200),1200);
+  const hvv2=getHvv('pp',rente2);
+  const rows2=buildData('onttrek',{startVermogen:vermPensioen,jaarRente:rente2,onttrekking:opname,looptijd:sim2,hvv:hvv2});
+  const werkLt2=rows2.reduce((last,r,i)=>r.onttrekking>0?i+1:last,0)||sim2;
+  const totOnt2=rows2.reduce((s,r)=>s+r.onttrekking,0);
+  const heff2=rows2.slice(0,werkLt2).reduce((s,r)=>s+r.maandHeffing,0);
+  const duurt2Oneindig=!hvv2.active&&!isFinite(lt2est);
+  document.getElementById('pp-r-duur').textContent=duurt2Oneindig?'Oneindig':fmtMnd(werkLt2);
+  document.getElementById('pp-r-totaal').textContent=fmt(totOnt2);
+  const taxSc=document.getElementById('pp-tax-sc');
+  const totH=heff1+heff2;
+  if(hvv.active||hvv2.active){taxSc.style.display='';document.getElementById('pp-r-heffing').textContent=fmt(totH);}else taxSc.style.display='none';
+  // Gecombineerde grafiek
+  const allRows=[...rows1,...rows2.map(r=>({...r,mnd:r.mnd+lt1}))];
+  const yr1=aggYear(rows1,'spaar');
+  const yr2=aggYear(rows2,'onttrek');
+  const lbl=[...yr1.map(r=>r.datum),...yr2.map(r=>r.datum)];
+  const vermData=[...yr1.map(r=>r.vermogen),...yr2.map(r=>r.resterend)];
+  // Fase-scheiding lijn
+  const faseLijn=new Array(yr1.length+yr2.length).fill(null);
+  faseLijn[yr1.length-1]=vermPensioen;
+  const ds=[
+    {label:'Vermogen',data:vermData,borderColor:'#003a70',backgroundColor:'rgba(0,58,112,0.1)',borderWidth:2,pointRadius:0,fill:true,tension:0.2,type:'line'}
+  ];
+  const li=[{l:'Vermogen (opbouw + gebruik)',c:'#003a70',line:true}];
+  if(hvv.active||hvv2.active){
+    const cumH=[...yr1.map((_,i)=>yr1.slice(0,i+1).reduce((s,r)=>s+r.heffing,0)),...yr2.map((_,i)=>heff1+yr2.slice(0,i+1).reduce((s,r)=>s+r.heffing,0))];
+    ds.push({label:'Heffing',data:cumH,borderColor:'#c0392b',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false,type:'line'});
+    li.push({l:'Box 3 heffing (cumulatief)',c:'#c0392b',line:true});
+  }
+  makeLineChart('pensioen-chart',lbl,ds);setLeg('pensioen-legend',li);
+}
+
+// ─── HYPOTHEEK & VERMOGEN ────────────────────────────────────
+function setHypoMode(mode,btn){
+  hypoMode=mode;
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('hypo-afl').style.display=mode==='aflossingsvrij'?'':'none';
+  document.getElementById('hypo-ov').style.display=mode==='overwaarde'?'':'none';
+  document.getElementById('hypo-res-afl').style.display=mode==='aflossingsvrij'?'':'none';
+  document.getElementById('hypo-res-ov').style.display=mode==='overwaarde'?'':'none';
+  document.getElementById('hypo-invoer-title').textContent=mode==='aflossingsvrij'?'Invoer — Aflossingsvrij sparen':'Invoer — Overwaarde benutten';
+  calcHypo();
+}
+function calcHypo(){
+  if(hypoMode==='aflossingsvrij'){
+    updLL('ha-lt','ha-ltlbl');
+    const doel=parseFloat(document.getElementById('ha-bedrag').value)||0;
+    const aanvang=parseFloat(document.getElementById('ha-aanvang').value)||0;
+    const rente=parseFloat(document.getElementById('ha-rente').value)||0;
+    const lt=parseFloat(document.getElementById('ha-lt').value)||0;
+    const mr=rente/100/12;
+    const hvv=getHvv('ha',rente);
+    let inleg;
+    if(mr>0){const f=Math.pow(1+mr,lt);inleg=Math.max(0,(doel-aanvang*f)*mr/(f-1));}
+    else inleg=Math.max(0,(doel-aanvang)/lt);
+    const rows=buildData('spaar',{inleg,jaarRente:rente,looptijd:lt,startVermogen:aanvang,hvv});
+    const eind=rows.length?rows[rows.length-1].vermogen:0;
+    const totInleg=aanvang+inleg*lt;
+    const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+    document.getElementById('ha-r-inleg').textContent=fmt(inleg);
+    document.getElementById('ha-r-totinleg').textContent=fmt(totInleg);
+    document.getElementById('ha-r-rend').textContent=fmt(eind-totInleg);
+    const tr=document.getElementById('ha-tax-row');
+    if(hvv.active){tr.style.display='';document.getElementById('ha-r-heffing').textContent=fmt(totH);}else tr.style.display='none';
+    const yr=aggYear(rows,'spaar');
+    fillTable('hypotheek-year-tbl',yr,'spaar',hvv.active);fillTable('hypotheek-month-tbl',rows,'spaar',hvv.active);
+    spaarChart('hypotheek-chart','hypotheek-legend',yr,lt,aanvang,inleg,hvv,[{label:'Doel',data:yr.map(()=>doel),type:'line',borderColor:'#FF6600',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false,order:-1}]);
+  }else{
+    const verm=parseFloat(document.getElementById('hv-verm').value)||0;
+    const inleg=parseFloat(document.getElementById('hv-inleg').value)||0;
+    const rente=parseFloat(document.getElementById('hv-rente').value)||0;
+    const ont=parseFloat(document.getElementById('hv-ont').value)||0;
+    const rest=parseFloat(document.getElementById('hv-rest').value)||0;
+    const mr=rente/100/12;const hvv=getHvv('hv',rente);
+    if(ont<=0)return;
+    // Met extra inleg: netto onttrekking = ont - inleg
+    const netOnt=Math.max(0,ont-inleg);
+    let lt=mr>0?solveN(verm,mr,netOnt,rest):netOnt>0?(verm-rest)/netOnt:Infinity;
+    const lmnd=Math.min(Math.ceil(isFinite(lt)?lt:1200),1200);
+    const rows=buildData('onttrek',{startVermogen:verm,jaarRente:rente,onttrekking:netOnt,looptijd:lmnd,hvv});
+    const totOnt=netOnt*lmnd;const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+    document.getElementById('hv-r-duur').textContent=isFinite(lt)?fmtMnd(lmnd):'Oneindig';
+    document.getElementById('hv-r-totaal').textContent=fmt(totOnt);
+    const tr=document.getElementById('hv-tax-row');
+    if(hvv.active){tr.style.display='';document.getElementById('hv-r-heffing').textContent=fmt(totH);}else tr.style.display='none';
+    const yr=aggYear(rows,'onttrek');
+    fillTable('hypotheek-year-tbl',yr,'onttrek_ov',hvv.active);fillTable('hypotheek-month-tbl',rows,'onttrek_ov',hvv.active);
+    onttrekChart('hypotheek-chart','hypotheek-legend',yr,netOnt,lmnd,hvv,'Onttrokken');
+  }
+}
+
+// ─── BREAK-EVEN & BOX 3 ──────────────────────────────────────
+function setBEMode(mode,btn){
+  beMode=mode;
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('be-body-breakeven').style.display=mode==='breakeven'?'':'none';
+  document.getElementById('be-body-box3opt').style.display=mode==='box3opt'?'':'none';
+  document.getElementById('be-res-breakeven').style.display=mode==='breakeven'?'':'none';
+  document.getElementById('be-res-box3opt').style.display=mode==='box3opt'?'':'none';
+  document.getElementById('be-invoer-title').textContent=mode==='breakeven'?'Invoer — Break-even rendement':'Invoer — Box 3 optimalisatie';
+  if(mode==='breakeven')calcBE();else calcBO();
+}
+function calcBE(){
+  updLL('be-lt','be-ltlbl');
+  const aanvang=parseFloat(document.getElementById('be-aanvang').value)||0;
+  const inleg=parseFloat(document.getElementById('be-inleg').value)||0;
+  const doel=parseFloat(document.getElementById('be-doel').value)||0;
+  const lt=parseFloat(document.getElementById('be-lt').value)||0;
+  const totInleg0=aanvang+inleg*lt;
+  document.getElementById('be-r-inleg0').textContent=fmt(totInleg0);
+  document.getElementById('be-r-rendnodig').textContent=fmt(Math.max(0,doel-totInleg0));
+  // Bisectie: zoek r zodat FV(r,lt) = doel
+  if(doel<=totInleg0){document.getElementById('be-r-rend').textContent='0,00%';
+  }else{
+    let lo=0,hi=0.5;
+    for(let i=0;i<60;i++){
+      const mid=(lo+hi)/2;
+      const mr=mid/12;
+      let verm=aanvang;
+      for(let m=1;m<=lt;m++){verm+=verm*mr+inleg;}
+      if(verm<doel)lo=mid;else hi=mid;
+    }
+    const rBE=((lo+hi)/2)*100;
+    document.getElementById('be-r-rend').textContent=fmtP(rBE,2);
+    // Grafiek: FV bij verschillende rendementen
+    const rendementen=[0,1,2,3,4,5,6,7,8,10];
+    const eindwaardes=rendementen.map(rPct=>{
+      const mr=rPct/100/12;let verm=aanvang;
+      for(let m=1;m<=lt;m++){verm+=verm*mr+inleg;}
+      return verm;
+    });
+    const lbl=rendementen.map(r=>r+'%');
+    const ds=[
+      {label:'Eindwaarde',data:eindwaardes,backgroundColor:'#003a70',borderColor:'#003a70',borderWidth:0},
+      {label:'Doelvermogen',data:rendementen.map(()=>doel),type:'line',borderColor:'#FF6600',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false,order:-1}
+    ];
+    makeChart('be-chart',lbl,ds);
+    setLeg('be-legend',[{l:'Eindwaarde per rendement',c:'#003a70'},{l:'Doelvermogen',c:'#FF6600',line:true}]);
+  }
+}
+function calcBO(){
+  const verm=parseFloat(document.getElementById('bo-verm').value)||0;
+  const rente=parseFloat(document.getElementById('bo-rente').value)||0;
+  const fictief=parseFloat(document.getElementById('bo-fictief').value)||0;
+  const k=parseInt(document.getElementById('bo-hvv').value)||1;
+  const vrijstelling=k*HVV_PP;
+  const belastbaar=Math.max(0,verm-vrijstelling);
+  const heffing=belastbaar*(fictief/100)*0.36;
+  const brutoRend=verm*(rente/100);
+  const nettoRend=brutoRend-heffing;
+  const effectief=verm>0?nettoRend/verm*100:0;
+  document.getElementById('bo-r-vrij').textContent=fmt(Math.min(verm,vrijstelling));
+  document.getElementById('bo-r-belast').textContent=fmt(belastbaar);
+  document.getElementById('bo-r-heffing').textContent=fmt(heffing);
+  document.getElementById('bo-r-brutorend').textContent=fmt(brutoRend);
+  document.getElementById('bo-r-nettorend').textContent=fmt(nettoRend);
+  document.getElementById('bo-r-effectief').textContent=fmtP(effectief,2);
+  // Grafiek: bruto rendement, heffing, netto rendement over verschillende vermogensniveaus
+  const niveaus=[0,50000,100000,150000,200000,300000,400000,500000,750000,1000000].filter(n=>n<=verm*2||n<=500000);
+  const lbl=niveaus.map(n=>n>=1000?Math.round(n/1000)+'k':'€0');
+  const brutos=niveaus.map(n=>n*(rente/100));
+  const heffingen=niveaus.map(n=>{const b=Math.max(0,n-vrijstelling);return b*(fictief/100)*0.36;});
+  const nettos=niveaus.map((n,i)=>brutos[i]-heffingen[i]);
+  const ds=[
+    {label:'Netto rendement',data:nettos,backgroundColor:'#1a6b3c',borderColor:'#1a6b3c',borderWidth:0},
+    {label:'Box 3 heffing',data:heffingen,backgroundColor:'#c0392b',borderColor:'#c0392b',borderWidth:0}
+  ];
+  makeChart('be-chart',lbl,ds);
+  setLeg('be-legend',[{l:'Netto rendement',c:'#1a6b3c'},{l:'Box 3 heffing',c:'#c0392b'}]);
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  calcVrij();calcDoel();calcDuur();calcInkomen();
+  calcGroei();calcReeel();calcScenario();calcPensioen();
+  calcHypo();calcBE();
+});
+</script>
+</body>
+</html>

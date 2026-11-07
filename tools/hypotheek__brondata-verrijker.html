@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brondata Verrijker — Leningdelen</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:'Segoe UI',Arial,sans-serif;
+  background:#F4F7F9;
+  color:#333;
+  font-size:16px;
+  line-height:1.6;
+  min-height:100vh;
+}
+.app-wrap { max-width:1000px; margin:0 auto; padding:24px 20px 80px; }
+
+/* Header */
+.app-header {
+  background:#003057;
+  border-radius:14px 14px 0 0;
+  padding:26px 36px 22px;
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.app-header h1 { font-size:21px; font-weight:700; color:white; }
+.app-header p  { font-size:13px; color:rgba(255,255,255,0.65); margin-top:3px; }
+.badge { background:#E5A138; color:white; font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.5px; text-transform:uppercase; }
+
+/* Steps bar */
+.steps-bar {
+  background:#002040;
+  padding:0 36px;
+  display:flex;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.step-tab {
+  padding:13px 16px;
+  font-size:12px;
+  color:rgba(255,255,255,0.38);
+  cursor:default;
+  border-bottom:3px solid transparent;
+  display:flex; align-items:center; gap:7px;
+  white-space:nowrap;
+  transition:all .2s;
+  user-select:none;
+}
+.step-tab.active { color:#E5A138; border-bottom-color:#E5A138; font-weight:600; }
+.step-tab.done   { color:rgba(255,255,255,0.65); cursor:pointer; }
+.step-tab.done:hover { color:white; }
+.step-num {
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(255,255,255,0.10);
+  font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.step-tab.active .step-num { background:#E5A138; color:white; }
+.step-tab.done   .step-num { background:#27AE60; color:white; }
+
+/* App body */
+.app-body {
+  background:white;
+  border-radius:0 0 14px 14px;
+  box-shadow:0 4px 24px rgba(0,48,87,.10);
+  padding:36px;
+  min-height:420px;
+}
+.panel { display:none; animation:fadeIn .25s ease; }
+.panel.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.section-heading { font-size:18px; font-weight:700; color:#003057; padding-bottom:10px; border-bottom:2px solid #E5A138; display:inline-block; margin-bottom:6px; }
+.section-sub { font-size:14px; color:#666; margin-bottom:24px; }
+
+/* Upload zone */
+.upload-zone {
+  border:2.5px dashed #C8D8E8;
+  border-radius:14px;
+  padding:52px 32px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .2s;
+  background:#FAFCFF;
+  position:relative;
+  overflow:hidden;
+}
+.upload-zone:hover, .upload-zone.drag-over { border-color:#003057; background:#EBF4FF; }
+.upload-zone.has-file { border-color:#27AE60; background:#F0FFF4; cursor:default; }
+.upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; z-index:1; }
+.upload-zone.has-file input { pointer-events:none; }
+.upload-icon { font-size:48px; display:block; margin-bottom:14px; }
+.upload-title { font-size:18px; font-weight:700; color:#003057; margin-bottom:6px; }
+.upload-sub   { font-size:13px; color:#888; }
+.upload-types { margin-top:14px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+.type-badge { background:#EBF4FF; color:#003057; font-size:11px; font-weight:700; padding:4px 12px; border-radius:12px; border:1px solid #C8D8E8; }
+
+/* File preview */
+.file-preview {
+  display:none;
+  margin-top:18px;
+  background:#F0FFF4;
+  border:1.5px solid #27AE60;
+  border-radius:10px;
+  padding:14px 18px;
+  align-items:center;
+  gap:14px;
+}
+.file-preview.show { display:flex; }
+.file-icon-big { font-size:26px; }
+.file-name-txt { font-size:14px; font-weight:700; color:#003057; }
+.file-size-txt { font-size:12px; color:#888; }
+.btn-rm { margin-left:auto; background:transparent; border:1.5px solid #E74C3C; color:#E74C3C; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:600; cursor:pointer; }
+.btn-rm:hover { background:#E74C3C; color:white; }
+
+/* Extracting overlay */
+.extract-loading {
+  display:none;
+  margin-top:22px;
+  background:linear-gradient(135deg,#003057,#00508c);
+  border-radius:12px;
+  padding:30px 24px;
+  text-align:center;
+  color:white;
+}
+.extract-loading.show { display:block; }
+.spinner {
+  width:40px; height:40px;
+  border:4px solid rgba(255,255,255,.2);
+  border-top-color:#E5A138;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.load-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+.load-sub   { font-size:13px; color:rgba(255,255,255,.6); }
+
+/* Extract result */
+.extract-result { display:none; margin-top:18px; }
+.extract-result.show { display:block; }
+.found-heading { font-size:14px; font-weight:700; color:#27AE60; margin-bottom:10px; }
+.extract-row {
+  background:#F8FFF9;
+  border:1.5px solid #B8E8C0;
+  border-radius:9px;
+  padding:11px 16px;
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.er-check { color:#27AE60; font-size:16px; flex-shrink:0; }
+.er-info  { flex:1; min-width:160px; }
+.er-info strong { font-size:13px; color:#003057; display:block; line-height:1.3; }
+.er-info span   { font-size:11px; color:#888; }
+.er-amounts { display:flex; gap:16px; flex-wrap:wrap; }
+.era { text-align:right; }
+.era .v { font-size:14px; font-weight:700; color:#003057; }
+.era .l { font-size:10px; color:#888; text-transform:uppercase; letter-spacing:.3px; }
+
+/* Error box */
+.err-box { display:none; margin-top:14px; background:#FFF5F5; border:1.5px solid #E74C3C; border-radius:9px; padding:13px 16px; font-size:13px; color:#c0392b; line-height:1.5; }
+.err-box.show { display:block; }
+.err-box.warn { background:#FFF8F0; border-color:#E5A138; color:#b87800; }
+
+/* Info box */
+.info-box { background:#EBF4FF; border-left:4px solid #003057; border-radius:0 8px 8px 0; padding:12px 16px; font-size:13px; color:#003057; margin-bottom:18px; }
+
+/* Card (step 1) */
+.card { background:#F4F7F9; border:1.5px solid #E0E6ED; border-radius:10px; padding:20px 22px; margin-bottom:14px; }
+.card-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.card-title { font-size:14px; font-weight:700; color:#003057; }
+.card-sub   { font-size:11px; color:#888; margin-top:2px; }
+
+.form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:12px; }
+.fg { display:flex; flex-direction:column; }
+.fg label { font-size:11px; font-weight:700; color:#003057; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+.fg input, .fg select { padding:8px 11px; border:1.5px solid #D0D8E4; border-radius:7px; font-size:14px; background:white; color:#333; transition:border-color .2s; font-family:inherit; }
+.fg input:focus, .fg select:focus { border-color:#003057; outline:none; }
+.fg input.auto-ok { border-color:#27AE60; background:#F0FFF4; }
+
+/* Buttons */
+.btn { padding:10px 22px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .18s; font-family:inherit; display:inline-flex; align-items:center; gap:7px; }
+.btn-primary { background:#003057; color:white; }
+.btn-primary:hover { background:#004a8a; }
+.btn-cta     { background:#E5A138; color:white; font-size:15px; font-weight:700; padding:12px 28px; }
+.btn-cta:hover { background:#d4922e; }
+.btn-ghost   { background:transparent; border:1.5px solid #D0D8E4; color:#555; }
+.btn-ghost:hover { border-color:#003057; color:#003057; }
+.btn-del     { background:transparent; border:1.5px solid #E74C3C; color:#E74C3C; padding:5px 12px; font-size:11px; border-radius:7px; cursor:pointer; }
+.btn-del:hover { background:#E74C3C; color:white; }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* Wizard (step 2) */
+.wiz { border:1.5px solid #E0E6ED; border-radius:12px; overflow:hidden; margin-bottom:18px; }
+.wiz-hdr { background:#003057; color:white; padding:14px 22px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.wiz-hdr h3 { font-size:13px; font-weight:700; }
+.wiz-meta { display:flex; gap:16px; }
+.wm .v { font-size:15px; font-weight:700; color:#E5A138; }
+.wm .l { font-size:10px; color:rgba(255,255,255,.5); }
+.wiz-body { padding:22px; background:white; }
+.qb { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid #F0F3F7; }
+.qb:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+.ql { font-size:13px; font-weight:700; color:#003057; margin-bottom:9px; }
+.qh { font-size:11px; color:#888; font-weight:400; display:block; margin-top:2px; }
+
+/* Pills */
+.pills { display:flex; flex-wrap:wrap; gap:7px; }
+.pills input[type="radio"] { display:none; }
+.pills label { padding:6px 14px; border:1.5px solid #D0D8E4; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; color:#555; transition:all .15s; user-select:none; }
+.pills input[type="radio"]:checked + label { background:#003057; border-color:#003057; color:white; }
+.pills label:hover { border-color:#003057; color:#003057; }
+
+.cf { display:none; margin-top:10px; }
+.cf.show { display:block; }
+
+/* Result table */
+.result-wrap { overflow-x:auto; margin-top:8px; }
+table.rt { width:100%; border-collapse:collapse; font-size:12px; }
+table.rt th { background:#003057; color:white; padding:8px 9px; text-align:left; font-weight:600; white-space:nowrap; font-size:11px; }
+table.rt th.cn { background:#002040; color:rgba(255,255,255,.45); font-size:9px; padding:3px 9px; }
+table.rt td { padding:8px 9px; border-bottom:1px solid #E8ECF2; vertical-align:top; }
+table.rt tr:hover td { background:#F8FAFD; }
+.cc  { color:#1a7a3a; font-weight:600; }
+.ce  { color:#b87800; font-weight:600; }
+.ca  { color:#c0392b; font-weight:600; }
+.cna { color:#bbb; font-style:italic; font-weight:400; }
+
+.nav-bar { display:flex; justify-content:space-between; align-items:center; margin-top:28px; padding-top:22px; border-top:1px solid #E8ECF2; }
+.legend { display:flex; gap:14px; margin-top:14px; flex-wrap:wrap; }
+.leg-item { display:flex; align-items:center; gap:5px; font-size:12px; color:#555; }
+.dot { width:9px; height:9px; border-radius:50%; }
+.dot.c { background:#27AE60; }
+.dot.e { background:#E5A138; }
+.dot.a { background:#E74C3C; }
+.disclaimer { font-size:12px; color:#888; background:#F4F7F9; border-left:3px solid #E5A138; padding:10px 14px; border-radius:0 8px 8px 0; margin-top:20px; }
+.export-bar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+
+@media (max-width:640px) {
+  .app-body { padding:18px 14px; }
+  .app-header, .steps-bar { padding-left:16px; padding-right:16px; }
+  .form-row { grid-template-columns:1fr; }
+  .steps-bar { overflow-x:auto; }
+}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+  <div class="app-header">
+    <div>
+      <h1>🔍 Brondata Verrijker — Leningdelen</h1>
+      <p>Upload aangifte PDF of foto → AI extraheert de data → verfijn per leningdeel → volledig resultaat</p>
+    </div>
+    <span class="badge">Fastlane Tool v2</span>
+  </div>
+
+  <div class="steps-bar">
+    <div class="step-tab active" id="tab0" onclick="navTo(0)"><div class="step-num">0</div> Upload document</div>
+    <div class="step-tab" id="tab1" onclick="navTo(1)"><div class="step-num">1</div> Controleer data</div>
+    <div class="step-tab" id="tab2" onclick="navTo(2)"><div class="step-num">2</div> Verfijning</div>
+    <div class="step-tab" id="tab3" onclick="navTo(3)"><div class="step-num">3</div> Resultaat</div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- ══════════════════════════════════════════ STAP 0 ══ -->
+    <div class="panel active" id="panel0">
+      <div class="section-heading">Stap 0 — Upload belastingaangifte</div>
+      <p class="section-sub">Upload een PDF van het schulden-overzicht uit Mijn Belastingdienst. De leningdelen worden automatisch uitgelezen — zonder API of internet.</p>
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept=".pdf" onchange="onFileSelect(event)">
+        <span class="upload-icon" id="uIcon">📄</span>
+        <div class="upload-title" id="uTitle">Sleep bestand hier, of klik om te uploaden</div>
+        <div class="upload-sub" id="uSub">Exporteer je aangifte als PDF vanuit Mijn Belastingdienst</div>
+        <div class="upload-types">
+          <span class="type-badge">PDF</span>
+        </div>
+      </div>
+
+      <div class="file-preview" id="filePreview">
+        <span class="file-icon-big" id="fIcon">📄</span>
+        <div>
+          <div class="file-name-txt" id="fName">—</div>
+          <div class="file-size-txt" id="fSize">—</div>
+        </div>
+        <button class="btn-rm" onclick="clearFile()">✕ Verwijder</button>
+      </div>
+
+      <div class="extract-loading" id="loadOverlay">
+        <div class="spinner"></div>
+        <div class="load-title">🤖 AI analyseert het document…</div>
+        <div class="load-sub" id="loadSub">Leningdelen worden herkend en bedragen uitgelezen</div>
+      </div>
+
+      <div class="err-box" id="errBox"></div>
+
+      <div class="extract-result" id="extractResult">
+        <div class="found-heading" id="foundHeading">✅ Gevonden leningdelen</div>
+        <div id="foundList"></div>
+        <div class="info-box" style="margin-top:14px;margin-bottom:0;">
+          💡 Controleer de bedragen in stap 1. Je kunt alles aanpassen voordat de berekening start.
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <div style="font-size:13px;color:#888;">
+          Geen bestand? <a href="#" onclick="skipToManual();return false;" style="color:#003057;font-weight:600;text-decoration:none;">Handmatig invoeren →</a>
+        </div>
+        <button class="btn btn-cta" id="nextBtn0" onclick="goStep1()" disabled>Volgende stap →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ STAP 1 ══ -->
+    <div class="panel" id="panel1">
+      <div class="section-heading">Stap 1 — Controleer & bewerk gegevens</div>
+      <p class="section-sub">Groen omrande velden zijn automatisch gevuld. Corrigeer waar nodig, voeg toe of verwijder leningdelen.</p>
+      <div id="loanCards"></div>
+      <button class="btn btn-ghost" onclick="addLoan()" style="margin-top:4px;">＋ Leningdeel toevoegen</button>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="navTo(0)">← Terug</button>
+        <button class="btn btn-cta" onclick="goStep2()">Volgende stap →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ STAP 2 ══ -->
+    <div class="panel" id="panel2">
+      <div class="section-heading">Stap 2 — Verfijning per leningdeel</div>
+      <p class="section-sub">Beantwoord de vragen voor een nauwkeuriger berekening van kolommen 5 t/m 11.</p>
+      <div id="wizardWrap"></div>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="navTo(1)">← Terug</button>
+        <button class="btn btn-cta" onclick="goStep3()">Bereken resultaat →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ STAP 3 ══ -->
+    <div class="panel" id="panel3">
+      <div class="section-heading">Stap 3 — Resultaat</div>
+      <p class="section-sub">Alle 12 kolommen ingevuld. Kleur geeft de betrouwbaarheid aan.</p>
+      <div class="export-bar">
+        <button class="btn btn-primary" onclick="doPrint()">🖨 Afdrukken</button>
+        <button class="btn btn-ghost"   onclick="doCSV()">⬇ Exporteer CSV</button>
+      </div>
+      <div id="resultOut"></div>
+      <div class="legend">
+        <div class="leg-item"><div class="dot c"></div>Zeker (uit brondata)</div>
+        <div class="leg-item"><div class="dot e"></div>Geschat (berekend)</div>
+        <div class="leg-item"><div class="dot a"></div>Aanname (verifiëren)</div>
+      </div>
+      <div class="disclaimer">⚠️ Indicatieve uitkomsten op basis van beschikbare brondata. Adviseur dient resultaten te verifiëren via de datavergelijker.</div>
+      <div class="nav-bar">
+        <button class="btn btn-ghost" onclick="navTo(2)">← Verfijning aanpassen</button>
+        <button class="btn btn-ghost" onclick="resetAll()">↺ Nieuwe berekening</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══ PDF.js worker ═══
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// ═══ STATE ═══
+let loans = [], loanAnswers = [], loanCnt = 0, activeStep = 0;
+
+const TYPES    = ['Annuïteiten','Aflossingsvrij','Lineair'];
+const RVP_OPTS = ['5 jaar','7 jaar','10 jaar','12 jaar','15 jaar','20 jaar','30 jaar','Variabel','Onbekend'];
+const LT_OPTS  = ['20 jaar','25 jaar','27 jaar','30 jaar','Anders'];
+
+const fmt    = n => (n==null||isNaN(+n)) ? '—' : '€\u00A0'+Math.round(+n).toLocaleString('nl-NL');
+const fmtPct = n => (n==null||isNaN(+n)) ? '—' : ((+n)*100).toFixed(3).replace('.',',')+'\u00A0%';
+const addMo  = (d, mo) => { if (!d) return null; const x=new Date(d); x.setMonth(x.getMonth()+mo); return x.toISOString().split('T')[0]; };
+const addYr  = (d, y) => addMo(d, y*12);
+const typeOf = n => { const s=(n||'').toLowerCase(); if(s.includes('annuï')||s.includes('annui')) return 'Annuïteiten'; if(s.includes('lineair')) return 'Lineair'; if(s.includes('afloss')) return 'Aflossingsvrij'; return 'Annuïteiten'; };
+
+
+// ═══ UPLOAD & DRAG-DROP ═══
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0]; if (f) handleFile(f);
+});
+
+function onFileSelect(e) { const f=e.target.files[0]; if(f) handleFile(f); }
+
+function handleFile(file) {
+  if (file.type !== 'application/pdf') { showErr('Alleen PDF-bestanden zijn toegestaan.'); return; }
+  hideErr();
+  hideExtract();
+
+  zone.classList.add('has-file');
+  document.getElementById('uIcon').textContent  = '📄';
+  document.getElementById('uTitle').textContent = '✓ PDF geselecteerd';
+  document.getElementById('uSub').textContent   = '';
+
+  document.getElementById('fIcon').textContent = '📄';
+  document.getElementById('fName').textContent = file.name;
+  document.getElementById('fSize').textContent = (file.size/1024).toFixed(0)+' KB · PDF';
+  document.getElementById('filePreview').classList.add('show');
+
+  extractFromPDF(file);
+}
+
+function clearFile() {
+  document.getElementById('fileInput').value = '';
+  zone.classList.remove('has-file');
+  document.getElementById('uIcon').textContent  = '📄';
+  document.getElementById('uTitle').textContent = 'Sleep bestand hier, of klik om te uploaden';
+  document.getElementById('uSub').textContent   = 'Belastingaangifte, Belastingdienst-overzicht of foto van het scherm';
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('loadOverlay').classList.remove('show');
+  hideExtract(); hideErr(); disableNext();
+}
+
+function showErr(msg, warn) {
+  const el = document.getElementById('errBox');
+  el.textContent = msg;
+  el.className = 'err-box show' + (warn ? ' warn' : '');
+}
+function hideErr()     { document.getElementById('errBox').className = 'err-box'; }
+function hideExtract() { document.getElementById('extractResult').classList.remove('show'); }
+
+function enableNext()  { const b=document.getElementById('nextBtn0'); b.disabled=false; }
+function disableNext() { const b=document.getElementById('nextBtn0'); b.disabled=true; }
+
+// ═══ PDF TEXT EXTRACTION + PARSER (geen API nodig) ═══
+async function extractFromPDF(file) {
+  const overlay = document.getElementById('loadOverlay');
+  overlay.classList.add('show');
+  document.getElementById('loadSub').textContent = 'PDF wordt gelezen…';
+  disableNext();
+
+  try {
+    const ab  = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+
+    // Collect all text items with position across all pages
+    let allItems = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page    = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const vp      = page.getViewport({ scale: 1 });
+      content.items.forEach(item => {
+        if (!item.str.trim()) return;
+        allItems.push({
+          str: item.str.trim(),
+          x:   Math.round(item.transform[4]),
+          // Flip Y so top of page = low number
+          y:   Math.round(vp.height - item.transform[5]),
+          page: p
+        });
+      });
+    }
+
+    document.getElementById('loadSub').textContent = 'Leningdelen worden herkend…';
+
+    // Group items into lines (same page, y within 6px)
+    const lines = [];
+    allItems.forEach(item => {
+      let line = lines.find(l => l.page === item.page && Math.abs(l.y - item.y) <= 6);
+      if (!line) {
+        line = { page: item.page, y: item.y, items: [] };
+        lines.push(line);
+      }
+      line.items.push(item);
+      // Recalculate average y
+      line.y = Math.round(line.items.reduce((s,i) => s+i.y, 0) / line.items.length);
+    });
+
+    // Sort lines: page ascending, then y ascending (top to bottom)
+    lines.sort((a,b) => a.page !== b.page ? a.page - b.page : a.y - b.y);
+
+    // Build line texts sorted by x within each line
+    lines.forEach(l => {
+      l.items.sort((a,b) => a.x - b.x);
+      l.text = l.items.map(i => i.str).join(' ');
+    });
+
+    // ── Parser ──
+    // Parse Dutch euro amount: "297.500" or "4.850" → integer
+    const parseAmt = s => parseInt(s.replace(/\./g,''), 10);
+    const findAmts = text => [...text.matchAll(/€\s*([\d.]+)/g)].map(m => parseAmt(m[1]));
+
+    const found = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const txt = lines[i].text;
+
+      // A loan name line: contains a known mortgage keyword, not Nummer/Bijzonderheid
+      const isName = /hypotheek|lening|krediet/i.test(txt)
+                  && !/nummer|bijzonderheid/i.test(txt);
+      if (!isName) continue;
+
+      // Extract name = everything before first €, or full line
+      const naam = txt.includes('€') ? txt.split('€')[0].trim() : txt.trim();
+
+      // Gather amounts within this loan block (stop before next name line)
+      let amounts = [];
+      let nummer  = '';
+      let blockEnd = Math.min(lines.length - 1, i + 6);
+      for (let k = i + 1; k <= blockEnd; k++) {
+        if (/hypotheek|lening|krediet/i.test(lines[k].text) && !/nummer|bijzonderheid/i.test(lines[k].text)) {
+          blockEnd = k - 1; break;
+        }
+      }
+      for (let j = i; j <= blockEnd; j++) {
+        const lt = lines[j].text;
+        if (/nummer\s*:/i.test(lt)) {
+          nummer = lt.replace(/.*Nummer\s*:\s*/i,'').replace(/\s*Bijzonderheid.*/i,'').trim();
+        }
+        findAmts(lt).forEach(a => amounts.push(a));
+      }
+
+      // Need at least 3 amounts: rente, saldo01, saldo31
+      if (naam && amounts.length >= 3) {
+        found.push({
+          naam,
+          nummer,
+          type:    typeOf(naam),
+          rente:   amounts[0],
+          saldo01: amounts[1],
+          saldo31: amounts[2]
+        });
+      }
+    }
+
+    overlay.classList.remove('show');
+
+    if (!found.length) throw new Error('Geen leningdelen herkend in de PDF. Controleer of het het juiste document is, of voer handmatig in.');
+
+    showFoundItems(found);
+    fillLoansFromData(found);
+    enableNext();
+
+  } catch (err) {
+    document.getElementById('loadOverlay').classList.remove('show');
+    showErr('❌ Lezen mislukt: ' + err.message);
+    enableNext();
+  }
+}
+
+// ═══ SKIP / MANUAL ═══
+function showFoundItems(items) {
+  document.getElementById('foundHeading').textContent = `✅ ${items.length} leningdeel${items.length!==1?'en':''} gevonden`;
+  document.getElementById('foundList').innerHTML = items.map(it => `
+    <div class="extract-row">
+      <span class="er-check">✓</span>
+      <div class="er-info">
+        <strong>${it.naam||'—'}</strong>
+        <span>${it.nummer||'Geen nummer'} · ${it.type}</span>
+      </div>
+      <div class="er-amounts">
+        <div class="era"><div class="v">${fmt(it.rente)}</div><div class="l">Rente 2025</div></div>
+        <div class="era"><div class="v">${fmt(it.saldo01)}</div><div class="l">01-01</div></div>
+        <div class="era"><div class="v">${fmt(it.saldo31)}</div><div class="l">31-12</div></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('extractResult').classList.add('show');
+}
+
+function fillLoansFromData(items) {
+  loans = []; loanCnt = 0;
+  items.forEach(it => {
+    loanCnt++;
+    loans.push({ id:loanCnt, naam:it.naam||'', nummer:it.nummer||'', type:it.type||typeOf(it.naam), rente:+it.rente||'', saldo01:+it.saldo01||'', saldo31:+it.saldo31||'', auto:true });
+  });
+}
+
+function skipToManual() {
+  if (!loans.length) addLoan();
+  renderCards();
+  goNav(1);
+}
+
+// ═══ STEP 1 — CARDS ═══
+function addLoan(preset) {
+  loanCnt++;
+  loans.push({ id:loanCnt, naam:preset?.naam||'', nummer:preset?.nummer||'', type:preset?typeOf(preset.naam):'Annuïteiten', rente:preset?.rente||'', saldo01:preset?.saldo01||'', saldo31:preset?.saldo31||'', auto:false });
+  renderCards();
+}
+
+function delLoan(id) { loans=loans.filter(l=>l.id!==id); renderCards(); }
+
+function renderCards() {
+  document.getElementById('loanCards').innerHTML = loans.map(l => {
+    const af = l.auto ? ' auto-ok' : '';
+    return `<div class="card">
+      <div class="card-hdr">
+        <div>
+          <div class="card-title">Leningdeel ${l.id}${l.auto?' <span style="font-size:10px;background:#D4EDDA;color:#155724;padding:2px 8px;border-radius:10px;">Auto ✓</span>':''}</div>
+          <div class="card-sub">Kolommen 0–3 uit brondata</div>
+        </div>
+        <button class="btn-del" onclick="delLoan(${l.id})">✕</button>
+      </div>
+      <div class="form-row">
+        <div class="fg" style="grid-column:span 2">
+          <label>Omschrijving (kolom 0)</label>
+          <input type="text" class="${af}" id="nm_${l.id}" value="${l.naam}" placeholder="bijv. ABN AMRO Annuïteiten Hypotheek" oninput="upd(${l.id},'naam',this.value)">
+        </div>
+        <div class="fg">
+          <label>Hypotheeknummer</label>
+          <input type="text" class="${af}" id="nr_${l.id}" value="${l.nummer}" placeholder="bijv. 0137 7764 89-1 08" oninput="upd(${l.id},'nummer',this.value)">
+        </div>
+        <div class="fg">
+          <label>Type lening</label>
+          <select id="tp_${l.id}" onchange="upd(${l.id},'type',this.value)">
+            ${TYPES.map(t=>`<option value="${t}" ${l.type===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fg">
+          <label>Rente 2025 (kol. 1) €</label>
+          <input type="number" class="${af}" id="re_${l.id}" value="${l.rente}" placeholder="bijv. 4850" oninput="upd(${l.id},'rente',+this.value||'')">
+        </div>
+        <div class="fg">
+          <label>Waarde 01-01 (kol. 2) €</label>
+          <input type="number" class="${af}" id="s1_${l.id}" value="${l.saldo01}" placeholder="bijv. 297500" oninput="upd(${l.id},'saldo01',+this.value||'')">
+        </div>
+        <div class="fg">
+          <label>Waarde 31-12 (kol. 3) €</label>
+          <input type="number" class="${af}" id="s3_${l.id}" value="${l.saldo31}" placeholder="bijv. 297500" oninput="upd(${l.id},'saldo31',+this.value||'')">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function upd(id, k, v) { const l=loans.find(x=>x.id===id); if(l) l[k]=v; }
+
+// ═══ STEP 2 — WIZARDS ═══
+function buildWizards() {
+  loanAnswers = [];
+  document.getElementById('wizardWrap').innerHTML = loans.map(l => {
+    const r  = +l.rente||0, s1=+l.saldo01||0, s3=+l.saldo31||0;
+    const af = s1-s3, avg=s1-af/2, pct=avg>0?r/avg:0;
+    loanAnswers.push({ id:l.id, bekendDatum:'nee', datumWaarde:'', oversluiting:'onbekend', rvp:'10 jaar', fiscDatum:'', looptijd:'30 jaar', ltCustom:'' });
+
+    const isAmort = l.type==='Annuïteiten'||l.type==='Lineair';
+    return `<div class="wiz">
+      <div class="wiz-hdr">
+        <div>
+          <h3>${l.naam||'Leningdeel '+l.id}</h3>
+          <div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;">${l.type} · ${l.nummer||'—'}</div>
+        </div>
+        <div class="wiz-meta">
+          <div class="wm"><div class="v">${fmtPct(pct)}</div><div class="l">Rente %</div></div>
+          <div class="wm"><div class="v">${fmt(af)}</div><div class="l">Afgelost</div></div>
+        </div>
+      </div>
+      <div class="wiz-body">
+        ${isAmort ? `
+        <div class="qb">
+          <div class="ql">⏱ Totale looptijd van dit leningdeel?
+            <span class="qh">Standaard 30 jaar voor annuïteiten.</span>
+          </div>
+          <div class="pills">
+            ${LT_OPTS.map(t=>`<input type="radio" name="lt_${l.id}" id="lt${l.id}_${t.replace(/ /g,'')}" value="${t}" ${t==='30 jaar'?'checked':''} onchange="sa(${l.id},'looptijd',this.value);tflt(${l.id},this.value)"><label for="lt${l.id}_${t.replace(/ /g,'')}">${t}</label>`).join('')}
+          </div>
+          <div class="cf" id="ltA_${l.id}">
+            <div class="fg" style="max-width:160px;margin-top:8px;">
+              <label>Jaren</label>
+              <input type="number" min="5" max="40" placeholder="bijv. 25" oninput="sa(${l.id},'ltCustom',this.value)">
+            </div>
+          </div>
+        </div>` : ''}
+        <div class="qb">
+          <div class="ql">📅 Is de exacte ingangsdatum van dit leningdeel bekend?</div>
+          <div class="pills">
+            <input type="radio" name="ing_${l.id}" id="ij_${l.id}" value="ja"  onchange="tfd(${l.id},'ja')">  <label for="ij_${l.id}">Ja, ik weet de datum</label>
+            <input type="radio" name="ing_${l.id}" id="in_${l.id}" value="nee" checked onchange="tfd(${l.id},'nee')"><label for="in_${l.id}">Nee, laat berekenen</label>
+          </div>
+          <div class="cf" id="ingF_${l.id}">
+            <div class="fg" style="max-width:200px;margin-top:8px;">
+              <label>Ingangsdatum</label>
+              <input type="date" oninput="sa(${l.id},'datumWaarde',this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="qb">
+          <div class="ql">🔄 Is er sprake van een oversluiting of herfinanciering?
+            <span class="qh">Beïnvloedt de relatie tussen fiscale ingangsdatum en leningdatum.</span>
+          </div>
+          <div class="pills">
+            <input type="radio" name="ovs_${l.id}" id="on_${l.id}" value="nee"      onchange="sa(${l.id},'oversluiting','nee')">      <label for="on_${l.id}">Nee, origineel</label>
+            <input type="radio" name="ovs_${l.id}" id="oj_${l.id}" value="ja"       onchange="sa(${l.id},'oversluiting','ja')">       <label for="oj_${l.id}">Ja, oversluiting</label>
+            <input type="radio" name="ovs_${l.id}" id="ou_${l.id}" value="onbekend" checked onchange="sa(${l.id},'oversluiting','onbekend')"><label for="ou_${l.id}">Onbekend</label>
+          </div>
+        </div>
+        <div class="qb">
+          <div class="ql">📊 Rentevastperiode (RVP)?
+            <span class="qh">10 jaar is de meest gebruikelijke keuze in Nederland.</span>
+          </div>
+          <div class="pills">
+            ${RVP_OPTS.map(r=>`<input type="radio" name="rvp_${l.id}" id="rv${l.id}_${r.replace(/ /g,'')}" value="${r}" ${r==='10 jaar'?'checked':''} onchange="sa(${l.id},'rvp',this.value)"><label for="rv${l.id}_${r.replace(/ /g,'')}">${r}</label>`).join('')}
+          </div>
+        </div>
+        <div class="qb">
+          <div class="ql">🏠 Fiscale ingangsdatum (datum inschrijving onderpand)?
+            <span class="qh">Laat leeg als onbekend — wordt dan geschat vanuit de leningdatum.</span>
+          </div>
+          <div class="fg" style="max-width:220px;">
+            <label>Datum (optioneel)</label>
+            <input type="date" oninput="sa(${l.id},'fiscDatum',this.value)">
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tflt(id, v) { const el=document.getElementById(`ltA_${id}`); if(el) el.classList.toggle('show',v==='Anders'); }
+function tfd(id, v)  { sa(id,'bekendDatum',v); const el=document.getElementById(`ingF_${id}`); if(el) el.classList.toggle('show',v==='ja'); }
+function sa(id, k, v){ const a=loanAnswers.find(x=>x.id===id); if(a) a[k]=v; }
+
+// ═══ CALCULATIONS ═══
+function backAnn(s01, r_yr, afl, ltY) {
+  const n = ltY*12, r_m = (r_yr/(s01-afl/2))/12;
+  if (r_m<=0) return null;
+  const Am = (r_yr+afl)/12, P = Am*(1-Math.pow(1+r_m,-n))/r_m;
+  if (P<s01) return null;
+  const F=Math.pow(1+r_m,n), inn=F-(s01/P)*(F-1);
+  if (inn<=0) return null;
+  const t=Math.log(inn)/Math.log(1+r_m);
+  if (t<0||t>n) return null;
+  const tr=Math.round(t);
+  return { start:addMo('2025-01-01',-tr), end:addMo('2025-01-01',n-tr), t:tr };
+}
+function backLin(s01, afl, ltY) {
+  const n=ltY*12, Am=afl/12, P=Am*n;
+  if (P<s01) return null;
+  const t=Math.round((P-s01)/Am);
+  return { start:addMo('2025-01-01',-t), end:addMo('2025-01-01',n-t), t };
+}
+
+function calcAll() {
+  return loans.map((l, i) => {
+    const ans = loanAnswers[i]||{};
+    const r=+l.rente||0, s1=+l.saldo01||0, s3=+l.saldo31||0;
+    const afl=s1-s3, avg=s1-afl/2, pct=avg>0?r/avg:0;
+    let ltY=30;
+    if (ans.looptijd==='Anders'&&ans.ltCustom) ltY=parseInt(ans.ltCustom)||30;
+    else if (ans.looptijd&&ans.looptijd!=='Anders') ltY=parseInt(ans.looptijd)||30;
+
+    let sd=null,ed=null,sc='assumed',ec='assumed',sr='';
+    if (ans.bekendDatum==='ja'&&ans.datumWaarde) {
+      sd=ans.datumWaarde; sc='certain'; ed=addYr(sd,ltY); ec='estimated';
+    } else if (l.type==='Annuïteiten'&&afl>0) {
+      const c=backAnn(s1,r,afl,ltY);
+      if (c) { sd=c.start;ed=c.end;sc=ec='estimated';sr=`≈ ${c.t} mnd teruggerekend`; }
+      else { sc='assumed'; sr='Berekening niet sluitend (oversluiting?)'; }
+    } else if (l.type==='Lineair'&&afl>0) {
+      const c=backLin(s1,afl,ltY);
+      if (c) { sd=c.start;ed=c.end;sc=ec='estimated';sr=`≈ ${c.t} mnd teruggerekend`; }
+    } else { sr='Niet herleidbaar (geen aflossing)'; }
+    if (!sd&&ans.fiscDatum) { sd=ans.fiscDatum;sc='assumed';ed=addYr(sd,ltY); }
+
+    let rs=null,re=null,rsc='assumed',rec='assumed';
+    if (sd) { rs=sd; rsc=sc==='certain'?'certain':'estimated'; }
+    if (rs&&ans.rvp&&ans.rvp!=='Onbekend'&&ans.rvp!=='Variabel') {
+      re=addYr(rs,parseInt(ans.rvp)||10); rec=rsc==='certain'?'estimated':'assumed';
+    }
+
+    let fs=ans.fiscDatum||null, fsc=fs?'certain':'assumed';
+    if (!fs&&sd) { fs=sd; fsc=ans.oversluiting==='ja'?'assumed':sc; }
+    const fe=fs?addYr(fs,ltY):null, fec=fsc==='certain'?'estimated':'assumed';
+
+    return { id:l.id, naam:l.naam, nummer:l.nummer, type:l.type,
+      r, s1, s3, afl, pct, pctConf:l.type==='Aflossingsvrij'?'certain':'estimated',
+      sd, sc, sr, ed, ec, rs, rsc, re, rec, fs, fsc, fe, fec,
+      ovs:ans.oversluiting, rvpLbl:ans.rvp };
+  });
+}
+
+// ═══ RENDER RESULTS ═══
+function renderResults(res) {
+  // Summary
+  let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:20px;">`;
+  res.forEach(r => {
+    h += `<div style="background:#EBF4FF;border-radius:10px;padding:13px 15px;border:1.5px solid #C8DDEF;">
+      <div style="font-size:10px;font-weight:700;color:#003057;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">${(r.naam||'Leningdeel '+r.id).replace(/ABN AMRO |Hypotheek/g,'').trim()}</div>
+      <div style="font-size:18px;font-weight:700;color:#003057;">${fmtPct(r.pct)}</div>
+      <div style="font-size:11px;color:#888;">Rentepercentage</div>
+      <div style="margin-top:8px;font-size:12px;color:#555;">
+        Afgelost: <strong>${fmt(r.afl)}</strong><br>
+        ${r.sd?`Start: <strong>${r.sd}</strong>`:'<span style="color:#E74C3C;">Start onbekend</span>'}
+      </div>
+    </div>`;
+  });
+  h += `</div>`;
+
+  // Table
+  h += `<div class="result-wrap"><table class="rt">
+    <thead>
+      <tr>${['#','0','1','2','3','4','5','6','7','8','9','10','11'].map(n=>`<th class="cn">${n}</th>`).join('')}</tr>
+      <tr>
+        <th>#</th><th>Omschrijving</th><th>Rente 2025</th><th>Waarde 01-01</th><th>Waarde 31-12</th>
+        <th>Afgelost</th><th>Ingang lening</th><th>Einde lening</th><th>Rente %</th>
+        <th>Ingang RVP</th><th>Einde RVP</th><th>Ingang fiscaal</th><th>Einde fiscaal</th>
+      </tr>
+    </thead><tbody>`;
+
+  res.forEach((r,i) => {
+    const C = x => `class="c${x}"`;
+    h += `<tr>
+      <td style="font-weight:700;color:#003057;">${i+1}</td>
+      <td>
+        <div style="font-weight:600;font-size:12px;line-height:1.3;">${r.naam||'—'}</div>
+        <div style="font-size:10px;color:#888;margin-top:1px;">${r.nummer||''} · ${r.type}</div>
+        ${r.ovs==='ja'?'<span style="font-size:9px;background:#FFF3CD;color:#856404;padding:1px 5px;border-radius:4px;display:inline-block;margin-top:2px;">Oversluiting</span>':''}
+      </td>
+      <td ${C('c')}>${fmt(r.r)}</td>
+      <td ${C('c')}>${fmt(r.s1)}</td>
+      <td ${C('c')}>${fmt(r.s3)}</td>
+      <td ${C('c')}>${fmt(r.afl)}</td>
+      <td ${C(r.sc)}>${r.sd||'<span class="cna">—</span>'}${r.sr?`<div style="font-size:9px;color:#888;margin-top:1px;">${r.sr}</div>`:''}</td>
+      <td ${C(r.ec)}>${r.ed||'<span class="cna">—</span>'}</td>
+      <td ${C(r.pctConf)}>${fmtPct(r.pct)}</td>
+      <td ${C(r.rsc)}>${r.rs||'<span class="cna">—</span>'}</td>
+      <td ${C(r.rec)}>${r.re||`<span class="cna">${r.rvpLbl||'—'}</span>`}</td>
+      <td ${C(r.fsc)}>${r.fs||'<span class="cna">—</span>'}</td>
+      <td ${C(r.fec)}>${r.fe||'<span class="cna">—</span>'}</td>
+    </tr>`;
+  });
+  h += `</tbody></table></div>`;
+
+  // Remarks
+  const rem = res.filter(r=>r.sr||r.ovs==='ja');
+  if (rem.length) {
+    h += `<div style="margin-top:16px;"><div style="font-size:13px;font-weight:700;color:#003057;margin-bottom:8px;">📌 Aandachtspunten voor de adviseur</div>`;
+    rem.forEach(r => {
+      h += `<div style="background:#FFF8F0;border-left:4px solid #E5A138;padding:9px 14px;border-radius:0 8px 8px 0;margin-bottom:7px;font-size:12px;">
+        <strong>${r.naam||'Leningdeel '+r.id}</strong>
+        ${r.ovs==='ja'?' — <em>Oversluiting: fiscale ingangsdatum kan afwijken</em>':''}
+        ${r.sr?`<br><span style="color:#888;">${r.sr}</span>`:''}
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  document.getElementById('resultOut').innerHTML = h;
+  window._results = res;
+}
+
+// ═══ NAVIGATION ═══
+function goNav(n) {
+  [0,1,2,3].forEach(i => {
+    document.getElementById(`tab${i}`).classList.remove('active','done');
+    document.getElementById(`panel${i}`).classList.remove('active');
+    if (i<n) document.getElementById(`tab${i}`).classList.add('done');
+  });
+  document.getElementById(`tab${n}`).classList.add('active');
+  document.getElementById(`panel${n}`).classList.add('active');
+  activeStep = n;
+  window.scrollTo(0,0);
+}
+
+function navTo(n) { if (n<=activeStep) goNav(n); }
+
+function goStep1() {
+  if (!loans.length) addLoan();
+  renderCards();
+  goNav(1);
+}
+
+function goStep2() {
+  // Sync DOM → loans
+  loans.forEach(l => {
+    const g = id => { const e=document.getElementById(id); return e?e.value:''; };
+    l.naam    = g(`nm_${l.id}`);
+    l.nummer  = g(`nr_${l.id}`);
+    l.type    = g(`tp_${l.id}`);
+    l.rente   = +g(`re_${l.id}`)||'';
+    l.saldo01 = +g(`s1_${l.id}`)||'';
+    l.saldo31 = +g(`s3_${l.id}`)||'';
+  });
+  if (!loans.length) { alert('Voeg minimaal één leningdeel toe.'); return; }
+  buildWizards();
+  goNav(2);
+}
+
+function goStep3() {
+  renderResults(calcAll());
+  goNav(3);
+}
+
+function resetAll() {
+  loans=[]; loanAnswers=[]; loanCnt=0;
+  clearFile();
+  goNav(0);
+}
+
+// ═══ EXPORT ═══
+function doCSV() {
+  if (!window._results) return;
+  const h = ['Nr','Naam','Nummer','Type','Rente 2025','Waarde 01-01','Waarde 31-12','Afgelost','Ingang lening','Einde lening','Rente %','Ingang RVP','Einde RVP','Ingang fiscaal','Einde fiscaal','Oversluiting'];
+  const rows = window._results.map((r,i)=>[
+    i+1,r.naam,r.nummer,r.type,r.r,r.s1,r.s3,r.afl,
+    r.sd||'',r.ed||'',(r.pct*100).toFixed(3).replace('.',',')+' %',
+    r.rs||'',r.re||'',r.fs||'',r.fe||'',r.ovs
+  ]);
+  let csv=h.join(';')+'\n';
+  rows.forEach(r=>{ csv+=r.map(v=>`"${v||''}"`).join(';')+'\n'; });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='brondata-verrijkt.csv'; a.click();
+}
+
+function doPrint() {
+  const c=document.getElementById('resultOut').innerHTML;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Brondata Verrijker</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:10pt;color:#333;padding:18mm}
+  h2{color:#003057;font-size:15pt;border-bottom:2px solid #E5A138;padding-bottom:7px;margin-bottom:13px}
+  table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:14px}
+  th{background:#003057;color:white;padding:5px 7px;text-align:left}th.cn{background:#002040;color:rgba(255,255,255,.45);font-size:8pt}
+  td{padding:5px 7px;border-bottom:1px solid #E0E6ED}tr:nth-child(even) td{background:#F4F7F9}
+  .cc{color:#1a7a3a;font-weight:600}.ce{color:#b87800;font-weight:600}.ca{color:#c0392b;font-weight:600}.cna{color:#bbb;font-style:italic}
+  p.meta{font-size:8pt;color:#888;margin-bottom:13px}</style></head><body>
+  <h2>Brondata Verrijker — Resultaat</h2>
+  <p class="meta">Gegenereerd op ${new Date().toLocaleDateString('nl-NL')} · Indicatief — ter verificatie door adviseur</p>
+  ${c}</body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(()=>w.print(),400);
+}
+</script>
+</body>
+</html>

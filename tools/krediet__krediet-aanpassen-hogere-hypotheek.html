@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krediet Verlengen = Hogere Hypotheek</title>
+<style>
+:root{
+  --navy:#002A54;--navy-mid:#003a70;--navy-light:#e8eef5;
+  --orange:#FF6600;--orange-light:#fff2e8;
+  --text:#333332;--border:#d8d8d8;
+  --green:#1a6b3c;--green-bg:#eaf5ee;
+  --red:#c0392b;--red-bg:#fdecea;
+  --amber:#b45309;--amber-bg:#fffbe6;
+  --blue:#1e40af;--blue-bg:#dbeafe;
+  --radius:6px;--radius-lg:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f4f6f9;min-height:100vh;}
+
+.header{background:var(--navy);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:14px;}
+.header-icon{font-size:28px;}
+.header-titles{display:flex;flex-direction:column;}
+.header-title{font-size:18px;font-weight:700;letter-spacing:-0.3px;line-height:1.2;}
+.header-title span{color:var(--orange);}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px;}
+
+/* STICKY */
+.sticky-bar{position:sticky;top:0;z-index:100;background:var(--navy-mid);display:flex;align-items:stretch;box-shadow:0 3px 12px rgba(0,0,0,0.25);border-bottom:3px solid var(--orange);}
+.sc{flex:1;padding:10px 16px;display:flex;flex-direction:column;gap:2px;}
+.sc.div{flex:0;width:1px;background:rgba(255,255,255,0.15);}
+.sl{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;}
+.sv{font-size:15px;font-weight:700;color:#fff;}
+.ss{font-size:11px;color:rgba(255,255,255,0.4);}
+.sv.gr{color:#4ade80;}.sv.re{color:#ff7f6e;}.sv.am{color:#fbbf24;}
+
+.main{padding:20px 24px 90px;max-width:1020px;margin:0 auto;}
+
+/* CARD */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;}
+.ch{padding:11px 16px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;}
+.ch::before{content:'';display:inline-block;width:8px;height:8px;transform:rotate(45deg);flex-shrink:0;background:var(--orange);}
+.ch-navy{background:var(--navy-light);color:var(--navy);}
+.ch-blue{background:#eff6ff;color:#1e40af;}
+.ch-blue::before{background:#3b82f6;}
+.ch-green{background:var(--green-bg);color:var(--green);}
+.ch-green::before{background:var(--green);}
+.cb{padding:16px 18px;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;}
+.fields-stack{display:flex;flex-direction:column;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 20px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px 16px;}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+@media(max-width:700px){.g2,.g3,.g4,.side{grid-template-columns:1fr;}}
+
+/* FIELDS */
+.f{display:flex;flex-direction:column;gap:4px;}
+.f label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;}
+.f input,.f select{border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:14px;font-family:Arial,sans-serif;color:var(--text);background:#fff;width:100%;transition:border-color 0.15s;}
+.f input:focus,.f select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 2px rgba(0,42,84,0.1);}
+.f input[readonly]{background:#f5f5f5;font-weight:700;}
+.f .hint{font-size:11px;color:#888;margin-top:2px;}
+.f .cr{font-size:11px;font-weight:700;margin-top:2px;}
+.f-blue input[readonly]{color:#1e40af;}
+.f-green input[readonly]{color:var(--green);}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+@media(max-width:680px){.kpi-grid{grid-template-columns:1fr 1fr;}}
+.kpi{border-radius:var(--radius-lg);padding:14px 16px;text-align:center;border:1px solid transparent;}
+.kpi .kl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;}
+.kpi .kv{font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.kpi .ks{font-size:11px;margin-top:4px;opacity:0.75;}
+.kpi-a{background:#eff6ff;border-color:#c7d2fe;}.kpi-a .kl{color:#6272a4;}.kpi-a .kv{color:#1e40af;}
+.kpi-b{background:var(--green-bg);border-color:#86efac;}.kpi-b .kl{color:#166534;}.kpi-b .kv{color:var(--green);}
+.kpi-c{background:var(--orange-light);border-color:#fed7aa;}.kpi-c .kl{color:#9a3412;}.kpi-c .kv{color:var(--orange);}
+.kpi-d{background:linear-gradient(135deg,#1e3a5f,#1e40af);border-color:#1e40af;}
+.kpi-d .kl{color:rgba(255,255,255,0.6);}.kpi-d .kv{color:#fff;}.kpi-d .ks{color:rgba(255,255,255,0.5);}
+
+/* IMPACT PANEL */
+.impact-panel{background:linear-gradient(135deg,#002A54 0%,#003a70 55%,#1e40af 100%);border-radius:var(--radius-lg);padding:22px 24px;color:#fff;margin-bottom:16px;}
+.ip-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.ip-icon{font-size:32px;}
+.ip-titles .ip-title{font-size:18px;font-weight:700;letter-spacing:-0.3px;}
+.ip-titles .ip-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;}
+.ip-flow{display:grid;grid-template-columns:1fr 48px 1fr 48px 1fr;align-items:center;gap:0;margin-bottom:20px;}
+@media(max-width:680px){.ip-flow{grid-template-columns:1fr;gap:10px;}}
+.ip-box{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:16px;text-align:center;}
+.ip-box .ib-lbl{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.ip-box .ib-val{font-size:24px;font-weight:700;letter-spacing:-0.5px;}
+.ip-box .ib-sub{font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;}
+.ib-val.blue{color:#93c5fd;}.ib-val.green{color:#4ade80;}.ib-val.orange{color:#fb923c;}
+.ip-arrow{text-align:center;font-size:26px;color:rgba(255,255,255,0.3);}
+.ip-settings{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.1);}
+@media(max-width:600px){.ip-settings{grid-template-columns:1fr;}}
+.is-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px;display:block;}
+.is-inp{width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:14px;font-weight:700;font-family:Arial,sans-serif;}
+.is-hint{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;display:block;}
+.box-toggle{display:flex;flex-direction:column;gap:5px;margin-top:2px;}
+.box-lbl{display:flex;align-items:center;gap:7px;cursor:pointer;padding:6px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);font-size:12px;font-weight:700;}
+.box-lbl.active{border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.12);}
+.box-lbl input{accent-color:#60a5fa;}
+.box1-lbl{color:#93c5fd;}.box3-lbl{color:rgba(255,255,255,0.55);}
+
+/* VERGELIJK TABEL */
+.cmp-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.cmp-tbl th{padding:8px 14px;text-align:left;font-size:11px;font-weight:700;}
+.cmp-tbl th.th-lbl{background:var(--navy);color:#fff;}
+.cmp-tbl th.th-oud{background:#1e40af;color:#fff;}
+.cmp-tbl th.th-nieuw{background:var(--green);color:#fff;}
+.cmp-tbl th.th-diff{background:#374151;color:#fff;}
+.cmp-tbl td{padding:9px 14px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.cmp-tbl tr:nth-child(even) td{background:#fafafa;}
+.cmp-tbl tr.tot td{font-weight:700;font-size:14px;background:#f0f4ff;}
+.v-oud{color:#1e40af;font-weight:700;}.v-nieuw{color:var(--green);font-weight:700;}.v-diff{font-weight:700;}
+.pos{color:var(--green);}.neg{color:var(--red);}
+
+/* AMORT */
+.amort-wrap{max-height:280px;overflow-y:auto;overflow-x:auto;}
+.amort-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.amort-tbl th{background:var(--navy);color:#fff;padding:6px 10px;text-align:right;position:sticky;top:0;z-index:1;font-size:11px;}
+.amort-tbl th:first-child{text-align:left;}
+.amort-tbl td{padding:5px 10px;border-bottom:1px solid #f0f0f0;text-align:right;}
+.amort-tbl td:first-child{text-align:left;color:#666;}
+.amort-tbl tr:nth-child(even) td{background:#fafafa;}
+.amort-tbl tr.yr td{background:#e8eef5!important;font-weight:700;}
+.amort-tbl tr.end-oud td{background:#dbeafe!important;font-weight:700;color:#1e40af;}
+.amort-tbl tr.end-nieuw td{background:#dcfce7!important;font-weight:700;color:var(--green);}
+.amort-tbl td.co{color:#1e40af;}.amort-tbl td.cn{color:var(--green);}
+
+/* UITLEG */
+.uitleg{background:var(--orange-light);border:1px solid #fed7aa;border-left:4px solid var(--orange);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:16px;}
+.uitleg-title{font-size:14px;font-weight:700;color:#9a3412;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.uitleg-body{font-size:13px;color:#7c2d12;line-height:1.7;}
+.uitleg-body strong{color:#9a3412;}
+
+.disc{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#92400e;line-height:1.55;margin-bottom:16px;}
+.st{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid var(--orange);display:inline-block;}
+.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}
+
+.footer-bar{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:flex;align-items:center;justify-content:flex-end;padding:10px 24px;gap:10px;z-index:200;box-shadow:0 -2px 12px rgba(0,0,0,0.18);}
+.btn{padding:9px 20px;border-radius:3px;border:none;font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.15s;}
+.btn:hover{opacity:0.88;}
+.btn-p{background:var(--orange);color:#fff;}
+.btn-s{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-icon">🏠</div>
+  <div class="header-titles">
+    <div class="header-title">Krediet verlengen / aanpassen <span>= hogere hypotheek</span></div>
+    <div class="header-sub">Toon de impact van consumptief krediet op hypotheekcapaciteit • GHF 2026 • Box 1 / Box 3</div>
+  </div>
+</div>
+
+<!-- STICKY BAR -->
+<div class="sticky-bar">
+  <div class="sc">
+    <span class="sl">Huidige maandlast krediet</span>
+    <span class="sv" id="b-oud">–</span>
+    <span class="ss" id="b-oud-s">–</span>
+  </div>
+  <div class="sc div"></div>
+  <div class="sc">
+    <span class="sl">Nieuwe maandlast krediet</span>
+    <span class="sv" id="b-nieuw">–</span>
+    <span class="ss" id="b-nieuw-s">–</span>
+  </div>
+  <div class="sc div"></div>
+  <div class="sc">
+    <span class="sl">Vrijgekomen maandlast</span>
+    <span class="sv gr" id="b-vrij">–</span>
+    <span class="ss">per maand minder lasten</span>
+  </div>
+  <div class="sc div"></div>
+  <div class="sc">
+    <span class="sl">🏠 Extra hypotheekcapaciteit</span>
+    <span class="sv gr" id="b-hyp">–</span>
+    <span class="ss" id="b-hyp-s">indicatief</span>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- UITLEG -->
+<div class="uitleg mt12">
+  <div class="uitleg-title">⚠ Waarom dit adviesgesprek essentieel is</div>
+  <div class="uitleg-body">
+    Elke euro consumptieve maandlast verlaagt de maximale hypotheek aanzienlijk. Door een persoonlijke lening te <strong>verlengen</strong> (lagere maandlast), te <strong>herfinancieren</strong> of volledig af te lossen, neemt de hypotheekruimte toe.
+    De GHF-norm rekent consumptieve lasten rechtstreeks af van de beschikbare financieringsruimte — <strong>iedere euro maandlast minder levert meerdere tienduizenden euro meer hypotheek op.</strong>
+  </div>
+</div>
+
+<!-- INVOER SIDE BY SIDE -->
+<div class="side mb16">
+
+  <!-- OUD -->
+  <div class="card">
+    <div class="ch ch-blue">■ Huidige kredietsituatie</div>
+    <div class="cb">
+      <div class="fields-stack">
+        <div class="f">
+          <label>Kredietvorm</label>
+          <select id="oud-type" onchange="herbereken()">
+            <option value="pl">Persoonlijke lening (aflopend)</option>
+            <option value="dk">Doorlopend krediet</option>
+            <option value="lease">Private lease</option>
+            <option value="anders">Anders / opgeven maandlast</option>
+          </select>
+        </div>
+        <div class="f" id="f-oud-som">
+          <label>Restschuld / kredietbedrag</label>
+          <input type="number" id="oud-som" value="20000" min="0" step="500" oninput="herbereken()">
+        </div>
+        <div class="f" id="f-oud-rente">
+          <label>Rente per jaar (%)</label>
+          <input type="number" id="oud-rente" value="7.5" min="0" max="30" step="0.1" oninput="herbereken()">
+        </div>
+        <div class="f" id="f-oud-lt">
+          <label>Resterende looptijd (mnd)</label>
+          <input type="number" id="oud-lt" value="60" min="1" max="240" step="1" oninput="herbereken()">
+        </div>
+        <div class="f" id="f-oud-limiet" style="display:none;">
+          <label>Kredietlimiet (DK)</label>
+          <input type="number" id="oud-limiet" value="10000" min="0" step="500" oninput="herbereken()">
+          <span class="hint">Toetslast = 2% van limiet</span>
+        </div>
+        <div class="f" id="f-oud-handmatig" style="display:none;">
+          <label>Werkelijke maandlast</label>
+          <input type="number" id="oud-handmatig" value="0" min="0" step="10" oninput="herbereken()">
+        </div>
+        <div class="f f-blue">
+          <label>Maandlast (berekend)</label>
+          <input type="text" id="oud-ml" readonly>
+          <span class="cr" style="color:#1e40af;" id="oud-rente-tot"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NIEUW -->
+  <div class="card">
+    <div class="ch ch-green">■ Nieuwe / aangepaste situatie</div>
+    <div class="cb">
+      <div class="fields-stack">
+        <div class="f">
+          <label>Scenario</label>
+          <select id="nieuw-scenario" onchange="toggleScenario()">
+            <option value="verleng">Verlengen (zelfde bedrag, langere looptijd)</option>
+            <option value="herfi">Herfinancieren (nieuw bedrag / rente)</option>
+            <option value="aflos">Volledig aflossen (maandlast = 0)</option>
+            <option value="handmatig">Handmatig invullen</option>
+          </select>
+        </div>
+        <div class="f" id="f-nieuw-som">
+          <label>Nieuw kredietbedrag</label>
+          <input type="number" id="nieuw-som" value="20000" min="0" step="500" oninput="herbereken()">
+        </div>
+        <div class="f" id="f-nieuw-rente">
+          <label>Nieuwe rente per jaar (%)</label>
+          <input type="number" id="nieuw-rente" value="7.5" min="0" max="30" step="0.1" oninput="herbereken()">
+        </div>
+        <div class="f" id="f-nieuw-lt">
+          <label>Nieuwe looptijd (mnd)</label>
+          <input type="number" id="nieuw-lt" value="120" min="1" max="180" step="6" oninput="herbereken()">
+          <span class="hint">Max. 180 mnd (15 jaar)</span>
+        </div>
+        <div class="f" id="f-nieuw-handmatig" style="display:none;">
+          <label>Nieuwe maandlast (handmatig)</label>
+          <input type="number" id="nieuw-handmatig" value="0" min="0" step="10" oninput="herbereken()">
+        </div>
+        <div class="f f-green">
+          <label>Nieuwe maandlast (berekend)</label>
+          <input type="text" id="nieuw-ml" readonly>
+          <span class="cr" style="color:var(--green);" id="nieuw-rente-tot"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI -->
+<div class="kpi-grid" id="kpi-grid">
+  <div class="kpi kpi-a">
+    <div class="kl">Huidige maandlast</div>
+    <div class="kv" id="kpi-oud">–</div>
+    <div class="ks" id="kpi-oud-s">per maand</div>
+  </div>
+  <div class="kpi kpi-b">
+    <div class="kl">Nieuwe maandlast</div>
+    <div class="kv" id="kpi-nieuw">–</div>
+    <div class="ks" id="kpi-nieuw-s">per maand</div>
+  </div>
+  <div class="kpi kpi-c">
+    <div class="kl">Vrijgekomen per maand</div>
+    <div class="kv" id="kpi-vrij">–</div>
+    <div class="ks">minder maandlast</div>
+  </div>
+  <div class="kpi kpi-d">
+    <div class="kl">🏠 Extra hypotheek</div>
+    <div class="kv" id="kpi-hyp">–</div>
+    <div class="ks" id="kpi-hyp-s">indicatief</div>
+  </div>
+</div>
+
+<!-- IMPACT PANEL -->
+<div class="impact-panel">
+  <div class="ip-header">
+    <div class="ip-icon">🏠</div>
+    <div class="ip-titles">
+      <div class="ip-title">Impact op hypotheekcapaciteit</div>
+      <div class="ip-sub">Vrijgekomen maandlast → extra leenruimte voor hypotheek (GHF-systematiek)</div>
+    </div>
+  </div>
+
+  <!-- FLOW VISUALISATIE -->
+  <div class="ip-flow" id="ip-flow">
+    <div class="ip-box">
+      <div class="ib-lbl">Huidige kredietlast</div>
+      <div class="ib-val blue" id="ip-oud">–</div>
+      <div class="ib-sub" id="ip-oud-s">per maand (Box 3)</div>
+    </div>
+    <div class="ip-arrow">→</div>
+    <div class="ip-box">
+      <div class="ib-lbl">Vrijgekomen maandlast</div>
+      <div class="ib-val orange" id="ip-vrij">–</div>
+      <div class="ib-sub">netto budget vrij</div>
+    </div>
+    <div class="ip-arrow">→</div>
+    <div class="ip-box" style="border-color:rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);">
+      <div class="ib-lbl">Extra hypotheek</div>
+      <div class="ib-val green" id="ip-hyp">–</div>
+      <div class="ib-sub" id="ip-hyp-s">indicatief</div>
+    </div>
+  </div>
+
+  <!-- INSTELLINGEN -->
+  <div class="ip-settings">
+    <div>
+      <span class="is-lbl">Toetsrente hypotheek (%)</span>
+      <input type="number" id="ip-rente" value="5.0" min="1.0" max="15.0" step="0.1"
+        class="is-inp" oninput="herbereken()">
+      <span class="is-hint">GHF 2026 minimum: 5,0%</span>
+    </div>
+    <div>
+      <span class="is-lbl">Looptijd hypotheek (jaar)</span>
+      <input type="number" id="ip-lt" value="30" min="5" max="40" step="1"
+        class="is-inp" oninput="herbereken()">
+      <span class="is-hint">5 t/m 40 jaar</span>
+    </div>
+    <div>
+      <span class="is-lbl">Fiscale behandeling</span>
+      <div class="box-toggle">
+        <label class="box-lbl box1-lbl active" id="lbl-box1">
+          <input type="radio" name="box-hyp" id="r-box1" value="box1" checked onchange="herbereken()">
+          Box 1 – Hypotheek (HRA 37,48%)
+        </label>
+        <label class="box-lbl box3-lbl" id="lbl-box3">
+          <input type="radio" name="box-hyp" id="r-box3" value="box3" onchange="herbereken()">
+          Box 3 – Overig (geen HRA)
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERGELIJKING TABEL -->
+<div class="card">
+  <div class="ch ch-navy">Detailvergelijking</div>
+  <div class="cb" style="padding:0;">
+    <table class="cmp-tbl">
+      <thead>
+        <tr>
+          <th class="th-lbl">Kengetal</th>
+          <th class="th-oud">■ Huidige situatie</th>
+          <th class="th-nieuw">■ Nieuwe situatie</th>
+          <th class="th-diff">Verschil</th>
+        </tr>
+      </thead>
+      <tbody id="cmp-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- EXTRA RENTE OPMERKING -->
+<div class="card" id="rente-opmerking-card">
+  <div class="ch ch-navy">Afweging: lagere maandlast vs. extra rentekosten</div>
+  <div class="cb">
+    <div id="rente-opmerking-body"></div>
+  </div>
+</div>
+
+<!-- AFLOSSCHEMA -->
+<div class="card">
+  <div class="ch ch-navy">Aflosschema vergelijking (jaarlijks)</div>
+  <div class="cb" style="padding:0;">
+    <div class="amort-wrap">
+      <table class="amort-tbl">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Periode</th>
+            <th class="co">Huid. last</th><th class="co">Rente</th><th class="co">Aflossing</th><th class="co">Restschuld</th>
+            <th class="cn">Nieuw last</th><th class="cn">Rente</th><th class="cn">Aflossing</th><th class="cn">Restschuld</th>
+          </tr>
+        </thead>
+        <tbody id="amort-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="disc">
+  Annuïtaire berekening. Doorlopend krediet: toetslast = 2% van kredietlimiet. Indicatieve extra hypotheekcapaciteit op basis van GHF-systematiek (vrijgekomen budget ÷ netfactor × PV-factor). HRA-factor = 37,48% × 50% gemiddelde rentefractie = 18,74% (Box 1). Aan deze berekening kunnen geen rechten worden ontleend.
+</div>
+
+</div><!-- /main -->
+
+<div class="footer-bar">
+  <button class="btn btn-p" onclick="printTool()">⌦ Afdrukken</button>
+</div>
+
+<script>
+const el  = id => document.getElementById(id);
+const v   = id => parseFloat(el(id).value) || 0;
+const sel = id => el(id).value;
+const fmt = n  => n===null||isNaN(n) ? '\u2013' : '\u20AC\u00a0' + Math.round(n).toLocaleString('nl-NL');
+const fmtD= n  => { const s=n>0?'+':''; return s+'\u20AC\u00a0'+Math.abs(Math.round(n)).toLocaleString('nl-NL'); }
+const show= (id,vis) => { const e=el(id); if(e) e.style.display=vis?'':'none'; }
+
+function ann(som, rJaar, n) {
+  if(som<=0||n<=0) return 0;
+  const r=rJaar/100/12;
+  if(r===0) return som/n;
+  return som*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+}
+
+// ── TOGGLE VELDEN ─────────────────────────────────────────────────────────────
+function toggleOudType() {
+  const t=sel('oud-type');
+  show('f-oud-som', t!=='anders'&&t!=='dk');
+  show('f-oud-limiet', t==='dk');
+  show('f-oud-rente', t==='pl'||t==='herfi');
+  show('f-oud-lt', t==='pl');
+  show('f-oud-handmatig', t==='anders'||t==='lease');
+}
+
+function toggleScenario() {
+  const s=sel('nieuw-scenario');
+  show('f-nieuw-som', s==='herfi');
+  show('f-nieuw-rente', s==='verleng'||s==='herfi');
+  show('f-nieuw-lt', s==='verleng'||s==='herfi');
+  show('f-nieuw-handmatig', s==='handmatig');
+  // Sync bedrag bij verlengen
+  if(s==='verleng') {
+    const oudSom = v('oud-som');
+    if(oudSom>0) el('nieuw-som').value=oudSom;
+    const oudR = v('oud-rente');
+    if(oudR>0) el('nieuw-rente').value=oudR;
+  }
+  herbereken();
+}
+
+// ── RADIO LABELS ──────────────────────────────────────────────────────────────
+function updateBoxLabels() {
+  const isB1 = el('r-box1').checked;
+  el('lbl-box1').classList.toggle('active', isB1);
+  el('lbl-box3').classList.toggle('active', !isB1);
+}
+
+// ── MAANDLAST BEREKENEN ───────────────────────────────────────────────────────
+function berekenOud() {
+  const t=sel('oud-type');
+  let ml=0, totRen=0, totBet=0, sub='';
+  if(t==='dk') {
+    ml = v('oud-limiet')*0.02;
+    sub='2% \xd7 limiet';
+  } else if(t==='anders'||t==='lease') {
+    ml = v('oud-handmatig');
+    sub='Opgegeven last';
+  } else {
+    const som=v('oud-som'), r=v('oud-rente'), lt=v('oud-lt');
+    ml=ann(som,r,lt);
+    totBet=ml*lt; totRen=totBet-som;
+    sub='Totale rente: '+fmt(totRen);
+  }
+  el('oud-ml').value=ml>0?fmt(ml):'';
+  el('oud-rente-tot').textContent=sub;
+  return ml;
+}
+
+function berekenNieuw(oudML) {
+  const s=sel('nieuw-scenario');
+  let ml=0, totRen=0, totBet=0, sub='', som=0, lt=0;
+  if(s==='aflos') {
+    ml=0; sub='Volledig afgelost';
+  } else if(s==='handmatig') {
+    ml=v('nieuw-handmatig'); sub='Opgegeven';
+  } else {
+    // verleng of herfi
+    som = s==='verleng' ? v('oud-som') : v('nieuw-som');
+    const r=v('nieuw-rente');
+    lt=v('nieuw-lt');
+    ml=ann(som,r,lt);
+    totBet=ml*lt; totRen=totBet-som;
+    sub='Totale rente: '+fmt(totRen);
+  }
+  el('nieuw-ml').value=ml>0?fmt(ml):(ml===0&&s==='aflos'?fmt(0):'');
+  el('nieuw-rente-tot').textContent=sub;
+  return ml;
+}
+
+// ── HOOFD BEREKENING ──────────────────────────────────────────────────────────
+function herbereken() {
+  updateBoxLabels();
+  const oudML = berekenOud();
+  const nieuwML = berekenNieuw(oudML);
+  const vrij = oudML - nieuwML;
+
+  // Hypotheek capaciteit
+  const toetsR = Math.max(1, Math.min(15, v('ip-rente')||5.0));
+  const hypLt  = Math.max(5, Math.min(40, v('ip-lt')||30)) * 12;
+  const isBox1 = el('r-box1').checked;
+  const aftrekPct=0.3748, intFracGem=0.50;
+  const netFactor = 1 - aftrekPct*intFracGem; // 0.8126
+  const rT = toetsR/100/12;
+  const pvFac = (1-Math.pow(1+rT,-hypLt))/rT;
+  const effectief = vrij>0 ? (isBox1 ? vrij/netFactor : vrij) : 0;
+  const extraHyp  = vrij>0 ? Math.round(effectief*pvFac) : 0;
+  const netML     = vrij>0 ? Math.round(effectief*netFactor) : 0;
+
+  // Sticky + KPI
+  const ltJaar = hypLt/12;
+  const hypSub = toetsR.toFixed(1)+'%, '+ltJaar+' jr, '+(isBox1?'Box 1':'Box 3');
+  el('b-oud').textContent=fmt(oudML);
+  el('b-oud-s').textContent=sel('oud-type').replace('pl','PL').replace('dk','DK').replace('lease','Lease').replace('anders','Handmatig');
+  el('b-nieuw').textContent=fmt(nieuwML);
+  el('b-nieuw-s').textContent=sel('nieuw-scenario').replace('verleng','Verlengd').replace('herfi','Herfinanciert').replace('aflos','Afgelost').replace('handmatig','Handmatig');
+  const vrijEl=el('b-vrij'); vrijEl.textContent=fmt(vrij); vrijEl.className='sv '+(vrij>0?'gr':vrij<0?'re':'');
+  el('b-hyp').textContent=extraHyp>0?fmt(extraHyp):(vrij<=0?'n.v.t.':'\u2013');
+  el('b-hyp-s').textContent=hypSub;
+
+  el('kpi-oud').textContent=fmt(oudML);
+  el('kpi-nieuw').textContent=fmt(nieuwML);
+  const vrijKpi=el('kpi-vrij'); vrijKpi.textContent=fmt(Math.abs(vrij)); vrijKpi.parentElement.className='kpi '+(vrij>0?'kpi-c':vrij<0?'kpi-a':'kpi-c');
+  el('kpi-vrij').parentElement.querySelector('.kl').textContent=vrij>=0?'Vrijgekomen per maand':'Extra last per maand';
+  el('kpi-hyp').textContent=extraHyp>0?fmt(extraHyp):'n.v.t.';
+  el('kpi-hyp-s').textContent=hypSub;
+
+  el('ip-oud').textContent=fmt(oudML);
+  el('ip-vrij').textContent=fmt(vrij);
+  el('ip-hyp').textContent=extraHyp>0?fmt(extraHyp):'n.v.t.';
+  el('ip-hyp-s').textContent=hypSub;
+
+  // Vergelijk tabel
+  const s=sel('nieuw-scenario'), oudType=sel('oud-type');
+  const oudSom=oudType==='dk'?v('oud-limiet'):v('oud-som'), oudR=v('oud-rente'), oudLt=v('oud-lt');
+  const nieuwSom=s==='verleng'?oudSom:s==='herfi'?v('nieuw-som'):0;
+  const nieuwR=v('nieuw-rente'), nieuwLt=v('nieuw-lt');
+  const oudTot=oudML*oudLt, nieuwTot=nieuwML*nieuwLt;
+  const oudRen=Math.max(0,oudTot-oudSom), nieuwRen=Math.max(0,nieuwTot-nieuwSom);
+  const dML=nieuwML-oudML, dRen=nieuwRen-oudRen, dTot=nieuwTot-oudTot;
+
+  const rows=[
+    ['Maandlast',fmt(oudML),fmt(nieuwML),fmtD(dML),dML<0?'pos':dML>0?'neg':''],
+    ['Looptijd',(s==='aflos'||s==='handmatig')?'\u2013':oudLt+' mnd',(s==='aflos')?'afgelost':(s==='handmatig')?'\u2013':nieuwLt+' mnd',s!=='aflos'&&s!=='handmatig'?fmtD(nieuwLt-oudLt)+' mnd':'\u2013',(nieuwLt>oudLt)?'neg':'pos'],
+    ['Totale rente',fmt(oudRen),s==='aflos'?fmt(0):fmt(nieuwRen),s!=='aflos'&&s!=='handmatig'?fmtD(dRen):'\u2013',dRen>0?'neg':'pos'],
+    ['Totale betaling',fmt(oudTot),s==='aflos'?fmt(oudSom):fmt(nieuwTot),s!=='aflos'&&s!=='handmatig'?fmtD(dTot):'\u2013',dTot>0?'neg':'pos'],
+  ];
+
+  if(extraHyp>0){
+    rows.push(['🏠 Extra hypotheekcapaciteit','\u2013','\u2013',fmt(extraHyp),'pos']);
+    if(isBox1) rows.push(['🏠 Bruto annuiteit extra hyp./mnd','\u2013','\u2013',fmt(effectief)+'/mnd','']);
+    if(isBox1) rows.push(['🏠 Netto last na HRA (37,48%)','\u2013','\u2013',fmt(netML)+'/mnd','']);
+  }
+
+  el('cmp-tbody').innerHTML=rows.map((r,i)=>{
+    const isTot=i>=rows.length-3&&extraHyp>0;
+    return '<tr class="'+(isTot?'tot':'')+'"><td>'+r[0]+'</td><td class="v-oud">'+r[1]+'</td><td class="v-nieuw">'+r[2]+'</td><td class="v-diff '+(r[4]||'')+'">'+r[3]+'</td></tr>';
+  }).join('');
+
+  // Rente opmerking
+  let opmBody='';
+  if(vrij>0&&dRen>0&&s!=='aflos'){
+    const tv=Math.round(dRen/vrij);
+    opmBody='<p style="font-size:13px;line-height:1.7;color:#444;">De verlengde lening verlaagt de maandlast met <strong style="color:var(--green);">'+fmt(vrij)+'/mnd</strong> maar kost over de gehele looptijd <strong style="color:var(--red);">'+fmt(dRen)+' meer rente</strong>. '+(tv>0?'Na <strong>'+tv+' maanden</strong> is de maandelijkse besparing opgeslokt door de hogere rentelast. ':'')+'Voor de klant is de afweging: liquiditeitsverlichting nu vs. hogere totaalkosten.</p>';
+  } else if(vrij>0&&(dRen<=0||s==='aflos')){
+    opmBody='<p style="font-size:13px;line-height:1.7;color:var(--green);"><strong>✓ Gunstig:</strong> lagere maandlast zonder hogere totale rentelast.</p>';
+  } else if(vrij<=0){
+    opmBody='<p style="font-size:13px;color:var(--amber);">De nieuwe situatie heeft een hogere of gelijke maandlast. Er is geen hypotheekruimtewinst.</p>';
+  }
+  el('rente-opmerking-body').innerHTML=opmBody;
+
+  // Amortisatie
+  buildAmort(oudSom,oudR,oudLt,oudML,nieuwSom,nieuwR,nieuwLt,nieuwML,s);
+}
+
+function buildAmort(hSom,hR,hLt,hML,nSom,nR,nLt,nML,scenario) {
+  const rH=hR/100/12, rN=nR/100/12;
+  let hRest=hSom, nRest=nSom;
+  const maxLt=Math.max(hLt,nLt,1);
+  const rows=[];
+  for(let m=1;m<=maxLt;m++){
+    const show=m===1||m%12===0||m===hLt||m===nLt||m===maxLt;
+    let hml='',hren='',haf='',hrs='',nml='',nren='',naf='',nrs='';
+    const isHE=m===hLt, isNE=m===nLt;
+    if(m<=hLt&&hRest>0.01){
+      const rn=hRest*rH; const af=Math.min(hML-rn,hRest); hRest=Math.max(0,hRest-af);
+      if(show){hml=fmt(hML);hren=fmt(rn);haf=fmt(af);hrs=fmt(hRest);}
+    } else if(show&&m>hLt){hrs=fmt(0);}
+    if(scenario!=='aflos'&&m<=nLt&&nRest>0.01){
+      const rn=nRest*rN; const af=Math.min(nML-rn,nRest); nRest=Math.max(0,nRest-af);
+      if(show){nml=fmt(nML);nren=fmt(rn);naf=fmt(af);nrs=fmt(nRest);}
+    } else if(show){nrs=fmt(0);}
+    if(show){
+      const lbl=isHE?'Mnd '+m+' \u25a0H einde':isNE?'Mnd '+m+' \u25a0N einde':m%12===0?'Jaar '+m/12:'Mnd '+m;
+      rows.push('<tr class="'+(m%12===0?'yr':'')+(isHE?' end-oud':'')+(isNE?' end-nieuw':'')+'">'+
+        '<td>'+lbl+'</td>'+
+        '<td class="co">'+hml+'</td><td class="co">'+hren+'</td><td class="co">'+haf+'</td><td class="co">'+hrs+'</td>'+
+        '<td class="cn">'+nml+'</td><td class="cn">'+nren+'</td><td class="cn">'+naf+'</td><td class="cn">'+nrs+'</td>'+
+        '</tr>');
+    }
+  }
+  el('amort-tbody').innerHTML=rows.join('');
+}
+
+function printTool(){
+  const w=window.open('','_blank');
+  w.document.write(document.documentElement.outerHTML);
+  w.document.close(); w.focus();
+  setTimeout(()=>w.print(),600);
+}
+
+// PRINT CSS
+const ps=document.createElement('style');
+ps.media='print';
+ps.textContent='.sticky-bar,.footer-bar{display:none!important}body{background:#fff}.main{padding:10px}.amort-wrap{max-height:none!important}';
+document.head.appendChild(ps);
+
+// INIT
+el('oud-type').addEventListener('change', () => { toggleOudType(); herbereken(); });
+toggleOudType();
+toggleScenario();
+</script>
+</body>
+</html>

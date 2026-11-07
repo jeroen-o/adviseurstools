@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Familie Hypotheek Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy:#003057; --navy-l:#004a85;
+  --amber:#E5A138; --amber-l:#f4bb62; --amber-p:#fef6e7;
+  --white:#fff;
+  --g50:#f8f9fa; --g100:#f0f2f5; --g200:#e2e6ea; --g400:#8a9ab0; --g600:#4a5568;
+  --green:#1a7f5a; --green-l:#e6f6f0;
+  --red:#c53030; --red-l:#fff0f0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#eef1f5;color:var(--navy);min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);padding:20px 36px;display:flex;align-items:center;gap:14px;border-bottom:3px solid var(--amber)}
+.hdr-icon{width:42px;height:42px;background:var(--amber);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.hdr h1{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:#fff}
+.hdr p{font-size:12px;color:var(--amber-l);margin-top:2px;font-weight:300}
+.hdr-actions{margin-left:auto}
+.btn-print{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);color:#fff;border:1.5px solid rgba(255,255,255,.25);padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-print:hover{background:var(--amber);border-color:var(--amber);color:var(--navy)}
+
+.main{max-width:1160px;margin:0 auto;padding:26px 20px 60px}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:16px;border:1px solid var(--g200);overflow:hidden;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,48,87,.06)}
+.card-hdr{padding:15px 22px;display:flex;align-items:center;gap:12px}
+.card-hdr.bank  {background:linear-gradient(135deg,#003057,#004a85)}
+.card-hdr.family{background:linear-gradient(135deg,#b47a1e,#E5A138)}
+.card-hdr.gift  {background:linear-gradient(135deg,#1a7f5a,#27a97a)}
+.card-hdr.result{background:linear-gradient(135deg,#1e2d40,#2c3e50)}
+.card-hdr.chrt  {background:linear-gradient(135deg,#1a3a5c,#2a5f8f)}
+.card-hdr.debt  {background:linear-gradient(135deg,#1a2a3a,#24404f)}
+.card-hdr h2{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:#fff}
+.badge{margin-left:auto;font-size:10.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.65);background:rgba(255,255,255,.13);padding:3px 9px;border-radius:20px;white-space:nowrap}
+.card-body{padding:22px}
+
+/* ── PART BLOCK ── */
+.part-block{border:1.5px solid var(--g200);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.part-block:last-of-type{margin-bottom:0}
+.part-hdr{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--g50);cursor:pointer;user-select:none}
+.part-hdr:hover{background:var(--g100)}
+.part-num{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.part-hdr .part-title{font-size:13px;font-weight:700;color:var(--navy);flex:1}
+.part-hdr .part-summary{font-size:12px;color:var(--g400);font-variant-numeric:tabular-nums}
+.part-hdr .chevron{font-size:12px;color:var(--g400);transition:transform .2s;flex-shrink:0}
+.part-block.collapsed .chevron{transform:rotate(-90deg)}
+.part-body{padding:16px;border-top:1px solid var(--g200);display:grid;gap:16px}
+.part-block.collapsed .part-body{display:none}
+
+.btn-remove{margin-left:6px;width:24px;height:24px;border-radius:6px;background:var(--red-l);color:var(--red);border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;transition:background .2s}
+.btn-remove:hover{background:#fcc}
+.btn-remove:disabled{opacity:.25;cursor:not-allowed}
+
+.btn-add{display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 16px;border:2px dashed var(--g200);border-radius:10px;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--g400);cursor:pointer;width:100%;justify-content:center;transition:all .2s}
+.btn-add:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-p)}
+.btn-add.bank-add:hover{border-color:var(--navy);color:var(--navy);background:#e8f0fe}
+.btn-add.family-add:hover{border-color:#b47a1e;color:#b47a1e;background:#fff9ee}
+
+/* ── GRID / FIELD ── */
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;align-items:start}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start}
+@media(max-width:700px){.g4,.g3{grid-template-columns:1fr}}
+
+.field{display:grid;grid-template-rows:22px 40px 18px;gap:4px}
+.field label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g600);display:flex;align-items:center;gap:5px;overflow:hidden;white-space:nowrap}
+.field input,.field select{height:40px;padding:0 12px;border:1.5px solid var(--g200);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--navy);background:var(--g50);outline:none;width:100%;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:var(--amber);background:#fff;box-shadow:0 0 0 3px rgba(229,161,56,.12)}
+.field input[readonly]{background:var(--g100);color:var(--g400);cursor:not-allowed}
+.hint{font-size:11px;color:var(--g400);line-height:18px;align-self:center}
+
+.toggle{display:flex;border:1.5px solid var(--g200);border-radius:8px;overflow:hidden;background:var(--g50);height:40px}
+.toggle button{flex:1;padding:0 5px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:500;color:var(--g600);cursor:pointer;transition:all .18s;border-right:1px solid var(--g200);line-height:1.2}
+.toggle button:last-child{border-right:none}
+.toggle button.an{background:var(--navy);color:#fff;font-weight:600}
+.toggle button.af{background:var(--amber);color:var(--navy);font-weight:700}
+.toggle button.ag{background:var(--green);color:#fff;font-weight:600}
+.toggle button.ax{background:#6b7280;color:#fff;font-weight:600}
+
+.box-pill{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:0 8px;border-radius:20px;height:18px}
+.box-pill.b1{background:var(--green-l);color:var(--green)}
+.box-pill.b3{background:#f1f3f5;color:#6b7280}
+
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--amber);color:var(--navy);font-size:9px;font-weight:900;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.info-btn:hover{background:var(--amber-l)}
+
+/* ── DIVIDER ── */
+.div-lbl{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--g400);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.div-lbl::before,.div-lbl::after{content:'';flex:1;height:1px;background:var(--g200)}
+
+/* ── RESULT GRID ── */
+.result-wrap{overflow-x:auto}
+.result-grid{display:grid;border-radius:12px;overflow:hidden;border:1px solid var(--g200);min-width:600px}
+.rc{padding:18px;border-right:1px solid var(--g200);display:flex;flex-direction:column}
+.rc:last-child{border-right:none;background:var(--navy)}
+.rc h3{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--g400);margin-bottom:8px}
+.rc:last-child h3{color:rgba(255,255,255,.4)}
+.rc-tags{display:flex;gap:4px;height:22px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.rr{display:flex;justify-content:space-between;align-items:center;height:28px;font-size:13px}
+.rr .rl{color:var(--g600)}
+.rr .rv{font-weight:600;color:var(--navy);font-variant-numeric:tabular-nums}
+.rc:last-child .rl{color:rgba(255,255,255,.55)}
+.rc:last-child .rv{color:#fff}
+.rr.ded .rv{color:var(--green)}
+.rc:last-child .rr.ded .rv{color:#6ee7b7}
+.rr.gft .rv{color:var(--amber)}
+.rc:last-child .rr.gft .rv{color:#fcd34d}
+.rr.ext .rv{color:#b45309}
+.rc:last-child .rr.ext .rv{color:#fbbf24}
+.rr.sub .rl{padding-left:12px;color:var(--g400);font-size:12px}
+.rr.sub .rv{color:var(--g400);font-size:12px}
+.rr.inactive{opacity:.25}
+.rr.sep{height:1px;background:var(--g100);margin:4px 0;padding:0}
+.rc:last-child .rr.sep{background:rgba(255,255,255,.1)}
+.rr.net{margin-top:auto;padding-top:8px;border-top:1px solid var(--g200);height:36px}
+.rc:last-child .rr.net{border-top:1px solid rgba(255,255,255,.15)}
+.rr.net .rl{font-weight:700;font-size:13px}
+.rr.net .rv{font-size:19px;color:var(--amber)}
+.rc:last-child .rr.net .rv{font-size:21px;color:var(--amber-l)}
+
+/* ── SUM BAR ── */
+.sum-bar{background:var(--navy);border-radius:12px;padding:18px 22px;display:flex;gap:0;align-items:stretch;margin-top:18px;flex-wrap:wrap}
+.si{display:flex;flex-direction:column;gap:4px;padding:0 18px;flex:1;min-width:100px}
+.si:first-child{padding-left:0}
+.si:last-child{padding-right:0}
+.si .sl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.38);white-space:nowrap}
+.si .sv{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.si .sv.acc{color:var(--amber-l);font-size:26px}
+.sdv{width:1px;background:rgba(255,255,255,.1);align-self:stretch;flex-shrink:0}
+
+/* ── YEAR BLOCKS ── */
+.yblocks{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.yblock{background:var(--g50);border:1.5px solid var(--g200);border-radius:10px;padding:12px 14px;flex:1;min-width:190px}
+.yblock .yt{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--g400);margin-bottom:5px}
+.yblock .yn{font-size:12px;color:var(--g600);line-height:1.55}
+.ybadge{display:inline-block;background:var(--green-l);color:var(--green);font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px}
+.ybadge.exp{background:var(--red-l);color:var(--red)}
+
+/* ── NOTE ── */
+.note{background:var(--amber-p);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:11px 14px;font-size:12px;color:var(--navy);margin-top:16px;line-height:1.65}
+
+/* ── CHART ── */
+.chart-wrap{position:relative;height:300px}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600)}
+.leg-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.debt-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:640px){.debt-grid{grid-template-columns:1fr}}
+.debt-col{display:flex;flex-direction:column;gap:8px}
+.debt-lbl{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--navy)}
+.debt-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.debt-badge{margin-left:auto;font-size:11px;font-weight:700;color:var(--g400);background:var(--g100);padding:2px 8px;border-radius:20px}
+
+/* ── MODAL ── */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal-ov.open{display:flex}
+.modal{background:#fff;border-radius:20px;max-width:520px;width:92%;padding:30px;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:mIn .22s ease;max-height:90vh;overflow-y:auto}
+@keyframes mIn{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:none}}
+.modal-hdr{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.modal-ico{width:44px;height:44px;background:var(--amber-p);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.modal h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--navy);line-height:1.2}
+.modal p{font-size:13.5px;color:var(--g600);line-height:1.7;margin-bottom:10px}
+.msec{background:var(--g50);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.msec .mt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--navy);margin-bottom:6px}
+.msec p{margin-bottom:0;font-size:13px}
+.modal-close{margin-top:16px;width:100%;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.modal-close:hover{background:var(--navy-l)}
+.hra-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
+.hra-bl{width:105px;flex-shrink:0;color:var(--g600);font-weight:500}
+.hra-bt{flex:1;height:20px;background:var(--g100);border-radius:5px;overflow:hidden}
+.hra-bf{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:7px;font-size:10.5px;font-weight:700;color:#fff}
+.hra-bv{width:54px;text-align:right;font-weight:700;font-size:11.5px}
+
+.gift-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+@media(max-width:640px){ .gift-info-grid { grid-template-columns: 1fr; } }
+.gift-info-block { border-radius: 10px; padding: 13px 15px; border: 1.5px solid; display: flex; flex-direction: column; gap: 6px; }
+.gift-info-block .gib-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+.gift-info-block .gib-value { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; line-height: 1; }
+.gift-info-block .gib-sub { font-size: 11.5px; line-height: 1.55; }
+.gift-info-block .gib-btn { align-self: flex-start; margin-top: 4px; padding: 5px 12px; border: none; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.gift-info-block .gib-btn:hover { opacity: 0.82; }
+.gift-info-block.green { background: var(--green-l); border-color: #a7f3d0; }
+.gift-info-block.green .gib-title { color: var(--green); }
+.gift-info-block.green .gib-value { color: var(--green); }
+.gift-info-block.green .gib-sub { color: #065f46; }
+.gift-info-block.green .gib-btn { background: var(--green); color: white; }
+.gift-info-block.amber { background: var(--amber-p); border-color: #fcd34d; }
+.gift-info-block.amber .gib-title { color: #92400e; }
+.gift-info-block.amber .gib-value { color: var(--amber); }
+.gift-info-block.amber .gib-sub { color: #78350f; }
+.gift-info-block.amber .gib-btn { background: var(--amber); color: var(--navy); }
+.rate-tip { background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 13px 15px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 12px; }
+.rate-tip .rt-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.rate-tip .rt-body { flex: 1; }
+.rate-tip .rt-title { font-size: 12px; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.rate-tip .rt-text { font-size: 13px; color: #1e3a8a; line-height: 1.6; }
+.rate-tip .rt-text a { color: #1d4ed8; font-weight: 700; text-decoration: none; border-bottom: 1.5px solid #bfdbfe; transition: border-color 0.2s; }
+.rate-tip .rt-text a:hover { border-color: #1d4ed8; }
+.footer { font-size: 11.5px; color: var(--g400); border-top: 1px solid var(--g200); }
+.footer-top { text-align: center; padding: 14px 20px; background: var(--g50); }
+.footer-disclaimer { background: var(--navy); color: rgba(255,255,255,0.75); padding: 32px 40px; }
+.footer-disclaimer .fd-site { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: var(--amber-l); margin-bottom: 14px; }
+.footer-disclaimer .fd-alert { background: rgba(229,161,56,0.15); border: 1.5px solid rgba(229,161,56,0.35); border-radius: 10px; padding: 14px 18px; margin-bottom: 22px; font-size: 13px; line-height: 1.65; color: rgba(255,255,255,0.9); }
+.footer-disclaimer .fd-alert strong { color: var(--amber-l); }
+.footer-disclaimer .fd-alert ul { margin: 8px 0 0 18px; }
+.footer-disclaimer .fd-alert li { margin-bottom: 5px; }
+.footer-disclaimer .fd-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--amber); margin-bottom: 16px; }
+.footer-disclaimer .fd-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:680px) { .footer-disclaimer .fd-sections { grid-template-columns: 1fr; } }
+.footer-disclaimer .fd-sec { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.08); }
+.footer-disclaimer .fd-sec h4 { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 7px; }
+.footer-disclaimer .fd-sec p { font-size: 11.5px; line-height: 1.65; color: rgba(255,255,255,0.65); }
+.footer-copy { text-align: center; padding: 14px; background: #001d38; font-size: 11px; color: rgba(255,255,255,0.3); }
+.type-tag{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px}
+
+.upflash{animation:flash .35s ease}
+@keyframes flash{0%{background:rgba(229,161,56,.06)}100%{}}
+
+@media print{body{background:#fff}.hdr-actions,.info-btn{display:none!important}.card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}.main{padding:8px}}
+</style>
+</head>
+<body>
+
+<!-- HRA MODAL -->
+<div class="modal-ov" id="hra-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-ico">🏛️</div>
+      <div>
+        <h3>Hypotheekrenteaftrek (HRA)</h3>
+        <p style="font-size:12px;color:var(--g400);margin:3px 0 0">Fiscaal voordeel voor eigen woningbezitters</p>
+      </div>
+    </div>
+    <p>De <strong>hypotheekrenteaftrek (HRA)</strong> is een belastingvoordeel waarbij u de betaalde rente over uw hypotheek mag aftrekken van uw belastbaar inkomen in <strong>Box 1</strong>. U betaalt daardoor minder inkomstenbelasting.</p>
+    <div id="modal-hra-vis" style="margin:14px 0"></div>
+    <div class="msec">
+      <div class="mt">📋 Voorwaarden</div>
+      <p>✅ Lening voor aankoop/verbetering eigen woning · ✅ Annuïtaire of lineaire aflossing (na 2013) · ✅ Max. <strong>30 jaar</strong> per woning · ✅ Familielening: schriftelijk contract + opgave Belastingdienst · ❌ Aflossvrij (na 2013) geeft géén recht op HRA</p>
+    </div>
+    <div class="msec">
+      <div class="mt">📅 De 30-jaarsklok</div>
+      <p>U heeft maximaal <strong>30 jaar</strong> HRA per koopwoning. Eerdere jaren in een koopwoning tellen mee. Stel het resterende aantal jaren in per leningdeel.</p>
+    </div>
+    <div class="msec" style="background:#fff5f5;border:1px solid #fcc">
+      <div class="mt" style="color:var(--red)">⚠️ Disclaimer</div>
+      <p style="color:var(--red)">Vereenvoudigde uitleg. Raadpleeg altijd een belasting- of hypotheekadviseur.</p>
+    </div>
+    <button class="modal-close" onclick="closeModal()">Begrepen — sluiten</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-icon">🏠</div>
+  <div>
+    <h1>Familie Hypotheek Calculator</h1>
+    <p>Bank + familielening · Meerdere leningdelen · HRA · Terugschenking · Extra aflossing</p>
+  </div>
+  <div class="hdr-actions">
+    <button class="btn-print" onclick="printTool()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Afdrukken
+    </button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- BANKLENING -->
+<div class="card">
+  <div class="card-hdr bank">
+    <svg width="17" height="17" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <h2>Banklening</h2>
+    <span class="badge" id="bank-badge">1 leningdeel</span>
+  </div>
+  <div class="card-body">
+    <div id="bank-parts"></div>
+    <button class="btn-add bank-add" onclick="addPart('bank')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Leningdeel toevoegen
+    </button>
+  </div>
+</div>
+
+<!-- FAMILIELENING -->
+<div class="card">
+  <div class="card-hdr family">
+    <svg width="17" height="17" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    <h2>Familielening</h2>
+    <span class="badge" id="family-badge">1 leningdeel</span>
+  </div>
+  <div class="card-body">
+    <div id="family-parts"></div>
+    <button class="btn-add family-add" onclick="addPart('family')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Leningdeel toevoegen
+    </button>
+  </div>
+</div>
+
+<!-- TERUGSCHENKING -->
+<div class="card">
+  <div class="card-hdr gift">
+    <svg width="17" height="17" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+    <h2>Maandelijkse Terugschenking</h2>
+    <span class="badge">Familieconstructie</span>
+  </div>
+  <div class="card-body">
+    <p style="font-size:13px;color:var(--g600);line-height:1.65;margin-bottom:16px">Het familielid schenkt maandelijks een vast bedrag terug. Dit verlaagt uw <em>netto woonlast</em>. Tip: stel hetzelfde bedrag ook als <strong>extra aflossing</strong> in op de familielening.</p>
+
+    <!-- INFO BLOCKS -->
+    <div class="gift-info-grid" style="grid-template-columns:1fr">
+      <div class="gift-info-block green">
+        <div class="gib-title">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg>
+          Fiscale schenkingsvrijstelling 2026
+        </div>
+        <div class="gib-value">€ 575 <span style="font-size:16px;font-weight:500">/mnd</span></div>
+        <div class="gib-sub">
+          Jaarlijkse vrijstelling: <strong>€ 6.908</strong> (kind) · € 6.908 ÷ 12 = <strong>€ 575,67/mnd</strong><br>
+          Schenkingen binnen deze grens zijn <strong>belastingvrij</strong> — daarboven geldt schenkbelasting.
+        </div>
+        <button class="gib-btn" onclick="applyGift(575, true); calculate()">Stel in op € 575/mnd</button>
+      </div>
+
+
+    </div>
+
+    <!-- RATE TIP -->
+    <div class="rate-tip">
+      <div class="rt-icon">💡</div>
+      <div class="rt-body">
+        <div class="rt-title">Actuele hypotheekrentes raadplegen</div>
+        <div class="rt-text">
+          Bekijk de actuele rentes van de 3 grootste banken (ING, Rabobank, ABN AMRO) en neem het gemiddelde als richtlijn voor de familielening.
+          Controleer altijd de meest recente tarieven via
+          <a href="https://www.hypotheekrente.nl" target="_blank" rel="noopener">hypotheekrente.nl ↗</a>
+          en raadpleeg een adviseur voor uw persoonlijke situatie.
+        </div>
+      </div>
+    </div>
+
+    <div class="g3">
+      <div class="field">
+        <label>Schenking per maand (€)</label>
+        <div style="position:relative">
+          <input type="number" id="gift-amount" value="0" step="50" min="0" style="padding-right:68px">
+          <button id="gift-reset-btn" onclick="resetGift()" style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--amber);border:none;border-radius:5px;padding:3px 7px;font-size:10px;font-weight:700;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif">↺ reset</button>
+        </div>
+        <span class="hint" id="gift-hint">30% van familierente · automatisch</span>
+      </div>
+      <div class="field">
+        <label>Per jaar (indicatief)</label>
+        <input type="number" id="gift-annual" readonly value="0">
+        <span class="hint" id="gift-annual-hint">Vrijstelling 2026: max. €6.908/jr (kind)</span>
+      </div>
+      <div class="field">
+        <label>Toerekenen aan</label>
+        <div class="toggle">
+          <button id="gift-family-btn" class="an" onclick="setGiftTarget('family')">Familielening</button>
+          <button id="gift-total-btn" onclick="setGiftTarget('total')">Totale last</button>
+        </div>
+        <span class="hint">Op welk deel zichtbaar in de berekening</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTATEN -->
+<div class="card">
+  <div class="card-hdr result">
+    <svg width="17" height="17" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    <h2>Berekening Maandlasten</h2>
+    <span class="badge" style="background:rgba(229,161,56,.2);color:#E5A138">Maand 1</span>
+  </div>
+  <div class="card-body">
+    <div class="result-wrap"><div class="result-grid" id="result-grid"></div></div>
+    <div class="sum-bar" id="sum-bar"></div>
+    <div class="yblocks" id="yblocks"></div>
+    <div class="note"><strong>Disclaimer:</strong> Alle berekeningen zijn uitsluitend indicatief en bedoeld ter oriëntatie. Aan de uitkomsten van deze berekening kunnen <strong>geen rechten worden ontleend</strong>. HRA geldt alleen voor Box 1-leningen voor de aankoop of verbetering van de eigen woning. Een familielening vereist een schriftelijk leningscontract en jaarlijkse opgave bij de Belastingdienst. Raadpleeg altijd een erkend hypotheek- of belastingadviseur voor persoonlijk advies.</div>
+  </div>
+</div>
+
+<!-- GRAFIEK MAANDLASTEN -->
+<div class="card">
+  <div class="card-hdr chrt">
+    <svg width="17" height="17" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <h2>Netto Maandlast over de Looptijd</h2>
+    <span class="badge">Per jaar · incl. HRA & schenking</span>
+  </div>
+  <div class="card-body">
+    <div class="chart-legend" id="chart-legend"></div>
+    <div class="chart-wrap"><canvas id="the-chart"></canvas></div>
+    <p style="font-size:11.5px;color:var(--g400);margin-top:8px;text-align:center">Netto last in januari van elk jaar. Na afloop van de aftrekperiode stijgt de netto last.</p>
+  </div>
+</div>
+
+<!-- SCHULDREST -->
+<div class="card">
+  <div class="card-hdr debt">
+    <svg width="17" height="17" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    <h2>Schuldrest per Leningdeel</h2>
+    <span class="badge">Openstaande schuld per jaar</span>
+  </div>
+  <div class="card-body">
+    <div class="debt-grid">
+      <div class="debt-col">
+        <div class="debt-lbl">
+          <span class="debt-dot" style="background:#003057"></span>
+          Banklening — schuldrest
+          <span class="debt-badge" id="bank-debt-start"></span>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chart-bank-debt"></canvas></div>
+      </div>
+      <div class="debt-col">
+        <div class="debt-lbl">
+          <span class="debt-dot" style="background:#E5A138"></span>
+          Familielening — schuldrest
+          <span class="debt-badge" id="family-debt-start"></span>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chart-family-debt"></canvas></div>
+      </div>
+    </div>
+    <p style="font-size:11.5px;color:var(--g400);margin-top:10px;text-align:center">Openstaande schuld begin van elk jaar. Extra aflossing versnelt de daling. Aflossvrij blijft vlak.</p>
+  </div>
+</div>
+
+</div><!-- /main -->
+<div class="footer">
+  <div class="footer-top">© 2026 · Familie Hypotheek Calculator · Indicatieve berekeningen — geen financieel advies</div>
+  <div class="footer-disclaimer">
+    <div style="max-width:1100px;margin:0 auto">
+      <div class="fd-site">Familiehypotheekmanager.nl</div>
+
+      <div class="fd-alert">
+        <strong>⚠ Belangrijke mededeling over onze AI-tools</strong><br>
+        Je maakt gebruik van een experimentele AI-tool voor het berekenen van familiehypotheken. AI kan patronen herkennen, maar begrijpt de specifieke Nederlandse wetgeving niet altijd foutloos.
+        <ul>
+          <li><strong>Let op:</strong> De berekening kan onjuistheden bevatten.</li>
+          <li><strong>Controle:</strong> Gebruik deze tool alleen om een eerste indruk te krijgen.</li>
+          <li><strong>Advies:</strong> Een familiehypotheek heeft grote fiscale gevolgen. Neem nooit een besluit zonder overleg met een professioneel adviseur.</li>
+        </ul>
+      </div>
+
+      <div class="fd-title">Disclaimer — Familiehypotheekmanager.nl</div>
+      <p style="font-size:12px;line-height:1.7;color:rgba(255,255,255,0.65);margin-bottom:16px">De informatie en berekeningen op deze website zijn met de grootst mogelijke zorgvuldigheid samengesteld. Wij maken hierbij gebruik van kunstmatige intelligentie (AI) om simulaties en berekeningen uit te voeren.</p>
+
+      <div class="fd-sections">
+        <div class="fd-sec">
+          <h4>Geen financieel advies</h4>
+          <p>De verstrekte informatie is uitsluitend bedoeld voor indicatieve doeleinden. De uitkomsten van de berekeningen zijn geen aanbod, financieel advies of juridisch bindend document. De complexe aard van hypotheekwetgeving en fiscale regels betekent dat elke situatie uniek is.</p>
+        </div>
+        <div class="fd-sec">
+          <h4>Fouten en aansprakelijkheid</h4>
+          <p>Omdat de berekeningen door AI worden gegenereerd, kunnen wij de foutloosheid, volledigheid of actualiteit van de resultaten niet garanderen. Familiehypotheekmanager.nl aanvaardt geen enkele aansprakelijkheid voor directe of indirecte schade die ontstaat door het gebruik van de website of de daarop gepresenteerde berekeningen.</p>
+        </div>
+        <div class="fd-sec" style="grid-column:1/-1">
+          <h4>Raadpleeg een deskundige</h4>
+          <p>Wij adviseren gebruikers nadrukkelijk om de uitkomsten van de AI-berekeningen altijd te laten verifiëren door een erkend financieel adviseur, fiscalist of notaris voordat er beslissingen worden genomen met financiële gevolgen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-copy">© 2026 Familiehypotheekmanager.nl · Alle rechten voorbehouden</div>
+</div>
+
+<script>
+/* ═══════════════ STATE ═══════════════ */
+let idSeq = 0;
+const newPart = (overrides={}) => ({
+  id: ++idSeq,
+  amount: 100000, rate: 4.10, term: 30,
+  type: 'annuity', box: 'box1',
+  deductionYears: 30, taxRate: 35.75, extra: 0,
+  ...overrides
+});
+
+const S = {
+  bank:   [ newPart({amount:250000}) ],
+  family: [ newPart({amount:50000, rate:3.50, term:20, deductionYears:20}) ],
+  gift: { amount: 0, target: 'family', manual: false }
+};
+
+/* ═══════════════ MODAL ═══════════════ */
+function openModal(){
+  const bruto=1000, t1=bruto*.3575, t2=bruto*.3756;
+  document.getElementById('modal-hra-vis').innerHTML=`
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g400);margin-bottom:8px">Voorbeeld: €1.000 rente / maand</div>
+    <div class="hra-bar-row"><div class="hra-bl">Bruto rente</div><div class="hra-bt"><div class="hra-bf" style="width:100%;background:#003057">€1.000</div></div><div class="hra-bv">€1.000</div></div>
+    <div class="hra-bar-row"><div class="hra-bl">Na 35,75%</div><div class="hra-bt"><div class="hra-bf" style="width:${(bruto-t1)/10}%;background:#1a7f5a">€${Math.round(bruto-t1)}</div></div><div class="hra-bv" style="color:var(--green)">€${Math.round(bruto-t1)}</div></div>
+    <div class="hra-bar-row"><div class="hra-bl">Na 37,56%</div><div class="hra-bt"><div class="hra-bf" style="width:${(bruto-t2)/10}%;background:#27a97a">€${Math.round(bruto-t2)}</div></div><div class="hra-bv" style="color:var(--green)">€${Math.round(bruto-t2)}</div></div>
+  `;
+  document.getElementById('hra-modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('hra-modal').classList.remove('open'); }
+
+/* ═══════════════ PRINT ═══════════════ */
+function printTool(){
+  const fmtP  = n => new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+  const fmtK  = n => new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+  const today = new Date().toLocaleDateString('nl-NL',{day:'2-digit',month:'long',year:'numeric'});
+  const tl    = t => ({annuity:'Annuïtair',linear:'Lineair',interest:'Aflossvrij'})[t]||t;
+  const row   = (l,v,c='',style='') => `<tr class="${c}"><td${style?' style="'+style+'"':''}>${l}</td><td>${v}</td></tr>`;
+  const row3  = (l,v1,v2,c='') => `<tr class="${c}"><td>${l}</td><td>${v1}</td><td>${v2}</td></tr>`;
+
+  // ── Totals ──────────────────────────────────────────────
+  const bankTotals   = calcGroupTotals('bank');
+  const familyTotals = calcGroupTotals('family');
+  const gift = S.gift.amount, gT = S.gift.target;
+  const fNetG = gT==='family' ? familyTotals.net - gift : familyTotals.net;
+  const tNet  = Math.max(0, bankTotals.net + fNetG - (gT==='total'?gift:0));
+  const tBruto = bankTotals.bruto + familyTotals.bruto;
+  const tTax   = bankTotals.tax   + familyTotals.tax;
+  const tExtra = bankTotals.extra + familyTotals.extra;
+
+  // ── Year-by-year table (10 rows or full term) ────────────
+  const maxYrs = Math.min(Math.max(totalTerm('bank'), totalTerm('family')), 30);
+  const yearRows = () => {
+    let html = '';
+    for(let yr=1; yr<=maxYrs; yr++){
+      const m=(yr-1)*12+1;
+      const bg=calcGroupTotals('bank',m,yr);
+      const fg=calcGroupTotals('family',m,yr);
+      const gOff = gT==='family' ? gift : 0;
+      const gOff2= gT==='total'  ? gift : 0;
+      const fng = Math.max(0, fg.net - gOff);
+      const net = Math.max(0, bg.net + fng - gOff2);
+      const alt = yr%2===0 ? 'style="background:#fafbfc"' : '';
+      html += `<tr ${alt}><td style="font-weight:600">${yr}</td><td>${fmtK(bg.bruto)}</td><td>${fmtK(fg.bruto)}</td><td style="color:#1a7f5a">−${fmtK(bg.tax+fg.tax)}</td><td style="color:#b45309">${tExtra>0?'+'+fmtK(tExtra):'—'}</td><td style="color:#E5A138">${gift>0?'−'+fmtK(gift):'—'}</td><td style="font-weight:700;color:#003057">${fmtK(net)}</td><td style="color:#8a9ab0">${fmtK(bg.balance+fg.balance)}</td></tr>`;
+    }
+    return html;
+  };
+
+  // ── Per-part detail blocks ───────────────────────────────
+  const partDetail = (who) => S[who].map((p,i) => {
+    const pm = loanMonthPart(p,1);
+    const h  = hraP(p,pm.interest,1);
+    const col = who==='bank' ? ['#003057','#1a56db','#2563eb','#0ea5e9','#0891b2'][i%5] : ['#b45309','#E5A138','#f59e0b','#d97706','#92400e'][i%5];
+    const totalInterest = (() => {
+      // rough total interest over full term (simplified, no extra)
+      let sum=0, bal=p.amount, r=p.rate/100/12, n=p.term*12;
+      for(let m=1;m<=n;m++){
+        if(bal<=0) break;
+        const int=bal*r;
+        sum+=int;
+        let pri=p.type==='annuity'?(r===0?p.amount/n:p.amount*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1)-int):p.type==='linear'?p.amount/n:0;
+        pri=Math.min(pri+p.extra, bal);
+        bal=Math.max(0,bal-pri);
+      }
+      return sum;
+    })();
+    return `
+    <div class="part-card" style="border-left:4px solid ${col}">
+      <div class="part-card-title" style="color:${col}">${who==='bank'?'🏦 Bank':'👨‍👩‍👧 Familie'} — Leningdeel ${i+1}</div>
+      <div class="part-grid">
+        <div class="part-block-inner">
+          <div class="plbl">Leningparameters</div>
+          <table>
+            ${row('Hoofdsom', fmtP(p.amount))}
+            ${row('Rente', p.rate.toFixed(2).replace('.',',')+'% per jaar')}
+            ${row('Looptijd', p.term+' jaar')}
+            ${row('Aflossingstype', tl(p.type))}
+            ${p.extra>0?row('Extra aflossing', fmtP(p.extra)+'/mnd'):''}
+          </table>
+        </div>
+        <div class="part-block-inner">
+          <div class="plbl">Belasting & aftrek</div>
+          <table>
+            ${row('Box', p.box==='box1'?'Box 1 — aftrekbaar':'Box 3 — geen aftrek')}
+            ${p.box==='box1'?row('HRA resterende jaren', p.deductionYears+' jaar'):''}
+            ${p.box==='box1'?row('Belastingtarief', p.taxRate+'%'):''}
+            ${p.box==='box1'?row('HRA voordeel mnd 1', '− '+fmtP(h),'ded'):''}
+          </table>
+        </div>
+        <div class="part-block-inner">
+          <div class="plbl">Maandlasten (mnd 1)</div>
+          <table>
+            ${row('Bruto maandlast', fmtP(pm.total))}
+            ${row('↳ Rente', fmtP(pm.interest),'sub')}
+            ${row('↳ Aflossing', fmtP(pm.principal-Math.min(p.extra,pm.principal)),'sub')}
+            ${p.extra>0?row('+ Extra aflossing', '+ '+fmtP(p.extra),'ext'):''}
+            ${row('Netto maandlast', fmtP(Math.max(0,pm.total-h)), 'net')}
+          </table>
+        </div>
+        <div class="part-block-inner">
+          <div class="plbl">Totaaloverzicht looptijd</div>
+          <table>
+            ${row('Totale rente (indicatief)', fmtK(totalInterest))}
+            ${row('Totaal betaald', fmtK(p.amount + totalInterest))}
+            ${p.box==='box1'&&p.deductionYears>0?row('HRA loopt t/m ca.', (2026+p.deductionYears).toString()):''}
+            ${row('Schuld aan einde looptijd', p.type==='interest'?fmtP(p.amount):fmtP(0))}
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── Schenking analyse ────────────────────────────────────
+  const giftAnalysis = gift>0 ? `
+    <div class="sec"><div class="st">🎁 Terugschenking — analyse</div>
+    <div class="two">
+      <div class="table-card">
+        <div class="card-lbl">Overzicht schenking</div>
+        <table>
+          ${row('Bedrag per maand', fmtP(gift))}
+          ${row('Bedrag per jaar', fmtP(gift*12))}
+          ${row('Toerekening', gT==='family'?'Familielening':'Totale last')}
+          ${row('Effect op netto last', '− '+fmtP(gift),'gft')}
+        </table>
+      </div>
+      <div class="table-card">
+        <div class="card-lbl">Fiscale vrijstelling 2026</div>
+        <table>
+          ${row('Vrijstelling (kind)', '€ 6.908 / jaar')}
+          ${row('Vrijstelling per maand', '€ 575 / mnd')}
+          ${row('Uw jaarbedrag', fmtP(gift*12))}
+          ${gift*12>6908?row('Status','⚠ Boven vrijstelling','',''): row('Status','✅ Binnen vrijstelling','ded')}
+          ${gift*12<=6908?row('Benut', Math.round(gift*12/6908*100)+'% van vrijstelling'):''}
+        </table>
+      </div>
+    </div></div>` : '';
+
+  const css = `
+  @page { size: A4 portrait; margin: 10mm 12mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; }
+  body { font-family: 'DM Sans', sans-serif; color: #1e293b; background: #fff; font-size: 11px; }
+
+  /* ── HEADER ── */
+  .rh { background: #003057; color: #fff; padding: 18px 24px 15px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .rh h1 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; line-height: 1.05; }
+  .rh .sub { font-size: 9.5px; color: rgba(255,255,255,.45); margin-top: 3px; }
+  .rh .meta { text-align: right; font-size: 9.5px; color: rgba(255,255,255,.45); }
+  .rh .meta strong { display: block; font-size: 12px; color: #f4bb62; font-weight: 700; margin-bottom: 2px; }
+  .ab { height: 3px; background: #E5A138; }
+  .page { width: 100%; padding: 14px 20px 20px; }
+
+  /* ── SECTIONS ── */
+  .sec { margin: 16px 0; }
+  .st { font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 700; color: #003057;
+        border-bottom: 2px solid #E5A138; padding-bottom: 4px; margin-bottom: 10px; }
+
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 4px 7px; text-align: left; font-size: 10.5px; }
+  th { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #94a3b8; padding-bottom: 3px; }
+  tr { border-bottom: 1px solid #f1f5f9; }
+  tr:last-child { border-bottom: none; }
+  td:last-child, th:last-child { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  tr.sub td { color: #94a3b8; font-size: 10px; padding-left: 14px; }
+  tr.ded td:last-child { color: #1a7f5a; }
+  tr.ext td:last-child { color: #b45309; }
+  tr.gft td:last-child { color: #b45309; }
+  tr.net td { font-weight: 700; font-size: 11.5px; border-top: 1.5px solid #003057; padding-top: 6px; }
+  tr.net td:last-child { color: #003057; font-size: 13px; }
+
+  /* ── LAYOUT ── */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .table-card { background: #f8fafc; border-radius: 6px; padding: 9px 11px; border: 1px solid #e2e8f0; }
+  .card-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #94a3b8; margin-bottom: 6px; }
+
+  /* ── SUMMARY BOX ── */
+  .sb { background: #003057; border-radius: 8px; padding: 12px 16px;
+        display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 10px 0; }
+  .sb-i .sb-l { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: rgba(255,255,255,.35); }
+  .sb-i .sb-v { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 700;
+                color: #fff; margin-top: 2px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .sb-i .sb-v.acc { color: #f4bb62; font-size: 19px; }
+
+  /* ── PART CARDS — 2×2 grid instead of 1×4 ── */
+  .part-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+               padding: 10px 12px; margin-bottom: 10px; page-break-inside: avoid; }
+  .part-card-title { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .part-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .part-block-inner { background: #f8fafc; border-radius: 5px; padding: 7px 9px; }
+  .plbl { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+          color: #94a3b8; margin-bottom: 5px; }
+
+  /* ── YEAR TABLE — compact ── */
+  .year-table th { background: #f1f5f9; }
+  .year-table td, .year-table th { padding: 3.5px 5px; font-size: 9.5px; }
+  .year-table td:first-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* ── HRA STATUS ── */
+  .hra-status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .hra-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; }
+  .hra-block .ht { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .hra-block .hv { font-size: 10.5px; color: #334155; line-height: 1.45; }
+  .badge-green { display: inline-block; background: #dcfce7; color: #166534; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+  .badge-red   { display: inline-block; background: #fee2e2; color: #991b1b; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
+
+  /* ── DISCLAIMER / FOOTER ── */
+  .dis { background: #fef6e7; border-left: 3px solid #E5A138; border-radius: 0 5px 5px 0;
+         padding: 9px 12px; font-size: 9.5px; color: #003057; line-height: 1.65; margin-top: 16px; }
+  .rf  { margin-top: 14px; padding-top: 10px; border-top: 1px solid #e2e8f0;
+         display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8; }
+
+  /* ── PRINT OVERRIDES ── */
+  @media print {
+    html, body { width: 210mm; }
+    .rh, .sb { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .hra-block { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .part-card, .table-card, .sec { page-break-inside: avoid; }
+    .year-table { page-break-inside: auto; }
+    .year-table tr { page-break-inside: avoid; }
+  }`;
+
+  // ── HRA Status per part ──────────────────────────────────
+  const hraStatusBlocks = ['bank','family'].flatMap((who,wi) =>
+    S[who].map((p,i) => {
+      if(p.box!=='box1') return `<div class="hra-block"><div class="ht" style="color:#64748b">${who==='bank'?'Bank':'Familie'} deel ${i+1}</div><div class="hv"><span class="badge-red">Box 3</span> Geen HRA-recht</div></div>`;
+      const r=p.deductionYears;
+      return `<div class="hra-block"><div class="ht" style="color:${['#003057','#1a56db','#2563eb','#0ea5e9','#0891b2','#b45309','#E5A138','#f59e0b','#d97706','#92400e'][(wi*5+i)%10]}">${who==='bank'?'Bank':'Familie'} deel ${i+1}</div>
+      <div class="hv">${r>0?`<span class="badge-green">${r} jaar resterend</span><br>Aftrek t/m ca. ${2026+r}${r<p.term?' <em>(looptijd langer)</em>':''}`:
+      '<span class="badge-red">Verlopen</span><br>Geen aftrek meer'}</div></div>`;
+    })
+  ).join('');
+
+  const html = `<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8">
+  <title>Familie Hypotheek Rapport — ${today}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>${css}</style></head><body>
+
+  <!-- HEADER -->
+  <div class="rh">
+    <div>
+      <h1>Familie Hypotheek<br>Berekening</h1>
+      <div class="sub">Volledig indicatief overzicht · bank- en familielening · alle leningdelen</div>
+    </div>
+    <div class="meta">
+      <strong>${today}</strong>
+      Familie Hypotheek Calculator<br>
+      Banklening: ${S.bank.length} deel${S.bank.length>1?'en':''}  ·  Familielening: ${S.family.length} deel${S.family.length>1?'en':''}
+    </div>
+  </div>
+  <div class="ab"></div>
+
+  <div class="page">
+
+  <!-- SAMENVATTING -->
+  <div class="sec">
+    <div class="st">📊 Samenvatting</div>
+    <div class="sb">
+      <div class="sb-i"><div class="sb-l">Totale hypotheek</div><div class="sb-v">${fmtK(totalAmount('bank')+totalAmount('family'))}</div></div>
+      <div class="sb-i"><div class="sb-l">Bruto / mnd</div><div class="sb-v">${fmtP(tBruto)}</div></div>
+      <div class="sb-i"><div class="sb-l">HRA voordeel</div><div class="sb-v" style="color:#6ee7b7">−${fmtP(tTax)}</div></div>
+      ${tExtra>0?`<div class="sb-i"><div class="sb-l">Extra aflossing</div><div class="sb-v" style="color:#fbbf24">+${fmtP(tExtra)}</div></div>`:'<div class="sb-i"></div>'}
+      <div class="sb-i"><div class="sb-l">✓ Netto / mnd</div><div class="sb-v acc">${fmtP(tNet)}</div></div>
+    </div>
+    <div class="two" style="margin-top:14px">
+      <div class="table-card">
+        <div class="card-lbl">Banklening totaal</div>
+        <table>
+          ${row('Totale hoofdsom', fmtP(totalAmount('bank')))}
+          ${row('Bruto maandlast (mnd 1)', fmtP(bankTotals.bruto))}
+          ${row('HRA voordeel (mnd 1)', '− '+fmtP(bankTotals.tax),'ded')}
+          ${bankTotals.extra>0?row('+ Extra aflossing', '+ '+fmtP(bankTotals.extra),'ext'):''}
+          ${row('Netto maandlast (mnd 1)', fmtP(bankTotals.net),'net')}
+        </table>
+      </div>
+      <div class="table-card">
+        <div class="card-lbl">Familielening totaal</div>
+        <table>
+          ${row('Totale hoofdsom', fmtP(totalAmount('family')))}
+          ${row('Bruto maandlast (mnd 1)', fmtP(familyTotals.bruto))}
+          ${row('HRA voordeel (mnd 1)', '− '+fmtP(familyTotals.tax),'ded')}
+          ${familyTotals.extra>0?row('+ Extra aflossing', '+ '+fmtP(familyTotals.extra),'ext'):''}
+          ${gift>0&&gT==='family'?row('− Terugschenking', '− '+fmtP(gift),'gft'):''}
+          ${row('Netto maandlast (mnd 1)', fmtP(fNetG),'net')}
+        </table>
+      </div>
+    </div>
+    ${gift>0?`<div class="table-card" style="margin-top:14px;background:#003057;border-color:#003057">
+      <table>
+        <tr><td style="color:rgba(255,255,255,.5);font-size:12px">Gecombineerde netto maandlast (bruto − HRA ${tExtra>0?'+ extra ':''}- schenking)</td>
+        <td style="color:#f4bb62;font-size:18px;font-family:Cormorant Garamond,serif;font-weight:700">${fmtP(tNet)}</td></tr>
+      </table>
+    </div>`:''}
+  </div>
+
+  <!-- BANKLENING DETAILS -->
+  <div class="sec">
+    <div class="st">🏦 Banklening — leningdelen</div>
+    ${partDetail('bank')}
+  </div>
+
+  <!-- FAMILIELENING DETAILS -->
+  <div class="sec">
+    <div class="st">👨‍👩‍👧 Familielening — leningdelen</div>
+    ${partDetail('family')}
+  </div>
+
+  ${giftAnalysis}
+
+  <!-- HRA STATUS -->
+  <div class="sec">
+    <div class="st">🏛️ Hypotheekrenteaftrek — status per deel</div>
+    <div class="hra-status-grid">${hraStatusBlocks}</div>
+  </div>
+
+  <!-- JAAR-OVERZICHT -->
+  <div class="sec">
+    <div class="st">📅 Jaar-voor-jaar overzicht${maxYrs<totalTerm('bank')||maxYrs<totalTerm('family')?' (eerste '+maxYrs+' jaar)':''}</div>
+    <div class="table-card" style="padding:0;overflow:hidden">
+      <table class="year-table">
+        <thead><tr>
+          <th>Jaar</th><th>Bruto bank</th><th>Bruto familie</th>
+          <th>HRA voordeel</th><th>Extra afl.</th><th>Schenking</th>
+          <th>Netto last</th><th>Schuldrest</th>
+        </tr></thead>
+        <tbody>${yearRows()}</tbody>
+      </table>
+    </div>
+    <p style="font-size:10.5px;color:#94a3b8;margin-top:7px">* Netto last = bruto bank + bruto familie − HRA + extra aflossing − terugschenking. Schuldrest = openstaande schuld beide leningen gecombineerd.</p>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="dis">
+    <strong>Disclaimer:</strong> Alle berekeningen in dit rapport zijn uitsluitend <strong>indicatief</strong> en bedoeld ter oriëntatie.
+    Aan de uitkomsten van deze berekening kunnen <strong>geen rechten worden ontleend</strong>.
+    Hypotheekrenteaftrek (HRA) geldt alleen voor Box 1-leningen voor de aankoop of verbetering van de eigen woning.
+    Een familielening vereist een schriftelijk leningscontract en jaarlijkse opgave bij de Belastingdienst.
+    De fiscale schenkingsvrijstelling 2026 bedraagt €6.908 per jaar (kind). Raadpleeg altijd een erkend hypotheek- of
+    belastingadviseur voor persoonlijk advies. Tarieven en vrijstellingen kunnen jaarlijks wijzigen.
+  </div>
+  <div class="rf">
+    <span>Familie Hypotheek Calculator  ·  ${today}</span>
+    <span>Indicatieve berekening  ·  Geen financieel advies</span>
+  </div>
+
+  </div><!-- /page -->
+  </body></html>`;
+
+  const w = window.open('','_blank','width=900,height=950');
+  w.document.write(html);
+  w.document.close();
+  w.onload = ()=>{ w.focus(); w.print(); };
+}
+
+/* ═══════════════ PART COLOURS ═══════════════ */
+const BANK_COLS   = ['#003057','#1a56db','#2563eb','#0ea5e9','#0891b2'];
+const FAMILY_COLS = ['#b45309','#E5A138','#f59e0b','#d97706','#92400e'];
+
+function partColor(who, idx){
+  return who==='bank' ? BANK_COLS[idx % BANK_COLS.length] : FAMILY_COLS[idx % FAMILY_COLS.length];
+}
+
+/* ═══════════════ RENDER PARTS UI ═══════════════ */
+function renderParts(who){
+  const parts = S[who];
+  const container = document.getElementById(`${who}-parts`);
+  const isBank = who==='bank';
+
+  container.innerHTML = parts.map((p, i) => {
+    const col = partColor(who, i);
+    const tl = {annuity:'Annuïtair',linear:'Lineair',interest:'Aflossvrij'}[p.type];
+    const pm = loanMonthPart(p, 1);
+    const sumText = `€ ${Math.round(p.amount/1000)}k · ${p.rate}% · ${tl} · ${fmtShort(pm.total)}/mnd`;
+    const actType = isBank ? 'an' : 'af';
+
+    return `<div class="part-block" id="part-${p.id}">
+      <div class="part-hdr" onclick="togglePart(${p.id})">
+        <span class="part-num" style="background:${col}">${i+1}</span>
+        <span class="part-title">Leningdeel ${i+1}</span>
+        <span class="part-summary">${sumText}</span>
+        <button class="btn-remove" onclick="event.stopPropagation();removePart('${who}',${p.id})" ${parts.length<=1?'disabled':''} title="Verwijder dit leningdeel">×</button>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="part-body">
+        <div class="g4">
+          <div class="field"><label>Leningbedrag</label><input type="number" value="${p.amount}" step="1000" min="0" oninput="updatePart('${who}',${p.id},'amount',this.value)"></div>
+          <div class="field"><label>Rente (% p.j.)</label><input type="number" value="${p.rate}" step="0.01" min="0" max="20" oninput="updatePart('${who}',${p.id},'rate',this.value)"></div>
+          <div class="field"><label>Looptijd (jaren)</label><input type="number" value="${p.term}" step="1" min="1" max="40" oninput="updatePart('${who}',${p.id},'term',this.value)"></div>
+          <div class="field">
+            <label>Aflossingstype</label>
+            <div class="toggle">
+              <button class="${p.type==='annuity'?actType:''}" onclick="updatePart('${who}',${p.id},'type','annuity')">Annuïtair</button>
+              <button class="${p.type==='linear'?actType:''}" onclick="updatePart('${who}',${p.id},'type','linear')">Lineair</button>
+              <button class="${p.type==='interest'?actType:''}" onclick="updatePart('${who}',${p.id},'type','interest')">Aflossvrij</button>
+            </div>
+          </div>
+        </div>
+        <div class="div-lbl">Belasting & renteaftrek</div>
+        <div class="g4">
+          <div class="field">
+            <label>Box <button class="info-btn" onclick="openModal()">i</button></label>
+            <div class="toggle">
+              <button class="${p.box==='box1'?'ag':''}" onclick="updatePart('${who}',${p.id},'box','box1')">Box 1</button>
+              <button class="${p.box==='box3'?'ax':''}" onclick="updatePart('${who}',${p.id},'box','box3')">Box 3</button>
+            </div>
+            <span class="box-pill ${p.box==='box1'?'b1':'b3'}" id="bpill-${p.id}">${p.box==='box1'?'Box 1 · aftrekbaar':'Box 3 · geen aftrek'}</span>
+          </div>
+          <div class="field" style="${p.box!=='box1'?'opacity:.35;pointer-events:none':''}">
+            <label>HRA resterende jaren <button class="info-btn" onclick="openModal()">i</button></label>
+            <input type="number" value="${p.deductionYears}" step="1" min="0" max="30" oninput="updatePart('${who}',${p.id},'deductionYears',this.value)">
+            <span class="hint">Max. 30 jaar</span>
+          </div>
+          <div class="field">
+            <label>Belastingtarief</label>
+            <div class="toggle">
+              <button class="${p.taxRate===35.75?(isBank?'an':'af'):''}" onclick="updatePart('${who}',${p.id},'taxRate',35.75)">35,75%</button>
+              <button class="${p.taxRate===37.56?(isBank?'an':'af'):''}" onclick="updatePart('${who}',${p.id},'taxRate',37.56)">37,56%</button>
+            </div>
+            <span class="hint">Marginaal IB-tarief</span>
+          </div>
+          <div class="field">
+            <label>Extra aflossing / mnd</label>
+            <input type="number" value="${p.extra}" step="50" min="0" oninput="updatePart('${who}',${p.id},'extra',this.value)">
+            <span class="hint">Boetevrij extra aflossen</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // update badge
+  const n = parts.length;
+  document.getElementById(`${who}-badge`).textContent = n===1 ? '1 leningdeel' : `${n} leningdelen`;
+}
+
+function togglePart(id){
+  document.getElementById(`part-${id}`).classList.toggle('collapsed');
+}
+
+function addPart(who){
+  const defaults = who==='bank'
+    ? {amount:100000, rate:4.10, term:30, deductionYears:30}
+    : {amount:25000,  rate:3.50, term:20, deductionYears:20};
+  S[who].push(newPart(defaults));
+  renderParts(who);
+  // auto-collapse all but last
+  S[who].slice(0,-1).forEach(p => {
+    const el = document.getElementById(`part-${p.id}`);
+    if(el) el.classList.add('collapsed');
+  });
+  if(!S.gift.manual) applyGift(calcDefaultGift(), false);
+  calculate();
+}
+
+function removePart(who, id){
+  if(S[who].length <= 1) return;
+  S[who] = S[who].filter(p => p.id !== id);
+  renderParts(who);
+  if(!S.gift.manual) applyGift(calcDefaultGift(), false);
+  calculate();
+}
+
+function updatePart(who, id, key, val){
+  const p = S[who].find(p => p.id === id);
+  if(!p) return;
+
+  if(key==='type' || key==='box'){
+    // Structural change — must re-render to update toggles/pill/opacity
+    p[key] = val;
+    const collapsed = document.getElementById('part-'+id)?.classList.contains('collapsed');
+    renderParts(who);
+    if(collapsed){
+      const el = document.getElementById('part-'+id);
+      if(el) el.classList.add('collapsed');
+    }
+  } else {
+    // Numeric change — update state only, never re-render (keeps focus)
+    p[key] = parseFloat(val) || 0;
+    // Update just the summary line in the part header
+    updatePartSummary(who, id);
+  }
+
+  if(!S.gift.manual) applyGift(calcDefaultGift(), false);
+  clearTimeout(window._calcTimer);
+  window._calcTimer = setTimeout(calculate, 120);
+}
+
+function updatePartSummary(who, id){
+  const p = S[who].find(p => p.id === id);
+  if(!p) return;
+  const tl = {annuity:'Annuïtair',linear:'Lineair',interest:'Aflossvrij'}[p.type]||p.type;
+  const pm = loanMonthPart(p, 1);
+  const sumEl = document.querySelector(`#part-${id} .part-summary`);
+  if(sumEl) sumEl.textContent = `€ ${Math.round(p.amount/1000)}k · ${p.rate}% · ${tl} · ${fmtShort(pm.total)}/mnd`;
+}
+
+/* ═══════════════ GIFT ═══════════════ */
+let giftManual = false;
+
+function calcDefaultGift(){
+  const totalInterest = S.family.reduce((sum, p) => {
+    const pm = loanMonthPart(p, 1);
+    return sum + pm.interest;
+  }, 0);
+  return Math.round(totalInterest * 0.30 / 10) * 10;
+}
+
+function applyGift(val, manual){
+  giftManual = manual;
+  S.gift.amount = val;
+  S.gift.manual = manual;
+  const el = document.getElementById('gift-amount');
+  if(el) el.value = val;
+  const annual = val * 12;
+  const ann = document.getElementById('gift-annual');
+  if(ann) ann.value = annual.toFixed(0);
+  // Annual hint: warn if over exemption limit
+  const annHint = document.getElementById('gift-annual-hint');
+  if(annHint){
+    const LIMIT = 6908;
+    if(annual > LIMIT){
+      annHint.innerHTML = `<span style="color:var(--red);font-weight:700">⚠ €${Math.round(annual).toLocaleString('nl-NL')} > vrijstelling €6.908 — schenkbelasting mogelijk</span>`;
+    } else if(annual > 0) {
+      const pct = Math.round(annual/LIMIT*100);
+      annHint.innerHTML = `Vrijstelling 2026: €6.908/jr · <strong style="color:var(--green)">${pct}% benut</strong>`;
+    } else {
+      annHint.textContent = 'Vrijstelling 2026: max. €6.908/jr (kind)';
+    }
+  }
+  const hint = document.getElementById('gift-hint');
+  const btn  = document.getElementById('gift-reset-btn');
+  if(hint){
+    if(manual){
+      const def = calcDefaultGift();
+      hint.textContent = `Handmatig · standaard = € ${def} (30% rente)`;
+      hint.style.color = 'var(--amber)';
+      if(btn) btn.style.display = 'block';
+    } else {
+      hint.textContent = '30% van familierente · automatisch';
+      hint.style.color = '';
+      if(btn) btn.style.display = 'none';
+    }
+  }
+}
+
+function resetGift(){ applyGift(calcDefaultGift(), false); calculate(); }
+
+function setGiftTarget(t){
+  S.gift.target = t;
+  document.getElementById('gift-family-btn').classList.remove('an');
+  document.getElementById('gift-total-btn').classList.remove('an');
+  document.getElementById(`gift-${t}-btn`).classList.add('an');
+  calculate();
+}
+
+/* ═══════════════ CALC ENGINE ═══════════════ */
+function loanMonthPart(p, monthIdx){
+  const {amount, rate, term, type, extra} = p;
+  if(amount<=0) return {total:0,interest:0,principal:0,balance:0};
+  const r=rate/100/12, n=term*12;
+  let bal=amount;
+  for(let m=1;m<monthIdx;m++){
+    if(bal<=0) break;
+    const int=bal*r;
+    let pri=type==='annuity'?(r===0?amount/n:amount*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1)-int):type==='linear'?amount/n:0;
+    pri=Math.max(0,Math.min(pri+extra,bal));
+    bal=Math.max(0,bal-pri);
+  }
+  if(bal<=0) return {total:0,interest:0,principal:0,balance:0};
+  const interest=bal*r;
+  let pri=type==='annuity'?(r===0?amount/n:amount*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1)-interest):type==='linear'?amount/n:0;
+  const extraAct=Math.min(extra,Math.max(0,bal-pri));
+  const principal=Math.min(pri+extraAct,bal);
+  return {total:interest+principal,interest,principal,balance:bal};
+}
+
+function hraP(p, interest, yearIdx){
+  if(p.box!=='box1'||p.deductionYears<yearIdx) return 0;
+  return interest*(p.taxRate/100);
+}
+
+function calcGroupTotals(who, monthIdx=1, yearIdx=1){
+  let bruto=0,interest=0,principal=0,tax=0,extra=0;
+  S[who].forEach(p=>{
+    const pm=loanMonthPart(p,monthIdx);
+    const h=hraP(p,pm.interest,yearIdx);
+    bruto+=pm.total; interest+=pm.interest; principal+=pm.principal; tax+=h; extra+=p.extra;
+  });
+  return {bruto, interest, principal, tax, net:bruto-tax, extra};
+}
+
+function totalAmount(who){ return S[who].reduce((s,p)=>s+p.amount,0); }
+function totalTerm(who){ return Math.max(...S[who].map(p=>p.term)); }
+
+const fmt = n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const fmtShort = n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+const typeLabel = t=>({annuity:'Annuïtair',linear:'Lineair',interest:'Aflossvrij'})[t]||t;
+
+/* ═══════════════ MAIN CALCULATE ═══════════════ */
+function calculate(){
+  const bT = calcGroupTotals('bank');
+  const fT = calcGroupTotals('family');
+  const gift=S.gift.amount, gTgt=S.gift.target;
+  const fNetG = gTgt==='family' ? fT.net-gift : fT.net;
+  const tNet = Math.max(0, bT.net + fNetG - (gTgt==='total'?gift:0));
+  const tBruto = bT.bruto + fT.bruto;
+  const tTax   = bT.tax + fT.tax;
+  const tExtra = bT.extra + fT.extra;
+
+  // ─ Result grid: one column per group + total ─
+  const cols = S.bank.length + S.family.length;
+  const gridCols = cols + 1; // +1 for total
+  document.getElementById('result-grid').style.gridTemplateColumns = `repeat(${gridCols},1fr)`;
+
+  const makePartCols = (who) => S[who].map((p, i) => {
+    const pm = loanMonthPart(p,1);
+    const h  = hraP(p, pm.interest, 1);
+    const net = Math.max(0, pm.total - h);
+    const isB = who==='bank';
+    const col = partColor(who, i);
+    const tag_type = `<span class="type-tag" style="background:${isB?'#e8f0fe':'#fff4e0'};color:${isB?'#1a56db':'#b47a1e'}">${typeLabel(p.type)}</span>`;
+    const tag_box  = `<span class="box-pill ${p.box==='box1'?'b1':'b3'}">${p.box==='box1'?'Box 1':'Box 3'}</span>`;
+    return `<div class="rc">
+      <h3 style="color:${col}">${isB?'🏦':'👨‍👩‍👧'} ${who==='bank'?'Bank':'Familie'} deel ${i+1}</h3>
+      <div class="rc-tags">${tag_type}${tag_box}</div>
+      <div class="rr"><span class="rl">Bruto last</span><span class="rv">${fmt(pm.total)}</span></div>
+      <div class="rr sub"><span class="rl">↳ Rente</span><span class="rv">${fmt(pm.interest)}</span></div>
+      <div class="rr sub"><span class="rl">↳ Aflossing</span><span class="rv">${fmt(pm.principal-Math.min(p.extra,pm.principal))}</span></div>
+      <div class="rr ded${p.box==='box1'&&p.deductionYears>0?'':' inactive'}"><span class="rl">− HRA (${p.taxRate}%)</span><span class="rv">− ${fmt(p.box==='box1'&&p.deductionYears>0?h:0)}</span></div>
+      <div class="rr ext${p.extra>0?'':' inactive'}"><span class="rl">+ Extra aflossing</span><span class="rv">+ ${fmt(p.extra>0?p.extra:0)}</span></div>
+      <div class="rr gft inactive"><span class="rl">− Terugschenking</span><span class="rv">− ${fmt(0)}</span></div>
+      <div class="rr net"><span class="rl">Netto last</span><span class="rv">${fmt(net)}</span></div>
+    </div>`;
+  }).join('');
+
+  // Show gift only on last family column
+  const familyCols = S.family.map((p, i) => {
+    const pm = loanMonthPart(p,1);
+    const h  = hraP(p, pm.interest, 1);
+    const isLast = i === S.family.length-1;
+    const giftShow = isLast && gTgt==='family' && gift>0;
+    const net = isLast ? Math.max(0, fNetG - (S.family.slice(0,i).reduce((s,pp)=>{ const m2=loanMonthPart(pp,1); return s+m2.total-hraP(pp,m2.interest,1); },0))) : Math.max(0, pm.total-h);
+    const col = partColor('family', i);
+    const tag_type = `<span class="type-tag" style="background:#fff4e0;color:#b47a1e">${typeLabel(p.type)}</span>`;
+    const tag_box  = `<span class="box-pill ${p.box==='box1'?'b1':'b3'}">${p.box==='box1'?'Box 1':'Box 3'}</span>`;
+    return `<div class="rc">
+      <h3 style="color:${col}">👨‍👩‍👧 Familie deel ${i+1}</h3>
+      <div class="rc-tags">${tag_type}${tag_box}</div>
+      <div class="rr"><span class="rl">Bruto last</span><span class="rv">${fmt(pm.total)}</span></div>
+      <div class="rr sub"><span class="rl">↳ Rente</span><span class="rv">${fmt(pm.interest)}</span></div>
+      <div class="rr sub"><span class="rl">↳ Aflossing</span><span class="rv">${fmt(pm.principal-Math.min(p.extra,pm.principal))}</span></div>
+      <div class="rr ded${p.box==='box1'&&p.deductionYears>0?'':' inactive'}"><span class="rl">− HRA (${p.taxRate}%)</span><span class="rv">− ${fmt(p.box==='box1'&&p.deductionYears>0?h:0)}</span></div>
+      <div class="rr ext${p.extra>0?'':' inactive'}"><span class="rl">+ Extra aflossing</span><span class="rv">+ ${fmt(p.extra>0?p.extra:0)}</span></div>
+      <div class="rr gft${giftShow?'':' inactive'}"><span class="rl">− Terugschenking</span><span class="rv">− ${fmt(giftShow?gift:0)}</span></div>
+      <div class="rr net"><span class="rl">Netto last</span><span class="rv">${fmt(isLast?Math.max(0,fNetG-(i>0?S.family.slice(0,i).reduce((s,pp)=>{const m2=loanMonthPart(pp,1);return s+m2.total-hraP(pp,m2.interest,1);},0):0)):Math.max(0,pm.total-h))}</span></div>
+    </div>`;
+  }).join('');
+
+  const bankColsHtml = S.bank.map((p, i) => {
+    const pm = loanMonthPart(p,1);
+    const h  = hraP(p, pm.interest, 1);
+    const net = Math.max(0, pm.total - h);
+    const col = partColor('bank', i);
+    const tag_type = `<span class="type-tag" style="background:#e8f0fe;color:#1a56db">${typeLabel(p.type)}</span>`;
+    const tag_box  = `<span class="box-pill ${p.box==='box1'?'b1':'b3'}">${p.box==='box1'?'Box 1':'Box 3'}</span>`;
+    return `<div class="rc">
+      <h3 style="color:${col}">🏦 Bank deel ${i+1}</h3>
+      <div class="rc-tags">${tag_type}${tag_box}</div>
+      <div class="rr"><span class="rl">Bruto last</span><span class="rv">${fmt(pm.total)}</span></div>
+      <div class="rr sub"><span class="rl">↳ Rente</span><span class="rv">${fmt(pm.interest)}</span></div>
+      <div class="rr sub"><span class="rl">↳ Aflossing</span><span class="rv">${fmt(pm.principal-Math.min(p.extra,pm.principal))}</span></div>
+      <div class="rr ded${p.box==='box1'&&p.deductionYears>0?'':' inactive'}"><span class="rl">− HRA (${p.taxRate}%)</span><span class="rv">− ${fmt(p.box==='box1'&&p.deductionYears>0?h:0)}</span></div>
+      <div class="rr ext${p.extra>0?'':' inactive'}"><span class="rl">+ Extra aflossing</span><span class="rv">+ ${fmt(p.extra>0?p.extra:0)}</span></div>
+      <div class="rr gft inactive"><span class="rl">− Terugschenking</span><span class="rv">− ${fmt(0)}</span></div>
+      <div class="rr net"><span class="rl">Netto last</span><span class="rv">${fmt(net)}</span></div>
+    </div>`;
+  }).join('');
+
+  const totalCol = `<div class="rc">
+    <h3>📊 Totaal</h3>
+    <div class="rc-tags"><span style="font-size:11px;color:rgba(255,255,255,.35)">Alle leningdelen · maand 1</span></div>
+    <div class="rr"><span class="rl">Bruto last</span><span class="rv">${fmt(tBruto)}</span></div>
+    <div class="rr sub"><span class="rl">↳ Rente</span><span class="rv">${fmt(bT.interest+fT.interest)}</span></div>
+    <div class="rr sub"><span class="rl">↳ Aflossing</span><span class="rv">${fmt(bT.principal+fT.principal-tExtra)}</span></div>
+    <div class="rr ded${tTax>0?'':' inactive'}"><span class="rl">− Totaal HRA</span><span class="rv">− ${fmt(tTax)}</span></div>
+    <div class="rr ext${tExtra>0?'':' inactive'}"><span class="rl">+ Extra aflossing</span><span class="rv">+ ${fmt(tExtra)}</span></div>
+    <div class="rr gft${gift>0?'':' inactive'}"><span class="rl">− Terugschenking</span><span class="rv">− ${fmt(gift)}</span></div>
+    <div class="rr net"><span class="rl">Netto last</span><span class="rv">${fmt(tNet)}</span></div>
+  </div>`;
+
+  document.getElementById('result-grid').innerHTML = bankColsHtml + familyCols + totalCol;
+
+  // Sum bar
+  document.getElementById('sum-bar').innerHTML = `
+    <div class="si"><div class="sl">Totale hypotheek</div><div class="sv">${fmtShort(totalAmount('bank')+totalAmount('family'))}</div></div>
+    <div class="sdv"></div>
+    <div class="si"><div class="sl">Bruto / mnd</div><div class="sv">${fmt(tBruto)}</div></div>
+    <div class="sdv"></div>
+    <div class="si"><div class="sl">HRA voordeel</div><div class="sv" style="color:#6ee7b7">−${fmt(tTax)}</div></div>
+    ${tExtra>0?`<div class="sdv"></div><div class="si"><div class="sl">Extra aflossing</div><div class="sv" style="color:#fbbf24">+${fmt(tExtra)}</div></div>`:''}
+    <div class="sdv"></div>
+    <div class="si"><div class="sl">Terugschenking</div><div class="sv" style="color:#fcd34d">−${fmt(gift)}</div></div>
+    <div class="sdv"></div>
+    <div class="si"><div class="sl">✓ Netto / mnd</div><div class="sv acc">${fmt(tNet)}</div></div>
+  `;
+
+  // Year blocks
+  let yh='';
+  ['bank','family'].forEach(who=>{
+    S[who].forEach((p,i)=>{
+      if(p.box!=='box1') return;
+      const r=p.deductionYears, col=partColor(who,i);
+      yh+=`<div class="yblock" style="border-color:${col}20">
+        <div class="yt" style="color:${col}">${who==='bank'?'🏦 Bank':'👨‍👩‍👧 Familie'} deel ${i+1}</div>
+        <div class="yn">${r>0
+          ?`<span class="ybadge">${r} jr resterend</span> Aftrek t/m ca. ${2026+r}.${r<p.term?' <em>Looptijd langer dan aftrek.</em>':''}`
+          :`<span class="ybadge exp">Verlopen</span> Geen HRA meer.`}
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('yblocks').innerHTML = yh;
+
+  const g=document.getElementById('result-grid');
+  g.classList.remove('upflash'); void g.offsetWidth; g.classList.add('upflash');
+
+  clearTimeout(window._ct);
+  window._ct = setTimeout(renderCharts, 80);
+}
+
+/* ═══════════════ CHARTS ═══════════════ */
+let chartMain=null, chartBankDebt=null, chartFamilyDebt=null;
+const fmtK = v=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
+const tickCb = labels=>(v,i)=>{ if(labels.length>25&&(i+1)%5!==0&&i!==0) return ''; return labels[i]; };
+
+function loanMonthGroup(who, monthIdx, yearIdx){
+  return S[who].reduce((acc,p)=>{
+    const pm=loanMonthPart(p,monthIdx);
+    const h=hraP(p,pm.interest,yearIdx);
+    acc.total+=pm.total; acc.interest+=pm.interest; acc.tax+=h; acc.extra+=p.extra; acc.balance+=pm.balance;
+    return acc;
+  },{total:0,interest:0,tax:0,extra:0,balance:0});
+}
+
+function renderCharts(){
+  const maxYrs = Math.max(totalTerm('bank'), totalTerm('family'));
+  const labels=[], dBank=[], dFamily=[], dNet=[];
+  const labelsB=[], debtB=[], labelsF=[], debtF=[];
+
+  for(let yr=1;yr<=maxYrs;yr++){
+    const m=(yr-1)*12+1;
+    labels.push(`J${yr}`);
+    const bg=loanMonthGroup('bank',m,yr);
+    const fg=loanMonthGroup('family',m,yr);
+    const bNet=Math.max(0,bg.total-bg.tax);
+    const fNet=Math.max(0,fg.total-fg.tax-(S.gift.target==='family'?S.gift.amount:0));
+    const gOff=S.gift.target==='total'?S.gift.amount:0;
+    dBank.push(Math.max(0,bNet));
+    dFamily.push(Math.max(0,fNet));
+    dNet.push(Math.max(0,bNet+fNet-gOff));
+  }
+  for(let yr=1;yr<=totalTerm('bank')+1;yr++){
+    labelsB.push(`J${yr}`);
+    debtB.push(loanMonthGroup('bank',(yr-1)*12+1,yr).balance);
+  }
+  for(let yr=1;yr<=totalTerm('family')+1;yr++){
+    labelsF.push(`J${yr}`);
+    debtF.push(loanMonthGroup('family',(yr-1)*12+1,yr).balance);
+  }
+
+  document.getElementById('bank-debt-start').textContent = fmtK(totalAmount('bank'));
+  document.getElementById('family-debt-start').textContent = fmtK(totalAmount('family'));
+
+  document.getElementById('chart-legend').innerHTML=`
+    <div class="leg-item"><div class="leg-dot" style="background:#003057"></div>Banklening netto</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#E5A138"></div>Familielening netto</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#7c3aed;opacity:.8"></div>Totale netto last</div>`;
+
+  const baseOpts=(labels,titleColor)=>({
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2d40',titleColor,bodyColor:'rgba(255,255,255,.85)',padding:11,cornerRadius:10,
+      callbacks:{label:c=>` ${c.dataset.label}: ${fmtK(c.parsed.y)}`}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10,family:'DM Sans'},color:'#8a9ab0',callback:tickCb(labels)}},
+      y:{grid:{color:'rgba(0,0,0,.04)'},min:0,ticks:{font:{size:10,family:'DM Sans'},color:'#8a9ab0',callback:fmtK}}
+    }
+  });
+
+  if(chartMain) chartMain.destroy();
+  chartMain=new Chart(document.getElementById('the-chart').getContext('2d'),{
+    data:{labels,datasets:[
+      {type:'bar',label:'Banklening netto',data:dBank,backgroundColor:'rgba(0,48,87,.80)',borderRadius:3,stack:'s',order:2},
+      {type:'bar',label:'Familielening netto',data:dFamily,backgroundColor:'rgba(229,161,56,.80)',borderRadius:3,stack:'s',order:2},
+      {type:'line',label:'Totale netto last',data:dNet,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.05)',borderWidth:2.5,pointRadius:2,pointBackgroundColor:'#7c3aed',fill:false,tension:.3,order:1}
+    ]},
+    options:{...baseOpts(labels,'#E5A138'),scales:{
+      x:{stacked:true,grid:{display:false},ticks:{font:{size:10,family:'DM Sans'},color:'#8a9ab0',callback:tickCb(labels)}},
+      y:{stacked:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:10,family:'DM Sans'},color:'#8a9ab0',callback:fmtK}}
+    }}
+  });
+
+  if(chartBankDebt) chartBankDebt.destroy();
+  chartBankDebt=new Chart(document.getElementById('chart-bank-debt').getContext('2d'),{
+    type:'line',
+    data:{labels:labelsB,datasets:[{label:'Schuldrest banklening',data:debtB,borderColor:'#003057',backgroundColor:'rgba(0,48,87,.08)',borderWidth:2.5,pointRadius:2,fill:true,tension:.2}]},
+    options:baseOpts(labelsB,'#6eb4ff')
+  });
+
+  if(chartFamilyDebt) chartFamilyDebt.destroy();
+  chartFamilyDebt=new Chart(document.getElementById('chart-family-debt').getContext('2d'),{
+    type:'line',
+    data:{labels:labelsF,datasets:[{label:'Schuldrest familielening',data:debtF,borderColor:'#E5A138',backgroundColor:'rgba(229,161,56,.08)',borderWidth:2.5,pointRadius:2,fill:true,tension:.2}]},
+    options:baseOpts(labelsF,'#E5A138')
+  });
+}
+
+/* ═══════════════ AVG RATE ═══════════════ */
+// Reference rates: average 10-yr fixed ING, Rabobank, ABN AMRO – Q1 2026
+const BANK_RATES = [
+  { name: 'ING',       rate: 3.90 },
+  { name: 'Rabobank',  rate: 3.95 },
+  { name: 'ABN AMRO',  rate: 3.85 }
+];
+const AVG_RATE = +(BANK_RATES.reduce((s,b)=>s+b.rate,0)/BANK_RATES.length).toFixed(2);
+
+function renderAvgRateBlock(){
+  const el = document.getElementById('avg-rate-display');
+  const sub = document.getElementById('avg-rate-sub');
+  if(!el) return;
+  el.textContent = AVG_RATE.toFixed(2).replace('.',',') + ' %';
+  sub.innerHTML = 'Gemiddelde van <strong>' + BANK_RATES.map(b=>b.name).join(', ') + '</strong> ('
+    + BANK_RATES.map(b=>b.name+' '+b.rate.toFixed(2).replace('.',',')+'%').join(' · ') + ').<br>'
+    + 'De Belastingdienst eist een <strong>zakelijke (marktconforme) rente</strong> bij een familielening. '
+    + 'Controleer actuele tarieven via '
+    + '<a href="https://www.hypotheekrente.nl" target="_blank" rel="noopener" style="color:#1d4ed8;font-weight:700;border-bottom:1.5px solid #bfdbfe;text-decoration:none">hypotheekrente.nl ↗</a>.';
+}
+
+function applyAvgRate(){
+  S.family.forEach(p => { p.rate = AVG_RATE; });
+  renderParts('family');
+  if(!S.gift.manual) applyGift(calcDefaultGift(), false);
+  calculate();
+}
+
+/* ═══════════════ INIT ═══════════════ */
+document.getElementById('gift-amount').addEventListener('input', e=>{
+  applyGift(parseFloat(e.target.value)||0, true);
+  clearTimeout(window._calcTimer);
+  window._calcTimer = setTimeout(calculate, 120);
+});
+
+renderParts('bank');
+renderParts('family');
+renderAvgRateBlock();
+applyGift(calcDefaultGift(), false);
+calculate();
+</script>
+</body>
+</html>

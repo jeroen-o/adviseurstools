@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verhuurrendement Calculator — Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#004580;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#333;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--shadow:0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;margin-top:1px;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:980px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:22px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:14px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:19px;}
+.card-body{padding:22px;}
+
+.fg{display:grid;gap:14px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.s2{grid-column:span 2;}
+.s3{grid-column:1/-1;}
+.s4{grid-column:1/-1;}
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:48px;}
+
+/* OBJECT TYPE TABS */
+.obj-tabs{display:flex;gap:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px;}
+.obj-tab{flex:1;padding:12px 8px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);background:#fff;border:none;transition:all .18s;border-right:1.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:3px;}
+.obj-tab:last-child{border-right:none;}
+.obj-tab.active{background:var(--navy);color:#fff;}
+.obj-tab .ti{font-size:20px;}
+
+/* SNELLE DEFAULTS */
+.quick-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.quick-btn{padding:5px 12px;border-radius:16px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--navy);transition:all .15s;}
+.quick-btn:hover{border-color:var(--navy);background:#F0F4F8;}
+
+/* BTN */
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;letter-spacing:.01em;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* RENDEMENT SCORECARD */
+.scorecard{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.score-item{border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;}
+.score-item.bruto{background:#EFF4F9;border:2px solid #C5D8E8;}
+.score-item.netto{background:var(--grlt);border:2px solid #A7DFC2;}
+.score-item.cash{background:var(--gold-lt);border:2px solid #F4C878;}
+.score-item.rood{background:var(--redlt);border:2px solid #F5B7B1;}
+.score-val{font-family:'DM Serif Display',serif;font-size:36px;color:var(--navy);line-height:1;}
+.score-lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.score-sub{font-size:11px;color:var(--muted);}
+.score-oordeel{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:10px;}
+.oordeel-goed{background:var(--grlt);color:var(--green);}
+.oordeel-matig{background:var(--orglt);color:var(--orange);}
+.oordeel-slecht{background:var(--redlt);color:var(--red);}
+
+/* CASHFLOW METER */
+.cf-meter{background:#F0F4F8;border-radius:10px;padding:16px 18px;margin-bottom:4px;}
+.cf-meter-titel{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.cf-bar-bg{height:22px;background:#e2e8f0;border-radius:11px;overflow:hidden;position:relative;margin-bottom:6px;}
+.cf-fill{height:100%;display:flex;}
+.cf-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:#fff;min-width:0;overflow:hidden;}
+
+/* DETAIL TABEL */
+.dtbl{width:100%;border-collapse:collapse;font-size:13.5px;}
+.dtbl thead th{background:var(--navy);color:#fff;padding:9px 14px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.dtbl thead th:not(:first-child){text-align:right;}
+.dtbl td{padding:8px 14px;border-bottom:1px solid var(--border);}
+.dtbl td:not(:first-child){text-align:right;}
+.dtbl tr:last-child td{border-bottom:none;}
+.dtbl tr:hover td{background:#F8FAFB;}
+.dtbl .cat{font-weight:700;color:var(--navy);background:#F8FAFB;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+.dtbl .subtotal td{font-weight:700;border-top:2px solid var(--border);}
+.dtbl .pos{color:var(--green);font-weight:700;}
+.dtbl .neg{color:var(--red);font-weight:700;}
+.dtbl .indent{padding-left:28px!important;}
+
+/* METRICS ROW */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
+.mbox{border-radius:11px;padding:16px 18px;display:flex;flex-direction:column;gap:3px;}
+.mbox.navy{background:#EFF4F9;border:1.5px solid #C5D8E8;}
+.mbox.gold{background:var(--gold-lt);border:1.5px solid #F4C878;}
+.mbox.green{background:var(--grlt);border:1.5px solid #A7DFC2;}
+.mbox.red{background:var(--redlt);border:1.5px solid #F5B7B1;}
+.mbox.orange{background:var(--orglt);border:1.5px solid #FCD34D;}
+.mbox .ml{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.mbox .mv{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);line-height:1.1;}
+.mbox .ms{font-size:11.5px;color:var(--muted);margin-top:1px;}
+
+/* GRAFIEK */
+.canvas-wrap{position:relative;height:270px;}
+canvas{width:100%!important;}
+.graf-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.graf-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s;}
+.graf-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* ADVIESBOX */
+.advies-box{background:linear-gradient(135deg,#EFF4F9 0%,#F8FAFB 100%);border:1.5px solid #C5D8E8;border-radius:12px;padding:18px 20px;font-size:13px;line-height:1.75;}
+.advies-box h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+.advies-punt{display:flex;gap:8px;margin-bottom:6px;}
+.advies-punt .ap-ico{flex-shrink:0;}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .fg2,.fg3,.fg4{grid-template-columns:1fr;}
+  .s2,.s3,.s4{grid-column:span 1;}
+  .scorecard{grid-template-columns:1fr;}
+  .metrics-row{grid-template-columns:1fr 1fr;}
+  .h-badges{display:none;}
+}
+@media(max-width:420px){.main{padding:14px 10px 60px;}.card-body{padding:14px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🏘️</div>
+    <div>
+      <div class="h-title">Verhuurrendement Calculator</div>
+      <div class="h-sub">Bruto/netto rendement · Box 3 · VVE · financieringslasten · cashflow</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">Box 3 2026</span>
+    <span class="badge gold">Cashflow</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">🏠</div>Vastgoedobject</div>
+    <div class="card-body">
+
+      <!-- OBJECT TYPE -->
+      <div class="sdiv" style="margin-bottom:12px;">Type object</div>
+      <div class="obj-tabs" style="margin-bottom:0;">
+        <button class="obj-tab active" id="tab-woning" onclick="setType('woning',this)">
+          <span class="ti">🏠</span><span>Woning</span>
+        </button>
+        <button class="obj-tab" id="tab-appartement" onclick="setType('appartement',this)">
+          <span class="ti">🏢</span><span>Appartement</span>
+        </button>
+        <button class="obj-tab" id="tab-commercieel" onclick="setType('commercieel',this)">
+          <span class="ti">🏪</span><span>Commercieel</span>
+        </button>
+        <button class="obj-tab" id="tab-vakantie" onclick="setType('vakantie',this)">
+          <span class="ti">🏖️</span><span>Vakantiewoning</span>
+        </button>
+      </div>
+
+      <!-- SNELLE DEFAULTS -->
+      <div style="margin:10px 0 18px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Snel invullen met voorbeeldwaarden:</div>
+        <div class="quick-btns">
+          <button class="quick-btn" onclick="setDefaults('starter')">Starterswoning €250k</button>
+          <button class="quick-btn" onclick="setDefaults('mid')">Gezinswoning €400k</button>
+          <button class="quick-btn" onclick="setDefaults('commercieel')">Kantoorpand €500k</button>
+          <button class="quick-btn" onclick="setDefaults('vakantie')">Vakantiewoning €350k</button>
+        </div>
+      </div>
+
+      <div class="fg fg3" style="margin-bottom:18px;">
+        <div class="sdiv s3">Aankoopwaarde & financiering</div>
+
+        <div class="field">
+          <label>Aankoopprijs / marktwaarde</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="aankoopprijs" value="350000" min="50000" step="5000" oninput="updateHints()">
+          </div>
+          <span class="hint" id="wozHint"></span>
+        </div>
+        <div class="field">
+          <label>WOZ-waarde (peildatum 1-1-2026)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="wozWaarde" value="330000" min="0" step="5000" oninput="updateHints()">
+          </div>
+          <span class="hint">Box 3 berekening op WOZ-waarde (6% forfait)</span>
+        </div>
+        <div class="field">
+          <label>Overdrachtsbelasting</label>
+          <select id="ovbTarief" onchange="updateHints()">
+            <option value="0.02">2% — starters (eigen gebruik eerst)</option>
+            <option value="0.10" selected>10,4% — verhuur / beleggers</option>
+            <option value="0.09">9% — vorig tarief</option>
+            <option value="0">0% — geen (al in bezit)</option>
+          </select>
+          <span class="hint" id="ovbHint"></span>
+        </div>
+
+        <div class="field">
+          <label>Hypotheek op dit object</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="hypotheek" value="200000" min="0" step="5000" oninput="updateHints()">
+          </div>
+          <span class="hint" id="ltv-hint"></span>
+        </div>
+        <div class="field">
+          <label>Hypotheekrente</label>
+          <div class="iw"><span class="pre">%</span>
+            <input type="number" id="hyprente" value="4.50" min="0.01" max="15" step="0.01" class="rs" style="padding-left:26px;padding-right:42px;">
+          </div>
+          <span class="hint">Verhuurhypotheek: doorgaans 0,5-1% hoger dan eigenbewoningshyp.</span>
+        </div>
+        <div class="field">
+          <label>Aflossing per jaar (optioneel)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="aflossing" value="0" min="0" step="500">
+          </div>
+          <span class="hint">0 = aflossingsvrij · of vul jaarlijkse aflossing in</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Huurinkomsten</div>
+
+        <div class="field">
+          <label>Maandelijkse kale huur</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="huurMnd" value="1500" min="100" step="50" oninput="updateHints()">
+          </div>
+          <span class="hint" id="brutobrendHint"></span>
+        </div>
+        <div class="field">
+          <label>Leegstandsrisico</label>
+          <select id="leegstand">
+            <option value="0">0% — altijd verhuurd</option>
+            <option value="4" selected>4% — goed verhuurd (~2-3 wkn/jaar)</option>
+            <option value="8">8% — gemiddeld (~1 maand/jaar)</option>
+            <option value="12">12% — lastig object (~6 weken/jaar)</option>
+            <option value="20">20% — commercieel risico</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Jaarlijkse huurstijging</label>
+          <div class="iw">
+            <input type="number" id="huurStijging" value="3.0" min="0" max="10" step="0.5" class="rs" style="padding-right:42px;">
+            <span class="suf">%</span>
+          </div>
+          <span class="hint">CPI 2024: ~2,7% · Gereguleerd: max. huurprijsindex</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Kosten</div>
+
+        <div class="fg fg4 s3" style="gap:12px;">
+          <div class="field">
+            <label>VVE-bijdrage / jaar</label>
+            <div class="iw"><span class="pre">€</span>
+              <input type="number" id="vveJaar" value="0" min="0" step="100">
+            </div>
+            <span class="hint">Appartement: €1.200–€4.000/jr typisch</span>
+          </div>
+          <div class="field">
+            <label>Onderhoud / jaar</label>
+            <div class="iw"><span class="pre">€</span>
+              <input type="number" id="onderhoudJaar" value="1500" min="0" step="100">
+            </div>
+            <span class="hint">Vuistregel: 1–2% van aankoopprijs</span>
+          </div>
+          <div class="field">
+            <label>Beheerkosten / jaar</label>
+            <div class="iw"><span class="pre">€</span>
+              <input type="number" id="beheerJaar" value="0" min="0" step="100">
+            </div>
+            <span class="hint">Verhuurmakelaar: ~8-10% van jaarhuur</span>
+          </div>
+          <div class="field">
+            <label>Verzekering / jaar</label>
+            <div class="iw"><span class="pre">€</span>
+              <input type="number" id="verzekeringJaar" value="600" min="0" step="50">
+            </div>
+            <span class="hint">Opstalverzekering verhuurpand</span>
+          </div>
+          <div class="field">
+            <label>OZB / gemeenteheffingen / jr</label>
+            <div class="iw"><span class="pre">€</span>
+              <input type="number" id="ozbJaar" value="500" min="0" step="50">
+            </div>
+          </div>
+          <div class="field">
+            <label>Overige kosten / jaar</label>
+            <div class="iw"><span class="pre">€</span>
+              <input type="number" id="overigeKosten" value="300" min="0" step="100">
+            </div>
+            <span class="hint">Accountant, kleine reparaties etc.</span>
+          </div>
+          <div class="field">
+            <label>Box 3 belasting (wordt berekend)</label>
+            <div class="iw"><span class="pre">€</span>
+              <input type="number" id="box3Belasting" value="0" readonly style="background:#F4F7F9;">
+            </div>
+            <span class="hint">6% × WOZ · 36% tarief · HVV €59.357</span>
+          </div>
+          <div class="field">
+            <label>Fiscale partner</label>
+            <select id="fiscPartner">
+              <option value="0">Nee — HVV €59.357</option>
+              <option value="1">Ja — HVV €118.714</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Waardeontwikkeling</div>
+
+        <div class="field">
+          <label>Verwachte jaarlijkse waardestijging</label>
+          <div class="iw">
+            <input type="number" id="waardestijging" value="3.0" min="-5" max="15" step="0.5" class="rs" style="padding-right:42px;">
+            <span class="suf">%</span>
+          </div>
+          <span class="hint">Nederland gemiddeld 2000-2023: ~5,2%/jr · conservatief: 2-3%</span>
+        </div>
+        <div class="field">
+          <label>Analysehorizon</label>
+          <div class="iw">
+            <input type="number" id="horizon" value="10" min="1" max="30" step="1" class="rs" style="padding-right:50px;">
+            <span class="suf">jaar</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Inkomstenbelastingtarief</label>
+          <select id="ibTarief">
+            <option value="0.3575">35,75% — schijf 1</option>
+            <option value="0.3756" selected>37,56% — schijf 2</option>
+          </select>
+          <span class="hint">Huurinkomsten zijn onbelast in box 3 (niet box 1)</span>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">🏘️ Bereken verhuurrendement</button>
+    </div>
+  </div>
+
+  <!-- SCORECARD -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Resultaat — <span id="resSubtitle">rendement & cashflow</span></div>
+    <div class="card-body">
+      <div class="scorecard" id="scorecard"></div>
+      <div class="cf-meter" id="cfMeter"></div>
+    </div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="card res-card" id="tblCard">
+    <div class="card-header"><div class="ico">📋</div>Gedetailleerde cashflow & rendement</div>
+    <div class="card-body">
+      <div style="overflow-x:auto;">
+        <table class="dtbl" id="detailTbl"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="card res-card" id="metricsCard">
+    <div class="card-header"><div class="ico">📊</div>Kerncijfers & scenario's</div>
+    <div class="card-body">
+      <div class="metrics-row" id="metricsRow"></div>
+    </div>
+  </div>
+
+  <!-- GRAFIEK -->
+  <div class="card res-card" id="grafCard">
+    <div class="card-header"><div class="ico">📈</div>Analyse over <span id="grafTitel">10 jaar</span></div>
+    <div class="card-body">
+      <div class="graf-tabs">
+        <button class="graf-tab active" onclick="setGraf('cashflow',this)">Cashflow & rendement</button>
+        <button class="graf-tab" onclick="setGraf('verloop',this)">Vermogensopbouw</button>
+        <button class="graf-tab" onclick="setGraf('kosten',this)">Kostenverdeling</button>
+        <button class="graf-tab" onclick="setGraf('scenario',this)">Huurscenario's</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="grafiek"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ADVIES -->
+  <div class="card res-card" id="adviesCard">
+    <div class="card-header"><div class="ico">🧑‍💼</div>Advies & aandachtspunten</div>
+    <div class="card-body">
+      <div class="advies-box" id="adviesBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONSTANTEN BOX 3 2026 ──────────────────────────────────────────────────
+const B3 = { forfait:0.06, tarief:0.36, hvv:59357, schuld_drempel:3800 };
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let objType = 'woning';
+let grafModus = 'cashflow';
+let grafObj = null;
+let lastResult = null;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n,dec=0){ if(isNaN(n)||n===null) return '—'; const neg=n<0; return (neg?'−\u00A0':'')+'\u00A0€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtPct(n,dec=2){ return n.toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+'%'; }
+
+// ── TYPE & DEFAULTS ────────────────────────────────────────────────────────
+function setType(t,btn){ objType=t; document.querySelectorAll('.obj-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+
+function setDefaults(preset){
+  const p = {
+    starter: { aankoopprijs:250000, wozWaarde:235000, hypotheek:150000, hyprente:5.00, huurMnd:1100, vveJaar:0, onderhoudJaar:1200, beheerJaar:0, verzekeringJaar:450, ozbJaar:350, waardestijging:3.0 },
+    mid:     { aankoopprijs:400000, wozWaarde:380000, hypotheek:240000, hyprente:4.75, huurMnd:1800, vveJaar:0, onderhoudJaar:2500, beheerJaar:1500, verzekeringJaar:750, ozbJaar:600, waardestijging:3.0 },
+    commercieel: { aankoopprijs:500000, wozWaarde:470000, hypotheek:300000, hyprente:5.50, huurMnd:3500, vveJaar:0, onderhoudJaar:5000, beheerJaar:0, verzekeringJaar:1800, ozbJaar:2500, waardestijging:2.0 },
+    vakantie:{ aankoopprijs:350000, wozWaarde:330000, hypotheek:200000, hyprente:5.25, huurMnd:2000, vveJaar:2400, onderhoudJaar:4000, beheerJaar:3500, verzekeringJaar:900, ozbJaar:500, waardestijging:4.0 },
+  };
+  const d = p[preset];
+  if(!d) return;
+  Object.entries(d).forEach(([id,val]) => { const el=document.getElementById(id); if(el) el.value=val; });
+  updateHints();
+}
+
+function updateHints(){
+  const ap = N('aankoopprijs'), huur = N('huurMnd'), hyp = N('hypotheek');
+  const ovb = parseFloat(document.getElementById('ovbTarief').value||0);
+  const ovbBedrag = ap * ovb;
+  document.getElementById('wozHint').textContent = ap>0 ? `Totale investering incl. OVB: ${fmt(ap + ovbBedrag)}` : '';
+  document.getElementById('ovbHint').textContent = ovb>0 ? `Overdrachtsbelasting: ${fmt(ap*ovb)} (${fmtPct(ovb*100)})` : 'Geen overdrachtsbelasting';
+  document.getElementById('ltv-hint').textContent = ap>0 ? `LTV: ${fmtPct(hyp/ap*100)} · Eigen inbreng: ${fmt(ap-hyp)}` : '';
+  const jaarhuur = huur * 12;
+  const brutoRend = ap>0 ? jaarhuur/ap*100 : 0;
+  document.getElementById('brutobrendHint').textContent = huur>0 && ap>0 ? `Bruto huurrendement: ${fmtPct(brutoRend)} (${fmt(jaarhuur)}/jaar)` : '';
+  berekenBox3Preview();
+}
+
+function berekenBox3Preview(){
+  const woz = N('wozWaarde'), hyp = N('hypotheek');
+  const partner = parseInt(document.getElementById('fiscPartner').value||0);
+  const hvv = B3.hvv * (partner+1);
+  const schuldDrempel = B3.schuld_drempel * (partner+1);
+  const schuldenEff = Math.max(0, hyp - schuldDrempel);
+  const vermogen = Math.max(0, woz - schuldenEff);
+  const grondslag = Math.max(0, vermogen - hvv);
+  const rend = woz * B3.forfait - schuldenEff * 0.027;
+  const aandeel = vermogen > 0 ? Math.min(1, Math.max(0, grondslag/vermogen)) : 0;
+  const belasting = Math.max(0, rend * aandeel) * B3.tarief;
+  document.getElementById('box3Belasting').value = Math.round(belasting);
+}
+
+// ── BEREKEN ────────────────────────────────────────────────────────────────
+function bereken(){
+  const ap        = N('aankoopprijs');
+  const woz       = N('wozWaarde');
+  const hyp       = N('hypotheek');
+  const hypRente  = N('hyprente') / 100;
+  const aflossing = N('aflossing');
+  const ovb       = parseFloat(document.getElementById('ovbTarief').value);
+  const huurMnd   = N('huurMnd');
+  const leegstand = N('leegstand') / 100;
+  const huurStijg = N('huurStijging') / 100;
+  const waardestijg = N('waardestijging') / 100;
+  const horizon   = Math.round(N('horizon'));
+  const partner   = parseInt(document.getElementById('fiscPartner').value||0);
+
+  // Kosten
+  const vveJaar       = N('vveJaar');
+  const onderhoudJaar = N('onderhoudJaar');
+  const beheerJaar    = N('beheerJaar');
+  const verzJaar      = N('verzekeringJaar');
+  const ozbJaar       = N('ozbJaar');
+  const overigeKosten = N('overigeKosten');
+
+  if(ap<=0||huurMnd<=0){ alert('Vul aankoopprijs en huurinkomsten in.'); return; }
+
+  // Totale investering
+  const ovbBedrag = ap * ovb;
+  const totaalInvestering = ap + ovbBedrag;
+  const eigenInbreng = totaalInvestering - hyp;
+
+  // Jaarlijkse huurinkomsten
+  const huurJaar = huurMnd * 12 * (1 - leegstand);
+
+  // Box 3 berekening
+  const hvv = B3.hvv * (partner+1);
+  const schuldDrempel = B3.schuld_drempel * (partner+1);
+  const schuldenEff0 = Math.max(0, hyp - schuldDrempel);
+  const vermogen0 = Math.max(0, woz - schuldenEff0);
+  const grondslag0 = Math.max(0, vermogen0 - hvv);
+  const rendB3 = woz * B3.forfait - schuldenEff0 * 0.027;
+  const aandeel0 = vermogen0 > 0 ? Math.min(1, Math.max(0, grondslag0/vermogen0)) : 0;
+  const box3Belasting = Math.max(0, rendB3 * aandeel0) * B3.tarief;
+  document.getElementById('box3Belasting').value = Math.round(box3Belasting);
+
+  // Jaarlijkse financieringslasten (rente)
+  const renteLastJaar = hyp * hypRente;
+
+  // Totale exploitatiekosten jaar 1
+  const totaleKosten = vveJaar + onderhoudJaar + beheerJaar + verzJaar + ozbJaar + overigeKosten + box3Belasting;
+  const totaleLasten = totaleKosten + renteLastJaar; // zonder aflossing (niet-cashflow)
+
+  // Cashflow (na rente en alle kosten, VOOR aflossing)
+  const cashflowJaar = huurJaar - totaleLasten;
+  const cashflowMnd  = cashflowJaar / 12;
+
+  // Rendementen
+  const brutoRend = huurJaar / ap * 100;
+  const nettoRend = (huurJaar - totaleKosten) / ap * 100; // huurrendement na kosten
+  const cashonCash = eigenInbreng > 0 ? cashflowJaar / eigenInbreng * 100 : 0;
+
+  // Totaalrendement inclusief waardestijging (jaar 1)
+  const waardestijgingJaar = ap * waardestijg;
+  const totaalRend = (cashflowJaar + waardestijgingJaar) / eigenInbreng * 100;
+
+  // Multiyear simulatie
+  const jaarData = [];
+  let hypSaldo = hyp, pandWaarde = ap;
+  let cumCashflow = -eigenInbreng; // begint negatief (investering)
+  let breakEven = null;
+
+  for(let jr=1; jr<=horizon; jr++){
+    const huurJrThis = huurMnd * Math.pow(1+huurStijg, jr-1) * 12 * (1-leegstand);
+    const wozThis = woz * Math.pow(1+waardestijg, jr-1);
+    pandWaarde = ap * Math.pow(1+waardestijg, jr-1);
+
+    // Box 3 update
+    const schuldenEffThis = Math.max(0, hypSaldo - schuldDrempel);
+    const vermogenThis = Math.max(0, wozThis - schuldenEffThis);
+    const grondThis = Math.max(0, vermogenThis - hvv);
+    const rendB3This = wozThis * B3.forfait - schuldenEffThis * 0.027;
+    const aandeelThis = vermogenThis > 0 ? Math.min(1, Math.max(0, grondThis/vermogenThis)) : 0;
+    const b3This = Math.max(0, rendB3This * aandeelThis) * B3.tarief;
+
+    const renteThis = hypSaldo * hypRente;
+    const kostenThis = vveJaar + onderhoudJaar + beheerJaar + verzJaar + ozbJaar + overigeKosten + b3This;
+    const cashThis = huurJrThis - kostenThis - renteThis;
+
+    cumCashflow += cashThis;
+    if(breakEven === null && cumCashflow >= 0) breakEven = jr;
+
+    jaarData.push({
+      jr, pandWaarde, hypSaldo, eigen: pandWaarde - hypSaldo,
+      huurJrThis, renteThis, kostenThis, b3This,
+      cashThis, cumCashflow,
+      nettoRend: (huurJrThis - kostenThis) / pandWaarde * 100,
+    });
+
+    hypSaldo = Math.max(0, hypSaldo - aflossing);
+  }
+
+  lastResult = { ap, woz, hyp, eigenInbreng, totaalInvestering, ovbBedrag,
+    huurJaar, huurMnd, leegstand, huurStijg, waardestijg, horizon,
+    brutoRend, nettoRend, cashonCash, totaalRend,
+    cashflowJaar, cashflowMnd, totaleKosten, totaleLasten, renteLastJaar,
+    vveJaar, onderhoudJaar, beheerJaar, verzJaar, ozbJaar, overigeKosten,
+    box3Belasting, jaarData, breakEven, totaalRend };
+
+  // ── SCORECARD ──
+  function oordeel(pct, laa, mid){ return pct>=mid?'goed':pct>=laa?'matig':'slecht'; }
+  const sc = document.getElementById('scorecard');
+  const cfKleur = cashflowMnd >= 0 ? 'netto' : 'rood';
+  sc.innerHTML = `
+    <div class="score-item bruto">
+      <div class="score-lbl">Bruto huurrendement</div>
+      <div class="score-val">${brutoRend.toFixed(1)}%</div>
+      <div class="score-sub">Jaarhuur ÷ aankoopprijs</div>
+      <span class="score-oordeel oordeel-${oordeel(brutoRend,5,7)}">${brutoRend>=7?'✓ Goed':brutoRend>=5?'~ Matig':'✗ Laag'}</span>
+    </div>
+    <div class="score-item netto">
+      <div class="score-lbl">Netto huurrendement</div>
+      <div class="score-val">${nettoRend.toFixed(1)}%</div>
+      <div class="score-sub">Na alle kosten & Box 3</div>
+      <span class="score-oordeel oordeel-${oordeel(nettoRend,3,5)}">${nettoRend>=5?'✓ Goed':nettoRend>=3?'~ Matig':'✗ Laag'}</span>
+    </div>
+    <div class="score-item ${cfKleur}">
+      <div class="score-lbl">Maandelijkse cashflow</div>
+      <div class="score-val">${cashflowMnd>=0?'+':''}${fmt(cashflowMnd,0)}</div>
+      <div class="score-sub">Na rente, kosten & belasting</div>
+      <span class="score-oordeel oordeel-${cashflowMnd>=200?'goed':cashflowMnd>=0?'matig':'slecht'}">${cashflowMnd>=200?'✓ Positief':cashflowMnd>=0?'~ Break-even':'✗ Negatief'}</span>
+    </div>`;
+
+  // ── CASHFLOW METER ──
+  const cfMeter = document.getElementById('cfMeter');
+  const rendPct = Math.min(100, huurJaar/totaleLasten*100);
+  const kostenPct = Math.min(100, totaleKosten/huurJaar*100);
+  const rentePct  = Math.min(100-kostenPct, renteLastJaar/huurJaar*100);
+  const restPct   = Math.max(0, 100-kostenPct-rentePct);
+  cfMeter.innerHTML = `
+    <div class="cf-meter-titel">Opbouw jaarhuur ${fmt(huurJaar)}</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+      <span style="color:var(--muted)">Hoe wordt de huur verdeeld?</span>
+      <span style="font-weight:600;color:${cashflowMnd>=0?'var(--green)':'var(--red)'}">Netto cashflow: ${fmt(cashflowJaar)}/jr</span>
+    </div>
+    <div class="cf-bar-bg"><div class="cf-fill">
+      <div class="cf-seg" style="width:${kostenPct.toFixed(1)}%;background:#6B21A8;">${kostenPct>10?'Kosten':''}  </div>
+      <div class="cf-seg" style="width:${rentePct.toFixed(1)}%;background:var(--orange);">${rentePct>8?'Rente':''}  </div>
+      <div class="cf-seg" style="width:${restPct.toFixed(1)}%;background:${restPct>0?'var(--green)':'var(--red)'};">${restPct>8?'Vrij':''}  </div>
+    </div></div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;"><div style="width:10px;height:10px;border-radius:50%;background:#6B21A8;flex-shrink:0;"></div>Kosten ${fmt(totaleKosten)} (${fmtPct(kostenPct,1)})</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;"><div style="width:10px;height:10px;border-radius:50%;background:var(--orange);flex-shrink:0;"></div>Rente ${fmt(renteLastJaar)} (${fmtPct(rentePct,1)})</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:12px;"><div style="width:10px;height:10px;border-radius:50%;background:${restPct>0?'var(--green)':'var(--red)'};flex-shrink:0;"></div>${restPct>0?'Vrije cashflow':'Tekort'} ${fmt(cashflowJaar)}</div>
+    </div>`;
+
+  // ── DETAIL TABEL ──
+  const dt = document.getElementById('detailTbl');
+  dt.innerHTML = `<thead><tr>
+    <th>Post</th><th style="text-align:right">Per maand</th>
+    <th style="text-align:right">Per jaar</th><th style="text-align:right">% van huur</th>
+  </tr></thead><tbody>
+    <tr class="cat"><td colspan="4">+ Inkomsten</td></tr>
+    <tr><td class="indent">Huurinkomsten (bruto)</td><td>${fmt(huurMnd*12/12,2)}</td><td>${fmt(huurMnd*12)}</td><td>107%</td></tr>
+    <tr><td class="indent">Leegstandskorting (${N('leegstand')}%)</td><td class="neg">${fmt(-(huurMnd*12*leegstand/12),2)}</td><td class="neg">${fmt(-(huurMnd*12*leegstand))}</td><td class="neg">−${fmtPct(leegstand*100)}</td></tr>
+    <tr class="subtotal"><td><strong>= Effectieve huur</strong></td><td><strong>${fmt(huurJaar/12,2)}</strong></td><td><strong>${fmt(huurJaar)}</strong></td><td><strong>100%</strong></td></tr>
+    
+    <tr class="cat"><td colspan="4">− Exploitatiekosten</td></tr>
+    ${vveJaar>0?`<tr><td class="indent">VVE-bijdrage</td><td>${fmt(vveJaar/12,2)}</td><td>${fmt(vveJaar)}</td><td>${fmtPct(vveJaar/huurJaar*100)}</td></tr>`:''}
+    <tr><td class="indent">Onderhoud</td><td>${fmt(onderhoudJaar/12,2)}</td><td>${fmt(onderhoudJaar)}</td><td>${fmtPct(onderhoudJaar/huurJaar*100)}</td></tr>
+    ${beheerJaar>0?`<tr><td class="indent">Beheerkosten</td><td>${fmt(beheerJaar/12,2)}</td><td>${fmt(beheerJaar)}</td><td>${fmtPct(beheerJaar/huurJaar*100)}</td></tr>`:''}
+    <tr><td class="indent">Verzekering</td><td>${fmt(verzJaar/12,2)}</td><td>${fmt(verzJaar)}</td><td>${fmtPct(verzJaar/huurJaar*100)}</td></tr>
+    <tr><td class="indent">OZB / gemeenteheffingen</td><td>${fmt(ozbJaar/12,2)}</td><td>${fmt(ozbJaar)}</td><td>${fmtPct(ozbJaar/huurJaar*100)}</td></tr>
+    ${overigeKosten>0?`<tr><td class="indent">Overige kosten</td><td>${fmt(overigeKosten/12,2)}</td><td>${fmt(overigeKosten)}</td><td>${fmtPct(overigeKosten/huurJaar*100)}</td></tr>`:''}
+    <tr><td class="indent">Box 3 belasting (2026)</td><td>${fmt(box3Belasting/12,2)}</td><td>${fmt(box3Belasting)}</td><td>${fmtPct(box3Belasting/huurJaar*100)}</td></tr>
+    <tr class="subtotal"><td><strong>= Totale exploitatiekosten</strong></td><td class="neg"><strong>${fmt(totaleKosten/12,2)}</strong></td><td class="neg"><strong>${fmt(totaleKosten)}</strong></td><td class="neg"><strong>${fmtPct(totaleKosten/huurJaar*100)}</strong></td></tr>
+    
+    <tr><td><strong style="color:var(--navy)">= Netto huurinkomen</strong></td><td class="${huurJaar-totaleKosten>=0?'pos':'neg'}"><strong>${fmt((huurJaar-totaleKosten)/12,2)}</strong></td><td class="${huurJaar-totaleKosten>=0?'pos':'neg'}"><strong>${fmt(huurJaar-totaleKosten)}</strong></td><td class="${huurJaar-totaleKosten>=0?'pos':'neg'}"><strong>${fmtPct((huurJaar-totaleKosten)/huurJaar*100)}</strong></td></tr>
+
+    <tr class="cat"><td colspan="4">− Financieringslasten</td></tr>
+    <tr><td class="indent">Hypotheekrente (${N('hyprente')}% × ${fmt(hyp)})</td><td class="neg">${fmt(renteLastJaar/12,2)}</td><td class="neg">${fmt(renteLastJaar)}</td><td class="neg">${fmtPct(renteLastJaar/huurJaar*100)}</td></tr>
+    ${aflossing>0?`<tr><td class="indent">Aflossing (niet-cashflow-negatief)</td><td>${fmt(aflossing/12,2)}</td><td>${fmt(aflossing)}</td><td>—</td></tr>`:''}
+
+    <tr class="subtotal"><td><strong>= Vrije cashflow</strong></td>
+      <td class="${cashflowMnd>=0?'pos':'neg'}"><strong>${fmt(cashflowMnd,2)}</strong></td>
+      <td class="${cashflowJaar>=0?'pos':'neg'}"><strong>${fmt(cashflowJaar)}</strong></td>
+      <td class="${cashflowJaar>=0?'pos':'neg'}"><strong>${fmtPct(cashflowJaar/huurJaar*100)}</strong></td>
+    </tr>
+  </tbody>`;
+
+  // ── METRICS ──
+  const mr = document.getElementById('metricsRow');
+  const breakEvenTxt = lastResult.breakEven ? `Jaar ${lastResult.breakEven}` : `>${horizon} jaar`;
+  mr.innerHTML = `
+    <div class="mbox navy">
+      <div class="ml">Cash-on-cash rendement</div>
+      <div class="mv">${cashonCash.toFixed(1)}%</div>
+      <div class="ms">Cashflow ÷ eigen inbreng ${fmt(eigenInbreng)}</div>
+    </div>
+    <div class="mbox gold">
+      <div class="ml">Totaalrendement jaar 1</div>
+      <div class="mv">${totaalRend.toFixed(1)}%</div>
+      <div class="ms">Cashflow + waardestijging ÷ eigen inbreng</div>
+    </div>
+    <div class="mbox ${lastResult.breakEven&&lastResult.breakEven<=horizon?'green':'orange'}">
+      <div class="ml">Break-even investering</div>
+      <div class="mv">${breakEvenTxt}</div>
+      <div class="ms">Cumulatieve cashflow dekt eigen inbreng</div>
+    </div>
+    <div class="mbox navy">
+      <div class="ml">Box 3 belasting/jaar</div>
+      <div class="mv">${fmt(box3Belasting)}</div>
+      <div class="ms">6% × ${fmt(woz)} forfait · 36% tarief</div>
+    </div>`;
+
+  document.getElementById('grafTitel').textContent = `${horizon} jaar`;
+  document.getElementById('resSubtitle').textContent = `Bruto ${fmtPct(brutoRend)} · Netto ${fmtPct(nettoRend)} · Cashflow ${fmt(cashflowMnd,2)}/mnd`;
+
+  // ── ADVIES ──
+  const adv = document.getElementById('adviesBox');
+  const punten = [];
+  if(brutoRend < 5) punten.push({ico:'⚠️', txt:`<strong>Bruto rendement ${fmtPct(brutoRend)} is laag</strong> — de marktstandaard voor gezond verhuurvastgoed is ≥6-7%. Overweeg of de aankooprijs realistisch is of de huur verhoogd kan worden.`});
+  if(cashflowMnd < 0) punten.push({ico:'🔴', txt:`<strong>Negatieve cashflow ${fmt(cashflowMnd,2)}/mnd</strong> — u legt maandelijks bij. Dit is alleen verantwoord bij sterke waardestijgingsverwachting én voldoende liquiditeitsreserve.`});
+  if(cashflowMnd >= 0 && cashflowMnd < 300) punten.push({ico:'⚠️', txt:`<strong>Lage marge:</strong> een onverwachte reparatie of tijdelijke leegstand brengt u direct in de min. Houd minimaal 3-6 maanden huur als liquiditeitsreserve aan.`});
+  if(box3Belasting > huurJaar*0.15) punten.push({ico:'💰', txt:`<strong>Box 3 slokt ${fmtPct(box3Belasting/huurJaar*100)} van de huur op</strong> — overweeg de tegenbewijsregeling als uw werkelijk rendement lager is dan 6% van de WOZ-waarde.`});
+  if(ovb > 0.10) punten.push({ico:'🏷️', txt:`<strong>Overdrachtsbelasting ${fmtPct(ovb*100)} (${fmt(ovbBedrag)})</strong> verlaagt uw aanvangsrendement aanzienlijk. Reken dit mee in uw kostprijs.`});
+  punten.push({ico:'📌', txt:`<strong>Vuistregel onderhoud:</strong> houd 1-2% van de pandwaarde (${fmt(ap*0.01)}-${fmt(ap*0.02)}) per jaar aan als onderhoudsreserve, ook als u geen VVE heeft.`});
+  if(N('vveJaar')===0 && objType==='appartement') punten.push({ico:'❗', txt:`<strong>Geen VVE ingevuld</strong> — bij een appartement is VVE-bijdrage vaak €100-350/mnd. Check de servicekosten vóór aankoop.`});
+  punten.push({ico:'🔍', txt:`<strong>Box 3 tegenbewijs:</strong> Als uw werkelijk netto rendement lager is dan het forfaitaire rendement (6% over WOZ), kunt u via de Opgaaf Werkelijk Rendement bezwaar maken.`});
+
+  adv.innerHTML = `<h3>🧑‍💼 Aandachtspunten & tips</h3>${punten.map(p=>`<div class="advies-punt"><span class="ap-ico">${p.ico}</span><span>${p.txt}</span></div>`).join('')}`;
+
+  ['resCard','tblCard','metricsCard','grafCard','adviesCard'].forEach(id=>document.getElementById(id).classList.add('vis'));
+  tekenGrafiek();
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── GRAFIEK ────────────────────────────────────────────────────────────────
+function setGraf(m,btn){ grafModus=m; document.querySelectorAll('.graf-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); tekenGrafiek(); }
+
+function tekenGrafiek(){
+  if(!lastResult) return;
+  const {jaarData, brutoRend, nettoRend, huurJaar, totaleKosten, renteLastJaar,
+    vveJaar, onderhoudJaar, beheerJaar, verzJaar, ozbJaar, overigeKosten,
+    box3Belasting, ap, eigenInbreng, huurMnd, leegstand, huurStijg} = lastResult;
+  const ctx = document.getElementById('grafiek').getContext('2d');
+  if(grafObj) grafObj.destroy();
+  const labels = jaarData.map(d=>`Jaar ${d.jr}`);
+
+  if(grafModus==='cashflow'){
+    grafObj=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+      {label:'Jaarhuur',data:jaarData.map(d=>Math.round(d.huurJrThis)),backgroundColor:'rgba(26,138,80,.7)',borderRadius:4},
+      {label:'Exploitatiekosten',data:jaarData.map(d=>-Math.round(d.kostenThis)),backgroundColor:'rgba(107,33,168,.5)',borderRadius:4},
+      {label:'Rente',data:jaarData.map(d=>-Math.round(d.renteThis)),backgroundColor:'rgba(217,119,6,.5)',borderRadius:4},
+      {label:'Vrije cashflow',data:jaarData.map(d=>Math.round(d.cashThis)),type:'line',borderColor:'#003057',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3,fill:false}
+    ]},options:{...gopts('Cashflow per jaar (€)','Jaar','€/jaar')}});
+  } else if(grafModus==='verloop'){
+    grafObj=new Chart(ctx,{type:'line',data:{labels,datasets:[
+      {label:'Pandwaarde',data:jaarData.map(d=>Math.round(d.pandWaarde)),borderColor:'#003057',backgroundColor:'rgba(0,48,87,.1)',borderWidth:2.5,fill:true,tension:.3,pointRadius:0},
+      {label:'Hypotheeksaldo',data:jaarData.map(d=>Math.round(d.hypSaldo)),borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.1)',borderWidth:2,fill:true,tension:.1,pointRadius:0},
+      {label:'Eigen vermogen in pand',data:jaarData.map(d=>Math.round(d.eigen)),borderColor:'#1A8A50',backgroundColor:'rgba(26,138,80,.15)',borderWidth:2,fill:true,tension:.3,pointRadius:0},
+      {label:'Cumulatieve cashflow',data:jaarData.map(d=>Math.round(d.cumCashflow+eigenInbreng)),borderColor:'#E5A138',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:0,fill:false}
+    ]},options:{...gopts('Vermogensopbouw (€)','Jaar','€')}});
+  } else if(grafModus==='kosten'){
+    grafObj=new Chart(ctx,{type:'doughnut',data:{
+      labels:['Onderhoud','VVE','Beheer','Verzekering','OZB','Overig','Box 3','Rente'].filter((_,i)=>[onderhoudJaar,vveJaar,beheerJaar,verzJaar,ozbJaar,overigeKosten,box3Belasting,renteLastJaar][i]>0),
+      datasets:[{data:[onderhoudJaar,vveJaar,beheerJaar,verzJaar,ozbJaar,overigeKosten,box3Belasting,renteLastJaar].filter(v=>v>0),
+        backgroundColor:['#003057','#6B21A8','#1A8A50','#2563EB','#D97706','#6B7280','#C0392B','#E5A138'],borderWidth:2,borderColor:'#fff'}]
+    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:12},color:'#333',boxWidth:14}},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)}`}}}}});
+  } else {
+    // Huurscenario's
+    const rentes = [3,4,5,6,7,8,9,10];
+    const jaarhuur = huurMnd * 12 * (1-leegstand);
+    const datasets = rentes.map((r,i) => ({
+      label:`Huur ${r}%`,
+      data: jaarData.map((d,jr) => {
+        const h = huurMnd*(r/100/12*12/brutoRend*100/100)*Math.pow(1+huurStijg,jr)*12*(1-leegstand);
+        // simpel: schaal huurMnd met r/brutoRend ratio
+        const hScen = huurMnd*(r/brutoRend)*Math.pow(1+huurStijg,jr)*12*(1-leegstand);
+        return Math.round(hScen - d.kostenThis - d.renteThis);
+      }),
+      borderColor:['#003057','#1A8A50','#2563EB','#D97706','#6B21A8','#C0392B','#E5A138','#6B7280'][i],
+      backgroundColor:'transparent', borderWidth:i===2?3:1.5,
+      pointRadius:0, fill:false, tension:.3,
+    }));
+    grafObj=new Chart(ctx,{type:'line',data:{labels,datasets},
+      options:{...gopts('Cashflow bij verschillende huurrendementen','Jaar','Cashflow (€/jr)')}});
+  }
+}
+
+function gopts(title,xLabel,yLabel){
+  return {responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{font:{family:'DM Sans',size:12},color:'#333',boxWidth:14}},
+      tooltip:{callbacks:{label:c=>` ${c.dataset.label}: €\u00A0${Math.round(c.parsed.y||0).toLocaleString('nl-NL')},-`}}},
+    scales:{
+      x:{ticks:{color:'#6B7280'},grid:{color:'#EEF2F6'}},
+      y:{ticks:{callback:v=>'€ '+(Math.abs(v)>=1000?(v/1000).toFixed(0)+'k':v),color:'#6B7280'},grid:{color:'#EEF2F6'}}
+    }
+  };
+}
+
+// Init
+updateHints();
+document.getElementById('fiscPartner').addEventListener('change', berekenBox3Preview);
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

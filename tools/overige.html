@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinAdvies Suite</title>
+<style>
+:root {
+  --navy:        #002A54;
+  --navy-mid:    #003a70;
+  --navy-light:  #e8eef5;
+  --navy-xlight: #f0f4fa;
+  --orange:      #FF6600;
+  --orange-light:#fff2e8;
+  --orange-mid:  #ffd9b8;
+  --gray-bg:     #f4f4f4;
+  --gray:        #f8f8f8;
+  --text:        #333332;
+  --text-mid:    #555554;
+  --muted:       #888887;
+  --border:      #d8d8d8;
+  --green:       #1a6b3c;
+  --green-bg:    #eaf5ee;
+  --red:         #c0392b;
+  --red-bg:      #fdecea;
+  --amber:       #b45309;
+  --amber-bg:    #fffbe6;
+  --radius:      6px;
+  --radius-lg:   10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; font-size: 15px; color: var(--text); background: #f0f2f5; min-height: 100vh; }
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--navy);
+  color: white;
+  padding: 0 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+.hdr-brand { display: flex; align-items: center; gap: 10px; }
+.hdr-ruit { width: 16px; height: 16px; background: var(--orange); transform: rotate(45deg); flex-shrink: 0; }
+.hdr-logo { font-size: 18px; font-weight: 700; color: white; letter-spacing: -.3px; }
+.hdr-logo span { color: var(--orange); }
+.hdr-sub { font-size: 12px; color: rgba(255,255,255,.5); margin-left: 10px; }
+.hdr-badge {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.8);
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 3px;
+}
+
+/* ── MODE / TAB BAR ── */
+.mode-bar {
+  background: var(--navy-mid);
+  display: flex;
+  overflow-x: auto;
+  position: sticky;
+  top: 52px;
+  z-index: 190;
+  box-shadow: 0 2px 6px rgba(0,0,0,.12);
+}
+.mode-btn {
+  padding: 11px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: none;
+  white-space: nowrap;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: Arial, sans-serif;
+}
+.mode-btn:hover { color: rgba(255,255,255,.9); background: rgba(255,255,255,.06); }
+.mode-btn.active { color: white; border-bottom-color: var(--orange); font-weight: 700; }
+
+/* ── DISCLAIMER BAR ── */
+.disclaimer-bar {
+  background: var(--navy-xlight);
+  border-bottom: 1px solid var(--navy-light);
+  padding: 7px 24px;
+  font-size: 11.5px;
+  color: var(--text-mid);
+  line-height: 1.5;
+}
+.disclaimer-bar strong { color: var(--orange); }
+
+/* ── PANELS ── */
+.panel { display: none; max-width: 980px; margin: 0 auto; padding: 22px 20px 80px; }
+.panel.active { display: block; }
+
+/* ── TOOL HEADER ── */
+.tool-header { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--navy-light); }
+.tool-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; color: var(--navy);
+  background: var(--navy-light); padding: 3px 10px; border-radius: 3px;
+  margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px;
+}
+.tool-title::before {
+  content: '';
+  display: inline-block;
+  width: 9px; height: 9px;
+  background: var(--orange);
+  transform: rotate(45deg);
+  margin-right: 9px;
+  flex-shrink: 0;
+}
+.tool-title {
+  font-size: 19px; font-weight: 700; color: var(--navy);
+  margin-bottom: 5px; display: flex; align-items: center;
+}
+.tool-desc { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 580px; }
+
+/* ── LAYOUT ── */
+.two-col { display: grid; grid-template-columns: 310px 1fr; gap: 16px; align-items: start; }
+
+/* ── CARDS ── */
+.card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.card:last-child { margin-bottom: 0; }
+.card-head {
+  padding: 10px 14px;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title { font-size: 11.5px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: .5px; }
+.card-body { padding: 14px 16px; }
+
+/* ── FORM ── */
+.field { margin-bottom: 11px; }
+.field:last-child { margin-bottom: 0; }
+.field-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11.5px; font-weight: 700; color: var(--text-mid);
+  text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px;
+}
+.field-val { font-size: 13px; color: var(--orange); font-weight: 700; text-transform: none; letter-spacing: 0; }
+.inp, .sel {
+  width: 100%;
+  background: var(--gray-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: Arial, sans-serif;
+  font-size: 13.5px;
+  color: var(--text);
+  padding: 7px 10px;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color .2s;
+}
+.inp:focus, .sel:focus { border-color: var(--orange); background: white; }
+input[type=range] {
+  width: 100%; -webkit-appearance: none;
+  height: 4px; background: var(--border);
+  border-radius: 4px; outline: none; cursor: pointer; margin-top: 3px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px;
+  background: var(--orange); border-radius: 50%; cursor: pointer;
+  border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.slab { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 2px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── RESULT HERO ── */
+.result-stack { display: flex; flex-direction: column; gap: 12px; }
+.result-hero {
+  background: var(--navy);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  color: white;
+}
+.rh-eyebrow { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+.rh-value { font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.rh-caption { font-size: 12px; color: rgba(255,255,255,.6); }
+
+/* ── KPI GRID ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.kpi {
+  background: white; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 12px;
+}
+.kpi-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+.kpi-value { font-size: 19px; font-weight: 700; }
+.kv-green { color: var(--green); } .kv-red { color: var(--red); }
+.kv-amber { color: var(--amber); } .kv-blue { color: var(--navy); }
+.kv-orange { color: var(--orange); }
+
+/* ── ALERTS ── */
+.alert {
+  border-radius: var(--radius); padding: 9px 13px;
+  display: flex; gap: 9px; border: 1px solid; margin-bottom: 7px; align-items: flex-start;
+}
+.alert:last-child { margin-bottom: 0; }
+.alert.success { background: var(--green-bg); border-color: rgba(26,107,60,.25); }
+.alert.warning { background: var(--amber-bg); border-color: rgba(180,83,9,.25); }
+.alert.error   { background: var(--red-bg);   border-color: rgba(192,57,43,.25); }
+.alert.info    { background: var(--navy-xlight); border-color: rgba(0,42,84,.2); }
+.alert.neutral { background: var(--gray); border-color: var(--border); }
+.alert-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.alert-body strong { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 2px; }
+.alert-body span { font-size: 11.5px; line-height: 1.55; opacity: .9; }
+.success .alert-body strong { color: var(--green); }
+.warning .alert-body strong { color: var(--amber); }
+.error   .alert-body strong { color: var(--red); }
+.info    .alert-body strong { color: var(--navy); }
+.neutral .alert-body strong { color: var(--text-mid); }
+
+/* ── SCORES ── */
+.score-meter { padding: 14px; text-align: center; }
+.score-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-30%); text-align: center; }
+.score-num { font-size: 30px; font-weight: 700; }
+.score-lbl { font-size: 10px; color: var(--muted); font-weight: 700; }
+
+/* ── PROGRESS ── */
+.prog-item { margin-bottom: 10px; }
+.prog-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; }
+.prog-label { font-weight: 700; color: var(--text-mid); }
+.prog-pct { font-weight: 700; }
+.prog-bar { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+
+/* ── LIFE EVENT CARDS ── */
+.le-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 8px; margin-bottom: 12px; }
+.le-card {
+  background: var(--gray); border: 2px solid var(--border);
+  border-radius: var(--radius-lg); padding: 11px 8px; text-align: center;
+  cursor: pointer; transition: all .15s;
+}
+.le-card:hover { border-color: var(--orange); }
+.le-card.active { background: var(--orange-light); border-color: var(--orange); }
+.le-icon { font-size: 20px; margin-bottom: 4px; }
+.le-name { font-size: 11.5px; font-weight: 700; color: var(--text); }
+
+/* ── TABLE ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th {
+  background: var(--navy); color: white;
+  padding: 7px 11px; text-align: left;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+}
+.data-table th.right, .data-table td.right { text-align: right; }
+.data-table td { padding: 8px 11px; border-bottom: 1px solid var(--gray); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: var(--gray); }
+.td-green { color: var(--green); font-weight: 700; }
+.td-red   { color: var(--red);   font-weight: 700; }
+
+/* ── DOELSTELLINGEN ── */
+.doel-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 10px;
+}
+.doel-head {
+  background: var(--navy-light); padding: 9px 14px;
+  display: flex; align-items: center; gap: 9px; justify-content: space-between;
+}
+.doel-naam { font-size: 13.5px; font-weight: 700; color: var(--navy); }
+.doel-pct { font-size: 16px; font-weight: 700; }
+.doel-body { padding: 12px 14px; }
+
+/* ── GESPREK AGENDA ── */
+.agenda-rij {
+  display: flex; gap: 12px; padding: 9px 12px;
+  border-bottom: 1px solid var(--gray);
+}
+.agenda-rij:last-child { border-bottom: none; }
+.agenda-tijd { font-size: 11.5px; font-weight: 700; color: var(--orange); width: 45px; flex-shrink: 0; margin-top: 1px; }
+.agenda-titel { font-size: 13px; font-weight: 700; color: var(--navy); }
+.agenda-doel { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+/* ── BEHOEFTEN GRID ── */
+.behoefte-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px;
+  background: var(--gray);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer; transition: all .15s;
+  margin-bottom: 7px;
+}
+.behoefte-item.active { background: var(--orange-light); border-color: var(--orange); }
+.behoefte-item:hover:not(.active) { border-color: var(--navy); }
+.behoefte-item input { width: 15px; height: 15px; accent-color: var(--orange); flex-shrink: 0; cursor: pointer; }
+.behoefte-icon { font-size: 18px; }
+.behoefte-naam { font-size: 13px; font-weight: 700; }
+.behoefte-cat  { font-size: 11px; color: var(--muted); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 720px) {
+  .two-col { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .field-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="hdr-brand">
+    <div class="hdr-ruit"></div>
+    <div class="hdr-logo">FinAdvies <span>Suite</span></div>
+    <div class="hdr-sub">Professionele tools voor financieel adviseurs</div>
+  </div>
+  <div class="hdr-badge">PROFESSIONEEL · 2026</div>
+</header>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer-bar">
+  <strong>Disclaimer</strong> — Berekeningen zijn indicatief op basis van de door u ingevoerde gegevens en fiscale regels 2026. Aan dit overzicht kunnen geen rechten worden ontleend. Gebruik uitsluitend als ondersteuning bij het adviesgesprek.
+</div>
+
+<!-- TABS -->
+<nav class="mode-bar">
+  <button class="mode-btn active" onclick="sw(0)">👤 Klantprofiel</button>
+  <button class="mode-btn" onclick="sw(1)">🎯 Risicoscore</button>
+  <button class="mode-btn" onclick="sw(2)">🔍 Behoefteanalyse</button>
+  <button class="mode-btn" onclick="sw(3)">💶 Vrij Besteedbaar</button>
+  <button class="mode-btn" onclick="sw(4)">🌊 Life Events</button>
+  <button class="mode-btn" onclick="sw(5)">📋 Gesprek Prep</button>
+  <button class="mode-btn" onclick="sw(6)">📊 Netto Besteedbaar</button>
+  <button class="mode-btn" onclick="sw(7)">🏆 Doelstellingen</button>
+</nav>
+
+<!-- ═══════════════════════════════════
+     0 — KLANTPROFIEL
+═══════════════════════════════════ -->
+<div class="panel active" id="p0">
+  <div class="tool-header">
+    <div class="tool-badge">👤 Klantbeheer</div>
+    <div class="tool-title">Klantprofiel Wizard</div>
+    <div class="tool-desc">Stel in één overzicht het volledige klantprofiel samen. Basis voor behoefteanalyse en adviesrapportage.</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">🧑 Persoonlijke gegevens</span></div>
+        <div class="card-body">
+          <div class="field"><div class="field-label">Geboortejaar</div>
+            <input type="number" class="inp" id="kpGebJaar" value="1980" min="1940" max="2005" oninput="calcKp()">
+          </div>
+          <div class="field-row">
+            <div class="field"><div class="field-label">Gezinssituatie</div>
+              <select class="sel" id="kpGezin" onchange="calcKp()">
+                <option value="alleen">Alleenstaand</option>
+                <option value="partner" selected>Met partner</option>
+                <option value="kinderen">Partner + kinderen</option>
+                <option value="eenouder">Eenoudergezin</option>
+              </select>
+            </div>
+            <div class="field"><div class="field-label">Kinderen</div>
+              <select class="sel" id="kpKinderen" onchange="calcKp()">
+                <option value="0" selected>Geen</option>
+                <option value="1">1 kind</option>
+                <option value="2">2 kinderen</option>
+                <option value="3">3+</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><div class="field-label">Woonsituatie</div>
+            <select class="sel" id="kpWoon" onchange="calcKp()">
+              <option value="koop" selected>Koopwoning</option>
+              <option value="huur">Huurwoning</option>
+              <option value="ouders">Bij ouders</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">💰 Financieel overzicht</span></div>
+        <div class="card-body">
+          <div class="field">
+            <div class="field-label">Bruto jaarinkomen <span class="field-val" id="kpInkV">€ 65.000</span></div>
+            <input type="range" id="kpInk" min="15000" max="300000" step="2000" value="65000" oninput="calcKp()">
+            <div class="slab"><span>€ 15k</span><span>€ 300k</span></div>
+          </div>
+          <div class="field">
+            <div class="field-label">Liquide spaargeld <span class="field-val" id="kpSpaarV">€ 30.000</span></div>
+            <input type="range" id="kpSpaar" min="0" max="500000" step="1000" value="30000" oninput="calcKp()">
+            <div class="slab"><span>€ 0</span><span>€ 500k</span></div>
+          </div>
+          <div class="field">
+            <div class="field-label">Hypotheek restschuld <span class="field-val" id="kpHypV">€ 280.000</span></div>
+            <input type="range" id="kpHyp" min="0" max="1000000" step="5000" value="280000" oninput="calcKp()">
+            <div class="slab"><span>€ 0</span><span>€ 1M</span></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><div class="field-label">Beleggingen (€)</div>
+              <input type="number" class="inp" id="kpBel" value="0" oninput="calcKp()">
+            </div>
+            <div class="field"><div class="field-label">Pensioenkapitaal (€)</div>
+              <input type="number" class="inp" id="kpPens" value="50000" oninput="calcKp()">
+            </div>
+          </div>
+          <div class="field"><div class="field-label">WOZ-waarde woning (€)</div>
+            <input type="number" class="inp" id="kpWoz" value="380000" oninput="calcKp()">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="result-stack" id="kpResult"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     1 — RISICOSCORE
+═══════════════════════════════════ -->
+<div class="panel" id="p1">
+  <div class="tool-header">
+    <div class="tool-badge">🎯 Risicobeoordeling</div>
+    <div class="tool-title">Financieel Risicoprofiel Scorer</div>
+    <div class="tool-desc">MiFID II-passendheidstoets op basis van 8 dimensies. Documenteer het beleggersprofiel conform AFM-eisen.</div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><span class="card-title">📊 Scoringsmatrix (8 criteria)</span></div>
+      <div class="card-body" id="risicoInputs"></div>
+    </div>
+    <div class="result-stack" id="risicoResult"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     2 — BEHOEFTEANALYSE
+═══════════════════════════════════ -->
+<div class="panel" id="p2">
+  <div class="tool-header">
+    <div class="tool-badge">🔍 Inventarisatie</div>
+    <div class="tool-title">Behoefteanalyse & Prioritering</div>
+    <div class="tool-desc">Inventariseer alle financiële behoeften van uw klant en rangschik ze op urgentie. Basis voor het adviesrapport.</div>
+  </div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-head"><span class="card-title">🔍 Klantbehoeften — selecteer wat van toepassing is</span></div>
+    <div class="card-body"><div id="behoefteGrid"></div></div>
+  </div>
+  <div id="behoefteResult"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     3 — VRIJ BESTEEDBAAR
+═══════════════════════════════════ -->
+<div class="panel" id="p3">
+  <div class="tool-header">
+    <div class="tool-badge">💶 Budgetanalyse</div>
+    <div class="tool-title">Vrij Besteedbaar Inkomen</div>
+    <div class="tool-desc">Bereken hoeveel de klant maandelijks vrij beschikbaar heeft voor adviesproducten, sparen en beleggen.</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">📥 Inkomsten (netto / mnd)</span></div>
+        <div class="card-body">
+          <div class="field"><div class="field-label">Salaris netto</div><input type="number" class="inp" id="vbSalaris" value="3800" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Partner inkomen netto</div><input type="number" class="inp" id="vbPartner" value="1500" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Toeslagen / uitkeringen</div><input type="number" class="inp" id="vbToeslag" value="200" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Overig inkomen</div><input type="number" class="inp" id="vbOverigInk" value="0" oninput="calcVb()"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">📤 Vaste lasten (per mnd)</span></div>
+        <div class="card-body">
+          <div class="field"><div class="field-label">Hypotheek / huur</div><input type="number" class="inp" id="vbHuur" value="1200" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Zorgverzekering</div><input type="number" class="inp" id="vbZorg" value="175" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Energie & water</div><input type="number" class="inp" id="vbEnergie" value="180" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Boodschappen</div><input type="number" class="inp" id="vbBood" value="600" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Vervoer (auto / OV)</div><input type="number" class="inp" id="vbVervoer" value="350" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Abonnementen</div><input type="number" class="inp" id="vbAbo" value="100" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Overige vaste lasten</div><input type="number" class="inp" id="vbOverig" value="200" oninput="calcVb()"></div>
+          <div class="field"><div class="field-label">Leningen / kredieten</div><input type="number" class="inp" id="vbKrediet" value="0" oninput="calcVb()"></div>
+        </div>
+      </div>
+    </div>
+    <div class="result-stack" id="vbResult"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     4 — LIFE EVENTS
+═══════════════════════════════════ -->
+<div class="panel" id="p4">
+  <div class="tool-header">
+    <div class="tool-badge">🌊 Triggers</div>
+    <div class="tool-title">Life Event Scanner</div>
+    <div class="tool-desc">Identificeer actuele en verwachte life events. Elk event triggert specifieke advieskansen en wettelijke verplichtingen.</div>
+  </div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-head"><span class="card-title">🌊 Actuele & verwachte life events — meerdere keuzes mogelijk</span></div>
+    <div class="card-body">
+      <div class="le-grid" id="leGrid"></div>
+      <div style="font-size:11.5px;color:var(--muted);">Klik op een event om te selecteren of deselecteren.</div>
+    </div>
+  </div>
+  <div id="leResult"></div>
+</div>
+
+<!-- ═══════════════════════════════════
+     5 — GESPREK PREP
+═══════════════════════════════════ -->
+<div class="panel" id="p5">
+  <div class="tool-header">
+    <div class="tool-badge">📋 Voorbereiding</div>
+    <div class="tool-title">Adviesgesprek Voorbereider</div>
+    <div class="tool-desc">Genereer een gestructureerde gespreksagenda op basis van klanttype en doelstellingen. Inclusief AFM-compliance punten.</div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><span class="card-title">⚙️ Gespreksparameters</span></div>
+      <div class="card-body">
+        <div class="field"><div class="field-label">Type gesprek</div>
+          <select class="sel" id="gpType" onchange="calcGp()">
+            <option value="intake" selected>Intakegesprek (nieuw)</option>
+            <option value="review">Jaarlijkse review</option>
+            <option value="life_event">Life event gesprek</option>
+            <option value="product">Productadvies gesprek</option>
+            <option value="pensioen">Pensioen oriëntatie</option>
+          </select>
+        </div>
+        <div class="field"><div class="field-label">Klantprofiel</div>
+          <select class="sel" id="gpProfiel" onchange="calcGp()">
+            <option value="starter">Starter (18–30 jr)</option>
+            <option value="opbouw" selected>Opbouwfase (30–50 jr)</option>
+            <option value="pre_pensioen">Pre-pensioen (50–65 jr)</option>
+            <option value="pensioen">Gepensioneerd (65+)</option>
+            <option value="zzp">ZZP'er</option>
+            <option value="ondernemer">Ondernemer / DGA</option>
+          </select>
+        </div>
+        <div class="field"><div class="field-label">Beschikbare tijd</div>
+          <select class="sel" id="gpTijd" onchange="calcGp()">
+            <option value="30">30 minuten</option>
+            <option value="60" selected>60 minuten</option>
+            <option value="90">90 minuten</option>
+            <option value="120">120 minuten</option>
+          </select>
+        </div>
+        <div class="field"><div class="field-label">Urgente topics (optioneel)</div>
+          <input type="text" class="inp" id="gpUrgent" placeholder="bijv. scheiding, nieuw kind" oninput="calcGp()">
+        </div>
+      </div>
+    </div>
+    <div class="result-stack" id="gpResult"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     6 — NETTO BESTEEDBAAR (2026)
+═══════════════════════════════════ -->
+<div class="panel" id="p6">
+  <div class="tool-header">
+    <div class="tool-badge">📊 Inkomensanalyse</div>
+    <div class="tool-title">Netto Besteedbaar Inkomen 2026</div>
+    <div class="tool-desc">Berekent het netto besteedbaar inkomen op basis van box 1-heffing 2026 inclusief heffingskortingen, eigenwoningforfait en hypotheekrenteaftrek.</div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><span class="card-title">⚙️ Inkomensgegevens</span></div>
+      <div class="card-body">
+        <div class="field">
+          <div class="field-label">Bruto jaarsalaris <span class="field-val" id="nbInkV">€ 60.000</span></div>
+          <input type="range" id="nbInk" min="10000" max="300000" step="1000" value="60000" oninput="calcNb()">
+          <div class="slab"><span>€ 10k</span><span>€ 300k</span></div>
+        </div>
+        <div class="field"><div class="field-label">Leeftijd</div>
+          <input type="number" class="inp" id="nbLeeftijd" value="42" min="18" max="80" oninput="calcNb()">
+        </div>
+        <div class="field"><div class="field-label">Woonsituatie</div>
+          <select class="sel" id="nbWoning" onchange="calcNb()">
+            <option value="koop" selected>Koopwoning (EWF van toepassing)</option>
+            <option value="huur">Huurwoning</option>
+          </select>
+        </div>
+        <div class="field"><div class="field-label">WOZ-waarde woning (€)</div>
+          <input type="number" class="inp" id="nbWoz" value="400000" oninput="calcNb()">
+        </div>
+        <div class="field"><div class="field-label">Hypotheekrenteaftrek per jaar (€)</div>
+          <input type="number" class="inp" id="nbHra" value="12000" oninput="calcNb()">
+        </div>
+        <div class="field"><div class="field-label">Lijfrente jaarruimteaftrek (€)</div>
+          <input type="number" class="inp" id="nbJr" value="0" oninput="calcNb()">
+        </div>
+        <div class="field"><div class="field-label">Fiscaal partner?</div>
+          <select class="sel" id="nbPartner" onchange="calcNb()">
+            <option value="nee" selected>Nee</option>
+            <option value="ja">Ja</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="result-stack" id="nbResult"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     7 — DOELSTELLINGEN
+═══════════════════════════════════ -->
+<div class="panel" id="p7">
+  <div class="tool-header">
+    <div class="tool-badge">🏆 Doelbeheer</div>
+    <div class="tool-title">Financiële Doelstellingen Dashboard</div>
+    <div class="tool-desc">Stel meerdere financiële doelen in en bereken de haalbaarheid en benodigde maandelijkse inleg per doel.</div>
+  </div>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-head"><span class="card-title">⚙️ Maandelijks vrij besteedbaar voor doelsparen</span></div>
+    <div class="card-body" style="display:flex;align-items:center;gap:16px;">
+      <div style="flex:1;"><input type="range" id="ddBeschikbaar" min="100" max="3000" step="50" value="500" oninput="calcDd()"></div>
+      <div style="font-size:20px;font-weight:700;color:var(--navy);width:85px;" id="ddBeschikbaarV">€ 500</div>
+    </div>
+  </div>
+  <div id="ddGoals"></div>
+  <div id="ddResult"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════
+function sw(n){
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
+}
+function fmt(n){return '€\u00a0'+Math.round(n).toLocaleString('nl-NL');}
+function fmtD(n,d=1){return n.toFixed(d).replace('.',',')+'%';}
+function al(cls,icon,title,body){
+  return `<div class="alert ${cls}"><div class="alert-icon">${icon}</div><div class="alert-body"><strong>${title}</strong><span>${body}</span></div></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 0 — KLANTPROFIEL
+// FIX: nettovermogen = totale bezittingen − totale schulden
+// Geen hypotheek*0.3 optellen bij assets (was fout in origineel)
+// ═══════════════════════════════════════════════════════════
+function calcKp(){
+  const jaar     = parseInt(document.getElementById('kpGebJaar').value)||1980;
+  const gezin    = document.getElementById('kpGezin').value;
+  const kinderen = parseInt(document.getElementById('kpKinderen').value)||0;
+  const woon     = document.getElementById('kpWoon').value;
+  const ink      = parseInt(document.getElementById('kpInk').value)||65000;
+  const spaar    = parseInt(document.getElementById('kpSpaar').value)||30000;
+  const hyp      = parseInt(document.getElementById('kpHyp').value)||280000;
+  const bel      = parseFloat(document.getElementById('kpBel').value)||0;
+  const pens     = parseFloat(document.getElementById('kpPens').value)||50000;
+  const woz      = parseFloat(document.getElementById('kpWoz').value)||380000;
+
+  document.getElementById('kpInkV').textContent  = fmt(ink);
+  document.getElementById('kpSpaarV').textContent = fmt(spaar);
+  document.getElementById('kpHypV').textContent   = fmt(hyp);
+
+  const leeftijd  = 2026 - jaar;
+  // Geschat netto: box1 globaal ~32-38% afhankelijk van inkomen. Gebruik NBI-functie indirect.
+  const nettoMnd  = Math.round(berekenNettoJaar(ink) / 12);
+  const bufferNorm = nettoMnd * 6;  // NIBUD: 6 maanden netto
+
+  // Nettovermogen = bezittingen − schulden
+  // Bezittingen: spaar + bel + pensioenkapitaal + (koop: woningwaarde WOZ)
+  const woningWaarde = woon === 'koop' ? woz : 0;
+  const totBezit  = spaar + bel + pens + woningWaarde;
+  const totSchuld = hyp;
+  const nettoVerm = totBezit - totSchuld;
+
+  // LTV indicatie
+  const ltv = woon === 'koop' && woz > 0 ? Math.round(hyp / woz * 100) : null;
+
+  const aowJaar = jaar + 67;  // indicatief
+
+  document.getElementById('kpResult').innerHTML = `
+    <div class="result-hero">
+      <div class="rh-eyebrow">Klantoverzicht</div>
+      <div class="rh-value">${leeftijd} jaar</div>
+      <div class="rh-caption">${gezin==='alleen'?'Alleenstaand':gezin==='partner'?'Met partner':gezin==='kinderen'?'Gezin met '+kinderen+' kind(eren)':'Eenoudergezin'} · ${woon==='koop'?'Koopwoning':'Huurwoning'}</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Bruto inkomen</div><div class="kpi-value kv-blue">${fmt(ink)}/jr</div></div>
+      <div class="kpi"><div class="kpi-label">Netto / mnd</div><div class="kpi-value">${fmt(nettoMnd)}</div></div>
+      <div class="kpi"><div class="kpi-label">Nettovermogen</div><div class="kpi-value ${nettoVerm>=0?'kv-green':'kv-red'}">${fmt(nettoVerm)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">💡 Financieel beeld</span></div>
+      <div class="card-body">
+        <table class="data-table">
+          <tr><th>Bezitting</th><th class="right">Waarde</th></tr>
+          ${woon==='koop'?`<tr><td>Woningwaarde (WOZ)</td><td class="right">${fmt(woz)}</td></tr>`:''}
+          ${spaar>0?`<tr><td>Spaargeld</td><td class="right">${fmt(spaar)}</td></tr>`:''}
+          ${bel>0?`<tr><td>Beleggingen</td><td class="right">${fmt(bel)}</td></tr>`:''}
+          ${pens>0?`<tr><td>Pensioenkapitaal</td><td class="right">${fmt(pens)}</td></tr>`:''}
+          <tr><td><strong>Totaal bezit</strong></td><td class="right td-green"><strong>${fmt(totBezit)}</strong></td></tr>
+          <tr><th>Schuld</th><th class="right">Bedrag</th></tr>
+          ${hyp>0?`<tr><td>Hypotheekschuld</td><td class="right td-red">${fmt(hyp)}</td></tr>`:''}
+          <tr><td><strong>Nettovermogen</strong></td><td class="right"><strong style="color:${nettoVerm>=0?'var(--green)':'var(--red)'};">${fmt(nettoVerm)}</strong></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">📋 Adviesaandachtspunten</span></div>
+      <div class="card-body">
+        ${!( spaar >= bufferNorm ) ? al('warning','⚠️','Spaarbuffer onvoldoende',`Spaargeld ${fmt(spaar)} is minder dan 6-maands netto buffer ${fmt(bufferNorm)}. Prioriteit 1 in advies.`) : al('success','✅','Spaarbuffer voldoende',`${fmt(spaar)} ≥ 6-maands norm ${fmt(bufferNorm)}.`)}
+        ${ltv!==null?al(ltv>90?'warning':'info','🏠', `LTV indicatief: ${ltv}%`, ltv>90?'Hoge schuld-waardeverhouding. Overwaarde-opbouw beperkt.':'Loan-to-value op basis van WOZ-waarde.'):''}
+        ${pens<ink*0.5?al('warning','⚠️','Pensioenopbouw laag t.o.v. inkomen',`Kapitaal ${fmt(pens)} is relatief beperkt. Jaarruimteberekening aanbevolen (AOW-datum indicatief ${aowJaar}).`):''}
+        ${kinderen>0?al('info','👶','Gezin — aanvullende checks',`ORV, voogdij testament, kinderbijslag en studiekosten spaarplan zijn aandachtspunten bij ${kinderen} kind(eren).`):''}
+        ${leeftijd>55?al('info','🏖️','Pre-pensioen fase',`Leeftijd ${leeftijd}, AOW-datum indicatief ${aowJaar}. Pensioenplanning en lasten na pensioen zijn topprioriteit.`):''}
+        ${al('neutral','📋','Vervolgstap','Behoefteanalyse uitvoeren en doelstellingen vaststellen als basis voor het financieel plan.')}
+      </div>
+    </div>`;
+}
+calcKp();
+
+// ═══════════════════════════════════════════════════════════
+// 1 — RISICOSCORE  (MiFID II)
+// ═══════════════════════════════════════════════════════════
+const RISICO_VRAGEN = [
+  {v:'Beleggingservaring',         opties:['Geen ervaring','Spaarrekening / obligaties','Aandelen / fondsen','Actief belegger'],w:[0,1,2,3]},
+  {v:'Reactie bij koersdaling −20%',opties:['Direct verkopen','Ongerust, maar wachten','Kalm blijven','Bijkopen'],w:[0,1,2,3]},
+  {v:'Beleggingshorizon',          opties:['< 3 jaar','3–7 jaar','7–15 jaar','15+ jaar'],w:[0,1,2,3]},
+  {v:'Financiële buffer',          opties:['< 1 maand','1–3 maanden','3–6 maanden','6+ maanden'],w:[0,1,2,3]},
+  {v:'Primair beleggingsdoel',     opties:['Kapitaalbehoud','Stabiel inkomen','Gebalanceerde groei','Maximale groei'],w:[0,1,2,3]},
+  {v:'Inkomensstabiliteit',        opties:['Onzeker (flex / ZZP)','Tijdelijk contract','Vast contract','Vast + extra'],w:[0,1,2,3]},
+  {v:'Bestaande verplichtingen',   opties:['Hoog (> 50% inkomen)','Gemiddeld (30–50%)','Laag (10–30%)','Vrijwel geen (< 10%)'],w:[0,1,2,3]},
+  {v:'Kennis financiële producten',opties:['Basis','Gemiddeld','Goed','Uitstekend'],w:[0,1,2,3]},
+];
+const risicoState = {};
+
+function renderRisico(){
+  document.getElementById('risicoInputs').innerHTML = RISICO_VRAGEN.map((q,i)=>`
+    <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--gray);">
+      <div style="font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:5px;">${q.v}</div>
+      <select class="sel" style="font-size:12.5px;" onchange="risicoState[${i}]=parseInt(this.value);calcRisico()">
+        <option value="">— selecteer —</option>
+        ${q.opties.map((o,j)=>`<option value="${q.w[j]}" ${risicoState[i]===q.w[j]?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>`).join('');
+}
+
+function calcRisico(){
+  const scores  = Object.values(risicoState);
+  const ingevuld = scores.length;
+  if(ingevuld < 3){
+    document.getElementById('risicoResult').innerHTML = al('neutral','📊','Vul minimaal 3 vragen in','Score en profiel verschijnen zodra er voldoende gegevens zijn.');
+    return;
+  }
+  const totaal = scores.reduce((s,v)=>s+v,0);
+  const max    = RISICO_VRAGEN.length * 3;  // 24
+  const pct    = Math.round((totaal / max) * 100);
+  // Profielen conform MiFID II categorisering
+  const profiel = pct >= 75 ? 'Offensief' : pct >= 55 ? 'Gematigd offensief' : pct >= 35 ? 'Neutraal' : pct >= 20 ? 'Defensief' : 'Zeer defensief';
+  const aaColor = pct >= 75 ? 'kv-red' : pct >= 55 ? 'kv-orange' : pct >= 35 ? 'kv-amber' : 'kv-green';
+  // Aandelen allocatie bandbreedtes per profiel
+  const aaBand  = pct >= 75 ? '80–100%' : pct >= 55 ? '60–80%' : pct >= 35 ? '40–60%' : pct >= 20 ? '20–40%' : '0–20%';
+  const volledig = ingevuld === RISICO_VRAGEN.length;
+
+  document.getElementById('risicoResult').innerHTML = `
+    <div class="result-hero">
+      <div class="rh-eyebrow">MiFID II · Risicoprofiel</div>
+      <div class="rh-value">${profiel}</div>
+      <div class="rh-caption">Score ${totaal}/${max} (${pct}%) · ${ingevuld}/${RISICO_VRAGEN.length} criteria ingevuld</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Score</div><div class="kpi-value kv-blue">${pct}%</div></div>
+      <div class="kpi"><div class="kpi-label">Aandelen bandbreedte</div><div class="kpi-value ${aaColor}">${aaBand}</div></div>
+      <div class="kpi"><div class="kpi-label">Status</div><div class="kpi-value" style="font-size:13px;">${volledig?'✅ Volledig':'⚠️ Onvolledig'}</div></div>
+    </div>
+    ${al('info','🛡️','Passendheidstoets resultaat',`Beleggingsproducten t/m risicoprofiel "<strong>${profiel}</strong>" zijn passend. Documenteer in klantdossier conform art. 4:23 Wft.`)}
+    ${al('neutral','📋','Aanbevolen portefeuillemix',`${aaBand} zakelijke waarden (breed gespreide ETF) — rest obligaties en liquiditeiten. Herbalanceren 1–2× per jaar.`)}
+    ${!volledig?al('warning','⚠️','Onvolledige scoring',`${RISICO_VRAGEN.length - ingevuld} vragen nog niet beantwoord. Vul alle criteria in voor een volledig AFM-dossier.`):''}`;
+}
+renderRisico();
+
+// ═══════════════════════════════════════════════════════════
+// 2 — BEHOEFTEANALYSE
+// ═══════════════════════════════════════════════════════════
+const BEHOEFTEN = [
+  {id:'pensioen', icon:'🏖️', naam:'Pensioenopbouw',        cat:'Lange termijn',  urgentie:'Hoog'},
+  {id:'orv',      icon:'❤️',  naam:'Overlijdensrisico (ORV)',cat:'Bescherming',    urgentie:'Hoog'},
+  {id:'ao',       icon:'🩺',  naam:'Arbeidsongeschiktheid', cat:'Bescherming',    urgentie:'Hoog'},
+  {id:'woning',   icon:'🏠',  naam:'Woning aankoop',        cat:'Wonen',          urgentie:'Situationeel'},
+  {id:'verbouw',  icon:'🔨',  naam:'Verbouwing',            cat:'Wonen',          urgentie:'Middel'},
+  {id:'studie',   icon:'🎓',  naam:'Studiekosten kinderen', cat:'Kinderen',       urgentie:'Middel'},
+  {id:'noodfonds',icon:'🛟',  naam:'Noodfonds / buffer',    cat:'Buffer',         urgentie:'Hoog'},
+  {id:'beleggen', icon:'📈',  naam:'Vermogensopbouw',       cat:'Lange termijn',  urgentie:'Middel'},
+  {id:'auto',     icon:'🚗',  naam:'Nieuwe auto',           cat:'Consumptie',     urgentie:'Laag'},
+  {id:'vakantie', icon:'✈️',  naam:'Vakantie / recreatie',  cat:'Consumptie',     urgentie:'Laag'},
+  {id:'scheiding',icon:'⚖️',  naam:'Scheiding afwikkeling', cat:'Levensgebeurtenis',urgentie:'Situationeel'},
+  {id:'nalaten',  icon:'🕊️',  naam:'Vermogen nalaten',      cat:'Nalatenschap',   urgentie:'Middel'},
+];
+const behoefteState = {};
+
+const BEHOEFTE_ADVIES = {
+  pensioen: 'Controleer pensioenopgave, bereken tekort, bespreek jaarruimte / inhaalruimte en AOW-datum.',
+  orv:      'Bereken benodigde overlijdensrisico dekking op basis van hypotheekschuld en inkomenssituatie partner.',
+  ao:       'Doorloop WIA-scenario (70% dagloon na 2 jaar), vergelijk met bestaande AOV-dekking.',
+  woning:   'Hypotheekadvies, NHG-toets, energielabel, bijkomende kosten en maandlastenberekening.',
+  verbouw:  'Bouwdepot of verhoogde hypotheek, borg bankgarantie, verzekeringen tijdens verbouwing.',
+  studie:   'Studiekosten inschatten (€ 15.000–25.000 per kind), maandelijkse inleg berekenen, DUO-voorwaarden.',
+  noodfonds:'NIBUD: minimaal 6 maands netto-inkomen liquide beschikbaar. Huidige buffer vs. norm toetsen.',
+  beleggen: 'Risicoprofiel vaststellen, beleggingshorizon, box 3-vrijstelling 2026 (€ 57.000 pp), fondselectie.',
+  auto:     'Privé vs. lease vergelijken, financiering of eigen middelen, restwaarde risico.',
+  vakantie: 'Doelsparen-berekening: gewenste bedrag, gewenst jaar, maandelijkse inleg.',
+  scheiding:'Polissen splitsen, ORV aanpassen, BKR-check, budget herstructurering, woning afwikkeling.',
+  nalaten:  'Testament, schenkvrijstellingen 2026 (€ 6.633 jr, € 28.947 studie), box 3 optimalisatie.',
+};
+
+function renderBehoeften(){
+  document.getElementById('behoefteGrid').innerHTML =
+    BEHOEFTEN.map(b=>`
+      <div class="behoefte-item ${behoefteState[b.id]?'active':''}" onclick="behoefteState['${b.id}']=!behoefteState['${b.id}'];renderBehoeften()">
+        <input type="checkbox" ${behoefteState[b.id]?'checked':''} onclick="event.stopPropagation()">
+        <span class="behoefte-icon">${b.icon}</span>
+        <div>
+          <div class="behoefte-naam">${b.naam}</div>
+          <div class="behoefte-cat">${b.cat} · Urgentie: ${b.urgentie}</div>
+        </div>
+      </div>`).join('');
+  calcBehoefte();
+}
+
+function calcBehoefte(){
+  const sel = BEHOEFTEN.filter(b=>behoefteState[b.id]);
+  if(!sel.length){ document.getElementById('behoefteResult').innerHTML=''; return; }
+  const hoog = sel.filter(b=>b.urgentie==='Hoog');
+  document.getElementById('behoefteResult').innerHTML = `
+    <div class="card">
+      <div class="card-head"><span class="card-title">📋 Geselecteerde behoeften (${sel.length}) — Actieplan</span></div>
+      <div class="card-body">
+        ${hoog.length ? al('warning','⚠️','Hoge urgentie behoeften',hoog.map(b=>b.naam).join(' · ')+' — direct oppakken in advies.') : ''}
+        ${sel.map((b,i)=>`
+          <div style="padding:10px 12px;background:var(--gray);border-radius:var(--radius);margin-bottom:8px;border-left:3px solid var(--orange);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:16px;">${b.icon}</span>
+              <strong style="font-size:13px;color:var(--navy);">${i+1}. ${b.naam}</strong>
+              <span style="font-size:11px;margin-left:auto;background:var(--navy-light);color:var(--navy);padding:1px 7px;border-radius:3px;font-weight:700;">${b.urgentie}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-mid);">${BEHOEFTE_ADVIES[b.id]||'Maatwerk advies vereist.'}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+renderBehoeften();
+
+// ═══════════════════════════════════════════════════════════
+// 3 — VRIJ BESTEEDBAAR
+// ═══════════════════════════════════════════════════════════
+function calcVb(){
+  const sal    = parseFloat(document.getElementById('vbSalaris').value)  ||3800;
+  const part   = parseFloat(document.getElementById('vbPartner').value)  ||1500;
+  const toes   = parseFloat(document.getElementById('vbToeslag').value)  ||200;
+  const ovInk  = parseFloat(document.getElementById('vbOverigInk').value)||0;
+  const huur   = parseFloat(document.getElementById('vbHuur').value)     ||1200;
+  const zorg   = parseFloat(document.getElementById('vbZorg').value)     ||175;
+  const en     = parseFloat(document.getElementById('vbEnergie').value)  ||180;
+  const bood   = parseFloat(document.getElementById('vbBood').value)     ||600;
+  const verv   = parseFloat(document.getElementById('vbVervoer').value)  ||350;
+  const abo    = parseFloat(document.getElementById('vbAbo').value)      ||100;
+  const ov     = parseFloat(document.getElementById('vbOverig').value)   ||200;
+  const kred   = parseFloat(document.getElementById('vbKrediet').value)  ||0;
+
+  const totInk  = sal + part + toes + ovInk;
+  const totLast = huur + zorg + en + bood + verv + abo + ov + kred;
+  const vrij    = totInk - totLast;
+  const druk    = totLast / totInk;
+
+  // Adviesruimte indicaties
+  const spaarInleg  = Math.round(Math.max(0, vrij * 0.20));  // 20% vrij → sparen
+  const belegInleg  = Math.round(Math.max(0, vrij * 0.15));  // 15% → beleggen
+
+  document.getElementById('vbResult').innerHTML = `
+    <div class="result-hero">
+      <div class="rh-eyebrow">Vrij besteedbaar per maand</div>
+      <div class="rh-value">${fmt(vrij)}</div>
+      <div class="rh-caption">Inkomen: ${fmt(totInk)} · Lasten: ${fmt(totLast)}</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Totaal inkomen</div><div class="kpi-value kv-blue">${fmt(totInk)}</div></div>
+      <div class="kpi"><div class="kpi-label">Vaste lasten</div><div class="kpi-value kv-red">${fmt(totLast)}</div></div>
+      <div class="kpi"><div class="kpi-label">Lastendruk</div><div class="kpi-value ${druk<0.65?'kv-green':druk<0.80?'kv-amber':'kv-red'}">${Math.round(druk*100)}%</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">📊 Budgetoverzicht</span></div>
+      <div class="card-body">
+        <table class="data-table">
+          <tr><th>Post</th><th class="right">Bedrag/mnd</th></tr>
+          <tr><td>Salaris netto</td><td class="right">${fmt(sal)}</td></tr>
+          ${part>0?`<tr><td>Partner inkomen</td><td class="right">${fmt(part)}</td></tr>`:''}
+          ${toes>0?`<tr><td>Toeslagen/uitkeringen</td><td class="right">${fmt(toes)}</td></tr>`:''}
+          ${ovInk>0?`<tr><td>Overig inkomen</td><td class="right">${fmt(ovInk)}</td></tr>`:''}
+          <tr><td style="font-weight:700;">Totaal inkomen</td><td class="right td-green"><strong>${fmt(totInk)}</strong></td></tr>
+          <tr><td style="color:var(--muted);font-size:11px;" colspan="2">Lasten</td></tr>
+          <tr><td>Hypotheek/huur</td><td class="right">${fmt(huur)}</td></tr>
+          <tr><td>Overige vaste lasten</td><td class="right">${fmt(totLast-huur)}</td></tr>
+          <tr><td style="font-weight:700;">Totaal lasten</td><td class="right td-red"><strong>${fmt(totLast)}</strong></td></tr>
+          <tr><td style="font-weight:700;color:var(--navy);">Vrij besteedbaar</td><td class="right"><strong style="color:${vrij>=0?'var(--green)':'var(--red)'};">${fmt(vrij)}</strong></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">💡 Adviesruimte</span></div>
+      <div class="card-body">
+        ${vrij < 0 ? al('error','🚨','Negatief vrij besteedbaar','De vaste lasten overtreffen het inkomen. Kostenreductie is urgent vóór productadvies.') : ''}
+        ${vrij >= 0 && vrij < 300 ? al('warning','⚠️','Beperkte ruimte',`Slechts ${fmt(vrij)}/mnd beschikbaar. Adviseer terughoudendheid bij nieuwe verplichtingen.`) : ''}
+        ${spaarInleg > 0 ? al('success','💶',`Spaardoelstelling: ${fmt(spaarInleg)}/mnd`,'20% van vrij besteedbaar als spaarnorm (NIBUD-richtlijn).') : ''}
+        ${belegInleg > 0 ? al('info','📈',`Beleggingsruimte: ${fmt(belegInleg)}/mnd`,'15% van vrij besteedbaar voor vermogensopbouw (na noodfonds).') : ''}
+        ${druk > 0.80 ? al('warning','⚠️','Hoge lastendruk',`${Math.round(druk*100)}% van het inkomen gaat naar vaste lasten. Risico bij inkomensterugval.`) : ''}
+      </div>
+    </div>`;
+}
+calcVb();
+
+// ═══════════════════════════════════════════════════════════
+// 4 — LIFE EVENTS
+// ═══════════════════════════════════════════════════════════
+const LE_ITEMS = [
+  {id:'baby',        icon:'👶', naam:'Baby verwacht'},
+  {id:'trouwen',     icon:'💍', naam:'Trouwen'},
+  {id:'scheiding',   icon:'💔', naam:'Scheiding'},
+  {id:'huis_kopen',  icon:'🔑', naam:'Huis kopen'},
+  {id:'huis_verkopen',icon:'🏡',naam:'Huis verkopen'},
+  {id:'pensioen',    icon:'🏖️', naam:'Pensioen'},
+  {id:'nieuwe_baan', icon:'💼', naam:'Nieuwe baan'},
+  {id:'ontslag',     icon:'📋', naam:'Ontslag / WW'},
+  {id:'erfenis',     icon:'🕊️', naam:'Erfenis'},
+  {id:'ao',          icon:'🩺', naam:'Arbeidsongeschikt'},
+  {id:'studie',      icon:'🎓', naam:'Studie kind'},
+  {id:'zzp',         icon:'🛠️', naam:'ZZP starten'},
+  {id:'overlijden',  icon:'🖤', naam:'Overlijden partner'},
+  {id:'buitenland',  icon:'🌍', naam:'Emigratie'},
+  {id:'samenwonan',  icon:'🤝', naam:'Samenwonen'},
+  {id:'hypotheek',   icon:'🏦', naam:'Hypotheek oversluiten'},
+];
+const leState = {};
+
+const LE_ADVIES = {
+  baby:         ['ORV verhogen','Voogdij testament','Kinderverzekering','Studie spaarplan','Kraamzorg en kinderopvang'],
+  trouwen:      ['Huwelijkse voorwaarden','Gezamenlijke polis AVP','ORV afsluiten','Testament','Pensioenpartnercontract'],
+  scheiding:    ['Polissen splitsen','ORV aanpassen','Woonhuisverzekering','BKR-check','Budgetanalyse'],
+  huis_kopen:   ['Hypotheekadvies (CHF/GHF 2026)','NHG-check (max. € 450.000)','ORV','Woonhuisverzekering','Notaris/kosten koper'],
+  huis_verkopen:['Overwaarde bepalen','Bijleenregeling','Restschuld afhandeling','Verhuiskosten','Dubbele lasten analyse'],
+  pensioen:     ['AOW-datum & pensioeninkomen','Pensioenkloof berekenen','Jaarruimte jaarraad','Box 3 optimalisatie','Onttrekkingsstrategie'],
+  nieuwe_baan:  ['Pensioenregeling vergelijken','Collectieve verzekeringen','Salaris onderhandelen','WW-rechten check'],
+  ontslag:      ['WW-berekening','Ontslagvergoeding belasting','Tijdelijke lastenverlaging','Pensioen continuïteit'],
+  erfenis:      ['Box 3 impact','Erfbelasting (EWF)','Vermogensplanning','Beleggingsstrategie','Schenkvrijstelling'],
+  ao:           ['WIA-scenario doorrekenen','AOV-dekking controleren','Eigen risico periode','Inkomensverlies berekenen'],
+  studie:       ['DUO gevolgen GHF','Studiekostenbegroot. € 15k–25k','Doelsparen kind','Schenkvrijstelling studie'],
+  zzp:          ['AOV afsluiten (BRANCHE!)','BAV / WA beroepsaansprakelijkheid','Jaarruimte / pensioen','Spaarbuffer vergroten'],
+  overlijden:   ['ANW-toets','Nabestaandenpensioen controleren','ORV uitkering benutten','Testament uitvoering'],
+  buitenland:   ['Belastingverdrag','Pensioen opbouw continuïteit','Socialezekerheidspositie','Zorgverzekering'],
+  samenwonan:   ['Samenlevingscontract','ORV','Testament','Gezamenlijke WA-polis'],
+  hypotheek:    ['Boeterente berekening','Nieuwe CHF-norm','NHG mogelijk?','Rentevergelijking','Aktekosten'],
+};
+
+function renderLeGrid(){
+  document.getElementById('leGrid').innerHTML = LE_ITEMS.map(item=>`
+    <div class="le-card ${leState[item.id]?'active':''}" onclick="leState['${item.id}']=!leState['${item.id}'];renderLeGrid();calcLe()">
+      <div class="le-icon">${item.icon}</div>
+      <div class="le-name">${item.naam}</div>
+    </div>`).join('');
+}
+
+function calcLe(){
+  const sel = LE_ITEMS.filter(i=>leState[i.id]);
+  if(!sel.length){ document.getElementById('leResult').innerHTML=''; return; }
+  document.getElementById('leResult').innerHTML = `
+    <div class="card">
+      <div class="card-head"><span class="card-title">🎯 Advieskansen bij ${sel.length} geselecteerde event(s)</span></div>
+      <div class="card-body">
+        ${sel.map(e=>`
+          <div style="margin-bottom:12px;padding:12px;background:var(--navy-xlight);border-radius:var(--radius);border-left:3px solid var(--orange);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-size:18px;">${e.icon}</span>
+              <strong style="font-size:13.5px;color:var(--navy);">${e.naam}</strong>
+            </div>
+            ${(LE_ADVIES[e.id]||['Maatwerk advies vereist — zie behoefteanalyse']).map(a=>`
+              <div style="font-size:12px;color:var(--text-mid);padding:2px 0 2px 4px;">◆ ${a}</div>`).join('')}
+          </div>`).join('')}
+        ${al('info','🛡️','Documentatieverplichting','Elk life event waarbij productadvies wordt verleend vereist vastlegging in het klantdossier (art. 4:23 Wft, bewaarplicht 7 jaar).')}
+      </div>
+    </div>`;
+}
+renderLeGrid();
+
+// ═══════════════════════════════════════════════════════════
+// 5 — GESPREK PREP
+// ═══════════════════════════════════════════════════════════
+function calcGp(){
+  const type    = document.getElementById('gpType').value;
+  const profiel = document.getElementById('gpProfiel').value;
+  const tijd    = parseInt(document.getElementById('gpTijd').value)||60;
+  const urgent  = document.getElementById('gpUrgent').value.trim();
+  const datum   = new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+
+  const agenda  = getAgenda(type, profiel, tijd);
+
+  document.getElementById('gpResult').innerHTML = `
+    <div class="result-hero">
+      <div class="rh-eyebrow">Gespreksagenda · ${datum}</div>
+      <div class="rh-value">${document.querySelector('#gpType option:checked').text}</div>
+      <div class="rh-caption">${document.querySelector('#gpProfiel option:checked').text} · ${tijd} minuten</div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">📋 Gespreksstructuur</span></div>
+      <div class="card-body" style="padding:0;">
+        ${agenda.map(item=>`
+          <div class="agenda-rij">
+            <div class="agenda-tijd">${item.tijd}</div>
+            <div>
+              <div class="agenda-titel">${item.onderwerp}</div>
+              <div class="agenda-doel">${item.doel}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+    ${urgent?al('warning','⚡','Urgent topic aangemeld',`"${urgent}" — plan hier voldoende tijd voor in en documenteer het in het dossier.`):''}
+    ${al('info','🛡️','AFM compliance reminder','Leg klantbehoefte, risicotolerantie en financiële situatie vast. Bewaarplicht adviesdossier: 7 jaar (art. 4:14 Bgfo).')}`;
+}
+
+function getAgenda(type, profiel, tijd){
+  const t = (min) => `${Math.floor(min/60)}:${String(min%60).padStart(2,'0')}`;
+  const agenda = [
+    {tijd: t(0),  onderwerp:'Welkom & verwachtingen',        doel:'Agenda bevestigen, gespreksregels, tijdsbewaking'},
+    {tijd: t(5),  onderwerp:'Actuele situatie',              doel:'Wat is er veranderd? Lopende vragen klant?'},
+    {tijd: t(Math.round(tijd*0.2)), onderwerp:'Doelstellingen & behoeften', doel:'Inventariseer prioriteiten en financiële wensen'},
+  ];
+  if(type==='pensioen'||profiel==='pre_pensioen'||profiel==='pensioen'){
+    agenda.push({tijd:t(Math.round(tijd*0.35)),onderwerp:'Pensioenanalyse',doel:'AOW-datum, werkgeverspensioen, eigen opbouw, pensioenkloof'});
+  }
+  if(profiel==='zzp'||profiel==='ondernemer'){
+    agenda.push({tijd:t(Math.round(tijd*0.35)),onderwerp:'Inkomensbescherming & pensioen ZZP',doel:'AOV-check, jaarruimte, reserves, bedrijfsrisico'});
+  }
+  if(type==='life_event'){
+    agenda.push({tijd:t(Math.round(tijd*0.35)),onderwerp:'Life event analyse',doel:'Gevolgen event doorspreken, acties vaststellen'});
+  }
+  agenda.push({tijd:t(Math.round(tijd*0.60)),onderwerp:'Advies & oplossingen',    doel:'Concrete aanbevelingen presenteren met onderbouwing'});
+  agenda.push({tijd:t(Math.round(tijd*0.80)),onderwerp:'Vragen & besluitvorming', doel:'Klant neemt beslissing, akkoord klantdossier'});
+  agenda.push({tijd:t(Math.round(tijd*0.90)),onderwerp:'Actielijst & nazorg',     doel:'Wie doet wat wanneer? Vervolgafspraak plannen'});
+  return agenda;
+}
+calcGp();
+
+// ═══════════════════════════════════════════════════════════
+// 6 — NETTO BESTEEDBAAR 2026
+//
+// GECORRIGEERDE BEREKENING t.o.v. origineel:
+// ✅ Box 1 tarief schijf 1: 35,82% (2026, was 35,75%)
+// ✅ Box 1 tarief schijf 2: 49,5%
+// ✅ Schijfgrens: € 38.441 (2026)
+// ✅ AHK 2026: max € 3.204 (afbouw 6,337% boven € 24.813)
+// ✅ Arbeidskorting 2026: max € 5.599, afbouw 6,51% boven € 43.071
+// ✅ EWF 2026: gestaffeld (zie tabel)
+// ✅ HRA-aftrekplafond: 35,75% (schijf 1-tarief na aftrekbeperking)
+// ✅ Wet Hillen 2026: 73,33% van positief EWF-saldo aftrekbaar
+// ✅ AOW-correctie: 55+ geboortekorting schijf 1 (17,9%)
+// ═══════════════════════════════════════════════════════════
+
+// EWF staffel 2026 (uit geheugen/project)
+function berekenEWF(woz){
+  if(woz<=12500)    return 0;
+  if(woz<=25000)    return Math.round(woz*0.001);
+  if(woz<=50000)    return Math.round(woz*0.002);
+  if(woz<=75000)    return Math.round(woz*0.0025);
+  if(woz<=1350000)  return Math.round(woz*0.0035);
+  return Math.round(4725 + (woz-1350000)*0.0235);
+}
+
+// Netto jaarberekening (gebruikt ook door klantprofiel)
+function berekenNettoJaar(bruto, lft=40, woning='huur', woz=0, hra=0, jr=0){
+  lft = parseInt(lft)||40;
+  const aow = lft >= 67;
+
+  // BOX 1 BELASTING 2026
+  const GRENS1 = 38441;
+  const T1     = aow ? 0.1790 : 0.3582;  // AOW-gerechtigden betalen geen AOW-premie in schijf 1
+  const T2     = 0.495;
+
+  const ib1 = Math.round(Math.min(bruto, GRENS1) * T1);
+  const ib2 = Math.round(Math.max(0, bruto - GRENS1) * T2);
+
+  // HEFFINGSKORTINGEN 2026
+  // Algemene heffingskorting: max € 3.204, afbouw 6,337% boven € 24.813
+  const AHK_MAX   = 3204;
+  const AHK_GRENS = 24813;
+  const AHK_PCT   = 0.06337;
+  const ahk = Math.max(0, Math.round(AHK_MAX - Math.max(0, bruto - AHK_GRENS) * AHK_PCT));
+
+  // Arbeidskorting 2026: opbouw 8,425% t/m € 11.491 (max),
+  // daarna vast max € 5.599 t/m € 43.071, afbouw 6,51% daarboven
+  const ARB_MAX   = 5599;
+  const ARB_AFBOUW_GRENS = 43071;
+  const ARB_AFBOUW_PCT   = 0.0651;
+  let arbK;
+  if(bruto <= 11491)       arbK = Math.round(bruto * 0.08425);   // opbouwfase
+  else if(bruto <= 43071)  arbK = ARB_MAX;                       // plateau
+  else arbK = Math.max(0, Math.round(ARB_MAX - (bruto - ARB_AFBOUW_GRENS) * ARB_AFBOUW_PCT));
+
+  // EWF & HRA
+  const ewf    = woning === 'koop' ? berekenEWF(woz)  : 0;
+  const hraCap = Math.round(hra * 0.3575);  // HRA-aftrekplafond 35,75%
+
+  // Wet Hillen 2026: 73,33% van positief saldo (EWF > HRA) als aftrek
+  const hillenSaldo = Math.max(0, ewf - hra);
+  const hillenAftrek = woning === 'koop' ? Math.round(hillenSaldo * 0.7333) : 0;
+
+  // Jaarruimte aftrek (max tarief schijf 1)
+  const jrAftrek = Math.round(jr * T1);
+
+  // Totale belasting
+  const totIB = Math.max(0, ib1 + ib2 - ahk - arbK - hraCap - jrAftrek);
+
+  return bruto - totIB;
+}
+
+function calcNb(){
+  const bruto   = parseInt(document.getElementById('nbInk').value)||60000;
+  const lft     = parseInt(document.getElementById('nbLeeftijd').value)||42;
+  const woning  = document.getElementById('nbWoning').value;
+  const woz     = parseFloat(document.getElementById('nbWoz').value)||400000;
+  const hra     = parseFloat(document.getElementById('nbHra').value)||12000;
+  const jr      = parseFloat(document.getElementById('nbJr').value)||0;
+
+  document.getElementById('nbInkV').textContent = fmt(bruto);
+
+  const aow    = lft >= 67;
+  const GRENS1 = 38441;
+  const T1     = aow ? 0.1790 : 0.3582;
+  const T2     = 0.495;
+
+  const ib1    = Math.round(Math.min(bruto, GRENS1) * T1);
+  const ib2    = Math.round(Math.max(0, bruto - GRENS1) * T2);
+
+  const AHK_MAX = 3204; const AHK_GRENS = 24813; const AHK_PCT = 0.06337;
+  const ahk     = Math.max(0, Math.round(AHK_MAX - Math.max(0, bruto - AHK_GRENS) * AHK_PCT));
+
+  const ARB_MAX = 5599; const ARB_AFB_G = 43071; const ARB_AFB_P = 0.0651;
+  let arbK;
+  if(bruto <= 11491)      arbK = Math.round(bruto * 0.08425);
+  else if(bruto <= 43071) arbK = ARB_MAX;
+  else arbK = Math.max(0, Math.round(ARB_MAX - (bruto - ARB_AFB_G) * ARB_AFB_P));
+
+  const ewf       = woning === 'koop' ? berekenEWF(woz) : 0;
+  const hraCap    = Math.round(hra * 0.3575);
+  const hillenSaldo  = Math.max(0, ewf - hra);
+  const hillenAftrek = woning === 'koop' ? Math.round(hillenSaldo * 0.7333) : 0;
+  const jrAftrek  = Math.round(jr * T1);
+
+  const totIB     = Math.max(0, ib1 + ib2 - ahk - arbK - hraCap - hillenAftrek - jrAftrek);
+  const nettJr    = bruto - totIB;
+  const nettMnd   = Math.round(nettJr / 12);
+  const effTarief = Math.round(totIB / bruto * 100);
+
+  document.getElementById('nbResult').innerHTML = `
+    <div class="result-hero">
+      <div class="rh-eyebrow">Netto maandinkomen (indicatief)</div>
+      <div class="rh-value">${fmt(nettMnd)}</div>
+      <div class="rh-caption">Netto/jaar: ${fmt(nettJr)} · Effectief tarief: ${effTarief}% · ${aow?'AOW-tarief schijf 1':'Volledig tarief schijf 1'}</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">IB-heffing</div><div class="kpi-value kv-red">${fmt(totIB)}</div></div>
+      <div class="kpi"><div class="kpi-label">HRA-voordeel</div><div class="kpi-value kv-green">${fmt(hraCap)}</div></div>
+      <div class="kpi"><div class="kpi-label">Eff. tarief</div><div class="kpi-value kv-amber">${effTarief}%</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">🔢 Belastingopbouw 2026</span></div>
+      <div class="card-body">
+        <table class="data-table">
+          <tr><th>Post</th><th class="right">Bedrag</th></tr>
+          <tr><td>Box 1 schijf 1 (${aow?'17,90%':'35,82%'}) over ${fmt(Math.min(bruto,GRENS1))}</td><td class="right">${fmt(ib1)}</td></tr>
+          ${bruto>GRENS1?`<tr><td>Box 1 schijf 2 (49,5%) over ${fmt(bruto-GRENS1)}</td><td class="right">${fmt(ib2)}</td></tr>`:''}
+          <tr><td style="color:var(--green);">Algemene heffingskorting</td><td class="right td-green">−${fmt(ahk)}</td></tr>
+          <tr><td style="color:var(--green);">Arbeidskorting</td><td class="right td-green">−${fmt(arbK)}</td></tr>
+          ${hra>0?`<tr><td style="color:var(--green);">HRA voordeel (35,75% plafond)</td><td class="right td-green">−${fmt(hraCap)}</td></tr>`:''}
+          ${hillenAftrek>0?`<tr><td style="color:var(--green);">Wet Hillen 2026 (73,33%)</td><td class="right td-green">−${fmt(hillenAftrek)}</td></tr>`:''}
+          ${jrAftrek>0?`<tr><td style="color:var(--green);">Jaarruimte-aftrek</td><td class="right td-green">−${fmt(jrAftrek)}</td></tr>`:''}
+          <tr><td><strong>Totale inkomstenbelasting</strong></td><td class="right"><strong>${fmt(totIB)}</strong></td></tr>
+          <tr><td style="font-weight:700;color:var(--navy);">Netto jaarinkomen</td><td class="right"><strong style="color:var(--green);">${fmt(nettJr)}</strong></td></tr>
+        </table>
+        ${ewf>0?`<div style="margin-top:10px;font-size:11.5px;color:var(--muted);padding:8px 10px;background:var(--gray);border-radius:var(--radius);">
+          EWF 2026 (WOZ ${fmt(woz)}): <strong>${fmt(ewf)}</strong>/jr · HRA: <strong>${fmt(hra)}</strong>/jr · 
+          ${hra>=ewf?'<span style="color:var(--green);">HRA > EWF → Wet Hillen niet van toepassing</span>':'<span style="color:var(--amber);">EWF > HRA → Hillen-aftrek: '+fmt(hillenAftrek)+'</span>'}
+        </div>`:''}
+        ${al('neutral','ℹ️','Indicatieve berekening 2026','Gebaseerd op gepubliceerde belastingparameters 2026. Geen rekening gehouden met bijzondere situaties, middelingsregeling of box 2/3 vermogen.')}
+      </div>
+    </div>`;
+}
+calcNb();
+
+// ═══════════════════════════════════════════════════════════
+// 7 — DOELSTELLINGEN
+// FIX: realistisch per-doel verdeling op basis van urgentie + haalbaarheid
+// ═══════════════════════════════════════════════════════════
+const DD_GOALS = [
+  {naam:'Noodfonds',            icon:'🛟', doel:15000, termijn:24,  prioriteit:1},
+  {naam:'Pensioen aanvulling',  icon:'🏖️', doel:150000,termijn:240, prioriteit:2},
+  {naam:'Studie kinderen',      icon:'🎓', doel:20000, termijn:120, prioriteit:3},
+  {naam:'Nieuwe auto',          icon:'🚗', doel:12000, termijn:48,  prioriteit:4},
+];
+
+function calcDd(){
+  const beschikbaar = parseInt(document.getElementById('ddBeschikbaar').value)||500;
+  document.getElementById('ddBeschikbaarV').textContent = fmt(beschikbaar);
+
+  // Verdeel naar prioriteit: hogere prioriteit → meer inleg
+  // Gewichten: 1→40%, 2→30%, 3→20%, 4→10%
+  const weights = [0.40, 0.30, 0.20, 0.10];
+  const ingleg  = DD_GOALS.map((g,i) => Math.round(beschikbaar * weights[i]));
+  const totInleg = ingleg.reduce((s,v)=>s+v,0);
+
+  document.getElementById('ddGoals').innerHTML = DD_GOALS.map((g,i)=>{
+    const inleg   = ingleg[i];
+    const mndNodig = inleg > 0 ? Math.ceil(g.doel / inleg) : 999;
+    // Haalbaarheidspct: hoe groot deel van het doel bereik je binnen de gewenste termijn?
+    const pct     = Math.min(100, inleg > 0 ? Math.round((inleg * g.termijn / g.doel) * 100) : 0);
+    const kleur   = pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)';
+    return `
+      <div class="doel-card">
+        <div class="doel-head">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;">${g.icon}</span>
+            <div>
+              <div class="doel-naam">${g.naam}</div>
+              <div style="font-size:11px;color:var(--muted);">Doel: ${fmt(g.doel)} · Termijn: ${g.termijn} mnd</div>
+            </div>
+          </div>
+          <div class="doel-pct" style="color:${kleur};">${pct}%</div>
+        </div>
+        <div class="doel-body">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+            <span style="color:var(--muted);">Inleg: <strong>${fmt(inleg)}/mnd</strong></span>
+            <span style="color:var(--muted);">${pct<100?`Volledig in ~${mndNodig} mnd`:'✅ Haalbaar binnen termijn'}</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${kleur};"></div></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('ddResult').innerHTML = `
+    ${al('info','💡','Prioriteitverdeling',`Verdeeld naar urgentie: noodfonds 40% (${fmt(ingleg[0])}) → pensioen 30% (${fmt(ingleg[1])}) → studie 20% (${fmt(ingleg[2])}) → auto 10% (${fmt(ingleg[3])}).`)}
+    ${beschikbaar < 300 ? al('warning','⚠️','Beperkt budget','Bij < € 300/mnd is het raadzaam eerst uitsluitend de noodfonds-buffer op te bouwen.') : ''}
+    ${al('neutral','📋','Volgende stap','Bespreek de doelen met de klant en stel prioriteiten op basis van persoonlijke wensen en levensgebeurtenissen.')}`;
+}
+calcDd();
+</script>
+</body>
+</html>

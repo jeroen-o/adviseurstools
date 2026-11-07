@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verzekeringscheck</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300;1,600&family=Epilogue:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ece6d8;
+  --bg3: #e0d9c8;
+  --ink: #1e1b16;
+  --ink2: #4a4540;
+  --ink3: #8a8278;
+  --white: #fffdf8;
+  --green: #2e6b4a;
+  --green-bg: #e8f2ec;
+  --amber: #b85c00;
+  --amber-bg: #fdf0e2;
+  --red: #b83030;
+  --red-bg: #fde8e8;
+  --blue: #1e4d7a;
+  --blue-bg: #e4eef8;
+  --accent: #c0440a;
+  --border: #d8d0be;
+  --r: 16px;
+  --r-sm: 9px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Epilogue', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.top-bar {
+  background: var(--ink);
+  padding: 18px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  color: var(--white);
+  letter-spacing: -0.3px;
+}
+
+.brand em {
+  color: #e8956a;
+  font-style: italic;
+}
+
+.top-right {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  font-weight: 300;
+}
+
+/* ── Progress ── */
+.progress-wrap {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 40px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.progress-steps {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+
+.step-dot {
+  height: 4px;
+  flex: 1;
+  background: var(--bg3);
+  border-radius: 4px;
+  transition: background 0.4s;
+}
+
+.step-dot.done { background: var(--green); }
+.step-dot.active { background: var(--accent); }
+
+.progress-label {
+  font-size: 12px;
+  color: var(--ink3);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* ── Main layout ── */
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ── Question card ── */
+.q-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 36px 40px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  animation: slideIn 0.28s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.q-step-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.q-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.q-sub {
+  font-size: 14px;
+  color: var(--ink3);
+  font-weight: 300;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+/* ── Options ── */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.options.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: all 0.18s;
+  user-select: none;
+}
+
+.opt:hover {
+  border-color: var(--ink2);
+  background: var(--bg2);
+}
+
+.opt.selected {
+  border-color: var(--accent);
+  background: #fdf3ee;
+}
+
+.opt-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+}
+
+.opt-label {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.opt-sub {
+  font-size: 12px;
+  color: var(--ink3);
+  font-weight: 300;
+  margin-top: 2px;
+}
+
+/* Checkbox style */
+.opt-check {
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+
+.opt.selected .opt-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-size: 11px;
+}
+
+/* Multi-select hint */
+.multi-hint {
+  font-size: 12px;
+  color: var(--ink3);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Range input */
+.range-wrap {
+  margin-top: 8px;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink3);
+  margin-bottom: 8px;
+}
+
+input[type=range] {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 6px;
+}
+
+.range-value {
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 10px;
+}
+
+/* ── Navigation ── */
+.nav-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: 'Epilogue', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink2);
+  padding: 12px 22px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-back:hover { border-color: var(--ink2); color: var(--ink); }
+
+.btn-next {
+  flex: 1;
+  background: var(--ink);
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: 'Epilogue', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  padding: 13px 22px;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-next:hover { background: var(--ink2); }
+.btn-next:disabled { background: var(--bg3); color: var(--ink3); cursor: not-allowed; }
+
+/* ── RESULTS ── */
+.results-hero {
+  text-align: center;
+  margin-bottom: 36px;
+  animation: slideIn 0.3s ease;
+}
+
+.results-hero h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.results-hero p {
+  font-size: 15px;
+  color: var(--ink2);
+  font-weight: 300;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Score gauge */
+.gauge-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.gauge-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 5px solid;
+}
+
+.gauge-circle .g-num {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gauge-circle .g-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.gauge-circle.good  { border-color: var(--green); color: var(--green); }
+.gauge-circle.ok    { border-color: #c8860a; color: #c8860a; }
+.gauge-circle.poor  { border-color: var(--red); color: var(--red); }
+
+.gauge-text h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.gauge-text p {
+  font-size: 13.5px;
+  color: var(--ink2);
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+/* Coverage result items */
+.coverage-section {
+  margin-bottom: 10px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+}
+
+.cov-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cov-header:hover { background: var(--bg); }
+
+.cov-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-essentieel .cov-status-dot { background: var(--red); }
+.status-aanbevolen .cov-status-dot  { background: #c8860a; }
+.status-aanwezig .cov-status-dot    { background: var(--green); }
+.status-optioneel .cov-status-dot   { background: var(--blue); }
+.status-nvt .cov-status-dot         { background: var(--bg3); }
+
+.cov-icon { font-size: 20px; flex-shrink: 0; }
+
+.cov-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.cov-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.status-essentieel .cov-badge { background: var(--red-bg); color: var(--red); }
+.status-aanbevolen .cov-badge  { background: var(--amber-bg); color: var(--amber); }
+.status-aanwezig .cov-badge    { background: var(--green-bg); color: var(--green); }
+.status-optioneel .cov-badge   { background: var(--blue-bg); color: var(--blue); }
+.status-nvt .cov-badge         { background: var(--bg2); color: var(--ink3); }
+
+.cov-chevron {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-left: 6px;
+  transition: transform 0.2s;
+}
+
+.cov-body {
+  padding: 0 20px 16px 20px;
+  border-top: 1px solid var(--bg2);
+  font-size: 13.5px;
+  color: var(--ink2);
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.cov-body p { padding-top: 14px; }
+
+.cov-tip {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+}
+
+.status-essentieel .cov-tip { background: var(--red-bg); color: var(--red); }
+.status-aanbevolen .cov-tip  { background: var(--amber-bg); color: var(--amber); }
+.status-aanwezig .cov-tip    { background: var(--green-bg); color: var(--green); }
+.status-optioneel .cov-tip   { background: var(--blue-bg); color: var(--blue); }
+
+/* Section labels */
+.section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin: 24px 0 10px;
+  padding-left: 2px;
+}
+
+/* Restart btn */
+.btn-restart {
+  width: 100%;
+  margin-top: 28px;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: 'Epilogue', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink2);
+  padding: 13px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-restart:hover { border-color: var(--ink); color: var(--ink); }
+
+.disclaimer {
+  font-size: 11.5px;
+  color: var(--ink3);
+  text-align: center;
+  margin-top: 20px;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+@media (max-width: 600px) {
+  .top-bar { padding: 16px 20px; }
+  .progress-wrap { padding: 12px 20px; }
+  .page { padding: 28px 16px 60px; }
+  .q-card { padding: 24px 20px; }
+  .options.grid-2 { grid-template-columns: 1fr; }
+  .gauge-wrap { flex-direction: column; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="brand">Verzekerings<em>check</em></div>
+  <div class="top-right">Geen API · 100% privé</div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-steps" id="progressSteps"></div>
+  <div class="progress-label" id="progressLabel">Stap 1 van 6</div>
+</div>
+
+<div class="page">
+  <div id="app"></div>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────
+const STEPS = [
+  {
+    id: 'wonen',
+    label: 'Stap 1 · Woonsituatie',
+    title: 'Hoe woont u?',
+    sub: 'Dit bepaalt welke woonverzekeringen voor u van toepassing zijn.',
+    type: 'single',
+    key: 'wonen',
+    options: [
+      { value: 'koop', icon: '🏠', label: 'Koopwoning', sub: 'Eigen woning, hypotheek' },
+      { value: 'huur', icon: '🔑', label: 'Huurwoning', sub: 'Particulier of woningcorporatie' },
+      { value: 'appartement_koop', icon: '🏢', label: 'Appartement (koop)', sub: 'VvE, eigen woning' },
+      { value: 'appartement_huur', icon: '🏗️', label: 'Appartement (huur)', sub: 'Huur met VvE of niet' },
+    ]
+  },
+  {
+    id: 'gezin',
+    label: 'Stap 2 · Gezin',
+    title: 'Wat is uw gezinssituatie?',
+    sub: 'Meer mensen in huis betekent meer risico op aansprakelijkheid.',
+    type: 'single',
+    key: 'gezin',
+    options: [
+      { value: 'alleen', icon: '🧍', label: 'Alleenstaand', sub: 'Woon alleen' },
+      { value: 'partner', icon: '👫', label: 'Met partner', sub: 'Geen kinderen' },
+      { value: 'kinderen', icon: '👨‍👩‍👧', label: 'Gezin met kinderen', sub: 'Kinderen thuis' },
+      { value: 'student', icon: '🎓', label: 'Student', sub: 'Kamer of studentenwoning' },
+    ]
+  },
+  {
+    id: 'werk',
+    label: 'Stap 3 · Werk & inkomen',
+    title: 'Wat is uw werksituatie?',
+    sub: 'Uw inkomenssituatie bepaalt het belang van inkomensbescherming.',
+    type: 'single',
+    key: 'werk',
+    options: [
+      { value: 'loondienst', icon: '💼', label: 'Loondienst', sub: 'Vast of tijdelijk contract' },
+      { value: 'zzp', icon: '🛠️', label: 'ZZP / zelfstandig', sub: 'Eigen onderneming' },
+      { value: 'gepensioneerd', icon: '🌿', label: 'Gepensioneerd', sub: 'AOW en/of pensioen' },
+      { value: 'student_werk', icon: '📚', label: 'Student / geen werk', sub: 'Geen of minimaal inkomen' },
+    ]
+  },
+  {
+    id: 'vervoer',
+    label: 'Stap 4 · Vervoer',
+    title: 'Welke vervoermiddelen heeft u?',
+    sub: 'Selecteer alles wat van toepassing is.',
+    type: 'multi',
+    key: 'vervoer',
+    options: [
+      { value: 'auto_wa', icon: '🚗', label: 'Auto (WA)', sub: 'Minimale wettelijke dekking' },
+      { value: 'auto_allrisk', icon: '🚙', label: 'Auto (All-risk)', sub: 'Uitgebreide dekking' },
+      { value: 'motor', icon: '🏍️', label: 'Motor / scooter', sub: 'Motorrijtuigverzekering' },
+      { value: 'fiets_duur', icon: '🚲', label: 'Dure fiets (>€750)', sub: 'E-bike of kwaliteitsfiets' },
+      { value: 'geen_auto', icon: '🚶', label: 'Geen auto', sub: 'Geen motorrijtuig' },
+    ]
+  },
+  {
+    id: 'bezit',
+    label: 'Stap 5 · Bezittingen',
+    title: 'Wat beschrijft uw situatie?',
+    sub: 'Selecteer alles wat van toepassing is.',
+    type: 'multi',
+    key: 'bezit',
+    options: [
+      { value: 'kostbaar', icon: '💎', label: 'Kostbaarheden > €2.500', sub: 'Sieraden, camera, instrument' },
+      { value: 'huisdier', icon: '🐕', label: 'Hond of ander huisdier', sub: 'Verhoogd AVP-risico' },
+      { value: 'hoge_inboedel', icon: '🛋️', label: 'Inboedel > €75.000', sub: 'Hoge woninginhoud' },
+      { value: 'tuin', icon: '🌳', label: 'Tuin met opstallen', sub: 'Schuur, tuinhuis, carport' },
+      { value: 'vrijwilliger', icon: '🤝', label: 'Vrijwilligerswerk', sub: 'Aansprakelijkheid buiten werk' },
+    ]
+  },
+  {
+    id: 'reis',
+    label: 'Stap 6 · Reizen',
+    title: 'Hoe reist u?',
+    sub: 'Dit bepaalt of een reis- en/of annuleringsverzekering zinvol is.',
+    type: 'single',
+    key: 'reis',
+    options: [
+      { value: 'veel', icon: '✈️', label: 'Regelmatig op reis', sub: 'Meerdere keren per jaar' },
+      { value: 'vakantie', icon: '🏖️', label: 'Jaarlijkse vakantie', sub: 'Eén of twee reizen per jaar' },
+      { value: 'weinig', icon: '🏡', label: 'Zelden op reis', sub: 'Nauwelijks of nooit' },
+      { value: 'buitenland', icon: '🌍', label: 'Woon/werk in buitenland', sub: 'Expat of grenswerker' },
+    ]
+  }
+];
+
+// ── STATE ────────────────────────────────────────────────
+const answers = {};
+let currentStep = 0;
+
+// ── RENDER ───────────────────────────────────────────────
+function render() {
+  updateProgress();
+  if (currentStep >= STEPS.length) {
+    renderResults();
+  } else {
+    renderQuestion(STEPS[currentStep]);
+  }
+}
+
+function updateProgress() {
+  const total = STEPS.length;
+  const stepsEl = document.getElementById('progressSteps');
+  const labelEl = document.getElementById('progressLabel');
+  stepsEl.innerHTML = Array.from({length: total}, (_, i) => {
+    const cls = i < currentStep ? 'done' : i === currentStep ? 'active' : '';
+    return `<div class="step-dot ${cls}"></div>`;
+  }).join('');
+  if (currentStep < total) {
+    labelEl.textContent = `Stap ${currentStep+1} van ${total}`;
+  } else {
+    labelEl.textContent = 'Resultaat';
+  }
+}
+
+function renderQuestion(step) {
+  const app = document.getElementById('app');
+  const isMulti = step.type === 'multi';
+  const selected = answers[step.key] || (isMulti ? [] : null);
+
+  let optionsHtml = '';
+  step.options.forEach(opt => {
+    const isSel = isMulti ? selected.includes(opt.value) : selected === opt.value;
+    optionsHtml += `
+      <div class="opt ${isSel ? 'selected' : ''}" onclick="selectOption('${step.key}', '${opt.value}', ${isMulti})">
+        <div class="opt-icon">${opt.icon}</div>
+        <div>
+          <div class="opt-label">${opt.label}</div>
+          ${opt.sub ? `<div class="opt-sub">${opt.sub}</div>` : ''}
+        </div>
+        <div class="opt-check">${isSel ? '✓' : ''}</div>
+      </div>`;
+  });
+
+  const hasAnswer = isMulti ? selected.length > 0 : selected !== null;
+
+  app.innerHTML = `
+    <div class="q-card">
+      <div class="q-step-label">${step.label}</div>
+      <div class="q-title">${step.title}</div>
+      <div class="q-sub">${step.sub}</div>
+      ${isMulti ? '<div class="multi-hint">☑ Meerdere antwoorden mogelijk</div>' : ''}
+      <div class="options ${step.options.length <= 4 ? 'grid-2' : ''}" id="optGrid">
+        ${optionsHtml}
+      </div>
+      <div class="nav-row">
+        ${currentStep > 0 ? '<button class="btn-back" onclick="goBack()">← Terug</button>' : ''}
+        <button class="btn-next" id="nextBtn" onclick="goNext()" ${!hasAnswer ? 'disabled' : ''}>
+          ${currentStep === STEPS.length - 1 ? 'Bekijk resultaat →' : 'Volgende →'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function selectOption(key, value, isMulti) {
+  if (isMulti) {
+    if (!answers[key]) answers[key] = [];
+    const idx = answers[key].indexOf(value);
+    if (idx >= 0) answers[key].splice(idx, 1);
+    else answers[key].push(value);
+  } else {
+    answers[key] = value;
+  }
+  render();
+}
+
+function goNext() {
+  const step = STEPS[currentStep];
+  const val = answers[step.key];
+  const isMulti = step.type === 'multi';
+  if (isMulti ? val && val.length > 0 : val) {
+    currentStep++;
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function goBack() {
+  currentStep--;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── SCORING LOGIC ────────────────────────────────────────
+function computeResults() {
+  const w = answers.wonen;
+  const g = answers.gezin;
+  const werk = answers.werk;
+  const vervoer = answers.vervoer || [];
+  const bezit = answers.bezit || [];
+  const reis = answers.reis;
+
+  const heeftAuto = vervoer.includes('auto_wa') || vervoer.includes('auto_allrisk');
+  const heeftAllrisk = vervoer.includes('auto_allrisk');
+  const heeftMotor = vervoer.includes('motor');
+  const heeftDuurFiets = vervoer.includes('fiets_duur');
+  const koopwoning = w === 'koop' || w === 'appartement_koop';
+  const huurwoning = w === 'huur' || w === 'appartement_huur';
+  const appartement = w === 'appartement_koop' || w === 'appartement_huur';
+  const isZZP = werk === 'zzp';
+  const heeftKinderen = g === 'kinderen';
+  const isStudent = g === 'student';
+  const reistVaak = reis === 'veel' || reis === 'buitenland';
+
+  const results = [];
+
+  // 1. Inboedelverzekering
+  results.push({
+    icon: '🛋️',
+    name: 'Inboedelverzekering',
+    status: 'essentieel',
+    badge: '⚠️ Ontbreekt vaak',
+    uitleg: 'De inboedelverzekering dekt schade aan uw spullen door brand, inbraak, waterschade en meer. Voor iedereen — huurder of eigenaar — is dit een absolute basis.',
+    tip: bezit.includes('hoge_inboedel')
+      ? 'Let op: uw inboedelwaarde is hoog. Zorg voor een adequate verzekerde som en controleer of kostbaarheden apart gedekt zijn.'
+      : 'Controleer of de verzekerde som up-to-date is — onderverzekering is een veelgemaakte fout.',
+    prioriteit: 1
+  });
+
+  // 2. Woonhuisverzekering
+  if (koopwoning) {
+    results.push({
+      icon: '🏠',
+      name: 'Woonhuisverzekering',
+      status: 'essentieel',
+      badge: '🔴 Verplicht bij hypotheek',
+      uitleg: 'Als eigenaar bent u verantwoordelijk voor schade aan het gebouw zelf. Bij een hypotheek is dit verplicht. Dekt brand, storm, water en inbraakschade aan de woning.',
+      tip: appartement ? 'Controleer of de VvE al een opstalverzekering heeft. Zo ja, dan is een eigen woonhuisverzekering meestal niet nodig.' : 'Zorg dat de herbouwwaarde actueel is — niet de marktwaarde maar de bouwkosten.',
+      prioriteit: 1
+    });
+  } else {
+    results.push({
+      icon: '🏠',
+      name: 'Woonhuisverzekering',
+      status: 'nvt',
+      badge: '— Niet van toepassing',
+      uitleg: 'Als huurder is het gebouw verzekerd door uw verhuurder. U hoeft zelf geen woonhuisverzekering af te sluiten.',
+      tip: null,
+      prioriteit: 3
+    });
+  }
+
+  // 3. AVP (Aansprakelijkheid)
+  const avpStatus = heeftKinderen ? 'essentieel' : 'aanbevolen';
+  results.push({
+    icon: '🤝',
+    name: 'Aansprakelijkheidsverzekering (AVP)',
+    status: avpStatus,
+    badge: heeftKinderen ? '⚠️ Essentieel met kinderen' : '👍 Sterk aanbevolen',
+    uitleg: 'Dekt schade die u, uw gezinsleden of huisdieren per ongeluk aan anderen veroorzaken. Zonder AVP kunt u privéaansprakelijkheid niet betalen.',
+    tip: bezit.includes('huisdier')
+      ? 'Uw huisdier valt normaal onder de AVP, maar controleer dit expliciet in uw polis.'
+      : heeftKinderen ? 'Kinderen veroorzaken regelmatig schade. De AVP dekt dit, maar controleer of schade op school ook gedekt is.' : 'Een AVP kost doorgaans €3–6 per maand en is een van de beste verzekeringen voor het geld.',
+    prioriteit: heeftKinderen ? 1 : 2
+  });
+
+  // 4. Rechtsbijstand
+  const rbStatus = isZZP || heeftKinderen ? 'aanbevolen' : 'optioneel';
+  results.push({
+    icon: '⚖️',
+    name: 'Rechtsbijstandverzekering',
+    status: rbStatus,
+    badge: rbStatus === 'aanbevolen' ? '👍 Aanbevolen' : '💡 Optioneel',
+    uitleg: 'Dekt juridische kosten bij geschillen over werk, huur, aankopen of conflicten met buren. Juridische bijstand is duur — gemiddeld €250+ per uur.',
+    tip: isZZP
+      ? 'Als ZZP\'er loopt u extra risico op zakelijke geschillen. Kies een polis die ook zakelijke modules biedt.'
+      : 'Controleer of uw werkgever al collectieve rechtsbijstand aanbiedt via de cao.',
+    prioriteit: 2
+  });
+
+  // 5. Auto
+  if (heeftAuto) {
+    results.push({
+      icon: '🚗',
+      name: 'Autoverzekering',
+      status: heeftAllrisk ? 'aanwezig' : 'aanbevolen',
+      badge: heeftAllrisk ? '✅ All-risk aanwezig' : '👍 Overweeg uitbreiding',
+      uitleg: heeftAllrisk
+        ? 'U heeft een all-risk (volledig casco) verzekering. Dit is de meest uitgebreide autoverzekering en dekt ook eigen schade.'
+        : 'U heeft een WA-verzekering. Dit is wettelijk verplicht maar dekt geen eigen schade. Overweeg uitbreiding naar WA+ of all-risk bij een nieuwere auto.',
+      tip: heeftAllrisk
+        ? 'Heroverweeg jaarlijks of all-risk nog zinvol is: zodra de dagwaarde onder €6.000 daalt, is WA+ vaak voldoende.'
+        : 'Bij een auto jonger dan 5 jaar is uitbreiding naar minimaal WA+ of all-risk aan te bevelen.',
+      prioriteit: heeftAllrisk ? 3 : 2
+    });
+  } else if (!vervoer.includes('geen_auto')) {
+    results.push({
+      icon: '🚗',
+      name: 'Autoverzekering',
+      status: 'nvt',
+      badge: '— Geen auto',
+      uitleg: 'U heeft aangegeven geen auto te hebben. Dit is niet van toepassing.',
+      tip: null,
+      prioriteit: 4
+    });
+  }
+
+  // 6. Motor
+  if (heeftMotor) {
+    results.push({
+      icon: '🏍️',
+      name: 'Motorrijtuigverzekering (motor)',
+      status: 'essentieel',
+      badge: '🔴 Wettelijk verplicht',
+      uitleg: 'Een motorrijtuigverzekering is wettelijk verplicht voor elke motor of scooter op de openbare weg. Minimaal WA is vereist.',
+      tip: 'Controleer of uw motor ook in de winter gedekt is als u hem stalt.',
+      prioriteit: 1
+    });
+  }
+
+  // 7. Fietsverzekering
+  if (heeftDuurFiets) {
+    results.push({
+      icon: '🚲',
+      name: 'Fietsverzekering',
+      status: 'aanbevolen',
+      badge: '👍 Aanbevolen',
+      uitleg: 'Bij een fiets boven €750 (zeker e-bikes) is diefstal een reëel risico. De inboedelverzekering dekt diefstal van de fiets buiten de woning meestal niet of beperkt.',
+      tip: 'Controleer eerst of uw inboedel- of reisverzekering al fietsendiefstal dekt voordat u een aparte polis afsluit.',
+      prioriteit: 2
+    });
+  }
+
+  // 8. AOV / Inkomensbescherming
+  if (isZZP) {
+    results.push({
+      icon: '💶',
+      name: 'Arbeidsongeschiktheidsverzekering (AOV)',
+      status: 'essentieel',
+      badge: '⚠️ Kritiek voor ZZP\'ers',
+      uitleg: 'Als ZZP\'er heeft u geen werkgeversnetwerk bij ziekte of arbeidsongeschiktheid. Zonder AOV valt uw inkomen direct weg. Dit is de meest onderverzekerde categorie onder zelfstandigen.',
+      tip: 'Kijk ook naar de broodfonds-constructie als goedkoper alternatief, of de collectieve AOV via beroepsverenigingen.',
+      prioriteit: 1
+    });
+  } else if (werk === 'loondienst') {
+    results.push({
+      icon: '💶',
+      name: 'Inkomensbescherming / WIA-aanvulling',
+      status: 'optioneel',
+      badge: '💡 Optioneel',
+      uitleg: 'In loondienst bent u de eerste jaren beschermd via uw werkgever en de Ziektewet. Na 2 jaar geldt de WIA. Een aanvullende verzekering kan het gat tussen WIA-uitkering en huidig inkomen dichten.',
+      tip: 'Controleer wat uw werkgever collectief aanbiedt — veel cao\'s bieden al een WIA-aanvulling.',
+      prioriteit: 3
+    });
+  }
+
+  // 9. Reisverzekering
+  if (reis !== 'weinig') {
+    const reisStatus = reistVaak ? 'aanbevolen' : 'optioneel';
+    results.push({
+      icon: '✈️',
+      name: 'Reisverzekering',
+      status: reisStatus,
+      badge: reisVaak ? '👍 Aanbevolen' : '💡 Optioneel',
+      uitleg: 'Dekt medische kosten, repatriëring, diefstal en annulering in het buitenland. Zorgverzekeraars dekken beperkte medische kosten buitenland — een reisverzekering vult dit aan.',
+      tip: reistVaak
+        ? 'Bij meerdere reizen per jaar is een doorlopende reisverzekering goedkoper dan losse polissen per reis.'
+        : 'Voor kortere Europese reizen volstaat soms een goede zorgverzekering met buitenlanddekking. Controleer dit eerst.',
+      prioriteit: reistVaak ? 2 : 3
+    });
+  }
+
+  // 10. Annuleringsverzekering
+  if (reis === 'veel' || reis === 'vakantie') {
+    results.push({
+      icon: '🗓️',
+      name: 'Annuleringsverzekering',
+      status: 'optioneel',
+      badge: '💡 Optioneel',
+      uitleg: 'Dekt de kosten als u een geboekte reis moet annuleren door ziekte, overlijden in de familie of andere gedekte oorzaken.',
+      tip: 'Sommige credit cards bieden gratis annuleringsdekking. Controleer dit voordat u een aparte polis afsluit.',
+      prioriteit: 3
+    });
+  }
+
+  return results.sort((a, b) => a.prioriteit - b.prioriteit);
+}
+
+// ── RESULTS RENDER ───────────────────────────────────────
+function renderResults() {
+  const results = computeResults();
+
+  const essentieel = results.filter(r => r.status === 'essentieel');
+  const aanbevolen = results.filter(r => r.status === 'aanbevolen');
+  const aanwezig   = results.filter(r => r.status === 'aanwezig');
+  const overig     = results.filter(r => r.status === 'optioneel' || r.status === 'nvt');
+
+  const totalActief = essentieel.length + aanbevolen.length + aanwezig.length;
+  const score = Math.round((aanwezig.length / Math.max(totalActief, 1)) * 100);
+  const gaugeClass = essentieel.length === 0 ? 'good' : essentieel.length <= 2 ? 'ok' : 'poor';
+  const gaugeText = essentieel.length === 0
+    ? 'Uw basisdekking lijkt goed op orde'
+    : `${essentieel.length} essentiële verzekering${essentieel.length > 1 ? 'en' : ''} aandacht nodig`;
+
+  let sectionsHtml = '';
+
+  if (essentieel.length > 0) {
+    sectionsHtml += `<div class="section-label">⚠️ Essentieel — direct actie vereist</div>`;
+    essentieel.forEach(r => sectionsHtml += covCard(r));
+  }
+  if (aanbevolen.length > 0) {
+    sectionsHtml += `<div class="section-label">👍 Aanbevolen voor uw situatie</div>`;
+    aanbevolen.forEach(r => sectionsHtml += covCard(r));
+  }
+  if (aanwezig.length > 0) {
+    sectionsHtml += `<div class="section-label">✅ Aanwezig & in orde</div>`;
+    aanwezig.forEach(r => sectionsHtml += covCard(r));
+  }
+  if (overig.length > 0) {
+    sectionsHtml += `<div class="section-label">💡 Optioneel / niet van toepassing</div>`;
+    overig.forEach(r => sectionsHtml += covCard(r));
+  }
+
+  document.getElementById('app').innerHTML = `
+    <div class="results-hero">
+      <h2>Uw verzekeringscheck</h2>
+      <p>Op basis van uw antwoorden hebben we uw dekkingsprofiel samengesteld.</p>
+    </div>
+
+    <div class="gauge-wrap">
+      <div class="gauge-circle ${gaugeClass}">
+        <div class="g-num">${essentieel.length}</div>
+        <div class="g-label">hiaten</div>
+      </div>
+      <div class="gauge-text">
+        <h3>${gaugeText}</h3>
+        <p>We vonden <strong>${results.filter(r=>r.status!=='nvt').length} relevante verzekeringscategorieën</strong> voor uw profiel.
+        ${essentieel.length > 0 ? `<strong> ${essentieel.length} daarvan vereisen directe aandacht.</strong>` : ' Uw basisdekking ziet er solide uit.'}
+        Scroll door het overzicht voor details en tips.</p>
+      </div>
+    </div>
+
+    ${sectionsHtml}
+
+    <button class="btn-restart" onclick="restart()">↺ Opnieuw invullen</button>
+    <div class="disclaimer">⚠️ Dit is een oriënterende check op basis van vaste logica — geen persoonlijk verzekeringsadvies.<br>Raadpleeg een adviseur voor uw specifieke situatie en polisvoorwaarden.</div>
+  `;
+}
+
+function covCard(r) {
+  const id = 'cov_' + r.name.replace(/\W/g,'_');
+  return `
+    <div class="coverage-section status-${r.status}">
+      <div class="cov-header" onclick="toggleCov('${id}')">
+        <div class="cov-status-dot"></div>
+        <div class="cov-icon">${r.icon}</div>
+        <div class="cov-name">${r.name}</div>
+        <div class="cov-badge">${r.badge}</div>
+        <div class="cov-chevron" id="chev_${id}">▼</div>
+      </div>
+      <div class="cov-body" id="${id}" style="display:none">
+        <p>${r.uitleg}</p>
+        ${r.tip ? `<div class="cov-tip">💡 <strong>Tip:</strong> ${r.tip}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+function toggleCov(id) {
+  const el = document.getElementById(id);
+  const chev = document.getElementById('chev_' + id);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  chev.textContent = open ? '▼' : '▲';
+}
+
+function restart() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  currentStep = 0;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── BOOT ─────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WOZ Bezwaar Tool</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #F4F7F9;
+  color: #333333;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.container { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #003057 0%, #004a8a 100%);
+  color: white;
+  padding: 28px 32px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: '🏠';
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 52px;
+  opacity: 0.15;
+}
+.header h1 { color: white; font-size: 28px; margin-bottom: 4px; }
+.header p  { color: rgba(255,255,255,0.85); font-size: 14px; }
+
+/* Stap-indicator */
+.step-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+  background: white;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0,48,87,0.08);
+  border: 1px solid #E0E6ED;
+}
+.step-btn {
+  flex: 1;
+  padding: 10px 6px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4A4A4A;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  position: relative;
+}
+.step-btn.active {
+  background: #003057;
+  color: white;
+}
+.step-btn.done {
+  color: #27AE60;
+}
+.step-btn .step-num {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #E0E6ED;
+  color: #4A4A4A;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  margin-right: 4px;
+  font-weight: 700;
+}
+.step-btn.active .step-num { background: #E5A138; color: white; }
+.step-btn.done .step-num { background: #27AE60; color: white; }
+
+/* Kaart */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,48,87,0.07);
+  border: 1px solid #E0E6ED;
+}
+.card h2 {
+  font-size: 20px;
+  color: #003057;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #F4F7F9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card h3 { font-size: 17px; color: #003057; margin: 18px 0 10px; }
+
+/* Formulier */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid.cols-1 { grid-template-columns: 1fr; }
+@media(max-width:620px) { .form-grid { grid-template-columns: 1fr; } }
+.form-group { margin-bottom: 4px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #003057;
+  margin-bottom: 5px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #E0E6ED;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #F4F7F9;
+  color: #333333;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.form-group textarea { resize: vertical; min-height: 90px; }
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #003057;
+  outline: none;
+  background: white;
+}
+.form-group input[type="date"] { cursor: pointer; }
+
+/* Knoppen */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.btn-primary { background: #003057; color: white; }
+.btn-primary:hover { background: #004a8a; }
+.btn-secondary { background: #F4F7F9; color: #003057; border: 1.5px solid #E0E6ED; }
+.btn-secondary:hover { background: #E0E6ED; }
+.btn-cta { background: #E5A138; color: white; font-size: 16px; font-weight: 700; }
+.btn-cta:hover { background: #d4922e; }
+.btn-danger { background: #E74C3C; color: white; }
+.btn-danger:hover { background: #c0392b; }
+.btn-success { background: #27AE60; color: white; }
+.btn-success:hover { background: #219a52; }
+.btn-group { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+
+/* Termijn banner */
+.termijn-box {
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.termijn-box.groen { background: #E8F8EF; border: 2px solid #27AE60; }
+.termijn-box.oranje { background: #FFF4E5; border: 2px solid #E5A138; }
+.termijn-box.rood { background: #FEEBEB; border: 2px solid #E74C3C; }
+.termijn-box.grijs { background: #F4F7F9; border: 2px solid #E0E6ED; }
+.termijn-icon { font-size: 32px; flex-shrink: 0; }
+.termijn-tekst strong { font-size: 17px; display: block; margin-bottom: 2px; }
+.termijn-tekst span { font-size: 14px; color: #4A4A4A; }
+.termijn-box.groen .termijn-tekst strong { color: #27AE60; }
+.termijn-box.oranje .termijn-tekst strong { color: #d4922e; }
+.termijn-box.rood .termijn-tekst strong { color: #E74C3C; }
+
+/* Checklist */
+.checklist { list-style: none; }
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #F4F7F9;
+}
+.checklist li:last-child { border-bottom: none; }
+.check-box {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 2px solid #E0E6ED;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-top: 1px;
+  background: white;
+}
+.check-box.checked { background: #27AE60; border-color: #27AE60; color: white; }
+.check-label { font-size: 15px; flex: 1; cursor: pointer; }
+.check-label.checked { text-decoration: line-through; color: #888; }
+
+/* Tabs voor brieven */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0;
+  background: #F4F7F9;
+  padding: 4px;
+  border-radius: 10px 10px 0 0;
+  border: 1px solid #E0E6ED;
+  border-bottom: none;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4A4A4A;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.tab-btn.active { background: white; color: #003057; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+/* Brief weergave */
+.brief-wrapper {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid #E0E6ED;
+  padding: 32px;
+  font-family: 'Times New Roman', serif;
+  font-size: 11pt;
+  line-height: 1.7;
+  color: #222;
+  min-height: 500px;
+}
+.brief-wrapper h4 {
+  font-size: 13pt;
+  margin-bottom: 6px;
+  color: #003057;
+  font-family: Arial, sans-serif;
+}
+.brief-afzender { margin-bottom: 24px; }
+.brief-datum { margin-bottom: 24px; }
+.brief-geadresseerde { margin-bottom: 24px; }
+.brief-onderwerp { margin-bottom: 24px; font-weight: bold; font-size: 12pt; }
+.brief-body p { margin-bottom: 12px; }
+.brief-body ul { margin: 8px 0 12px 24px; }
+.brief-body li { margin-bottom: 4px; }
+.brief-ondertekening { margin-top: 32px; }
+
+/* Alert */
+.alert {
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.alert-info { background: #EBF4FF; border-left: 4px solid #003057; color: #003057; }
+.alert-warn { background: #FFF4E5; border-left: 4px solid #E5A138; color: #7a4f0d; }
+.alert-success { background: #E8F8EF; border-left: 4px solid #27AE60; color: #145a32; }
+
+/* Redenen checkboxes */
+.reden-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media(max-width:580px) { .reden-grid { grid-template-columns: 1fr; } }
+.reden-item {
+  border: 1.5px solid #E0E6ED;
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.reden-item:hover { border-color: #003057; background: #F4F7F9; }
+.reden-item.selected { border-color: #003057; background: #EBF4FF; }
+.reden-item input[type="checkbox"] { margin-top: 2px; cursor: pointer; accent-color: #003057; }
+.reden-item label { font-size: 14px; cursor: pointer; flex: 1; }
+
+/* Voortgangsbalk checklist */
+.progress-bar-wrap { background: #E0E6ED; border-radius: 6px; height: 8px; margin: 8px 0 16px; }
+.progress-bar-fill { height: 8px; border-radius: 6px; background: linear-gradient(90deg, #27AE60, #003057); transition: width 0.4s; }
+
+/* Link gemeente */
+.gemeente-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: #E5A138;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 8px;
+  transition: background 0.2s;
+}
+.gemeente-link:hover { background: #d4922e; }
+
+/* Stappen navigatie verbergen */
+.stap { display: none; }
+.stap.actief { display: block; }
+
+/* Disclaimer */
+.disclaimer {
+  font-size: 13px;
+  color: #4A4A4A;
+  background: #F4F7F9;
+  border-left: 3px solid #E5A138;
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 24px;
+  line-height: 1.5;
+}
+
+/* Print hidden */
+@media print { .no-print { display: none !important; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header no-print">
+    <h1>🏠 WOZ Bezwaar Tool</h1>
+    <p>Maak eenvoudig bezwaar tegen de WOZ-waarde van uw woning · Inclusief ingebrekestelling & termijnbewaker</p>
+  </div>
+
+  <!-- Stap navigatie -->
+  <div class="step-bar no-print" id="stepBar">
+    <button class="step-btn active" id="sb0" onclick="gaNaarStap(0)">
+      <span class="step-num">1</span> Uw gegevens
+    </button>
+    <button class="step-btn" id="sb1" onclick="gaNaarStap(1)">
+      <span class="step-num">2</span> Bezwaarreden
+    </button>
+    <button class="step-btn" id="sb2" onclick="gaNaarStap(2)">
+      <span class="step-num">3</span> Termijn
+    </button>
+    <button class="step-btn" id="sb3" onclick="gaNaarStap(3)">
+      <span class="step-num">4</span> Brieven
+    </button>
+    <button class="step-btn" id="sb4" onclick="gaNaarStap(4)">
+      <span class="step-num">5</span> Checklist
+    </button>
+  </div>
+
+  <!-- ===================== STAP 1: Gegevens ===================== -->
+  <div class="stap actief" id="stap0">
+    <div class="card">
+      <h2>📋 Uw gegevens & aanslagbiljet</h2>
+
+      <div class="alert alert-info">
+        <span>ℹ️</span>
+        <span>Vul uw gegevens in zoals vermeld op het <strong>aanslagbiljet gemeentelijke belastingen</strong>. De dagtekening vindt u rechtsboven op het aanslagbiljet.</span>
+      </div>
+
+      <h3>Uw persoonsgegevens</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="voornaam">Voornaam</label>
+          <input type="text" id="voornaam" placeholder="bijv. Jan">
+        </div>
+        <div class="form-group">
+          <label for="achternaam">Achternaam (incl. tussenvoegsel)</label>
+          <input type="text" id="achternaam" placeholder="bijv. de Vries">
+        </div>
+        <div class="form-group">
+          <label for="straat">Straatnaam + huisnummer</label>
+          <input type="text" id="straat" placeholder="bijv. Kerkstraat 12">
+        </div>
+        <div class="form-group">
+          <label for="postcode">Postcode + woonplaats</label>
+          <input type="text" id="postcode" placeholder="bijv. 1234 AB Amsterdam">
+        </div>
+        <div class="form-group">
+          <label for="email">E-mailadres (optioneel)</label>
+          <input type="email" id="email" placeholder="u@voorbeeld.nl">
+        </div>
+        <div class="form-group">
+          <label for="telefoon">Telefoonnummer (optioneel)</label>
+          <input type="tel" id="telefoon" placeholder="06-12345678">
+        </div>
+      </div>
+
+      <h3>Aanslagbiljet & WOZ-gegevens</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="gemeente">Gemeente</label>
+          <input type="text" id="gemeente" placeholder="bijv. Amsterdam">
+        </div>
+        <div class="form-group">
+          <label for="aanslagNr">Aanslagnummer (van biljet)</label>
+          <input type="text" id="aanslagNr" placeholder="bijv. 2025-123456">
+        </div>
+        <div class="form-group">
+          <label for="dagtekening">Dagtekening aanslagbiljet</label>
+          <input type="date" id="dagtekening" oninput="berekeningTermijn()">
+        </div>
+        <div class="form-group">
+          <label for="peildatum">WOZ-peildatum</label>
+          <input type="date" id="peildatum" value="2025-01-01">
+        </div>
+        <div class="form-group">
+          <label for="wozWaarde">Vastgestelde WOZ-waarde (€)</label>
+          <input type="number" id="wozWaarde" placeholder="bijv. 425000">
+        </div>
+        <div class="form-group">
+          <label for="wozEigen">Uw geschatte WOZ-waarde (€)</label>
+          <input type="number" id="wozEigen" placeholder="bijv. 385000">
+        </div>
+        <div class="form-group">
+          <label for="objectNr">Objectnummer WOZ (optioneel)</label>
+          <input type="text" id="objectNr" placeholder="bijv. WOZ-0363-12345">
+        </div>
+        <div class="form-group">
+          <label for="wozAdres">Adres bezwaarschrift gemeente</label>
+          <input type="text" id="wozAdres" placeholder="bijv. Postbus 1234, 1234 AB Amsterdam">
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-cta" id="btn1">Volgende: Bezwaarreden →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STAP 2: Reden ===================== -->
+  <div class="stap" id="stap1">
+    <div class="card">
+      <h2>📝 Bezwaargrondslagen</h2>
+      <div class="alert alert-info">
+        <span>ℹ️</span>
+        <span>Kies de redenen die van toepassing zijn. U kunt meerdere redenen aangeven. Hoe meer onderbouwing, hoe sterker uw bezwaar.</span>
+      </div>
+
+      <h3>Wat klopt er niet aan de WOZ-waarde?</h3>
+      <div class="reden-grid" id="redenGrid">
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="te_hoog_markt">
+          <label>📊 WOZ-waarde is te hoog in verhouding tot vergelijkbare woningen in de buurt</label>
+        </div>
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="verkeerde_kenmerken">
+          <label>🏗️ Onjuiste woningkenmerken (oppervlakte, bouwjaar, inhoud)</label>
+        </div>
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="staat_onderhoud">
+          <label>🔧 Slechte staat van onderhoud die niet is meegewogen</label>
+        </div>
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="locatie_nadeel">
+          <label>📍 Waardedrukkende locatiefactoren (drukke weg, spoor, hoogspanning)</label>
+        </div>
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="recente_verkoop">
+          <label>💰 Woning recentelijk voor lager bedrag gekocht of getaxeerd</label>
+        </div>
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="vergelijkingsobjecten">
+          <label>🏘️ Gemeente heeft niet-vergelijkbare woningen als referentie gebruikt</label>
+        </div>
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="erfpacht">
+          <label>📜 Woning is op erfpachtgrond gebouwd (lagere WEV)</label>
+        </div>
+        <div class="reden-item" onclick="toggleReden(this)">
+          <input type="checkbox" name="reden" value="fout_biljet">
+          <label>⚠️ Fout op het aanslagbiljet (verkeerd object/naam/adres)</label>
+        </div>
+      </div>
+
+      <h3 style="margin-top:24px;">Aanvullende toelichting</h3>
+      <div class="form-group">
+        <label for="aanvulling">Uw eigen toelichting (optioneel, verschijnt in de brief)</label>
+        <textarea id="aanvulling" placeholder="bijv.: Uit het taxatieverslag blijkt dat mijn woning is vergeleken met een woning op 3 km afstand met een veel groter perceel..."></textarea>
+      </div>
+
+      <h3>Onderbouwing bij bezwaar meesturen?</h3>
+      <div class="reden-grid">
+        <div class="reden-item" onclick="toggleBijlage(this)">
+          <input type="checkbox" name="bijlage" value="taxatierapport">
+          <label>📄 Eigen taxatierapport / waardebepaling</label>
+        </div>
+        <div class="reden-item" onclick="toggleBijlage(this)">
+          <input type="checkbox" name="bijlage" value="verkoopakte">
+          <label>📋 Koopakte / verkoopakte</label>
+        </div>
+        <div class="reden-item" onclick="toggleBijlage(this)">
+          <input type="checkbox" name="bijlage" value="vergelijkingen">
+          <label>🏠 Verkoopoverzicht vergelijkbare woningen (Funda)</label>
+        </div>
+        <div class="reden-item" onclick="toggleBijlage(this)">
+          <input type="checkbox" name="bijlage" value="fotos">
+          <label>📸 Foto's van gebreken/onderhoudsachterstand</label>
+        </div>
+        <div class="reden-item" onclick="toggleBijlage(this)">
+          <input type="checkbox" name="bijlage" value="offerte">
+          <label>🔨 Offerte/rapport over herstelkosten</label>
+        </div>
+        <div class="reden-item" onclick="toggleBijlage(this)">
+          <input type="checkbox" name="bijlage" value="taxverslag">
+          <label>📑 Uitgeprint taxatieverslag WOZ (van gemeente)</label>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="gaNaarStap(0)">← Terug</button>
+        <button class="btn btn-cta" id="btn2">Volgende: Termijn controleren →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STAP 3: Termijn ===================== -->
+  <div class="stap" id="stap2">
+    <div class="card">
+      <h2>⏰ Bezwaartermijn & tijdlijn</h2>
+
+      <div id="termijnStatus" class="termijn-box grijs">
+        <div class="termijn-icon">📅</div>
+        <div class="termijn-tekst">
+          <strong>Vul de dagtekening in (stap 1) om uw termijn te berekenen</strong>
+          <span>De 6-wekentermijn gaat in op de dagtekening van het aanslagbiljet.</span>
+        </div>
+      </div>
+
+      <div class="card" style="background:#F4F7F9; border-color:#E0E6ED;">
+        <h3 style="margin-top:0;">📚 Hoe werkt de bezwaartermijn?</h3>
+        <ul style="padding-left:20px; font-size:15px; line-height:2;">
+          <li><strong>6 weken</strong> na de <em>dagtekening</em> op het aanslagbiljet om bezwaar in te dienen</li>
+          <li>U kunt het bezwaar per post of digitaal indienen bij de gemeente</li>
+          <li>Heeft u te laat ingediend? Kijk bij de gemeente of er bijzondere omstandigheden van toepassing zijn (tijdige ontvangst in de brievenbus etc.)</li>
+          <li>Na indiening moet de gemeente <strong>binnen 6 weken</strong> uitspraak doen (kan verlengd worden tot 12 weken)</li>
+          <li>Reageert de gemeente niet op tijd? Dan kunt u een <strong>ingebrekestelling</strong> sturen</li>
+        </ul>
+      </div>
+
+      <h3>Tijdlijn bij bezwaar</h3>
+      <div style="position:relative; padding-left:32px; border-left: 3px solid #E0E6ED; margin: 8px 0;">
+        <div style="margin-bottom:20px; position:relative;">
+          <div style="position:absolute; left:-40px; top:4px; width:16px; height:16px; border-radius:50%; background:#003057;"></div>
+          <strong>Dagtekening aanslagbiljet</strong> — U ontvangt het aanslagbiljet van de gemeente
+        </div>
+        <div style="margin-bottom:20px; position:relative;">
+          <div style="position:absolute; left:-40px; top:4px; width:16px; height:16px; border-radius:50%; background:#E5A138;"></div>
+          <strong id="tl1">+ 6 weken</strong> — <em>Uiterste indiening bezwaarschrift</em>
+        </div>
+        <div style="margin-bottom:20px; position:relative;">
+          <div style="position:absolute; left:-40px; top:4px; width:16px; height:16px; border-radius:50%; background:#27AE60;"></div>
+          <strong id="tl2">+ 12 weken</strong> — Gemeente doet uitspraak (of 18 weken bij verlenging)
+        </div>
+        <div style="margin-bottom:20px; position:relative;">
+          <div style="position:absolute; left:-40px; top:4px; width:16px; height:16px; border-radius:50%; background:#E74C3C;"></div>
+          <strong id="tl3">Geen uitspraak na 12 weken?</strong> — <em>Ingebrekestelling sturen</em> (stap 4 van deze tool)
+        </div>
+        <div style="position:relative;">
+          <div style="position:absolute; left:-40px; top:4px; width:16px; height:16px; border-radius:50%; background:#9B59B6;"></div>
+          <strong>Niet eens met uitspraak?</strong> — Beroep instellen bij de rechtbank (belastingrecht)
+        </div>
+      </div>
+
+      <h3 style="margin-top:20px;">🌐 Digitaal bezwaar indienen</h3>
+      <div class="alert alert-info">
+        <span>💡</span>
+        <span>Bij veel gemeentes kunt u ook <strong>digitaal</strong> bezwaar maken. Dit gaat via DigiD (particulieren) of eHerkenning (bedrijven). Zoek op de website van uw gemeente naar "bezwaar WOZ" of "WOZ bezwaar digitaal".</span>
+      </div>
+      <p style="font-size:14px; margin-bottom:8px;">Handige portalen:</p>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <a href="https://www.wozwaardeloket.nl" target="_blank" class="gemeente-link">🔍 WOZ Waardeloket</a>
+        <a href="https://www.belastingdienst.nl" target="_blank" class="gemeente-link">📑 Belastingdienst.nl</a>
+        <a href="https://www.eigenhuis.nl/financien-regelen/woz/woz-bezwaar-maken" target="_blank" class="gemeente-link">🏠 Eigen Huis WOZ-gids</a>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="gaNaarStap(1)">← Terug</button>
+        <button class="btn btn-cta" id="btn3">Volgende: Brieven genereren →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STAP 4: Brieven ===================== -->
+  <div class="stap" id="stap3">
+    <div class="card" style="padding-bottom:0;">
+      <h2 style="margin-bottom:16px;">✉️ Uw bezwaarbrieven</h2>
+      <div class="alert alert-success">
+        <span>✅</span>
+        <span>Hieronder vindt u twee brieven klaar. Controleer de inhoud, pas aan waar nodig, en print of stuur ze op.</span>
+      </div>
+
+      <div class="tab-bar no-print">
+        <button class="tab-btn active" id="tab0" onclick="toonTab(0)">📄 Brief 1: Bezwaarschrift WOZ</button>
+        <button class="tab-btn" id="tab1" onclick="toonTab(1)">⚠️ Brief 2: Ingebrekestelling</button>
+      </div>
+
+      <!-- Brief 1 -->
+      <div class="brief-wrapper" id="briefTab0">
+        <div id="briefBezwaar">
+          <!-- Gegenereerd door JS -->
+        </div>
+      </div>
+
+      <!-- Brief 2 -->
+      <div class="brief-wrapper" id="briefTab1" style="display:none;">
+        <div id="briefIngebreke">
+          <!-- Gegenereerd door JS -->
+        </div>
+      </div>
+
+      <div class="btn-group" style="margin-top:16px;" id="briefKnoppen">
+        <button class="btn btn-primary no-print" onclick="printBrief(0)">🖨️ Print Bezwaarschrift</button>
+        <button class="btn btn-danger no-print" onclick="printBrief(1)">🖨️ Print Ingebrekestelling</button>
+        <button class="btn btn-secondary no-print" onclick="gaNaarStap(2)">← Terug</button>
+        <button class="btn btn-cta no-print" onclick="gaNaarStap(4)">Naar checklist →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STAP 5: Checklist ===================== -->
+  <div class="stap" id="stap4">
+    <div class="card">
+      <h2>✅ Uw bezwaar-checklist</h2>
+
+      <div id="checklistVoortgang">
+        <p style="font-size:14px; color:#4A4A4A;" id="checkVoortgangTekst">0 van 12 stappen afgerond</p>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <h3>Vóór indienen</h3>
+      <ul class="checklist">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb0">✓</div>
+          <div class="check-label" id="cl0">Taxatieverslag WOZ opgevraagd en bekeken bij de gemeente (via DigiD)</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb1"></div>
+          <div class="check-label" id="cl1">Dagtekening aanslagbiljet gecontroleerd (rechtsbovenhoek biljet)</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb2"></div>
+          <div class="check-label" id="cl2">Bezwaartermijn van 6 weken nog niet verstreken</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb3"></div>
+          <div class="check-label" id="cl3">Vergelijkbare woningverkopen opgezocht (bijv. Kadaster, Funda, WOZ-loket)</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb4"></div>
+          <div class="check-label" id="cl4">Brief bezwaarschrift ingevuld en gecontroleerd</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb5"></div>
+          <div class="check-label" id="cl5">Bijlagen verzameld (taxatierapport, foto's, koopakte, vergelijkingen)</div>
+        </li>
+      </ul>
+
+      <h3>Bij indienen</h3>
+      <ul class="checklist">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb6"></div>
+          <div class="check-label" id="cl6">Bezwaarschrift per aangetekende post verstuurd (of digitaal ingediend)</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb7"></div>
+          <div class="check-label" id="cl7">Kopie van de brief en bijlagen bewaard</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb8"></div>
+          <div class="check-label" id="cl8">Verzenddatum en ontvangstbewijs/track&trace genoteerd</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb9"></div>
+          <div class="check-label" id="cl9">Ontvangstbevestiging van gemeente ontvangen (bewaar dit!)</div>
+        </li>
+      </ul>
+
+      <h3>Na indienen — wachten op uitspraak</h3>
+      <ul class="checklist">
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb10"></div>
+          <div class="check-label" id="cl10">Termijn uitspraak bijgehouden: gemeente heeft 6 weken (max. 12 weken) om te reageren</div>
+        </li>
+        <li onclick="toggleCheck(this)">
+          <div class="check-box" id="cb11"></div>
+          <div class="check-label" id="cl11">Geen reactie na 12 weken? Ingebrekestelling verstuurd (brief 2 uit stap 4)</div>
+        </li>
+      </ul>
+
+      <div style="margin-top:24px; background:#F4F7F9; border-radius:10px; padding:18px;">
+        <strong style="color:#003057; display:block; margin-bottom:8px;">📌 Let op: automatische bezwaren bij WOZ</strong>
+        <p style="font-size:14px;">Als u bezwaar maakt tegen de WOZ-waarde, maakt u automatisch <em>ook</em> bezwaar tegen de <strong>onroerendezaakbelasting (OZB)</strong> en de <strong>rioolheffing</strong>. Voor de afvalstoffenheffing en hondenbelasting moet u apart bezwaar maken als u dat ook wilt.</p>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="gaNaarStap(3)">← Terug naar brieven</button>
+        <button class="btn btn-primary" onclick="printChecklist()">🖨️ Print checklist</button>
+        <button class="btn btn-cta" onclick="startOpnieuw()">🔄 Nieuw bezwaar starten</button>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <strong>Disclaimer:</strong> Deze tool helpt u bij het opstellen van een bezwaarschrift WOZ, maar geeft geen juridisch advies. Bij complexe situaties of hoge belangen raden wij aan een belastingadviseur of juridisch expert te raadplegen. De termijnen en procedures kunnen per gemeente licht afwijken. Controleer altijd de informatie op de website van uw gemeente.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===================== STATE =====================
+let huidigeStap = 0;
+let checkStates = new Array(12).fill(false);
+checkStates[0] = true; // eerste al aangevinkt als voorbeeld
+
+// ===================== NAVIGATIE =====================
+function gaNaarStap(n) {
+  document.getElementById('stap' + huidigeStap).classList.remove('actief');
+  document.getElementById('sb' + huidigeStap).classList.remove('active');
+  if (huidigeStap < n) {
+    document.getElementById('sb' + huidigeStap).classList.add('done');
+  } else {
+    document.getElementById('sb' + huidigeStap).classList.remove('done');
+  }
+  huidigeStap = n;
+  document.getElementById('stap' + n).classList.add('actief');
+  document.getElementById('sb' + n).classList.add('active');
+  document.getElementById('sb' + n).classList.remove('done');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (n === 2) berekeningTermijn();
+  if (n === 3) genereerBrieven();
+  if (n === 4) updateChecklist();
+}
+
+// ===================== TERMIJN =====================
+function berekeningTermijn() {
+  const dt = document.getElementById('dagtekening').value;
+  if (!dt) return;
+
+  const dagtekening = new Date(dt);
+  const vandaag = new Date();
+  vandaag.setHours(0,0,0,0);
+
+  const deadline = new Date(dagtekening);
+  deadline.setDate(deadline.getDate() + 42); // 6 weken = 42 dagen
+
+  const uitspraakDeadline = new Date(dagtekening);
+  uitspraakDeadline.setDate(uitspraakDeadline.getDate() + 42 + 84); // +12 weken na bezwaar
+
+  const dagRest = Math.round((deadline - vandaag) / (1000 * 60 * 60 * 24));
+
+  const box = document.getElementById('termijnStatus');
+  const dl = deadline.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  let icon, cls, titel, sub;
+  if (dagRest > 14) {
+    icon = '✅'; cls = 'groen';
+    titel = `Nog ${dagRest} dagen — u heeft ruim de tijd`;
+    sub = `Uiterste indiening: ${dl}`;
+  } else if (dagRest > 0) {
+    icon = '⚠️'; cls = 'oranje';
+    titel = `Haast geboden: nog ${dagRest} dag${dagRest === 1 ? '' : 'en'}!`;
+    sub = `Uiterste indiening: ${dl} — stuur de brief zo snel mogelijk op`;
+  } else if (dagRest === 0) {
+    icon = '🚨'; cls = 'rood';
+    titel = 'Vandaag is de laatste dag!';
+    sub = `Dien uw bezwaar vandaag in — uiterste datum: ${dl}`;
+  } else {
+    icon = '❌'; cls = 'rood';
+    titel = `Termijn verstreken (${Math.abs(dagRest)} dagen geleden)`;
+    sub = `De bezwaartermijn was ${dl}. Controleer bij de gemeente of er nog mogelijkheden zijn.`;
+  }
+
+  box.className = `termijn-box ${cls}`;
+  box.innerHTML = `<div class="termijn-icon">${icon}</div><div class="termijn-tekst"><strong>${titel}</strong><span>${sub}</span></div>`;
+
+  // Tijdlijn updaten
+  document.getElementById('tl1').textContent = `Deadline bezwaar: ${dl}`;
+  document.getElementById('tl2').textContent = `Uitspraak uiterlijk: ${uitspraakDeadline.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+}
+
+// ===================== TOGGLES =====================
+function toggleReden(el) {
+  el.classList.toggle('selected');
+  el.querySelector('input[type="checkbox"]').checked = el.classList.contains('selected');
+}
+
+function toggleBijlage(el) {
+  el.classList.toggle('selected');
+  el.querySelector('input[type="checkbox"]').checked = el.classList.contains('selected');
+}
+
+// ===================== HELPERS =====================
+function getDag() {
+  return new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function formatEuro(n) {
+  return '€ ' + Number(n).toLocaleString('nl-NL');
+}
+function getGegevens() {
+  return {
+    naam: ((document.getElementById('voornaam').value || 'Voornaam') + ' ' + (document.getElementById('achternaam').value || 'Achternaam')).trim(),
+    straat: document.getElementById('straat').value || 'Straatnaam 1',
+    postcode: document.getElementById('postcode').value || '1234 AB Woonplaats',
+    email: document.getElementById('email').value,
+    telefoon: document.getElementById('telefoon').value,
+    gemeente: document.getElementById('gemeente').value || 'Uw Gemeente',
+    aanslagNr: document.getElementById('aanslagNr').value || '[aanslagnummer]',
+    dagtekening: document.getElementById('dagtekening').value ? new Date(document.getElementById('dagtekening').value).toLocaleDateString('nl-NL', {day:'numeric',month:'long',year:'numeric'}) : '[dagtekening]',
+    peildatum: document.getElementById('peildatum').value ? new Date(document.getElementById('peildatum').value).toLocaleDateString('nl-NL', {day:'numeric',month:'long',year:'numeric'}) : '1 januari 2025',
+    wozWaarde: document.getElementById('wozWaarde').value ? formatEuro(document.getElementById('wozWaarde').value) : '[WOZ-waarde]',
+    wozEigen: document.getElementById('wozEigen').value ? formatEuro(document.getElementById('wozEigen').value) : '[eigen schatting]',
+    objectNr: document.getElementById('objectNr').value || '[objectnummer]',
+    wozAdres: document.getElementById('wozAdres').value || 'Postbus ... , ... [Gemeente]',
+    aanvulling: document.getElementById('aanvulling').value,
+  };
+}
+function getRedenen() {
+  const geselecteerd = [];
+  document.querySelectorAll('#redenGrid .reden-item.selected label').forEach(l => {
+    geselecteerd.push(l.textContent.trim().replace(/^.{2}\s*/, ''));
+  });
+  return geselecteerd;
+}
+function getBijlagen() {
+  const ges = [];
+  document.querySelectorAll('.reden-grid:last-of-type .reden-item.selected label').forEach(l => {
+    ges.push(l.textContent.trim().replace(/^.{2}\s*/, ''));
+  });
+  return ges;
+}
+
+// ===================== BRIEVEN GENEREREN =====================
+function genereerBrieven() {
+  const g = getGegevens();
+  const redenen = getRedenen();
+  const bijlagen = getBijlagen();
+  const vandaag = getDag();
+
+  // Deadline berekenen
+  let deadlineStr = '[datum uiterlijk 6 weken na dagtekening]';
+  if (document.getElementById('dagtekening').value) {
+    const dl = new Date(document.getElementById('dagtekening').value);
+    dl.setDate(dl.getDate() + 42);
+    deadlineStr = dl.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  // Redenen tekst
+  let redenenHTML = '';
+  if (redenen.length > 0) {
+    redenenHTML = '<ul>' + redenen.map(r => `<li>${r}</li>`).join('') + '</ul>';
+  } else {
+    redenenHTML = '<ul><li>[Geef hier uw bezwaargrondslagen op]</li></ul>';
+  }
+
+  // Bijlagen tekst
+  let bijlagenHTML = '';
+  if (bijlagen.length > 0) {
+    bijlagenHTML = `<p><strong>Bijgevoegde stukken:</strong></p><ul>${bijlagen.map(b => `<li>${b}</li>`).join('')}</ul>`;
+  }
+
+  // Aanvulling
+  const aanvullingHTML = g.aanvulling ? `<p>${g.aanvulling}</p>` : '';
+
+  // ===== BRIEF 1: BEZWAARSCHRIFT =====
+  document.getElementById('briefBezwaar').innerHTML = `
+    <div class="brief-afzender">
+      <strong>${g.naam}</strong><br>
+      ${g.straat}<br>
+      ${g.postcode}
+      ${g.email ? '<br>' + g.email : ''}
+      ${g.telefoon ? '<br>' + g.telefoon : ''}
+    </div>
+
+    <div class="brief-geadresseerde">
+      <strong>Gemeente ${g.gemeente}</strong><br>
+      Afdeling Belastingen<br>
+      ${g.wozAdres}
+    </div>
+
+    <div class="brief-datum">${vandaag}</div>
+
+    <div class="brief-onderwerp">
+      Betreft: Bezwaarschrift WOZ-beschikking<br>
+      Aanslagnummer: ${g.aanslagNr} | WOZ-objectnummer: ${g.objectNr}<br>
+      Object: ${g.straat}, ${g.postcode}
+    </div>
+
+    <div class="brief-body">
+      <p>Geachte heer/mevrouw,</p>
+
+      <p>Hierbij maak ik bezwaar tegen de aan mij opgelegde WOZ-beschikking met kenmerk <strong>${g.aanslagNr}</strong>, gedagtekend op <strong>${g.dagtekening}</strong>. De deadline voor het indienen van bezwaar is <strong>${deadlineStr}</strong>.</p>
+
+      <p><strong>Vastgestelde WOZ-waarde:</strong> ${g.wozWaarde}<br>
+      <strong>WOZ-peildatum:</strong> ${g.peildatum}<br>
+      <strong>Adres object:</strong> ${g.straat}, ${g.postcode}</p>
+
+      <p>Ik ben van mening dat de vastgestelde WOZ-waarde van <strong>${g.wozWaarde}</strong> te hoog is. Op basis van mijn eigen analyse en de beschikbare marktinformatie schat ik de waarde in de vrij opleverbare staat (WEV) op de peildatum op maximaal <strong>${g.wozEigen}</strong>.</p>
+
+      <p><strong>Bezwaargrondslagen:</strong></p>
+      ${redenenHTML}
+
+      ${aanvullingHTML}
+
+      <p>Ik verzoek u de WOZ-waarde nader te motiveren en te heroverwegen, en mij in de gelegenheid te stellen gehoord te worden indien u de bezwaargronden betwist.</p>
+
+      <p>Ik verzoek u de vastgestelde WOZ-waarde te verlagen naar een niveau dat recht doet aan de werkelijke marktwaarde van de woning op de peildatum ${g.peildatum}.</p>
+
+      ${bijlagenHTML}
+
+      <p>Graag ontvang ik een ontvangstbevestiging van dit bezwaarschrift.</p>
+
+      <p>Ik vertrouw erop u hiermee voldoende te hebben geïnformeerd.</p>
+    </div>
+
+    <div class="brief-ondertekening">
+      <p>Hoogachtend,</p>
+      <br><br>
+      <p>${g.naam}</p>
+      <p style="font-size:10pt; color:#888;">${g.straat}, ${g.postcode}</p>
+    </div>
+  `;
+
+  // ===== BRIEF 2: INGEBREKESTELLING =====
+  let ingebrekeDeadline = '[datum: 12 weken na indiening bezwaar]';
+  if (document.getElementById('dagtekening').value) {
+    const igd = new Date(document.getElementById('dagtekening').value);
+    igd.setDate(igd.getDate() + 42 + 84); // dagtekening + 6 wk bezwaar + 12 wk uitspraak
+    ingebrekeDeadline = igd.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  document.getElementById('briefIngebreke').innerHTML = `
+    <div style="background:#FFF4E5; border:1px solid #E5A138; border-radius:8px; padding:14px; margin-bottom:24px; font-family:'Segoe UI',Arial,sans-serif; font-size:13px; color:#7a4f0d;">
+      ⚠️ <strong>Gebruik deze brief pas als de gemeente niet tijdig heeft gereageerd</strong> op uw bezwaarschrift (na 12 weken, of 18 weken bij verlenging). Na de ingebrekestelling heeft de gemeente nog 2 weken om te reageren, anders kunt u dwangsommen vorderen.
+    </div>
+
+    <div class="brief-afzender">
+      <strong>${g.naam}</strong><br>
+      ${g.straat}<br>
+      ${g.postcode}
+      ${g.email ? '<br>' + g.email : ''}
+      ${g.telefoon ? '<br>' + g.telefoon : ''}
+    </div>
+
+    <div class="brief-geadresseerde">
+      <strong>Gemeente ${g.gemeente}</strong><br>
+      Afdeling Belastingen<br>
+      ${g.wozAdres}
+    </div>
+
+    <div class="brief-datum">${vandaag}</div>
+
+    <div class="brief-onderwerp">
+      Betreft: INGEBREKESTELLING wegens niet tijdig beslissen op bezwaarschrift<br>
+      Aanslagnummer: ${g.aanslagNr} | Ingediend bezwaar d.d. [datum bezwaar]
+    </div>
+
+    <div class="brief-body">
+      <p>Geachte heer/mevrouw,</p>
+
+      <p>Op [datum indiening bezwaar] heb ik bij u een bezwaarschrift ingediend tegen de WOZ-beschikking met kenmerk <strong>${g.aanslagNr}</strong>, betreffende het object ${g.straat}, ${g.postcode}.</p>
+
+      <p>Tot op heden heb ik van u geen uitspraak op mijn bezwaar ontvangen. Op grond van artikel 7:10 van de Algemene wet bestuursrecht (Awb) had u uiterlijk op <strong>${ingebrekeDeadline}</strong> uitspraak op mijn bezwaar moeten doen.</p>
+
+      <p>Ik stel u hierbij <strong>formeel in gebreke</strong> wegens het niet tijdig nemen van een besluit op mijn bezwaarschrift, als bedoeld in artikel 4:17 lid 3 van de Awb. U heeft nu twee weken de tijd om alsnog uitspraak te doen. Indien u ook na deze termijn geen besluit neemt, zal ik aanspraak maken op een dwangsom op grond van artikel 4:17 Awb en/of beroep instellen bij de rechtbank wegens het niet tijdig beslissen (artikel 6:2 sub b Awb jo. artikel 7:1 lid 1 Awb).</p>
+
+      <p>Ik verzoek u mij schriftelijk te bevestigen dat u deze ingebrekestelling heeft ontvangen.</p>
+
+      <p>Ik ga ervan uit dat u zo spoedig mogelijk zorg draagt voor een uitspraak op mijn bezwaar.</p>
+    </div>
+
+    <div class="brief-ondertekening">
+      <p>Hoogachtend,</p>
+      <br><br>
+      <p>${g.naam}</p>
+      <p style="font-size:10pt; color:#888;">${g.straat}, ${g.postcode}</p>
+    </div>
+  `;
+}
+
+// ===================== TAB WISSELEN =====================
+function toonTab(n) {
+  document.getElementById('briefTab0').style.display = n === 0 ? 'block' : 'none';
+  document.getElementById('briefTab1').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('tab0').classList.toggle('active', n === 0);
+  document.getElementById('tab1').classList.toggle('active', n === 1);
+}
+
+// ===================== PRINT =====================
+function printBrief(n) {
+  const titel = n === 0 ? 'Bezwaarschrift WOZ' : 'Ingebrekestelling WOZ';
+  const inhoud = document.getElementById(n === 0 ? 'briefBezwaar' : 'briefIngebreke').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html lang="nl"><head>
+    <meta charset="UTF-8">
+    <title>${titel}</title>
+    <style>
+      body { font-family: 'Times New Roman', serif; font-size: 11pt; line-height: 1.7; color: #111; margin: 20mm 22mm 25mm 22mm; }
+      strong { font-weight: bold; }
+      p { margin-bottom: 10px; }
+      ul { margin: 8px 0 12px 22px; }
+      li { margin-bottom: 4px; }
+      .brief-onderwerp { font-weight: bold; margin-bottom: 20px; }
+      .brief-afzender, .brief-datum, .brief-geadresseerde { margin-bottom: 20px; }
+      .brief-ondertekening { margin-top: 32px; }
+      h1 { font-size: 14pt; color: #003057; border-bottom: 2px solid #003057; padding-bottom: 6px; margin-bottom: 20px; font-family: Arial, sans-serif; }
+      @media print { body { margin: 15mm 20mm; } }
+    </style>
+  </head><body>
+    <h1>${titel}</h1>
+    ${inhoud}
+  </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 400);
+}
+
+function printChecklist() {
+  const win = window.open('', '_blank');
+  let items = '';
+  const labels = [
+    'Taxatieverslag WOZ opgevraagd en bekeken bij de gemeente (via DigiD)',
+    'Dagtekening aanslagbiljet gecontroleerd (rechtsbovenhoek biljet)',
+    'Bezwaartermijn van 6 weken nog niet verstreken',
+    'Vergelijkbare woningverkopen opgezocht (bijv. Kadaster, Funda, WOZ-loket)',
+    'Brief bezwaarschrift ingevuld en gecontroleerd',
+    'Bijlagen verzameld (taxatierapport, foto\'s, koopakte, vergelijkingen)',
+    'Bezwaarschrift per aangetekende post verstuurd (of digitaal ingediend)',
+    'Kopie van de brief en bijlagen bewaard',
+    'Verzenddatum en ontvangstbewijs/track&trace genoteerd',
+    'Ontvangstbevestiging van gemeente ontvangen (bewaar dit!)',
+    'Termijn uitspraak bijgehouden: gemeente heeft 6 weken (max. 12 weken) om te reageren',
+    'Geen reactie na 12 weken? Ingebrekestelling verstuurd'
+  ];
+  labels.forEach((l, i) => {
+    items += `<li style="margin-bottom:10px;"><span style="display:inline-block;width:18px;height:18px;border:2px solid #003057;border-radius:3px;margin-right:10px;vertical-align:middle;${checkStates[i]?'background:#27AE60;':''}"></span>${l}</li>`;
+  });
+  win.document.write(`<!DOCTYPE html><html lang="nl"><head>
+    <meta charset="UTF-8"><title>WOZ Bezwaar Checklist</title>
+    <style>body{font-family:Arial,sans-serif;font-size:11pt;margin:20mm;color:#222;} h1{color:#003057;border-bottom:2px solid #E5A138;padding-bottom:6px;} ul{list-style:none;padding:0;}</style>
+  </head><body>
+    <h1>✅ WOZ Bezwaar Checklist</h1>
+    <p style="font-size:10pt;color:#666;">Gegenereerd op ${getDag()}</p>
+    <ul>${items}</ul>
+    <p style="font-size:9pt;color:#888;margin-top:20px;">WOZ Bezwaar Tool — www.hypotheekbond.nl</p>
+  </body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => { win.print(); }, 400);
+}
+
+// ===================== CHECKLIST TOGGLE =====================
+function toggleCheck(li) {
+  const idx = parseInt(li.querySelector('.check-box').id.replace('cb', ''));
+  checkStates[idx] = !checkStates[idx];
+  updateChecklist();
+}
+
+function updateChecklist() {
+  checkStates.forEach((state, i) => {
+    const cb = document.getElementById('cb' + i);
+    const cl = document.getElementById('cl' + i);
+    if (cb) {
+      cb.classList.toggle('checked', state);
+      cb.textContent = state ? '✓' : '';
+    }
+    if (cl) cl.classList.toggle('checked', state);
+  });
+  const gedaan = checkStates.filter(Boolean).length;
+  const totaal = checkStates.length;
+  const pct = Math.round((gedaan / totaal) * 100);
+  const fill = document.getElementById('progressFill');
+  const tekst = document.getElementById('checkVoortgangTekst');
+  if (fill) fill.style.width = pct + '%';
+  if (tekst) tekst.textContent = `${gedaan} van ${totaal} stappen afgerond`;
+}
+
+// ===================== OPNIEUW =====================
+function startOpnieuw() {
+  if (confirm('Weet u zeker dat u opnieuw wilt beginnen? Uw gegevens worden gewist.')) {
+    document.querySelectorAll('input, textarea, select').forEach(el => { el.value = ''; });
+    document.querySelectorAll('.reden-item.selected').forEach(el => el.classList.remove('selected'));
+    checkStates = new Array(12).fill(false);
+    checkStates[0] = true;
+    gaNaarStap(0);
+  }
+}
+
+// ===================== EVENT LISTENERS =====================
+document.getElementById('btn1').addEventListener('click', () => gaNaarStap(1));
+document.getElementById('btn2').addEventListener('click', () => gaNaarStap(2));
+document.getElementById('btn3').addEventListener('click', () => gaNaarStap(3));
+document.getElementById('dagtekening').addEventListener('input', berekeningTermijn);
+
+// Init
+updateChecklist();
+checkStates[0] = true;
+updateChecklist();
+</script>
+</body>
+</html>

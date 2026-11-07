@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verzekering Adviseur Suite</title>
+<style>
+:root{--navy:#002A54;--nm:#003a70;--nl:#e8eef5;--or:#FF6600;--ol:#fff2e8;--tx:#333332;--bd:#d8d8d8;--gn:#1a6b3c;--rd:#c0392b;--r:6px;--rl:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--tx);background:#f4f6f9;}
+.nav-bar{background:var(--nm);}
+.nav-row{display:grid;grid-template-columns:repeat(4,1fr);}
+.nr2{border-top:1px solid rgba(255,255,255,.1);}
+.nr3{border-top:2px solid rgba(255,165,0,.3);}
+.nr4{border-top:1px solid rgba(255,255,255,.1);}
+.mt{padding:8px 4px;color:rgba(255,255,255,.65);font-size:11px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s;}
+.mt:hover{color:#fff;background:rgba(255,255,255,.05);}
+.mt.active{color:#fff;border-bottom-color:var(--or);background:rgba(255,255,255,.07);}
+.suite-div{background:rgba(255,165,0,.12);text-align:center;font-size:10px;font-weight:700;color:rgba(255,200,100,.7);padding:2px;letter-spacing:.8px;text-transform:uppercase;}
+.main{padding:18px;}
+.pan{display:none;}.pan.active{display:block;}
+.hero{margin-bottom:16px;}
+.badge{display:inline-block;background:var(--nl);color:var(--navy);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.hero h2{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.hero p{font-size:13px;color:#666;line-height:1.5;}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--rl);margin-bottom:13px;overflow:hidden;}
+.ch{background:var(--nl);padding:9px 16px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:7px;}
+.ch::before{content:'';display:inline-block;width:7px;height:7px;background:var(--or);transform:rotate(45deg);flex-shrink:0;}
+.cb{padding:15px;}
+.g2{display:grid;grid-template-columns:285px 1fr;gap:14px;align-items:start;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.g2eq{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:800px){.g2{grid-template-columns:1fr;}.g3,.g4{grid-template-columns:1fr 1fr;}}
+.field{margin-bottom:11px;}.field:last-child{margin-bottom:0;}
+.field label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#666;margin-bottom:3px;}
+.fv{font-size:12px;font-weight:700;color:var(--or);}
+.fi{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);font-size:13.5px;color:var(--tx);background:#fff;}
+.fi:focus{outline:none;border-color:var(--navy);}
+.fw{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);font-size:13.5px;color:var(--tx);background:#fff;cursor:pointer;}
+.fw:focus{outline:none;border-color:var(--navy);}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--nl);border-radius:4px;outline:none;cursor:pointer;margin:3px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--or);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--or);cursor:pointer;border:2px solid #fff;}
+.slab{display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:1px;}
+.sc{background:var(--nl);border-radius:var(--r);padding:10px 12px;}
+.sc-l{font-size:11px;color:#666;margin-bottom:2px;}
+.sc-v{font-size:16px;font-weight:700;color:var(--navy);}
+.sc.hi{background:var(--ol);}.sc.hi .sc-v{color:var(--or);}
+.sc.gn{background:#eaf3ee;}.sc.gn .sc-v{color:var(--gn);}
+.sc.rd{background:#fdf3f3;}.sc.rd .sc-v{color:var(--rd);}
+.sc.bl{background:#e8eef8;}.sc.bl .sc-v{color:#1a508a;}
+.sc.am{background:#fdf6e0;}.sc.am .sc-v{color:#a86800;}
+.hs{background:var(--navy);border-radius:var(--rl);padding:16px 20px;color:#fff;margin-bottom:11px;}
+.hs-l{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px;}
+.hs-v{font-size:26px;font-weight:700;line-height:1;margin-bottom:3px;color:#ffb366;}
+.hs-s{font-size:12px;color:rgba(255,255,255,.5);}
+.hs.goed{background:var(--gn);}
+.hs.slecht{background:var(--rd);}
+.ib{border-radius:var(--r);padding:9px 12px;margin-bottom:7px;border-left:4px solid;display:flex;gap:9px;align-items:flex-start;}
+.ib-i{font-size:14px;flex-shrink:0;margin-top:1px;}
+.ib-b strong{display:block;font-size:13px;font-weight:700;margin-bottom:1px;}
+.ib-b span{font-size:12px;line-height:1.5;}
+.ib.ok{background:#eaf3ee;border-color:var(--gn);}.ib.ok .ib-b strong{color:var(--gn);}
+.ib.wa{background:#fdf6e0;border-color:#a86800;}.ib.wa .ib-b strong{color:#a86800;}
+.ib.er{background:#fdf3f3;border-color:var(--rd);}.ib.er .ib-b strong{color:var(--rd);}
+.ib.in{background:#e8eef8;border-color:#1a508a;}.ib.in .ib-b strong{color:#1a508a;}
+.ib.hl{background:var(--ol);border-color:var(--or);}.ib.hl .ib-b strong{color:var(--or);}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--navy);color:#fff;padding:6px 10px;text-align:right;font-weight:600;}
+.tbl th:first-child,.tbl td:first-child{text-align:left;}
+.tbl tbody tr:nth-child(even){background:var(--nl);}
+.tbl td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--bd);}
+.tbl td:first-child{font-weight:600;color:var(--navy);}
+/* Dekking grid */
+.dek-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.dek-item{background:#f9f9f9;border:2px solid var(--bd);border-radius:var(--r);padding:10px;cursor:pointer;text-align:center;transition:all .15s;}
+.dek-item:hover{border-color:var(--navy);}
+.dek-item.on{background:#eaf3ee;border-color:rgba(26,107,60,.4);}
+.dek-item.off{background:#fdf3f3;border-color:rgba(192,57,43,.3);}
+.dek-icon{font-size:20px;margin-bottom:3px;}
+.dek-naam{font-size:12px;font-weight:700;}
+.dek-st{font-size:10px;margin-top:2px;}
+/* Polis row */
+.polis-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f9f9;border-radius:var(--r);margin-bottom:6px;}
+/* Inboedel */
+.inb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+/* SD inputs */
+.sd-hdr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:5px;font-size:10px;color:#888;font-weight:700;text-transform:uppercase;padding:0 2px;margin-bottom:5px;}
+.sd-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:5px;align-items:center;margin-bottom:5px;}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="nav-row nr1">
+    <button class="mt active" onclick="sw(0)" id="t0">🔍 Dekking Gap</button>
+    <button class="mt" onclick="sw(1)" id="t1">❤️ ORV</button>
+    <button class="mt" onclick="sw(2)" id="t2">🩺 AOV ZZP</button>
+    <button class="mt" onclick="sw(3)" id="t3">🏠 Herbouwwaarde</button>
+  </div>
+  <div class="nav-row nr2">
+    <button class="mt" onclick="sw(4)" id="t4">🛋️ Inboedel</button>
+    <button class="mt" onclick="sw(5)" id="t5">⚖️ AVP</button>
+    <button class="mt" onclick="sw(6)" id="t6">💶 Premie Bench</button>
+    <button class="mt" onclick="sw(7)" id="t7">💥 Schade Impact</button>
+  </div>
+  <div class="suite-div">Zorg · Zakelijk · Voertuig · Portfolio</div>
+  <div class="nav-row nr3">
+    <button class="mt" onclick="sw(8)" id="t8">🏥 Zorg ER</button>
+    <button class="mt" onclick="sw(9)" id="t9">🏢 BAV Bedrijf</button>
+    <button class="mt" onclick="sw(10)" id="t10">✈️ Reisverzekering</button>
+    <button class="mt" onclick="sw(11)" id="t11">🚗 Auto Dagwaarde</button>
+  </div>
+  <div class="nav-row nr4">
+    <button class="mt" onclick="sw(12)" id="t12">👥 Collectief</button>
+    <button class="mt" onclick="sw(13)" id="t13">⚡ Onderverzekering</button>
+    <button class="mt" onclick="sw(14)" id="t14">📋 Claimhistorie</button>
+    <button class="mt" onclick="sw(15)" id="t15">📊 Dashboard</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ 0: DEKKING GAP ═══ -->
+<div class="pan active" id="p0">
+  <div class="hero"><div class="badge">Gap Analyse</div><h2>🔍 Dekking Gap Analyse</h2><p>Klik op elke verzekering om de status te registreren. Het systeem genereert direct een geprioriteerde advieslijst.</p></div>
+  <div class="card"><div class="ch">Status per verzekering — klik om te wisselen</div><div class="cb">
+    <div class="dek-grid" id="dekkingGrid"></div>
+    <div style="font-size:11px;color:#888;margin-top:10px">Grijs = onbekend · Groen = gedekt · Rood = niet gedekt</div>
+  </div></div>
+  <div id="dekkingRes"></div>
+</div>
+
+<!-- ═══ 1: ORV ═══ -->
+<div class="pan" id="p1">
+  <div class="hero"><div class="badge">Overlijdensrisico</div><h2>❤️ ORV Benodigde Dekking Calculator</h2><p>Bereken de exacte benodigde ORV-dekking op basis van hypotheek, inkomenstekort en gezinssituatie.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Gezinssituatie</div><div class="cb">
+      <div class="field"><label>Hypotheek restschuld (€)</label><input type="number" class="fi" id="orvHyp" value="300000" oninput="calcOrv()"></div>
+      <div class="field"><label>Bruto inkomen verzekerde (€/jr)</label><input type="number" class="fi" id="orvInk" value="65000" oninput="calcOrv()"></div>
+      <div class="field"><label>Partner inkomen bruto (€/jr)</label><input type="number" class="fi" id="orvPart" value="30000" oninput="calcOrv()"></div>
+      <div class="field"><label>Kinderen aanwezig</label><select class="fw" id="orvKind" onchange="calcOrv()"><option value="ja" selected>Ja</option><option value="nee">Nee</option></select></div>
+      <div class="field"><label>Aanvullingsjaren <span class="fv" id="orvJrV">20 jr</span></label>
+        <input type="range" id="orvJr" min="5" max="30" value="20" oninput="calcOrv()"><div class="slab"><span>5</span><span>30 jr</span></div></div>
+      <div class="field"><label>Partnerpensioen (€/jr)</label><input type="number" class="fi" id="orvPp" value="8000" oninput="calcOrv()"></div>
+      <div class="field"><label>Spaargeld / andere dekking (€)</label><input type="number" class="fi" id="orvOv" value="20000" oninput="calcOrv()"></div>
+    </div></div>
+    <div id="orvRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 2: AOV ZZP ═══ -->
+<div class="pan" id="p2">
+  <div class="hero"><div class="badge">AOV</div><h2>🩺 AOV Benodigde Dekking (ZZP)</h2><p>Bereken het optimale AOV-maandbedrag voor ZZP-klanten. ZZP-ers hebben géén WIA-recht — volledige nettoinkomenbescherming is noodzakelijk.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">ZZP Profiel</div><div class="cb">
+      <div class="field"><label>Netto jaarinkomen <span class="fv" id="aovInkV">€ 60.000</span></label>
+        <input type="range" id="aovInk" min="15000" max="200000" step="2000" value="60000" oninput="calcAov()">
+        <div class="slab"><span>€15k</span><span>€200k</span></div></div>
+      <div class="field"><label>Branche</label><select class="fw" id="aovBr" onchange="calcAov()"><option value="licht">IT / Consultancy / Financieel</option><option value="midden" selected>Marketing / HR / Creatief</option><option value="zwaar">Bouw / Technisch</option><option value="zorg">Zorg / Welzijn</option></select></div>
+      <div class="field"><label>Leeftijd</label><input type="number" class="fi" id="aovLft" value="38" oninput="calcAov()"></div>
+      <div class="field"><label>Eigen risicotermijn</label><select class="fw" id="aovEr" onchange="calcAov()"><option value="14">14 dagen</option><option value="30" selected>30 dagen</option><option value="60">60 dagen</option><option value="90">90 dagen</option><option value="180">180 dagen</option></select></div>
+      <div class="field"><label>Partner met inkomen?</label><select class="fw" id="aovPart" onchange="calcAov()"><option value="ja">Ja, volledig</option><option value="nee" selected>Nee / deeltijd</option></select></div>
+      <div class="field"><label>Spaarbuffer (maanden)</label><input type="number" class="fi" id="aovBuf" value="3" min="0" max="24" oninput="calcAov()"></div>
+    </div></div>
+    <div id="aovRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 3: HERBOUWWAARDE ═══ -->
+<div class="pan" id="p3">
+  <div class="hero"><div class="badge">Woonhuisverzekering</div><h2>🏠 Herbouwwaarde Calculator</h2><p>Bereken de exacte herbouwwaarde van de woning voor een correcte woonhuisverzekering. Inclusief indexatieadvies.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Woninggegevens</div><div class="cb">
+      <div class="field"><label>Woonoppervlak <span class="fv" id="hwm2V">120 m²</span></label>
+        <input type="range" id="hwm2" min="40" max="500" step="5" value="120" oninput="calcHw()">
+        <div class="slab"><span>40 m²</span><span>500 m²</span></div></div>
+      <div class="field"><label>Woningtype</label><select class="fw" id="hwType" onchange="calcHw()"><option value="rijtje" selected>Rijtjeswoning</option><option value="hoek">Hoekwoning</option><option value="twee1">2-onder-1-kap</option><option value="vrijstaand">Vrijstaand</option><option value="appartement">Appartement</option></select></div>
+      <div class="field"><label>Bouwperiode</label><select class="fw" id="hwBj" onchange="calcHw()"><option value="1.05">Na 2000 (nieuwbouw)</option><option value="1.0">1980–2000</option><option value="1.15" selected>1950–1980</option><option value="1.5">Voor 1950 / Monument</option></select></div>
+      <div class="field"><label>Kwaliteit afwerking</label><select class="fw" id="hwKwal" onchange="calcHw()"><option value="1.0" selected>Standaard</option><option value="1.15">Goed</option><option value="1.35">Luxe</option></select></div>
+      <div class="field"><label>Aanbouw aanwezig</label><select class="fw" id="hwAan" onchange="calcHw()"><option value="0" selected>Nee</option><option value="15000">Klein (< 20 m²)</option><option value="35000">Groot (20–50 m²)</option></select></div>
+      <div class="field"><label>Zonnepanelen</label><select class="fw" id="hwZon" onchange="calcHw()"><option value="nee" selected>Nee</option><option value="ja">Ja</option></select></div>
+    </div></div>
+    <div id="hwRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 4: INBOEDEL ═══ -->
+<div class="pan" id="p4">
+  <div class="hero"><div class="badge">Inboedelverzekering</div><h2>🛋️ Inboedelwaarde Calculator</h2><p>Kamer-voor-kamer inventarisatie van de inboedelwaarde voor een correcte inboedelverzekering op nieuwwaarde.</p></div>
+  <div class="card"><div class="ch">Inboedel per ruimte (nieuwwaarde)</div><div class="cb">
+    <div class="inb-grid" id="inbInputs"></div>
+  </div></div>
+  <div id="inbRes"></div>
+</div>
+
+<!-- ═══ 5: AVP ═══ -->
+<div class="pan" id="p5">
+  <div class="hero"><div class="badge">Aansprakelijkheid</div><h2>⚖️ AVP Dekkingsbehoefte Check</h2><p>Bepaal de optimale AVP-dekking op basis van gezinssituatie, huisdieren en risicofactoren.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Risicoprofiel</div><div class="cb">
+      <div class="field"><label>Gezinssituatie</label><select class="fw" id="avpGezin" onchange="calcAvp()"><option value="alleen">Alleenstaand</option><option value="partner" selected>Met partner</option><option value="kinderen">Met jonge kinderen</option><option value="pubers">Met tieners</option></select></div>
+      <div class="field"><label>Huisdieren</label><select class="fw" id="avpDier" onchange="calcAvp()"><option value="geen" selected>Geen</option><option value="kat">Kat</option><option value="hond">Hond (klein/midden)</option><option value="groot">Grote/bijtgevaarlijke hond</option></select></div>
+      <div class="field"><label>Activiteiten</label><select class="fw" id="avpActief" onchange="calcAvp()"><option value="laag">Rustig</option><option value="midden" selected>Actief (sport, tuin)</option><option value="hoog">Hoog risico</option></select></div>
+      <div class="field"><label>Vrijwilligerswerk</label><select class="fw" id="avpVrijw" onchange="calcAvp()"><option value="nee" selected>Nee</option><option value="ja">Ja</option></select></div>
+      <div class="field"><label>Woonsituatie</label><select class="fw" id="avpWoon" onchange="calcAvp()"><option value="koop" selected>Eigenaar</option><option value="huur">Huurder</option></select></div>
+    </div></div>
+    <div id="avpRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 6: PREMIE BENCHMARK ═══ -->
+<div class="pan" id="p6">
+  <div class="hero"><div class="badge">Marktanalyse</div><h2>💶 Premie Benchmark Tool</h2><p>Vergelijk de premies van uw klant met het marktgemiddelde en identificeer overprijsde polissen.</p></div>
+  <div class="card"><div class="ch">Huidige jaarpremies klant</div><div class="cb" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+    <div class="field"><label>Woonhuis (jr)</label><input type="number" class="fi" id="bpWoon" value="1200" oninput="calcBp()"></div>
+    <div class="field"><label>Inboedel (jr)</label><input type="number" class="fi" id="bpInb" value="240" oninput="calcBp()"></div>
+    <div class="field"><label>AVP (jr)</label><input type="number" class="fi" id="bpAvp" value="96" oninput="calcBp()"></div>
+    <div class="field"><label>Zorgverzekering (mnd)</label><input type="number" class="fi" id="bpZorg" value="165" oninput="calcBp()"></div>
+    <div class="field"><label>Auto (jr)</label><input type="number" class="fi" id="bpAuto" value="800" oninput="calcBp()"></div>
+    <div class="field"><label>Reisverzekering (jr)</label><input type="number" class="fi" id="bpReis" value="180" oninput="calcBp()"></div>
+  </div></div>
+  <div id="bpRes"></div>
+</div>
+
+<!-- ═══ 7: SCHADE IMPACT ═══ -->
+<div class="pan" id="p7">
+  <div class="hero"><div class="badge">Schadeanalyse</div><h2>💥 Schade Impact & No-Claim Analyse</h2><p>Bereken of melden voordeliger is dan zelf betalen. Inclusief no-claimverlies en break-even berekening.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Schadegegevens</div><div class="cb">
+      <div class="field"><label>Schadebedrag (€)</label><input type="number" class="fi" id="siSchade" value="3500" oninput="calcSi()"></div>
+      <div class="field"><label>Eigen risico polis (€)</label><input type="number" class="fi" id="siEr" value="500" oninput="calcSi()"></div>
+      <div class="field"><label>Huidige jaarpremie (€)</label><input type="number" class="fi" id="siPremie" value="900" oninput="calcSi()"></div>
+      <div class="field"><label>Premieverlies (jaren)</label><select class="fw" id="siJaren" onchange="calcSi()"><option value="1">1 jaar</option><option value="2">2 jaar</option><option value="3" selected>3 jaar</option><option value="5">5 jaar</option></select></div>
+      <div class="field"><label>No-claim korting huidig (%)</label><input type="number" class="fi" id="siNcm" value="25" oninput="calcSi()"></div>
+    </div></div>
+    <div id="siRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 8: ZORG ER ═══ -->
+<div class="pan" id="p8">
+  <div class="hero"><div class="badge">Zorgverzekering</div><h2>🏥 Zorg Eigen Risico Optimizer 2025</h2><p>Bereken het optimale eigen risico voor de zorgverzekering op basis van verwacht zorggebruik. Verplicht ER 2025: €385.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Zorgsituatie</div><div class="cb">
+      <div class="field"><label>Leeftijd</label><input type="number" class="fi" id="zerLft" value="42" oninput="calcZer()"></div>
+      <div class="field"><label>Chronische aandoening</label><select class="fw" id="zerChron" onchange="calcZer()"><option value="nee" selected>Nee</option><option value="licht">Ja, licht (€200–500/jr)</option><option value="zwaar">Ja, zwaar (€1.000+/jr)</option></select></div>
+      <div class="field"><label>Verwacht zorggebruik</label><select class="fw" id="zerGebr" onchange="calcZer()"><option value="laag" selected>Laag (huisarts only)</option><option value="midden">Gemiddeld (1–2 specialist)</option><option value="hoog">Hoog (meerdere / opname)</option></select></div>
+      <div class="field"><label>Financiële buffer</label><select class="fw" id="zerRis" onchange="calcZer()"><option value="laag">Krap — bescherming gewenst</option><option value="midden" selected>Voldoende</option><option value="hoog">Ruim — risico acceptabel</option></select></div>
+    </div></div>
+    <div id="zerRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 9: BAV BEDRIJF ═══ -->
+<div class="pan" id="p9">
+  <div class="hero"><div class="badge">Zakelijk</div><h2>🏢 Bedrijfsaansprakelijkheid (BAV) Calculator</h2><p>Bereken de optimale BAV-dekking voor zakelijke klanten en ZZP'ers op basis van omzet, branche en projectrisico.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Bedrijfsprofiel</div><div class="cb">
+      <div class="field"><label>Jaaromzet <span class="fv" id="bavOmzetV">€ 200.000</span></label>
+        <input type="range" id="bavOmzet" min="20000" max="2000000" step="10000" value="200000" oninput="calcBav()">
+        <div class="slab"><span>€20k</span><span>€2M</span></div></div>
+      <div class="field"><label>Branche</label><select class="fw" id="bavBr" onchange="calcBav()"><option value="it" selected>IT / Software</option><option value="advies">Advies / Consultancy</option><option value="bouw">Bouw / Engineering</option><option value="zorg">Zorg / Medisch</option><option value="fin">Financieel / Juridisch</option></select></div>
+      <div class="field"><label>Maximaal projectrisico</label><select class="fw" id="bavProj" onchange="calcBav()"><option value="laag">< €50.000</option><option value="midden" selected>€50k – €500k</option><option value="hoog">> €500.000</option></select></div>
+      <div class="field"><label>Medewerkers</label><select class="fw" id="bavPers" onchange="calcBav()"><option value="1" selected>ZZP (1 pers.)</option><option value="5">2–10 medewerkers</option><option value="25">11–50 medewerkers</option></select></div>
+    </div></div>
+    <div id="bavRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 10: REIS ═══ -->
+<div class="pan" id="p10">
+  <div class="hero"><div class="badge">Reisverzekering</div><h2>✈️ Reis Dekking Analyse</h2><p>Stel de optimale reisverzekering samen op basis van reisfrequentie, bestemming, activiteiten en gezinssituatie.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Reisgedrag</div><div class="cb">
+      <div class="field"><label>Reizen per jaar <span class="fv" id="rdFreqV">3×</span></label>
+        <input type="range" id="rdFreq" min="1" max="12" value="3" oninput="calcRd()">
+        <div class="slab"><span>1×</span><span>12×</span></div></div>
+      <div class="field"><label>Bestemming</label><select class="fw" id="rdBest" onchange="calcRd()"><option value="eu" selected>Europa / Schengen</option><option value="wereld">Wereldwijd</option><option value="usa">VS / Canada</option></select></div>
+      <div class="field"><label>Reisduur per reis</label><select class="fw" id="rdDuur" onchange="calcRd()"><option value="7">Max 7 dagen</option><option value="14">Max 14 dagen</option><option value="30" selected>Max 30 dagen</option><option value="90">Max 90 dagen</option></select></div>
+      <div class="field"><label>Activiteiten</label><select class="fw" id="rdActief" onchange="calcRd()"><option value="laag">Zon / Cultuur</option><option value="midden" selected>Wandelen / Sport</option><option value="hoog">Skiën / Avontuur</option></select></div>
+      <div class="field"><label>Gezinssamenstelling</label><select class="fw" id="rdGezin" onchange="calcRd()"><option value="1">Alleen</option><option value="2" selected>2 personen</option><option value="gezin">Gezin met kinderen</option></select></div>
+      <div class="field"><label>Totale reiskosten per jaar (€)</label><input type="number" class="fi" id="rdKosten" value="3000" oninput="calcRd()"></div>
+    </div></div>
+    <div id="rdRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 11: AUTO DAGWAARDE ═══ -->
+<div class="pan" id="p11">
+  <div class="hero"><div class="badge">Autoverzekering</div><h2>🚗 Auto Dagwaarde & Dekkingsadvies</h2><p>Bereken de actuele dagwaarde van het voertuig en geef advies over WA, WA+ of All-Risk dekking.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Voertuiggegevens</div><div class="cb">
+      <div class="field"><label>Nieuwprijs <span class="fv" id="adNieuwV">€ 35.000</span></label>
+        <input type="range" id="adNieuw" min="5000" max="200000" step="1000" value="35000" oninput="calcAd()">
+        <div class="slab"><span>€5k</span><span>€200k</span></div></div>
+      <div class="field"><label>Leeftijd voertuig <span class="fv" id="adLftV">4 jaar</span></label>
+        <input type="range" id="adLft" min="0" max="30" value="4" oninput="calcAd()">
+        <div class="slab"><span>0</span><span>30 jr</span></div></div>
+      <div class="field"><label>Brandstoftype</label><select class="fw" id="adBrand" onchange="calcAd()"><option value="benzine" selected>Benzine</option><option value="diesel">Diesel</option><option value="elektrisch">Elektrisch</option><option value="hybride">Hybride</option></select></div>
+      <div class="field"><label>Gebruik</label><select class="fw" id="adGebr" onchange="calcAd()"><option value="prive" selected>Privé</option><option value="zakelijk">Zakelijk</option><option value="mix">Mix</option></select></div>
+      <div class="field"><label>Km/jaar <span class="fv" id="adKmV">15.000</span></label>
+        <input type="range" id="adKm" min="0" max="80000" step="1000" value="15000" oninput="calcAd()">
+        <div class="slab"><span>0</span><span>80k km</span></div></div>
+      <div class="field"><label>Gewenst eigen risico</label><select class="fw" id="adEr" onchange="calcAd()"><option value="0">€ 0</option><option value="150" selected>€ 150</option><option value="300">€ 300</option><option value="500">€ 500</option></select></div>
+    </div></div>
+    <div id="adRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 12: COLLECTIEF ═══ -->
+<div class="pan" id="p12">
+  <div class="hero"><div class="badge">Collectief</div><h2>👥 Collectieve vs Individuele Polis</h2><p>Bereken of een collectieve verzekering via werkgever of vereniging goedkoper is dan een individuele polis.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Vergelijking</div><div class="cb">
+      <div class="field"><label>Type verzekering</label><select class="fw" id="cvType" onchange="calcCv()"><option value="zorg" selected>Zorgverzekering</option><option value="rechts">Rechtsbijstand</option><option value="woon">Woonhuisverzekering</option><option value="inb">Inboedelverzekering</option></select></div>
+      <div class="field"><label>Individuele jaarpremie (€)</label><input type="number" class="fi" id="cvInd" value="1440" oninput="calcCv()"></div>
+      <div class="field"><label>Collectieve jaarpremie (€)</label><input type="number" class="fi" id="cvCol" value="1200" oninput="calcCv()"></div>
+      <div class="field"><label>Werkgeversbijdrage (%)</label><input type="number" class="fi" id="cvWg" value="50" oninput="calcCv()"></div>
+      <div class="field"><label>Gezinsleden (incl. uzelf)</label><select class="fw" id="cvPers" onchange="calcCv()"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+    </div></div>
+    <div id="cvRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 13: ONDERVERZEKERING ═══ -->
+<div class="pan" id="p13">
+  <div class="hero"><div class="badge">Onderverzekering</div><h2>⚡ Onderverzekering Check & Proportionaliteitsregel</h2><p>Bereken of uw klant onderverzekerd is en hoeveel de verzekeraar bij schade daadwerkelijk uitkeert.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Verzekeringssituatie</div><div class="cb">
+      <div class="field"><label>Werkelijke waarde <span class="fv" id="ovWerkV">€ 120.000</span></label>
+        <input type="range" id="ovWerk" min="1000" max="2000000" step="1000" value="120000" oninput="calcOv()">
+        <div class="slab"><span>€1k</span><span>€2M</span></div></div>
+      <div class="field"><label>Verzekerd bedrag <span class="fv" id="ovVerzeV">€ 80.000</span></label>
+        <input type="range" id="ovVerze" min="1000" max="2000000" step="1000" value="80000" oninput="calcOv()">
+        <div class="slab"><span>€1k</span><span>€2M</span></div></div>
+      <div class="field"><label>Schadebedrag (€)</label><input type="number" class="fi" id="ovSchade" value="25000" oninput="calcOv()"></div>
+      <div class="field"><label>Type verzekering</label><select class="fw" id="ovType" onchange="calcOv()"><option value="inboedel" selected>Inboedel</option><option value="woonhuis">Woonhuis</option><option value="bedrijf">Bedrijfsinventaris</option></select></div>
+    </div></div>
+    <div id="ovRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 14: CLAIMHISTORIE ═══ -->
+<div class="pan" id="p14">
+  <div class="hero"><div class="badge">Claimstrategie</div><h2>📋 Claimhistorie Impact Analyser</h2><p>Analyseer de impact van claimgeschiedenis op de toekomstige premie en geef advies over de optimale claimstrategie.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Claimoverzicht</div><div class="cb">
+      <div class="field"><label>Jaarpremie (€)</label><input type="number" class="fi" id="chPremie" value="900" oninput="calcCh()"></div>
+      <div class="field"><label>Schades afgelopen 5 jaar</label><select class="fw" id="chSchades" onchange="calcCh()"><option value="0" selected>Geen</option><option value="1">1 schade</option><option value="2">2 schades</option><option value="3">3 schades</option><option value="4">4+</option></select></div>
+      <div class="field"><label>No-claim korting huidig (%)</label><input type="number" class="fi" id="chNcm" value="30" oninput="calcCh()"></div>
+      <div class="field"><label>Gemiddeld schadebedrag (€)</label><input type="number" class="fi" id="chGem" value="2000" oninput="calcCh()"></div>
+      <div class="field"><label>Eigen risico per claim (€)</label><input type="number" class="fi" id="chEr" value="500" oninput="calcCh()"></div>
+    </div></div>
+    <div id="chRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 15: POLISSEN DASHBOARD ═══ -->
+<div class="pan" id="p15">
+  <div class="hero"><div class="badge">Portfolio</div><h2>📊 Klant Polissen Dashboard</h2><p>Volledig verzekeringsportfolio van uw klant: alle polissen, totaalpremie en aandachtspunten in één overzicht.</p></div>
+  <div class="g2eq" style="margin-bottom:13px">
+    <div class="card"><div class="ch">Klantgegevens</div><div class="cb">
+      <div class="field"><label>Klantnaam</label><input type="text" class="fi" id="pdNaam" value="Familie de Boer" oninput="calcPd()"></div>
+      <div class="field"><label>Gezinssituatie</label><select class="fw" id="pdGezin" onchange="calcPd()"><option value="alleen">Alleen</option><option value="partner">Met partner</option><option value="gezin" selected>Gezin</option></select></div>
+    </div></div>
+    <div class="card"><div class="ch">Polissen invoer (jaarpremie)</div><div class="cb" id="pdInputs" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div></div>
+  </div>
+  <div id="pdRes"></div>
+</div>
+
+</div>
+
+<script>
+function sw(n){
+  document.querySelectorAll('.pan').forEach((p,i)=>p.classList.toggle('active',i===n));
+  for(let i=0;i<16;i++){const t=document.getElementById('t'+i);if(t)t.classList.toggle('active',i===n);}
+}
+function fmt(n){if(n===null||isNaN(n)||!isFinite(n))return'—';return'€\u202F'+Math.round(n).toLocaleString('nl-NL');}
+function fmtP(n,d=1){return n.toFixed(d).replace('.',',')+'%';}
+function ib(cls,icon,title,body){return`<div class="ib ${cls}"><div class="ib-i">${icon}</div><div class="ib-b"><strong>${title}</strong><span>${body}</span></div></div>`;}
+
+// ── 0: DEKKING GAP ────────────────────────────────────────────
+const DEK=[
+  {id:'woon',icon:'🏠',naam:'Woonhuis',prio:'hoog'},{id:'inb',icon:'🛋️',naam:'Inboedel',prio:'hoog'},
+  {id:'avp',icon:'⚖️',naam:'AVP',prio:'hoog'},{id:'zorg',icon:'🏥',naam:'Zorgverzekering',prio:'hoog'},
+  {id:'orv',icon:'❤️',naam:'ORV',prio:'hoog'},{id:'ao',icon:'🩺',naam:'AOV/WIA-aanvulling',prio:'hoog'},
+  {id:'auto',icon:'🚗',naam:'Auto',prio:'midden'},{id:'reis',icon:'✈️',naam:'Reisverzekering',prio:'midden'},
+  {id:'rechts',icon:'⚡',naam:'Rechtsbijstand',prio:'midden'},{id:'uitvaart',icon:'🕊️',naam:'Uitvaart',prio:'laag'},
+  {id:'huisdier',icon:'🐕',naam:'Huisdier',prio:'laag'},{id:'fiets',icon:'🚲',naam:'Fiets',prio:'laag'},
+];
+const dState={};
+function renderDek(){
+  document.getElementById('dekkingGrid').innerHTML=DEK.map(d=>`
+    <div class="dek-item ${dState[d.id]==='ja'?'on':dState[d.id]==='nee'?'off':''}" onclick="dState['${d.id}']=dState['${d.id}']==='ja'?'nee':dState['${d.id}']==='nee'?undefined:'ja';renderDek();calcDek()">
+      <div class="dek-icon">${d.icon}</div>
+      <div class="dek-naam">${d.naam}</div>
+      <div class="dek-st" style="color:${dState[d.id]==='ja'?'var(--gn)':dState[d.id]==='nee'?'var(--rd)':'#888'}">${dState[d.id]==='ja'?'✓ Gedekt':dState[d.id]==='nee'?'✗ Niet gedekt':'— Onbekend'}</div>
+    </div>`).join('');
+}
+function calcDek(){
+  const ontbreekt=DEK.filter(d=>dState[d.id]==='nee');
+  const gedekt=DEK.filter(d=>dState[d.id]==='ja');
+  if(!ontbreekt.length&&!gedekt.length){document.getElementById('dekkingRes').innerHTML='';return;}
+  const urgent=ontbreekt.filter(d=>d.prio==='hoog');
+  document.getElementById('dekkingRes').innerHTML=`
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc gn"><div class="sc-l">Gedekt</div><div class="sc-v">${gedekt.length}</div></div>
+      <div class="sc rd"><div class="sc-l">Niet gedekt</div><div class="sc-v">${ontbreekt.length}</div></div>
+      <div class="sc ${urgent.length>0?'rd':'gn'}"><div class="sc-l">Urgent</div><div class="sc-v">${urgent.length}</div></div>
+    </div>
+    ${urgent.length>0?ib('er','🚨','Urgente dekkingsgaten — direct actie vereist',urgent.map(d=>d.icon+' '+d.naam).join(' · ')):''}
+    ${ontbreekt.filter(d=>d.prio==='midden').length>0?ib('wa','⚠️','Aanbevolen polissen ontbreken',ontbreekt.filter(d=>d.prio==='midden').map(d=>d.icon+' '+d.naam).join(' · ')):''}
+    ${gedekt.length>=6?ib('ok','✅','Goede dekkingsbasis','Klant heeft kernrisico\'s gedekt. Review bedragen jaarlijks en na life events.'):''}`;
+}
+renderDek();
+
+// ── 1: ORV ───────────────────────────────────────────────────
+function calcOrv(){
+  const hyp=+document.getElementById('orvHyp').value||300000;
+  const ink=+document.getElementById('orvInk').value||65000;
+  const part=+document.getElementById('orvPart').value||30000;
+  const jr=+document.getElementById('orvJr').value||20;
+  const pp=+document.getElementById('orvPp').value||8000;
+  const overig=+document.getElementById('orvOv').value||20000;
+  document.getElementById('orvJrV').textContent=jr+' jr';
+  // Netto inkomenstekort: 70% van verzekerd inkomen minus 50% partnerinkomen minus partnerpensioen
+  const nettoTekort=Math.max(0,(ink*0.7-part*0.5-pp)*0.75);
+  // Kapitaal nodig voor inkomenstekort: annuïteit bij 2% reëel rendement
+  const r=0.02;
+  const inkomensKap=Math.round(nettoTekort*(1-Math.pow(1+r,-jr))/r);
+  const totaal=Math.max(0,hyp+inkomensKap-overig);
+  document.getElementById('orvRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Benodigde ORV Dekking</div><div class="hs-v">${fmt(totaal)}</div>
+      <div class="hs-s">Hypotheek: ${fmt(hyp)} + Inkomenskapitaal: ${fmt(inkomensKap)}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Hypotheekdeel</div><div class="sc-v">${fmt(hyp)}</div></div>
+      <div class="sc am"><div class="sc-l">Inkomensaanvulling</div><div class="sc-v">${fmt(inkomensKap)}</div></div>
+      <div class="sc"><div class="sc-l">Premie indicatie/mnd</div><div class="sc-v">${fmt(Math.round(totaal*0.001/12))}</div></div>
+    </div>
+    ${ib('in','ℹ️','ORV-constructie','Overweeg dalende ORV gelijk aan hypotheekaflossing. Bij kinderen: tijdelijk hogere dekking eerste 10–15 jaar aanbevolen.')}
+    ${totaal>500000?ib('wa','⚠️','Hoge dekking — medische acceptatie','Bij bedragen boven €500.000 zijn medische waarborgen doorgaans vereist.'):ib('ok','✅','Dekking in normale range','')};
+    ${ib('in','📊','Berekend via annuïteitsformule (2%)','Inkomenskapitaal is contant gemaakt bij 2% reëel rendement — realistischer dan simpele vermenigvuldiging.')}`;
+}
+calcOrv();
+
+// ── 2: AOV ZZP ───────────────────────────────────────────────
+function calcAov(){
+  const ink=+document.getElementById('aovInk').value||60000;
+  const br=document.getElementById('aovBr').value;
+  const lft=+document.getElementById('aovLft').value||38;
+  const er=+document.getElementById('aovEr').value||30;
+  const part=document.getElementById('aovPart').value;
+  const buf=+document.getElementById('aovBuf').value||3;
+  document.getElementById('aovInkV').textContent=fmt(ink);
+  // ZZP heeft GEEN WIA — volledig netto inkomen beschermen
+  const nettoMnd=Math.round(ink*0.72/12);
+  const dagBedrag=nettoMnd; // volledige bescherming nodig
+  const PCT={licht:0.025,midden:0.04,zwaar:0.06,zorg:0.05};
+  const ER_K={14:0,30:0.10,60:0.18,90:0.25,180:0.35};
+  const jaarpremie=Math.round(dagBedrag*12*(PCT[br]||0.04)*(1-(ER_K[er]||0)));
+  const mndPremie=Math.round(jaarpremie/12);
+  const erMaanden=Math.round(er/30);
+  const bufferOk=buf>=erMaanden;
+  document.getElementById('aovRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Aanbevolen AOV Maandbedrag</div><div class="hs-v">${fmt(dagBedrag)}/mnd</div>
+      <div class="hs-s">Premie indicatie: ${fmt(mndPremie)}/mnd · ER: ${er} dagen</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Maanduitkering</div><div class="sc-v">${fmt(dagBedrag)}</div></div>
+      <div class="sc am"><div class="sc-l">Premie/jr indicatie</div><div class="sc-v">${fmt(jaarpremie)}</div></div>
+      <div class="sc"><div class="sc-l">ER-termijn</div><div class="sc-v">${er} dagen</div></div>
+    </div>
+    ${ib('er','🚨','ZZP = geen WIA','ZZP-ers ontvangen géén WIA-uitkering. Bij arbeidsongeschiktheid stopt alle inkomen direct. Volledige nettoinkomenbescherming is essentieel.')}
+    ${!bufferOk?ib('wa','⚠️','Buffer te klein voor ER-termijn',`Met ${buf} maand buffer en ${er} dagen ER is er een financieel gat. Vergroot de buffer of verkort de ER-termijn.`):ib('ok','✅','Buffer dekt eigen risicotermijn','')}
+    ${part==='nee'?ib('er','🚨','Geen partnerinkomen als vangnet','Zonder partnerinkomen is ruime AOV-bescherming cruciaal. Overweeg ook een kortlopende WW-verzekering.'):ib('in','ℹ️','Partnerinkomen als aanvullend vangnet','Verhoog ER-termijn voor lagere premie als partnerinkomen een buffer vormt.')}`;
+}
+calcAov();
+
+// ── 3: HERBOUWWAARDE ─────────────────────────────────────────
+function calcHw(){
+  const m2=+document.getElementById('hwm2').value||120;
+  const type=document.getElementById('hwType').value;
+  const bj=+document.getElementById('hwBj').value||1.15;
+  const kwal=+document.getElementById('hwKwal').value||1.0;
+  const aan=+document.getElementById('hwAan').value||0;
+  const zon=document.getElementById('hwZon').value;
+  document.getElementById('hwm2V').textContent=m2+' m²';
+  const BASIS={rijtje:1400,hoek:1520,twee1:1640,vrijstaand:1850,appartement:1150};
+  const basis=(BASIS[type]||1400)*bj*kwal;
+  const herbouw=Math.round(m2*basis+aan+(zon==='ja'?9000:0));
+  document.getElementById('hwRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Herbouwwaarde</div><div class="hs-v">${fmt(herbouw)}</div>
+      <div class="hs-s">${m2} m² · ${fmt(Math.round(basis))}/m² · Premie ca. ${fmt(Math.round(herbouw*0.0015))}/jr</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Kosten/m²</div><div class="sc-v">${fmt(Math.round(basis))}</div></div>
+      <div class="sc"><div class="sc-l">Aanbouw</div><div class="sc-v">${fmt(aan)}</div></div>
+      <div class="sc ${zon==='ja'?'am':'gn'}"><div class="sc-l">Zonnepanelen</div><div class="sc-v">${zon==='ja'?'€ 9.000':'Geen'}</div></div>
+    </div>
+    ${ib('in','ℹ️','Garantieclausule aanbevolen','Laat klant verzekeren met garantie tegen onderverzekering. Verzekeraar vergoedt dan altijd volledig, ook als bedrag achteraf iets te laag bleek.')}
+    ${zon==='ja'?ib('wa','⚠️','Zonnepanelen — aparte melding','Controleer of verzekeraar zonnepanelen automatisch meeverzekert of aparte opgave vereist.'):''}`;
+}
+calcHw();
+
+// ── 4: INBOEDEL ──────────────────────────────────────────────
+const KAMERS=[
+  {naam:'Woonkamer',icon:'🛋️',basis:12000},{naam:'Slaapkamer 1',icon:'🛏️',basis:5000},
+  {naam:'Slaapkamer 2/3',icon:'🛏️',basis:3000},{naam:'Keuken',icon:'🍳',basis:7000},
+  {naam:'Badkamer',icon:'🚿',basis:2500},{naam:'Zolder / berging',icon:'📦',basis:3000},
+  {naam:'Tuin / buiten',icon:'🌿',basis:2000},{naam:'Bijzondere waarden',icon:'💎',basis:5000},
+];
+function renderInb(){
+  document.getElementById('inbInputs').innerHTML=KAMERS.map((k,i)=>`
+    <div class="field"><label>${k.icon} ${k.naam}</label>
+    <input type="number" class="fi" value="${k.basis}" id="ib${i}" oninput="calcInb()"></div>`).join('');
+}
+function calcInb(){
+  const vals=KAMERS.map((_,i)=>+document.getElementById('ib'+i)?.value||0);
+  const tot=vals.reduce((s,v)=>s+v,0);
+  const bijz=vals[7];
+  document.getElementById('inbRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Totale Inboedelwaarde</div><div class="hs-v">${fmt(tot)}</div>
+      <div class="hs-s">Premie indicatie: ${fmt(Math.round(tot*0.003))}/jr · Nieuwwaardeverzekering</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Totale waarde</div><div class="sc-v">${fmt(tot)}</div></div>
+      <div class="sc am"><div class="sc-l">Bijzondere waarden</div><div class="sc-v">${fmt(bijz)}</div></div>
+      <div class="sc"><div class="sc-l">Premie/mnd</div><div class="sc-v">${fmt(Math.round(tot*0.003/12))}</div></div>
+    </div>
+    ${bijz>5000?ib('wa','⚠️','Hoge bijzondere waarden','Items > €2.500 (sieraden, kunst, elektronica) vereisen mogelijk een aparte waardepolis. Controleer sublimiet verzekeraar.'):ib('ok','✅','Bijzondere waarden in normale range','')}
+    ${ib('in','ℹ️','Altijd nieuwwaarde adviseren','Bij dagwaarde ontvangt klant slechts de afgeschreven waarde — onvoldoende voor vervanging. Nieuwwaardeverzekering is de standaard.')}`;
+}
+renderInb(); calcInb();
+
+// ── 5: AVP ───────────────────────────────────────────────────
+function calcAvp(){
+  const gezin=document.getElementById('avpGezin').value;
+  const dier=document.getElementById('avpDier').value;
+  const actief=document.getElementById('avpActief').value;
+  const vrijw=document.getElementById('avpVrijw').value;
+  let score=0;
+  if(gezin==='kinderen')score+=2;else if(gezin==='pubers')score+=3;
+  if(dier==='hond')score+=1;else if(dier==='groot')score+=3;
+  if(actief==='hoog')score+=2;else if(actief==='midden')score+=1;
+  if(vrijw==='ja')score+=1;
+  const dekking=score>=6?2500000:score>=3?1500000:1000000;
+  document.getElementById('avpRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Aanbevolen AVP Dekking</div><div class="hs-v">${fmt(dekking)}</div>
+      <div class="hs-s">Risicoscore: ${score}/9 · Premie ca. €5–€12/mnd</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Aanbevolen dekking</div><div class="sc-v">${fmt(dekking)}</div></div>
+      <div class="sc"><div class="sc-l">Risicoscore</div><div class="sc-v">${score} / 9</div></div>
+      <div class="sc gn"><div class="sc-l">Premie indicatie</div><div class="sc-v">€5–€12/mnd</div></div>
+    </div>
+    ${ib('ok','✅',`Aanbevolen dekking: ${fmt(dekking)}`,`Op basis van gezin (${gezin}), activiteiten en huisdieren. AVP dekt persoonlijke aansprakelijkheid voor schade aan derden.`)}
+    ${dier==='groot'?ib('er','⚠️','Gevaarlijke hond — verplichte melding','Bijtgevaarlijke rassen moeten specifiek worden gemeld. Check acceptatiebeleid en eventuele uitsluitingen.'):''}
+    ${vrijw==='ja'?ib('in','ℹ️','Vrijwilligerswerk','Controleer of de AVP vrijwilligersactiviteiten dekt of dat een aanvulling via de organisatie nodig is.'):''}`;
+}
+calcAvp();
+
+// ── 6: PREMIE BENCHMARK ──────────────────────────────────────
+function calcBp(){
+  const woon=+document.getElementById('bpWoon').value||1200;
+  const inb=+document.getElementById('bpInb').value||240;
+  const avp=+document.getElementById('bpAvp').value||96;
+  const zorgMnd=+document.getElementById('bpZorg').value||165;
+  const zorg=zorgMnd*12;
+  const auto=+document.getElementById('bpAuto').value||800;
+  const reis=+document.getElementById('bpReis').value||180;
+  const items=[
+    {n:'Woonhuis',k:woon,g:900,h:1400},{n:'Inboedel',k:inb,g:200,h:350},
+    {n:'AVP',k:avp,g:72,h:120},{n:'Zorgverzekering',k:zorg,g:1900,h:2280},
+    {n:'Auto',k:auto,g:700,h:1100},{n:'Reisverzekering',k:reis,g:160,h:280},
+  ];
+  const totK=items.reduce((s,i)=>s+i.k,0);
+  const totG=items.reduce((s,i)=>s+i.g,0);
+  const besp=Math.max(0,totK-totG);
+  document.getElementById('bpRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Totale jaarpremies klant</div><div class="hs-v">${fmt(totK)}</div>
+      <div class="hs-s">Marktgemiddelde: ${fmt(totG)} · Potentiële besparing: ${fmt(besp)}</div></div>
+    <div class="card"><div class="ch">Premievergelijking per product</div><div class="cb">
+      <table class="tbl"><thead><tr><th>Verzekering</th><th>Klant/jr</th><th>Markt gem.</th><th>Verschil</th></tr></thead><tbody>
+        ${items.map(i=>`<tr><td>${i.n}</td><td>${fmt(i.k)}</td><td>${fmt(i.g)}</td><td style="font-weight:700;color:${i.k>i.h?'var(--rd)':i.k>i.g?'#a86800':'var(--gn)'}">${i.k>i.g?'+':''}${fmt(i.k-i.g)}</td></tr>`).join('')}
+      </tbody></table>
+    </div></div>
+    ${besp>300?ib('wa','⚠️',`Marktverkenning aanbevolen — ca. ${fmt(besp)} besparing mogelijk`,'Klant betaalt significant meer dan het marktgemiddelde. Overweeg herbeoordeling bij verlenging.'):ib('ok','✅','Premies concurrerend','Klant betaalt premies in lijn met de markt.')}`;
+}
+calcBp();
+
+// ── 7: SCHADE IMPACT ─────────────────────────────────────────
+function calcSi(){
+  const schade=+document.getElementById('siSchade').value||3500;
+  const er=+document.getElementById('siEr').value||500;
+  const premie=+document.getElementById('siPremie').value||900;
+  const jaren=+document.getElementById('siJaren').value||3;
+  const ncm=+document.getElementById('siNcm').value||25;
+  const uitkering=Math.max(0,schade-er);
+  const premieStijging=Math.round(premie*(ncm/100)*0.7);
+  const totaalExtra=premieStijging*jaren;
+  const netto=uitkering-totaalExtra;
+  document.getElementById('siRes').innerHTML=`
+    <div class="hs ${netto>200?'':'slecht'}"><div class="hs-l">Advies: ${netto>200?'Melden':'Niet melden'}</div><div class="hs-v">${netto>0?'+':''}${fmt(netto)}</div>
+      <div class="hs-s">Uitkering: ${fmt(uitkering)} − Premienadeel ${jaren} jr: ${fmt(totaalExtra)}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc gn"><div class="sc-l">Schade-uitkering</div><div class="sc-v">${fmt(uitkering)}</div></div>
+      <div class="sc rd"><div class="sc-l">Premie extra/jr</div><div class="sc-v">${fmt(premieStijging)}</div></div>
+      <div class="sc am"><div class="sc-l">Break-even</div><div class="sc-v">${premieStijging>0?Math.ceil(uitkering/premieStijging)+' jaar':'n.v.t.'}</div></div>
+    </div>
+    ${netto>200?ib('ok','✅','Melden is voordeliger','De uitkering weegt op tegen het no-claimverlies. Adviseer te melden.'):ib('wa','⚠️','Zelf betalen is voordeliger','Het premienadeel overstijgt de uitkering. Adviseer de schade zelf te vergoeden om no-claim te behouden.')}`;
+}
+calcSi();
+
+// ── 8: ZORG ER ───────────────────────────────────────────────
+function calcZer(){
+  const lft=+document.getElementById('zerLft').value||42;
+  const chron=document.getElementById('zerChron').value;
+  const gebr=document.getElementById('zerGebr').value;
+  const ris=document.getElementById('zerRis').value;
+  const verwacht={laag:80,midden:420,hoog:1100}[gebr]+(chron==='zwaar'?800:chron==='licht'?300:0);
+  // Zorg ER 2025: verplicht basis €385, vrijwillig uitbreiden tot max €885 (extra €500)
+  // Premiekorting ~€0,48/jr per € extra ER (gemiddeld markt 2025)
+  const opties=[
+    {er:385,extra:0,korting:0},{er:485,extra:100,korting:48},
+    {er:585,extra:200,korting:96},{er:685,extra:300,korting:144},
+    {er:785,extra:400,korting:192},{er:885,extra:500,korting:240},
+  ];
+  const scores=opties.map(o=>{
+    const erKosten=Math.min(verwacht,o.extra);
+    const netto=o.korting-erKosten;
+    return{...o,erKosten,netto};
+  });
+  const best=scores.reduce((a,b)=>a.netto>=b.netto?a:b);
+  document.getElementById('zerRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Optimaal Eigen Risico 2025</div><div class="hs-v">€ ${best.er}</div>
+      <div class="hs-s">Verwacht zorggebruik: ${fmt(verwacht)}/jr · Netto voordeel: ${fmt(best.netto>0?best.netto:0)}</div></div>
+    <div class="card"><div class="ch">Vergelijking ER-opties</div><div class="cb">
+      <table class="tbl"><thead><tr><th>ER niveau</th><th>Extra vrijwillig</th><th>Premiekorting/jr</th><th>Verwacht ER-kosten</th><th>Netto voordeel</th></tr></thead><tbody>
+        ${scores.map(s=>`<tr style="${s.er===best.er?'background:#eaf3ee':''}">
+          <td>€ ${s.er}</td><td>€ ${s.extra}</td>
+          <td style="color:var(--gn)">+${fmt(s.korting)}</td>
+          <td style="color:var(--rd)">−${fmt(s.erKosten)}</td>
+          <td style="font-weight:700;color:${s.netto>=0?'var(--gn)':'var(--rd)'}">
+            ${s.netto>=0?'+':''}${fmt(s.netto)}${s.er===best.er?' ✓':''}</td>
+        </tr>`).join('')}
+      </tbody></table>
+    </div></div>
+    ${chron==='zwaar'?ib('wa','⚠️','Chronische aandoening — laag ER aanbevolen','Bij hoge verwachte zorgkosten is een laag eigen risico financieel voordeliger, ondanks hogere premie.'):ib('ok','✅',`Optimaal: ER €${best.er}`,`Netto voordeel: ${fmt(best.netto>0?best.netto:0)}/jr bij verwacht gebruik van ${fmt(verwacht)}.`)}
+    ${ib('in','ℹ️','Verplicht ER 2025: €385','Het verplicht eigen risico bedraagt €385 in 2025. Extra vrijwillig ER geeft premiekorting ca. €0,48 per euro extra risico.')}`;
+}
+calcZer();
+
+// ── 9: BAV BEDRIJF ───────────────────────────────────────────
+function calcBav(){
+  const omzet=+document.getElementById('bavOmzet').value||200000;
+  const br=document.getElementById('bavBr').value;
+  const proj=document.getElementById('bavProj').value;
+  const pers=document.getElementById('bavPers').value;
+  document.getElementById('bavOmzetV').textContent=fmt(omzet);
+  const MIN_DEK={laag:250000,midden:1000000,hoog:2500000};
+  const PCT={it:0.004,advies:0.005,bouw:0.007,zorg:0.009,fin:0.008};
+  const SCHAAL={'1':1.0,'5':1.4,'25':1.9}; // correcte schalingsfactor (niet lineair)
+  const dekking=Math.max(MIN_DEK[proj],omzet*2);
+  const premie=Math.round(omzet*(PCT[br]||0.005)*SCHAAL[pers]);
+  const persLabel={'1':'ZZP (1)','5':'2–10 mwk','25':'11–50 mwk'};
+  document.getElementById('bavRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Aanbevolen BAV Dekking</div><div class="hs-v">${fmt(dekking)}</div>
+      <div class="hs-s">Premie indicatie: ${fmt(premie)}/jr · ${persLabel[pers]} · ${br.toUpperCase()}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Min. projectdekking</div><div class="sc-v">${fmt(MIN_DEK[proj])}</div></div>
+      <div class="sc am"><div class="sc-l">Premie/mnd indicatie</div><div class="sc-v">${fmt(Math.round(premie/12))}</div></div>
+      <div class="sc"><div class="sc-l">% van omzet</div><div class="sc-v">${fmtP(premie/omzet*100,2)}</div></div>
+    </div>
+    ${ib('in','ℹ️','BAV + Beroepsaansprakelijkheid combineren','BAV dekt aansprakelijkheid voor letsel/zaakschade aan derden. Beroepsaansprakelijkheid (E&O) is aanvullend voor adviesdiensten. Combineer beide.')}
+    ${(br==='fin'||br==='zorg')?ib('wa','⚠️','Hoog risico branche','In financiële en medische dienstverlening gelden hogere bedragen en specifieke polisvormen. Raadpleeg specialistische verzekeraar.'):''}`;
+}
+calcBav();
+
+// ── 10: REIS ─────────────────────────────────────────────────
+function calcRd(){
+  const freq=+document.getElementById('rdFreq').value||3;
+  const best=document.getElementById('rdBest').value;
+  const duur=+document.getElementById('rdDuur').value||30;
+  const actief=document.getElementById('rdActief').value;
+  const gezin=document.getElementById('rdGezin').value;
+  const kosten=+document.getElementById('rdKosten').value||3000;
+  document.getElementById('rdFreqV').textContent=freq+'×';
+  const JAARPREMIE={eu:{'1':120,'2':180,gezin:240},wereld:{'1':180,'2':280,gezin:380},usa:{'1':220,'2':340,gezin:460}};
+  const base=(JAARPREMIE[best]||JAARPREMIE.eu)[gezin]||180;
+  const surcharge=actief==='hoog'?0.3:actief==='midden'?0.1:0;
+  const premie=Math.round(base*(1+surcharge));
+  document.getElementById('rdRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Aanbevolen Jaarpolis</div><div class="hs-v">${fmt(premie)}/jr</div>
+      <div class="hs-s">${freq}× per jaar · Max ${duur} dgn · ${best==='eu'?'Europa':best==='usa'?'VS/Canada':'Wereldwijd'}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Annulering dekking</div><div class="sc-v">${fmt(kosten)}</div></div>
+      <div class="sc"><div class="sc-l">Premie per jaar</div><div class="sc-v">${fmt(premie)}</div></div>
+      <div class="sc gn"><div class="sc-l">Kosten per reis</div><div class="sc-v">${fmt(Math.round(premie/freq))}</div></div>
+    </div>
+    ${actief==='hoog'?ib('wa','⚠️','Sportactiviteiten — toeslag of uitbreiding','Skiën, duiken, klimmen etc. zijn soms uitgesloten. Controleer polisvoorwaarden en voeg een sportmodule toe.'):''}
+    ${best==='usa'?ib('er','🚨','VS: minimaal $1M medische dekking vereist','Ziekenhuisopname in de VS kost tienduizenden dollars per dag. Zorg voor adequate medische dekking.'):''}
+    ${ib('in','ℹ️','Jaarpolis vs losse reisverzekering',`Bij ${freq}+ reizen per jaar is een jaarpolis vrijwel altijd goedkoper dan losse verzekeringen.`)}`;
+}
+calcRd();
+
+// ── 11: AUTO DAGWAARDE ───────────────────────────────────────
+function calcAd(){
+  const nieuw=+document.getElementById('adNieuw').value||35000;
+  const lft=+document.getElementById('adLft').value||4;
+  const brand=document.getElementById('adBrand').value;
+  const gebr=document.getElementById('adGebr').value;
+  const km=+document.getElementById('adKm').value||15000;
+  const erKeuze=+document.getElementById('adEr').value||150;
+  document.getElementById('adNieuwV').textContent=fmt(nieuw);
+  document.getElementById('adLftV').textContent=lft+' jaar';
+  document.getElementById('adKmV').textContent=km.toLocaleString('nl-NL');
+  // Afschrijving: elektrisch wat sneller in eerste jaren, daarna stabiel
+  const afschr=brand==='elektrisch'?0.15:0.12;
+  const dagwaarde=Math.round(nieuw*Math.pow(1-afschr,lft));
+  const pct=Math.round((1-dagwaarde/nieuw)*100);
+  const advies=dagwaarde>30000?'All-Risk':dagwaarde>15000?'WA+ / Beperkt Casco':dagwaarde>6000?'WA+ (aanbevolen)':'WA (basis)';
+  const premPct={
+    'All-Risk':0.035,'WA+ / Beperkt Casco':0.018,
+    'WA+ (aanbevolen)':0.012,'WA (basis)':0.006
+  };
+  // BUG FIX: haakjes correct om operator precedence te voorkomen
+  const zakToeslag=(gebr==='zakelijk'?200:0);
+  const premie=Math.round(dagwaarde*(premPct[advies]||0.018)+zakToeslag);
+  document.getElementById('adRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Dagwaarde Voertuig</div><div class="hs-v">${fmt(dagwaarde)}</div>
+      <div class="hs-s">Afschrijving ${pct}% · Aanbevolen: ${advies}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Nieuwprijs</div><div class="sc-v">${fmt(nieuw)}</div></div>
+      <div class="sc am"><div class="sc-l">Dagwaarde nu</div><div class="sc-v">${fmt(dagwaarde)}</div></div>
+      <div class="sc"><div class="sc-l">Premie indicatie</div><div class="sc-v">${fmt(premie)}/jr</div></div>
+    </div>
+    ${ib('in','💡','Dekkingsadvies: '+advies,dagwaarde>30000?'Nieuw voertuig — All-Risk is standaard. Verhoog ER naar €150–300 voor lagere premie.':dagwaarde>15000?'Beperkt Casco dekt storm, brand, diefstal. Weeg All-Risk meerkosten af tegen dagwaarde.':'Voertuig relatief oud. All-Risk niet meer kostenefficiënt bij deze dagwaarde.')}
+    ${brand==='elektrisch'?ib('in','⚡','Elektrisch voertuig — extra aandachtspunten','Controleer of de accu meeverzekerd is en of opladen-thuis dekking inbegrepen is. Vraag naar EV-specifieke pakketten.'):''}`;
+}
+calcAd();
+
+// ── 12: COLLECTIEF ────────────────────────────────────────────
+function calcCv(){
+  const ind=+document.getElementById('cvInd').value||1440;
+  const col=+document.getElementById('cvCol').value||1200;
+  const wg=+document.getElementById('cvWg').value||50;
+  const pers=+document.getElementById('cvPers').value||1;
+  const nettoCol=Math.round(col*(1-wg/100)*pers);
+  const nettoInd=Math.round(ind*pers);
+  const besp=nettoInd-nettoCol;
+  document.getElementById('cvRes').innerHTML=`
+    <div class="hs ${besp>0?'':'slecht'}"><div class="hs-l">${besp>0?'Collectief voordeliger':'Individueel voordeliger'}</div>
+      <div class="hs-v">${besp>0?'+':'−'}${fmt(Math.abs(besp))}/jr</div>
+      <div class="hs-s">Netto collectief: ${fmt(nettoCol)} · Netto individueel: ${fmt(nettoInd)}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc rd"><div class="sc-l">Individueel (netto)</div><div class="sc-v">${fmt(nettoInd)}</div></div>
+      <div class="sc gn"><div class="sc-l">Collectief (netto)</div><div class="sc-v">${fmt(nettoCol)}</div></div>
+      <div class="sc bl"><div class="sc-l">Werkgeversbijdrage</div><div class="sc-v">${fmtP(wg)}</div></div>
+    </div>
+    ${besp>100?ib('ok','✅',`Collectief scheelt ${fmt(besp)}/jr`,'Collectieve polis aanbevolen. Beoordeel ook de dekkingsomvang — collectief is niet altijd gelijkwaardig aan individueel.'):
+     besp<-100?ib('wa','⚠️','Individueel goedkoper','Collectieve polis is duurder ondanks werkgeversbijdrage. Check ook dekking en aanvullende pakketten.'):
+     ib('in','ℹ️','Vergelijkbaar tarief','Premiemäßig neutraal. Laat klant ook op dekking, dekking en voorwaarden vergelijken.')}`;
+}
+calcCv();
+
+// ── 13: ONDERVERZEKERING ──────────────────────────────────────
+function calcOv(){
+  const werk=+document.getElementById('ovWerk').value||120000;
+  const verze=+document.getElementById('ovVerze').value||80000;
+  const schade=+document.getElementById('ovSchade').value||25000;
+  document.getElementById('ovWerkV').textContent=fmt(werk);
+  document.getElementById('ovVerzeV').textContent=fmt(verze);
+  const ratio=verze/werk;
+  const uitkering=Math.round(schade*ratio);
+  const gat=schade-uitkering;
+  const onder=ratio<0.9;
+  document.getElementById('ovRes').innerHTML=`
+    <div class="hs ${onder?'slecht':''}"><div class="hs-l">${onder?'Onderverzekerd!':'Correct verzekerd'}</div>
+      <div class="hs-v">${onder?fmtP((1-ratio)*100)+' onderverzekerd':'✅ Geen probleem'}</div>
+      <div class="hs-s">Verzekerd: ${fmtP(ratio*100)} van werkelijke waarde · Uitkering: ${fmt(uitkering)}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc"><div class="sc-l">Schadebedrag</div><div class="sc-v">${fmt(schade)}</div></div>
+      <div class="sc ${onder?'rd':'gn'}"><div class="sc-l">Uitkering verzekeraar</div><div class="sc-v">${fmt(uitkering)}</div></div>
+      <div class="sc rd"><div class="sc-l">Klant betaalt zelf</div><div class="sc-v">${fmt(gat)}</div></div>
+    </div>
+    ${onder?ib('er','🚨','Proportionaliteitsregel van toepassing!',`Slechts ${fmtP(ratio*100)} verzekerd. Bij schade van ${fmt(schade)} keert verzekeraar slechts ${fmt(uitkering)} uit — klant betaalt ${fmt(gat)} zelf. Verhoog verzekerd bedrag naar ${fmt(werk)}.`):ib('ok','✅','Geen onderverzekering','Proportionaliteitsregel heeft geen negatieve impact. Jaarlijks herbeoordelen.')}`;
+}
+calcOv();
+
+// ── 14: CLAIMHISTORIE ─────────────────────────────────────────
+function calcCh(){
+  const premie=+document.getElementById('chPremie').value||900;
+  const schades=+document.getElementById('chSchades').value||0;
+  const ncm=+document.getElementById('chNcm').value||30;
+  const gem=+document.getElementById('chGem').value||2000;
+  const er=+document.getElementById('chEr').value||500;
+  const ncmVerlies=Math.round(premie*(ncm/100)*0.6*schades);
+  const totUitkering=Math.round((gem-er)*schades);
+  const netto=totUitkering-ncmVerlies;
+  document.getElementById('chRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Claimhistorie Analyse</div><div class="hs-v">${schades} schade${schades!==1?'s':''}</div>
+      <div class="hs-s">Totaal ontvangen: ${fmt(totUitkering)} · Premienadeel: ${fmt(ncmVerlies)}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc gn"><div class="sc-l">Totaal uitkeringen</div><div class="sc-v">${fmt(totUitkering)}</div></div>
+      <div class="sc rd"><div class="sc-l">No-claim nadeel</div><div class="sc-v">${fmt(ncmVerlies)}</div></div>
+      <div class="sc ${netto>=0?'gn':'rd'}"><div class="sc-l">Netto resultaat</div><div class="sc-v">${netto>=0?'+':''}${fmt(netto)}</div></div>
+    </div>
+    ${ib('in','💡','Strategie voor toekomst',schades===0?'Geen claims — optimale no-claim positie. Adviseer kleine schades zelf te betalen.':netto>0?'Melden loonde financieel. Toets bij toekomstige schades altijd de break-even via de Schade Impact tool.':'Melden leverde per saldo verlies op. Bij schades kleiner dan ER + premienadeel: altijd zelf betalen.')}`;
+}
+calcCh();
+
+// ── 15: POLISSEN DASHBOARD ────────────────────────────────────
+const POLISSEN=[
+  {icon:'🏠',naam:'Woonhuisverzekering',id:'pdWoon',def:900},
+  {icon:'🛋️',naam:'Inboedelverzekering',id:'pdInb',def:200},
+  {icon:'⚖️',naam:'AVP',id:'pdAvp',def:72},
+  {icon:'🏥',naam:'Zorgverzekering',id:'pdZorg',def:1900},
+  {icon:'❤️',naam:'ORV',id:'pdOrv',def:480},
+  {icon:'🩺',naam:'AOV',id:'pdAov',def:0},
+  {icon:'🚗',naam:'Autoverzekering',id:'pdAuto',def:700},
+  {icon:'✈️',naam:'Reisverzekering',id:'pdReis',def:180},
+  {icon:'⚡',naam:'Rechtsbijstand',id:'pdRechts',def:240},
+];
+function renderPd(){
+  document.getElementById('pdInputs').innerHTML=POLISSEN.map(p=>`
+    <div class="field"><label>${p.icon} ${p.naam}</label>
+    <input type="number" class="fi" value="${p.def}" id="${p.id}" style="margin-top:2px" oninput="calcPd()"></div>`).join('');
+}
+function calcPd(){
+  const naam=document.getElementById('pdNaam').value||'Klant';
+  const vals=POLISSEN.map(p=>({...p,premie:+document.getElementById(p.id)?.value||0}));
+  const totaal=vals.reduce((s,v)=>s+v.premie,0);
+  const actief=vals.filter(v=>v.premie>0);
+  const kern=['pdWoon','pdInb','pdAvp','pdZorg'];
+  const ontbreekt=vals.filter(v=>v.premie===0&&kern.includes(v.id));
+  document.getElementById('pdRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Polissen Dashboard — ${naam}</div>
+      <div class="hs-v" style="font-size:20px">${fmt(totaal)}/jr · ${fmt(Math.round(totaal/12))}/mnd</div>
+      <div class="hs-s">${actief.length} actieve polissen · ${ontbreekt.length} kernverzekeringen ontbreken</div></div>
+    <div class="card"><div class="ch">Actieve polissen overzicht</div><div class="cb">
+      ${actief.map(v=>`<div class="polis-row"><div style="font-size:18px">${v.icon}</div><div style="flex:1;font-size:13px;font-weight:700">${v.naam}</div><div style="font-size:15px;font-weight:700;color:var(--navy)">${fmt(v.premie)}/jr</div></div>`).join('')}
+    </div></div>
+    ${ontbreekt.length>0?ib('er','🚨','Kernverzekeringen ontbreken',ontbreekt.map(v=>v.icon+' '+v.naam).join(' · ')):ib('ok','✅','Volledig kernpakket aanwezig','Klant heeft alle basisverzekeringen actief.')}`;
+}
+renderPd(); calcPd();
+</script>
+</body>
+</html>

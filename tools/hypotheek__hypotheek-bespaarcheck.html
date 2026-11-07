@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypotheek Bespaarcheck 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#00408a;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#1D2632;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--shadow:0 2px 16px rgba(0,48,87,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;}
+
+.hdr{background:var(--navy);padding:18px 28px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.18);}
+.hdr-ico{font-size:26px;}
+.hdr-title{font-family:'DM Serif Display',serif;font-size:20px;color:#fff;}
+.hdr-sub{font-size:12px;color:rgba(255,255,255,.65);}
+.hdr-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10.5px;font-weight:700;padding:3px 11px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;}
+
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px;display:flex;flex-direction:column;gap:18px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+.ch{background:var(--navy);color:#fff;padding:12px 20px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;}
+.cb{padding:20px;}
+.row{display:grid;gap:12px;}
+.r2{grid-template-columns:1fr 1fr;}
+.r3{grid-template-columns:1fr 1fr 1fr;}
+.sep{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;padding-bottom:4px;border-bottom:1px solid var(--border);margin-top:4px;}
+.fl{display:flex;flex-direction:column;gap:4px;}
+label{font-size:12px;font-weight:600;color:var(--navy);}
+.sub{font-size:10.5px;color:var(--muted);}
+.iw{position:relative;}
+.px{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:600;color:var(--muted);pointer-events:none;}
+.sx{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:600;color:var(--muted);pointer-events:none;}
+input,select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;-moz-appearance:textfield;outline:none;transition:border .15s;}
+input:focus,select:focus{border-color:var(--navy);}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.iw input{padding-left:24px;}
+.iw input.sr{padding-left:10px;padding-right:38px;}
+.btn{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .15s;}
+.btn:hover{background:var(--navy2);}
+.hidden{display:none;}
+
+/* VERDICT */
+.verdict{border-radius:12px;padding:22px 26px;display:flex;align-items:flex-start;gap:16px;margin-bottom:18px;}
+.verdict.ja{background:var(--grlt);border:2px solid #A7DFC2;}
+.verdict.misschien{background:var(--orglt);border:2px solid #FCD34D;}
+.verdict.nee{background:var(--redlt);border:2px solid #F5B7B1;}
+.v-ico{font-size:40px;flex-shrink:0;}
+.v-titel{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);}
+.v-sub{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.5;}
+
+/* VERGELIJK GRID */
+.vg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:18px;}
+.vc{border-radius:10px;overflow:hidden;border:1.5px solid var(--border);}
+.vc.hl{border-color:var(--green);box-shadow:0 3px 14px rgba(26,138,80,.12);}
+.vc-head{padding:9px 14px;font-size:12.5px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px;}
+.vc-head.nu{background:#6B7280;}
+.vc-head.over{background:var(--green);}
+.vc-head.wacht{background:var(--orange);}
+.vc-body{padding:13px 14px;background:#fff;}
+.vc-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px solid #EEF2F6;}
+.vc-row:last-child{border-bottom:none;font-weight:700;color:var(--navy);}
+.vc-row .g{color:var(--green);font-weight:700;}
+.best-badge{background:var(--grlt);color:var(--green);font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;}
+
+/* GRAFIEK */
+.canvas-wrap{position:relative;height:220px;}
+canvas{width:100%!important;}
+
+/* METRICS */
+.mrow{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:4px;}
+.mb{border-radius:9px;padding:13px 15px;}
+.mb.navy{background:#EFF4F9;border:1.5px solid #C5D8E8;}
+.mb.green{background:var(--grlt);border:1.5px solid #A7DFC2;}
+.mb.gold{background:var(--gold-lt);border:1.5px solid #F4C878;}
+.mb.orange{background:var(--orglt);border:1.5px solid #FCD34D;}
+.mb-l{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.mb-v{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);line-height:1.1;}
+.mb-s{font-size:11px;color:var(--muted);}
+
+@media(max-width:640px){.r2,.r3,.vg,.mrow{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-ico">💰</div>
+  <div>
+    <div class="hdr-title">Hypotheek Bespaarcheck</div>
+    <div class="hdr-sub">Kan ik besparen? Huidige rente vs. markt · oversluiten · rentemiddeling · wachten</div>
+  </div>
+  <div class="hdr-badge">Bespaarcheck</div>
+</div>
+
+<div class="wrap">
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="ch">📝 Uw huidige hypotheek</div>
+    <div class="cb">
+      <div class="row r3" style="margin-bottom:14px;">
+        <div class="sep" style="grid-column:1/-1;">Huidig</div>
+        <div class="fl">
+          <label>Hypotheeksaldo</label>
+          <div class="iw"><span class="px">€</span>
+            <input type="number" id="saldo" value="280000" step="5000">
+          </div>
+        </div>
+        <div class="fl">
+          <label>Huidige contractrente</label>
+          <div class="iw"><span class="sx">%</span>
+            <input type="number" id="crHuidig" value="4.80" step="0.01" class="sr">
+          </div>
+        </div>
+        <div class="fl">
+          <label>Resterende looptijd</label>
+          <div class="iw"><span class="sx">jr</span>
+            <input type="number" id="looptijdRest" value="22" step="1" class="sr">
+          </div>
+        </div>
+        <div class="fl">
+          <label>Resterende RVP</label>
+          <div class="iw"><span class="sx">jr</span>
+            <input type="number" id="rvpRest" value="3" step="0.5" class="sr">
+          </div>
+        </div>
+        <div class="fl">
+          <label>Aflosvorm</label>
+          <select id="vorm">
+            <option value="ann" selected>Annuïtair</option>
+            <option value="lin">Lineair</option>
+            <option value="af">Aflossingsvrij</option>
+          </select>
+        </div>
+        <div class="fl">
+          <label>Boetevrij per jaar</label>
+          <div class="iw"><span class="sx">%</span>
+            <input type="number" id="boeteVrij" value="10" step="1" class="sr">
+          </div>
+          <span class="sub">Standaard 10-20% van oorspronkelijke schuld</span>
+        </div>
+
+        <div class="sep" style="grid-column:1/-1;margin-top:4px;">Nieuwe marktrentestand</div>
+        <div class="fl">
+          <label>Marktrente 10 jaar vast</label>
+          <div class="iw"><span class="sx">%</span>
+            <input type="number" id="crNieuw10" value="3.60" step="0.01" class="sr">
+          </div>
+        </div>
+        <div class="fl">
+          <label>Marktrente resterende RVP</label>
+          <div class="iw"><span class="sx">%</span>
+            <input type="number" id="crNieuwRest" value="3.30" step="0.01" class="sr">
+          </div>
+          <span class="sub">Voor NCW-boeterente berekening</span>
+        </div>
+        <div class="fl">
+          <label>Oversluitkosten (notaris etc.)</label>
+          <div class="iw"><span class="px">€</span>
+            <input type="number" id="osKosten" value="2500" step="100">
+          </div>
+        </div>
+      </div>
+      <button class="btn" onclick="bereken()">💰 Check of ik kan besparen</button>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card hidden" id="resCard">
+    <div class="ch">💡 Resultaat bespaarcheck</div>
+    <div class="cb">
+      <div id="verdictBox"></div>
+      <div class="mrow" id="mrow"></div>
+    </div>
+  </div>
+
+  <!-- VERGELIJKING -->
+  <div class="card hidden" id="vergCard">
+    <div class="ch">⚖️ Drie opties vergeleken</div>
+    <div class="cb">
+      <div class="vg" id="vg"></div>
+    </div>
+  </div>
+
+  <!-- GRAFIEK -->
+  <div class="card hidden" id="grafCard">
+    <div class="ch">📈 Cumulatieve besparing over de resterende looptijd</div>
+    <div class="cb">
+      <div class="canvas-wrap"><canvas id="graf"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const N=id=>parseFloat(document.getElementById(id).value)||0;
+function fmt(n,d=0){if(!n&&n!==0)return'—';const neg=n<0;return(neg?'−':'')+' € '+Math.abs(Math.round(n)).toLocaleString('nl-NL')+',-';}
+function fmtPct(n,d=2){return n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
+function fmtMnd(m){if(m<=0)return'< 1 mnd';if(m<12)return Math.round(m)+' mnd';return Math.floor(m/12)+'j '+(Math.round(m%12)>0?Math.round(m%12)+'m':'');}
+
+function ann(s,r,n){const rm=r/12;if(rm===0)return s/n;return s*rm*Math.pow(1+rm,n)/(Math.pow(1+rm,n)-1);}
+function saldoNa(s,r,lt,t,vorm){
+  if(vorm==='af')return s;if(vorm==='lin')return Math.max(0,s-t*(s/lt));
+  const rm=r/12;if(rm===0)return Math.max(0,s-t*(s/lt));
+  return s*(Math.pow(1+rm,lt)-Math.pow(1+rm,t))/(Math.pow(1+rm,lt)-1);
+}
+function maandlast(s,r,n,vorm){
+  if(vorm==='af')return s*r/12;if(vorm==='lin')return s/n+s*r/12;
+  return ann(s,r,n);
+}
+
+let grafObj=null;
+
+function bereken(){
+  const saldo=N('saldo'),crH=N('crHuidig')/100,crN=N('crNieuw10')/100,crM=N('crNieuwRest')/100;
+  const ltRest=Math.round(N('looptijdRest')*12),rvpRest=Math.round(N('rvpRest')*12);
+  const vorm=document.getElementById('vorm').value,osK=N('osKosten'),bvPct=N('boeteVrij')/100;
+
+  const mlHuidig=maandlast(saldo,crH,ltRest,vorm);
+  const mlNieuw=maandlast(saldo,crN,ltRest,vorm);
+  const besMnd=mlHuidig-mlNieuw;
+
+  // NCW boeterente
+  const saldoBv=Math.max(0,saldo*(1-bvPct));
+  let ncw=0;
+  for(let t=1;t<=rvpRest;t++){
+    const s=saldoNa(saldoBv,crH,ltRest,t-1,vorm);
+    ncw+=s*(crH-crM)/12*Math.pow(1+crM/12,-t);
+  }
+
+  // Break-even oversluiten
+  const totalKostOs=ncw+osK;
+  const besMndOs=mlHuidig-mlNieuw;
+  const breakEvenOs=besMndOs>0?totalKostOs/besMndOs:Infinity;
+
+  // Rentemiddeling (gewogen gemiddelde)
+  const rMid=(crH*rvpRest+crN*(120-rvpRest))/120; // 10jr nieuw
+  const mlMid=maandlast(saldo,rMid,ltRest,vorm);
+  const besMndMid=mlHuidig-mlMid;
+
+  // Wachten: betaal huidig tot einde rvp, dan marktrente
+  const mlNaRvp=maandlast(saldoNa(saldo,crH,ltRest,rvpRest,vorm),crN,ltRest-rvpRest,vorm);
+
+  // Verdict
+  let verdictKls,verdictIco,verdictTitel,verdictSub;
+  const renteverschil=crH-crN;
+  if(renteverschil<0.3){
+    verdictKls='nee';verdictIco='📊';
+    verdictTitel='Klein renteverschil — oversluiten is waarschijnlijk niet rendabel';
+    verdictSub=`Uw contractrente (${fmtPct(crH*100)}) ligt slechts ${fmtPct(renteverschil*100)} boven de marktrente. De oversluitkosten zijn dan moeilijk terug te verdienen.`;
+  } else if(breakEvenOs>rvpRest+24){
+    verdictKls='misschien';verdictIco='⏳';
+    verdictTitel='Renteverschil aanwezig — maar break-even pas na einde RVP';
+    verdictSub=`Break-even bij oversluiten ligt op ${fmtMnd(breakEvenOs)}. Overweeg te wachten op het einde van uw RVP (nog ${fmtMnd(rvpRest)}) en dan direct marktrente pakken.`;
+  } else {
+    verdictKls='ja';verdictIco='✅';
+    verdictTitel=`Ja, u kunt ${fmt(Math.round(besMnd))}/mnd besparen!`;
+    verdictSub=`Renteverschil ${fmtPct(renteverschil*100)}. Break-even bij oversluiten: ${fmtMnd(breakEvenOs)}. Dat is binnen uw RVP — oversluiten of rentemiddeling loont.`;
+  }
+
+  document.getElementById('verdictBox').innerHTML=`
+    <div class="verdict ${verdictKls}">
+      <div class="v-ico">${verdictIco}</div>
+      <div><div class="v-titel">${verdictTitel}</div><div class="v-sub">${verdictSub}</div></div>
+    </div>`;
+
+  document.getElementById('mrow').innerHTML=`
+    <div class="mb navy"><div class="mb-l">Huidig maandlast</div><div class="mb-v">${fmt(mlHuidig)}</div><div class="mb-s">${fmtPct(crH*100)} rente</div></div>
+    <div class="mb green"><div class="mb-l">Na oversluiten</div><div class="mb-v">${fmt(mlNieuw)}</div><div class="mb-s">Besparing ${fmt(besMnd)}/mnd</div></div>
+    <div class="mb gold"><div class="mb-l">Impliciete boeterente</div><div class="mb-v">${fmt(ncw)}</div><div class="mb-s">NCW renteverlies bank</div></div>
+    <div class="mb ${breakEvenOs<rvpRest?'green':'orange'}"><div class="mb-l">Break-even</div><div class="mb-v">${fmtMnd(breakEvenOs)}</div><div class="mb-s">${breakEvenOs<rvpRest?'Binnen RVP':'Na einde RVP'}</div></div>`;
+
+  // Vergelijking
+  const opts=[
+    {kls:'nu',lbl:'Niets doen',ico:'⏸',rente:crH,ml:mlHuidig,totaalOverRvp:mlHuidig*rvpRest,kosten:0},
+    {kls:'over',lbl:'Oversluiten nu',ico:'🔄',rente:crN,ml:mlNieuw,totaalOverRvp:mlNieuw*rvpRest+totalKostOs,kosten:totalKostOs},
+    {kls:'wacht',lbl:'Wachten + rentemiddeling',ico:'⏳',rente:rMid,ml:mlMid,totaalOverRvp:mlHuidig*Math.min(rvpRest/2,6)+mlMid*(rvpRest-Math.min(rvpRest/2,6)),kosten:0},
+  ];
+  const minTotaal=Math.min(...opts.map(o=>o.totaalOverRvp));
+
+  document.getElementById('vg').innerHTML=opts.map(o=>`
+    <div class="vc ${o.totaalOverRvp===minTotaal?'hl':''}">
+      <div class="vc-head ${o.kls}">${o.ico} ${o.lbl}${o.totaalOverRvp===minTotaal?' <span class="best-badge">Beste optie</span>':''}</div>
+      <div class="vc-body">
+        <div class="vc-row"><span>Rente</span><span>${fmtPct(o.rente*100)}</span></div>
+        <div class="vc-row"><span>Maandlast</span><span>${fmt(o.ml)}</span></div>
+        <div class="vc-row"><span>Kosten</span><span>${o.kosten>0?fmt(o.kosten):'€ 0,-'}</span></div>
+        <div class="vc-row"><span>Besparing/mnd</span><span class="${o.ml<mlHuidig?'g':''}">${o.ml<mlHuidig?'+'+fmt(mlHuidig-o.ml):'—'}</span></div>
+        <div class="vc-row"><span><strong>Totaal over RVP</strong></span><span><strong>${fmt(o.totaalOverRvp)}</strong></span></div>
+      </div>
+    </div>`).join('');
+
+  // Grafiek: cumulatieve besparing vs. niets doen
+  const labels=[],dOs=[],dMid=[],dWacht=[];
+  let cumOs=-totalKostOs,cumMid=0,cumWacht=0;
+  for(let m=1;m<=ltRest;m++){
+    cumOs+=mlHuidig-mlNieuw;
+    cumMid+=mlHuidig-mlMid;
+    const rW=m<rvpRest?crH:crN;
+    const mlW=m<rvpRest?mlHuidig:mlNaRvp;
+    cumWacht+=mlHuidig-mlW;
+    if(m%3===0||m===ltRest){
+      labels.push('Jr '+(m/12).toFixed(1));
+      dOs.push(Math.round(cumOs));
+      dMid.push(Math.round(cumMid));
+      dWacht.push(Math.round(cumWacht));
+    }
+  }
+  if(grafObj)grafObj.destroy();
+  grafObj=new Chart(document.getElementById('graf').getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Oversluiten',data:dOs,borderColor:'#003057',backgroundColor:'rgba(0,48,87,.08)',borderWidth:2.5,fill:true,pointRadius:0,tension:.3},
+      {label:'Wachten → marktrente',data:dWacht,borderColor:'#1A8A50',backgroundColor:'rgba(26,138,80,.08)',borderWidth:2,fill:true,pointRadius:0,tension:.3},
+      {label:'Rentemiddeling',data:dMid,borderColor:'#E5A138',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:0,fill:false,tension:.3},
+      {label:'Nulpunt',data:labels.map(()=>0),borderColor:'rgba(0,0,0,.2)',borderWidth:1,pointRadius:0,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{font:{family:'DM Sans',size:11},boxWidth:12,color:'#333'}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: € ${c.parsed.y.toLocaleString('nl-NL')},-`}}},
+      scales:{
+        x:{ticks:{maxTicksLimit:10,font:{size:10},color:'#6B7280'},grid:{color:'#EEF2F6'}},
+        y:{ticks:{callback:v=>'€'+(v/1000).toFixed(0)+'k',font:{size:10},color:'#6B7280'},grid:{color:'#EEF2F6'}}}}});
+
+  ['resCard','vergCard','grafCard'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>

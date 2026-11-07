@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aflossingsvrij: loop ik een risico?</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F4F7F9;color:#333333;font-size:15px;line-height:1.6}
+.wrap{max-width:640px;margin:0 auto;padding:2rem 1rem 3rem}
+
+/* Header */
+.tool-header{background:#003057;border-radius:12px;padding:1.5rem 1.75rem;margin-bottom:1.5rem;color:#fff}
+.tool-header h1{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
+.tool-header p{font-size:14px;color:rgba(255,255,255,.7)}
+
+/* Progress */
+.progress{display:flex;align-items:center;margin-bottom:1.75rem}
+.pgap{width:6px;flex:none}
+.pdot{flex:1;height:5px;background:#dde4ea;border-radius:3px;transition:background .3s}
+.pdot.done{background:#E5A138}
+.pdot.active{background:#003057}
+
+/* Cards */
+.card{background:#fff;border:1px solid #dde4ea;border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.card-title{font-size:15px;font-weight:700;color:#003057}
+.step-badge{font-size:12px;color:#999;font-weight:400}
+
+/* Fields */
+.field{margin-bottom:1.25rem}
+.field:last-child{margin-bottom:0}
+label{font-size:13px;color:#4A4A4A;font-weight:600;display:block;margin-bottom:6px}
+.hint{font-size:12px;color:#888;margin-top:5px;line-height:1.5}
+.hint a{color:#003057;text-decoration:none;font-weight:600}
+.hint a:hover{text-decoration:underline}
+
+.iw{display:flex;align-items:center;border:1.5px solid #dde4ea;border-radius:8px;overflow:hidden;background:#fff}
+.iw:focus-within{border-color:#003057;box-shadow:0 0 0 3px rgba(0,48,87,.1)}
+.ipre{padding:0 12px;font-size:14px;color:#888;background:#F4F7F9;border-right:1.5px solid #dde4ea;height:40px;display:flex;align-items:center;white-space:nowrap;font-weight:600}
+.iw input{border:none;flex:1;padding:0 12px;height:40px;font-size:14px;color:#333;outline:none;background:#fff;width:100%}
+input[type=date],input[type=number]{border:1.5px solid #dde4ea;border-radius:8px;padding:0 12px;height:40px;font-size:14px;color:#333;outline:none;background:#fff;width:100%}
+input[type=date]:focus,input[type=number]:focus{border-color:#003057;box-shadow:0 0 0 3px rgba(0,48,87,.1)}
+
+/* Ja/Nee */
+.yn-group{display:flex;gap:10px;margin-top:6px}
+.yn-btn{flex:1;padding:10px 0;border:1.5px solid #dde4ea;border-radius:8px;font-size:14px;cursor:pointer;background:#fff;color:#4A4A4A;transition:all .15s;text-align:center;font-weight:500}
+.yn-btn:hover{border-color:#003057;color:#003057}
+.yn-btn.sel-yes{background:#e8f0f7;border-color:#003057;color:#003057;font-weight:700}
+.yn-btn.sel-no{background:#F4F7F9;border-color:#aab;color:#555;font-weight:600}
+.bedrag-row{margin-top:10px;padding:12px 14px;background:#f0f6fb;border:1.5px solid #b8d0e8;border-radius:8px;display:none}
+.bedrag-row.open{display:block}
+.bedrag-row label{font-size:13px;color:#003057;font-weight:600;margin-bottom:6px}
+
+/* Buttons */
+.btn-pri{background:#E5A138;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:.5rem;transition:background .2s;letter-spacing:.02em}
+.btn-pri:hover{background:#c8861e}
+.btn-sec{background:#fff;color:#003057;border:1.5px solid #003057;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-sec:hover{background:#003057;color:#fff}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn-sec{flex:1}
+.btn-row .btn-pri{flex:2}
+.err{color:#c0392b;font-size:13px;margin-top:8px;min-height:18px;font-weight:500}
+
+/* Score ring */
+.score-wrap{display:flex;flex-direction:column;align-items:center;margin:1.25rem 0}
+.score-ring{position:relative;width:130px;height:130px}
+.score-ring svg{width:130px;height:130px;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:11;stroke-linecap:round}
+.ring-bg{stroke:#eef2f5}
+.ring-fill{stroke-dasharray:283;stroke-dashoffset:283;transition:stroke-dashoffset .9s ease}
+.score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:800;color:#003057}
+.score-lbl{font-size:18px;font-weight:700;margin-top:12px;color:#003057}
+.score-sub{font-size:13px;color:#777;margin-top:3px}
+
+/* Ink pill */
+.ink-pill{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:1rem}
+.ink-pill-pens{background:#e8f0f7;color:#003057;border:1px solid #b8d0e8}
+.ink-pill-bruto{background:#fdf3e3;color:#8b5e1a;border:1px solid #f0d090}
+
+/* Meter */
+.meter{height:10px;border-radius:5px;background:#eef2f5;overflow:hidden;margin:6px 0 14px}
+.meter-fill{height:100%;border-radius:5px;transition:width .7s ease}
+
+/* Metric cards */
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.5rem}
+.mc{background:#F4F7F9;border-radius:8px;padding:.75rem 1rem;border:1px solid #dde4ea}
+.ml{font-size:11px;color:#888;margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.mv{font-size:20px;font-weight:700;color:#003057}
+
+/* Criteria */
+.crit{border:1.5px solid #dde4ea;border-radius:10px;overflow:hidden;margin-bottom:10px;background:#fff}
+.crit-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;gap:10px}
+.crit-head:hover{background:#F4F7F9}
+.crit-left{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#333;flex:1}
+.ci{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.ci-pos{background:#e6f4ec;color:#1a7a40}
+.ci-neg{background:#fde8e8;color:#c0392b}
+.ci-neu{background:#fdf3e3;color:#a0691a}
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.b-pos{background:#e6f4ec;color:#1a7a40}
+.b-neg{background:#fde8e8;color:#c0392b}
+.b-neu{background:#fdf3e3;color:#a0691a}
+.crit-body{padding:13px 16px;border-top:1px solid #eef2f5;background:#F4F7F9;font-size:13px;color:#555;line-height:1.7;display:none}
+.crit-body.open{display:block}
+.chev{font-size:10px;color:#bbb;transition:transform .2s;flex-shrink:0}
+.chev.open{transform:rotate(180deg)}
+
+/* Print */
+.print-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;color:#003057;border:1.5px solid #003057;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:10px;transition:all .2s}
+.print-btn:hover{background:#003057;color:#fff}
+.disclaimer{font-size:11px;color:#aaa;margin-top:1.5rem;line-height:1.6;border-top:1px solid #e0e6ec;padding-top:1rem}
+
+.hidden{display:none}
+
+/* print handled via openPrintWindow() */
+@media(max-width:480px){
+  .mrow{grid-template-columns:1fr}
+  .yn-group{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tool-header">
+    <h1>Aflossingsvrij: loop je risico?</h1>
+    <p>Check in 2 stappen hoe je hypotheek er écht voorstaat.</p>
+  </div>
+
+  <div class="progress">
+    <div class="pdot active" id="d0"></div><div class="pgap"></div>
+    <div class="pdot" id="d1"></div><div class="pgap"></div>
+    <div class="pdot" id="d2"></div>
+  </div>
+
+  <!-- STAP 1 -->
+  <div id="step0">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.1rem">
+        <div class="card-title">Jouw hypotheek</div>
+        <span class="step-badge">Stap 1 van 2</span>
+      </div>
+      <div class="field">
+        <label>Jouw geboortedatum</label>
+        <input type="date" id="gebdatum" max="2000-12-31" min="1940-01-01">
+      </div>
+      <div class="field">
+        <label>Aflossingsvrije hypotheekschuld</label>
+        <div class="iw"><div class="ipre">€</div><input type="number" id="schuld" placeholder="500.000" min="0" step="1000"></div>
+      </div>
+      <div class="field">
+        <label>Huidige woningwaarde</label>
+        <div class="iw"><div class="ipre">€</div><input type="number" id="waarde" placeholder="1.500.000" min="0" step="1000"></div>
+      </div>
+      <div class="field">
+        <label>Einddatum hypotheek</label>
+        <input type="date" id="einddatum" min="2025-01-01" max="2075-12-31">
+        <div class="hint">Dit staat op je hypotheekakte of het jaaroverzicht van je bank.</div>
+      </div>
+      <div class="field">
+        <label>Jouw bruto inkomen per maand</label>
+        <div class="iw"><div class="ipre">€</div><input type="number" id="inkomen" placeholder="5.000" min="0" step="100"></div>
+      </div>
+      <div class="field">
+        <label>Jouw pensioeninkomen per maand</label>
+        <div class="iw"><div class="ipre">€</div><input type="number" id="pensioeninkomen" placeholder="2.500" min="0" step="100"></div>
+        <div class="hint">Weet je het niet precies? Check <a href="https://www.mijnpensioenoverzicht.nl" target="_blank" rel="noopener">mijnpensioenoverzicht.nl</a> — log in met DigiD en je ziet het meteen.</div>
+      </div>
+    </div>
+    <button class="btn-pri" onclick="goStep1()">Volgende stap →</button>
+    <div class="err" id="err0"></div>
+  </div>
+
+  <!-- STAP 2 -->
+  <div id="step1" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.1rem">
+        <div class="card-title">Nog twee snelle vragen</div>
+        <span class="step-badge">Stap 2 van 2</span>
+      </div>
+
+      <div class="field">
+        <label>Heb je eigen spaargeld of vermogen dat je wilt inzetten om af te lossen?</label>
+        <div class="yn-group">
+          <div class="yn-btn" id="yn1-ja" onclick="pickYN('yn1','ja')">Ja</div>
+          <div class="yn-btn" id="yn1-nee" onclick="pickYN('yn1','nee')">Nee</div>
+        </div>
+        <div class="bedrag-row" id="yn1-bedrag-row">
+          <label>Hoeveel wil je inzetten?</label>
+          <div class="iw"><div class="ipre">€</div><input type="number" id="yn1-bedrag" placeholder="50.000" min="0" step="1000"></div>
+          <div class="hint">Dit bedrag trekken we af van je resterende schuld op de einddatum.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Verwacht je een erfenis of ander vermogen dat je voor de aflossing kunt gebruiken?</label>
+        <div class="yn-group">
+          <div class="yn-btn" id="yn2-ja" onclick="pickYN('yn2','ja')">Ja</div>
+          <div class="yn-btn" id="yn2-nee" onclick="pickYN('yn2','nee')">Nee</div>
+        </div>
+        <div class="bedrag-row" id="yn2-bedrag-row">
+          <label>Welk bedrag verwacht je te ontvangen?</label>
+          <div class="iw"><div class="ipre">€</div><input type="number" id="yn2-bedrag" placeholder="100.000" min="0" step="1000"></div>
+          <div class="hint">Dit bedrag trekken we af van je resterende schuld op de einddatum.</div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-sec" onclick="setStep(0)">← Vorige stap</button>
+      <button class="btn-pri" onclick="goStep2()">Bereken mijn score →</button>
+    </div>
+    <div class="err" id="err1"></div>
+  </div>
+
+  <!-- RESULTAAT -->
+  <div id="step3" class="hidden">
+    <div class="card" style="text-align:center">
+      <div class="score-wrap">
+        <div class="score-ring">
+          <svg viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="45"/>
+            <circle class="ring-fill" id="ring-fill" cx="50" cy="50" r="45"/>
+          </svg>
+          <div class="score-num" id="score-num">—</div>
+        </div>
+        <div class="score-lbl" id="score-lbl">—</div>
+        <div class="score-sub" id="score-sub">—</div>
+      </div>
+
+      <div id="ink-pill-wrap" style="margin-bottom:.75rem"></div>
+      <p style="font-size:13px;color:#666;margin-bottom:1.25rem;text-align:left" id="score-uitleg"></p>
+
+      <div style="font-size:12px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;text-align:left">Loan-to-Value op einddatum (LTV)</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="meter" style="flex:1"><div class="meter-fill" id="ltv-bar"></div></div>
+        <span style="font-size:16px;font-weight:800;min-width:46px;text-align:right;color:#003057" id="ltv-val"></span>
+      </div>
+
+      <div class="mrow">
+        <div class="mc"><div class="ml">Resterende schuld</div><div class="mv" id="rest-schuld"></div><div id="rest-schuld-sub" style="font-size:11px;color:#888;margin-top:3px;line-height:1.4;display:none"></div></div>
+        <div class="mc"><div class="ml">Leeftijd op einddatum</div><div class="mv" id="leeft-eind"></div></div>
+      </div>
+      <div class="mrow">
+        <div class="mc"><div class="ml">Eigen middelen</div><div class="mv" id="eigen-mid"></div></div>
+        <div class="mc"><div class="ml">Jaren tot einddatum</div><div class="mv" id="jaren-eind"></div></div>
+      </div>
+    </div>
+
+    <div id="criteria-list"></div>
+
+    <div class="btn-row" style="margin-top:.5rem">
+      <button class="btn-sec" onclick="setStep(1)">← Vorige stap</button>
+      <button class="btn-sec" onclick="resetTool()">Opnieuw</button>
+    </div>
+    <button class="print-btn" onclick="openPrintWindow()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Resultaat afdrukken
+    </button>
+    <div class="disclaimer"><strong>Let op:</strong> Dit is een indicatieve berekening op basis van het AFM-model. Het vervangt geen professioneel hypotheekadvies. Twijfel je? Neem contact op met een erkend hypotheekadviseur.</div>
+  </div>
+</div>
+
+<script>
+var yn = {yn1:null, yn2:null};
+
+function pickYN(g, v) {
+  yn[g] = v;
+  ['ja','nee'].forEach(function(x) {
+    document.getElementById(g+'-'+x).className = 'yn-btn' + (v===x ? (x==='ja' ? ' sel-yes' : ' sel-no') : '');
+  });
+  var row = document.getElementById(g+'-bedrag-row');
+  if(v === 'ja') { row.classList.add('open'); }
+  else { row.classList.remove('open'); document.getElementById(g+'-bedrag').value = ''; }
+}
+
+function setStep(n) {
+  document.getElementById('step0').classList.toggle('hidden', n!==0);
+  document.getElementById('step1').classList.toggle('hidden', n!==1);
+  document.getElementById('step3').classList.toggle('hidden', n!==2);
+  [0,1,2].forEach(function(i) {
+    var d = document.getElementById('d'+i);
+    d.className = 'pdot' + (i<n ? ' done' : i===n ? ' active' : '');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goStep1() {
+  var geb  = document.getElementById('gebdatum').value;
+  var s    = parseFloat(document.getElementById('schuld').value);
+  var w    = parseFloat(document.getElementById('waarde').value);
+  var e    = document.getElementById('einddatum').value;
+  var ink  = parseFloat(document.getElementById('inkomen').value);
+  var pens = parseFloat(document.getElementById('pensioeninkomen').value);
+  var err  = document.getElementById('err0');
+  if(!geb||!s||!w||!e||!ink||!pens) { err.textContent='Vul alle velden in om door te gaan.'; return; }
+  if(s<=0||w<=0||ink<=0||pens<=0)   { err.textContent='Voer geldige bedragen in.'; return; }
+  err.textContent='';
+  setStep(1);
+}
+
+function goStep2() {
+  var err = document.getElementById('err1');
+  if(!yn.yn1||!yn.yn2) { err.textContent='Beantwoord beide vragen om door te gaan.'; return; }
+  err.textContent='';
+  calculate();
+  setStep(2);
+}
+
+function fmt(n) { return '\u20AC\u00a0' + Math.round(n).toLocaleString('nl-NL'); }
+
+function calculate() {
+  var gebDate  = new Date(document.getElementById('gebdatum').value);
+  var eindDate = new Date(document.getElementById('einddatum').value);
+  var schuld   = parseFloat(document.getElementById('schuld').value);
+  var waarde   = parseFloat(document.getElementById('waarde').value);
+  var inkomen  = parseFloat(document.getElementById('inkomen').value);
+  var pensioenInkomen = parseFloat(document.getElementById('pensioeninkomen').value);
+  var nu = new Date();
+
+  var leeftijdNu    = Math.floor((nu - gebDate) / (365.25*24*3600*1000));
+  var jarenTotEind  = Math.max(0, Math.round((eindDate - nu) / (365.25*24*3600*1000)));
+  var leeftijdOpEind = leeftijdNu + jarenTotEind;
+
+  var eigenGeld = (yn.yn1==='ja') ? (parseFloat(document.getElementById('yn1-bedrag').value)||0) : 0;
+  var erfenis   = (yn.yn2==='ja') ? (parseFloat(document.getElementById('yn2-bedrag').value)||0) : 0;
+  var totalEigenMiddelen = eigenGeld + erfenis;
+
+  var schuldEind = Math.max(0, schuld - totalEigenMiddelen);
+  var ltv = (schuldEind / waarde) * 100;
+
+  // Pensioenlogica: als leeftijd op einddatum >= 57, toets op pensioeninkomen
+  var gebruiktPensioen = leeftijdOpEind >= 57;
+  var toetsInkomen = gebruiktPensioen ? pensioenInkomen : inkomen;
+  var maxHyp = toetsInkomen * 12 * 4.5;
+  var inkomenOk = maxHyp >= schuldEind;
+
+  // SCORE
+  var score = 5;
+  score += (ltv < 50) ? 2 : (ltv <= 75) ? 0 : -2;
+  score += (jarenTotEind > 15) ? 1 : (jarenTotEind >= 7) ? 0 : -2;
+  score += (leeftijdOpEind < 57) ? 1 : (leeftijdOpEind <= 67) ? 0 : -2;
+  score += inkomenOk ? 1 : -1;
+  if(eigenGeld > 0) score += 1;
+  if(erfenis > 0)   score += 0.5;
+  score = Math.round(Math.max(1, Math.min(10, score)));
+
+  var ds = score;
+  if(ds <= 2) ds = 3;
+  if(ds >= 9) ds = 8;
+
+  var cfgs = {
+    3:{lbl:'Hoog risico',      sub:'Nu actie ondernemen',       color:'#c0392b'},
+    4:{lbl:'Hoog risico',      sub:'Nu actie ondernemen',       color:'#c0392b'},
+    5:{lbl:'Aandacht vereist', sub:'Er is werk aan de winkel',  color:'#E5A138'},
+    6:{lbl:'Aandacht vereist', sub:'Er is werk aan de winkel',  color:'#E5A138'},
+    7:{lbl:'Beperkt risico',   sub:'Ziet er redelijk uit',      color:'#1a7a40'},
+    8:{lbl:'Laag risico',      sub:'Je zit er goed voor!',      color:'#1a7a40'}
+  };
+  var cfg = cfgs[ds] || {lbl:'—', sub:'—', color:'#003057'};
+
+  var ring = document.getElementById('ring-fill');
+  ring.style.stroke = cfg.color;
+  setTimeout(function() { ring.style.strokeDashoffset = 283 - (283*(ds/10)); }, 120);
+
+  document.getElementById('score-num').textContent = ds;
+  document.getElementById('score-lbl').textContent = cfg.lbl;
+  document.getElementById('score-lbl').style.color = cfg.color;
+  document.getElementById('score-sub').textContent = cfg.sub;
+
+  var pillTxt = gebruiktPensioen
+    ? 'Getoetst op pensioeninkomen (' + fmt(pensioenInkomen) + '/mnd) \u2014 je bent ' + leeftijdOpEind + ' jaar op de einddatum'
+    : 'Getoetst op bruto inkomen (' + fmt(inkomen) + '/mnd) \u2014 je bent ' + leeftijdOpEind + ' jaar op de einddatum';
+  var pillCls = gebruiktPensioen ? 'ink-pill ink-pill-pens' : 'ink-pill ink-pill-bruto';
+  document.getElementById('ink-pill-wrap').innerHTML = '<span class="' + pillCls + '">' + pillTxt + '</span>';
+
+  document.getElementById('score-uitleg').textContent =
+    'Je score is gebaseerd op de LTV op de einddatum, de resterende looptijd, je leeftijd en je '
+    + (gebruiktPensioen ? 'pensioeninkomen' : 'bruto inkomen') + '. '
+    + (gebruiktPensioen
+        ? 'Omdat je op de einddatum 57 jaar of ouder bent, toetsen geldverstrekkers op je pensioeninkomen \u2014 net als bij een nieuwe hypotheekaanvraag.'
+        : 'Omdat je op de einddatum nog geen 57 bent, telt je huidige bruto inkomen als uitgangspunt.');
+
+  var barColor = (ltv < 50) ? '#1a7a40' : (ltv <= 75) ? '#E5A138' : '#c0392b';
+  document.getElementById('ltv-bar').style.width  = Math.min(ltv,100).toFixed(0) + '%';
+  document.getElementById('ltv-bar').style.background = barColor;
+  document.getElementById('ltv-val').textContent  = ltv.toFixed(0) + '%';
+  document.getElementById('rest-schuld').textContent = fmt(schuldEind);
+  var subEl = document.getElementById('rest-schuld-sub');
+  if(totalEigenMiddelen > 0) {
+    subEl.textContent = fmt(schuld) + ' − ' + fmt(totalEigenMiddelen) + ' eigen middelen';
+    subEl.style.display = 'block';
+  } else {
+    subEl.style.display = 'none';
+  }
+  document.getElementById('leeft-eind').textContent  = leeftijdOpEind + ' jaar';
+  document.getElementById('eigen-mid').textContent   = totalEigenMiddelen > 0 ? fmt(totalEigenMiddelen) : '\u2014';
+  document.getElementById('jaren-eind').textContent  = jarenTotEind + ' jaar';
+
+  // CRITERIA
+  var crits = [];
+
+  // 1. LTV
+  if(ltv < 50) {
+    var ltvBody = 'Super \u2014 de waarde van je woning is flink hoger dan je resterende schuld op de einddatum';
+    if(totalEigenMiddelen > 0) { ltvBody += ' (na inzet van ' + fmt(totalEigenMiddelen) + ' eigen middelen)'; }
+    ltvBody += '. Dit werkt positief voor je score.';
+    crits.push({pos:1, t:'Je schuld is minder dan 50% van de woningwaarde', b:ltvBody});
+  } else if(ltv <= 75) {
+    crits.push({pos:-1, t:'Je schuld zit tussen 50% en 75% van de woningwaarde',
+      b:'Je LTV op de einddatum is ' + ltv.toFixed(0) + '%. Bij herfinanciering mag maximaal 50% van de woningwaarde aflossingsvrij zijn. Dit drukt je score.'});
+  } else {
+    crits.push({pos:-1, t:'Je schuld is meer dan 75% van de woningwaarde',
+      b:'Je LTV op de einddatum is ' + ltv.toFixed(0) + '%. Dat is hoog ten opzichte van de waarde van je woning \u2014 dit heeft een sterk negatief effect op je score.'});
+  }
+
+  // 2. Looptijd
+  if(jarenTotEind > 15) {
+    crits.push({pos:1, t:'Je hebt nog meer dan 15 jaar de tijd',
+      b:'Goed nieuws: er is nog genoeg ruimte om je hypotheek aan te passen als dat nodig is. Dit werkt positief voor je score.'});
+  } else if(jarenTotEind >= 7) {
+    crits.push({pos:0, t:'Je hebt nog 7 tot 15 jaar',
+      b:'Je hebt nog enige tijd om actie te ondernemen \u2014 maar zet het niet op de lange baan. Oriënteer je alvast op je opties.'});
+  } else {
+    crits.push({pos:-1, t:'De einddatum is binnen 7 jaar',
+      b:'Het wordt urgent: je hypotheek loopt binnenkort af. Neem zo snel mogelijk contact op met een adviseur. Dit heeft een negatief effect op je score.'});
+  }
+
+  // 3. Leeftijd op einddatum
+  if(leeftijdOpEind > 67) {
+    crits.push({pos:-1, t:'Je bent op de einddatum ouder dan 67 \u2014 pensioenleeftijd bereikt',
+      b:'Op de einddatum heb je de AOW-leeftijd bereikt. Dat betekent waarschijnlijk een lager inkomen, minder of geen hypotheekrenteaftrek, en een strengere beoordeling bij herfinanciering. Dit heeft een negatief effect op je score.'});
+  } else if(leeftijdOpEind >= 57) {
+    crits.push({pos:0, t:'Je bent op de einddatum ouder dan 57',
+      b:'Geldverstrekkers beoordelen hypotheekaanvragen van 57-plussers op basis van pensioeninkomen. Dit heeft op zichzelf geen direct effect op je score, maar via de inkomenstoets kan een lager pensioeninkomen de financierbaarheid wel beïnvloeden.'});
+  } else {
+    crits.push({pos:1, t:'Je bent op de einddatum jonger dan 57',
+      b:'Je zit nog ruim voor de leeftijdsgrens van 57 jaar waarop geldverstrekkers overschakelen naar pensioentoetsing. Dit werkt positief voor je score.'});
+  }
+
+  // 4. Inkomenstoets
+  var inkomenLabel = gebruiktPensioen
+    ? 'pensioeninkomen van ' + fmt(pensioenInkomen) + ' per maand'
+    : 'bruto inkomen van ' + fmt(inkomen) + ' per maand';
+  if(!inkomenOk) {
+    crits.push({pos:-1, t:'Je inkomen is onvoldoende om de schuld op einddatum te financieren',
+      b:'Op basis van je ' + inkomenLabel + ' kun je maximaal ' + fmt(maxHyp) + ' lenen. Je resterende schuld is ' + fmt(schuldEind) + '. Dat gat is een probleem bij herfinanciering of verlenging. Dit drukt je score.'});
+  } else {
+    crits.push({pos:1, t:'Je inkomen is voldoende om de schuld op einddatum te financieren',
+      b:'Op basis van je ' + inkomenLabel + ' kun je maximaal ' + fmt(maxHyp) + ' lenen. Je resterende schuld is ' + fmt(schuldEind) + ' \u2014 dat past. Dit werkt positief voor je score.'});
+  }
+
+  // 5. Eigen middelen
+  if(eigenGeld > 0 && erfenis > 0) {
+    crits.push({pos:1, t:'Je zet eigen geld én verwacht vermogen in',
+      b:'In totaal zet je ' + fmt(totalEigenMiddelen) + ' in (' + fmt(eigenGeld) + ' eigen geld + ' + fmt(erfenis) + ' verwacht vermogen). Dat verlaagt je resterende schuld naar ' + fmt(schuldEind) + '. Goed bezig \u2014 dit werkt positief voor je score.'});
+  } else if(eigenGeld > 0) {
+    crits.push({pos:1, t:'Je hebt eigen geld beschikbaar voor aflossing',
+      b:'Je zet ' + fmt(eigenGeld) + ' in. Hierdoor daalt je resterende schuld naar ' + fmt(schuldEind) + '. Dit werkt positief voor je score.'});
+  } else if(erfenis > 0) {
+    crits.push({pos:1, t:'Je verwacht een erfenis of ander vermogen',
+      b:'Je verwacht ' + fmt(erfenis) + ' te ontvangen. Hierdoor daalt je resterende schuld naar ' + fmt(schuldEind) + '. Dit werkt positief voor je score.'});
+  }
+
+  document.getElementById('criteria-list').innerHTML = crits.map(function(c,i) {
+    var ip = c.pos===1, ineg = c.pos===-1;
+    return '<div class="crit">'
+      + '<div class="crit-head" onclick="tog('+i+')">'
+      + '<div class="crit-left">'
+      + '<div class="ci ' + (ip?'ci-pos':ineg?'ci-neg':'ci-neu') + '">' + (ip?'✓':ineg?'✕':'~') + '</div>'
+      + '<span>' + c.t + '</span>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+      + '<span class="badge ' + (ip?'b-pos':ineg?'b-neg':'b-neu') + '">' + (ip?'+ positief':ineg?'− negatief':'neutraal') + '</span>'
+      + '<span class="chev" id="chev'+i+'">▼</span>'
+      + '</div>'
+      + '</div>'
+      + '<div class="crit-body" id="cb'+i+'">' + c.b + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function tog(i) {
+  document.getElementById('cb'+i).classList.toggle('open');
+  document.getElementById('chev'+i).classList.toggle('open');
+}
+
+function openPrintWindow() {
+  // Collect all CSS from the page
+  var styles = '';
+  for(var i=0; i<document.styleSheets.length; i++){
+    try {
+      var rules = document.styleSheets[i].cssRules || document.styleSheets[i].rules;
+      for(var j=0; j<rules.length; j++){ styles += rules[j].cssText + '\n'; }
+    } catch(e){}
+  }
+
+  // Grab the result card + criteria HTML
+  var header = document.querySelector('.tool-header').outerHTML;
+  var resultCard = document.getElementById('step3').innerHTML;
+
+  // Build print HTML — all crit-bodies open, no buttons
+  var html = '<!DOCTYPE html><html lang="nl"><head>'
+    + '<meta charset="UTF-8">'
+    + '<title>Hypotheek risicocheck — resultaat</title>'
+    + '<style>'
+    + styles
+    + 'body{background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;color:#333}'
+    + '.wrap{max-width:640px;margin:0 auto;padding:1.5rem}'
+    + '.hidden{display:block!important}'
+    + '.btn-pri,.btn-sec,.btn-row,.print-btn{display:none!important}'
+    + '.crit-body{display:block!important}'
+    + '.bedrag-row.open{display:block!important}'
+    + '.chev{display:none}'
+    + '.card{page-break-inside:avoid}'
+    + '.crit{page-break-inside:avoid;margin-bottom:8px}'
+    + '</style>'
+    + '</head><body>'
+    + '<div class="wrap">'
+    + header
+    + '<div id="step3">' + resultCard + '</div>'
+    + '</div>'
+    + '<script>window.onload=function(){window.print();}<\/script>'
+    + '</body></html>';
+
+  var w = window.open('', '_blank', 'width=700,height=900');
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+function resetTool() {
+  ['gebdatum','einddatum'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['schuld','waarde','inkomen','pensioeninkomen','yn1-bedrag','yn2-bedrag'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['yn1','yn2'].forEach(function(g) {
+    yn[g] = null;
+    ['ja','nee'].forEach(function(v){ document.getElementById(g+'-'+v).className='yn-btn'; });
+    document.getElementById(g+'-bedrag-row').classList.remove('open');
+  });
+  document.getElementById('ring-fill').style.strokeDashoffset = 283;
+  setStep(0);
+}
+</script>
+</body>
+</html>

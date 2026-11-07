@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dekkingsanalyse · Polischeck</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --ink: #1c1c1c;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #8a8a8a;
+    --cream: #faf8f3;
+    --cream-2: #f2ede3;
+    --cream-3: #e8e1d4;
+    --forest: #2d5a3d;
+    --forest-light: #3d7a52;
+    --forest-pale: #eaf2ec;
+    --amber: #c8600a;
+    --amber-pale: #fdf0e6;
+    --red: #b83232;
+    --red-pale: #fdeaea;
+    --blue: #2a5c8a;
+    --blue-pale: #e8f0f8;
+    --white: #ffffff;
+    --border: #ddd8cc;
+    --radius: 12px;
+    --radius-sm: 7px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    background: var(--forest);
+    padding: 0 40px;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+  }
+
+  .logo-text {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 18px;
+    color: var(--white);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 300;
+    margin-top: 1px;
+  }
+
+  .header-right {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    font-weight: 300;
+  }
+
+  /* ─── Page layout ─── */
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    margin-bottom: 40px;
+  }
+
+  .hero h2 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+
+  .hero p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    font-weight: 300;
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  /* ─── Two-column setup ─── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ─── Card ─── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .card-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title span { font-size: 18px; }
+
+  /* ─── Upload zone ─── */
+  .upload-zone {
+    border: 2px dashed var(--cream-3);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--cream);
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--forest-light);
+    background: var(--forest-pale);
+  }
+
+  .upload-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 36px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .upload-zone h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .upload-zone p {
+    font-size: 13px;
+    color: var(--ink-muted);
+    font-weight: 300;
+  }
+
+  /* ─── File list ─── */
+  .file-list {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .file-item {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .file-item .file-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .file-item .file-status {
+    font-size: 12px;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  .file-item .file-status.ok { color: var(--forest); }
+  .file-item .file-status.err { color: var(--red); }
+
+  .file-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-muted);
+    font-size: 16px;
+    padding: 0 2px;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+
+  .file-remove:hover { color: var(--red); }
+
+  /* ─── Profile card ─── */
+  .profile-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .field-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .field-group select,
+  .field-group input {
+    width: 100%;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .field-group select:focus,
+  .field-group input:focus {
+    border-color: var(--forest);
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    user-select: none;
+  }
+
+  .checkbox-item input[type=checkbox] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--forest);
+    cursor: pointer;
+  }
+
+  /* ─── Analyse button ─── */
+  .analyse-btn {
+    width: 100%;
+    background: var(--forest);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .analyse-btn:hover:not(:disabled) { background: var(--forest-light); }
+  .analyse-btn:active:not(:disabled) { transform: scale(0.99); }
+  .analyse-btn:disabled {
+    background: var(--cream-3);
+    color: var(--ink-muted);
+    cursor: not-allowed;
+  }
+
+  /* ─── Progress ─── */
+  .progress-bar-wrap {
+    height: 4px;
+    background: var(--cream-3);
+    border-radius: 4px;
+    margin-top: 12px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--forest);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 6px;
+    display: none;
+    text-align: center;
+  }
+
+  /* ─── Results area ─── */
+  #results {
+    margin-top: 36px;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--cream-3);
+  }
+
+  .results-header h2 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .results-header .timestamp {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+
+  /* Score summary row */
+  .score-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .score-tile {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: center;
+  }
+
+  .score-tile .tile-value {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .score-tile .tile-label {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .score-tile.green .tile-value { color: var(--forest); }
+  .score-tile.amber .tile-value { color: var(--amber); }
+  .score-tile.red .tile-value { color: var(--red); }
+
+  /* Result sections */
+  .result-section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .result-section-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--cream-2);
+  }
+
+  .result-section-header:hover { background: var(--cream); }
+
+  .section-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .section-icon.green { background: var(--forest-pale); }
+  .section-icon.amber { background: var(--amber-pale); }
+  .section-icon.red   { background: var(--red-pale); }
+  .section-icon.blue  { background: var(--blue-pale); }
+
+  .section-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  .section-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .section-badge.green { background: var(--forest-pale); color: var(--forest); }
+  .section-badge.amber { background: var(--amber-pale); color: var(--amber); }
+  .section-badge.red   { background: var(--red-pale);   color: var(--red);   }
+  .section-badge.blue  { background: var(--blue-pale);  color: var(--blue);  }
+
+  .section-chevron {
+    color: var(--ink-muted);
+    font-size: 12px;
+    transition: transform 0.2s;
+  }
+
+  .result-section-body {
+    padding: 18px 20px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    border-top: none;
+  }
+
+  .result-section-body p { margin-bottom: 10px; }
+  .result-section-body p:last-child { margin-bottom: 0; }
+  .result-section-body strong { color: var(--ink); font-weight: 600; }
+
+  .result-section-body ul {
+    margin: 8px 0 8px 18px;
+  }
+
+  .result-section-body ul li {
+    margin-bottom: 5px;
+  }
+
+  /* Coverage items grid */
+  .coverage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .cov-item {
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cov-item.yes  { background: var(--forest-pale); color: var(--forest); }
+  .cov-item.no   { background: var(--red-pale);    color: var(--red);    }
+  .cov-item.unknown { background: var(--cream-2);  color: var(--ink-muted); }
+
+  .cov-item .cov-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .cov-item.yes .cov-dot  { background: var(--forest); }
+  .cov-item.no .cov-dot   { background: var(--red); }
+  .cov-item.unknown .cov-dot { background: var(--ink-muted); }
+
+  /* Loading skeleton */
+  .skeleton {
+    background: linear-gradient(90deg, var(--cream-2) 25%, var(--cream-3) 50%, var(--cream-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: var(--radius-sm);
+    height: 16px;
+    margin-bottom: 10px;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Disclaimer */
+  .disclaimer-box {
+    background: var(--cream-2);
+    border: 1px solid var(--cream-3);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.6;
+    margin-top: 24px;
+  }
+
+  /* Empty state */
+  .empty-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-muted);
+  }
+
+  .empty-results .empty-icon { font-size: 48px; margin-bottom: 14px; }
+  .empty-results h3 { font-family: 'Libre Baskerville', serif; font-size: 18px; color: var(--ink-soft); margin-bottom: 6px; }
+  .empty-results p { font-size: 14px; font-weight: 300; }
+
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; }
+    .score-row { grid-template-columns: repeat(3, 1fr); }
+    .page { padding: 24px 16px 60px; }
+    .header { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">📋</div>
+    <div>
+      <div class="logo-text">Polischeck</div>
+      <div class="logo-sub">Dekkingsanalyse op basis van AI</div>
+    </div>
+  </div>
+  <div class="header-right">Upload · Analyseer · Verbeter</div>
+</div>
+
+<div class="page">
+
+  <div class="hero">
+    <h2>Analyseer uw polisbladen<br><em style="font-weight:400; color:var(--forest)">in één klik</em></h2>
+    <p>Upload één of meerdere PDF polisdocumenten. De AI analyseert de dekking, signaleert hiaten en vergelijkt met uw gewenste profiel.</p>
+  </div>
+
+  <div class="layout">
+
+    <!-- Left: Upload + Results -->
+    <div>
+      <!-- Upload card -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title"><span>📎</span> Polisdocumenten uploaden</div>
+
+        <div class="upload-zone" id="uploadZone"
+          ondragover="event.preventDefault(); this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleDrop(event)">
+          <input type="file" id="fileInput" accept=".pdf" multiple onchange="handleFiles(this.files)">
+          <span class="upload-icon">📄</span>
+          <h3>Sleep PDF's hierheen of klik om te uploaden</h3>
+          <p>Polisbladen, verzekeringsoverzichten, voorwaarden — meerdere bestanden mogelijk</p>
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <div class="progress-bar-wrap" id="progressWrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-label" id="progressLabel"></div>
+      </div>
+
+      <!-- Analyse button -->
+      <button class="analyse-btn" id="analyseBtn" onclick="startAnalysis()" disabled>
+        <span>🔍</span> Start dekkingsanalyse
+      </button>
+
+      <!-- Results -->
+      <div id="results">
+        <div class="empty-results">
+          <div class="empty-icon">🛡️</div>
+          <h3>Nog geen analyse uitgevoerd</h3>
+          <p>Upload uw polisdocumenten en vul uw profiel in om te beginnen.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Profile -->
+    <div>
+      <div class="card">
+        <div class="card-title"><span>👤</span> Uw profiel</div>
+        <div class="profile-grid">
+
+          <div class="field-group">
+            <label>Woonsituatie</label>
+            <select id="woonsituatie">
+              <option value="koopwoning">Koopwoning</option>
+              <option value="huurwoning">Huurwoning</option>
+              <option value="appartement">Appartement (VvE)</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label>Gezinssituatie</label>
+            <select id="gezin">
+              <option value="alleenstaand">Alleenstaand</option>
+              <option value="samenwonend">Samenwonend / getrouwd</option>
+              <option value="gezin_kinderen">Gezin met kinderen</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label>Werkzaamheden</label>
+            <select id="werk">
+              <option value="loondienst">Loondienst</option>
+              <option value="zzp">ZZP / zelfstandig</option>
+              <option value="gepensioneerd">Gepensioneerd</option>
+              <option value="student">Student</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label>Gewenste dekkingen (minimaal)</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item"><input type="checkbox" id="chk_woonhuis" checked> Woonhuisverzekering</label>
+              <label class="checkbox-item"><input type="checkbox" id="chk_inboedel" checked> Inboedelverzekering</label>
+              <label class="checkbox-item"><input type="checkbox" id="chk_aansprakelijkheid" checked> Aansprakelijkheid (AVP)</label>
+              <label class="checkbox-item"><input type="checkbox" id="chk_rechtsbijstand"> Rechtsbijstand</label>
+              <label class="checkbox-item"><input type="checkbox" id="chk_reis"> Reisverzekering</label>
+              <label class="checkbox-item"><input type="checkbox" id="chk_auto"> Autoverzekering</label>
+              <label class="checkbox-item"><input type="checkbox" id="chk_inkomen"> Inkomensbescherming</label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label>Bijzonderheden / aandachtspunten</label>
+            <input type="text" id="bijzonderheden" placeholder="bijv. hond, waardevolle spullen, zakelijk gebruik…">
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let uploadedFiles = [];
+let extractedTexts = [];
+
+// ─── File handling ───────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+}
+
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    if (f.type === 'application/pdf' && !uploadedFiles.find(x => x.name === f.name)) {
+      uploadedFiles.push(f);
+      renderFileItem(f, 'Gereed om te lezen', 'ok');
+    }
+  });
+  updateAnalyseBtn();
+}
+
+function renderFileItem(file, statusText, statusClass) {
+  const list = document.getElementById('fileList');
+  const id = 'fi_' + file.name.replace(/\W/g, '_');
+  const existing = document.getElementById(id);
+  if (existing) {
+    existing.querySelector('.file-status').textContent = statusText;
+    existing.querySelector('.file-status').className = 'file-status ' + statusClass;
+    return;
+  }
+  const div = document.createElement('div');
+  div.className = 'file-item';
+  div.id = id;
+  div.innerHTML = `
+    <span>📄</span>
+    <div class="file-name">${escHtml(file.name)}</div>
+    <div class="file-status ${statusClass}">${statusText}</div>
+    <button class="file-remove" onclick="removeFile('${escHtml(file.name)}')" title="Verwijder">✕</button>
+  `;
+  list.appendChild(div);
+}
+
+function removeFile(name) {
+  uploadedFiles = uploadedFiles.filter(f => f.name !== name);
+  const id = 'fi_' + name.replace(/\W/g, '_');
+  document.getElementById(id)?.remove();
+  updateAnalyseBtn();
+}
+
+function updateAnalyseBtn() {
+  document.getElementById('analyseBtn').disabled = uploadedFiles.length === 0;
+}
+
+// ─── PDF.js extraction ───────────────────────────────────
+async function extractPdfText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  const maxPages = Math.min(pdf.numPages, 30);
+  for (let i = 1; i <= maxPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(s => s.str).join(' ') + '\n';
+  }
+  return text.substring(0, 18000);
+}
+
+// ─── Main analysis ───────────────────────────────────────
+async function startAnalysis() {
+  if (uploadedFiles.length === 0) return;
+
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Bezig met analyseren…';
+
+  showProgress(0, 'PDFs inlezen…');
+
+  // Extract all PDFs
+  extractedTexts = [];
+  for (let i = 0; i < uploadedFiles.length; i++) {
+    const f = uploadedFiles[i];
+    renderFileItem(f, 'Wordt ingelezen…', '');
+    try {
+      const txt = await extractPdfText(f);
+      extractedTexts.push({ name: f.name, text: txt });
+      renderFileItem(f, `${txt.length.toLocaleString()} tekens gelezen`, 'ok');
+    } catch(e) {
+      renderFileItem(f, 'Leesbaar mislukt', 'err');
+    }
+    showProgress(Math.round(((i+1)/uploadedFiles.length)*40), `PDF ${i+1}/${uploadedFiles.length} ingelezen`);
+  }
+
+  showProgress(45, 'Profiel ophalen…');
+  const profile = buildProfile();
+
+  showProgress(55, 'AI analyseert uw polissen…');
+
+  // Show skeleton
+  showSkeleton();
+
+  try {
+    const analysis = await callAI(extractedTexts, profile);
+    showProgress(95, 'Resultaten verwerken…');
+    renderResults(analysis);
+    showProgress(100, 'Klaar!');
+    setTimeout(() => hideProgress(), 800);
+  } catch(e) {
+    showError(e.message);
+    hideProgress();
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>🔄</span> Opnieuw analyseren';
+}
+
+function buildProfile() {
+  const woonsituatie = document.getElementById('woonsituatie').value;
+  const gezin = document.getElementById('gezin').value;
+  const werk = document.getElementById('werk').value;
+  const bijz = document.getElementById('bijzonderheden').value;
+  const gewenst = ['woonhuis','inboedel','aansprakelijkheid','rechtsbijstand','reis','auto','inkomen']
+    .filter(id => document.getElementById('chk_'+id)?.checked)
+    .map(id => ({
+      woonhuis: 'Woonhuisverzekering', inboedel: 'Inboedelverzekering',
+      aansprakelijkheid: 'Aansprakelijkheidsverzekering (AVP)', rechtsbijstand: 'Rechtsbijstandverzekering',
+      reis: 'Reisverzekering', auto: 'Autoverzekering', inkomen: 'Inkomensbescherming / AOV'
+    }[id]));
+  return { woonsituatie, gezin, werk, bijz, gewenst };
+}
+
+// ─── AI call ─────────────────────────────────────────────
+async function callAI(docs, profile) {
+  const docSection = docs.map((d,i) =>
+    `=== DOCUMENT ${i+1}: ${d.name} ===\n${d.text}`
+  ).join('\n\n');
+
+  const prompt = `Je bent een expert verzekeringsadviseur. Analyseer de volgende polisdocumenten grondig.
+
+KLANTPROFIEL:
+- Woonsituatie: ${profile.woonsituatie}
+- Gezin: ${profile.gezin}
+- Werk: ${profile.werk}
+- Bijzonderheden: ${profile.bijz || 'geen'}
+- Gewenste minimale dekkingen: ${profile.gewenst.join(', ')}
+
+POLISDOCUMENTEN:
+${docSection}
+
+Geef een GESTRUCTUREERDE analyse in het volgende JSON-formaat (antwoord ALLEEN met JSON, geen uitleg eromheen):
+
+{
+  "samenvatting": "2-3 zinnen overall beoordeling",
+  "gevonden_polissen": [
+    {
+      "naam": "naam van polis",
+      "verzekeraar": "naam verzekeraar of Onbekend",
+      "type": "type verzekering",
+      "status": "ok|aandacht|probleem",
+      "dekking_samenvatting": "korte samenvatting van de dekking",
+      "eigen_risico": "bedrag of Niet gevonden",
+      "aandachtspunten": ["punt 1", "punt 2"]
+    }
+  ],
+  "dekkingscheck": [
+    {
+      "categorie": "naam dekking",
+      "status": "gedekt|niet_gedekt|onbekend",
+      "toelichting": "korte toelichting"
+    }
+  ],
+  "hiaten": [
+    {
+      "onderwerp": "naam van het hiaat",
+      "ernst": "hoog|midden|laag",
+      "uitleg": "waarom dit een risico is voor dit profiel"
+    }
+  ],
+  "aanbevelingen": [
+    {
+      "prioriteit": "urgent|aanbevolen|optioneel",
+      "actie": "concrete actie",
+      "reden": "korte toelichting"
+    }
+  ],
+  "score_gedekt": 0,
+  "score_hiaten": 0,
+  "score_aanbevelingen": 0
+}
+
+score_gedekt = aantal gedekte categorieën, score_hiaten = aantal gevonden hiaten, score_aanbevelingen = aantal aanbevelingen.
+Wees eerlijk en concreet. Als iets niet uit de documenten blijkt, zeg dat dan.`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2500,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message);
+
+  const raw = data.content[0].text.replace(/```json|```/g, '').trim();
+  return JSON.parse(raw);
+}
+
+// ─── Render results ───────────────────────────────────────
+function renderResults(data) {
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'results-header';
+  hdr.innerHTML = `<h2>Analyseresultaat</h2><span class="timestamp">${new Date().toLocaleString('nl-NL', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>`;
+  container.appendChild(hdr);
+
+  // Score row
+  const scoreRow = document.createElement('div');
+  scoreRow.className = 'score-row';
+  scoreRow.innerHTML = `
+    <div class="score-tile green">
+      <div class="tile-value">${data.score_gedekt}</div>
+      <div class="tile-label">Gedekt</div>
+    </div>
+    <div class="score-tile red">
+      <div class="tile-value">${data.score_hiaten}</div>
+      <div class="tile-label">Hiaten</div>
+    </div>
+    <div class="score-tile amber">
+      <div class="tile-value">${data.score_aanbevelingen}</div>
+      <div class="tile-label">Acties</div>
+    </div>
+  `;
+  container.appendChild(scoreRow);
+
+  // Samenvatting
+  addSection(container, '📊', 'blue', 'Samenvatting', 'Algemeen', `<p>${escHtml(data.samenvatting)}</p>`, true);
+
+  // Gevonden polissen
+  if (data.gevonden_polissen?.length) {
+    let html = '';
+    data.gevonden_polissen.forEach(p => {
+      const kleur = p.status === 'ok' ? 'green' : p.status === 'aandacht' ? 'amber' : 'red';
+      const badge = p.status === 'ok' ? '✅ In orde' : p.status === 'aandacht' ? '⚠️ Aandacht' : '❌ Probleem';
+      html += `<div style="margin-bottom:14px; padding-bottom:14px; border-bottom:1px solid var(--cream-2)">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <strong style="font-size:15px;">${escHtml(p.naam)}</strong>
+          <span class="section-badge ${kleur}">${badge}</span>
+        </div>
+        <div style="font-size:13px; color:var(--ink-muted); margin-bottom:6px;">${escHtml(p.verzekeraar)} · ${escHtml(p.type)} · Eigen risico: ${escHtml(p.eigen_risico)}</div>
+        <p style="margin-bottom:6px;">${escHtml(p.dekking_samenvatting)}</p>
+        ${p.aandachtspunten?.length ? '<ul>' + p.aandachtspunten.map(a => `<li>${escHtml(a)}</li>`).join('') + '</ul>' : ''}
+      </div>`;
+    });
+    addSection(container, '📄', 'green', 'Gevonden polissen', `${data.gevonden_polissen.length} polis(sen)`, html, true);
+  }
+
+  // Dekkingscheck
+  if (data.dekkingscheck?.length) {
+    let html = '<div class="coverage-grid">';
+    data.dekkingscheck.forEach(d => {
+      const cls = d.status === 'gedekt' ? 'yes' : d.status === 'niet_gedekt' ? 'no' : 'unknown';
+      const icon = d.status === 'gedekt' ? '✓' : d.status === 'niet_gedekt' ? '✗' : '?';
+      html += `<div class="cov-item ${cls}" title="${escHtml(d.toelichting)}"><div class="cov-dot"></div>${icon} ${escHtml(d.categorie)}</div>`;
+    });
+    html += '</div>';
+    addSection(container, '✅', 'green', 'Dekkingscheck', 'Per categorie', html, true);
+  }
+
+  // Hiaten
+  if (data.hiaten?.length) {
+    let html = '';
+    data.hiaten.forEach(h => {
+      const kleur = h.ernst === 'hoog' ? 'red' : h.ernst === 'midden' ? 'amber' : 'blue';
+      const label = h.ernst === 'hoog' ? '🔴 Hoog risico' : h.ernst === 'midden' ? '🟡 Gemiddeld' : '🔵 Laag';
+      html += `<div style="display:flex; gap:12px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--cream-2)">
+        <span class="section-badge ${kleur}" style="white-space:nowrap; height:fit-content; margin-top:2px;">${label}</span>
+        <div><strong>${escHtml(h.onderwerp)}</strong><br><span style="font-size:13px;">${escHtml(h.uitleg)}</span></div>
+      </div>`;
+    });
+    addSection(container, '⚠️', 'red', 'Hiaten in dekking', `${data.hiaten.length} gevonden`, html, true);
+  }
+
+  // Aanbevelingen
+  if (data.aanbevelingen?.length) {
+    let html = '';
+    data.aanbevelingen.forEach((a, i) => {
+      const kleur = a.prioriteit === 'urgent' ? 'red' : a.prioriteit === 'aanbevolen' ? 'amber' : 'blue';
+      const label = a.prioriteit === 'urgent' ? '🔴 Urgent' : a.prioriteit === 'aanbevolen' ? '🟡 Aanbevolen' : '🔵 Optioneel';
+      html += `<div style="display:flex; gap:12px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--cream-2)">
+        <div style="font-family:'Libre Baskerville',serif; font-size:20px; color:var(--ink-muted); min-width:24px; text-align:center; line-height:1.4;">${i+1}</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><strong>${escHtml(a.actie)}</strong><span class="section-badge ${kleur}">${label}</span></div>
+          <span style="font-size:13px;">${escHtml(a.reden)}</span>
+        </div>
+      </div>`;
+    });
+    addSection(container, '💡', 'amber', 'Aanbevelingen', `${data.aanbevelingen.length} acties`, html, true);
+  }
+
+  // Disclaimer
+  const disc = document.createElement('div');
+  disc.className = 'disclaimer-box';
+  disc.textContent = '⚠️ Dit is een oriënterende analyse op basis van de aangeleverde documenten. De AI kan fouten maken of onvolledige informatie extraheren. Raadpleeg altijd uw verzekeringsadviseur of de polisvoorwaarden voor definitieve zekerheid over uw dekking.';
+  container.appendChild(disc);
+}
+
+function addSection(container, icon, color, title, badge, bodyHtml, open = false) {
+  const sec = document.createElement('div');
+  sec.className = 'result-section';
+  const bodyId = 'body_' + Math.random().toString(36).slice(2);
+  sec.innerHTML = `
+    <div class="result-section-header" onclick="toggleSection('${bodyId}', this)">
+      <div class="section-icon ${color}">${icon}</div>
+      <div class="section-title">${escHtml(title)}</div>
+      <span class="section-badge ${color}">${badge}</span>
+      <span class="section-chevron" id="chev_${bodyId}">${open ? '▲' : '▼'}</span>
+    </div>
+    <div class="result-section-body" id="${bodyId}" style="display:${open ? 'block' : 'none'}">
+      ${bodyHtml}
+    </div>
+  `;
+  container.appendChild(sec);
+}
+
+function toggleSection(bodyId, header) {
+  const body = document.getElementById(bodyId);
+  const chev = document.getElementById('chev_' + bodyId);
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chev.textContent = open ? '▼' : '▲';
+}
+
+function showSkeleton() {
+  const container = document.getElementById('results');
+  container.innerHTML = `
+    <div style="padding:20px 0;">
+      ${[80,60,90,50,70].map(w => `<div class="skeleton" style="width:${w}%; margin-bottom:12px;"></div>`).join('')}
+    </div>`;
+}
+
+function showError(msg) {
+  document.getElementById('results').innerHTML = `
+    <div style="background:var(--red-pale);border:1px solid var(--red);border-radius:var(--radius);padding:20px;color:var(--red);">
+      <strong>Analyse mislukt</strong><br>${escHtml(msg)}
+    </div>`;
+}
+
+function showProgress(pct, label) {
+  const wrap = document.getElementById('progressWrap');
+  const bar  = document.getElementById('progressBar');
+  const lbl  = document.getElementById('progressLabel');
+  wrap.style.display = 'block';
+  lbl.style.display  = 'block';
+  bar.style.width    = pct + '%';
+  lbl.textContent    = label;
+}
+
+function hideProgress() {
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('progressLabel').style.display = 'none';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AOV Inkomensgap Calculator 2026 — Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#004580;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#333;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--purple:#6B21A8;--purplt:#F5F3FF;
+  --shadow:0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;margin-top:1px;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:980px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:22px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:14px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:19px;}
+.card-body{padding:22px;}
+
+.fg{display:grid;gap:14px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.s2{grid-column:span 2;}
+.s3{grid-column:1/-1;}
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:42px;}
+
+/* SITUATIE TABS */
+.sit-tabs{display:flex;gap:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px;}
+.sit-tab{flex:1;padding:13px 8px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);background:#fff;border:none;transition:all .18s;border-right:1.5px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:4px;}
+.sit-tab:last-child{border-right:none;}
+.sit-tab.active{background:var(--navy);color:#fff;}
+.sit-tab .ti{font-size:22px;}
+.sit-tab .tn{font-size:12.5px;font-weight:700;}
+.sit-tab .ts{font-size:10.5px;opacity:.7;}
+
+/* WIA TIJDLIJN */
+.tijdlijn{display:flex;margin:18px 0;gap:0;}
+.tl-fase{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.tl-fase::after{content:'→';position:absolute;right:-8px;top:16px;font-size:16px;color:var(--muted);z-index:1;}
+.tl-fase:last-child::after{display:none;}
+.tl-blok{width:100%;padding:10px 8px;border-radius:8px;text-align:center;font-size:11.5px;font-weight:600;line-height:1.4;margin-bottom:5px;}
+.tl-blok.fase1{background:#EFF4F9;border:1.5px solid #C5D8E8;color:var(--navy);}
+.tl-blok.fase2{background:var(--orglt);border:1.5px solid #FCD34D;color:var(--orange);}
+.tl-blok.fase3a{background:var(--grlt);border:1.5px solid #A7DFC2;color:var(--green);}
+.tl-blok.fase3b{background:var(--redlt);border:1.5px solid #F5B7B1;color:var(--red);}
+.tl-label{font-size:10px;color:var(--muted);text-align:center;}
+
+/* BTN */
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;letter-spacing:.01em;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* GAP VISUALISATIE */
+.gap-viz{border-radius:12px;overflow:hidden;margin-bottom:20px;}
+.gap-header{background:var(--navy);color:#fff;padding:12px 18px;font-weight:700;font-size:14px;}
+.gap-body{padding:18px;background:#fff;border:1.5px solid var(--border);border-top:none;border-radius:0 0 12px 12px;}
+.gap-bar-wrap{margin:14px 0 6px;}
+.gap-bar-label{font-size:12px;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between;}
+.gap-bar{height:28px;border-radius:5px;display:flex;overflow:hidden;background:#EEF2F6;}
+.gap-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;transition:width .5s;min-width:0;overflow:hidden;}
+.gap-seg.seg-uitkering{background:var(--green);}
+.gap-seg.seg-gap{background:var(--red);}
+.gap-seg.seg-loondoor{background:var(--orange);}
+.gap-seg.seg-eigen{background:#6B21A8;}
+.gap-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
+.gap-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+
+/* METRICS ROW */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
+.mbox{border-radius:11px;padding:16px 18px;display:flex;flex-direction:column;gap:3px;}
+.mbox.navy{background:#EFF4F9;border:1.5px solid #C5D8E8;}
+.mbox.gold{background:var(--gold-lt);border:1.5px solid #F4C878;}
+.mbox.green{background:var(--grlt);border:1.5px solid #A7DFC2;}
+.mbox.red{background:var(--redlt);border:1.5px solid #F5B7B1;}
+.mbox.orange{background:var(--orglt);border:1.5px solid #FCD34D;}
+.mbox .ml{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.mbox .mv{font-family:'DM Serif Display',serif;font-size:24px;color:var(--navy);line-height:1.1;}
+.mbox .ms{font-size:11.5px;color:var(--muted);margin-top:1px;}
+
+/* FASE TABEL */
+.ftbl{width:100%;border-collapse:collapse;font-size:13.5px;}
+.ftbl thead th{background:var(--navy);color:#fff;padding:9px 14px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.ftbl thead th:not(:first-child){text-align:right;}
+.ftbl td{padding:9px 14px;border-bottom:1px solid var(--border);}
+.ftbl td:not(:first-child){text-align:right;}
+.ftbl tr:last-child td{border-bottom:none;}
+.ftbl tr:hover td{background:#F8FAFB;}
+.ftbl .fase-label{font-weight:700;color:var(--navy);}
+.ftbl .gap-cell{color:var(--red);font-weight:700;}
+.ftbl .aov-cell{color:var(--green);font-weight:700;}
+
+/* GRAFIEK */
+.canvas-wrap{position:relative;height:280px;}
+canvas{width:100%!important;}
+.graf-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.graf-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s;}
+.graf-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* AOV ADVIESBOX */
+.aov-box{background:linear-gradient(135deg,#EFF4F9 0%,#F8FAFB 100%);border:1.5px solid #C5D8E8;border-radius:12px;padding:18px 20px;}
+.aov-titel{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.aov-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.aov-item{background:#fff;border-radius:9px;padding:13px 15px;border:1.5px solid var(--border);}
+.aov-item .ai-lbl{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.aov-item .ai-val{font-size:17px;font-weight:700;color:var(--navy);}
+.aov-item .ai-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .fg2,.fg3{grid-template-columns:1fr;}
+  .s2,.s3{grid-column:span 1;}
+  .metrics-row{grid-template-columns:1fr 1fr;}
+  .tijdlijn{flex-direction:column;gap:8px;}
+  .tl-fase::after{display:none;}
+  .aov-grid{grid-template-columns:1fr;}
+  .h-badges{display:none;}
+}
+@media(max-width:420px){.main{padding:14px 10px 60px;}.card-body{padding:14px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🩺</div>
+    <div>
+      <div class="h-title">AOV Inkomensgap Calculator 2026</div>
+      <div class="h-sub">WIA-uitkering · eigenrisicotermijn · inkomensgat · benodigde AOV-dekking</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">WIA 2026</span>
+    <span class="badge gold">Inkomensgap</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- WIA TIJDLIJN UITLEG -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📋</div>Hoe werkt de WIA-bescherming in 2026?</div>
+    <div class="card-body">
+      <div class="tijdlijn">
+        <div class="tl-fase">
+          <div class="tl-blok fase1">🏥 Ziek gemeld<br><strong>Dag 1</strong></div>
+          <div class="tl-label">Werkgever betaalt ≥70% loon (max 2 jr)</div>
+        </div>
+        <div class="tl-fase">
+          <div class="tl-blok fase2">⏳ Wachttijd<br><strong>104 weken</strong></div>
+          <div class="tl-label">Re-integratie + keuring UWV bij week 88</div>
+        </div>
+        <div class="tl-fase">
+          <div class="tl-blok fase3a">✅ WGA/IVA<br><strong>≥35% AO</strong></div>
+          <div class="tl-label">IVA: 75% · WGA loongerelateerd: 70-75%</div>
+        </div>
+        <div class="tl-fase">
+          <div class="tl-blok fase3b">❌ Geen WIA<br><strong><35% AO</strong></div>
+          <div class="tl-label">Geen WIA-uitkering → terugval op werkgever/WW</div>
+        </div>
+      </div>
+      <div style="background:#F8FAFB;border-radius:8px;padding:12px 16px;font-size:12.5px;color:var(--muted);line-height:1.7;">
+        <strong style="color:var(--navy);">Maximumdagloon 2026 (UWV):</strong> €304,25/dag = max. WIA-maandloon €6.617,-
+         ·  <strong style="color:var(--navy);">WIA-drempel:</strong> ≥35% arbeidsongeschikt
+         ·  <strong style="color:var(--navy);">ZZP:</strong> géén automatische WIA — AOV verplicht voor eigen dekking
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Uw situatie</div>
+    <div class="card-body">
+
+      <!-- SITUATIE TABS -->
+      <div class="sdiv" style="margin-bottom:12px;">Dienstverband</div>
+      <div class="sit-tabs" style="margin-bottom:18px;">
+        <button class="sit-tab active" id="tab-werknemer" onclick="setSit('werknemer',this)">
+          <span class="ti">👔</span><span class="tn">Werknemer</span><span class="ts">WIA-verzekerd via UWV</span>
+        </button>
+        <button class="sit-tab" id="tab-zzp" onclick="setSit('zzp',this)">
+          <span class="ti">🏢</span><span class="tn">ZZP / Ondernemer</span><span class="ts">Géén automatische WIA-dekking</span>
+        </button>
+        <button class="sit-tab" id="tab-dga" onclick="setSit('dga',this)">
+          <span class="ti">📊</span><span class="tn">DGA</span><span class="ts">Wel/niet WIA naar keuze</span>
+        </button>
+      </div>
+
+      <div class="fg fg3" style="margin-bottom:18px;">
+        <div class="sdiv s3">Inkomen & arbeid</div>
+
+        <div class="field">
+          <label>Bruto jaarsalaris / jaarinkomen</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="jaarInkomen" value="72000" min="10000" step="1000" oninput="updateHints()">
+          </div>
+          <span class="hint" id="mndInkomenHint"></span>
+        </div>
+        <div class="field">
+          <label>Leeftijd</label>
+          <div class="iw">
+            <input type="number" id="leeftijd" value="38" min="18" max="67" step="1" class="rs" style="padding-right:50px;">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint">Bepaalt WGA-loongerelateerde duur</span>
+        </div>
+        <div class="field">
+          <label>Arbeidsverleden (jaren)</label>
+          <div class="iw">
+            <input type="number" id="arbeidsVerleden" value="15" min="0" max="45" step="1" class="rs" style="padding-right:50px;">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint">Bepaalt duur WGA-loongerelateerde uitkering</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Arbeidsongeschiktheid</div>
+
+        <div class="field">
+          <label>AO-percentage (UWV-oordeel)</label>
+          <div class="iw">
+            <input type="number" id="aoPct" value="80" min="0" max="100" step="5" class="rs" style="padding-right:42px;" oninput="updateAoHint()">
+            <span class="suf">%</span>
+          </div>
+          <span class="hint" id="aoHint"></span>
+        </div>
+        <div class="field">
+          <label>Type arbeidsongeschiktheid</label>
+          <select id="aoType">
+            <option value="iva">IVA — volledig & duurzaam (≥80%, geen herstel)</option>
+            <option value="wga80" selected>WGA 80-100% — volledig maar kans op herstel</option>
+            <option value="wga35_80">WGA 35-80% — gedeeltelijk arbeidsongeschikt</option>
+            <option value="geen">Geen WIA (<35%) — geen uitkering</option>
+          </select>
+        </div>
+        <div class="field" id="rvcVeld">
+          <label>Restverdiencapaciteit (bij WGA 35-80%)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="rvc" value="0" min="0" step="500">
+          </div>
+          <span class="hint">Wat kan je volgens UWV nog verdienen/maand?</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Gewenste dekking & eigen risico</div>
+
+        <div class="field">
+          <label>Gewenst dekkingsniveau (% van inkomen)</label>
+          <div class="iw">
+            <input type="number" id="dekkingPct" value="80" min="50" max="100" step="5" class="rs" style="padding-right:42px;">
+            <span class="suf">%</span>
+          </div>
+          <span class="hint">Gangbaar: 70-80% van bruto inkomen</span>
+        </div>
+        <div class="field">
+          <label>Eigenrisicotermijn AOV</label>
+          <select id="eigenRisico">
+            <option value="0">Direct (dag 1)</option>
+            <option value="30">30 dagen</option>
+            <option value="60">60 dagen</option>
+            <option value="90">90 dagen</option>
+            <option value="180" selected>180 dagen (1e jaar eigen risico)</option>
+            <option value="365">1 jaar</option>
+            <option value="730">2 jaar (einde loondoorbetaling)</option>
+          </select>
+          <span class="hint">Langere eigenrisicotermijn = lagere premie</span>
+        </div>
+        <div class="field">
+          <label>Maandelijkse vaste lasten</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="vasteLasten" value="2500" min="0" step="100">
+          </div>
+          <span class="hint">Hypotheek/huur + overige vaste kosten per maand</span>
+        </div>
+
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">🩺 Bereken inkomensgap & AOV-behoefte</button>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Resultaat — inkomensgap & AOV-behoefte</div>
+    <div class="card-body">
+      <div id="gapViz" class="gap-viz"></div>
+      <div class="metrics-row" id="metricsRow"></div>
+    </div>
+  </div>
+
+  <!-- FASE OVERZICHT -->
+  <div class="card res-card" id="tblCard">
+    <div class="card-header"><div class="ico">📋</div>Inkomen per fase — stap voor stap</div>
+    <div class="card-body">
+      <div style="overflow-x:auto;">
+        <table class="ftbl" id="faseTbl"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAFIEK -->
+  <div class="card res-card" id="grafCard">
+    <div class="card-header"><div class="ico">📈</div>Inkomensverloop bij arbeidsongeschiktheid</div>
+    <div class="card-body">
+      <div class="graf-tabs">
+        <button class="graf-tab active" onclick="setGraf('inkomen',this)">Inkomen per fase</button>
+        <button class="graf-tab" onclick="setGraf('gap',this)">Inkomensgap</button>
+        <button class="graf-tab" onclick="setGraf('scenario',this)">AO%-scenario's</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="grafiek"></canvas></div>
+    </div>
+  </div>
+
+  <!-- AOV ADVIES -->
+  <div class="card res-card" id="aovCard">
+    <div class="card-header"><div class="ico">🛡️</div>AOV-advies & dekkingsadvies</div>
+    <div class="card-body">
+      <div class="aov-box" id="aovBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONSTANTEN 2026 ────────────────────────────────────────────────────────
+const WIA_2026 = {
+  maxDagloon:      304.25,
+  maxMaandloon:    304.25 * 21.75,   // ≈ €6.617
+  wiaIva:          0.75,
+  wgaLoongrel1:    0.75,             // eerste 2 maanden
+  wgaLoongrel2:    0.70,             // daarna
+  wgaLoonaanvul:   0.70,             // loonaanvullingsuitkering
+  // WGA vervolguitkering als % van minimumloon per AO-klasse:
+  wgaVervolgPct: { 35:0.28, 45:0.35, 55:0.42, 65:0.50, 80:0.65 },
+  wmlMnd:          2294.40 * 1.08,   // incl. vakantiegeld ≈ €2.478/mnd
+  loondoorBetaling: 0.70,            // min. 70% bij werkgever
+  wachttijd:       104,              // weken
+  ib2026schijf1:   0.3575,
+  ib2026schijf2:   0.3756,
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let situatie = 'werknemer';
+let grafModus = 'inkomen';
+let grafObj = null;
+let lastResult = null;
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n,dec=0){ if(isNaN(n)||n===null) return '—'; return '\u00A0€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtPct(n,dec=1){ return n.toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+'%'; }
+
+function setSit(s,btn){
+  situatie=s;
+  document.querySelectorAll('.sit-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Verberg WIA-type voor ZZP (hebben geen WIA)
+  document.getElementById('aoType').parentElement.style.display = s==='zzp'?'none':'flex';
+  updateAoHint();
+}
+
+function updateHints(){
+  const j=N('jaarInkomen');
+  document.getElementById('mndInkomenHint').textContent = j>0?`= ${fmt(j/12,2)}/mnd bruto`:'';
+}
+
+function updateAoHint(){
+  const ao=N('aoPct');
+  const type=document.getElementById('aoType').value;
+  const hints={
+    iva:'IVA: 75% van maandloon, doorlopend tot AOW',
+    wga80:'WGA 80-100%: eerst 75%→70% (loongerelateerd), dan loonaanvulling 70%',
+    wga35_80:'WGA 35-80%: loongerelateerd, dan loonaanvulling of vervolguitkering',
+    geen:'Geen WIA-uitkering — terugval op WW of werkgever',
+  };
+  document.getElementById('aoHint').textContent = ao<35?'⚠ Onder 35%: geen WIA-uitkering':(hints[type]||'');
+  document.getElementById('rvcVeld').style.display = type==='wga35_80'?'flex':'none';
+}
+
+// ── BEREKENING ────────────────────────────────────────────────────────────
+function berekenWia(brutoJaarInkomen, aoType, aoPct, arbVerleden, rvc){
+  const brutoMnd = brutoJaarInkomen / 12;
+  const incl_vak = brutoJaarInkomen * 1.08;
+  const dagloon  = Math.min(incl_vak / 261, WIA_2026.maxDagloon);
+  const maandloon = dagloon * 21.75;
+
+  // WGA duur loongerelateerd (1 mnd per jaar arbeidsverleden, min 3, max 24)
+  const wgaDuur = Math.min(24, Math.max(3, arbVerleden));
+
+  let fases = [];
+
+  if(situatie === 'zzp'){
+    // ZZP: GEEN WIA, direct 0 uitkering
+    fases = [
+      { label:'Eerste 2 jaar (eigen rekening)', duur:'104 weken', bruto:0, pctVanLoon:0, type:'wachttijd' },
+      { label:'Na 2 jaar (geen WIA)', duur:'Doorlopend', bruto:0, pctVanLoon:0, type:'nvt' },
+    ];
+    return { fases, maandloon, dagloon, wgaDuur, brutoMnd };
+  }
+
+  if(aoType === 'geen' || aoPct < 35){
+    fases = [
+      { label:'Fase 1: Loondoorbetaling', duur:'104 weken', bruto: brutoMnd * WIA_2026.loondoorBetaling, pctVanLoon:70, type:'loondoor' },
+      { label:'Na 104 weken: geen WIA (<35%)', duur:'—', bruto:0, pctVanLoon:0, type:'geen' },
+    ];
+    return { fases, maandloon, dagloon, wgaDuur, brutoMnd };
+  }
+
+  // Fase 1: loondoorbetaling (altijd voor werknemer)
+  fases.push({ label:'Fase 1: Loondoorbetaling werkgever', duur:'104 weken', bruto:Math.min(brutoMnd, WIA_2026.loondoorBetaling * brutoMnd), pctVanLoon:70, type:'loondoor' });
+
+  if(aoType === 'iva'){
+    const ivaUitkering = maandloon * WIA_2026.wiaIva;
+    fases.push({ label:'Fase 2: IVA-uitkering', duur:'Tot AOW', bruto:ivaUitkering, pctVanLoon:(ivaUitkering/brutoMnd*100), type:'iva' });
+  } else if(aoType === 'wga80'){
+    const wgaLG = maandloon * WIA_2026.wgaLoongrel2;
+    const wgaLA = maandloon * WIA_2026.wgaLoonaanvul * (aoPct/100);
+    fases.push({ label:`Fase 2a: WGA loongerelateerd (${wgaDuur} mnd)`, duur:`${wgaDuur} maanden`, bruto:wgaLG, pctVanLoon:(wgaLG/brutoMnd*100), type:'wga' });
+    fases.push({ label:'Fase 2b: WGA loonaanvullingsuitkering', duur:'Tot AOW / herstel', bruto:wgaLA, pctVanLoon:(wgaLA/brutoMnd*100), type:'wga' });
+  } else if(aoType === 'wga35_80'){
+    const wgaLG = maandloon * WIA_2026.wgaLoongrel2 * (aoPct/100);
+    // loonaanvullingsuitkering: 70% van verschil maatmanloon - rvc
+    const rvcMnd = rvc || 0;
+    const wgaLA = Math.max(0, (maandloon - rvcMnd) * 0.70 * (aoPct/100));
+    // vervolguitkering: % van minimumloon
+    const klasseKeys = [35,45,55,65,80].filter(k=>aoPct>=k);
+    const klasse = klasseKeys.length ? klasseKeys[klasseKeys.length-1] : 35;
+    const wgaVVU = WIA_2026.wmlMnd * WIA_2026.wgaVervolgPct[klasse];
+    fases.push({ label:`Fase 2a: WGA loongerelateerd (${wgaDuur} mnd)`, duur:`${wgaDuur} maanden`, bruto:wgaLG, pctVanLoon:(wgaLG/brutoMnd*100), type:'wga' });
+    if(rvcMnd>0 && rvcMnd >= maandloon * 0.50 * (aoPct/100)){
+      fases.push({ label:'Fase 2b: WGA loonaanvullingsuitkering + arbeid', duur:'Tot herstel/AOW', bruto:wgaLA + rvcMnd, pctVanLoon:((wgaLA+rvcMnd)/brutoMnd*100), type:'wga', note:'incl. arbeidsinkomsten' });
+    } else {
+      fases.push({ label:'Fase 2b: WGA vervolguitkering', duur:'Tot AOW / herstel', bruto:wgaVVU, pctVanLoon:(wgaVVU/brutoMnd*100), type:'vvu', note:`${aoPct}% AO → ${fmtPct(WIA_2026.wgaVervolgPct[klasse]*100)}% WML` });
+    }
+  }
+
+  return { fases, maandloon, dagloon, wgaDuur, brutoMnd };
+}
+
+function bereken(){
+  const jaarInk    = N('jaarInkomen');
+  const leeftijd   = N('leeftijd');
+  const arbVerl    = N('arbeidsVerleden');
+  const aoPct      = N('aoPct');
+  const aoType     = document.getElementById('aoType').value;
+  const rvc        = N('rvc');
+  const dekkingPct = N('dekkingPct');
+  const erWeken    = parseInt(document.getElementById('eigenRisico').value);
+  const vasteL     = N('vasteLasten');
+
+  if(jaarInk <= 0){ alert('Vul een inkomen in.'); return; }
+
+  const wiaResult = berekenWia(jaarInk, aoType, aoPct, arbVerl, rvc);
+  const brutoMnd  = jaarInk / 12;
+
+  // Langetermijn uitkering (laatste fase of 0 als ZZP/geen)
+  const ltFase    = wiaResult.fases[wiaResult.fases.length-1];
+  const ltUitkering = ltFase?.bruto || 0;
+
+  // Gewenst netto inkomen
+  const gewenstBruto  = brutoMnd * dekkingPct / 100;
+  const inkomensgap   = Math.max(0, gewenstBruto - ltUitkering);
+  const vasteLastGap  = Math.max(0, vasteL - ltUitkering);
+
+  // AOV-bedrag dat geadviseerd wordt
+  const aovBedrag = inkomensgap;
+  const aovJaar   = aovBedrag * 12;
+
+  // Indicatieve AOV-premie (1-4% van verzekerd bedrag, afhankelijk van leeftijd/ER)
+  const leeftFactor = 0.5 + (leeftijd - 25) / 100;
+  const erFactor    = erWeken === 0 ? 2.5 : erWeken === 30 ? 2.2 : erWeken === 60 ? 2.0 : erWeken === 90 ? 1.8 : erWeken === 180 ? 1.5 : erWeken === 365 ? 1.2 : 1.0;
+  const sitFactor   = situatie === 'zzp' ? 1.3 : situatie === 'dga' ? 1.15 : 1.0;
+  const premiePct   = Math.min(6, Math.max(1.5, leeftFactor * erFactor * sitFactor));
+  const aovPremieJaar = aovJaar * premiePct / 100;
+  const aovPremieMnd  = aovPremieJaar / 12;
+
+  lastResult = { wiaResult, brutoMnd, ltUitkering, inkomensgap, vasteLastGap,
+    aovBedrag, aovJaar, aovPremieJaar, aovPremieMnd, dekkingPct, erWeken,
+    vasteL, aoPct, aoType, gewenstBruto, jaarInkomen:jaarInk };
+
+  // ── GAP VISUALISATIE ──
+  const gapViz = document.getElementById('gapViz');
+  const uitkPct = Math.min(100, ltUitkering/brutoMnd*100);
+  const gapPct  = Math.min(100-uitkPct, inkomensgap/brutoMnd*100);
+  const aovPct  = Math.min(gapPct, aovBedrag/brutoMnd*100);
+
+  gapViz.innerHTML = `
+    <div class="gap-header">📊 Inkomensopbouw bij langdurige arbeidsongeschiktheid</div>
+    <div class="gap-body">
+      <div class="gap-bar-label">
+        <span>Bruto maandinkomen: ${fmt(brutoMnd,2)}</span>
+        <span>Gewenst: ${fmt(gewenstBruto,2)} (${dekkingPct}%)</span>
+      </div>
+      <div class="gap-bar-wrap">
+        <div class="gap-bar-label"><span>WIA-uitkering</span><span>Inkomensgap</span></div>
+        <div class="gap-bar">
+          <div class="gap-seg seg-uitkering" style="width:${uitkPct.toFixed(1)}%">${uitkPct>12?fmt(ltUitkering,0)+'/mnd':''}</div>
+          <div class="gap-seg seg-gap" style="width:${gapPct.toFixed(1)}%">${gapPct>12?fmt(inkomensgap,0)+' gap':''}</div>
+        </div>
+      </div>
+      <div class="gap-legend">
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;">
+          <div class="gap-dot" style="background:var(--green)"></div>
+          WIA-uitkering: ${fmt(ltUitkering,2)}/mnd (${fmtPct(uitkPct)})
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;">
+          <div class="gap-dot" style="background:var(--red)"></div>
+          Inkomensgap: ${fmt(inkomensgap,2)}/mnd (${fmtPct(gapPct)})
+        </div>
+        ${situatie!=='zzp'&&aoPct>=35?`<div style="display:flex;align-items:center;gap:5px;font-size:12px;">
+          <div class="gap-dot" style="background:var(--orange)"></div>
+          Fase 1 loondoorbetaling werkgever: ${fmt(brutoMnd*0.7,2)}/mnd
+        </div>`:''}
+      </div>
+    </div>`;
+
+  // ── METRICS ──
+  const mr = document.getElementById('metricsRow');
+  mr.innerHTML = `
+    <div class="mbox ${inkomensgap>0?'red':'green'}">
+      <div class="ml">Maandelijks inkomensgap</div>
+      <div class="mv">${fmt(inkomensgap,2)}</div>
+      <div class="ms">Gewenst ${fmt(gewenstBruto,2)} − uitkering ${fmt(ltUitkering,2)}</div>
+    </div>
+    <div class="mbox gold">
+      <div class="ml">Benodigd AOV-bedrag/mnd</div>
+      <div class="mv">${fmt(aovBedrag,2)}</div>
+      <div class="ms">Om ${dekkingPct}% inkomen te halen</div>
+    </div>
+    <div class="mbox ${vasteLastGap>0?'red':'green'}">
+      <div class="ml">Dekking vaste lasten</div>
+      <div class="mv">${vasteLastGap>0?'⚠ Tekort':'✓ Gedekt'}</div>
+      <div class="ms">Vaste lasten ${fmt(vasteL,2)}/mnd ${vasteLastGap>0?'— tekort '+fmt(vasteLastGap,2):''}</div>
+    </div>
+    <div class="mbox navy">
+      <div class="ml">Indicatieve AOV-premie</div>
+      <div class="mv">${fmt(aovPremieMnd,2)}/mnd</div>
+      <div class="ms">~${fmtPct(premiePct,1)} van verzekerd bedrag · ER ${erWeken} dgn</div>
+    </div>`;
+
+  // ── FASE TABEL ──
+  const ft = document.getElementById('faseTbl');
+  let html = `<thead><tr>
+    <th>Fase</th><th>Duur</th><th>Bruto uitkering/mnd</th>
+    <th>% van loon</th><th>Inkomensgap</th><th>AOV dekt</th>
+  </tr></thead><tbody>`;
+
+  // Fase 0: nu (normaal)
+  html += `<tr><td class="fase-label">0. Situatie nu</td><td>—</td><td>${fmt(brutoMnd,2)}</td><td>100%</td><td>—</td><td>—</td></tr>`;
+
+  // Fase 1: bij ZZP meteen gap
+  if(situatie==='zzp'){
+    html += `<tr style="background:var(--redlt);">
+      <td class="fase-label">1. Ziek (ZZP)</td><td>Direct</td><td class="gap-cell">€ 0,-</td>
+      <td class="gap-cell">0%</td><td class="gap-cell">${fmt(brutoMnd,2)}/mnd</td>
+      <td class="aov-cell">${fmt(aovBedrag,2)}/mnd AOV</td></tr>`;
+  } else {
+    html += `<tr><td class="fase-label">1. Loondoorbetaling</td><td>104 weken</td>
+      <td>${fmt(brutoMnd*0.7,2)}</td><td>70%</td>
+      <td class="gap-cell">${fmt(Math.max(0,gewenstBruto-brutoMnd*0.7),2)}</td>
+      <td>${erWeken<730?'AOV bij ER '+erWeken+' dgn':'—'}</td></tr>`;
+  }
+
+  // WIA-fases
+  wiaResult.fases.filter(f=>f.type!=='loondoor'&&f.type!=='wachttijd').forEach(f=>{
+    const gap = Math.max(0, gewenstBruto - f.bruto);
+    html += `<tr>
+      <td class="fase-label">${f.label}</td><td>${f.duur}</td>
+      <td>${fmt(f.bruto,2)}${f.note?'<br><span style="font-size:10.5px;color:var(--muted);">'+f.note+'</span>':''}</td>
+      <td>${fmtPct(f.pctVanLoon)}</td>
+      <td class="${gap>0?'gap-cell':''}">${gap>0?fmt(gap,2):'✓ Gedekt'}</td>
+      <td class="${gap>0?'aov-cell':''}">${gap>0?fmt(Math.min(aovBedrag,gap),2)+'/mnd':'—'}</td>
+    </tr>`;
+  });
+
+  if(aoPct<35||aoType==='geen'){
+    html += `<tr style="background:var(--redlt);"><td class="fase-label" colspan="2">Na 104 weken — geen WIA</td>
+      <td class="gap-cell">€ 0,-</td><td class="gap-cell">0%</td>
+      <td class="gap-cell">${fmt(brutoMnd,2)}/mnd</td>
+      <td class="aov-cell">${fmt(aovBedrag,2)}/mnd AOV</td></tr>`;
+  }
+
+  ft.innerHTML = html + '</tbody>';
+
+  // ── AOV ADVIES ──
+  const sitLabels = { werknemer:'werknemer', zzp:'ZZP / ondernemer', dga:'DGA' };
+  const erLabels = { 0:'dag 1', 30:'30 dgn', 60:'60 dgn', 90:'90 dgn', 180:'180 dgn', 365:'1 jaar', 730:'2 jaar' };
+  const erWkn = String(erWeken);
+  document.getElementById('aovBox').innerHTML = `
+    <div class="aov-titel">🛡️ AOV-dekkingsadvies voor ${sitLabels[situatie]||'u'}</div>
+    <div class="aov-grid">
+      <div class="aov-item">
+        <div class="ai-lbl">Benodigd maandelijks AOV-bedrag</div>
+        <div class="ai-val">${fmt(aovBedrag,2)}/mnd</div>
+        <div class="ai-sub">Op basis van ${dekkingPct}% inkomensdekking</div>
+      </div>
+      <div class="aov-item">
+        <div class="ai-lbl">Indicatieve premie (${erLabels[erWkn]||erWeken+' dgn'} eigenrisico)</div>
+        <div class="ai-val">${fmt(aovPremieMnd,2)}/mnd</div>
+        <div class="ai-sub">≈ ${fmtPct(premiePct,1)} van verzekerd bedrag — indicatief</div>
+      </div>
+      <div class="aov-item">
+        <div class="ai-lbl">Dekking vaste lasten</div>
+        <div class="ai-val" style="color:${vasteLastGap>0?'var(--red)':'var(--green)'};">${vasteLastGap>0?'⚠ Onvoldoende':'✓ Voldoende'}</div>
+        <div class="ai-sub">Maandlasten ${fmt(vasteL,2)} vs. uitkering ${fmt(ltUitkering,2)}</div>
+      </div>
+      <div class="aov-item">
+        <div class="ai-lbl">AOV eigenrisicotermijn</div>
+        <div class="ai-val">${erLabels[erWkn]||erWeken+' dgn'}</div>
+        <div class="ai-sub">${erWeken<=180?'Loondoorbetaling dekt de wachttijd':erWeken<=730?'Loondoorbetaling loopt na wachttijd door':'AOV start na wachttijd'}</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted);line-height:1.7;">
+      ${situatie==='zzp'?'⚠️ <strong style="color:var(--navy);">Belangrijk voor ZZP:</strong> U heeft <em>geen</em> WIA-dekking via UWV. Een AOV is uw enige bescherming bij langdurige arbeidsongeschiktheid. <br>Overweeg ook de vrijwillige UWV-verzekering (bij start ZZP: 13 weken aanmelden) of de aankomende BAZ (Basisverzekering Arbeidsongeschiktheid Zelfstandigen, wetsvoorstel 2026).':''}
+      ${aoPct>=35&&aoPct<=65?'💡 <strong style="color:var(--navy);">WGA-hiaatverzekering:</strong> Bij 35-80% AO kan de WGA-vervolguitkering fors lager uitvallen dan verwacht. Een WGA-hiaatverzekering vult aan tot 70-75% van uw maandloon.':''}
+      ${aoPct>65?'💡 <strong style="color:var(--navy);">WIA-excedentverzekering:</strong> Uw inkomen boven het maximumdagloon (€6.617/mnd) is niet gedekt door de WIA. Een WIA-excedentverzekering dekt het inkomen boven dit maximum.':''}
+      <br>📞 Vraag altijd een persoonlijk advies aan bij een onafhankelijke verzekeringsadviseur. De indicatieve premie kan sterk afwijken op basis van uw gezondheidsverklaring.
+    </div>`;
+
+  ['resCard','tblCard','grafCard','aovCard'].forEach(id=>document.getElementById(id).classList.add('vis'));
+  tekenGrafiek();
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── GRAFIEK ────────────────────────────────────────────────────────────────
+function setGraf(m,btn){ grafModus=m; document.querySelectorAll('.graf-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); tekenGrafiek(); }
+
+function tekenGrafiek(){
+  if(!lastResult) return;
+  const {wiaResult,brutoMnd,inkomensgap,aovBedrag,gewenstBruto,jaarInkomen} = lastResult;
+  const ctx=document.getElementById('grafiek').getContext('2d');
+  if(grafObj) grafObj.destroy();
+
+  if(grafModus==='inkomen'){
+    const fases=['Nu','Loondoor.\n(104 wk)'];
+    const inkomen=[brutoMnd, brutoMnd*0.7];
+    const gaps=[0, Math.max(0,gewenstBruto-brutoMnd*0.7)];
+    wiaResult.fases.filter(f=>f.type!=='loondoor'&&f.type!=='wachttijd').forEach(f=>{
+      fases.push(f.label.replace('Fase 2','F2').replace('Fase 2a','F2a').replace('Fase 2b','F2b').replace('loongerelateerd','LG').replace('loonaanvullingsuitkering','LAU').replace('vervolguitkering','VVU'));
+      inkomen.push(f.bruto||0);
+      gaps.push(Math.max(0,gewenstBruto-(f.bruto||0)));
+    });
+    grafObj=new Chart(ctx,{type:'bar',data:{labels:fases,datasets:[
+      {label:'Bruto inkomen/uitkering',data:inkomen,backgroundColor:'#003057',borderRadius:6},
+      {label:'Inkomensgap (t.o.v. gewenst)',data:gaps,backgroundColor:'rgba(192,57,43,.4)',borderRadius:6},
+      {label:`Gewenst (${lastResult.dekkingPct}%)`,data:fases.map(()=>gewenstBruto),type:'line',borderColor:'#E5A138',backgroundColor:'transparent',borderWidth:2,borderDash:[6,3],pointRadius:0}
+    ]},options:{...gopts('Inkomen per fase (€/mnd)','Fase','Bruto (€/mnd)')}});
+
+  } else if(grafModus==='gap'){
+    // Gap over jaren (eerste 5 jaar)
+    const jaren=Array.from({length:11},(_,i)=>i*0.5);
+    const wachttijdJaar=2;
+    const wgaDuurJaar=(lastResult?.wiaResult?.wgaDuur||12)/12;
+    const inkomenReeks=jaren.map(t=>{
+      if(t<wachttijdJaar) return brutoMnd*0.70; // loondoorbetaling
+      const fase=wiaResult.fases.find(f=>f.type!=='loondoor'&&f.type!=='wachttijd');
+      if(!fase) return 0;
+      const ltFase=wiaResult.fases[wiaResult.fases.length-1];
+      if(t<wachttijdJaar+wgaDuurJaar) return fase.bruto||0;
+      return ltFase.bruto||0;
+    });
+    const gapReeks=inkomenReeks.map(v=>Math.max(0,gewenstBruto-v));
+    grafObj=new Chart(ctx,{type:'line',data:{labels:jaren.map(t=>'Jr '+(t>0?t.toFixed(1):'0')),datasets:[
+      {label:'Inkomen/uitkering',data:inkomenReeks,borderColor:'#1A8A50',backgroundColor:'rgba(26,138,80,.1)',borderWidth:2.5,fill:true,tension:.3,pointRadius:0},
+      {label:'Inkomensgap',data:gapReeks,borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.15)',borderWidth:2,fill:true,tension:.3,pointRadius:0},
+      {label:`Gewenst (${lastResult.dekkingPct}%)`,data:jaren.map(()=>gewenstBruto),borderColor:'#E5A138',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,3],pointRadius:0,fill:false}
+    ]},options:{...gopts('Inkomen vs. gap over jaren','Jaar','Bruto (€/mnd)')}});
+
+  } else {
+    // AO% scenario's — gap per AO-klasse
+    const aoPcts=[35,45,55,65,80,100];
+    const klassen={iva:'IVA',wga80:'WGA 80-100%',wga35_80:'WGA 35-80%'};
+    const wiaTypes=['wga35_80','wga35_80','wga35_80','wga35_80','wga80','iva'];
+    const uitkeringen=aoPcts.map((ao,i)=>{
+      const res=berekenWia(jaarInkomen,wiaTypes[i],ao,lastResult?.wiaResult?.wgaDuur||15,0);
+      const ltF=res.fases[res.fases.length-1];
+      return ltF?.bruto||0;
+    });
+    const gaps=uitkeringen.map(u=>Math.max(0,gewenstBruto-u));
+    grafObj=new Chart(ctx,{type:'bar',data:{labels:aoPcts.map(a=>a+'% AO'),datasets:[
+      {label:'Langetermijn uitkering',data:uitkeringen,backgroundColor:'#1A8A50',borderRadius:6},
+      {label:'Inkomensgap',data:gaps,backgroundColor:'rgba(192,57,43,.5)',borderRadius:6},
+    ]},options:{...gopts('Uitkering & gap per AO-percentage','AO%','Bruto (€/mnd)')}});
+  }
+}
+
+function gopts(title,xLabel,yLabel){
+  return {
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{font:{family:'DM Sans',size:12},color:'#333',boxWidth:14}},
+      tooltip:{callbacks:{label:c=>` ${c.dataset.label}: €\u00A0${Math.round(c.parsed.y||0).toLocaleString('nl-NL')},-`}}},
+    scales:{
+      x:{title:{display:true,text:xLabel,font:{size:11},color:'#6B7280'},ticks:{color:'#6B7280'},grid:{color:'#EEF2F6'}},
+      y:{title:{display:true,text:yLabel,font:{size:11},color:'#6B7280'},ticks:{callback:v=>'€ '+(v/1000).toFixed(1)+'k',color:'#6B7280'},grid:{color:'#EEF2F6'}}
+    }
+  };
+}
+
+// Init
+updateHints();
+updateAoHint();
+document.getElementById('aoType').addEventListener('change',updateAoHint);
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

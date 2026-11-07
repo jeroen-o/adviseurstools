@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pensioen Tools Suite</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--navy:#002A54;--nm:#003a70;--nl:#e8eef5;--or:#FF6600;--ol:#fff2e8;--tx:#333332;--bd:#d8d8d8;--gn:#1a6b3c;--rd:#c0392b;--r:6px;--rl:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--tx);background:#f4f6f9;}
+/* NAV */
+.nav-bar{background:var(--nm);}
+.nav-row{display:grid;}
+.nr1{grid-template-columns:repeat(4,1fr);border-bottom:1px solid rgba(255,255,255,.1);}
+.nr2{grid-template-columns:repeat(4,1fr);}
+.mt{padding:9px 6px;color:rgba(255,255,255,.7);font-size:12px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;text-align:center;width:100%;transition:color .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mt:hover{color:#fff;background:rgba(255,255,255,.05);}
+.mt.active{color:#fff;border-bottom-color:var(--or);background:rgba(255,255,255,.07);}
+/* LAYOUT */
+.main{padding:20px;}
+.pan{display:none;}.pan.active{display:block;}
+.hero{margin-bottom:18px;}
+.hero h2{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.hero p{font-size:13px;color:#666;line-height:1.5;}
+/* CARDS */
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--rl);margin-bottom:16px;overflow:hidden;}
+.ch{background:var(--nl);padding:10px 18px;font-size:14px;font-weight:700;color:var(--navy);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;}
+.ch::before{content:'';display:inline-block;width:8px;height:8px;background:var(--or);transform:rotate(45deg);flex-shrink:0;}
+.cb{padding:18px;}
+/* GRID */
+.g2{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.gsc{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media(max-width:900px){.g2{grid-template-columns:1fr;}.gsc{grid-template-columns:1fr 1fr;}}
+@media(max-width:640px){.g3,.g4,.gsc{grid-template-columns:1fr 1fr;}}
+/* FIELDS */
+.field{margin-bottom:12px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#666;margin-bottom:4px;}
+.fv{font-size:13px;font-weight:700;color:var(--or);}
+.fi{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);font-size:14px;color:var(--tx);background:#fff;}
+.fi:focus{outline:none;border-color:var(--navy);}
+.fw{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);font-size:14px;color:var(--tx);background:#fff;cursor:pointer;}
+.fw:focus{outline:none;border-color:var(--navy);}
+/* SLIDER */
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--nl);border-radius:4px;outline:none;cursor:pointer;margin:3px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--or);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--or);cursor:pointer;border:2px solid #fff;}
+.slab{display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:1px;}
+/* STAT CARDS */
+.sc{background:var(--nl);border-radius:var(--r);padding:11px 13px;}
+.sc-l{font-size:11px;color:#666;margin-bottom:2px;}
+.sc-v{font-size:17px;font-weight:700;color:var(--navy);}
+.sc.hi{background:var(--ol);}.sc.hi .sc-v{color:var(--or);}
+.sc.gn{background:#eaf3ee;}.sc.gn .sc-v{color:var(--gn);}
+.sc.rd{background:#fdf3f3;}.sc.rd .sc-v{color:var(--rd);}
+.sc.bl{background:#e8eef8;}.sc.bl .sc-v{color:#1a508a;}
+.sc.am{background:#fdf6e0;}.sc.am .sc-v{color:#a86800;}
+/* HERO STAT */
+.hs{background:var(--navy);border-radius:var(--rl);padding:20px 22px;color:#fff;margin-bottom:12px;}
+.hs-l{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;}
+.hs-v{font-size:32px;font-weight:700;line-height:1;margin-bottom:4px;color:#ffb366;}
+.hs-s{font-size:12px;color:rgba(255,255,255,.5);}
+/* INFO BOXES */
+.ib{border-radius:var(--r);padding:10px 13px;font-size:13px;margin-bottom:8px;border-left:4px solid;display:flex;gap:10px;align-items:flex-start;}
+.ib-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
+.ib-body strong{display:block;font-size:13px;font-weight:700;margin-bottom:2px;}
+.ib-body span{font-size:12px;line-height:1.5;}
+.ib.ok{background:#eaf3ee;border-color:var(--gn);}.ib.ok .ib-body strong{color:var(--gn);}
+.ib.warn{background:#fdf6e0;border-color:#a86800;}.ib.warn .ib-body strong{color:#a86800;}
+.ib.danger{background:#fdf3f3;border-color:var(--rd);}.ib.danger .ib-body strong{color:var(--rd);}
+.ib.info{background:#e8eef8;border-color:#1a508a;}.ib.info .ib-body strong{color:#1a508a;}
+.ib.hl{background:var(--ol);border-color:var(--or);}.ib.hl .ib-body strong{color:var(--or);}
+/* INCOME BARS */
+.inc-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.inc-lbl{font-size:12px;color:#555;width:140px;flex-shrink:0;}
+.inc-track{flex:1;height:18px;background:var(--nl);border-radius:4px;overflow:hidden;}
+.inc-fill{height:100%;display:flex;align-items:center;padding:0 6px;font-size:11px;font-weight:700;color:#fff;border-radius:4px;min-width:28px;}
+.inc-val{font-size:13px;font-weight:700;width:72px;text-align:right;flex-shrink:0;color:var(--navy);}
+/* TIJDLIJN */
+.tl{position:relative;padding-left:28px;}
+.tl::before{content:'';position:absolute;left:8px;top:4px;bottom:0;width:2px;background:var(--bd);}
+.tl-item{position:relative;padding-bottom:14px;}
+.tl-dot{position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;}
+.tl-lbl{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:2px;}
+.tl-t{font-size:13px;font-weight:700;color:var(--navy);}
+.tl-b{font-size:12px;color:#666;line-height:1.5;}
+/* CHECKLIST */
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;margin-bottom:8px;transition:all .15s;}
+.cl-item.done{background:#eaf3ee;border-color:rgba(26,107,60,.3);}
+.cl-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--gn);cursor:pointer;flex-shrink:0;margin-top:2px;}
+.cl-item .cl-icon{font-size:16px;flex-shrink:0;}
+.cl-item .cl-t{font-size:13px;font-weight:700;color:var(--navy);}
+.cl-item .cl-s{font-size:11px;color:#666;margin-top:1px;}
+.prog-bar{height:6px;background:var(--nl);border-radius:4px;overflow:hidden;margin-bottom:4px;}
+.prog-fill{height:100%;background:var(--gn);border-radius:4px;transition:width .3s;}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--navy);color:#fff;padding:7px 10px;text-align:right;font-weight:600;}
+.tbl th:first-child{text-align:left;}
+.tbl tbody tr:nth-child(even){background:var(--nl);}
+.tbl td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--bd);}
+.tbl td:first-child{text-align:left;font-weight:600;color:var(--navy);}
+.divider{border:none;border-top:2px solid var(--nl);margin:14px 0;}
+.fase-lbl{background:var(--navy);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px;display:inline-block;margin-bottom:10px;}
+.chart-area{position:relative;height:220px;}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="nav-row nr1">
+    <button class="mt active" onclick="sw(0)" id="t0">🏖️ AOW & Pensioen</button>
+    <button class="mt" onclick="sw(1)" id="t1">📊 Pensioenkloof</button>
+    <button class="mt" onclick="sw(2)" id="t2">💰 Jaarruimte 2025</button>
+    <button class="mt" onclick="sw(3)" id="t3">📈 Lijfrente</button>
+  </div>
+  <div class="nav-row nr2">
+    <button class="mt" onclick="sw(4)" id="t4">⏰ Eerder Stoppen</button>
+    <button class="mt" onclick="sw(5)" id="t5">🔮 Scenario Planner</button>
+    <button class="mt" onclick="sw(6)" id="t6">❤️ Partnerpensioen</button>
+    <button class="mt" onclick="sw(7)" id="t7">✅ Pensioen Check</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══ 0: AOW & PENSIOEN ══ -->
+<div class="pan active" id="p0">
+  <div class="hero"><h2>🏖️ AOW & Pensioen Calculator</h2><p>Bereken uw verwacht totaal pensioeninkomen vanuit AOW, werkgeverspensioen en eigen aanvulling.</p></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ch">Uw situatie</div><div class="cb">
+        <div class="field"><label>Huidige leeftijd <span class="fv" id="a0v">45 jaar</span></label>
+          <input type="range" id="a0" min="18" max="66" value="45" oninput="calcAow()">
+          <div class="slab"><span>18</span><span>66</span></div>
+        </div>
+        <div class="field"><label>Bruto jaarsalaris <span class="fv" id="a1v">€ 55.000</span></label>
+          <input type="range" id="a1" min="15000" max="200000" step="1000" value="55000" oninput="calcAow()">
+          <div class="slab"><span>€15k</span><span>€200k</span></div>
+        </div>
+        <div class="field"><label>Opgebouwd pensioenkapitaal (€)</label>
+          <input type="number" class="fi" id="a2" value="80000" oninput="calcAow()">
+        </div>
+        <div class="field"><label>AOW-opbouwjaren (van 15 t/m pensioenleeftijd)</label>
+          <select class="fw" id="a3" onchange="calcAow()">
+            <option value="52" selected>52 jaar (volledig — altijd NL)</option>
+            <option value="47">47 jaar (5 jr buiten NL)</option>
+            <option value="42">42 jaar (10 jr buiten NL)</option>
+            <option value="32">32 jaar (20 jr buiten NL)</option>
+          </select>
+        </div>
+        <div class="field"><label>Pensioenregeling werkgever</label>
+          <select class="fw" id="a4" onchange="calcAow()">
+            <option value="middelloon" selected>Middelloonregeling (1,875%/jr)</option>
+            <option value="bp">Beschikbare premieregeling</option>
+            <option value="geen">Geen pensioen via werkgever</option>
+          </select>
+        </div>
+        <div class="field"><label>Eigen aanvullende maandinleg (€)</label>
+          <input type="number" class="fi" id="a5" value="0" placeholder="bijv. 200" oninput="calcAow()">
+        </div>
+      </div></div>
+    </div>
+    <div id="aowRes"></div>
+  </div>
+</div>
+
+<!-- ══ 1: PENSIOENKLOOF ══ -->
+<div class="pan" id="p1">
+  <div class="hero"><h2>📊 Pensioenkloof Calculator</h2><p>Hoeveel inkomen valt weg bij pensionering? Bereken uw pensioenkloof en wat u nu kunt doen.</p></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ch">Uw inkomens</div><div class="cb">
+        <div class="field"><label>Huidig netto maandinkomen <span class="fv" id="pk0v">€ 3.200</span></label>
+          <input type="range" id="pk0" min="1000" max="12000" step="100" value="3200" oninput="calcPk()">
+          <div class="slab"><span>€1k</span><span>€12k</span></div>
+        </div>
+        <div class="field"><label>Verwacht pensioeninkomen netto/mnd <span class="fv" id="pk1v">€ 1.800</span></label>
+          <input type="range" id="pk1" min="500" max="8000" step="100" value="1800" oninput="calcPk()">
+          <div class="slab"><span>€500</span><span>€8k</span></div>
+        </div>
+        <div class="field"><label>Gewenste vervangingsratio</label>
+          <select class="fw" id="pk2" onchange="calcPk()">
+            <option value="0.70" selected>70% (comfortabel — aanbevolen)</option>
+            <option value="0.80">80% (ruim leven)</option>
+            <option value="0.60">60% (sober)</option>
+            <option value="1.0">100% (gelijk niveau)</option>
+          </select>
+        </div>
+        <div class="field"><label>Jaren tot pensionering <span class="fv" id="pk3v">20 jaar</span></label>
+          <input type="range" id="pk3" min="1" max="45" value="20" oninput="calcPk()">
+          <div class="slab"><span>1</span><span>45</span></div>
+        </div>
+        <div class="field"><label>Verwacht rendement aanvulling <span class="fv" id="pk4v">5%</span></label>
+          <input type="range" id="pk4" min="1" max="10" step="0.5" value="5" oninput="calcPk()">
+          <div class="slab"><span>1%</span><span>10%</span></div>
+        </div>
+        <div class="field"><label>Uitkeringsperiode (jaren)</label>
+          <select class="fw" id="pk5" onchange="calcPk()">
+            <option value="20" selected>20 jaar</option>
+            <option value="25">25 jaar</option>
+            <option value="30">30 jaar</option>
+          </select>
+        </div>
+      </div></div>
+    </div>
+    <div id="pkRes"></div>
+  </div>
+</div>
+
+<!-- ══ 2: JAARRUIMTE ══ -->
+<div class="pan" id="p2">
+  <div class="hero"><h2>💰 Jaarruimte & Reserveringsruimte 2025</h2><p>Bereken hoeveel u fiscaal aftrekbaar kunt inleggen voor lijfrente of banksparen (Wet IB 2001, WTP-regels).</p></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ch">Fiscale gegevens 2024</div><div class="cb">
+        <div class="field"><label>Belastbaar jaarinkomen 2024 <span class="fv" id="jr0v">€ 65.000</span></label>
+          <input type="range" id="jr0" min="10000" max="200000" step="1000" value="65000" oninput="calcJr()">
+          <div class="slab"><span>€10k</span><span>€200k</span></div>
+        </div>
+        <div class="field"><label>A-factor (uit UPO / jaaropgave werkgever, €)</label>
+          <input type="number" class="fi" id="jr1" value="1200" placeholder="zie UPO" oninput="calcJr()">
+        </div>
+        <div class="field"><label>Werkgever betaalt pensioenpremie?</label>
+          <select class="fw" id="jr2" onchange="calcJr()">
+            <option value="ja" selected>Ja (in A-factor verwerkt)</option>
+            <option value="nee">Nee / ZZP / geen pensioen</option>
+          </select>
+        </div>
+        <div class="field"><label>Onbenutte jaarruimte voorgaande 10 jaar (€)</label>
+          <input type="number" class="fi" id="jr3" value="0" placeholder="reserveringsruimte" oninput="calcJr()">
+        </div>
+        <div class="field"><label>Uw leeftijd (voor reserveringsruimtecap)</label>
+          <input type="number" class="fi" id="jr4" value="45" min="18" max="74" oninput="calcJr()">
+        </div>
+      </div></div>
+    </div>
+    <div id="jrRes"></div>
+  </div>
+</div>
+
+<!-- ══ 3: LIJFRENTE ══ -->
+<div class="pan" id="p3">
+  <div class="hero"><h2>📈 Lijfrente & Banksparen Calculator</h2><p>Bereken de verwachte uitkering bij lijfrente of banksparen op basis van inleg, looptijd en rendement.</p></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ch">Uw inleg & looptijd</div><div class="cb">
+        <div class="field"><label>Maandelijkse inleg <span class="fv" id="lj0v">€ 300</span></label>
+          <input type="range" id="lj0" min="50" max="2000" step="25" value="300" oninput="calcLj()">
+          <div class="slab"><span>€50</span><span>€2.000</span></div>
+        </div>
+        <div class="field"><label>Beginkapitaal (eenmalig) <span class="fv" id="lj5v">€ 0</span></label>
+          <input type="range" id="lj5" min="0" max="100000" step="1000" value="0" oninput="calcLj()">
+          <div class="slab"><span>€0</span><span>€100k</span></div>
+        </div>
+        <div class="field"><label>Opbouwperiode <span class="fv" id="lj1v">20 jaar</span></label>
+          <input type="range" id="lj1" min="5" max="40" value="20" oninput="calcLj()">
+          <div class="slab"><span>5 jr</span><span>40 jr</span></div>
+        </div>
+        <div class="field"><label>Rendement opbouw <span class="fv" id="lj2v">5%</span></label>
+          <input type="range" id="lj2" min="1" max="10" step="0.5" value="5" oninput="calcLj()">
+          <div class="slab"><span>1%</span><span>10%</span></div>
+        </div>
+        <div class="field"><label>Rendement tijdens uitkering <span class="fv" id="lj6v">2%</span></label>
+          <input type="range" id="lj6" min="0" max="6" step="0.5" value="2" oninput="calcLj()">
+          <div class="slab"><span>0%</span><span>6%</span></div>
+        </div>
+        <div class="field"><label>Uitkeringsperiode</label>
+          <select class="fw" id="lj3" onchange="calcLj()">
+            <option value="20" selected>20 jaar</option>
+            <option value="10">10 jaar (banksparen)</option>
+            <option value="15">15 jaar</option>
+            <option value="25">25 jaar</option>
+          </select>
+        </div>
+        <div class="field"><label>Belastingschijf bij inleg</label>
+          <select class="fw" id="lj4" onchange="calcLj()">
+            <option value="0.3756" selected>37,56% (schijf 1 — box 1)</option>
+            <option value="0.4950">49,50% (schijf 2 — box 1)</option>
+          </select>
+        </div>
+      </div></div>
+    </div>
+    <div id="ljRes"></div>
+  </div>
+</div>
+
+<!-- ══ 4: EERDER STOPPEN ══ -->
+<div class="pan" id="p4">
+  <div class="hero"><h2>⏰ Eerder Stoppen met Werken</h2><p>Wanneer bereikt u financiële onafhankelijkheid? Bereken de FI-datum op basis van uw vermogen, uitgaven en rendement.</p></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ch">Uw financiële situatie</div><div class="cb">
+        <div class="field"><label>Huidig belegd/gespaard vermogen <span class="fv" id="es0v">€ 150.000</span></label>
+          <input type="range" id="es0" min="0" max="2000000" step="5000" value="150000" oninput="calcEs()">
+          <div class="slab"><span>€0</span><span>€2M</span></div>
+        </div>
+        <div class="field"><label>Maandelijkse inleg <span class="fv" id="es1v">€ 1.000</span></label>
+          <input type="range" id="es1" min="0" max="5000" step="100" value="1000" oninput="calcEs()">
+          <div class="slab"><span>€0</span><span>€5k</span></div>
+        </div>
+        <div class="field"><label>Maandelijkse uitgaven na stoppen <span class="fv" id="es2v">€ 2.500</span></label>
+          <input type="range" id="es2" min="1000" max="10000" step="100" value="2500" oninput="calcEs()">
+          <div class="slab"><span>€1k</span><span>€10k</span></div>
+        </div>
+        <div class="field"><label>Verwacht rendement <span class="fv" id="es3v">6%</span></label>
+          <input type="range" id="es3" min="1" max="12" step="0.5" value="6" oninput="calcEs()">
+          <div class="slab"><span>1%</span><span>12%</span></div>
+        </div>
+        <div class="field"><label>Veilige onttrekkingsrate (SWR) <span class="fv" id="es4v">4%</span></label>
+          <input type="range" id="es4" min="2" max="6" step="0.5" value="4" oninput="calcEs()">
+          <div class="slab"><span>2%</span><span>6%</span></div>
+        </div>
+        <div class="field"><label>AOW-leeftijd</label>
+          <select class="fw" id="es5" onchange="calcEs()">
+            <option value="67" selected>67 jaar</option>
+            <option value="68">68 jaar (verwacht)</option>
+          </select>
+        </div>
+      </div></div>
+    </div>
+    <div id="esRes"></div>
+  </div>
+</div>
+
+<!-- ══ 5: SCENARIO PLANNER ══ -->
+<div class="pan" id="p5">
+  <div class="hero"><h2>🔮 Pensioen Scenario Planner</h2><p>Vergelijk pessimistisch, realistisch en optimistisch scenario naast elkaar.</p></div>
+  <div class="card" style="margin-bottom:16px"><div class="ch">Basisgegevens</div><div class="cb" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+    <div class="field"><label>Huidig vermogen <span class="fv" id="sp0v">€ 80.000</span></label>
+      <input type="range" id="sp0" min="0" max="1000000" step="5000" value="80000" oninput="calcSp()">
+      <div class="slab"><span>€0</span><span>€1M</span></div>
+    </div>
+    <div class="field"><label>Maandelijkse inleg <span class="fv" id="sp1v">€ 500</span></label>
+      <input type="range" id="sp1" min="0" max="3000" step="50" value="500" oninput="calcSp()">
+      <div class="slab"><span>€0</span><span>€3k</span></div>
+    </div>
+    <div class="field"><label>Jaren tot pensioen <span class="fv" id="sp2v">20 jaar</span></label>
+      <input type="range" id="sp2" min="1" max="40" value="20" oninput="calcSp()">
+      <div class="slab"><span>1</span><span>40</span></div>
+    </div>
+  </div></div>
+  <div id="spRes"></div>
+</div>
+
+<!-- ══ 6: PARTNERPENSIOEN ══ -->
+<div class="pan" id="p6">
+  <div class="hero"><h2>❤️ Partnerpensioen Check</h2><p>Wat krijgt uw partner als u overlijdt vóór of na pensionering? Check uw dekking en risico's.</p></div>
+  <div class="g2">
+    <div>
+      <div class="card"><div class="ch">Uw pensioensituatie</div><div class="cb">
+        <div class="field"><label>Type pensioenregeling</label>
+          <select class="fw" id="pp0" onchange="calcPp()">
+            <option value="middelloon" selected>Middelloon (DB) — 70% PP</option>
+            <option value="bp">Beschikbare premie (DC) — 50% PP</option>
+            <option value="zzp">ZZP / geen werkgeverspensioen</option>
+          </select>
+        </div>
+        <div class="field"><label>Verwacht ouderdomspensioen bruto/jaar (€)</label>
+          <input type="number" class="fi" id="pp1" value="20000" oninput="calcPp()">
+        </div>
+        <div class="field"><label>Type partnerpensioen regeling</label>
+          <select class="fw" id="pp2" onchange="calcPp()">
+            <option value="risicodekking" selected>Risicodekking (vervalt bij ontslag)</option>
+            <option value="opbouw">Opbouwdekking (blijft behouden)</option>
+            <option value="geen">Geen partnerpensioen</option>
+          </select>
+        </div>
+        <div class="field"><label>Samenlevingsvorm</label>
+          <select class="fw" id="pp3" onchange="calcPp()">
+            <option value="getrouwd" selected>Getrouwd / geregistreerd partnerschap</option>
+            <option value="notarieel">Samenwonend (notarieel, aangemeld)</option>
+            <option value="niet_gemeld">Samenwonend (NIET aangemeld bij fonds)</option>
+          </select>
+        </div>
+        <div class="field"><label>Situatie</label>
+          <select class="fw" id="pp4" onchange="calcPp()">
+            <option value="voor_pensioen" selected>Vóór pensionering (nog werkzaam)</option>
+            <option value="na_pensioen">Na pensionering (al met pensioen)</option>
+          </select>
+        </div>
+      </div></div>
+    </div>
+    <div id="ppRes"></div>
+  </div>
+</div>
+
+<!-- ══ 7: PENSIOEN CHECK ══ -->
+<div class="pan" id="p7">
+  <div class="hero"><h2>✅ Pensioen Volledigheidscheck</h2><p>Heeft u alles op orde? Loop stap voor stap door de essentiële pensioenacties.</p></div>
+  <div class="card"><div class="ch">Uw pensioen check</div><div class="cb">
+    <div class="prog-bar"><div class="prog-fill" id="pcFill" style="width:0%"></div></div>
+    <div id="pcLbl" style="font-size:12px;color:#666;margin-bottom:14px;"></div>
+    <div id="pcList"></div>
+  </div></div>
+</div>
+
+</div>
+
+<script>
+// ── HELPERS ──────────────────────────────────────────────────────
+function fmt(n){if(n===null||isNaN(n)||!isFinite(n))return'—';return'€\u202F'+Math.round(n).toLocaleString('nl-NL');}
+function fmtP(n,d=1){return n.toFixed(d).replace('.',',')+'%';}
+function fmtMnd(n){if(!n||n<1)return'—';n=Math.round(n);const j=Math.floor(n/12),m=n%12;let s='';if(j>0&&m>0)s=j+' jr '+m+' mnd';else if(j>0)s=j+' jaar';else s=m+' mnd';return s;}
+
+function sw(n){
+  document.querySelectorAll('.pan').forEach((p,i)=>p.classList.toggle('active',i===n));
+  document.querySelectorAll('.mt').forEach((t,i)=>t.classList.toggle('active',i===n));
+}
+
+function ib(cls,icon,title,body){
+  return`<div class="ib ${cls}"><div class="ib-icon">${icon}</div><div class="ib-body"><strong>${title}</strong><span>${body}</span></div></div>`;
+}
+
+function annuityPMT(pv,r,n){
+  // Maandelijkse uitkering uit een pot pv bij maandrendement r over n maanden
+  if(r===0)return pv/n;
+  return pv*r/(1-Math.pow(1+r,-n));
+}
+
+function fvAnnuity(pmt,r,n,pv=0){
+  // Eindwaarde van periodieke inleg + beginkapitaal
+  if(r===0)return pv+pmt*n;
+  return pv*Math.pow(1+r,n)+pmt*(Math.pow(1+r,n)-1)/r;
+}
+
+// ── 0: AOW & PENSIOEN ────────────────────────────────────────────
+function calcAow(){
+  const lft=+document.getElementById('a0').value;
+  const sal=+document.getElementById('a1').value;
+  const kap=+document.getElementById('a2').value||0;
+  const jarenAow=+document.getElementById('a3').value;
+  const wg=document.getElementById('a4').value;
+  const inleg=+document.getElementById('a5').value||0;
+  document.getElementById('a0v').textContent=lft+' jaar';
+  document.getElementById('a1v').textContent=fmt(sal);
+
+  const aowLft=67, jarenTot=Math.max(0,aowLft-lft);
+
+  // AOW 2025: bruto alleenstaand €1.496/mnd; 2% opbouw per jaar van leeftijd 15 t/m 67 = 52 jaar vol
+  const aowVol=1496;
+  const aowPct=Math.min(100,Math.round(jarenAow/52*100));
+  const aowMaand=Math.round(aowVol*aowPct/100);
+
+  // Werkgeverspensioen
+  const dienstjaren=Math.min(40,jarenTot);
+  const wpMaand=wg==='middelloon'?Math.round(sal*0.01875*dienstjaren/12):
+    wg==='beschikbare_premie'?Math.round(sal*0.015*dienstjaren/12):0;
+
+  // Opgebouwd kapitaal — annuïtaire uitkering 20jr bij 1% rendement
+  const kapUitkering=Math.round(annuityPMT(kap,0.01/12,240));
+
+  // Eigen inleg opbouw → uitkering
+  const r5=0.05/12;
+  const eigenKap=inleg>0?Math.round(fvAnnuity(inleg,r5,jarenTot*12)):0;
+  const eigenUitkering=Math.round(annuityPMT(eigenKap,0.03/12,240));
+
+  const totaal=aowMaand+wpMaand+kapUitkering+eigenUitkering;
+  const nettoSal=Math.round(sal/12*0.685);
+  const ratio=nettoSal>0?Math.round(totaal/nettoSal*100):0;
+  const kleur=ratio>=70?'gn':ratio>=50?'am':'rd';
+
+  document.getElementById('aowRes').innerHTML=`
+    <div class="hs">
+      <div class="hs-l">Verwacht pensioeninkomen (bruto/mnd)</div>
+      <div class="hs-v">${fmt(totaal)}</div>
+      <div class="hs-s">Vervangingsratio: ${ratio}% van huidig netto salaris · AOW-leeftijd: ${aowLft}</div>
+    </div>
+    <div class="g4" style="margin-bottom:12px">
+      <div class="sc bl"><div class="sc-l">AOW (${aowPct}%)</div><div class="sc-v">${fmt(aowMaand)}</div></div>
+      <div class="sc am"><div class="sc-l">Werkgeverspensioen</div><div class="sc-v">${fmt(wpMaand)}</div></div>
+      <div class="sc"><div class="sc-l">Opgebouwd kapitaal</div><div class="sc-v">${fmt(kapUitkering)}</div></div>
+      <div class="sc gn"><div class="sc-l">Eigen inleg</div><div class="sc-v">${fmt(eigenUitkering)}</div></div>
+    </div>
+    <div class="card"><div class="ch">Inkomensopbouw</div><div class="cb">
+      ${[[`AOW (${aowPct}% opbouw)`,aowMaand,'#1a508a'],['Werkgeverspensioen',wpMaand,'#a86800'],['Opgebouwd kapitaal',kapUitkering,'#555'],['Eigen inleg',eigenUitkering,'#1a6b3c']].map(([lbl,val,clr])=>
+        `<div class="inc-row"><div class="inc-lbl">${lbl}</div><div class="inc-track"><div class="inc-fill" style="width:${totaal>0?Math.max(4,Math.round(val/totaal*100)):0}%;background:${clr}">${totaal>0&&val>0?Math.round(val/totaal*100)+'%':''}</div></div><div class="inc-val" style="color:${clr}">${fmt(val)}</div></div>`
+      ).join('')}
+    </div></div>
+    ${ib(ratio>=70?'ok':ratio>=50?'warn':'danger',ratio>=70?'✅':'⚠️',`Vervangingsratio: ${ratio}%`,
+      ratio>=70?`Uw pensioeninkomen is adequaat (norm: 70% van netto salaris). Blijf dit jaarlijks monitoren via mijnpensioenoverzicht.nl.`:
+      ratio>=50?`Uw pensioeninkomen valt onder de aanbevolen 70%-norm. Overweeg een aanvulling via lijfrente of banksparen.`:
+      `Uw pensioen dekt minder dan 50% van uw huidige netto inkomen. Direct actie ondernemen is sterk aan te raden.`)}
+    ${ib('info','ℹ️','Toelichting berekening','AOW bruto alleenstaand 2025: €1.496/mnd bij volledige opbouw (52 jaar van 15 t/m 67). Uitkering opgebouwd kapitaal op basis van annuïteitsformule met 1% rendement over 20 jaar.')}`;
+}
+calcAow();
+
+// ── 1: PENSIOENKLOOF ────────────────────────────────────────────
+function calcPk(){
+  const huidig=+document.getElementById('pk0').value;
+  const pensioen=+document.getElementById('pk1').value;
+  const ratio=+document.getElementById('pk2').value;
+  const jaren=+document.getElementById('pk3').value;
+  const rende=+document.getElementById('pk4').value;
+  const uitkJaren=+document.getElementById('pk5').value;
+  document.getElementById('pk0v').textContent=fmt(huidig);
+  document.getElementById('pk1v').textContent=fmt(pensioen);
+  document.getElementById('pk3v').textContent=jaren+' jaar';
+  document.getElementById('pk4v').textContent=fmtP(rende);
+
+  const gewenst=Math.round(huidig*ratio);
+  const kloof=Math.max(0,gewenst-pensioen);
+
+  // Benodigde pot: annuïteitsformule met rendement 2% tijdens uitkering
+  const rUitk=0.02/12, nUitk=uitkJaren*12;
+  const benodigdKap=kloof>0?Math.round(kloof*(1-Math.pow(1+rUitk,-nUitk))/rUitk):0;
+
+  // Benodigde maandinleg om pot op te bouwen
+  const r=rende/100/12, n=jaren*12;
+  const inlegNodig=benodigdKap>0?(r>0?Math.round(benodigdKap*r/(Math.pow(1+r,n)-1)):Math.round(benodigdKap/n)):0;
+
+  document.getElementById('pkRes').innerHTML=`
+    <div class="hs">
+      <div class="hs-l">Pensioenkloof (per maand)</div>
+      <div class="hs-v">${kloof>0?fmt(kloof):'Geen kloof'}</div>
+      <div class="hs-s">Gewenst: ${fmt(gewenst)}/mnd · Verwacht: ${fmt(pensioen)}/mnd · Ratio: ${fmtP(ratio*100,0)}</div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="sc ${kloof>0?'rd':'gn'}"><div class="sc-l">Kloof per jaar</div><div class="sc-v">${fmt(kloof*12)}</div></div>
+      <div class="sc am"><div class="sc-l">Benodigde extra pot</div><div class="sc-v">${fmt(benodigdKap)}</div></div>
+      <div class="sc hi"><div class="sc-l">Benodigde maandinleg</div><div class="sc-v">${fmt(inlegNodig)}</div></div>
+    </div>
+    ${kloof>0?
+      ib('warn','⚠️',`Pensioenkloof: ${fmt(kloof)}/mnd`,`Om ${fmtP(ratio*100,0)} van uw inkomen te halen heeft u ${fmt(benodigdKap)} extra kapitaal nodig. Bij ${fmtP(rende)} rendement is dat ${fmt(inlegNodig)}/mnd inleg over ${jaren} jaar. (Berekend met 2% rendement tijdens uitkering over ${uitkJaren} jaar.)`) :
+      ib('ok','✅','Geen pensioenkloof',`Uw verwacht pensioeninkomen (${fmt(pensioen)}) overstijgt uw ${fmtP(ratio*100,0)}-norm (${fmt(gewenst)}). Controleer dit jaarlijks op mijnpensioenoverzicht.nl.`)}
+    ${ib('info','💡','Vergeet inflatie niet',`Bij 2,5% inflatie per jaar is €1.800 netto over 20 jaar nog maar €1.120 waard in koopkracht. Houd hier rekening mee bij het stellen van uw pensioendoelen.`)}`;
+}
+calcPk();
+
+// ── 2: JAARRUIMTE ────────────────────────────────────────────────
+function calcJr(){
+  const ink=+document.getElementById('jr0').value;
+  const afactor=+document.getElementById('jr1').value||0;
+  const wg=document.getElementById('jr2').value;
+  const oud=+document.getElementById('jr3').value||0;
+  const lft=+document.getElementById('jr4').value||45;
+  document.getElementById('jr0v').textContent=fmt(ink);
+
+  // Jaarruimte 2025: 30% × (inkomen − franchise €15.599), max inkomen €137.800
+  const franchise=15599, maxInk=137800;
+  const grondslag=Math.max(0,Math.min(ink,maxInk)-franchise);
+  // Trek A-factor × 6,27 af als werkgever pensioenpremie betaalt
+  const afActie=wg==='ja'?afactor*6.27:0;
+  const jr=Math.max(0,Math.round(grondslag*0.30-afActie));
+
+  // Reserveringsruimte 2025: onbenutte jaarruimte (max 10 jaar terug), begrensd op:
+  // - Leeftijd < 67: min(10% × premiegrondslag 2025, €8.254) × resterende jaren of gewoon max €8.254/jr
+  // - Simpel: max(min(invoer, 8254))
+  const maxReserv=8254;
+  const reserv=Math.min(Math.max(0,oud),maxReserv);
+  const totaal=jr+reserv;
+  const voordeel37=Math.round(totaal*0.3756);
+  const voordeel49=Math.round(totaal*0.4950);
+
+  document.getElementById('jrRes').innerHTML=`
+    <div class="hs">
+      <div class="hs-l">Fiscale jaarruimte 2025</div>
+      <div class="hs-v">${fmt(jr)}</div>
+      <div class="hs-s">+ Reserveringsruimte: ${fmt(reserv)} = Totaal aftrekbaar: ${fmt(totaal)}</div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="sc am"><div class="sc-l">Jaarruimte</div><div class="sc-v">${fmt(jr)}</div></div>
+      <div class="sc bl"><div class="sc-l">Reserveringsruimte</div><div class="sc-v">${fmt(reserv)}</div></div>
+      <div class="sc gn"><div class="sc-l">Belastingvoordeel (37,56%)</div><div class="sc-v">${fmt(voordeel37)}</div></div>
+    </div>
+    ${ib('hl','💰','Wat kunt u aftrekken?',`Totaal ${fmt(totaal)} inleggen in lijfrente of banksparen en aftrekken van belastbaar inkomen. Voordeel: ${fmt(voordeel37)} (schijf 1) of ${fmt(voordeel49)} (schijf 2).`)}
+    ${ib('info','📋','Formule jaarruimte 2025',`30% × (inkomen − €15.599) − (A-factor × 6,27). Inkomen gecapped op €137.800. A-factor vindt u op uw UPO (Uniform Pensioenoverzicht) van uw pensioenfonds.`)}
+    ${ib('warn','⚠️','Reserveringsruimte gecapped op €8.254/jr',`De maximale reserveringsruimte per jaar is €8.254 (2025). Onbenutte jaarruimte uit de voorgaande 10 jaar mag u in één jaar benutten.`)}
+    ${ib('info','📅','Deadline','Inleg vóór 31 december van het belastingjaar. Vermeld in uw belastingaangifte onder "Premies lijfrente" / "Banksparen". Bewaar bewijs van storting en A-factor.')}`;
+}
+calcJr();
+
+// ── 3: LIJFRENTE ─────────────────────────────────────────────────
+function calcLj(){
+  const inleg=+document.getElementById('lj0').value;
+  const begin=+document.getElementById('lj5').value||0;
+  const jaren=+document.getElementById('lj1').value;
+  const rende=+document.getElementById('lj2').value;
+  const rendeUitk=+document.getElementById('lj6').value;
+  const uitkPeriode=+document.getElementById('lj3').value;
+  const belasting=+document.getElementById('lj4').value;
+  document.getElementById('lj0v').textContent=fmt(inleg);
+  document.getElementById('lj5v').textContent=fmt(begin);
+  document.getElementById('lj1v').textContent=jaren+' jaar';
+  document.getElementById('lj2v').textContent=fmtP(rende);
+  document.getElementById('lj6v').textContent=fmtP(rendeUitk);
+
+  const r=rende/100/12, n=jaren*12;
+  const kapitaal=Math.round(fvAnnuity(inleg,r,n,begin));
+
+  // Uitkering via annuïteitsformule MET rendement tijdens uitkering
+  const rU=rendeUitk/100/12, nU=uitkPeriode*12;
+  const brutUitkering=Math.round(annuityPMT(kapitaal,rU,nU));
+  const netUitkering=Math.round(brutUitkering*(1-0.3756));
+
+  const totaalInleg=inleg*n+begin;
+  const rendement=kapitaal-totaalInleg;
+  const belastingVoordeel=Math.round(totaalInleg*belasting);
+  const nettoCost=totaalInleg-belastingVoordeel;
+
+  document.getElementById('ljRes').innerHTML=`
+    <div class="hs">
+      <div class="hs-l">Eindkapitaal na ${jaren} jaar</div>
+      <div class="hs-v">${fmt(kapitaal)}</div>
+      <div class="hs-s">Uitkering: ${fmt(brutUitkering)} bruto / ${fmt(netUitkering)} netto per maand</div>
+    </div>
+    <div class="g4" style="margin-bottom:12px">
+      <div class="sc"><div class="sc-l">Totaal ingelegd</div><div class="sc-v">${fmt(totaalInleg)}</div></div>
+      <div class="sc gn"><div class="sc-l">Rendement</div><div class="sc-v">${fmt(rendement)}</div></div>
+      <div class="sc bl"><div class="sc-l">Fiscaal voordeel</div><div class="sc-v">${fmt(belastingVoordeel)}</div></div>
+      <div class="sc hi"><div class="sc-l">Netto inlegkosten</div><div class="sc-v">${fmt(nettoCost)}</div></div>
+    </div>
+    ${ib('hl','💡','Effectiviteit',`Na belastingteruggave kost uw totale inleg netto slechts ${fmt(nettoCost)}. Het rendement van ${fmt(rendement)} plus ${fmt(belastingVoordeel)} belastingvoordeel maakt lijfrente een krachtig pensioenmiddel.`)}
+    ${ib('warn','⚠️','Uitkering is belast als inkomen','De lijfrente-uitkeringen zijn belast in box 1. Het voordeel zit in het tariefsverschil: bij inleg betaalt u geen belasting (aftrek), bij uitkering is het tarief doorgaans lager.')}
+    ${ib('info','ℹ️','Uitkering berekend met rendement','De maandelijkse uitkering is berekend via annuïteitsformule met '+fmtP(rendeUitk)+'% rendement tijdens de uitkeringsfase over '+uitkPeriode+' jaar.')}`;
+}
+calcLj();
+
+// ── 4: EERDER STOPPEN ────────────────────────────────────────────
+function calcEs(){
+  const verm=+document.getElementById('es0').value;
+  const inleg=+document.getElementById('es1').value;
+  const uitg=+document.getElementById('es2').value;
+  const rende=+document.getElementById('es3').value;
+  const swr=+document.getElementById('es4').value;
+  const aowLft=+document.getElementById('es5').value;
+  document.getElementById('es0v').textContent=fmt(verm);
+  document.getElementById('es1v').textContent=fmt(inleg);
+  document.getElementById('es2v').textContent=fmt(uitg);
+  document.getElementById('es3v').textContent=fmtP(rende);
+  document.getElementById('es4v').textContent=fmtP(swr);
+
+  const fiGetal=Math.round(uitg*12/(swr/100));
+  const r=rende/100/12;
+  // n = log((FI + PMT/r) / (PV + PMT/r)) / log(1+r)
+  let maanden;
+  if(verm>=fiGetal){maanden=0;}
+  else if(r>0){
+    const A=verm+inleg/r, B=fiGetal+inleg/r;
+    maanden=B>A&&A>0?Math.ceil(Math.log(B/A)/Math.log(1+r)):1200;
+  } else {
+    maanden=inleg>0?Math.ceil((fiGetal-verm)/inleg):9999;
+  }
+  const jarenNodig=Math.ceil(maanden/12);
+  const haalbaar=jarenNodig<60;
+
+  document.getElementById('esRes').innerHTML=`
+    <div class="hs">
+      <div class="hs-l">FI-getal (benodigd vermogen)</div>
+      <div class="hs-v">${fmt(fiGetal)}</div>
+      <div class="hs-s">${fmtP(swr)}% SWR · uitgaven ${fmt(uitg)}/mnd · FI over ca. ${haalbaar?jarenNodig+' jaar':'meer dan 50 jaar'}</div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="sc bl"><div class="sc-l">Huidig vermogen</div><div class="sc-v">${fmt(verm)}</div></div>
+      <div class="sc am"><div class="sc-l">Nog te sparen</div><div class="sc-v">${fmt(Math.max(0,fiGetal-verm))}</div></div>
+      <div class="sc ${jarenNodig<=10?'gn':jarenNodig<=20?'am':'rd'}"><div class="sc-l">FI over ca.</div><div class="sc-v">${haalbaar?jarenNodig+' jaar':'> 50 jr'}</div></div>
+    </div>
+    ${haalbaar?ib('ok','🎯','Uw FI-datum',`Met ${fmt(inleg)}/mnd inleg bij ${fmtP(rende)} rendement bereikt u financiële onafhankelijkheid over ca. ${jarenNodig} jaar. Uw vermogen betaalt dan uw levensonderhoud zonder loonarbeid.`):ib('warn','⚠️','FI-datum ver weg',`Met de huidige parameters duurt het meer dan 50 jaar. Verhoog de inleg, verlaag de uitgaven of kies een hogere onttrekkingsrate.`)}
+    ${ib('info','🏛️','AOW als bonus',`Wanneer u op ${aowLft}-jarige leeftijd AOW ontvangt (~€1.496/mnd bruto), daalt uw benodigde onttrekking significant. Uw FI-getal kan dan kleiner worden ingesteld.`)}
+    ${ib('warn','📊','4%-regel is een richtlijn','De 4%-regel (Trinity Study) is gebaseerd op een 30-jaar horizon bij een gespreide portefeuille. Voor eerder stoppen (> 30 jr) is 3–3,5% veiliger.')}`;
+}
+calcEs();
+
+// ── 5: SCENARIO PLANNER ──────────────────────────────────────────
+const SCKLEUR=['#003a70','#FF6600','#1a6b3c'];
+function calcSp(){
+  const v=+document.getElementById('sp0').value;
+  const inleg=+document.getElementById('sp1').value;
+  const jaren=+document.getElementById('sp2').value;
+  document.getElementById('sp0v').textContent=fmt(v);
+  document.getElementById('sp1v').textContent=fmt(inleg);
+  document.getElementById('sp2v').textContent=jaren+' jaar';
+
+  const sc=[
+    {naam:'Pessimistisch',rende:2,note:'Obligatiezwaar / laag rendement'},
+    {naam:'Realistisch',rende:5,note:'Gespreide portefeuille (historisch gemiddelde)'},
+    {naam:'Optimistisch',rende:8,note:'Aandelenzwaar / hoog rendement'},
+  ];
+
+  const res=sc.map(s=>{
+    const r=s.rende/100/12, n=jaren*12;
+    const kap=Math.round(fvAnnuity(inleg,r,n,v));
+    const uitk=Math.round(annuityPMT(kap,0.02/12,240));
+    return{...s,kap,uitk};
+  });
+
+  const maxKap=res[2].kap;
+
+  document.getElementById('spRes').innerHTML=`
+    <div class="g2" style="margin-bottom:0">
+      <div class="card"><div class="ch">Drie scenario's na ${jaren} jaar</div><div class="cb">
+        ${res.map((r,i)=>`
+          <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:${i<2?'1px solid var(--bd)':'none'}">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+              <span style="font-weight:700;font-size:14px;flex:1">${r.naam} (${fmtP(r.rende,0)}%)</span>
+              <span style="font-size:20px;font-weight:700;color:${SCKLEUR[i]}">${fmt(r.kap)}</span>
+            </div>
+            <div style="height:8px;background:var(--nl);border-radius:4px;overflow:hidden;margin-bottom:5px">
+              <div style="width:${Math.round(r.kap/maxKap*100)}%;height:100%;background:${SCKLEUR[i]};border-radius:4px"></div>
+            </div>
+            <div style="font-size:12px;color:#666">${r.note} · Uitkering (20 jr, 2%): <strong>${fmt(r.uitk)}/mnd</strong></div>
+          </div>`).join('')}
+      </div></div>
+      <div class="card"><div class="ch">Vergelijking vs. realistisch</div><div class="cb">
+        <table class="tbl">
+          <thead><tr><th>Scenario</th><th>Rendement</th><th>Kapitaal</th><th>Uitkering</th><th>vs. Realistisch</th></tr></thead>
+          <tbody>${res.map((r,i)=>{
+            const diff=r.kap-res[1].kap;
+            return`<tr><td style="color:${SCKLEUR[i]};font-weight:700">${r.naam}</td><td>${fmtP(r.rende,0)}</td><td>${fmt(r.kap)}</td><td>${fmt(r.uitk)}</td><td style="color:${diff>=0?'var(--gn)':'var(--rd)'}">${diff>=0?'+':''}${fmt(diff)}</td></tr>`;
+          }).join('')}</tbody>
+        </table>
+        <div style="margin-top:14px">${ib('info','📊','Spreiding vermindert risico','De werkelijkheid ligt waarschijnlijk tussen pessimistisch en optimistisch. Een gespreide ETF-portefeuille (aandelen + obligaties) stuurt richting het realistische scenario.')}</div>
+      </div></div>
+    </div>`;
+}
+calcSp();
+
+// ── 6: PARTNERPENSIOEN ────────────────────────────────────────────
+function calcPp(){
+  const type=document.getElementById('pp0').value;
+  const ouderdom=+document.getElementById('pp1').value||0;
+  const regeling=document.getElementById('pp2').value;
+  const samen=document.getElementById('pp3').value;
+  const situatie=document.getElementById('pp4').value;
+
+  const ppPct=type==='middelloon'?0.70:type==='bp'?0.50:0;
+  const ppBedrag=Math.round(ouderdom*ppPct/12);
+  const aowPartner=1496;
+  const totaalPartner=ppBedrag+aowPartner;
+
+  let html='';
+  if(samen==='niet_gemeld') html+=ib('danger','🚨','Partner NIET aangemeld bij pensioenfonds!',`Als u samenwoont maar uw partner niet heeft aangemeld bij uw pensioenfonds, heeft uw partner bij overlijden géén recht op partnerpensioen. Meld direct aan via uw fonds.`);
+  if(regeling==='risicodekking'&&situatie==='voor_pensioen') html+=ib('danger','⚠️','Risicodekking vervalt bij baanwisseling',`Bij risicodekking heeft uw partner alleen recht op partnerpensioen als u overlijdt terwijl u bij deze werkgever in dienst bent. Bij ontslag of baanwisseling vervalt dit recht. Sluit eventueel een ORV af.`);
+  if(type==='zzp') html+=ib('danger','🚨','Geen automatisch partnerpensioen',`Als ZZP'er is er geen werkgeverspartnerpensioen. Uw partner is afhankelijk van uw eigen vermogen. Een overlijdensrisicoverzekering (ORV) is essentieel.`);
+  html+=ib('info','💰',`Partnerpensioen: ${fmt(ppBedrag)}/mnd`,ppPct>0?`${Math.round(ppPct*100)}% van ouderdomspensioen (${fmt(ouderdom/12)}/mnd) = ${fmt(ppBedrag)}/mnd bruto. Uw partner ontvangt ook eigen AOW: ${fmt(aowPartner)}/mnd.`:'Geen werkgeverspartnerpensioen. Uw partner is aangewezen op eigen AOW en uw vermogen.');
+  html+=ib('warn','📋','Wet toekomst pensioenen (2023)','Nieuwe pensioencontracten vanaf 2024 gebruiken risicodekking per dienstjaar. Let bij jobhoppen altijd op de partnerpensioendecking. Vraag uw werkgever of pensioenfonds om uitleg.');
+
+  document.getElementById('ppRes').innerHTML=`
+    <div class="hs">
+      <div class="hs-l">Partnerpensioen (bruto/mnd)</div>
+      <div class="hs-v">${fmt(ppBedrag)}</div>
+      <div class="hs-s">+ AOW partner: ${fmt(aowPartner)}/mnd = Totaal: ${fmt(totaalPartner)}/mnd</div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="sc ${ppBedrag>0?'am':'rd'}"><div class="sc-l">Partnerpensioen</div><div class="sc-v">${fmt(ppBedrag)}</div></div>
+      <div class="sc bl"><div class="sc-l">AOW partner (bruto)</div><div class="sc-v">${fmt(aowPartner)}</div></div>
+      <div class="sc gn"><div class="sc-l">Totaal partner</div><div class="sc-v">${fmt(totaalPartner)}</div></div>
+    </div>${html}`;
+}
+calcPp();
+
+// ── 7: PENSIOEN CHECK ────────────────────────────────────────────
+const PC=[
+  {cat:'Basis',icon:'📋',t:'Mijnpensioenoverzicht.nl geraadpleegd',s:'Check al uw pensioenpotten op één plek.'},
+  {cat:'Basis',icon:'🎯',t:'Pensioendoelstelling bepaald',s:'Wat wilt u netto per maand bij pensionering?'},
+  {cat:'Basis',icon:'📄',t:'UPO (Uniform Pensioenoverzicht) bewaard',s:'Bewaar het UPO elk jaar — nodig voor A-factor en jaarruimteberekening.'},
+  {cat:'Fiscaal',icon:'💰',t:'Jaarruimte berekend en benut',s:'Onbenutte ruimte is belastingvoordeel dat u laat liggen.'},
+  {cat:'Fiscaal',icon:'🧾',t:'Aftrekpost lijfrente in aangifte verwerkt',s:'Inleg vóór 31 december, vermeld in uw belastingaangifte.'},
+  {cat:'Partner',icon:'❤️',t:'Partner aangemeld bij pensioenfonds',s:'Essentieel voor partnerpensioen bij overlijden. Controleer ook na baanwisseling.'},
+  {cat:'Partner',icon:'🛡️',t:'ORV of overlijdensrisicoverzekering gecheckt',s:'Dekt het overlijdensrisico uw hypotheek en het inkomen van uw partner?'},
+  {cat:'Werk',icon:'💼',t:'Pensioen bij jobwisseling geregeld',s:'Kleine pensioenpotjes samenvoegen of overdragen (waardeoverdracht).'},
+  {cat:'ZZP',icon:'🛠️',t:'Eigen pensioenregeling getroffen (bij ZZP)',s:'Lijfrente, banksparen, beleggen, broodfonds of arbeidsongeschiktheidsverzekering.'},
+  {cat:'Beleggen',icon:'📈',t:'Beleggingsportefeuille passend bij horizon',s:'Meer risico bij lange horizon, geleidelijk afbouwen richting pensionering.'},
+  {cat:'Beleggen',icon:'🔄',t:'Automatische maandelijkse inleg ingesteld',s:'Automatiseer inleg zodat u nooit vergeet te beleggen.'},
+  {cat:'Beleggen',icon:'🌍',t:'Spreiding gecheckt (geen concentratierisico)',s:'Niet alles in één fonds, sector of land — gebruik gespreide ETF\'s.'},
+];
+const pcState={};
+function renderPc(){
+  const done=PC.filter((_,i)=>pcState[i]).length;
+  document.getElementById('pcFill').style.width=Math.round(done/PC.length*100)+'%';
+  document.getElementById('pcLbl').textContent=`${done} van ${PC.length} geregeld — ${Math.round(done/PC.length*100)}%`;
+  document.getElementById('pcList').innerHTML=PC.map((item,i)=>`
+    <div class="cl-item ${pcState[i]?'done':''}" onclick="pcState[${i}]=!pcState[${i}];renderPc()">
+      <input type="checkbox" ${pcState[i]?'checked':''} onclick="event.stopPropagation()">
+      <span class="cl-icon">${item.icon}</span>
+      <div>
+        <div class="cl-t">${item.t}</div>
+        <div class="cl-s">${item.cat} — ${item.s}</div>
+      </div>
+    </div>`).join('');
+}
+renderPc();
+</script>
+</body>
+</html>

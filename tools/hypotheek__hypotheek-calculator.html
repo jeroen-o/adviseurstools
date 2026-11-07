@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hypotheek Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+    <script>
+        const { useState } = React;
+
+        const fmt = (n) => n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        function App() {
+            const [leningdelen, setLeningdelen] = useState([
+                { id: 1, bedrag: '300000', rente: '4.5', looptijd: '30', type: 'annuitair' }
+            ]);
+            const [premie, setPremie] = useState('0');
+            const [nextId, setNextId] = useState(2);
+
+            const berekenAnnuitair = (deel) => {
+                const P = parseFloat(deel.bedrag);
+                const jaarRente = parseFloat(deel.rente) / 100;
+                const maandRente = jaarRente / 12;
+                const aantalMaanden = parseInt(deel.looptijd) * 12;
+                if (maandRente === 0) return P / aantalMaanden;
+                return P * (maandRente * Math.pow(1 + maandRente, aantalMaanden)) /
+                       (Math.pow(1 + maandRente, aantalMaanden) - 1);
+            };
+
+            const berekenAflossingsvrij = (deel) => {
+                const P = parseFloat(deel.bedrag);
+                const jaarRente = parseFloat(deel.rente) / 100;
+                return (P * jaarRente) / 12;
+            };
+
+            const berekenLineair = (deel) => {
+                const P = parseFloat(deel.bedrag);
+                const jaarRente = parseFloat(deel.rente) / 100;
+                const aantalMaanden = parseInt(deel.looptijd) * 12;
+                const aflossing = P / aantalMaanden;
+                const eersteRente = (P * jaarRente) / 12;
+                return aflossing + eersteRente;
+            };
+
+            const berekenMaandlast = (deel) => {
+                if (parseFloat(deel.bedrag) <= 0 || parseFloat(deel.rente) < 0 || parseInt(deel.looptijd) <= 0) return 0;
+                switch (deel.type) {
+                    case 'annuitair': return berekenAnnuitair(deel);
+                    case 'lineair': return berekenLineair(deel);
+                    case 'aflossingsvrij': return berekenAflossingsvrij(deel);
+                    default: return 0;
+                }
+            };
+
+            const berekenTotalMaandlast = () => {
+                return leningdelen.reduce((sum, deel) => sum + berekenMaandlast(deel), 0) + parseFloat(premie || 0);
+            };
+
+            const generateTable = () => {
+                const aantalMaanden = Math.max(...leningdelen.map(d => parseInt(d.looptijd) * 12));
+                const data = [];
+                for (let i = 1; i <= aantalMaanden; i++) {
+                    let maandlast = 0, totalRente = 0, totalAflossing = 0, totalRestschuld = 0;
+                    leningdelen.forEach(deel => {
+                        const P = parseFloat(deel.bedrag);
+                        const jaarRente = parseFloat(deel.rente) / 100;
+                        const maandRente = jaarRente / 12;
+                        const aantalMaandenDeel = parseInt(deel.looptijd) * 12;
+                        if (i <= aantalMaandenDeel) {
+                            if (deel.type === 'aflossingsvrij') {
+                                const ml = berekenAflossingsvrij(deel);
+                                maandlast += ml; totalRente += ml; totalRestschuld += P;
+                            } else if (deel.type === 'lineair') {
+                                const aflossing = P / aantalMaandenDeel;
+                                let restschuld = P;
+                                for (let j = 1; j < i; j++) restschuld -= aflossing;
+                                const renteAmount = restschuld * maandRente;
+                                maandlast += aflossing + renteAmount;
+                                totalRente += renteAmount; totalAflossing += aflossing;
+                                totalRestschuld += Math.max(0, restschuld - aflossing);
+                            } else {
+                                const ml = berekenAnnuitair(deel);
+                                let restschuld = P;
+                                for (let j = 1; j < i; j++) {
+                                    const ra = restschuld * maandRente;
+                                    restschuld -= (ml - ra);
+                                }
+                                const renteAmount = restschuld * maandRente;
+                                const aflossing = ml - renteAmount;
+                                maandlast += ml; totalRente += renteAmount; totalAflossing += aflossing;
+                                totalRestschuld += Math.max(0, restschuld - aflossing);
+                            }
+                        }
+                    });
+                    if (i % 12 === 0 || i === 1) {
+                        data.push({
+                            maand: i, maandlast: maandlast + parseFloat(premie || 0),
+                            rente: totalRente, aflossing: totalAflossing,
+                            restschuld: totalRestschuld, premie: parseFloat(premie || 0)
+                        });
+                    }
+                }
+                return data;
+            };
+
+            const addLending = () => {
+                setLeningdelen([...leningdelen, { id: nextId, bedrag: '100000', rente: '4.5', looptijd: '30', type: 'annuitair' }]);
+                setNextId(nextId + 1);
+            };
+
+            const removeLending = (id) => {
+                if (leningdelen.length > 1) setLeningdelen(leningdelen.filter(d => d.id !== id));
+            };
+
+            const updateLending = (id, field, value) => {
+                setLeningdelen(leningdelen.map(d => d.id === id ? { ...d, [field]: value } : d));
+            };
+
+            // ── Nieuwe printfunctie: opent een apart venster ──────────────────────
+            // Werkt ook vanuit een Google Sites iframe omdat window.open()
+            // altijd een nieuw top-level venster aanmaakt.
+            const handlePrint = () => {
+                const tableRows = generateTable();
+                const totalMaandlast = berekenTotalMaandlast();
+
+                const typeLabel = { annuitair: 'Annuïtair', lineair: 'Lineair', aflossingsvrij: 'Aflossingsvrij' };
+
+                const leningTable = leningdelen.map((d, i) =>
+                    `<tr>
+                        <td>Lening ${i + 1}</td>
+                        <td>${typeLabel[d.type]}</td>
+                        <td>€ ${parseFloat(d.bedrag).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</td>
+                        <td>${d.rente}%</td>
+                        <td>${d.looptijd} jaar</td>
+                        <td>€ ${berekenMaandlast(d).toLocaleString('nl-NL', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                    </tr>`
+                ).join('');
+
+                const bodyRows = tableRows.map((row, idx) =>
+                    `<tr class="${idx % 2 === 0 ? 'even' : ''}">
+                        <td>${row.maand}</td>
+                        <td>€ ${(row.maandlast - row.premie).toLocaleString('nl-NL', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                        <td>€ ${row.premie.toLocaleString('nl-NL', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                        <td>€ ${row.rente.toLocaleString('nl-NL', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                        <td>€ ${row.aflossing.toLocaleString('nl-NL', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                        <td>€ ${row.restschuld.toLocaleString('nl-NL', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                    </tr>`
+                ).join('');
+
+                const html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Hypotheek Calculator – Overzicht</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 24px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .subtitle { color: #555; margin-bottom: 20px; font-size: 13px; }
+  h2 { font-size: 14px; margin: 20px 0 8px; border-bottom: 2px solid #2563eb; padding-bottom: 4px; color: #2563eb; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th { background: #2563eb; color: white; text-align: left; padding: 6px 10px; font-size: 11px; }
+  td { padding: 5px 10px; border-bottom: 1px solid #e5e7eb; }
+  tr.even td { background: #f8fafc; }
+  .total-box { background: #2563eb; color: white; padding: 14px 18px; border-radius: 8px;
+               display: inline-block; margin-top: 8px; margin-bottom: 16px; }
+  .total-box .label { font-size: 12px; opacity: .85; }
+  .total-box .amount { font-size: 22px; font-weight: bold; margin-top: 2px; }
+  @media print { body { padding: 12px; } }
+</style>
+</head>
+<body>
+<h1>🏠 Hypotheek Calculator</h1>
+<p class="subtitle">Overzicht gegenereerd op ${new Date().toLocaleDateString('nl-NL', {day:'numeric',month:'long',year:'numeric'})}</p>
+
+<h2>Leningdelen</h2>
+<table>
+  <thead><tr><th>#</th><th>Type</th><th>Bedrag</th><th>Rente</th><th>Looptijd</th><th>Maandlast</th></tr></thead>
+  <tbody>${leningTable}</tbody>
+</table>
+
+<div class="total-box">
+  <div class="label">Totale maandlast (incl. premie)</div>
+  <div class="amount">€ ${totalMaandlast.toLocaleString('nl-NL', {minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+</div>
+
+<h2>Maandelijks overzicht</h2>
+<table>
+  <thead><tr><th>Maand</th><th>Maandlast</th><th>Premie</th><th>Rente</th><th>Aflossing</th><th>Restschuld</th></tr></thead>
+  <tbody>${bodyRows}</tbody>
+</table>
+
+<script>
+  window.onload = function() { window.print(); };
+<\/script>
+</body>
+</html>`;
+
+                const win = window.open('', '_blank', 'width=900,height=700');
+                if (win) {
+                    win.document.write(html);
+                    win.document.close();
+                } else {
+                    alert('Pop-ups zijn geblokkeerd. Sta pop-ups toe voor deze pagina om te kunnen afdrukken.');
+                }
+            };
+            // ─────────────────────────────────────────────────────────────────────
+
+            const isValid = leningdelen.some(d =>
+                d.bedrag && d.rente && d.looptijd &&
+                parseFloat(d.bedrag) > 0 && parseFloat(d.rente) >= 0 && parseInt(d.looptijd) > 0
+            );
+
+            return React.createElement('div', { className: 'min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-4' },
+                React.createElement('div', { className: 'max-w-4xl mx-auto' },
+                    React.createElement('div', { className: 'text-center mb-8' },
+                        React.createElement('div', { className: 'flex items-center justify-center gap-3 mb-3' },
+                            React.createElement('svg', { className: 'w-10 h-10 text-blue-600', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M3 12l2-3m0 0l7-4 7 4M5 9v7a1 1 0 001 1h12a1 1 0 001-1V9m-9 4v4m0 0H9m4 0h4' })
+                            ),
+                            React.createElement('h1', { className: 'text-4xl font-bold text-gray-800' }, 'Hypotheek Calculator')
+                        ),
+                        React.createElement('p', { className: 'text-gray-600 text-lg' }, 'Bereken de maandlasten van verschillende hypotheekvormen')
+                    ),
+
+                    React.createElement('div', { className: 'bg-white rounded-2xl shadow-xl p-8 mb-6' },
+                        React.createElement('div', { className: 'flex justify-end mb-6' },
+                            React.createElement('button', {
+                                onClick: handlePrint,
+                                className: 'flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium'
+                            },
+                                React.createElement('svg', { className: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                    React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4H9a2 2 0 00-2 2v2a2 2 0 002 2h4a2 2 0 002-2v-2a2 2 0 00-2-2zm0 0H7v4a2 2 0 002 2h4a2 2 0 002-2v-4' })
+                                ),
+                                'Afdrukken'
+                            )
+                        ),
+
+                        React.createElement('div', { className: 'mb-8' },
+                            React.createElement('div', { className: 'flex justify-between items-center mb-4' },
+                                React.createElement('h3', { className: 'text-lg font-bold text-gray-800' }, 'Leningdelen'),
+                                React.createElement('button', {
+                                    onClick: addLending,
+                                    className: 'px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm'
+                                }, '+ Lening toevoegen')
+                            ),
+                            React.createElement('div', { className: 'space-y-4' },
+                                leningdelen.map((deel, idx) =>
+                                    React.createElement('div', { key: deel.id, className: 'border-2 border-gray-200 rounded-lg p-4' },
+                                        React.createElement('div', { className: 'flex justify-between items-center mb-3' },
+                                            React.createElement('h4', { className: 'font-semibold text-gray-700' }, `Lening ${idx + 1}`),
+                                            leningdelen.length > 1 && React.createElement('button', {
+                                                onClick: () => removeLending(deel.id),
+                                                className: 'px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm'
+                                            }, 'Verwijderen')
+                                        ),
+                                        React.createElement('div', { className: 'grid md:grid-cols-4 gap-4' },
+                                            React.createElement('div', {},
+                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Type'),
+                                                React.createElement('select', {
+                                                    value: deel.type,
+                                                    onChange: (e) => updateLending(deel.id, 'type', e.target.value),
+                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors'
+                                                },
+                                                    React.createElement('option', { value: 'annuitair' }, 'Annuïtair'),
+                                                    React.createElement('option', { value: 'lineair' }, 'Lineair'),
+                                                    React.createElement('option', { value: 'aflossingsvrij' }, 'Aflossingsvrij')
+                                                )
+                                            ),
+                                            React.createElement('div', {},
+                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Bedrag (€)'),
+                                                React.createElement('input', {
+                                                    type: 'number', value: deel.bedrag,
+                                                    onChange: (e) => updateLending(deel.id, 'bedrag', e.target.value),
+                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                                    placeholder: '100000'
+                                                })
+                                            ),
+                                            React.createElement('div', {},
+                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Rente (%)'),
+                                                React.createElement('input', {
+                                                    type: 'number', step: '0.1', value: deel.rente,
+                                                    onChange: (e) => updateLending(deel.id, 'rente', e.target.value),
+                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                                    placeholder: '4.5'
+                                                })
+                                            ),
+                                            React.createElement('div', {},
+                                                React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Looptijd (jaren)'),
+                                                React.createElement('input', {
+                                                    type: 'number', value: deel.looptijd,
+                                                    onChange: (e) => updateLending(deel.id, 'looptijd', e.target.value),
+                                                    className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                                    placeholder: '30'
+                                                })
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+
+                        React.createElement('div', { className: 'mb-8 bg-gray-50 rounded-lg p-4' },
+                            React.createElement('label', { className: 'block text-sm font-semibold text-gray-700 mb-2' }, 'Premie / Overige maandlasten (€)'),
+                            React.createElement('input', {
+                                type: 'number', step: '0.01', value: premie,
+                                onChange: (e) => setPremie(e.target.value),
+                                className: 'w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-lg',
+                                placeholder: '0'
+                            })
+                        ),
+
+                        isValid && React.createElement('div', { className: 'bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg' },
+                            React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
+                                React.createElement('svg', { className: 'w-6 h-6', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                    React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
+                                ),
+                                React.createElement('h3', { className: 'font-bold text-2xl' }, 'Totale maandlast')
+                            ),
+                            React.createElement('p', { className: 'text-4xl font-bold' }, '€ ' + fmt(berekenTotalMaandlast()))
+                        ),
+
+                        !isValid && React.createElement('div', { className: 'text-center py-8 text-gray-500' },
+                            React.createElement('p', {}, 'Vul alle velden in om de berekening te starten')
+                        )
+                    ),
+
+                    isValid && React.createElement('div', { className: 'bg-white rounded-2xl shadow-xl p-8 mb-6' },
+                        React.createElement('h3', { className: 'text-xl font-bold text-gray-800 mb-4' }, 'Maandlijks overzicht'),
+                        React.createElement('div', { className: 'overflow-x-auto' },
+                            React.createElement('table', { className: 'w-full text-sm' },
+                                React.createElement('thead', {},
+                                    React.createElement('tr', { className: 'border-b-2 border-gray-300' },
+                                        React.createElement('th', { className: 'text-left py-3 px-4 font-semibold text-gray-700' }, 'Maand'),
+                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Maandlast'),
+                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Premie'),
+                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Rente'),
+                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Aflossing'),
+                                        React.createElement('th', { className: 'text-right py-3 px-4 font-semibold text-gray-700' }, 'Restschuld')
+                                    )
+                                ),
+                                React.createElement('tbody', {},
+                                    generateTable().map((row, idx) =>
+                                        React.createElement('tr', { key: idx, className: idx % 2 === 0 ? 'bg-gray-50' : '' },
+                                            React.createElement('td', { className: 'py-3 px-4 text-gray-800' }, row.maand),
+                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.maandlast - row.premie)),
+                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.premie)),
+                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.rente)),
+                                            React.createElement('td', { className: 'py-3 px-4 text-right text-gray-800' }, '€ ' + fmt(row.aflossing)),
+                                            React.createElement('td', { className: 'py-3 px-4 text-right font-semibold text-gray-800' }, '€ ' + fmt(row.restschuld))
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ),
+
+                    React.createElement('div', { className: 'bg-white rounded-xl shadow-md p-6' },
+                        React.createElement('h2', { className: 'text-xl font-bold text-gray-800 mb-4' }, 'Uitleg hypotheekvormen'),
+                        React.createElement('div', { className: 'space-y-4 text-gray-700' },
+                            React.createElement('div', {},
+                                React.createElement('h3', { className: 'font-semibold text-blue-600 mb-1' }, 'Annuïtaire hypotheek'),
+                                React.createElement('p', { className: 'text-sm leading-relaxed' }, 'U betaalt elke maand hetzelfde bedrag. In het begin bestaat dit vooral uit rente, later betaalt u meer af op de hoofdsom.')
+                            ),
+                            React.createElement('div', {},
+                                React.createElement('h3', { className: 'font-semibold text-green-600 mb-1' }, 'Aflossingsvrije hypotheek'),
+                                React.createElement('p', { className: 'text-sm leading-relaxed' }, 'U betaalt alleen rente. De hoofdsom blijft gelijk en moet aan het einde van de looptijd in één keer worden afgelost.')
+                            ),
+                            React.createElement('div', {},
+                                React.createElement('h3', { className: 'font-semibold text-purple-600 mb-1' }, 'Lineaire hypotheek'),
+                                React.createElement('p', { className: 'text-sm leading-relaxed' }, 'U lost elke maand hetzelfde bedrag af. Omdat de restschuld daalt, betaalt u steeds minder rente. De maandlast daalt dus elke maand.')
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>

@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koopovereenkomst Reader</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --navy: #003057;
+    --amber: #E5A138;
+    --amber-light: #F5C978;
+    --navy-light: #1a4a70;
+    --cream: #FAF8F5;
+    --white: #FFFFFF;
+    --border: #DDD8D0;
+    --text: #1A1A1A;
+    --text-muted: #6B6560;
+    --success: #2D7A4F;
+    --error: #C0392B;
+    --section-bg: #F0EDE8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  .header { background: var(--navy); color: white; padding: 20px 28px; display: flex; align-items: center; gap: 16px; border-bottom: 3px solid var(--amber); }
+  .header-icon { width: 40px; height: 40px; background: var(--amber); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+  .header p { font-size: 12px; opacity: 0.65; margin-top: 1px; font-weight: 300; }
+
+  .main { padding: 24px 28px; max-width: 960px; margin: 0 auto; }
+
+  .upload-zone { border: 2px dashed var(--border); border-radius: 12px; background: white; padding: 36px 24px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--amber); background: #FFFBF5; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(229,161,56,0.15); }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+  .upload-zone h2 { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .upload-zone p { font-size: 13px; color: var(--text-muted); }
+  .upload-zone .hint { margin-top: 10px; font-size: 11px; color: var(--text-muted); background: var(--section-bg); padding: 6px 12px; border-radius: 20px; display: inline-block; }
+
+  .file-selected { display: none; background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; align-items: center; gap: 12px; margin-top: 12px; }
+  .file-selected.visible { display: flex; }
+  .file-icon { width: 40px; height: 40px; background: var(--navy); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; flex-shrink: 0; }
+  .file-name { font-weight: 600; font-size: 13px; color: var(--navy); }
+  .file-size { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .btn-analyze { width: 100%; margin-top: 16px; padding: 14px 24px; background: var(--amber); color: var(--navy); border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-analyze:hover:not(:disabled) { background: var(--amber-light); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(229,161,56,0.35); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .loading-bar { display: none; margin-top: 16px; background: white; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; text-align: center; }
+  .loading-bar.visible { display: block; }
+  .loading-spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--section-bg); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--text-muted); }
+
+  .error-box { display: none; margin-top: 16px; background: #FDF2F2; border: 1px solid #F5C6C6; border-radius: 10px; padding: 14px 18px; color: var(--error); font-size: 13px; }
+  .error-box.visible { display: block; }
+
+  #results { display: none; margin-top: 28px; }
+  #results.visible { display: block; }
+
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--navy); flex-wrap: wrap; gap: 10px; }
+  .results-header h2 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--navy); }
+  .address-badge { background: var(--navy); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+
+  .section { background: white; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
+  .section-header { background: var(--navy); color: white; padding: 10px 18px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .section-header .icon { font-size: 15px; }
+
+  .party-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .party-col { padding: 16px 18px; }
+  .party-col:first-child { border-right: 1px solid var(--border); }
+  .party-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--amber); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--section-bg); }
+
+  .field-row { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--section-bg); }
+  .field-row:last-child { border-bottom: none; }
+  .field-label { font-size: 11px; color: var(--text-muted); font-weight: 500; min-width: 110px; flex-shrink: 0; }
+  .field-value { font-size: 13px; color: var(--text); }
+  .field-value.empty { color: var(--border); font-style: italic; font-size: 12px; }
+
+  /* Editable fields */
+  .editable {
+    flex: 1;
+    min-width: 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1.5px solid transparent;
+    padding: 1px 4px;
+    border-radius: 3px;
+    cursor: text;
+    transition: border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .editable:empty::before { content: attr(data-placeholder); color: var(--border); font-style: italic; }
+  .editable:hover { border-bottom-color: var(--border); background: #FAFAFA; }
+  .editable:focus { outline: none; border-bottom-color: var(--amber); background: #FFFBF5; white-space: normal; }
+  .edit-select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    border: none;
+    border-bottom: 1.5px solid transparent;
+    background: transparent;
+    padding: 1px 4px;
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: border-color 0.15s, background 0.15s;
+    appearance: auto;
+  }
+  .edit-select:hover { border-bottom-color: var(--border); background: #FAFAFA; }
+  .edit-select:focus { outline: none; border-bottom-color: var(--amber); }
+  .info-cell .editable { font-size: 14px; color: var(--navy); font-weight: 500; display: block; }
+  .info-cell .editable.big { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; }
+  .date-val .editable { font-size: 13px; font-weight: 600; color: var(--navy); }
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .info-cell { padding: 14px 18px; border-right: 1px solid var(--section-bg); border-bottom: 1px solid var(--section-bg); }
+  .info-cell:nth-child(2n) { border-right: none; }
+  .info-cell:nth-last-child(-n+2) { border-bottom: none; }
+  .info-cell .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+  .info-cell .value { font-size: 14px; color: var(--navy); font-weight: 500; }
+  .info-cell .value.big { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; }
+
+  .dates-list { padding: 16px 18px; }
+  .date-item { display: flex; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--section-bg); }
+  .date-item:last-child { border-bottom: none; }
+  .date-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+  .date-label { font-size: 12px; color: var(--text-muted); flex: 1; }
+  .date-val { font-size: 13px; font-weight: 600; color: var(--navy); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .badge-yes { background: #E8F5EE; color: var(--success); }
+  .badge-no { background: #FDF2F2; color: var(--error); }
+
+  .action-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .btn-print { padding: 10px 20px; background: white; color: var(--navy); border: 1px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+  .btn-print:hover { background: var(--navy); color: white; border-color: var(--navy); }
+  .btn-reset { padding: 10px 20px; background: var(--section-bg); color: var(--navy); border: 1px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-reset:hover { background: var(--border); }
+
+  @media (max-width: 600px) {
+    .party-grid, .info-grid { grid-template-columns: 1fr; }
+    .party-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+    .info-cell { border-right: none !important; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">📋</div>
+  <div>
+    <h1>Koopovereenkomst Reader</h1>
+    <p>Upload een NVM koopovereenkomst PDF om gegevens automatisch uit te lezen</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="pdfInput" accept=".pdf" />
+    <div class="upload-icon">📄</div>
+    <h2>Sleep PDF hierheen of klik om te uploaden</h2>
+    <p>NVM model koopovereenkomst (bestaande woning)</p>
+    <span class="hint">Alleen PDF-bestanden · Maximaal 20 MB</span>
+  </div>
+
+  <div class="file-selected" id="fileSelected">
+    <div class="file-icon">📄</div>
+    <div class="file-info">
+      <div class="file-name" id="fileName">—</div>
+      <div class="file-size" id="fileSize">—</div>
+    </div>
+  </div>
+
+  <button class="btn-analyze" id="btnAnalyze" disabled onclick="analyze()">
+    🔍 Gegevens uitlezen
+  </button>
+
+  <div class="loading-bar" id="loadingBar">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">PDF wordt ingelezen…</div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div id="results">
+    <div class="results-header">
+      <h2>Uitgelezen gegevens</h2>
+      <span class="address-badge" id="addressBadge">—</span>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="icon">🏠</span> Verkoper</div>
+      <div class="party-grid">
+        <div class="party-col"><div class="party-title">Verkoper</div><div id="verkoperFields"></div></div>
+        <div class="party-col"><div class="party-title">Mede-verkoper</div><div id="medeVerkoperFields"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="icon">🔑</span> Koper</div>
+      <div class="party-grid">
+        <div class="party-col"><div class="party-title">Koper</div><div id="koperFields"></div></div>
+        <div class="party-col"><div class="party-title">Mede-koper</div><div id="medeKoperFields"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="icon">📍</span> Onderpand & Eigendomsoverdracht</div>
+      <div id="onderpandFields" style="padding:16px 18px"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="icon">💶</span> Financieel</div>
+      <div class="info-grid" id="financieelGrid"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="icon">📅</span> Datums</div>
+      <div class="dates-list" id="datumsGrid"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="icon">📝</span> Opmerkingen</div>
+      <div style="padding:16px 18px">
+        <span class="editable" contenteditable="true" data-key="opmerkingen" data-placeholder="Vul hier zelf aanvullende informatie in…" style="display:block;min-height:80px;white-space:pre-wrap;font-size:13px;color:var(--text);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;transition:border-color 0.15s,background 0.15s;" onfocus="this.style.borderColor='var(--amber)';this.style.background='#FFFBF5'" onblur="this.style.borderColor='var(--border)';this.style.background='transparent'"></span>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-print" onclick="printResults()">🖨️ Afdrukken</button>
+      <button class="btn-print" onclick="downloadXml()">⬇️ Download XML</button>
+      <button class="btn-reset" onclick="reset()">↩ Nieuw document</button>
+    </div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let pdfFile = null;
+
+const pdfInput = document.getElementById('pdfInput');
+const uploadZone = document.getElementById('uploadZone');
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') handleFile(f);
+});
+pdfInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  pdfFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(0) + ' KB';
+  document.getElementById('fileSelected').classList.add('visible');
+  document.getElementById('btnAnalyze').disabled = false;
+  hideError();
+}
+
+function showError(msg) { const b = document.getElementById('errorBox'); b.textContent = '⚠️ ' + msg; b.classList.add('visible'); }
+function hideError() { document.getElementById('errorBox').classList.remove('visible'); }
+
+async function extractText(file) {
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  const allItems = [];   // positional items (all pages)
+  let fullText = '';     // flat text (all pages, for regex)
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    const pageItems = tc.items
+      .filter(it => it.str.trim())
+      .map(it => ({
+        str: it.str.trim(),
+        x: Math.round(it.transform[4]),
+        y: Math.round(it.transform[5]),
+        page: i
+      }));
+    allItems.push(...pageItems);
+    // For flat text: sort top-to-bottom then left-to-right
+    const sorted = [...pageItems].sort((a, b) => b.y - a.y || a.x - b.x);
+    fullText += sorted.map(it => it.str).join(' ') + '\n';
+  }
+  return { items: allItems, text: fullText };
+}
+
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+function g(text, ...patterns) {
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return (m[1] || m[0]).trim().replace(/\s+/g, ' ');
+  }
+  return null;
+}
+
+function euro(val) {
+  if (!val) return '—';
+  const n = parseFloat(String(val).replace(/[^\d,]/g, '').replace(',', '.'));
+  if (isNaN(n)) return val;
+  return '€ ' + n.toLocaleString('nl-NL', { minimumFractionDigits: 0 });
+}
+
+let _fieldId = 0;
+function nextId() { return 'f' + (++_fieldId); }
+
+function esc(s) { return String(s || '').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"'); }
+
+function fieldRow(label, val, key) {
+  const id = nextId();
+  const v = esc(val || '');
+  return '<div class="field-row">' +
+    '<span class="field-label">' + label + '</span>' +
+    '<span class="editable" id="' + id + '" contenteditable="true" data-key="' + (key||'') + '" data-placeholder="\u2014">' + v + '</span>' +
+    '</div>';
+}
+
+function fieldRowSelect(label, val, key, options) {
+  const id = nextId();
+  let opts = '<option value="">\u2014</option>' + options.map(function(o) {
+    return '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>';
+  }).join('');
+  return '<div class="field-row">' +
+    '<span class="field-label">' + label + '</span>' +
+    '<select class="edit-select" id="' + id + '" data-key="' + (key||'') + '">' + opts + '</select>' +
+    '</div>';
+}
+
+function infoCellSelect(label, val, key, options) {
+  const id = nextId();
+  let opts = '<option value="">\u2014</option>' + options.map(function(o) {
+    return '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>';
+  }).join('');
+  return '<div class="info-cell"><div class="label">' + label + '</div>' +
+    '<select class="edit-select" id="' + id + '" data-key="' + (key||'') + '">' + opts + '</select>' +
+    '</div>';
+}
+
+function infoCell(label, val, big, key) {
+  const id = nextId();
+  const v = esc((val && val !== '\u2014') ? val : '');
+  return '<div class="info-cell"><div class="label">' + label + '</div>' +
+    '<span class="editable' + (big ? ' big' : '') + '" id="' + id + '" contenteditable="true" data-key="' + (key||'') + '" data-placeholder="\u2014">' + v + '</span>' +
+    '</div>';
+}
+
+function dateItem(label, val, key) {
+  const id = nextId();
+  const v = esc(val || '');
+  return '<div class="date-item"><div class="date-dot"></div><div class="date-label">' + label + '</div>' +
+    '<div class="date-val"><span class="editable" id="' + id + '" contenteditable="true" data-key="' + (key||'') + '" data-placeholder="\u2014">' + v + '</span></div>' +
+    '</div>';
+}
+
+const BS_OPTIES = [
+  'Gemeenschap van goederen',
+  'Huwelijkse voorwaarden',
+  'Samenwonend met samenlevingscontract',
+  'Samenwonend zonder samenlevingscontract',
+  'Alleenstaand'
+];
+
+// ── PARSE ────────────────────────────────────────────────────────────────────
+
+// Burgerlijke staat normaliseren naar 5 vaste opties
+function normaliseerBS(raw) {
+  if (!raw) return null;
+  const r = raw.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (r.includes('gemeenschap van goederen') || (r.includes('gehuwd') && !r.includes('voorwaarden'))) return 'Gemeenschap van goederen';
+  if (r.includes('huwelijkse voorwaarden')) return 'Huwelijkse voorwaarden';
+  if (r.includes('zonder samenlevingscontract')) return 'Samenwonend zonder samenlevingscontract';
+  if (r.includes('samenlevingscontract') || (r.includes('samenwon') && !r.includes('zonder'))) return 'Samenwonend met samenlevingscontract';
+  if (r.includes('alleenstaand') || r.includes('ongehuwd')) return 'Alleenstaand';
+  return null;
+}
+
+// Geeft voor een set items (één pagina) de vier personen terug
+// door rij-voor-rij de label + linkerwaarde + rechterwaarde te combineren.
+// Structuur NVM: label op x≈66, linkerwaarde op x≈166, rechterwaarde op x≈353
+function parseerPersonen(pageItems, yOnder, yBoven, colLinks, colRechts) {
+  // Filter op y-bereik, sorteer top→bottom (hoge y = hoger op pagina in PDF.js)
+  const items = pageItems
+    .filter(it => it.y >= yOnder && it.y <= yBoven)
+    .sort((a, b) => b.y - a.y || a.x - b.x);
+
+  // Groepeer op y-rij (items binnen 4pt = zelfde rij)
+  const rijen = [];
+  let huidigeRij = null, huidigY = null;
+  for (const it of items) {
+    if (huidigY === null || Math.abs(it.y - huidigY) > 4) {
+      if (huidigeRij) rijen.push(huidigeRij);
+      huidigeRij = { y: it.y, label: [], links: [], rechts: [] };
+      huidigY = it.y;
+    }
+    if (it.x < colLinks)       huidigeRij.label.push(it.str);
+    else if (it.x < colRechts) huidigeRij.links.push(it.str);
+    else                       huidigeRij.rechts.push(it.str);
+  }
+  if (huidigeRij) rijen.push(huidigeRij);
+
+  // Definieer de veldnamen in volgorde zoals ze in het NVM-formulier staan
+  const VELDEN = ['naam','voornamen','geboorteplaats','geboortedatum','straat','postcode','woonplaats','email','telefoon','burgerlijke_staat'];
+  const LABELS = ['naam','voornamen','geboorteplaats','geboortedatum','straat','postcode','woonplaats','e-mailadres','telefoon','burgerlijke staat'];
+
+  // Bouw twee personen op via label-matching
+  const links  = { naam:null,voornamen:null,geboorteplaats:null,geboortedatum:null,straat:null,postcode:null,woonplaats:null,email:null,telefoon:null,burgerlijke_staat:null };
+  const rechts = { naam:null,voornamen:null,geboorteplaats:null,geboortedatum:null,straat:null,postcode:null,woonplaats:null,email:null,telefoon:null,burgerlijke_staat:null };
+
+  let huidigVeld = null;
+
+  for (const rij of rijen) {
+    const labelTekst = rij.label.join(' ').toLowerCase().replace(/\s*-\s*/g, '-').trim();
+    const linksTekst = rij.links.join(' ').trim();
+    const rechtsTekst = rij.rechts.join(' ').trim();
+
+    // Detecteer welk veld deze rij introduceert
+    const gevondenIdx = LABELS.findIndex(lbl => labelTekst.replace(/\s*-\s*/g, '-').startsWith(lbl));
+    if (gevondenIdx >= 0) {
+      huidigVeld = VELDEN[gevondenIdx];
+    }
+
+    if (!huidigVeld) continue;
+
+    // Telefoon: strip "Mobiel:" prefix
+    let lv = linksTekst.replace(/^Mobiel:\s*/i, '').trim();
+    let rv = rechtsTekst.replace(/^Mobiel:\s*/i, '').trim();
+
+    if (lv) links[huidigVeld]  = links[huidigVeld]  ? links[huidigVeld]  + ' ' + lv : lv;
+    if (rv) rechts[huidigVeld] = rechts[huidigVeld] ? rechts[huidigVeld] + ' ' + rv : rv;
+  }
+
+  // Normaliseer burgerlijke staat
+  links.burgerlijke_staat  = normaliseerBS(links.burgerlijke_staat);
+  rechts.burgerlijke_staat = normaliseerBS(rechts.burgerlijke_staat);
+
+  return { links, rechts };
+}
+
+function parse({ items, text }) {
+  const t = text.replace(/\s+/g, ' ');
+
+  // ---- ONDERPAND ----
+  const betreftMatch = t.match(/Betreft:\s*([A-Za-z][^,]+\d+[A-Za-z]?),?\s*(\d{4}\s*[A-Z]{2})\s+([A-Za-z][A-Za-z\s\-]+?)(?=\s{2,}|Paraaf|$)/i)
+                    || t.match(/plaatselijk bekend[^:]*:\s*([A-Za-z][^,]+\d+[A-Za-z]?),?\s*(\d{4}\s*[A-Z]{2})\s+([A-Za-z][A-Za-z\s\-]+?)(?=\s{2,}|kadastraal|$)/i);
+  const straat     = betreftMatch ? betreftMatch[1].trim() : g(t, /plaatselijk bekend[^:]*:\s*([A-Za-z][^\d,]{1,40}\d+[A-Za-z]?)/i);
+  const postcode   = betreftMatch ? betreftMatch[2].trim() : g(t, /(\d{4}\s*[A-Z]{2})\s+[A-Z][a-z]{2}/);
+  const woonplaats = betreftMatch ? betreftMatch[3].trim() : g(t, /\d{4}\s*[A-Z]{2}\s+([A-Za-z][A-Za-z\s\-]{2,30}?)(?=\s{2})/);
+
+  // Kadastrale gegevens
+  const kadGem = g(t, /gemeente\s+(Nijkerk|[A-Z][a-z]+),?\s+sectie/i);
+  const sectie = g(t, /sectie\s+([A-Z])\s*,?\s*no/i);
+  const nummers = [];
+  const numRe = /no\.?\s*(\d{4,5})/g;
+  let nm;
+  while ((nm = numRe.exec(t)) !== null) nummers.push(nm[1]);
+  const nummersStr = nummers.length ? nummers.join(', ') : null;
+  let totM2 = null, totKadastraal = null;
+  const totMatch = t.match(/aldus tezamen groot\s+(\d+)\s+hectare,?\s+(\d+)\s+are\s+(?:en\s+)?(\d+)\s+centiare/i);
+  if (totMatch) {
+    const ha = parseInt(totMatch[1]), are = parseInt(totMatch[2]), ca = parseInt(totMatch[3]);
+    totM2 = (ha*10000 + are*100 + ca) + ' m\u00B2';
+    totKadastraal = String(ha).padStart(2,'0') + ' hectare, ' + String(are).padStart(2,'0') + ' are en ' + String(ca).padStart(2,'0') + ' centiare';
+  }
+
+  // ---- PERSONEN ----
+  // Uit de PDF-analyse: labels op x≈66, linkerkolom-waarden op x≈166, rechterkolom op x≈354
+  // Kolomgrenzen worden dynamisch bepaald via de x-positie van "Echtgeno" (= begin rechterkolom)
+  const p1items = items.filter(it => it.page === 1);
+
+  // Bepaal kolomgrenzen
+  // colLinks  = grens tussen label-kolom en linker-waarde-kolom
+  // colRechts = grens tussen linker-waarde-kolom en rechter-waarde-kolom
+  const echtgenoItem = p1items.find(it => /Echtgeno/i.test(it.str));
+  const colRechts = echtgenoItem ? echtgenoItem.x - 3 : 340;
+
+  // Label-kolom eindigt net voor de eerste waarde — zoek via "Naam:" label
+  const naamLabelItem = p1items.find(it => /^Naam:?$/.test(it.str.trim()));
+  const eersteWaardeItem = p1items.find(it =>
+    naamLabelItem && Math.abs(it.y - naamLabelItem.y) < 4 &&
+    it.x > naamLabelItem.x + 10 && it.x < colRechts
+  );
+  const colLinks = eersteWaardeItem ? eersteWaardeItem.x - 3 : 155;
+
+  // Sectie-ankerpunten: "A." en "B." als losse items
+  // pdfplumber toonde: A. op y_top≈223, B. op y_top≈463 → in PDF.js y = pageHeight - y_top
+  // Maar pageHeight varieert; robuuster: zoek items die exact "A." of "B." zijn
+  const anchorA = p1items.find(it => /^A\.$/.test(it.str.trim()));
+  const anchorB = p1items.find(it => /^B\.$/.test(it.str.trim()));
+  // Einde partijensectie: "De onder (B) genoemde" of "Verkoper en koper worden"
+  const anchorEind = p1items.find(it => /^De$/.test(it.str.trim()) &&
+    (() => {
+      // Zoek of vlak rechts op dezelfde y "onder" staat
+      const y = it.y;
+      return p1items.some(it2 => Math.abs(it2.y - y) < 4 && /onder/.test(it2.str) && it2.x > it.x);
+    })()
+  ) || p1items.find(it => /partijen/i.test(it.str));
+
+  const PAGE_TOP = 900;
+  const yA_boven = anchorA    ? anchorA.y + 6    : PAGE_TOP;
+  const yA_onder = anchorB    ? anchorB.y - 6    : PAGE_TOP / 2;
+  const yB_boven = anchorB    ? anchorB.y + 6    : PAGE_TOP / 2;
+  const yB_onder = anchorEind ? anchorEind.y - 6 : 50;
+
+  const { links: verkoper,     rechts: medeVerkoper } = parseerPersonen(p1items, yA_onder, yA_boven, colLinks, colRechts);
+  const { links: koper,        rechts: medeKoper }    = parseerPersonen(p1items, yB_onder, yB_boven, colLinks, colRechts);
+
+  // ---- EIGENDOMSOVERDRACHT ----
+  const overdDatum = g(t, /akte van levering zal gepasseerd worden op\s+(\d{1,2}\s+\w+\s+\d{4})/i,
+                           /gepasseerd worden op\s+(\d{1,2}\s+\w+\s+\d{4})/i);
+  const notaris = g(t, /notariskantoor\s+([^,\.]+)/i, /ten overstaan van[^n]+notaris[^\n]*?([A-Z][A-Za-z\s]+Notarissen)/);
+  const gevestigd = g(t, /notarissen[^,]*,\s*gevestigd te\s+([A-Z][a-z]+)/i,
+                         /gevestigd te\s+([A-Z][a-z]+)/i);
+
+  // ---- FINANCIEEL ----
+  const koopsom = g(t, /koopsom van\s*[€E]?\s*([\d\.]+(?:,\d+)?)/i,
+                       /koopsom van\s*€\s*([\d\.,]+)/i);
+  const bgDatum = g(t, /uiterlijk op\s+(\d{1,2}\s+\w+\s+\d{4})\s+een\s+schriftelijke/i);
+  const bgBedrag = g(t, /bankgarantie[^\€]*[€E]\s*([\d\.]+(?:,\d+)?)/i,
+                        /garantie voor een bedrag van\s*[€E]\s*([\d\.]+)/i);
+
+  // ---- ONTBINDENDE VOORWAARDEN ----
+  const hypotheekDatum = g(t, /op\s+(\d{1,2}\s+\w+\s+\d{4})\s+koper voor de financiering/i);
+  const hypotheekBedrag = g(t, /financiering[^€]*[€E]\s*([\d\.]+(?:,\d+)?)/i);
+  const nhg = /nationale hypotheek garantie/i.test(t) ?
+    (/n\.v\.t\.|nvt|niet van toepassing/i.test(t.match(/nationale hypotheek garantie.{0,200}/i)?.[0]||'') ? 'Nee' : 'Ja') : 'Nee';
+  const bk = /bouwtechnische keuring/i.test(t) ? 'Ja' : 'Nee';
+  const bkDatum = g(t, /op\s+(\d{1,2}\s+\w+\s+\d{4})\s+uit het rapport van een bouwtechnische/i,
+                       /bouwtechnische keuring[^d]*datum[:\s]+(\d{1,2}\s+\w+\s+\d{4})/i);
+  const bkBedrag = g(t, /kosten[^€]*[€E]\s*([\d\.]+)[^k]*keuring/i,
+                        /drempel[^€]*[€E]\s*([\d\.]+)/i,
+                        /een bedrag van\s*[€E]\s*([\d\.]+)[^,]*te boven/i);
+
+  // ---- DATUM TEKENEN ----
+  const tekenKoper = g(t, /J\.S\.\s+Oversteegen[^D]*Datum:\s+(\d{1,2}\s+\w+\.?\s+\d{4})/i,
+                           /Datum:\s+(\d{1,2}\s+\w+\.?\s+\d{4}).*?J\.S\./i);
+  const tekenVerkoper = g(t, /J\.F\.I\.\s+Nová[kK][^D]*Datum:\s+(\d{1,2}\s+\w+\.?\s+\d{4})/i);
+
+  // Bereken bedenktijd (tekendatum koper + 3 dagen)
+  function addDays(dateStr, days) {
+    if (!dateStr) return null;
+    const months = {jan:0,feb:1,mrt:2,maa:2,apr:3,mei:4,jun:5,jul:6,aug:7,sep:8,okt:9,nov:10,dec:11};
+    const parts = dateStr.toLowerCase().replace('.','').split(/\s+/);
+    if (parts.length < 3) return null;
+    const d = parseInt(parts[0]);
+    const m = months[parts[1].substring(0,3)];
+    const y = parseInt(parts[2]);
+    if (isNaN(d) || m === undefined || isNaN(y)) return null;
+    const date = new Date(y, m, d + days);
+    return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  const bedenktijd = addDays(tekenKoper, 3);
+
+  return {
+    onderpand: { straat, postcode, woonplaats, kadastraal_gemeente: kadGem, sectie, nummers: nummersStr, groot: totM2, kadastraal: totKadastraal },
+    eigendomsoverdracht: { datum: overdDatum, notaris, gevestigd },
+    verkoper, medeVerkoper, koper, medeKoper,
+    financieel: { koopsom, bankgarantie_datum: bgDatum, bankgarantie_bedrag: bgBedrag },
+    datums: {
+      tekenen_koper: tekenKoper,
+      tekenen_verkoper: tekenVerkoper,
+      bedenktijd_einde: bedenktijd,
+      bankgarantie: bgDatum,
+      hypotheek: hypotheekDatum,
+      keuring: bkDatum,
+      overdracht: overdDatum
+    },
+    ontbindende: { hypotheek_datum: hypotheekDatum, hypotheek_bedrag: hypotheekBedrag, nhg, bk, bk_datum: bkDatum, bk_bedrag: bkBedrag }
+  };
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function renderPerson(container, p, prefix) {
+  if (!p) { container.innerHTML = '<div class="field-row"><span class="field-value empty">Niet van toepassing</span></div>'; return; }
+  const k = (f) => prefix + '.' + f;
+  container.innerHTML = [
+    fieldRow('Naam', p.naam, k('naam')),
+    fieldRow('Voornamen', p.voornamen, k('voornamen')),
+    fieldRow('Geboorteplaats', p.geboorteplaats, k('geboorteplaats')),
+    fieldRow('Geboortedatum', p.geboortedatum, k('geboortedatum')),
+    fieldRow('Straat', p.straat, k('straat')),
+    fieldRow('Postcode', p.postcode, k('postcode')),
+    fieldRow('Woonplaats', p.woonplaats, k('woonplaats')),
+    fieldRow('E-mailadres', p.email, k('email')),
+    fieldRow('Telefoon', p.telefoon, k('telefoon')),
+    fieldRowSelect('Burgerlijke staat', p.burgerlijke_staat, k('burgerlijke_staat'), BS_OPTIES),
+  ].join('');
+}
+
+function renderResults(d) {
+  const op = d.onderpand, ev = d.eigendomsoverdracht, fi = d.financieel, dt = d.datums;
+
+  document.getElementById('addressBadge').textContent =
+    [op.straat, op.postcode, op.woonplaats].filter(Boolean).join(', ') || 'Onbekend adres';
+
+  renderPerson(document.getElementById('verkoperFields'), d.verkoper, 'verkoper');
+  renderPerson(document.getElementById('medeVerkoperFields'), d.medeVerkoper, 'medeVerkoper');
+  renderPerson(document.getElementById('koperFields'), d.koper, 'koper');
+  renderPerson(document.getElementById('medeKoperFields'), d.medeKoper, 'medeKoper');
+
+  document.getElementById('onderpandFields').innerHTML = [
+    fieldRow('Straat', op.straat, 'onderpand.straat'),
+    fieldRow('Postcode', op.postcode, 'onderpand.postcode'),
+    fieldRow('Woonplaats', op.woonplaats, 'onderpand.woonplaats'),
+    fieldRow('Kadastraal gemeente', op.kadastraal_gemeente, 'onderpand.kadastraal_gemeente'),
+    fieldRow('Sectie', op.sectie, 'onderpand.sectie'),
+    fieldRow('Perceelnummer(s)', op.nummers, 'onderpand.nummers'),
+    fieldRow('Totaal oppervlak', op.groot ? (op.kadastraal ? op.groot + ' (' + op.kadastraal + ')' : op.groot) : null, 'onderpand.groot'),
+    '<div style="height:12px;border-top:1px solid var(--section-bg);margin:8px 0"></div>',
+    fieldRow('Datum overdracht', ev.datum, 'eigendomsoverdracht.datum'),
+    fieldRow('Notaris', ev.notaris, 'eigendomsoverdracht.notaris'),
+    fieldRow('Gevestigd te', ev.gevestigd, 'eigendomsoverdracht.gevestigd'),
+  ].join('');
+
+  document.getElementById('financieelGrid').innerHTML = [
+    infoCell('Koopsom', fi.koopsom ? euro(fi.koopsom.replace(/\./g,'').replace(',','.')) : null, true, 'financieel.koopsom'),
+    infoCell('Bankgarantie bedrag', fi.bankgarantie_bedrag ? euro(fi.bankgarantie_bedrag.replace(/\./g,'').replace(',','.')) : null, false, 'financieel.bankgarantie_bedrag'),
+    infoCell('Bankgarantie uiterlijk', fi.bankgarantie_datum || null, false, 'financieel.bankgarantie_datum'),
+    infoCell('Roerende zaken', '€ 0 (nihil)', false, 'financieel.roerende_zaken'),
+  ].join('');
+
+  document.getElementById('datumsGrid').innerHTML = [
+    dateItem('Bankgarantie uiterlijk', dt.bankgarantie, 'datums.bankgarantie'),
+    dateItem('Ontb. vw. — bouwkundige keuring', dt.keuring, 'datums.keuring'),
+    dateItem('Ontb. vw. — hypotheek', dt.hypotheek, 'datums.hypotheek'),
+    dateItem('Eigendomsoverdracht', dt.overdracht, 'datums.overdracht'),
+  ].join('');
+
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── XML DOWNLOAD ─────────────────────────────────────────────────────────────
+let lastData = null;
+
+// Collect all current input/select values by data-key, deep-merge into lastData
+function collectData() {
+  if (!lastData) return lastData;
+  const d = JSON.parse(JSON.stringify(lastData)); // deep clone
+  document.querySelectorAll('[data-key]').forEach(el => {
+    const key = el.dataset.key;
+    if (!key) return;
+    const val = el.tagName === 'SELECT' ? el.value : (el.textContent || el.innerText || '').trim();
+    const parts = key.split('.');
+    let obj = d;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!obj[parts[i]]) obj[parts[i]] = {};
+      obj = obj[parts[i]];
+    }
+    obj[parts[parts.length - 1]] = val || null;
+  });
+  return d;
+}
+
+function xmlEsc(v) {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, ''');
+}
+
+function personXml(tag, p) {
+  if (!p) return `  <${tag}/>`;
+  return [
+    `  <${tag}>`,
+    `    <naam>${xmlEsc(p.naam)}</naam>`,
+    `    <voornamen>${xmlEsc(p.voornamen)}</voornamen>`,
+    `    <geboorteplaats>${xmlEsc(p.geboorteplaats)}</geboorteplaats>`,
+    `    <geboortedatum>${xmlEsc(p.geboortedatum)}</geboortedatum>`,
+    `    <straat>${xmlEsc(p.straat)}</straat>`,
+    `    <postcode>${xmlEsc(p.postcode)}</postcode>`,
+    `    <woonplaats>${xmlEsc(p.woonplaats)}</woonplaats>`,
+    `    <email>${xmlEsc(p.email)}</email>`,
+    `    <telefoon>${xmlEsc(p.telefoon)}</telefoon>`,
+    `    <burgerlijke_staat>${xmlEsc(p.burgerlijke_staat)}</burgerlijke_staat>`,
+    `  </${tag}>`,
+  ].join('\n');
+}
+
+function buildXml(d) {
+  const op = d.onderpand, ev = d.eigendomsoverdracht, fi = d.financieel, dt = d.datums;
+  const lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<koopovereenkomst>',
+    '',
+    '  <!-- ONDERPAND -->',
+    '  <onderpand>',
+    `    <straat>${xmlEsc(op.straat)}</straat>`,
+    `    <postcode>${xmlEsc(op.postcode)}</postcode>`,
+    `    <woonplaats>${xmlEsc(op.woonplaats)}</woonplaats>`,
+    `    <kadastraal_gemeente>${xmlEsc(op.kadastraal_gemeente)}</kadastraal_gemeente>`,
+    `    <sectie>${xmlEsc(op.sectie)}</sectie>`,
+    `    <perceelnummers>${xmlEsc(op.nummers)}</perceelnummers>`,
+    `    <oppervlak_m2>${xmlEsc(op.groot)}</oppervlak_m2>`,
+    `    <oppervlak_kadastraal>${xmlEsc(op.kadastraal)}</oppervlak_kadastraal>`,
+    '  </onderpand>',
+    '',
+    '  <!-- EIGENDOMSOVERDRACHT -->',
+    '  <eigendomsoverdracht>',
+    `    <datum>${xmlEsc(ev.datum)}</datum>`,
+    `    <notaris>${xmlEsc(ev.notaris)}</notaris>`,
+    `    <gevestigd_te>${xmlEsc(ev.gevestigd)}</gevestigd_te>`,
+    '  </eigendomsoverdracht>',
+    '',
+    '  <!-- VERKOPER -->',
+    personXml('verkoper', d.verkoper),
+    personXml('mede_verkoper', d.medeVerkoper),
+    '',
+    '  <!-- KOPER -->',
+    personXml('koper', d.koper),
+    personXml('mede_koper', d.medeKoper),
+    '',
+    '  <!-- FINANCIEEL -->',
+    '  <financieel>',
+    `    <koopsom>${xmlEsc(fi.koopsom)}</koopsom>`,
+    `    <bankgarantie_bedrag>${xmlEsc(fi.bankgarantie_bedrag)}</bankgarantie_bedrag>`,
+    `    <bankgarantie_datum>${xmlEsc(fi.bankgarantie_datum)}</bankgarantie_datum>`,
+    '  </financieel>',
+    '',
+    '  <!-- DATUMS -->',
+    '  <datums>',
+    `    <tekenen_koper>${xmlEsc(dt.tekenen_koper)}</tekenen_koper>`,
+    `    <tekenen_verkoper>${xmlEsc(dt.tekenen_verkoper)}</tekenen_verkoper>`,
+    `    <bedenktijd_einde>${xmlEsc(dt.bedenktijd_einde)}</bedenktijd_einde>`,
+    `    <bankgarantie>${xmlEsc(dt.bankgarantie)}</bankgarantie>`,
+    `    <ontbindende_vw_hypotheek>${xmlEsc(dt.hypotheek)}</ontbindende_vw_hypotheek>`,
+    `    <ontbindende_vw_keuring>${xmlEsc(dt.keuring)}</ontbindende_vw_keuring>`,
+    `    <eigendomsoverdracht>${xmlEsc(dt.overdracht)}</eigendomsoverdracht>`,
+    '  </datums>',
+    '',
+    '  <!-- ONTBINDENDE VOORWAARDEN -->',
+    '  <ontbindende_voorwaarden>',
+    `    <hypotheek_datum>${xmlEsc(ov.hypotheek_datum)}</hypotheek_datum>`,
+    `    <hypotheek_bedrag>${xmlEsc(ov.hypotheek_bedrag)}</hypotheek_bedrag>`,
+    `    <nhg>${xmlEsc(ov.nhg)}</nhg>`,
+    `    <bouwkundige_keuring>${xmlEsc(ov.bk)}</bouwkundige_keuring>`,
+    `    <keuring_datum>${xmlEsc(ov.bk_datum)}</keuring_datum>`,
+    `    <keuring_drempel>${xmlEsc(ov.bk_bedrag)}</keuring_drempel>`,
+    '  </ontbindende_voorwaarden>',
+    '',
+    '</koopovereenkomst>',
+  ];
+  return lines.join('\n');
+}
+
+function downloadXml() {
+  if (!lastData) return;
+  const xml = buildXml(collectData());
+  const blob = new Blob([xml], { type: 'application/xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const adres = (lastData.onderpand.straat || 'koopovereenkomst').replace(/\s+/g, '_');
+  a.href = url;
+  a.download = `koopovereenkomst_${adres}.xml`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ── MAIN ─────────────────────────────────────────────────────────────────────
+async function analyze() {
+  if (!pdfFile) return;
+  hideError();
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('loadingBar').classList.add('visible');
+  document.getElementById('btnAnalyze').disabled = true;
+  document.getElementById('loadingText').textContent = 'PDF wordt ingelezen…';
+
+  try {
+    const extracted = await extractText(pdfFile);
+    document.getElementById('loadingText').textContent = 'Gegevens worden uitgelezen…';
+
+    const data = parse(extracted);
+    lastData = data;
+    renderResults(data);
+  } catch(err) {
+    showError('Fout bij verwerken PDF: ' + err.message);
+  } finally {
+    document.getElementById('loadingBar').classList.remove('visible');
+    document.getElementById('btnAnalyze').disabled = false;
+  }
+}
+
+function reset() {
+  pdfFile = null;
+  lastData = null;
+  document.getElementById('pdfInput').value = '';
+  document.getElementById('fileSelected').classList.remove('visible');
+  document.getElementById('btnAnalyze').disabled = true;
+  document.getElementById('results').classList.remove('visible');
+  hideError();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function printResults() {
+  const addr = document.getElementById('addressBadge').textContent;
+  const content = document.getElementById('results').innerHTML;
+  const w = window.open('', '_blank');
+  w.document.write('<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Koopovereenkomst ' + addr + '</title>'
+    + '<style>body{font-family:Arial,sans-serif;font-size:10pt;padding:20px;color:#111}'
+    + '.section-header{background:#003057;color:white;padding:6px 12px;font-weight:bold;font-size:10pt;margin-top:14px}'
+    + '.party-grid,.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}'
+    + '.party-col,.info-cell{padding:8px 12px;border:1px solid #eee;font-size:9pt}'
+    + '.party-title{font-size:8pt;text-transform:uppercase;color:#E5A138;font-weight:bold;margin-bottom:6px}'
+    + '.field-row{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #f5f5f5}'
+    + '.field-label{min-width:100px;font-size:8pt;color:#666}.field-value{font-size:9pt}'
+    + '.field-value.empty{color:#ccc;font-style:italic}'
+    + '.date-item{display:flex;gap:10px;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:9pt}'
+    + '.date-dot{width:8px;height:8px;border-radius:50%;background:#E5A138;margin-top:3px;flex-shrink:0}'
+    + '.date-label{flex:1;color:#666}.date-val{font-weight:bold}'
+    + '.results-header{border-bottom:2px solid #003057;padding-bottom:8px;margin-bottom:12px}'
+    + '.address-badge{background:#003057;color:white;padding:3px 10px;border-radius:10px;font-size:9pt}'
+    + '.action-row,.btn-print,.btn-reset{display:none!important}'
+    + '.badge{padding:1px 8px;border-radius:8px;font-size:8pt;font-weight:bold}'
+    + '.badge-yes{background:#e8f5ee;color:#2D7A4F}.badge-no{background:#fdf2f2;color:#C0392B}'
+    + '@media print{body{padding:5px}}</style></head><body>' + content + '</body></html>');
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+</script>
+</body>
+</html>

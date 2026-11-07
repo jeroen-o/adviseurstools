@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Het Pensioencijfer®</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── Tokens ──────────────────────────────────────────────────────────── */
+:root{
+  --k-navy:    #00338D;
+  --k-blue:    #005EB8;
+  --k-sky:     #0091DA;
+  --k-teal:    #00B2A9;
+  --k-yellow:  #FFB600;
+  --k-red:     #BC204B;
+  --k-purple:  #470A68;
+  --k-gray:    #63666A;
+  --k-gray-lt: #97999B;
+  --bg:        #F2F4F8;
+  --card:      #FFFFFF;
+  --border:    #D9DDE8;
+  --text:      #1A1A2E;
+  --muted:     #63666A;
+  --green:     #107F5A;
+  --green-lt:  #E6F5EF;
+  --amber:     #B8670A;
+  --amber-lt:  #FFF4E0;
+  --red:       #BC204B;
+  --red-lt:    #FDE8EF;
+  --blue-lt:   #E5F1FB;
+  --r:         10px;
+  --r-sm:      6px;
+  --sh:        0 2px 12px rgba(0,51,141,.08);
+  --sh-lg:     0 8px 36px rgba(0,51,141,.14);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Source Sans 3',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  font-size:16px;line-height:1.6;
+  min-height:100vh;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.wrap{max-width:720px;margin:0 auto;padding:0 1rem 4rem}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+.kpmg-header{
+  background:var(--k-navy);
+  padding:2rem 2rem 1.75rem;
+  margin-bottom:2rem;
+  border-bottom:4px solid var(--k-yellow);
+  position:relative;
+}
+.kpmg-header::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:8px;
+  background:var(--k-yellow);
+}
+.kh-eyebrow{
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.6);font-weight:600;margin-bottom:.5rem;
+}
+.kh-title{
+  font-size:32px;font-weight:700;color:#fff;line-height:1.15;
+  margin-bottom:.5rem;
+}
+.kh-title em{color:var(--k-yellow);font-style:normal}
+.kh-sub{font-size:15px;color:rgba(255,255,255,.75);max-width:460px;line-height:1.5}
+
+/* ── Step progress ───────────────────────────────────────────────────── */
+.step-progress{
+  display:flex;align-items:stretch;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+  margin-bottom:2rem;box-shadow:var(--sh);
+}
+.sp-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:.75rem .25rem .6rem;border-right:1px solid var(--border);
+  position:relative;cursor:default;
+  transition:background .2s;
+}
+.sp-item:last-child{border-right:none}
+.sp-item.done{background:var(--green-lt);cursor:pointer}
+.sp-item.active{background:var(--k-navy)}
+.sp-num{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;margin-bottom:4px;
+  background:var(--border);color:var(--muted);
+  transition:all .3s;
+}
+.sp-item.done .sp-num{background:var(--green);color:#fff}
+.sp-item.active .sp-num{background:var(--k-yellow);color:var(--k-navy)}
+.sp-lbl{
+  font-size:10px;font-weight:600;color:var(--muted);
+  text-align:center;line-height:1.3;letter-spacing:.02em;
+}
+.sp-item.done .sp-lbl{color:var(--green)}
+.sp-item.active .sp-lbl{color:rgba(255,255,255,.9)}
+.sp-item.done::after{
+  content:'✓';position:absolute;top:4px;right:6px;
+  font-size:9px;color:var(--green);font-weight:700;
+}
+@media(max-width:480px){.sp-lbl{display:none}.sp-item{padding:.75rem .15rem}}
+
+/* ── Cards ───────────────────────────────────────────────────────────── */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:0;
+  margin-bottom:1rem;box-shadow:var(--sh);overflow:hidden;
+}
+.card-head{
+  background:var(--k-navy);padding:1.25rem 1.75rem;
+  border-bottom:3px solid var(--k-yellow);
+}
+.card-head h2{
+  font-size:19px;font-weight:700;color:#fff;margin-bottom:2px;
+}
+.card-head p{font-size:13px;color:rgba(255,255,255,.7)}
+.card-body{padding:1.75rem}
+
+/* ── Form ────────────────────────────────────────────────────────────── */
+.field{margin-bottom:1.4rem}
+.field:last-child{margin-bottom:0}
+.field>label{
+  display:block;font-size:13px;font-weight:700;color:var(--k-navy);
+  margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em;
+}
+.hint{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+.hint a{color:var(--k-blue);font-weight:600;text-decoration:none}
+.hint a:hover{text-decoration:underline}
+
+/* Input with prefix */
+.iw{
+  display:flex;align-items:center;
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  overflow:hidden;transition:border-color .2s,box-shadow .2s;
+}
+.iw:focus-within{border-color:var(--k-blue);box-shadow:0 0 0 3px rgba(0,94,184,.12)}
+.iw .pre{
+  padding:0 14px;font-size:14px;color:var(--muted);
+  background:var(--bg);border-right:1.5px solid var(--border);
+  height:44px;display:flex;align-items:center;font-weight:600;white-space:nowrap;
+}
+.iw input{
+  border:none;flex:1;padding:0 14px;height:44px;
+  font-size:15px;color:var(--text);outline:none;background:#fff;
+  width:100%;font-family:'Source Sans 3',sans-serif;
+}
+input[type=date],input[type=number],input[type=text]{
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:0 14px;height:44px;font-size:15px;color:var(--text);
+  outline:none;background:#fff;width:100%;
+  font-family:'Source Sans 3',sans-serif;transition:border-color .2s,box-shadow .2s;
+}
+input:focus{border-color:var(--k-blue);box-shadow:0 0 0 3px rgba(0,94,184,.12)}
+select{
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:0 36px 0 14px;height:44px;font-size:15px;color:var(--text);
+  outline:none;background:#fff;width:100%;cursor:pointer;
+  font-family:'Source Sans 3',sans-serif;transition:border-color .2s;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2363666A' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+}
+select:focus{border-color:var(--k-blue);box-shadow:0 0 0 3px rgba(0,94,184,.12)}
+
+/* Slider */
+.slider-row{display:flex;align-items:center;gap:16px;margin-top:8px}
+input[type=range]{flex:1;accent-color:var(--k-blue);cursor:pointer}
+.sv{
+  font-size:18px;font-weight:700;color:var(--k-navy);
+  min-width:64px;text-align:right;
+}
+
+/* Toggle buttons */
+.tog{display:flex;gap:8px;margin-top:7px;flex-wrap:wrap}
+.tog-btn{
+  flex:1;min-width:100px;padding:11px 14px;
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  font-size:14px;cursor:pointer;background:#fff;color:var(--muted);
+  transition:all .15s;text-align:center;font-family:'Source Sans 3',sans-serif;
+  font-weight:600;line-height:1.3;
+}
+.tog-btn:hover{border-color:var(--k-blue);color:var(--k-navy)}
+.tog-btn.on{background:var(--k-navy);border-color:var(--k-navy);color:#fff}
+.tog-btn.off{background:var(--bg);border-color:#bbb;color:var(--muted)}
+
+/* Callout */
+.callout{
+  background:var(--blue-lt);border-left:4px solid var(--k-blue);
+  border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 16px;
+  font-size:13px;color:#1A3A5C;line-height:1.55;margin-top:1.25rem;
+}
+.callout strong{color:var(--k-navy)}
+.callout.warn{background:var(--amber-lt);border-color:var(--k-yellow);color:#5C3A00}
+.callout.warn strong{color:var(--amber)}
+
+/* Divider */
+.divider{border:none;border-top:1px dashed var(--border);margin:1.5rem 0}
+
+/* Partner block */
+.partner-block{display:none;padding-top:1.25rem;margin-top:1.25rem;border-top:1px dashed var(--border)}
+.partner-block.show{display:block}
+.partner-label{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--k-teal);margin-bottom:1rem;
+  display:flex;align-items:center;gap:8px;
+}
+.partner-label::before{content:'';flex:1;height:1px;background:var(--border)}
+.partner-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Reveal block */
+.reveal-block{display:none;margin-top:1rem}
+.reveal-block.show{display:block}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.btn-primary{
+  background:var(--k-navy);color:#fff;border:none;
+  border-radius:var(--r-sm);padding:14px 28px;
+  font-size:15px;font-weight:700;cursor:pointer;width:100%;
+  margin-top:.5rem;transition:background .2s;
+  font-family:'Source Sans 3',sans-serif;
+  border-bottom:3px solid var(--k-yellow);
+}
+.btn-primary:hover{background:var(--k-blue)}
+.btn-back{
+  background:#fff;color:var(--k-navy);border:1.5px solid var(--k-navy);
+  border-radius:var(--r-sm);padding:14px 28px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  transition:all .2s;font-family:'Source Sans 3',sans-serif;
+}
+.btn-back:hover{background:var(--k-navy);color:#fff}
+.btn-row{display:flex;gap:10px}
+.btn-row .btn-back{flex:1}
+.btn-row .btn-primary{flex:2}
+.err{color:var(--red);font-size:13px;margin-top:8px;min-height:18px;font-weight:600}
+
+/* Animate */
+.step-wrap{animation:fade-up .3s ease both}
+@keyframes fade-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.hidden{display:none!important}
+
+/* ══════════════════════════════════════════════════════════════════════ */
+/* RESULTS                                                               */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+/* Score hero */
+.score-hero{
+  background:var(--k-navy);border-radius:var(--r);
+  padding:2.5rem 2rem 2rem;margin-bottom:1rem;
+  box-shadow:var(--sh-lg);text-align:center;
+  border-bottom:4px solid var(--k-yellow);
+  position:relative;overflow:hidden;
+}
+.score-hero::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(0,178,169,.1);
+}
+.score-hero::after{
+  content:'';position:absolute;bottom:-60px;left:-30px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,182,0,.07);
+}
+
+.scores-row{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem}
+.score-block{display:flex;flex-direction:column;align-items:center;flex:1;min-width:130px}
+.score-block-label{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.6rem;text-align:center}
+.ring-container{display:flex;flex-direction:column;align-items:center;position:relative;z-index:1}
+.ring-svg{width:130px;height:130px;transform:rotate(-90deg)}
+.ring-svg circle{fill:none;stroke-width:12;stroke-linecap:round}
+.ring-bg-c{stroke:rgba(255,255,255,.12)}
+.ring-fill-c{stroke-dasharray:361;stroke-dashoffset:361;transition:stroke-dashoffset 1.4s cubic-bezier(.22,1,.36,1)}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-num{font-size:46px;font-weight:700;color:#fff;line-height:1}
+.ring-denom{font-size:13px;color:rgba(255,255,255,.5);margin-top:-2px}
+.score-divider{width:1px;background:rgba(255,255,255,.2);align-self:stretch;margin:.5rem 0}
+
+
+
+/* Gap pills */
+.pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;position:relative;z-index:1}
+.pill{
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2);
+}
+.pill-pos{background:rgba(16,127,90,.35);border-color:rgba(16,127,90,.5)}
+.pill-neg{background:rgba(188,32,75,.35);border-color:rgba(188,32,75,.5)}
+.pill-neu{background:rgba(0,145,218,.25);border-color:rgba(0,145,218,.4)}
+
+/* Inkomensbrug */
+.ib-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  box-shadow:var(--sh);margin-bottom:1rem;overflow:hidden;
+}
+.ib-head{background:var(--bg);padding:1rem 1.5rem;border-bottom:1px solid var(--border)}
+.ib-title{font-size:17px;font-weight:700;color:var(--k-navy);margin-bottom:2px}
+.ib-sub{font-size:13px;color:var(--muted)}
+.ib-body{padding:1.5rem}
+.ib-chart-wrap{height:230px;position:relative}
+
+.ib-legend{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;
+  margin-top:1.25rem;
+}
+.leg{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.leg-swatch{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.leg strong{color:var(--text);font-weight:600}
+
+/* IDG meter */
+.idg-meter{
+  background:var(--bg);border-radius:var(--r-sm);padding:1rem 1.25rem;
+  margin-top:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.idg-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+.idg-track{flex:1;min-width:120px;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.idg-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.idg-pct{font-size:15px;font-weight:700;color:var(--k-navy);white-space:nowrap}
+.idg-norm{font-size:11px;color:var(--muted)}
+
+/* Dimensions */
+.dims-section{margin-bottom:1rem}
+.dims-title{font-size:16px;font-weight:700;color:var(--k-navy);margin-bottom:.75rem;padding-left:.1rem;letter-spacing:.01em}
+.dim-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:8px;overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,51,141,.05);
+}
+.dim-head{
+  display:flex;align-items:center;padding:.9rem 1.1rem;gap:14px;
+  cursor:pointer;
+}
+.dim-head:hover{background:var(--bg)}
+.dim-icon-box{
+  width:40px;height:40px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.dim-info{flex:1;min-width:0}
+.dim-name{font-size:14px;font-weight:700;color:var(--text)}
+.dim-detail{font-size:12px;color:var(--muted);margin-top:1px}
+.dim-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.dim-num{font-size:26px;font-weight:700;line-height:1}
+.dim-bar-wrap{width:88px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.dim-bar-inner{height:100%;border-radius:3px;width:0;transition:width 1s ease}
+
+.dim-body-text{
+  padding:.75rem 1.1rem .9rem;border-top:1px solid var(--border);
+  background:var(--bg);font-size:13px;color:var(--muted);
+  line-height:1.55;display:none;
+}
+.dim-body-text.open{display:block}
+.chev{font-size:9px;color:var(--border);transition:transform .2s;margin-left:6px}
+.chev.open{transform:rotate(180deg)}
+
+/* Actions */
+.actions-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--sh);margin-bottom:1rem;overflow:hidden;
+}
+.actions-head{background:var(--bg);padding:1rem 1.5rem;border-bottom:1px solid var(--border)}
+.actions-head h3{font-size:16px;font-weight:700;color:var(--k-navy)}
+.actions-body{padding:1rem 1.5rem}
+.act{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bg)}
+.act:last-child{border-bottom:none;padding-bottom:0}
+.act-icon{
+  width:28px;height:28px;border-radius:6px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.act-text{font-size:13px;color:var(--text);line-height:1.55}
+.act-text strong{color:var(--k-navy)}
+
+/* Print */
+.print-btn{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  background:#fff;color:var(--k-navy);border:1.5px solid var(--k-navy);
+  border-radius:var(--r-sm);padding:13px 20px;font-size:14px;
+  font-weight:700;cursor:pointer;width:100%;margin-top:10px;
+  transition:all .2s;font-family:'Source Sans 3',sans-serif;
+}
+.print-btn:hover{background:var(--k-navy);color:#fff}
+.disclaimer{
+  font-size:11px;color:#aaa;margin-top:1.5rem;
+  line-height:1.65;border-top:1px solid var(--border);padding-top:1.25rem;
+}
+.disclaimer strong{color:var(--k-gray)}
+
+@media(max-width:480px){
+  .tog{flex-direction:column}
+  .btn-row{flex-direction:column}
+  .ib-legend{grid-template-columns:1fr}
+}
+/* ── Upload zone ──────────────────────────────────────────────────────── */
+.upload-zone{
+  border:2px dashed var(--border);border-radius:var(--r);
+  padding:2rem 1.5rem;text-align:center;
+  background:var(--card);margin-bottom:1.5rem;
+  cursor:pointer;transition:border-color .2s,background .2s;
+  position:relative;
+}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--k-blue);background:var(--blue-lt)}
+.upload-zone.done{border-color:var(--green);background:var(--green-lt);border-style:solid}
+.uz-icon{font-size:32px;margin-bottom:.6rem}
+.uz-title{font-size:16px;font-weight:700;color:var(--k-navy);margin-bottom:.3rem}
+.uz-sub{font-size:13px;color:var(--muted)}
+.uz-sub a{color:var(--k-blue);font-weight:600;text-decoration:underline;cursor:pointer}
+.uz-input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.import-banner{
+  background:var(--green-lt);border:1px solid #7BC99A;border-radius:var(--r);
+  padding:1rem 1.25rem;margin-bottom:1rem;
+}
+.ib-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:.6rem}
+.ib-head-left{display:flex;align-items:center;gap:10px}
+.ib-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.ib-name{font-size:15px;font-weight:700;color:var(--k-navy)}
+.ib-clear{font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;background:none;border:none;padding:0;font-family:inherit}
+.ib-clear:hover{color:var(--red)}
+.ib-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
+.ib-row{display:flex;align-items:baseline;gap:6px;font-size:13px}
+.ib-lbl{color:var(--muted);white-space:nowrap}
+.ib-val{font-weight:700;color:var(--text)}
+.ib-val.auto{color:var(--green)}
+.ib-note{font-size:11px;color:var(--muted);margin-top:.5rem;line-height:1.5}
+.upload-zone-skip{font-size:12px;color:var(--muted);text-align:center;margin-bottom:1rem}
+.upload-zone-skip a{color:var(--k-blue);cursor:pointer;text-decoration:underline}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="kpmg-header">
+    <div class="kh-eyebrow">Pensioencheck — Model 2026</div>
+    <div class="kh-title">Het <em>Pensioencijfer</em><sup style="font-size:18px;vertical-align:super">®</sup></div>
+    <div class="kh-sub">Gebaseerd op replacement rate-methodologie (OECD), life-cycle hypothesis en CBS-equivalentieschalen. Check in 6 stappen of jij — alleen of samen — genoeg hebt voor later.</div>
+  </div>
+
+
+  <!-- UPLOAD ZONE -->
+  <div id="upload-section">
+    <div class="upload-zone" id="upload-zone" 
+         ondragover="event.preventDefault();this.classList.add('drag')" 
+         ondragleave="this.classList.remove('drag')"
+         ondrop="handleDrop(event)">
+      <input type="file" class="uz-input" id="file-input" accept=".json,.xml" onchange="handleFile(this.files[0])">
+      <div class="uz-icon">📄</div>
+      <div class="uz-title">Upload je Pensioenoverzicht</div>
+      <div class="uz-sub">Sleep je <strong>.json</strong> of <strong>.xml</strong> bestand hiernaartoe, of <a onclick="document.getElementById('file-input').click();event.stopPropagation()">klik om te bladeren</a>.<br>Je bestand wordt lokaal verwerkt — er wordt niets verstuurd.</div>
+    </div>
+    <div class="upload-zone-skip">Geen bestand bij de hand? <a onclick="skipUpload()">Sla over en vul alles handmatig in →</a></div>
+  </div>
+
+  <!-- IMPORT BANNER (verborgen tot upload) -->
+  <div id="import-banner" class="import-banner hidden">
+    <div class="ib-head">
+      <div class="ib-head-left">
+        <span class="ib-badge">✓ Geïmporteerd</span>
+        <span class="ib-name" id="ib-name"></span>
+      </div>
+      <button class="ib-clear" onclick="clearImport()">Verwijder import</button>
+    </div>
+    <div class="ib-grid" id="ib-grid"></div>
+    <div id="ib-naam-wrap" class="hidden" style="margin-top:.75rem">
+      <label style="font-size:12px;font-weight:700;color:var(--k-navy);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Naam niet gevonden in JSON — vul in</label>
+      <input type="text" id="naam-main" placeholder="Bijv. Jean Jansen" style="border:1.5px solid var(--border);border-radius:6px;padding:0 12px;height:38px;font-size:14px;width:100%;font-family:'Source Sans 3',sans-serif">
+    </div>
+    <div id="ib-gebdatum-wrap" class="hidden" style="margin-top:.75rem">
+      <label style="font-size:12px;font-weight:700;color:var(--k-navy);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Geboortedatum niet gevonden in JSON — vul in</label>
+      <input type="date" id="gebdatum-main-json" max="2000-12-31" min="1940-01-01" style="border:1.5px solid var(--border);border-radius:6px;padding:0 12px;height:38px;font-size:14px;width:100%;font-family:'Source Sans 3',sans-serif" oninput="document.getElementById('gebdatum').value=this.value">
+    </div>
+    <div class="ib-note">De geïmporteerde gegevens zijn ingevuld in de relevante velden. Controleer en pas aan waar nodig. Velden die niet uit het bestand konden worden gelezen, vul je zelf in.</div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="step-progress hidden" id="progress">
+    <div class="sp-item active" id="sp0"><div class="sp-num">1</div><div class="sp-lbl">Situatie</div></div>
+    <div class="sp-item" id="sp1"><div class="sp-num">2</div><div class="sp-lbl">Inkomen</div></div>
+    <div class="sp-item" id="sp2"><div class="sp-num">3</div><div class="sp-lbl">Pensioen</div></div>
+    <div class="sp-item" id="sp3"><div class="sp-num">4</div><div class="sp-lbl">Vermogen</div></div>
+    <div class="sp-item" id="sp4"><div class="sp-num">5</div><div class="sp-lbl">Woonlasten</div></div>
+    <div class="sp-item" id="sp5"><div class="sp-num">6</div><div class="sp-lbl">Bescherming</div></div>
+  </div>
+
+  <!-- ════════════════════════════════════ STAP 1 ════════════════════ -->
+  <div id="step0" class="step-wrap hidden">
+    <div class="card">
+      <div class="card-head">
+        <h2>Jouw situatie</h2>
+        <p>Vertel ons over jezelf en eventueel je partner</p>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Jouw geboortedatum</label>
+          <input type="date" id="gebdatum" max="2000-12-31" min="1940-01-01">
+        </div>
+        <div class="field">
+          <label>Gewenste pensioenleeftijd</label>
+          <div class="slider-row">
+            <input type="range" min="60" max="72" value="67" id="sl-pen" oninput="sval('sl-pen','sv-pen',' jaar')">
+            <span class="sv" id="sv-pen">67 jaar</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Heb je een partner?</label>
+          <div class="tog">
+            <div class="tog-btn" id="pt-ja" onclick="tog('partner','ja')">Ja, ik heb een partner</div>
+            <div class="tog-btn" id="pt-nee" onclick="tog('partner','nee')">Nee, ik ben alleenstaand</div>
+          </div>
+        </div>
+        <div class="partner-block" id="pb1">
+          <div class="partner-label">Partner</div>
+          <!-- Partner upload zone -->
+          <div class="upload-zone" id="upload-zone-p" style="padding:1rem 1.25rem;margin-bottom:1rem"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="handleDropP(event)">
+            <input type="file" class="uz-input" id="file-input-p" accept=".json,.xml" onchange="handleFileP(this.files[0])">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="font-size:22px" id="uz-icon-p">📄</div>
+              <div>
+                <div class="uz-title" style="font-size:14px">Upload Pensioenoverzicht partner</div>
+                <div class="uz-sub">Sleep of <a onclick="document.getElementById('file-input-p').click();event.stopPropagation()">blader</a> naar het .json of .xml bestand van je partner.</div>
+              </div>
+            </div>
+          </div>
+          <!-- Partner import banner -->
+          <div id="import-banner-p" class="import-banner hidden" style="margin-bottom:1rem">
+            <div class="ib-head">
+              <div class="ib-head-left">
+                <span class="ib-badge">✓ Partner</span>
+                <span class="ib-name" id="ib-name-p"></span>
+              </div>
+              <button class="ib-clear" onclick="clearImportP()">Verwijder</button>
+            </div>
+            <div class="ib-grid" id="ib-grid-p"></div>
+          </div>
+          <div class="field">
+            <label>Naam partner <span style="font-weight:400;color:var(--muted)">(optioneel)</span></label>
+            <input type="text" id="naamP" placeholder="Bijv. A. Jansen">
+          </div>
+          <div class="field">
+            <label>Geboortedatum partner</label>
+            <input type="date" id="gebdatumP" max="2000-12-31" min="1940-01-01">
+          </div>
+          <div class="field">
+            <label>Pensioenleeftijd partner</label>
+            <div class="slider-row">
+              <input type="range" min="60" max="72" value="67" id="sl-penP" oninput="sval('sl-penP','sv-penP',' jaar')">
+              <span class="sv" id="sv-penP">67 jaar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="nav(1)">Volgende stap →</button>
+    <div class="err" id="e0"></div>
+  </div>
+
+  <!-- ════════════════════════════════════ STAP 2 ════════════════════ -->
+  <div id="step1" class="step-wrap hidden">
+    <div class="card">
+      <div class="card-head">
+        <h2>Huidig inkomen</h2>
+        <p>Hoe ziet je financiële situatie er vandaag uit?</p>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Jouw netto besteedbaar inkomen / maand</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="inkNu" placeholder="3.200" min="0" step="50"></div>
+          <p class="hint">Na belasting en premies, exclusief partnerinkomen.</p>
+        </div>
+        <div id="inkNuP-wrap" class="hidden">
+          <div class="field">
+            <label>Netto inkomen partner / maand</label>
+            <div class="iw"><div class="pre">€</div><input type="number" id="inkNuP" placeholder="2.100" min="0" step="50"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Gewenste levensstandaard na pensionering</label>
+          <div class="tog">
+            <div class="tog-btn" id="ls-80" onclick="tog('ls','80')"><strong>80%</strong><br><span style="font-size:12px;opacity:.75">OECD-norm</span></div>
+            <div class="tog-btn" id="ls-90" onclick="tog('ls','90')"><strong>90%</strong><br><span style="font-size:12px;opacity:.75">Comfortabel</span></div>
+            <div class="tog-btn" id="ls-100" onclick="tog('ls','100')"><strong>100%</strong><br><span style="font-size:12px;opacity:.75">Zelfde niveau</span></div>
+          </div>
+          <p class="hint">Gemiddeld dalen uitgaven 15–25% na pensionering (geen werkkosten, reiskosten etc.).</p>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="nav(0)">← Terug</button>
+      <button class="btn-primary" onclick="nav(2)">Volgende stap →</button>
+    </div>
+    <div class="err" id="e1"></div>
+  </div>
+
+  <!-- ════════════════════════════════════ STAP 3 ════════════════════ -->
+  <div id="step2" class="step-wrap hidden">
+    <div class="card">
+      <div class="card-head">
+        <h2>Pensioeninkomen</h2>
+        <p>Wat kun je verwachten aan pensioenuitkeringen?</p>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>AOW — volledig opgebouwd (50 jaar in NL)?</label>
+          <div class="tog">
+            <div class="tog-btn" id="aow-ja" onclick="tog('aow','ja')">Ja, volledig</div>
+            <div class="tog-btn" id="aow-nee" onclick="tog('aow','nee')">Nee, gedeeltelijk</div>
+          </div>
+        </div>
+        <div class="reveal-block" id="aow-pct-wrap">
+          <div class="field">
+            <label>AOW-opbouw percentage</label>
+            <div class="slider-row">
+              <input type="range" min="10" max="99" value="80" step="2" id="sl-aowpct" oninput="sval('sl-aowpct','sv-aowpct','%')">
+              <span class="sv" id="sv-aowpct">80%</span>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Aanvullend pensioen bruto / maand</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="aanvP" placeholder="1.200" min="0" step="50"></div>
+          <p class="hint">Controleer op <a href="https://www.mijnpensioenoverzicht.nl" target="_blank">mijnpensioenoverzicht.nl</a> met DigiD. Bij upload: dit is jouw aanvullend pensioen (exclusief AOW en partner).</p>
+        </div>
+        <div class="field">
+          <label>Type pensioenregeling</label>
+          <select id="pensType">
+            <option value="">— Kies type —</option>
+            <option value="db">Uitkeringsovereenkomst (DB) — gegarandeerd + geïndexeerd</option>
+            <option value="cdc">Collectief DC (CDC) — gegarandeerd, beperkte indexatie</option>
+            <option value="dc">Premieovereenkomst (DC / WTP) — variabel, beleggingsafhankelijk</option>
+            <option value="mix">Mix van DB en DC</option>
+            <option value="geen">Geen / zelfstandige (geen pensioenfonds)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Lijfrente of banksparen netto / maand <span style="font-weight:400;font-size:12px;color:var(--muted)">(optioneel)</span></label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="lijfr" placeholder="0" min="0" step="50"></div>
+        </div>
+        <div class="partner-block" id="pb3">
+          <div class="partner-label">Partner — pensioen</div>
+          <div class="field">
+            <label>Aanvullend pensioen partner bruto / maand</label>
+            <div class="iw"><div class="pre">€</div><input type="number" id="aanvPP" placeholder="800" min="0" step="50"></div>
+          </div>
+          <div class="field">
+            <label>Type pensioenregeling partner</label>
+            <select id="pensTypeP">
+              <option value="">— Kies type —</option>
+              <option value="db">DB — gegarandeerd + geïndexeerd</option>
+              <option value="cdc">CDC — gegarandeerd, beperkte indexatie</option>
+              <option value="dc">DC / WTP — variabel</option>
+              <option value="mix">Mix DB en DC</option>
+              <option value="geen">Geen / zelfstandige</option>
+            </select>
+          </div>
+        </div>
+        <div class="callout warn" style="margin-top:1rem">
+          <strong>Wet Toekomst Pensioenen (2023):</strong> Nieuw opgebouwd pensioen is DC. Controleer via je UPO wat gegarandeerd is en wat variabel.
+        </div>
+        <div class="callout" style="margin-top:.75rem">
+          <strong>AOW: opgebouwd vs. te bereiken.</strong> Als je tot je AOW-leeftijd in Nederland blijft wonen, bouw je elk jaar 2% extra AOW op. Gebruik <em>te bereiken</em> (100%) als je verwacht in Nederland te blijven. Gebruik <em>opgebouwd</em> als je eerder stopt of al lang in het buitenland hebt gewoond.
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="nav(1)">← Terug</button>
+      <button class="btn-primary" onclick="nav(3)">Volgende stap →</button>
+    </div>
+    <div class="err" id="e2"></div>
+  </div>
+
+  <!-- ════════════════════════════════════ STAP 4 ════════════════════ -->
+  <div id="step3" class="step-wrap hidden">
+    <div class="card">
+      <div class="card-head">
+        <h2>Vermogen & bezittingen</h2>
+        <p>Jouw vermogen als aanvulling op het pensioen</p>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Spaargeld (direct beschikbaar)</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="spaar" placeholder="35.000" min="0" step="1000"></div>
+          <p class="hint">Betaalrekeningen, spaarrekeningen, deposito's. Gewicht in model: 100%.</p>
+        </div>
+        <div class="field">
+          <label>Beleggingen (huidige waarde)</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="beleg" placeholder="0" min="0" step="1000"></div>
+          <p class="hint">Aandelen, ETF's, obligaties, beleggingsfondsen. Gewicht: 80% (koersrisico).</p>
+        </div>
+        <div class="field">
+          <label>Woningwaarde (WOZ of taxatie)</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="woningW" placeholder="380.000" min="0" step="5000"></div>
+          <p class="hint">Laat leeg als je huurt. Overwaarde telt mee voor 60% (beperkte liquiditeit).</p>
+        </div>
+        <div class="field">
+          <label>Resterende hypotheekschuld</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="hyp" placeholder="120.000" min="0" step="5000"></div>
+        </div>
+        <div class="callout" style="margin-top:1rem">
+          <strong>Berekening:</strong> Gewogen vermogen = spaargeld × 100% + beleggingen × 80% + overwaarde × 60%. Dit wordt omgezet naar een maandelijkse annuïteit over de pensioenduur (reëel rendement 1,5%/jaar — CPB-norm 2023).
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="nav(2)">← Terug</button>
+      <button class="btn-primary" onclick="nav(4)">Volgende stap →</button>
+    </div>
+    <div class="err" id="e3"></div>
+  </div>
+
+  <!-- ════════════════════════════════════ STAP 5 ════════════════════ -->
+  <div id="step4" class="step-wrap hidden">
+    <div class="card">
+      <div class="card-head">
+        <h2>Woonlasten</h2>
+        <p>Woonlasten zijn de grootste vaste kostenpost bij pensionering</p>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Huidige maandelijkse woonlasten</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="woonNu" placeholder="1.050" min="0" step="50"></div>
+          <p class="hint">Hypotheekrente + aflossing, of huur inclusief servicekosten.</p>
+        </div>
+        <div class="field">
+          <label>Type woonsituatie</label>
+          <select id="woonType">
+            <option value="">— Kies situatie —</option>
+            <option value="hyp_afl">Hypotheek met aflossing — lost af vóór pensioen</option>
+            <option value="hyp_vr">Aflossingsvrije hypotheek — loopt door na pensioen</option>
+            <option value="huur">Huur</option>
+            <option value="vrij">Eigen woning schuldenvrij</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Verwachte woonlasten bij pensionering</label>
+          <div class="iw"><div class="pre">€</div><input type="number" id="woonPens" placeholder="650" min="0" step="50"></div>
+          <p class="hint">Schuldenvrij? Vul ca. € 200–300 in voor onderhoud/VvE. Huurder? Geschatte huur dan.</p>
+        </div>
+        <div class="callout warn">
+          <strong>Nibud-norm:</strong> Woonlasten boven 35% van het netto pensioeninkomen vormen een structureel bestedingsrisico.
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="nav(3)">← Terug</button>
+      <button class="btn-primary" id="btn-stap5" onclick="nav(5)">Volgende stap →</button>
+    </div>
+    <div class="err" id="e4"></div>
+  </div>
+
+  <!-- ════════════════════════════════════ STAP 6 ════════════════════ -->
+  <div id="step5" class="step-wrap hidden">
+    <div class="card">
+      <div class="card-head">
+        <h2>Bescherming bij overlijden</h2>
+        <p>Wat blijft er over voor de achterblijvende partner?</p>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Heeft jouw pensioenregeling een nabestaandenpensioen?</label>
+          <div class="tog">
+            <div class="tog-btn" id="nb-ja" onclick="tog('nb','ja')">Ja</div>
+            <div class="tog-btn" id="nb-nee" onclick="tog('nb','nee')">Nee / onbekend</div>
+          </div>
+        </div>
+        <div class="reveal-block" id="nb-pct-wrap">
+          <div class="field">
+            <label>Nabestaandenpensioen als % van jouw pensioen</label>
+            <div class="slider-row">
+              <input type="range" min="0" max="100" value="70" step="5" id="sl-nbpct" oninput="sval('sl-nbpct','sv-nbpct','%')">
+              <span class="sv" id="sv-nbpct">70%</span>
+            </div>
+            <p class="hint">Staat op je Uniform Pensioenoverzicht (UPO).</p>
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="field">
+          <label>Heeft je partner een nabestaandenpensioen?</label>
+          <div class="tog">
+            <div class="tog-btn" id="nbp-ja" onclick="tog('nbp','ja')">Ja</div>
+            <div class="tog-btn" id="nbp-nee" onclick="tog('nbp','nee')">Nee / onbekend</div>
+          </div>
+        </div>
+        <div class="reveal-block" id="nbp-pct-wrap">
+          <div class="field">
+            <label>Nabestaandenpensioen partner als % van diens pensioen</label>
+            <div class="slider-row">
+              <input type="range" min="0" max="100" value="70" step="5" id="sl-nbppct" oninput="sval('sl-nbppct','sv-nbppct','%')">
+              <span class="sv" id="sv-nbppct">70%</span>
+            </div>
+          </div>
+        </div>
+        <div class="callout warn" style="margin-top:1rem">
+          <strong>Let op (WTP 2023):</strong> Nabestaandenpensioen is nu op risicobasis bij veel regelingen — dekking vervalt bij werkgeverswisseling. Controleer je UPO.
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="nav(4)">← Terug</button>
+      <button class="btn-primary" onclick="nav(6)">Bereken mijn Pensioencijfer →</button>
+    </div>
+    <div class="err" id="e5"></div>
+  </div>
+
+  <!-- ════════════════════════════════════ RESULTATEN ════════════════ -->
+  <div id="results" class="step-wrap hidden">
+
+    <div class="score-hero">
+      <div class="scores-row">
+        <!-- Cijfer 1: met overwaarde -->
+        <div class="score-block">
+          <div class="score-block-label">Incl. overwaarde woning</div>
+          <div class="ring-container">
+            <svg class="ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg-c" cx="60" cy="60" r="54"/>
+              <circle class="ring-fill-c" id="ring-fill" cx="60" cy="60" r="54"/>
+            </svg>
+            <div class="ring-inner">
+              <div class="ring-num" id="r-num">–</div>
+              <div class="ring-denom">/10</div>
+            </div>
+          </div>
+        </div>
+        <div class="score-divider"></div>
+        <!-- Cijfer 2: zonder overwaarde -->
+        <div class="score-block">
+          <div class="score-block-label">Excl. overwaarde woning</div>
+          <div class="ring-container">
+            <svg class="ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg-c" cx="60" cy="60" r="54"/>
+              <circle class="ring-fill-c" id="ring-fill2" cx="60" cy="60" r="54"/>
+            </svg>
+            <div class="ring-inner">
+              <div class="ring-num" id="r-num2">–</div>
+              <div class="ring-denom">/10</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pills" id="r-pills"></div>
+    </div>
+
+    <!-- Inkomensbrug -->
+    <div class="ib-card">
+      <div class="ib-head">
+        <div class="ib-title">De Inkomensbrug™</div>
+        <div class="ib-sub">Netto maandinkomen — huidig vs. bij pensionering</div>
+      </div>
+      <div class="ib-body">
+        <div class="ib-chart-wrap"><canvas id="chart"></canvas></div>
+        <div class="idg-meter">
+          <div class="idg-label">Dekkingsgraad</div>
+          <div class="idg-track"><div class="idg-fill" id="idg-fill"></div></div>
+          <div>
+            <div class="idg-pct" id="idg-pct">–%</div>
+            <div class="idg-norm" id="idg-norm"></div>
+          </div>
+        </div>
+        <div class="ib-legend" id="ib-legend"></div>
+      </div>
+    </div>
+
+    <!-- Dimensies -->
+    <div class="dims-section">
+      <div class="dims-title">Scores per dimensie — klik voor toelichting</div>
+      <div id="dim-list"></div>
+    </div>
+
+    <!-- Acties -->
+    <div class="actions-card">
+      <div class="actions-head"><h3>Aandachtspunten & aanbevolen acties</h3></div>
+      <div class="actions-body" id="act-list"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:.5rem">
+      <button class="btn-back" onclick="nav(4)">← Aanpassen</button>
+      <button class="btn-back" onclick="reset()">Opnieuw</button>
+    </div>
+    <button class="print-btn" onclick="doPrint()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Pensioencijfer rapport afdrukken / opslaan als PDF
+    </button>
+    <div class="disclaimer">
+      <strong>Disclaimer:</strong> Het Pensioencijfer® is een indicatief signaleringsmodel gebaseerd op gepubliceerde wetenschappelijke methodologie: OECD replacement rate-framework (2019), life-cycle hypothesis (Modigliani & Brumberg, 1954), CBS-equivalentieschalen, KAG-prognosetafels 2022 en CPB-rendementsveronderstellingen (2023). De uitkomst is geen actuariële berekening en geen financieel advies. Raadpleeg een gecertificeerd financieel planner (CFP) voor een persoonlijk pensioenplan. | Versie 1.0 — 2026.
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+'use strict';
+var S = { partner:null, ls:null, aow:null, nb:null, nbp:null };
+var chartInst = null, RD = {};
+var ALL_STEPS = ['step0','step1','step2','step3','step4','step5'];
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function sval(sliderId, outId, suf) {
+  document.getElementById(outId).textContent = document.getElementById(sliderId).value + suf;
+}
+function iv(id, def) {
+  var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? (def||0) : v;
+}
+function fmt(n) { return '€\u00a0' + Math.round(n).toLocaleString('nl-NL'); }
+
+function tog(key, val) {
+  S[key] = val;
+  var map = {
+    'partner': ['pt-ja','pt-nee'],
+    'ls':      ['ls-80','ls-90','ls-100'],
+    'aow':     ['aow-ja','aow-nee'],
+    'nb':      ['nb-ja','nb-nee'],
+    'nbp':     ['nbp-ja','nbp-nee'],
+  };
+  if(!map[key]) return;
+  map[key].forEach(function(id) {
+    var el = document.getElementById(id);
+    if(!el) return;
+    var suffix = id.endsWith('-ja') ? 'ja' : id.endsWith('-nee') ? 'nee' : id.split('-').pop();
+    el.className = 'tog-btn' + (suffix === val ? ' on' : '');
+  });
+  // Special reveals
+  if(key === 'partner') {
+    ['pb1','pb3'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if(el) el.className = 'partner-block' + (val==='ja' ? ' show' : '');
+    });
+    var pw = document.getElementById('inkNuP-wrap');
+    if(pw) pw.classList.toggle('hidden', val!=='ja');
+    // stap 6 bij alleenstaande direct naar calc
+    var b5 = document.getElementById('btn-stap5');
+    if(b5) {
+      if(val === 'nee') { b5.textContent = 'Bereken mijn Pensioencijfer →'; b5.onclick = function(){ calc(); }; }
+      else { b5.textContent = 'Volgende stap →'; b5.onclick = function(){ nav(5); }; }
+    }
+  }
+  if(key === 'aow') {
+    var el = document.getElementById('aow-pct-wrap');
+    if(el) el.className = 'reveal-block' + (val==='nee' ? ' show' : '');
+  }
+  if(key === 'nb') {
+    var el = document.getElementById('nb-pct-wrap');
+    if(el) el.className = 'reveal-block' + (val==='ja' ? ' show' : '');
+  }
+  if(key === 'nbp') {
+    var el = document.getElementById('nbp-pct-wrap');
+    if(el) el.className = 'reveal-block' + (val==='ja' ? ' show' : '');
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────
+function nav(n) {
+  var e = document.getElementById('e' + Math.max(0, n-1));
+  // Validate
+  if(n===1) {
+    if(!document.getElementById('gebdatum').value) { e.textContent='Vul je geboortedatum in.'; return; }
+    if(S.partner===null) { e.textContent='Geef aan of je een partner hebt.'; return; }
+    if(S.partner==='ja' && !document.getElementById('gebdatumP').value) { e.textContent='Vul de geboortedatum van je partner in.'; return; }
+    e.textContent='';
+  }
+  if(n===2) {
+    if(!document.getElementById('inkNu').value) { e.textContent='Vul je netto maandinkomen in.'; return; }
+    if(S.ls===null) { e.textContent='Kies je gewenste levensstandaard.'; return; }
+    e.textContent='';
+  }
+  if(n===3) {
+    if(S.aow===null) { e.textContent='Geef aan of je AOW volledig is opgebouwd.'; return; }
+    if(!document.getElementById('pensType').value) { e.textContent='Selecteer je type pensioenregeling.'; return; }
+    if(S.partner==='ja' && !document.getElementById('pensTypeP').value) { e.textContent='Selecteer ook het type pensioenregeling van je partner.'; return; }
+    e.textContent='';
+  }
+  if(n===4) { e.textContent=''; }
+  if(n===5) {
+    if(!document.getElementById('woonNu').value) { e.textContent='Vul je huidige woonlasten in.'; return; }
+    if(!document.getElementById('woonType').value) { e.textContent='Selecteer je woonsituatie.'; return; }
+    if(!document.getElementById('woonPens').value) { e.textContent='Geef een schatting van je woonlasten bij pensioen.'; return; }
+    e.textContent='';
+    if(S.partner==='nee') { calc(); return; }
+  }
+  // Stap 6 validatie (koppel)
+  if(n===6) {
+    var e6 = document.getElementById('e5');
+    if(S.nb===null)  { e6.textContent='Geef aan of je nabestaandenpensioen hebt.'; return; }
+    if(S.nbp===null) { e6.textContent='Geef aan of je partner nabestaandenpensioen heeft.'; return; }
+    e6.textContent='';
+    calc(); return;
+  }
+  ALL_STEPS.forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  document.getElementById('results').classList.add('hidden');
+  if(n <= 5) {
+    document.getElementById(ALL_STEPS[n]).classList.remove('hidden');
+    for(var i=0;i<6;i++) {
+      var sp = document.getElementById('sp'+i);
+      sp.className = 'sp-item' + (i<n ? ' done' : i===n ? ' active' : '');
+    }
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Calculation ───────────────────────────────────────────────────────
+function calc() {
+  var gebD = new Date(document.getElementById('gebdatum').value);
+  var nu = new Date();
+  var leeftNu = Math.floor((nu - gebD)/(365.25*24*3600*1000));
+  var penLeeft = parseInt(document.getElementById('sl-pen').value);
+  var jarenTot = Math.max(0, penLeeft - leeftNu);
+  var hasP = S.partner === 'ja';
+  var cbsFactor = hasP ? 1.37 : 1.0;
+
+  var inkNu  = iv('inkNu');
+  var inkNuP = hasP ? iv('inkNuP') : 0;
+  var inkHH  = inkNu + inkNuP;
+  var lsPct  = parseInt(S.ls || '80') / 100;
+  var gewenstInk = inkHH * lsPct;
+
+  // AOW 2026
+  var aowVol = S.aow === 'ja';
+  var aowPct = aowVol ? 1.0 : iv('sl-aowpct',80)/100;
+  var aowB_solo = 1463 * aowPct;
+  var aowB_kop  = 1022 * aowPct;
+  var aowN = (hasP ? aowB_kop : aowB_solo) * 0.89;
+  // Partner AOW: aparte opbouw onbekend → gebruik 100% als conservatieve aanname
+  // (gebruiker kan dit aanpassen via eigen aanvullend pensioen veld)
+  var aowNP = hasP ? 1022 * 0.89 : 0;
+
+  var aanvP  = iv('aanvP') * 0.82;
+  var lijfr  = iv('lijfr') * 0.88;
+  var aanvPP = hasP ? iv('aanvPP') * 0.82 : 0;
+  var pensType  = document.getElementById('pensType').value;
+  var pensTypeP = hasP ? document.getElementById('pensTypeP').value : '';
+
+  var pensInk  = aowN + aanvP + lijfr;
+  var pensInkP = hasP ? aowNP + aanvPP : 0;
+  var pensHH   = pensInk + pensInkP;
+
+  // Koopkrachtindex
+  var geind = aowN;
+  if(pensType==='db') geind += aanvP;
+  else if(pensType==='mix'||pensType==='cdc') geind += aanvP*0.5;
+  var ki = pensHH > 0 ? geind/pensHH*100 : 0;
+
+  // Vermogen
+  var spaar  = iv('spaar');
+  var beleg  = iv('beleg');
+  var woningV = iv('woningW');
+  var hypV   = iv('hyp');
+  var overW  = Math.max(0, woningV - hypV);
+  // Twee vermogensvarianten
+  var vGew       = spaar*1.0 + beleg*0.8 + overW*0.6;   // incl. overwaarde
+  var vGewZonder = spaar*1.0 + beleg*0.8;                // excl. overwaarde
+
+  // Annuïteit helper
+  var pensioenduur = Math.max(10, Math.round(97 - penLeeft));
+  var r_ann = 0.015/12;
+  var n_ann = pensioenduur*12;
+  function annuiteit(v) { return v > 0 ? v*r_ann/(1-Math.pow(1+r_ann,-n_ann)) : 0; }
+
+  var annuM       = annuiteit(vGew);
+  var annuMZonder = annuiteit(vGewZonder);
+
+  var pensTotaal       = pensHH + annuM;
+  var pensTotaalZonder = pensHH + annuMZonder;
+
+  // IDG
+  var idgBasis  = inkHH > 0 ? pensHH/inkHH*100 : 0;
+  var idgTotaal = inkHH > 0 ? pensTotaal/inkHH*100 : 0;
+  var idg = idgTotaal;
+  var inkPerPers = inkHH / cbsFactor;
+  var idgNorm = inkPerPers < 2500 ? 82 : inkPerPers < 4500 ? 72 : 67;
+  var idgVsN = idgTotaal / idgNorm * 100;
+
+  // Woonlasten
+  var woonPens = iv('woonPens');
+  var wlr = pensHH > 0 ? woonPens/pensHH*100 : 100;
+
+  // Nabestaanden — Tabel 9 rapport
+  // Nabestaandenratio = inkomen na overlijden / inkomen voor overlijden × 100%
+  // Rapport: >=80%→9-10, 65-79%→7-8, 50-64%→4-6, <50%→1-3
+  var d6val = null;
+  if(hasP) {
+    var nbPct  = S.nb ==='ja' ? iv('sl-nbpct',70)/100  : 0;
+    var nbpPct = S.nbp==='ja' ? iv('sl-nbppct',70)/100 : 0;
+    // Scenario A: persoon overlijdt → partner ontvangt eigen pensInkP + persoons nabestaandenpensioen
+    var inkNaA = pensInkP + (aanvP + lijfr) * nbPct;
+    // Scenario B: partner overlijdt → persoon ontvangt eigen pensInk + partners nabestaandenpensioen
+    var inkNaB = pensInk + aanvPP * nbpPct;
+    // Worst case (laagste inkomen na overlijden)
+    var inkNaOverl = Math.min(inkNaA, inkNaB);
+    var nbRatio = pensHH > 0 ? inkNaOverl / pensHH * 100 : 0;
+    if(nbRatio >= 80)      d6val = Math.round(9 + Math.min(1,(nbRatio-80)/20)); // 9-10
+    else if(nbRatio >= 65) d6val = Math.round(7 + (nbRatio-65)/15);             // 7-8
+    else if(nbRatio >= 50) d6val = Math.round(4 + (nbRatio-50)/15*2);           // 4-6
+    else d6val = Math.max(1, Math.round(1 + nbRatio/50*2));                      // 1-3
+    d6val = Math.min(10, Math.max(1, d6val));
+  }
+
+  // Tekort voor vermogensbuffer
+  var tekort = Math.max(0, gewenstInk - pensHH);
+  var bufMnd = tekort > 0 ? vGew/tekort : 99;
+
+  // ── Dimensiescores (conform rapport Pensioencijfer v1.0) ─────────────
+  // D1: Inkomensdekkingsgraad — Tabel 4 rapport
+  // Scorevariabele = diff in pp: idgBasis − idgNorm
+  // Reverse-engineering casus A (diff=-4.8pp→6) en B (diff=-1.6pp→7): bands van 10pp
+  // >= +10pp → 10, 0–+10pp → 8-9, -10–0pp → 6-7, -20–-10pp → 4-5,
+  // -30–-20pp → 2-3, < -30pp → 0-1
+  var d1diff = idgBasis - idgNorm;
+  var d1;
+  if(d1diff >= 10)       d1 = 10;
+  else if(d1diff >= 0)   d1 = Math.round(8 + d1diff / 10 * 2);        // 8–10
+  else if(d1diff >= -10) d1 = Math.round(6 + (d1diff + 10) / 10);     // 6–7
+  else if(d1diff >= -20) d1 = Math.round(4 + (d1diff + 20) / 10);     // 4–5
+  else if(d1diff >= -30) d1 = Math.round(2 + (d1diff + 30) / 10);     // 2–3
+  else d1 = Math.max(0, Math.round(1 + (d1diff + 30) / 10));          // 0–1
+  d1 = Math.min(10, Math.max(0, d1));
+
+  // D2: Koopkrachtindex — Tabel 5 rapport
+  // Rapport: >=80%→8-10, 60-79%→5-7, <60%→1-4
+  var d2;
+  if(ki >= 80) d2 = Math.round(8 + (ki - 80) / 20 * 2);      // 8–10
+  else if(ki >= 60) d2 = Math.round(5 + (ki - 60) / 20 * 3); // 5–7
+  else d2 = Math.max(1, Math.round(1 + ki / 60 * 3));         // 1–4
+  d2 = Math.min(10, Math.max(1, d2));
+
+  // D3: Vermogenstoereikendheid — Tabel 6 rapport
+  // Rapport: >5jr(60mnd)→8-10, 2-5jr(24-60mnd)→5-7, <2jr(<24mnd)→2-4, geen/negatief→0-1
+  var d3;
+  if(bufMnd >= 60) d3 = Math.round(8 + Math.min(2, (bufMnd - 60) / 60 * 2)); // 8–10
+  else if(bufMnd >= 24) d3 = Math.round(5 + (bufMnd - 24) / 36 * 2);         // 5–7
+  else if(bufMnd >= 6)  d3 = Math.round(2 + (bufMnd - 6) / 18 * 2);          // 2–4
+  else d3 = Math.max(0, Math.round(bufMnd / 6));                               // 0–1
+  d3 = Math.min(10, Math.max(0, d3));
+
+  // D4: Woonlastenduurzaamheid — Tabel 7 rapport
+  // Rapport: <25%→9-10, 25-34%→7-8, 35-44%→4-6, 45-54%→2-3, >=55%→0-1
+  var d4;
+  if(wlr < 25)       d4 = Math.round(9 + (25 - wlr) / 25 * 1);          // 9–10
+  else if(wlr < 35)  d4 = Math.round(7 + (35 - wlr) / 10 * 1);          // 7–8
+  else if(wlr < 45)  d4 = Math.round(4 + (45 - wlr) / 10 * 2);          // 4–6
+  else if(wlr < 55)  d4 = Math.round(2 + (55 - wlr) / 10 * 1);          // 2–3
+  else               d4 = Math.round(Math.max(0, 1 - (wlr - 55) / 10));  // 0–1
+  d4 = Math.min(10, Math.max(0, d4));
+
+  // D5: Levensduurrisico — Tabel 8 rapport
+  // Formule: Dekkingshorizon = jaren waarvoor (gegarandeerd ink. + vermogensannuïteit) >= IDG-norm
+  // Planning horizon = mediane LEV + 10jr; mediane LEV ~20jr voor 67-jarige → horizon ~30jr
+  var gegarHH = aowN
+    + (pensType === 'db' ? aanvP : (pensType === 'mix' || pensType === 'cdc') ? aanvP * 0.5 : 0)
+    + lijfr
+    + (hasP ? aowNP + (pensTypeP === 'db' ? aanvPP : (pensTypeP === 'mix' || pensTypeP === 'cdc') ? aanvPP * 0.5 : 0) : 0);
+
+  // Bereken hoeveel JAREN (gegarandeerd + vermogensannuïteit) >= gewenstInk
+  // Vermogensannuïteit daalt naarmate vermogen opgesoupeerd raakt; we schatten
+  // conservatief hoeveel jaar het tekort gedekt wordt door vermogen
+  var tekortVermogen = Math.max(0, gewenstInk - gegarHH);
+  // Dekkingshorizon in jaren: gegarandeerd is levenslang; vermogen dekt extra jaren
+  var extraJaren = tekortVermogen > 0 ? (vGew / (tekortVermogen * 12)) : 99;
+  var dekkHorizon = gegarHH >= gewenstInk ? 99 : extraJaren;
+  // Mediane levensverwachting voor 67-jarige ≈ 20 jaar (CBS 2025)
+  var mediaan = Math.max(15, 87 - penLeeft); // benadering: CBS mediane overlevingsleeftijd ~87
+  var d5;
+  if(gegarHH >= gewenstInk)        d5 = 9;                             // volledig gegarandeerd → 9-10
+  else if(dekkHorizon > mediaan + 10) d5 = Math.round(7 + Math.min(1, (dekkHorizon - (mediaan+10)) / 5)); // 7-8
+  else if(dekkHorizon >= mediaan)  d5 = Math.round(4 + (dekkHorizon - mediaan) / (mediaan * 0.5) * 2);    // 4-6
+  else d5 = Math.max(1, Math.round(1 + dekkHorizon / mediaan * 2));   // 1-3
+  d5 = Math.min(10, Math.max(1, d5));
+
+  // ── Gewogen score ──────────────────────────────────────────────────
+  var gew, dims;
+  if(hasP) { gew=[0.30,0.20,0.20,0.15,0.10,0.05]; dims=[d1,d2,d3,d4,d5,d6val]; }
+  else     { gew=[0.316,0.210,0.210,0.158,0.106,0]; dims=[d1,d2,d3,d4,d5,0]; }
+
+  var rawScore = dims.reduce(function(s,v,i){ return s+v*gew[i]; },0);
+  if(d1<=2) rawScore = Math.min(rawScore,5);
+  if(d1>=9&&d3>=8) rawScore = Math.max(rawScore,7);
+
+  // Score capping: nooit lager dan 3, nooit hoger dan 8
+  var cijfer = Math.min(8, Math.max(3, Math.round(rawScore*10)/10));
+
+  // ── Tweede score: zonder overwaarde ──────────────────────────────
+  var tekortZonder = Math.max(0, gewenstInk - pensHH);
+  var bufMndZonder = tekortZonder > 0 ? vGewZonder/tekortZonder : 99;
+  var d3z;
+  if(bufMndZonder>=60) d3z=Math.round(8+Math.min(2,(bufMndZonder-60)/60*2));
+  else if(bufMndZonder>=24) d3z=Math.round(5+(bufMndZonder-24)/36*2);
+  else if(bufMndZonder>=6)  d3z=Math.round(2+(bufMndZonder-6)/18*2);
+  else d3z=Math.max(0,Math.round(bufMndZonder/6));
+  d3z=Math.min(10,Math.max(0,d3z));
+
+  // D5 zonder overwaarde
+  var tekortV2 = Math.max(0, gewenstInk - gegarHH);
+  var dekkH2 = tekortV2 > 0 ? vGewZonder/(tekortV2*12) : 99;
+  var mediaan2 = Math.max(15, 87 - penLeeft);
+  var d5z;
+  if(gegarHH>=gewenstInk) d5z=9;
+  else if(dekkH2>mediaan2+10) d5z=Math.round(7+Math.min(1,(dekkH2-(mediaan2+10))/5));
+  else if(dekkH2>=mediaan2)   d5z=Math.round(4+(dekkH2-mediaan2)/(mediaan2*0.5)*2);
+  else d5z=Math.max(1,Math.round(1+dekkH2/mediaan2*2));
+  d5z=Math.min(10,Math.max(1,d5z));
+
+  var dimsZ = hasP ? [d1,d2,d3z,d4,d5z,d6val] : [d1,d2,d3z,d4,d5z,0];
+  var rawZ = dimsZ.reduce(function(s,v,i){ return s+v*gew[i]; },0);
+  if(d1<=2) rawZ=Math.min(rawZ,5);
+  if(d1>=9&&d3z>=8) rawZ=Math.max(rawZ,7);
+  var cijferZonder = Math.min(8, Math.max(3, Math.round(rawZ*10)/10));
+
+  // Save
+  RD = { cijfer:cijfer, cijferZonder:cijferZonder,
+    inkHH:inkHH, gewenstInk:gewenstInk,
+    pensHH:pensHH, pensTotaal:pensTotaal, annuM:annuM,
+    pensTotaalZonder:pensTotaalZonder, annuMZonder:annuMZonder,
+    idg:idg, idgNorm:idgNorm, idgVsN:idgVsN, ki:ki,
+    wlr:wlr, vGew:vGew, vGewZonder:vGewZonder, bufMnd:bufMnd,
+    overW:overW, dims:dims, hasP:hasP, pensioengap:pensTotaal-gewenstInk };
+
+  // Show results
+  ALL_STEPS.forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  document.getElementById('progress').classList.add('hidden');
+  document.getElementById('results').classList.remove('hidden');
+  renderResults(RD);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Render ────────────────────────────────────────────────────────────
+// Score kleur per band (3–8 schaal, geen labels)
+var SCORE_COLORS = {
+  3: '#EF5350', 4: '#FFB300',
+  5: '#FFB300', 6: '#0091DA',
+  7: '#0091DA', 8: '#00B2A9'
+};
+
+function renderResults(d) {
+  var c  = d.cijfer;
+  var c2 = d.cijferZonder;
+  var circ = 361;
+
+  // Ring 1: incl. overwaarde
+  var ring1 = document.getElementById('ring-fill');
+  ring1.style.stroke = SCORE_COLORS[Math.round(c)] || '#0091DA';
+  setTimeout(function(){ ring1.style.strokeDashoffset = circ - circ*(c/10); }, 150);
+  document.getElementById('r-num').textContent = c%1===0?c:c.toFixed(1);
+
+  // Ring 2: excl. overwaarde
+  var ring2 = document.getElementById('ring-fill2');
+  if(ring2) {
+    ring2.style.stroke = SCORE_COLORS[Math.round(c2)] || '#0091DA';
+    setTimeout(function(){ ring2.style.strokeDashoffset = circ - circ*(c2/10); }, 350);
+    document.getElementById('r-num2').textContent = c2%1===0?c2:c2.toFixed(1);
+  }
+  // Labels verwijderd — geen kwalificatietekst
+
+  // Pills
+  var gap = d.pensioengap;
+  var owFmt = d.overW > 0 ? fmt(Math.round(d.overW)) : null;
+  var pillHtml = '<div class="pill '+(gap>=0?'pill-pos':'pill-neg')+'">'+(gap>=0?'Overschot ':'Tekort ')+fmt(Math.abs(gap))+'/mnd</div>'
+    +'<div class="pill pill-neu">IDG: '+Math.round(d.idg)+'% (norm '+d.idgNorm+'%)</div>'
+    +'<div class="pill">KI: '+Math.round(d.ki)+'%</div>'
+    +(owFmt ? '<div class="pill" style="opacity:.8">Overwaarde woning: '+owFmt+'</div>' : '');
+  document.getElementById('r-pills').innerHTML = pillHtml;
+
+  // Chart
+  buildChart(d);
+
+  // IDG meter
+  var pct=Math.min(100,d.idgVsN);
+  var col=pct>=90?'#107F5A':pct>=75?'#00338D':pct>=60?'#FFB600':'#BC204B';
+  var fill=document.getElementById('idg-fill');
+  fill.style.background=col;
+  setTimeout(function(){ fill.style.width=pct+'%'; },200);
+  document.getElementById('idg-pct').textContent = Math.round(d.idg)+'%';
+  document.getElementById('idg-norm').textContent = '(norm: '+d.idgNorm+'%)';
+
+  // Dims
+  buildDims(d);
+  buildActions(d);
+}
+
+function buildChart(d) {
+  if(chartInst){ chartInst.destroy(); chartInst=null; }
+  var ctx=document.getElementById('chart').getContext('2d');
+  var vals=[Math.round(d.inkHH),Math.round(d.pensHH),Math.round(d.pensTotaal),Math.round(d.gewenstInk)];
+  var cols=['#00338D','#005EB8','#107F5A','#FFB600'];
+  var lbls=['Huidig\ninkomen','Pensioen\nbasis','Pensioen\n+ vermogen','Gewenst\nniveau'];
+  chartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:lbls,
+      datasets:[{data:vals,backgroundColor:cols,borderRadius:6,borderSkipped:false,barPercentage:.55}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+fmt(c.raw)+'/mnd'; }}}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},
+           ticks:{callback:function(v){ return '€'+Math.round(v/1000)+'k'; },font:{size:11},color:'#888'}},
+        x:{grid:{display:false},ticks:{font:{size:11},color:'#555'}}
+      }
+    }
+  });
+  // Legend
+  var legHtml=['Huidig netto inkomen','Pensioen (AOW + aanvullend)','Inclusief vermogensannuïteit ('+fmt(Math.round(d.annuM))+'/mnd)','Gewenst inkomensniveau'];
+  document.getElementById('ib-legend').innerHTML=legHtml.map(function(l,i){
+    return '<div class="leg"><div class="leg-swatch" style="background:'+cols[i]+'"></div><div>'+l+': <strong>'+fmt(vals[i])+'</strong></div></div>';
+  }).join('');
+}
+
+function buildDims(d) {
+  var defs=[
+    {n:'I. Inkomensdekkingsgraad',      icon:'💶',  wt:'30%', key:'IDG: '+Math.round(d.idg)+'% vs norm '+d.idgNorm+'%'},
+    {n:'II. Inkomenscontinuïteit',      icon:'📊',  wt:'20%', key:'Koopkrachtindex: '+Math.round(d.ki)+'% geïndexeerd'},
+    {n:'III. Vermogenstoereikendheid',  icon:'🏦',  wt:'20%', key:'Buffer: '+(d.bufMnd>=99?'Ruim voldoende':Math.round(d.bufMnd)+' maanden')},
+    {n:'IV. Woonlastenduurzaamheid',    icon:'🏠',  wt:'15%', key:'WLR op pensioen: '+Math.round(d.wlr)+'% (norm <35%)'},
+    {n:'V. Levensduurrisico',           icon:'⏳',  wt:'10%', key:'Gegarandeerde inkomensdekkingshorizon'},
+    {n:'VI. Partnerbescherming',        icon:'👥',  wt:'5%',  key:d.hasP?'Nabestaandeninkomenratio':'Niet van toepassing (alleenstaand)'},
+  ];
+  var details=[
+    'De inkomensdekkingsgraad (IDG) vergelijkt je verwachte netto pensioeninkomen met je huidige netto besteedbaar inkomen. De norm is afhankelijk van je inkomensniveau: lager inkomen = hogere norm (82%), modaal = 72%, hoog inkomen = 67% (OECD, 2019).',
+    'De koopkrachtindex meet welk deel van je pensioeninkomen volledig geïndexeerd is. AOW is altijd geïndexeerd. DB-pensioenen zijn afhankelijk van de dekkingsgraad van het fonds. DC-pensioenen zijn beleggingsafhankelijk. Bij lage KI erodeert koopkracht bij 2% inflatie: na 20 jaar is niet-geïndexeerd pensioen ca. 33% minder waard.',
+    'Het gewogen vermogen (spaargeld 100%, beleggingen 80%, overwaarde 60%) wordt omgezet naar een maandelijkse annuïteit. De buffer geeft aan hoeveel maanden het vermogen het inkomenstekort tussen pensioeninkomen en gewenst niveau kan aanvullen.',
+    'De woonlastenratio (WLR) toont woonlasten als percentage van het netto pensioeninkomen. Nibud-norm: boven 35% is financieel risicovol. Huurders lopen inflatieverhoging op de huur; eigenaren met aflossingsvrije hypotheek lopen herfinancieringsrisico.',
+    'Het levensduurrisico toont hoe lang het gecombineerde gegarandeerde inkomen + vermogen toereikend is om het gewenste niveau te halen. Bij volledig gegarandeerd inkomen is er geen levensduurrisico. Hoe meer je afhankelijk bent van vermogen, hoe groter het risico dat je het overleeft.',
+    d.hasP?'De nabestaandenratio toont wat het huishoudensinkomen is na overlijden van één partner, als percentage van het inkomen voor overlijden. Onder de WTP 2023 is nabestaandenpensioen risicoverzekering — dekking vervalt bij werkgeverswisseling. Controleer je UPO.':'Niet van toepassing: alleenstaand.',
+  ];
+
+  var el=document.getElementById('dim-list');
+  el.innerHTML='';
+  d.dims.forEach(function(sc,i){
+    // Dimensie VI: skip voor solo (dims[5]===0 bij solo)
+    if(i===5 && !d.hasP) return;
+    var scv=sc===null?0:sc;
+    var col,bgCol;
+    if(scv>=8){col='#107F5A';bgCol='#E6F5EF';}
+    else if(scv>=6){col='#005EB8';bgCol='#E5F1FB';}
+    else if(scv>=4){col='#B8670A';bgCol='#FFF4E0';}
+    else{col='#BC204B';bgCol='#FDE8EF';}
+    if(sc===null){col='#97999B';bgCol='#F2F4F8';}
+
+    var barW = sc===null?0:(scv/10)*100;
+    var div=document.createElement('div');
+    div.className='dim-card';
+    div.innerHTML='<div class="dim-head" onclick="toggleDim('+i+')">'
+      +'<div class="dim-icon-box" style="background:'+bgCol+'">'+defs[i].icon+'</div>'
+      +'<div class="dim-info"><div class="dim-name">'+defs[i].n+' <span style="font-size:11px;color:var(--muted);font-weight:400">('+defs[i].wt+')</span></div>'
+      +'<div class="dim-detail">'+defs[i].key+'</div></div>'
+      +'<div class="dim-right">'
+      +'<div class="dim-num" style="color:'+col+'">'+(sc===null?'–':scv)+'</div>'
+      +'<div class="dim-bar-wrap"><div class="dim-bar-inner" id="db'+i+'" style="background:'+col+'"></div></div>'
+      // badge removed
+      +'</div>'
+      +'<span class="chev" id="chev'+i+'">▼</span>'
+      +'</div>'
+      +'<div class="dim-body-text" id="dbt'+i+'">'+details[i]+'</div>';
+    el.appendChild(div);
+    setTimeout(function(w,id){ var f=document.getElementById(id); if(f)f.style.width=w+'%'; }.bind(null,barW,'db'+i), 200+i*80);
+  });
+}
+
+function toggleDim(i){
+  document.getElementById('dbt'+i).classList.toggle('open');
+  document.getElementById('chev'+i).classList.toggle('open');
+}
+
+function buildActions(d) {
+  var acts=[];
+  var dims=d.dims;
+
+  if(dims[0]!==null&&dims[0]<4) acts.push({col:'#BC204B',bg:'#FDE8EF',ico:'🚨',txt:'<strong>Pensioengap te groot:</strong> Je pensioeninkomen dekt minder dan 60% van de norm. Overleg zo snel mogelijk met een financieel adviseur over pensioensuppletie (lijfrente, banksparen). Bereken je jaarruimte via de factor A op je UPO.'});
+  else if(dims[0]!==null&&dims[0]<7) acts.push({col:'#B8670A',bg:'#FFF4E0',ico:'⚠️',txt:'<strong>Dekkingsgraad optimaliseren:</strong> Er is nog ruimte tussen huidig pensioen en gewenst niveau. Controleer je fiscale jaarruimte voor extra pensioensparen (box 1 lijfrente of banksparen).'});
+
+  if(dims[1]!==null&&dims[1]<5) acts.push({col:'#B8670A',bg:'#FFF4E0',ico:'📉',txt:'<strong>Koopkrachtrisico groot:</strong> Meer dan 40% van je pensioen is niet geïndexeerd. Bij 2% inflatie en 25 jaar pensioen verlies je 40% koopkracht. Overweeg een geïndexeerde lijfrente of inflatiebeschermd product.'});
+
+  if(dims[2]!==null&&dims[2]<5) acts.push({col:'#B8670A',bg:'#FFF4E0',ico:'🏦',txt:'<strong>Vermogensbuffer versterken:</strong> Je vermogen biedt een beperkte aanvullende buffer ('+Math.round(d.bufMnd)+' maanden). Overweeg gestructureerd sparen of beleggen, bij voorkeur belastingefficiënt (lijfrente box 1 of beleggingsrekening box 3).'});
+
+  if(dims[3]!==null&&dims[3]<5) acts.push({col:'#BC204B',bg:'#FDE8EF',ico:'🏠',txt:'<strong>Woonlasten te hoog ('+Math.round(d.wlr)+'%):</strong> Boven de Nibud-grens van 35%. Overweeg downsizing, extra hypotheekaflossing, of zorg dat je hypotheek voor pensioen is afgelost.'});
+
+  if(dims[4]!==null&&dims[4]<5) acts.push({col:'#B8670A',bg:'#FFF4E0',ico:'⏳',txt:'<strong>Levensduurrisico aanwezig:</strong> Bij lang leven loop je risico dat vermogen eerder uitgeput raakt dan verwacht. Overweeg een levenslange lijfrente als gegarandeerde aanvulling op het periodieke pensioen.'});
+
+  if(d.hasP&&dims[5]!==null&&dims[5]<5) acts.push({col:'#BC204B',bg:'#FDE8EF',ico:'👥',txt:'<strong>Nabestaandenbescherming onvoldoende:</strong> Bij overlijden daalt het inkomen te sterk. Controleer je nabestaandenpensioen op het UPO. Onder de WTP 2023 vervalt dekking bij werkgeverswisseling — overweeg aanvullende overlijdensrisicoverzekering.'});
+
+  if(acts.length===0) acts.push({col:'#107F5A',bg:'#E6F5EF',ico:'✅',txt:'<strong>Sterke pensioenpositie:</strong> Je scoort goed op alle dimensies. Monitor je situatie jaarlijks via mijnpensioenoverzicht.nl en pas bij bij grote veranderingen (baanwisseling, scheiding, aankoop woning).'});
+
+  var el=document.getElementById('act-list');
+  el.innerHTML=acts.map(function(a){
+    return '<div class="act"><div class="act-icon" style="background:'+a.bg+'">'+a.ico+'</div><div class="act-text">'+a.txt+'</div></div>';
+  }).join('');
+}
+
+// ── Print via Blob URL (werkt ook in Google Sites iframe) ─────────────
+function doPrint() {
+  // Collect styles
+  var styles = '';
+  for (var i = 0; i < document.styleSheets.length; i++) {
+    try {
+      var rs = document.styleSheets[i].cssRules || document.styleSheets[i].rules;
+      for (var j = 0; j < rs.length; j++) styles += rs[j].cssText + '\n';
+    } catch(e) {}
+  }
+
+  // Open all dim-body-texts so they print
+  document.querySelectorAll('.dim-body-text').forEach(function(el){ el.classList.add('open'); });
+
+  var hdr = document.querySelector('.kpmg-header').outerHTML;
+  var res = document.getElementById('results').innerHTML;
+
+  // Close them again
+  document.querySelectorAll('.dim-body-text').forEach(function(el){ el.classList.remove('open'); });
+
+  var html = '<!DOCTYPE html><html lang="nl"><head>'
+    + '<meta charset="UTF-8">'
+    + '<title>Pensioencijfer\u00ae Rapport 2026</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">'
+    + '<style>'
+    + styles
+    + 'body{background:#fff;max-width:720px;margin:0 auto;padding:1.5rem;font-family:\'Source Sans 3\',sans-serif}'
+    + '@media print{body{padding:0}}'
+    + '.wrap{max-width:720px}'
+    + '.hidden{display:block!important}'
+    + '.btn-primary,.btn-back,.btn-row,.print-btn,.step-progress{display:none!important}'
+    + '.dim-body-text{display:block!important;border-top:1px solid #D9DDE8}'
+    + '.ib-chart-wrap{height:220px}'
+    + '.score-hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + '.kpmg-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + '</style>'
+    + '</head><body>'
+    + '<div class="wrap">' + hdr + '<div id="results">' + res + '</div></div>'
+    + '<script>window.addEventListener(\'load\',function(){setTimeout(function(){window.print();},800);});<\/script>'
+    + '</body></html>';
+
+  // Blob approach — works from iframes (Google Sites)
+  try {
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href   = url;
+    a.target = '_blank';
+    a.rel    = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); document.body.removeChild(a); }, 10000);
+  } catch(e) {
+    // Fallback: window.open
+    var w = window.open('', '_blank', 'width=780,height=960,noopener');
+    if (w && w.document) {
+      w.document.open(); w.document.write(html); w.document.close();
+    } else {
+      alert('Printvenster geblokkeerd door de browser. Sta pop-ups toe voor deze pagina en probeer opnieuw.');
+    }
+  }
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────
+function reset() {
+  S={partner:null,ls:null,aow:null,nb:null,nbp:null};
+  ['gebdatum','gebdatumP','naamP','inkNu','inkNuP','aanvP','aanvPP','lijfr','spaar','beleg','woningW','hyp','woonNu','woonPens']
+    .forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['pensType','pensTypeP','woonType'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['pb1','pb3'].forEach(function(id){var e=document.getElementById(id);if(e)e.className='partner-block';});
+  ['inkNuP-wrap'].forEach(function(id){var e=document.getElementById(id);if(e)e.classList.add('hidden');});
+  ['aow-pct-wrap','nb-pct-wrap','nbp-pct-wrap'].forEach(function(id){var e=document.getElementById(id);if(e)e.className='reveal-block';});
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  var rf=document.getElementById('ring-fill');if(rf)rf.style.strokeDashoffset=361;
+  document.getElementById('progress').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  ALL_STEPS.forEach(function(id){document.getElementById(id).classList.add('hidden');});
+  for(var i=0;i<6;i++){var sp=document.getElementById('sp'+i);sp.className='sp-item'+(i===0?' active':'');}
+  var b5=document.getElementById('btn-stap5');
+  if(b5){b5.textContent='Volgende stap →';b5.onclick=function(){nav(5);};}
+  // Toon upload-sectie opnieuw (tenzij al een import actief is)
+  var uploadSec = document.getElementById('upload-section');
+  if(uploadSec) uploadSec.classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Pensioenoverzicht upload & parse ─────────────────────────────────
+
+// ── Partner upload handlers ───────────────────────────────────────────
+function handleDropP(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone-p').classList.remove('drag');
+  var files = e.dataTransfer.files;
+  if(files.length > 0) handleFileP(files[0]);
+}
+
+function handleFileP(file) {
+  if(!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  if(ext !== 'json' && ext !== 'xml') {
+    alert('Ondersteunde bestandstypen: .json en .xml (van mijnpensioenoverzicht.nl)');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = ext === 'json' ? parseJSON(e.target.result) : parseXML(e.target.result);
+      applyImportP(data, file.name);
+    } catch(err) {
+      alert('Bestand kon niet worden gelezen. Controleer of het een geldig pensioenoverzicht is. ' + err.message);
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function applyImportP(data, filename) {
+  window._importDataP = data;
+  // Fill partner geboortedatum
+  if(data.geboortedatum) {
+    document.getElementById('gebdatumP').value = data.geboortedatum;
+  }
+  // Fill partner naam (if available from XML)
+  if(data.naam) {
+    document.getElementById('naamP').value = data.naam;
+  }
+  // Fill partner aanvullend pensioen
+  if(data.aanvPensMnd > 0) {
+    document.getElementById('aanvPP').value = data.aanvPensMnd;
+  }
+  // Fill partner pensioentype
+  if(data.uitvoerders && data.uitvoerders.length > 0) {
+    var pt = document.getElementById('pensTypeP');
+    if(pt) pt.value = data.uitvoerders.length > 1 ? 'mix' : 'cdc';
+  }
+  // Fill partner nabestaandenpensioen
+  if(data.nbJaar > 0) {
+    tog('nbp', 'ja');
+    document.getElementById('sl-nbppct').value = data.nbPct;
+    document.getElementById('sv-nbppct').textContent = data.nbPct + '%';
+  }
+  // Show partner import banner
+  showImportBannerP(data, filename);
+  // Mark upload zone as done
+  var uz = document.getElementById('upload-zone-p');
+  if(uz) { uz.classList.add('done'); document.getElementById('uz-icon-p').textContent = '✓'; }
+}
+
+function showImportBannerP(data, filename) {
+  var banner = document.getElementById('import-banner-p');
+  document.getElementById('ib-name-p').textContent = data.naam || filename;
+  var rows = [];
+  if(data.naam)
+    rows.push({lbl:'Naam', val:data.naam, auto:true});
+  else
+    rows.push({lbl:'Naam', val:'Niet beschikbaar in JSON — vul in', auto:false});
+  if(data.geboortedatum)
+    rows.push({lbl:'Geboortedatum', val:data.geboortedatum.split('-').reverse().join('-'), auto:true});
+  else
+    rows.push({lbl:'Geboortedatum', val:'Niet beschikbaar in JSON — vul in', auto:false});
+  if(data.aanvPensMnd > 0)
+    rows.push({lbl:'Aanvullend pensioen', val:'€ '+data.aanvPensMnd+'/mnd bruto', auto:true});
+  if(data.uitvoerders && data.uitvoerders.length > 0)
+    rows.push({lbl:'Uitvoerders', val:data.uitvoerders.join(', '), auto:false});
+  document.getElementById('ib-grid-p').innerHTML = rows.map(function(r){
+    return '<div class="ib-row"><span class="ib-lbl">'+r.lbl+':</span><span class="ib-val'+(r.auto?' auto':'')+'">'+r.val+'</span></div>';
+  }).join('');
+  banner.classList.remove('hidden');
+}
+
+function clearImportP() {
+  window._importDataP = null;
+  document.getElementById('gebdatumP').value = '';
+  document.getElementById('naamP').value = '';
+  document.getElementById('aanvPP').value = '';
+  document.getElementById('file-input-p').value = '';
+  document.getElementById('import-banner-p').classList.add('hidden');
+  var uz = document.getElementById('upload-zone-p');
+  if(uz) { uz.classList.remove('done'); document.getElementById('uz-icon-p').textContent = '📄'; }
+}
+
+// ── Hoofd upload handlers ─────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  var files = e.dataTransfer.files;
+  if(files.length > 0) handleFile(files[0]);
+}
+
+function handleFile(file) {
+  if(!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  if(ext !== 'json' && ext !== 'xml') {
+    alert('Ondersteunde bestandstypen: .json en .xml (van mijnpensioenoverzicht.nl)');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = ext === 'json' ? parseJSON(e.target.result) : parseXML(e.target.result);
+      applyImport(data, file.name);
+    } catch(err) {
+      alert('Bestand kon niet worden gelezen. Controleer of het een geldig pensioenoverzicht is.\n\n' + err.message);
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function parseJSON(text) {
+  var d = JSON.parse(text);
+  var result = {};
+  // Naam en geboortedatum — niet aanwezig in JSON-formaat van mijnpensioenoverzicht.nl
+  // (Gebruik het XML-bestand voor naam en geboortedatum)
+  result.naam = '';
+  result.geboortedatum = '';
+  result.naamOnbekend = true;
+  result.gebdatumOnbekend = true;
+  // Leefsituatie — derive from AOWSamenwonend presence
+  var totalen = d.Totalen.OuderdomsPensioenTotalen.OuderdomsPensioenTotaal;
+  var pensPeriod = totalen.find(function(t){ return t.AOWSamenwonend; });
+  result.partner = pensPeriod ? 'ja' : null; // assume partner if samenwonend AOW shown
+  // AOW details
+  var details = d.Details.OuderdomsPensioenDetails.OuderdomsPensioen;
+  var aowDetails = null;
+  details.forEach(function(p){ if(p.AOW) aowDetails = p.AOW.AOWDetailsOpbouw; });
+  if(aowDetails) {
+    var opg = aowDetails.OpgebouwdSamenwonend || aowDetails.OpgebouwdAlleenstaand || 0;
+    var teb = aowDetails.TeBereikenSamenwonend || aowDetails.TeBereikenAlleenstaand || 1;
+    result.aowOpgebouwdPct  = Math.round(opg / teb * 100);  // bijv. 76%
+    result.aowTeBereikPct   = Math.round(teb / teb * 100);  // altijd 100% als te bereiken = vol
+    // "Te bereiken" is altijd 100% van de norm als men in NL blijft
+    // Gebruik te bereiken als default (optimistische maar realistische aanname)
+    result.aowPct = result.aowTeBereikPct; // default: 100%
+    result.aowVol = result.aowPct >= 99;
+    result.aowBedragOpg = opg;
+    result.aowBedragTeb = teb;
+  }
+  // Aanvullend pensioen — use last period (vanaf pensioenleeftijd) indicatief totaal
+  var mainPeriod = totalen[totalen.length - 1];
+  result.aanvPensJaar = mainPeriod ? mainPeriod.IndicatiefPensioen : 0;
+  result.aanvPensMnd = Math.round(result.aanvPensJaar / 12);
+  // Pensioenuitvoerders (voor type-bepaling)
+  var uitvoerders = [];
+  details.forEach(function(p){
+    (p.IndicatiefPensioen || []).forEach(function(ip){ if(uitvoerders.indexOf(ip.PensioenUitvoerder)<0) uitvoerders.push(ip.PensioenUitvoerder); });
+  });
+  result.uitvoerders = uitvoerders;
+  // Nabestaandenpensioen
+  var nbTot = d.Totalen.PartnerPensioenTotalen.PartnerPensioenTotaal[0];
+  var nbJaar = nbTot ? (nbTot.IndicatiefPensioen.OpgebouwdBedragNaPens || 0) + (nbTot.Pensioen.OpgebouwdBedragNaPens || 0) : 0;
+  // Avoid double-counting if both are same source
+  // Safer: use IndicatiefPensioen only (higher/more complete)
+  var nbIndicatief = d.Details.PartnerPensioenDetails.PartnerPensioen[0];
+  var nbTotIndicatief = 0;
+  if(nbIndicatief) {
+    nbIndicatief.IndicatiefPensioen.forEach(function(ip){ nbTotIndicatief += (ip.Bedragen.OpgebouwdBedragNaPens||0); });
+    nbIndicatief.Pensioen.forEach(function(p){ nbTotIndicatief += (p.Bedragen.OpgebouwdBedragNaPens||0); });
+  }
+  result.nbJaar = nbTotIndicatief > 0 ? nbTotIndicatief : nbJaar;
+  result.nbPct = result.aanvPensJaar > 0 ? Math.round(result.nbJaar / result.aanvPensJaar * 100) : 70;
+  result.nbPct = Math.min(100, Math.max(0, result.nbPct));
+  return result;
+}
+
+function parseXML(text) {
+  var parser = new DOMParser();
+  var xml = parser.parseFromString(text, 'text/xml');
+  var result = {};
+  var ns = '';
+  // Try to read with namespace, fall back to local names
+  function txt(node, tag) {
+    var el = node.getElementsByTagNameNS('*', tag)[0] || node.getElementsByTagName(tag)[0];
+    return el ? el.textContent.trim() : null;
+  }
+  function txts(node, tag) {
+    return Array.from(node.getElementsByTagNameNS('*', tag) || node.getElementsByTagName(tag));
+  }
+
+  // Persoonsgegevens
+  result.naam = txt(xml, 'Naam') || '';
+  result.geboortedatum = txt(xml, 'Geboortedatum') || ''; // YYYY-MM-DD
+  var levensSit = txt(xml, 'LevensSituatie') || '';
+  result.partner = levensSit.toLowerCase().indexOf('samen') >= 0 || levensSit.toLowerCase().indexOf('gehuwd') >= 0 ? 'ja' : 'nee';
+
+  // AOW opbouw — bewaar zowel opgebouwd als te bereiken
+  var aowOpbouw = xml.getElementsByTagNameNS('*','AOWDetailsOpbouw')[0] || xml.getElementsByTagName('AOWDetailsOpbouw')[0];
+  if(aowOpbouw) {
+    var opg = parseFloat(txt(aowOpbouw,'OpgebouwdSamenwonend') || txt(aowOpbouw,'OpgebouwdAlleenstaand') || '0');
+    var teb = parseFloat(txt(aowOpbouw,'TeBereikenSamenwonend') || txt(aowOpbouw,'TeBereikenAlleenstaand') || '1');
+    result.aowOpgebouwdPct = Math.round(opg / teb * 100);  // bijv. 76%
+    result.aowTeBereikPct  = 100;                           // te bereiken = vol (bij verblijf in NL)
+    // Default: te bereiken (realistische aanname: klant blijft in NL tot AOW-leeftijd)
+    result.aowPct = result.aowTeBereikPct;
+    result.aowVol = true; // 100% = volledig
+    result.aowBedragOpg = opg;
+    result.aowBedragTeb = teb;
+  }
+
+  // Aanvullend pensioen — totaal indicatief vanaf pensioenleeftijd (last OuderdomsPensioenTotaal)
+  var opTotalen = txts(xml, 'OuderdomsPensioenTotaal');
+  var mainTot = opTotalen[opTotalen.length - 1];
+  result.aanvPensJaar = mainTot ? parseFloat(txt(mainTot,'IndicatiefPensioen') || '0') : 0;
+  // Subtract AOW from total to get only supplementary pension
+  var aowSam = mainTot ? parseFloat(txt(mainTot,'AOWSamenwonend') || '0') : 0;
+  var aowAll = mainTot ? parseFloat(txt(mainTot,'AOWAlleenstaand') || '0') : 0;
+  // aanvPensJaar here is already just the supplementary (7919 is WITHOUT AOW in this file)
+  result.aanvPensMnd = Math.round(result.aanvPensJaar / 12);
+
+  // Uitvoerders
+  var uitvEls = txts(xml, 'PensioenUitvoerder');
+  var uitv = [];
+  uitvEls.forEach(function(el){ var v=el.textContent.trim(); if(uitv.indexOf(v)<0) uitv.push(v); });
+  result.uitvoerders = uitv;
+
+  // Nabestaandenpensioen
+  var ppTotaal = xml.getElementsByTagNameNS('*','PartnerPensioenTotaal')[0] || xml.getElementsByTagName('PartnerPensioenTotaal')[0];
+  var nbJaar = 0;
+  if(ppTotaal) {
+    var ind = ppTotaal.getElementsByTagNameNS('*','IndicatiefPensioen')[0] || ppTotaal.getElementsByTagName('IndicatiefPensioen')[0];
+    if(ind) nbJaar += parseFloat(txt(ind,'OpgebouwdBedragNaPens') || '0');
+    var pen = ppTotaal.getElementsByTagNameNS('*','Pensioen')[0] || ppTotaal.getElementsByTagName('Pensioen')[0];
+    if(pen) nbJaar += parseFloat(txt(pen,'OpgebouwdBedragNaPens') || '0');
+  }
+  result.nbJaar  = nbJaar;
+  result.nbPct   = result.aanvPensJaar > 0 ? Math.min(100, Math.round(nbJaar / result.aanvPensJaar * 100)) : 70;
+
+  return result;
+}
+
+function applyImport(data, filename) {
+  // Store for clear functionality
+  window._importData = data;
+  window._importFile = filename;
+
+  // ── Fill geboortedatum (XML only)
+  if(data.geboortedatum) {
+    document.getElementById('gebdatum').value = data.geboortedatum;
+  }
+
+  // ── Fill partner
+  if(data.partner) {
+    tog('partner', data.partner);
+  }
+
+  // ── Fill pensioen stap (stap 3)
+  // AOW — gebruik te bereiken als default (klant blijft in NL)
+  if(typeof data.aowPct !== 'undefined') {
+    if(data.aowPct >= 99) {
+      tog('aow', 'ja'); // volledig
+    } else {
+      tog('aow', 'nee');
+      document.getElementById('sl-aowpct').value = data.aowPct;
+      document.getElementById('sv-aowpct').textContent = data.aowPct + '%';
+    }
+  }
+  // Aanvullend pensioen bruto/mnd
+  if(data.aanvPensMnd > 0) {
+    document.getElementById('aanvP').value = data.aanvPensMnd;
+  }
+  // Pensioentype — guess based on uitvoerders (conservative: mark as mix)
+  if(data.uitvoerders && data.uitvoerders.length > 0) {
+    var pt = document.getElementById('pensType');
+    // Zwitserleven traditionally DB/CDC; a.s.r. mix; set to mix as safe default
+    pt.value = data.uitvoerders.length > 1 ? 'mix' : 'cdc';
+  }
+
+  // ── Fill nabestaandenpensioen (stap 6, koppel only)
+  if(data.partner === 'ja' && data.nbJaar > 0) {
+    tog('nb', 'ja');
+    var nbPct = data.nbPct;
+    document.getElementById('sl-nbpct').value = nbPct;
+    document.getElementById('sv-nbpct').textContent = nbPct + '%';
+  }
+
+  // ── Show import banner
+  showImportBanner(data, filename);
+
+  // ── Hide upload zone, show progress + step 0
+  document.getElementById('upload-section').classList.add('hidden');
+  document.getElementById('progress').classList.remove('hidden');
+  document.getElementById('step0').classList.remove('hidden');
+
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function showImportBanner(data, filename) {
+  var banner = document.getElementById('import-banner');
+  document.getElementById('ib-name').textContent = data.naam || filename;
+  // Show naam/gebdatum input fields if not found (JSON)
+  var naamWrap = document.getElementById('ib-naam-wrap');
+  var gebWrap  = document.getElementById('ib-gebdatum-wrap');
+  if(naamWrap) naamWrap.className = data.naamOnbekend ? '' : 'hidden';
+  if(gebWrap)  gebWrap.className  = data.gebdatumOnbekend ? '' : 'hidden';
+  
+  var rows = [];
+  if(data.geboortedatum)
+    rows.push({lbl:'Geboortedatum', val:data.geboortedatum.split('-').reverse().join('-'), auto:true});
+  if(data.partner)
+    rows.push({lbl:'Leefsituatie', val:data.partner==='ja'?'Samenwonend / gehuwd':'Alleenstaand', auto:true});
+  if(typeof data.aowBedragTeb !== 'undefined') {
+    // Toon beide: opgebouwd én te bereiken
+    var aowFmt = function(e){ return '€ ' + Math.round(e).toLocaleString('nl-NL') + '/jr'; };
+    rows.push({lbl:'AOW te bereiken', val:aowFmt(data.aowBedragTeb)+' (100% — bij verblijf in NL)', auto:true});
+    rows.push({lbl:'AOW opgebouwd nu', val:aowFmt(data.aowBedragOpg)+' ('+data.aowOpgebouwdPct+'%)', auto:false});
+    rows.push({lbl:'Gebruikt in berekening', val:'Te bereiken (100%) — klik <a onclick="useAowOpgebouwd()" style="color:var(--k-blue);cursor:pointer;font-weight:700">hier</a> voor opgebouwd ('+data.aowOpgebouwdPct+'%)', auto:true});
+  } else if(typeof data.aowPct !== 'undefined') {
+    rows.push({lbl:'AOW-opbouw', val:data.aowPct+'%', auto:true});
+  }
+  if(data.aanvPensMnd > 0)
+    rows.push({lbl:'Aanvullend pensioen', val:'€ '+data.aanvPensMnd+'/mnd bruto', auto:true});
+  if(data.uitvoerders && data.uitvoerders.length > 0)
+    rows.push({lbl:'Uitvoerders', val:data.uitvoerders.join(', '), auto:false});
+  if(data.nbPct > 0 && data.partner==='ja')
+    rows.push({lbl:'Nabestaandenpensioen', val:data.nbPct+'% van pensioen', auto:true});
+
+  document.getElementById('ib-grid').innerHTML = rows.map(function(r){
+    return '<div class="ib-row"><span class="ib-lbl">'+r.lbl+':</span><span class="ib-val'+(r.auto?' auto':'')+'">'+r.val+'</span></div>';
+  }).join('');
+
+  banner.classList.remove('hidden');
+  
+  // Mark upload zone as done
+  var uz = document.getElementById('upload-zone');
+  if(uz) { uz.classList.add('done'); uz.querySelector('.uz-icon').textContent = '✓'; }
+}
+
+function clearImport() {
+  window._importData = null;
+  // Reset imported fields
+  document.getElementById('gebdatum').value = '';
+  ['pt-ja','pt-nee'].forEach(function(id){ document.getElementById(id).className='tog-btn'; });
+  S.partner = null;
+  document.getElementById('pb1').className='partner-block';
+  document.getElementById('inkNuP-wrap').classList.add('hidden');
+  document.getElementById('pb3').className='partner-block';
+  tog('aow', null); S.aow = null;
+  ['aow-ja','aow-nee'].forEach(function(id){ document.getElementById(id).className='tog-btn'; });
+  document.getElementById('aow-pct-wrap').className='reveal-block';
+  document.getElementById('aanvP').value = '';
+  document.getElementById('pensType').value = '';
+  tog('nb', null); S.nb = null;
+  ['nb-ja','nb-nee'].forEach(function(id){ document.getElementById(id).className='tog-btn'; });
+  document.getElementById('nb-pct-wrap').className='reveal-block';
+  document.getElementById('import-banner').classList.add('hidden');
+  // Reset main upload zone
+  document.getElementById('file-input').value = '';
+  var uz = document.getElementById('upload-zone');
+  uz.classList.remove('done');
+  uz.querySelector('.uz-icon').textContent = '📄';
+  // Reset partner upload too
+  var uzp = document.getElementById('upload-zone-p');
+  if(uzp) { uzp.classList.remove('done'); document.getElementById('uz-icon-p').textContent = '📄'; }
+  var bannerP = document.getElementById('import-banner-p');
+  if(bannerP) bannerP.classList.add('hidden');
+  var fiP = document.getElementById('file-input-p');
+  if(fiP) fiP.value = '';
+  // Reset naam + gebdatum JSON fallback fields
+  var nm = document.getElementById('naam-main'); if(nm) nm.value='';
+  var gj = document.getElementById('gebdatum-main-json'); if(gj) gj.value='';
+  document.getElementById('upload-section').classList.remove('hidden');
+  document.getElementById('step0').classList.add('hidden');
+  document.getElementById('progress').classList.add('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function skipUpload() {
+  document.getElementById('upload-section').classList.add('hidden');
+  document.getElementById('progress').classList.remove('hidden');
+  document.getElementById('step0').classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// Switch AOW from te-bereiken to opgebouwd (and vice versa)
+function useAowOpgebouwd() {
+  var data = window._importData;
+  if(!data || typeof data.aowOpgebouwdPct === 'undefined') return;
+  // Switch to opgebouwd
+  data._usingOpgebouwd = true;
+  tog('aow', 'nee');
+  document.getElementById('sl-aowpct').value = data.aowOpgebouwdPct;
+  document.getElementById('sv-aowpct').textContent = data.aowOpgebouwdPct + '%';
+  // Update banner row
+  var grid = document.getElementById('ib-grid');
+  if(!grid) return;
+  var rows_html = grid.innerHTML;
+  // Re-render banner with updated link
+  var rows = [];
+  var aowFmt = function(e){ return '€ ' + Math.round(e).toLocaleString('nl-NL') + '/jr'; };
+  rows.push({lbl:'AOW te bereiken', val:aowFmt(data.aowBedragTeb)+' (100% — bij verblijf in NL)', auto:false});
+  rows.push({lbl:'AOW opgebouwd nu', val:aowFmt(data.aowBedragOpg)+' ('+data.aowOpgebouwdPct+'%)', auto:true});
+  rows.push({lbl:'Gebruikt in berekening', val:'Opgebouwd ('+data.aowOpgebouwdPct+'%) — <a onclick="useAowTeBereiken()" style="color:var(--k-blue);cursor:pointer;font-weight:700">gebruik te bereiken (100%)</a>', auto:false});
+  // Keep other rows
+  if(data.geboortedatum) rows.unshift({lbl:'Geboortedatum', val:data.geboortedatum.split('-').reverse().join('-'), auto:true});
+  if(data.partner) rows.unshift({lbl:'Leefsituatie', val:data.partner==='ja'?'Samenwonend / gehuwd':'Alleenstaand', auto:true});
+  grid.innerHTML = rows.map(function(r){
+    return '<div class="ib-row"><span class="ib-lbl">'+r.lbl+':</span><span class="ib-val'+(r.auto?' auto':'')+'">'+r.val+'</span></div>';
+  }).join('');
+}
+
+function useAowTeBereiken() {
+  var data = window._importData;
+  if(!data || typeof data.aowTeBereikPct === 'undefined') return;
+  data._usingOpgebouwd = false;
+  tog('aow', 'ja'); // volledig
+  // Re-render banner
+  showImportBanner(data, window._importFile || '');
+}
+
+</script>
+</body>
+</html>

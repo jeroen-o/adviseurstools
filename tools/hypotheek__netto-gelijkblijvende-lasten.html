@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netto Gelijkblijvende Maandlast</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy:        #002A54;
+  --navy-mid:    #003a70;
+  --navy-light:  #e8eef5;
+  --orange:      #FF6600;
+  --orange-light:#fff2e8;
+  --text:        #333332;
+  --border:      #d8d8d8;
+  --green:       #1a6b3c;
+  --red:         #c0392b;
+  --radius:      6px;
+  --radius-lg:   10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; font-size: 15px; color: var(--text); background: #f0f2f5; }
+
+/* ─── Header ─── */
+.header {
+  background: var(--navy);
+  color: white;
+  padding: 14px 28px;
+  border-bottom: 3px solid var(--orange);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-title { font-size: 18px; font-weight: bold; }
+.header-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+.header-badge {
+  background: var(--orange); color: white;
+  font-size: 11px; font-weight: bold;
+  padding: 4px 12px; border-radius: 3px; letter-spacing: 0.5px;
+}
+
+/* ─── Layout ─── */
+.container { padding: 24px 28px; max-width: 1200px; margin: 0 auto; }
+
+/* ─── Card ─── */
+.card {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.card-header {
+  background: var(--navy); color: white;
+  padding: 11px 20px; font-weight: bold; font-size: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.card-header::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; background: var(--orange);
+  transform: rotate(45deg); flex-shrink: 0;
+}
+.card-body { padding: 20px; }
+
+/* ─── Leningdeel rows ─── */
+.deel-list { display: flex; flex-direction: column; gap: 12px; }
+
+.deel-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fafafa;
+  overflow: hidden;
+}
+.deel-row-header {
+  background: var(--navy-light);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.deel-label {
+  font-weight: bold; font-size: 13px; color: var(--navy);
+  display: flex; align-items: center; gap: 8px;
+}
+.deel-nr-badge {
+  background: var(--navy); color: white; font-size: 11px; font-weight: bold;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.deel-box-tag {
+  font-size: 11px; font-weight: bold; padding: 2px 8px;
+  border-radius: 10px; border: 1px solid;
+}
+.deel-box-tag.box1 { background: #e8f5ee; border-color: var(--green); color: var(--green); }
+.deel-box-tag.box3 { background: #fff0e0; border-color: var(--orange); color: var(--orange); }
+
+.deel-fields {
+  display: grid;
+  grid-template-columns: 1.5fr 0.85fr 0.85fr 1.1fr 0.95fr auto;
+  gap: 12px; padding: 14px; align-items: end;
+}
+@media (max-width: 850px) { .deel-fields { grid-template-columns: 1fr 1fr 1fr; } }
+
+.field label {
+  display: block; font-size: 11px; color: #666;
+  margin-bottom: 4px; font-weight: bold;
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+.field .iw { position: relative; }
+.field .pfx {
+  position: absolute; left: 9px; top: 50%;
+  transform: translateY(-50%); color: #bbb; font-size: 13px; pointer-events: none;
+}
+.field .sfx {
+  position: absolute; right: 9px; top: 50%;
+  transform: translateY(-50%); color: #bbb; font-size: 12px; pointer-events: none;
+}
+.field input, .field select {
+  width: 100%; padding: 8px 30px 8px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; font-family: Arial; color: var(--text); background: white;
+}
+.field input.has-pfx { padding-left: 24px; }
+.field input:focus, .field select:focus { outline: none; border-color: var(--navy); }
+
+.field-bel { transition: opacity .2s; }
+.field-bel.hidden { opacity: 0.3; pointer-events: none; }
+
+.btn-remove {
+  background: none; border: 1px solid #ddd; color: #bbb;
+  width: 32px; height: 32px; border-radius: 50%;
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; flex-shrink: 0; align-self: flex-end; margin-bottom: 2px;
+}
+.btn-remove:hover { background: #ffe8e8; border-color: var(--red); color: var(--red); }
+
+/* ─── Buttons ─── */
+.btn-add {
+  background: var(--navy-light); color: var(--navy);
+  border: 1px dashed var(--navy); border-radius: var(--radius);
+  padding: 10px 20px; font-size: 14px; font-weight: bold;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  font-family: Arial; transition: background .15s; margin-top: 4px;
+}
+.btn-add:hover { background: #d0dcea; }
+
+.btn-primary {
+  background: var(--orange); color: white; border: none;
+  padding: 12px 36px; border-radius: 3px; font-size: 15px;
+  font-weight: bold; cursor: pointer; font-family: Arial;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background .15s; margin-top: 20px;
+}
+.btn-primary:hover { background: #e05500; }
+
+/* ─── Hero totaal ─── */
+.total-hero {
+  background: var(--navy); border-radius: var(--radius-lg);
+  padding: 24px 28px; margin-bottom: 20px; color: white;
+  display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr 1px 1fr; gap: 0;
+  align-items: center;
+}
+@media (max-width: 700px) { .total-hero { grid-template-columns: 1fr 1fr; gap: 16px; } }
+.th-divider { background: rgba(255,255,255,0.15); height: 50px; align-self: center; }
+.th-block { text-align: center; padding: 0 20px; }
+.th-block .th-label { font-size: 11px; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.th-block .th-val { font-size: 26px; font-weight: bold; color: var(--orange); letter-spacing: -0.5px; }
+.th-block .th-sub { font-size: 11px; opacity: 0.55; margin-top: 3px; }
+
+/* ─── Per-deel kaarten ─── */
+.deel-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.deel-res-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.drc-header {
+  padding: 10px 14px; font-weight: bold; font-size: 13px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.drc-header.box1 { background: #e8f5ee; color: var(--green); border-color: #c3e6cb; }
+.drc-header.box3 { background: #fff0e0; color: #994d00; border-color: #ffd7b0; }
+.drc-body { padding: 12px 14px; }
+.drc-row { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 13px; }
+.drc-row .dl { color: #888; }
+.drc-row .dv { font-weight: bold; color: var(--navy); }
+.split-mini { display: flex; height: 10px; border-radius: 4px; overflow: hidden; margin: 10px 0 5px; }
+.sm-lin { background: var(--navy); }
+.sm-ann { background: var(--orange); }
+.split-legend { display: flex; justify-content: space-between; font-size: 11px; }
+.sl-lin { color: var(--navy); font-weight: bold; }
+.sl-ann { color: var(--orange); font-weight: bold; }
+.box3-note { margin-top: 8px; font-size: 11px; color: #aaa; line-height: 1.4; }
+
+/* ─── Aanpas-slider ─── */
+.slider-section {
+  margin-top: 12px;
+  border-top: 1px dashed var(--border);
+  padding-top: 11px;
+}
+.slider-label {
+  font-size: 11px; font-weight: bold; color: #777;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  margin-bottom: 7px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.slider-label .opt-tag {
+  font-size: 10px; background: #e8f5ee; color: var(--green);
+  border: 1px solid #c3e6cb; border-radius: 8px; padding: 1px 7px;
+  font-weight: bold; letter-spacing: 0;
+}
+.slider-label .man-tag {
+  font-size: 10px; background: var(--orange-light); color: var(--orange);
+  border: 1px solid #ffd0a8; border-radius: 8px; padding: 1px 7px;
+  font-weight: bold; letter-spacing: 0;
+}
+.slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.slider-row input[type=range] {
+  flex: 1; height: 4px; cursor: pointer;
+  accent-color: var(--navy);
+  padding: 0; border: none; background: none;
+}
+.slider-row .pct-input {
+  width: 64px; padding: 5px 20px 5px 7px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 13px; font-family: Arial; color: var(--navy);
+  font-weight: bold; text-align: right;
+}
+.slider-row .pct-sfx { font-size: 12px; color: #aaa; margin-left: -16px; pointer-events: none; }
+.btn-reset {
+  background: var(--navy-light); color: var(--navy); border: 1px solid #c8d8ea;
+  padding: 4px 10px; border-radius: 3px; font-size: 11px; font-family: Arial;
+  cursor: pointer; font-weight: bold; white-space: nowrap;
+}
+.btn-reset:hover { background: #d0dcea; }
+
+/* ─── Chart ─── */
+.chart-container { position: relative; height: 300px; }
+
+/* ─── Tabellen ─── */
+.comp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.comp-table thead th {
+  background: var(--navy-mid); color: white;
+  padding: 9px 13px; text-align: right;
+  font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.comp-table thead th:first-child { text-align: left; }
+.comp-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); text-align: right; }
+.comp-table td:first-child { text-align: left; }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr.opt-row td { background: var(--orange-light); font-weight: bold; }
+.comp-table tr:not(.opt-row):hover td { background: #fafafa; }
+.badge-opt {
+  background: var(--orange); color: white; font-size: 10px;
+  padding: 2px 7px; border-radius: 10px; margin-left: 6px;
+  font-weight: bold; vertical-align: middle;
+}
+
+.year-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.year-table thead th {
+  background: var(--navy-mid); color: white;
+  padding: 9px 11px; text-align: right;
+  font-size: 12px; font-weight: bold;
+}
+.year-table thead th:first-child { text-align: left; }
+.year-table td { padding: 8px 11px; border-bottom: 1px solid #efefef; text-align: right; }
+.year-table td:first-child { text-align: left; font-weight: bold; color: var(--navy); }
+.year-table tr:nth-child(even) td { background: #fafafa; }
+.year-table tr:hover td { background: var(--navy-light); }
+.year-table .ended { opacity: 0.35; font-style: italic; font-weight: normal; }
+
+/* ─── Info ─── */
+.info-box {
+  background: var(--navy-light); border-left: 3px solid var(--navy);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 11px 14px; font-size: 13px; color: var(--navy);
+  line-height: 1.55; margin-bottom: 16px;
+}
+
+.delta-pos { color: var(--red); }
+.delta-neg { color: var(--green); font-weight: bold; }
+#results { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Netto Gelijkblijvende Maandlast</div>
+    <div class="header-sub">Optimale combinatie lineair & annuïteit — meerdere leningdelen</div>
+  </div>
+  <div class="header-badge">COMBINATIETOOL</div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-header">Leningdelen</div>
+    <div class="card-body">
+
+      <div class="info-box">
+        Per leningdeel wordt de optimale verdeling (% lineair / % annuïteit) berekend zodat de netto maandlast zo constant mogelijk blijft over de eigen looptijd.
+        Bij <strong>Box 3</strong> geldt geen renteaftrek — de annuïteit is dan automatisch optimaal (vaste bruto = vaste netto last).
+      </div>
+
+      <div class="deel-list" id="deel-list"></div>
+
+      <div style="margin-top:12px;">
+        <button class="btn-add" onclick="addDeel()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Leningdeel toevoegen
+        </button>
+      </div>
+
+      <button class="btn-primary" onclick="bereken()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Bereken optimale combinatie
+      </button>
+    </div>
+  </div>
+
+  <!-- Resultaten -->
+  <div id="results">
+
+    <div class="total-hero">
+      <div class="th-block">
+        <div class="th-label">Totale netto maandlast</div>
+        <div class="th-val" id="th-netto">€ —</div>
+        <div class="th-sub">Begin looptijd</div>
+      </div>
+      <div class="th-divider"></div>
+      <div class="th-block">
+        <div class="th-label">Minimum netto last</div>
+        <div class="th-val" id="th-min" style="font-size:22px;">€ —</div>
+        <div class="th-sub" id="th-min-sub">—</div>
+      </div>
+      <div class="th-divider"></div>
+      <div class="th-block">
+        <div class="th-label">Maximum netto last</div>
+        <div class="th-val" id="th-max" style="font-size:22px;">€ —</div>
+        <div class="th-sub" id="th-max-sub">—</div>
+      </div>
+      <div class="th-divider"></div>
+      <div class="th-block">
+        <div class="th-label">Totale netto kosten</div>
+        <div class="th-val" id="th-totaal" style="font-size:20px;">€ —</div>
+        <div class="th-sub">Gehele looptijd</div>
+      </div>
+    </div>
+
+    <!-- Per-deel kaarten -->
+    <div class="deel-results" id="deel-results"></div>
+
+    <!-- Grafiek -->
+    <div class="card">
+      <div class="card-header">Gecombineerde netto maandlast over de looptijd</div>
+      <div class="card-body">
+        <div class="chart-container"><canvas id="mainChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Schuldgrafiek -->
+    <div class="card">
+      <div class="card-header">Verloop hypotheekschuld over de looptijd</div>
+      <div class="card-body">
+        <div class="chart-container"><canvas id="debtChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Vergelijking -->
+    <div class="card">
+      <div class="card-header">Vergelijking hypotheekvormen — gecombineerd totaal</div>
+      <div class="card-body" style="padding:0;overflow-x:auto;">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Eerste netto last</th>
+              <th>Laatste netto last</th>
+              <th>Verschil (1e vs laatste)</th>
+              <th>Variatie (max − min)</th>
+              <th>Totale netto kosten</th>
+            </tr>
+          </thead>
+          <tbody id="comp-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Jaaroverzicht -->
+    <div class="card">
+      <div class="card-header">Jaaroverzicht — optimale combinatie per leningdeel</div>
+      <div class="card-body" style="padding:0;overflow-x:auto;">
+        <table class="year-table">
+          <thead><tr id="year-head"></tr></thead>
+          <tbody id="year-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── State ──────────────────────────────────────────────
+let deelCounter = 0;
+let deelIds = [];
+let mainChart = null;
+let debtChart = null;
+
+const DEEL_COLORS = ['#002A54','#FF6600','#1a6b3c','#8b1a1a','#005577','#7a4f00','#555555'];
+
+// ─── Formatting ─────────────────────────────────────────
+const euro  = n => isNaN(n) || n === null ? '—' : '€\u00a0' + n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const euroK = n => '€\u00a0' + Math.round(n).toLocaleString('nl-NL');
+const pct   = n => (n * 100).toFixed(2).replace('.',',') + '%';
+
+// ─── DOM helpers ────────────────────────────────────────
+function fval(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+function sval(id) { return document.getElementById(id)?.value; }
+
+// ─── Leningdeel toevoegen ───────────────────────────────
+function addDeel(cfg = {}) {
+  deelCounter++;
+  const id = deelCounter;
+  deelIds.push(id);
+
+  const defaults = [
+    { bedrag: 300000, looptijd: 30, rente: 4.0,  box: 1, belasting: 35.75 },
+    { bedrag: 0,      looptijd: 20, rente: 3.5,  box: 1, belasting: 35.75 },
+    { bedrag:  50000, looptijd: 10, rente: 5.0,  box: 3, belasting: 0     },
+  ];
+  const d = { ...(defaults[id - 1] ?? defaults[2]), ...cfg };
+
+  const color = DEEL_COLORS[(id - 1) % DEEL_COLORS.length];
+  const list  = document.getElementById('deel-list');
+  const div   = document.createElement('div');
+  div.className = 'deel-row';
+  div.id = `deel-row-${id}`;
+
+  div.innerHTML = `
+    <div class="deel-row-header">
+      <div class="deel-label">
+        <div class="deel-nr-badge" style="background:${color};">${id}</div>
+        Leningdeel ${id}
+        <span class="deel-box-tag ${d.box === 3 ? 'box3':'box1'}" id="box-tag-${id}">
+          ${d.box === 3 ? 'Box 3' : 'Box 1'}
+        </span>
+      </div>
+    </div>
+    <div class="deel-fields">
+      <div class="field">
+        <label>Hypotheekbedrag</label>
+        <div class="iw">
+          <span class="pfx">€</span>
+          <input type="number" id="bedrag-${id}" value="${d.bedrag}" min="1000" step="1000" class="has-pfx">
+        </div>
+      </div>
+      <div class="field">
+        <label>Looptijd</label>
+        <div class="iw">
+          <input type="number" id="looptijd-${id}" value="${d.looptijd}" min="1" max="40" step="1">
+          <span class="sfx">jr</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nominale rente</label>
+        <div class="iw">
+          <input type="number" id="rente-${id}" value="${d.rente}" min="0" max="20" step="0.05">
+          <span class="sfx">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Fiscaal</label>
+        <select id="box-${id}" onchange="onBoxChange(${id})">
+          <option value="1" ${d.box===1?'selected':''}>Box 1 — renteaftrek</option>
+          <option value="3" ${d.box===3?'selected':''}>Box 3 — geen aftrek</option>
+        </select>
+      </div>
+      <div class="field field-bel ${d.box===3?'hidden':''}" id="bel-field-${id}">
+        <label>Belastingvoordeel</label>
+        <select id="bel-select-${id}" onchange="onBelChange(${id})">
+          <option value="37.56" ${d.belasting===37.56?'selected':''}>37,56%</option>
+          <option value="35.75" ${d.belasting!==37.56?'selected':''}>35,75%</option>
+          <option value="custom">Zelf invoeren</option>
+        </select>
+        <div class="iw" id="bel-custom-wrap-${id}" style="display:none;margin-top:5px;">
+          <input type="number" id="bel-custom-${id}" value="${d.belasting}" min="0" max="55" step="0.01">
+          <span class="sfx">%</span>
+        </div>
+      </div>
+      <button class="btn-remove" onclick="removeDeel(${id})" title="Verwijder leningdeel ${id}">×</button>
+    </div>
+  `;
+  list.appendChild(div);
+}
+
+function removeDeel(id) {
+  if (deelIds.length <= 1) { alert('Minimaal één leningdeel vereist.'); return; }
+  document.getElementById(`deel-row-${id}`)?.remove();
+  deelIds = deelIds.filter(x => x !== id);
+}
+
+function onBoxChange(id) {
+  const box = parseInt(sval(`box-${id}`));
+  const tag = document.getElementById(`box-tag-${id}`);
+  const bel = document.getElementById(`bel-field-${id}`);
+  tag.textContent  = box === 3 ? 'Box 3' : 'Box 1';
+  tag.className    = `deel-box-tag ${box === 3 ? 'box3' : 'box1'}`;
+  bel?.classList.toggle('hidden', box === 3);
+}
+
+function onBelChange(id) {
+  const v = sval(`bel-select-${id}`);
+  const wrap = document.getElementById(`bel-custom-wrap-${id}`);
+  if (wrap) wrap.style.display = v === 'custom' ? '' : 'none';
+}
+
+function getBelasting(id) {
+  const v = sval(`bel-select-${id}`);
+  if (v === 'custom') return parseFloat(document.getElementById(`bel-custom-${id}`)?.value) || 0;
+  return parseFloat(v) || 0;
+}
+
+// ─── Berekening ─────────────────────────────────────────
+function computeNetCosts(H, n, r, t, alpha) {
+  const HL = alpha * H, HA = (1 - alpha) * H;
+  const GA = HA > 0 ? (r > 0 ? HA * r / (1 - Math.pow(1+r,-n)) : HA/n) : 0;
+
+  const netArr=[], grossArr=[], rentArr=[], balArr=[], aflosArr=[];
+  let balA = HA;
+  const aflosL = HL / n;
+
+  for (let k = 0; k < n; k++) {
+    const balL  = HL * (n - k) / n;
+    const rentL = r * balL;
+    const rentA = r * balA;
+    const aflosA = GA - rentA;
+
+    balArr.push(balL + balA);
+    rentArr.push(rentL + rentA);
+    grossArr.push(aflosL + rentL + GA);
+    aflosArr.push(aflosL + (isNaN(aflosA)||aflosA<0?0:aflosA));
+    netArr.push(aflosL + rentL*(1-t) + GA - t*rentA);
+
+    balA = balA*(1+r) - GA;
+    if (balA < 0.005) balA = 0;
+  }
+  return { netArr, grossArr, rentArr, balArr, aflosArr };
+}
+
+function getStats(arr) {
+  let sum=0, min=arr[0], max=arr[0];
+  for (const v of arr) { sum+=v; if(v<min)min=v; if(v>max)max=v; }
+  const mean = sum/arr.length;
+  let sq=0; for (const v of arr) sq+=(v-mean)**2;
+  return { sum, mean, min, max, range:max-min, variance:sq/arr.length };
+}
+
+function findAlpha(H, n, r, t) {
+  if (t <= 0.0001) return 0;
+  let best=0.5, bv=Infinity;
+  for (let i=0;i<=2000;i++) {
+    const a=i/2000, v=getStats(computeNetCosts(H,n,r,t,a).netArr).variance;
+    if(v<bv){bv=v;best=a;}
+  }
+  for (let a=Math.max(0,best-0.005); a<=Math.min(1,best+0.005); a+=0.00005) {
+    const v=getStats(computeNetCosts(H,n,r,t,a).netArr).variance;
+    if(v<bv){bv=v;best=a;}
+  }
+  // 4 decimalen = 0.01% precisie
+  return Math.round(best*10000)/10000;
+}
+
+// ─── Globale staat voor herberekening bij slider ──────────
+let currentDc   = [];
+let currentMaxJr = 0;
+let currentMaxN  = 0;
+let optimalAlphas = []; // bewaar de optimale waarden voor reset-knop
+
+// ─── Bereken: optimaliseer alphas en sla op ───────────────
+function bereken() {
+  const parts = deelIds.map(id => {
+    const box = parseInt(sval(`box-${id}`));
+    const H   = fval(`bedrag-${id}`);
+    const jr  = parseInt(document.getElementById(`looptijd-${id}`)?.value)||30;
+    const rj  = fval(`rente-${id}`)/100;
+    const t   = box===3 ? 0 : getBelasting(id)/100;
+    return { id, H, jr, n: jr*12, r: rj/12, t, box };
+  }).filter(p => p.H > 100);
+
+  if (!parts.length) return;
+
+  currentMaxJr = Math.max(...parts.map(p=>p.jr));
+  currentMaxN  = currentMaxJr * 12;
+
+  currentDc = parts.map(p => {
+    const alpha = findAlpha(p.H, p.n, p.r, p.t);
+    const lin   = computeNetCosts(p.H, p.n, p.r, p.t, 1.0);
+    const ann   = computeNetCosts(p.H, p.n, p.r, p.t, 0.0);
+    return { ...p, alpha, optAlpha: alpha, lin, ann,
+      linSt: getStats(lin.netArr),
+      annSt: getStats(ann.netArr) };
+  });
+
+  document.getElementById('results').style.display = 'block';
+  renderResults(true); // true = eerste render, bouw kaarten opnieuw
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ─── Slider callback ──────────────────────────────────────
+function onAlphaChange(idx, rawVal, source) {
+  const a = Math.min(1, Math.max(0, parseFloat(rawVal)/100));
+  currentDc[idx].alpha = Math.round(a*10000)/10000;
+
+  // Sync slider ↔ input
+  const slider = document.getElementById(`slider-${idx}`);
+  const input  = document.getElementById(`pctinput-${idx}`);
+  if (slider && source !== 'slider') slider.value = (currentDc[idx].alpha*100).toFixed(2);
+  if (input  && source !== 'input')  input.value  = (currentDc[idx].alpha*100).toFixed(2);
+
+  // Update isManual flag
+  const isManual = Math.abs(currentDc[idx].alpha - currentDc[idx].optAlpha) > 0.00005;
+  currentDc[idx].isManual = isManual;
+  const tag = document.getElementById(`split-tag-${idx}`);
+  if (tag) {
+    tag.className = isManual ? 'man-tag' : 'opt-tag';
+    tag.textContent = isManual ? 'Handmatig' : 'Optimaal';
+  }
+
+  renderResults(false); // false = herrender zonder kaarten opnieuw te bouwen
+}
+
+function resetAlpha(idx) {
+  currentDc[idx].alpha    = currentDc[idx].optAlpha;
+  currentDc[idx].isManual = false;
+  const slider = document.getElementById(`slider-${idx}`);
+  const input  = document.getElementById(`pctinput-${idx}`);
+  if (slider) slider.value = (currentDc[idx].optAlpha*100).toFixed(2);
+  if (input)  input.value  = (currentDc[idx].optAlpha*100).toFixed(2);
+  const tag = document.getElementById(`split-tag-${idx}`);
+  if (tag) { tag.className='opt-tag'; tag.textContent='Optimaal'; }
+  renderResults(false);
+}
+
+// ─── Render: alles hertekenen op basis van currentDc ─────
+function renderResults(buildCards) {
+  const dc    = currentDc;
+  const maxJr = currentMaxJr;
+  const maxN  = currentMaxN;
+
+  // Herbereken opt data voor elk deel met huidige alpha
+  dc.forEach(d => {
+    d.opt   = computeNetCosts(d.H, d.n, d.r, d.t, d.alpha);
+    d.optSt = getStats(d.opt.netArr);
+  });
+
+  // Gecombineerde arrays
+  function combined(scenario) {
+    const a = new Array(maxN).fill(0);
+    dc.forEach(d => {
+      const src = scenario==='opt' ? d.opt.netArr : scenario==='lin' ? d.lin.netArr : d.ann.netArr;
+      for (let k=0;k<maxN;k++) a[k] += k<d.n ? src[k] : 0;
+    });
+    return a;
+  }
+  const cOpt=combined('opt'), cLin=combined('lin'), cAnn=combined('ann');
+  const cOptSt=getStats(cOpt), cLinSt=getStats(cLin), cAnnSt=getStats(cAnn);
+
+  // ─── Hero ───
+  document.getElementById('th-netto').textContent  = euro(cOpt[0]);
+  document.getElementById('th-min').textContent    = euro(cOptSt.min);
+  document.getElementById('th-max').textContent    = euro(cOptSt.max);
+  document.getElementById('th-totaal').textContent = euroK(cOptSt.sum);
+  const minIdx=cOpt.indexOf(cOptSt.min), maxIdx=cOpt.indexOf(cOptSt.max);
+  document.getElementById('th-min-sub').textContent = `Maand ${minIdx+1} · jaar ${Math.ceil((minIdx+1)/12)}`;
+  document.getElementById('th-max-sub').textContent = `Maand ${maxIdx+1} · jaar ${Math.ceil((maxIdx+1)/12)}`;
+
+  // ─── Per-deel kaarten (alleen bij eerste render) ───
+  if (buildCards) {
+    const dresDiv = document.getElementById('deel-results');
+    dresDiv.innerHTML = '';
+    dc.forEach((d,i) => {
+      const pctL2 = (d.alpha*100).toFixed(2);
+      const pctA2 = (100 - d.alpha*100).toFixed(2);
+      const color  = DEEL_COLORS[i%DEEL_COLORS.length];
+      const bcls   = d.box===3 ? 'box3' : 'box1';
+      const blbl   = d.box===3 ? 'Box 3 — geen renteaftrek' : `Box 1 — ${(d.t*100).toFixed(2).replace('.',',')}% voordeel`;
+      const isBox3 = d.box === 3;
+
+      const card = document.createElement('div');
+      card.className = 'deel-res-card';
+      card.id = `deel-res-${i}`;
+      card.innerHTML = `
+        <div class="drc-header ${bcls}">
+          <span>
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:6px;vertical-align:middle;"></span>
+            Leningdeel ${d.id}
+          </span>
+          <span style="font-size:11px;font-weight:normal;">${blbl}</span>
+        </div>
+        <div class="drc-body">
+          <div class="drc-row"><span class="dl">Bedrag</span><span class="dv">${euroK(d.H)}</span></div>
+          <div class="drc-row"><span class="dl">Looptijd</span><span class="dv">${d.jr} jaar</span></div>
+          <div class="drc-row"><span class="dl">Rente</span><span class="dv">${pct(d.r*12)}</span></div>
+          <div class="drc-row"><span class="dl">Netto maandlast (gem.)</span><span class="dv drc-netto-${i}" style="color:var(--orange);">${euro(d.optSt.mean)}</span></div>
+          <div class="drc-row"><span class="dl">Variatie (max−min)</span><span class="dv drc-variatie-${i}">${euro(d.optSt.range)}</span></div>
+          <div class="split-mini" id="split-mini-${i}">
+            <div class="sm-lin" style="width:${Math.max(0.5,d.alpha*100)}%;"></div>
+            <div class="sm-ann" style="width:${Math.max(0.5,(1-d.alpha)*100)}%;"></div>
+          </div>
+          <div class="split-legend">
+            <span class="sl-lin" id="leg-lin-${i}">${pctL2}% Lineair — ${euroK(d.alpha*d.H)}</span>
+            <span class="sl-ann" id="leg-ann-${i}">${pctA2}% Annuïteit — ${euroK((1-d.alpha)*d.H)}</span>
+          </div>
+          ${isBox3 ? '<div class="box3-note">Box 3: geen renteaftrek → bruto = netto → 100% annuïteit is optimaal.</div>' : `
+          <div class="slider-section">
+            <div class="slider-label">
+              <span>% Lineair aanpassen</span>
+              <span id="split-tag-${i}" class="opt-tag">Optimaal</span>
+            </div>
+            <div class="slider-row">
+              <input type="range" id="slider-${i}" min="0" max="100" step="0.01"
+                value="${(d.alpha*100).toFixed(2)}"
+                oninput="onAlphaChange(${i}, this.value, 'slider')">
+              <input type="number" id="pctinput-${i}" class="pct-input" min="0" max="100" step="0.01"
+                value="${(d.alpha*100).toFixed(2)}"
+                oninput="onAlphaChange(${i}, this.value, 'input')">
+              <span class="pct-sfx">%</span>
+              <button class="btn-reset" onclick="resetAlpha(${i})">↺ Optimaal</button>
+            </div>
+          </div>`}
+        </div>
+      `;
+      dresDiv.appendChild(card);
+    });
+  } else {
+    // Alleen dynamische onderdelen updaten
+    dc.forEach((d,i) => {
+      const pctL2 = (d.alpha*100).toFixed(2);
+      const pctA2 = (100 - d.alpha*100).toFixed(2);
+      const mini  = document.getElementById(`split-mini-${i}`);
+      if (mini) {
+        mini.children[0].style.width = Math.max(0.5, d.alpha*100)+'%';
+        mini.children[1].style.width = Math.max(0.5, (1-d.alpha)*100)+'%';
+      }
+      const legL = document.getElementById(`leg-lin-${i}`);
+      const legA = document.getElementById(`leg-ann-${i}`);
+      if (legL) legL.textContent = `${pctL2}% Lineair — ${euroK(d.alpha*d.H)}`;
+      if (legA) legA.textContent = `${pctA2}% Annuïteit — ${euroK((1-d.alpha)*d.H)}`;
+      const netEl = document.querySelector(`.drc-netto-${i}`);
+      const varEl = document.querySelector(`.drc-variatie-${i}`);
+      if (netEl) netEl.textContent = euro(d.optSt.mean);
+      if (varEl) varEl.textContent = euro(d.optSt.range);
+    });
+  }
+
+  // ─── Grafiek maandlasten ───
+  const labels=[], dO=[], dL=[], dA=[];
+  for (let yr=1; yr<=maxJr; yr++) {
+    const k=(yr-1)*12;
+    labels.push(`Jaar ${yr}`);
+    dO.push(+cOpt[k].toFixed(2));
+    dL.push(+cLin[k].toFixed(2));
+    dA.push(+cAnn[k].toFixed(2));
+  }
+  if (mainChart) mainChart.destroy();
+  mainChart = new Chart(document.getElementById('mainChart').getContext('2d'),{
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'100% Lineair', data:dL, borderColor:'#999', borderDash:[6,4], borderWidth:1.5, pointRadius:2, fill:false, tension:0.3 },
+      { label:'Huidige verdeling', data:dO, borderColor:'#FF6600', backgroundColor:'rgba(255,102,0,0.07)', borderWidth:2.5, pointRadius:3, pointBackgroundColor:'#FF6600', fill:true, tension:0.3 },
+      { label:'100% Annuïteit', data:dA, borderColor:'#002A54', borderDash:[6,4], borderWidth:1.5, pointRadius:2, fill:false, tension:0.3 },
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{font:{family:'Arial',size:12},usePointStyle:true,boxWidth:8}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${euro(ctx.parsed.y)}`}},
+      },
+      scales:{
+        y:{ticks:{callback:v=>'€ '+Math.round(v).toLocaleString('nl-NL'),font:{family:'Arial',size:12}},grid:{color:'rgba(0,0,0,0.04)'}},
+        x:{ticks:{font:{family:'Arial',size:11},maxTicksLimit:15},grid:{display:false}},
+      },
+    },
+  });
+
+  // ─── Grafiek hypotheekschuld ───
+  // Helper: lineaire restschuld van één deel op maand k
+  function linBal(d, k) { return k < d.n ? d.alpha * d.H * (d.n - k) / d.n : 0; }
+  function annBal(d, k) { return k < d.n ? d.opt.balArr[k] - linBal(d, k) : 0; }
+
+  const debtLabels    = [...labels, 'Einde'];
+  const debtTotaal    = [], debtLinTot = [], debtAnnTot = [];
+
+  for (let yr=1; yr<=maxJr; yr++) {
+    const k=(yr-1)*12;
+    let tot=0, lin=0, ann=0;
+    dc.forEach(d=>{
+      tot += k<d.n ? d.opt.balArr[k] : 0;
+      lin += linBal(d, k);
+      ann += annBal(d, k);
+    });
+    debtTotaal.push(Math.round(tot));
+    debtLinTot.push(Math.round(lin));
+    debtAnnTot.push(Math.round(ann));
+  }
+  debtTotaal.push(0); debtLinTot.push(0); debtAnnTot.push(0);
+
+  // Gestapelde areas: lineair (navy) + annuïteit (oranje) = totaal
+  const debtDatasets = [
+    {
+      label: 'Lineair deel schuld',
+      data: debtLinTot,
+      borderColor: 'rgba(0,42,84,0.6)',
+      backgroundColor: 'rgba(0,42,84,0.18)',
+      borderWidth: 1.5,
+      pointRadius: 2,
+      fill: 'origin',
+      stack: 'schuld',
+      tension: 0.3,
+      order: 2,
+    },
+    {
+      label: 'Annuïteit deel schuld',
+      data: debtAnnTot,
+      borderColor: 'rgba(255,102,0,0.6)',
+      backgroundColor: 'rgba(255,102,0,0.18)',
+      borderWidth: 1.5,
+      pointRadius: 2,
+      fill: '-1',
+      stack: 'schuld',
+      tension: 0.3,
+      order: 2,
+    },
+    {
+      label: 'Totale hypotheekschuld',
+      data: debtTotaal,
+      borderColor: '#002A54',
+      backgroundColor: 'transparent',
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointBackgroundColor: '#002A54',
+      fill: false,
+      tension: 0.3,
+      order: 1,
+    },
+  ];
+
+  // Per-deel lijnen (alleen bij >1 deel)
+  if (dc.length > 1) {
+    dc.forEach((d,i) => {
+      const color = DEEL_COLORS[i%DEEL_COLORS.length];
+      const data  = [];
+      for (let yr=1; yr<=maxJr; yr++) {
+        const k=(yr-1)*12;
+        data.push(k < d.n ? Math.round(d.opt.balArr[k]) : 0);
+      }
+      data.push(0);
+      debtDatasets.push({ label:`Schuld deel ${d.id}`, data, borderColor:color, borderDash:[4,3], borderWidth:1.2, pointRadius:0, fill:false, tension:0.3, order:3 });
+    });
+  }
+
+  if (debtChart) debtChart.destroy();
+  debtChart = new Chart(document.getElementById('debtChart').getContext('2d'),{
+    type:'line',
+    data:{ labels:debtLabels, datasets:debtDatasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{font:{family:'Arial',size:12},usePointStyle:true,boxWidth:8}},
+        tooltip:{
+          callbacks:{
+            label: ctx => {
+              const v = ctx.parsed.y;
+              return `${ctx.dataset.label}: ${euroK(v)}`;
+            },
+          },
+        },
+      },
+      scales:{
+        y:{ min:0, stacked:false, ticks:{callback:v=>'€ '+Math.round(v/1000).toLocaleString('nl-NL')+'k',font:{family:'Arial',size:12}}, grid:{color:'rgba(0,0,0,0.04)'}, title:{display:true,text:'Resterende schuld',font:{family:'Arial',size:11},color:'#888'} },
+        x:{ ticks:{font:{family:'Arial',size:11},maxTicksLimit:16}, grid:{display:false} },
+      },
+    },
+  });
+
+  // ─── Vergelijking ───
+  const compBody=document.getElementById('comp-body');
+  compBody.innerHTML='';
+  [
+    {lbl:'100% Lineair',        st:cLinSt, arr:cLin, opt:false},
+    {lbl:'Huidige verdeling',   st:cOptSt, arr:cOpt, opt:true },
+    {lbl:'100% Annuïteit',      st:cAnnSt, arr:cAnn, opt:false},
+  ].forEach(row=>{
+    const diff=row.arr[maxN-1]-row.arr[0];
+    const cls=diff>0.5?'delta-pos':diff<-0.5?'delta-neg':'';
+    const tr=document.createElement('tr');
+    if(row.opt)tr.className='opt-row';
+    tr.innerHTML=`
+      <td>${row.lbl}${row.opt?'<span class="badge-opt">ACTIEF</span>':''}</td>
+      <td>${euro(row.arr[0])}</td>
+      <td>${euro(row.arr[maxN-1])}</td>
+      <td class="${cls}">${(diff>=0?'+':'')}${euro(diff)}</td>
+      <td>${euro(row.st.range)}</td>
+      <td>${euroK(row.st.sum)}</td>
+    `;
+    compBody.appendChild(tr);
+  });
+
+  // ─── Jaaroverzicht ───
+  const head=document.getElementById('year-head');
+  const body=document.getElementById('year-body');
+  head.innerHTML='<th>Jaar</th><th>Totale schuld</th><th style="color:rgba(255,255,255,0.7);font-style:italic;">w.v. lineair</th><th style="color:rgba(255,255,255,0.7);font-style:italic;">w.v. annuïteit</th><th>Totaal bruto</th><th>Totaal netto</th>';
+  dc.forEach((d,i)=>{
+    const c=DEEL_COLORS[i%DEEL_COLORS.length];
+    head.innerHTML+=`<th><span style="color:${c};">●</span> Deel ${d.id} netto</th><th><span style="color:${c};">●</span> Deel ${d.id} schuld</th>`;
+  });
+  body.innerHTML='';
+  for (let yr=1; yr<=maxJr; yr++) {
+    const k=(yr-1)*12;
+    let tBal=0, tGross=0, tNet=0, tLin=0, tAnn=0;
+    dc.forEach(d=>{
+      if(k<d.n){
+        tBal   += d.opt.balArr[k];
+        tGross += d.opt.grossArr[k];
+        tNet   += d.opt.netArr[k];
+        tLin   += linBal(d, k);
+        tAnn   += annBal(d, k);
+      }
+    });
+    const tr=document.createElement('tr');
+    let html=`<td>Jaar ${yr}</td><td><strong>${euroK(tBal)}</strong></td><td style="color:var(--navy);font-size:12px;">${euroK(tLin)}</td><td style="color:var(--orange);font-size:12px;">${euroK(tAnn)}</td><td>${euro(tGross)}</td><td><strong>${euro(tNet)}</strong></td>`;
+    dc.forEach(d=>{
+      html += k<d.n
+        ? `<td>${euro(d.opt.netArr[k])}</td><td>${euroK(d.opt.balArr[k])}</td>`
+        : `<td class="ended">afgelost</td><td class="ended">€ 0</td>`;
+    });
+    tr.innerHTML=html;
+    body.appendChild(tr);
+  }
+}
+
+// ─── Init ────────────────────────────────────────────────
+addDeel();
+addDeel();
+</script>
+</body>
+</html>

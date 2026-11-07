@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlijdensrisicoverzekering Calculator — Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #003057;
+  --navy2:  #004580;
+  --gold:   #E5A138;
+  --gold-lt:#FEF8EE;
+  --bg:     #F4F7F9;
+  --white:  #FFFFFF;
+  --text:   #333333;
+  --muted:  #6B7280;
+  --border: #D1DCE5;
+  --green:  #1A8A50;
+  --grlt:   #E8F7EF;
+  --red:    #C0392B;
+  --redlt:  #FDECEA;
+  --shadow: 0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;margin-top:1px;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:980px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:22px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:14px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:19px;}
+.card-body{padding:22px;}
+
+.fg{display:grid;gap:14px;}
+.fg2{grid-template-columns:1fr 1fr;}
+.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.s2{grid-column:span 2;}
+.s3{grid-column:1/-1;}
+
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],input[type=range],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:42px;}
+
+/* VORM SELECTOR */
+.vorm-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:4px;}
+.vorm-btn{border:2px solid var(--border);border-radius:10px;padding:13px 10px;background:#fff;cursor:pointer;text-align:center;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.vorm-btn:hover{border-color:var(--navy);background:#F0F4F8;}
+.vorm-btn.active{border-color:var(--navy);background:#EFF4F9;}
+.vorm-btn .vi{font-size:22px;}
+.vorm-btn .vn{font-size:12.5px;font-weight:700;color:var(--navy);}
+.vorm-btn .vs{font-size:10.5px;color:var(--muted);}
+
+/* ROKER TOGGLE */
+.toggle-row{display:flex;gap:10px;}
+.tog-btn{flex:1;padding:10px;border:2px solid var(--border);border-radius:9px;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--muted);transition:all .18s;}
+.tog-btn.active.green{border-color:var(--green);background:var(--grlt);color:var(--green);}
+.tog-btn.active.red{border-color:var(--red);background:var(--redlt);color:var(--red);}
+
+/* BTN */
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;letter-spacing:.01em;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* METRICS */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.mbox{border-radius:11px;padding:16px 18px;display:flex;flex-direction:column;gap:3px;}
+.mbox.navy{background:#EFF4F9;border:1.5px solid #C5D8E8;}
+.mbox.gold{background:var(--gold-lt);border:1.5px solid #F4C878;}
+.mbox.green{background:var(--grlt);border:1.5px solid #A7DFC2;}
+.mbox.red{background:var(--redlt);border:1.5px solid #F5B7B1;}
+.mbox .ml{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.mbox .mv{font-family:'DM Serif Display',serif;font-size:24px;color:var(--navy);line-height:1.1;}
+.mbox .ms{font-size:11.5px;color:var(--muted);margin-top:1px;}
+
+/* GRAFIEK */
+.canvas-wrap{position:relative;height:260px;}
+canvas{width:100%!important;}
+.graf-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.graf-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s;}
+.graf-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* VERGELIJK TABEL */
+.vtbl{width:100%;border-collapse:collapse;font-size:13px;}
+.vtbl thead th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.vtbl thead th:not(:first-child){text-align:right;}
+.vtbl td{padding:8px 12px;border-bottom:1px solid var(--border);}
+.vtbl td:not(:first-child){text-align:right;}
+.vtbl tr:last-child td{border-bottom:none;}
+.vtbl tr:hover td{background:#F8FAFB;}
+.vtbl .best{color:var(--green);font-weight:700;}
+.vtbl .bv-badge{background:var(--grlt);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:5px;}
+
+/* BRON BOX */
+.bron-box{background:#F8FAFB;border:1.5px solid var(--border);border-radius:10px;padding:16px 18px;font-size:12.5px;color:var(--muted);line-height:1.7;}
+.bron-box strong{color:var(--navy);}
+.bron-box a{color:var(--navy);text-decoration:underline;}
+
+/* DISCLAIMER */
+.disclaimer{background:var(--gold-lt);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:14px 18px;font-size:12.5px;color:var(--text);line-height:1.7;margin-top:4px;}
+.disclaimer strong{color:#B87A00;}
+
+/* ADVISEUR BOX */
+.adviseur-box{background:linear-gradient(135deg,#EFF4F9 0%,#F8FAFB 100%);border:1.5px solid #C5D8E8;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px;}
+.adv-intro{display:flex;gap:14px;align-items:flex-start;}
+.adv-icon{font-size:32px;flex-shrink:0;line-height:1;}
+.adv-titel{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.adv-sub{font-size:12.5px;color:var(--muted);line-height:1.55;}
+.adv-zoek-row{display:flex;gap:8px;}
+.adv-input-wrap{position:relative;flex:1;}
+.adv-pre{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+#postcodeInput{width:100%;padding:10px 12px 10px 36px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .18s;background:#fff;}
+#postcodeInput:focus{border-color:var(--navy);}
+.adv-zoek-btn{padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .18s;}
+.adv-zoek-btn:hover{background:var(--navy2);}
+.adv-resultaat{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.adv-item{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.adv-item:last-child{border-bottom:none;padding-bottom:0;}
+.adv-avatar{width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.adv-naam{font-size:13.5px;font-weight:700;color:var(--navy);}
+.adv-info{font-size:12px;color:var(--muted);}
+.adv-afstand{font-size:11.5px;font-weight:600;color:var(--green);margin-left:auto;white-space:nowrap;}
+.adv-geen{font-size:13px;color:var(--muted);text-align:center;padding:10px;}
+.adv-links{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* VERGELIJKER LINKS */
+.vlink{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s;}
+.vlink.primary{background:var(--navy);color:#fff;}
+.vlink.primary:hover{background:var(--navy2);}
+.vlink.secondary{background:#fff;color:var(--navy);border:1.5px solid var(--border);}
+.vlink.secondary:hover{border-color:var(--navy);background:#F0F4F8;}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .fg2,.fg3,.fg4{grid-template-columns:1fr;}
+  .s2,.s3{grid-column:span 1;}
+  .vorm-grid{grid-template-columns:1fr;}
+  .metrics-row{grid-template-columns:1fr 1fr;}
+  .h-badges{display:none;}
+}
+@media(max-width:420px){
+  .metrics-row{grid-template-columns:1fr;}
+  .main{padding:14px 10px 60px;}
+  .card-body{padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🛡️</div>
+    <div>
+      <div class="h-title">Overlijdensrisicoverzekering Calculator</div>
+      <div class="h-sub">Indicatieve premie · AG Prognosetafel 2022 · alle drie dekkingsvormen</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">Actuarieel</span>
+    <span class="badge gold">Indicatief</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Gegevens verzekerde</div>
+    <div class="card-body">
+
+      <div class="fg fg3" style="margin-bottom:18px; gap:14px;">
+        <div class="sdiv s3">Persoonlijke gegevens</div>
+
+        <div class="field">
+          <label>Leeftijd verzekerde</label>
+          <div class="iw">
+            <input type="number" id="leeftijd" value="35" min="18" max="70" step="1" class="rs" style="padding-right:55px;" oninput="updateLeeftijdHint()">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint" id="leeftijdHint">Eindleeftijd wordt automatisch berekend</span>
+        </div>
+        <div class="field">
+          <label>Verzekerd bedrag</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="som" value="300000" min="10000" step="10000">
+          </div>
+          <span class="hint">Uit te keren bedrag bij overlijden</span>
+        </div>
+        <div class="field">
+          <label>Looptijd verzekering</label>
+          <div class="iw">
+            <input type="number" id="looptijd" value="30" min="5" max="40" step="1" class="rs" style="padding-right:55px;" oninput="updateLeeftijdHint()">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint" id="eindleeftijdHint"></span>
+        </div>
+
+        <div class="sdiv s3">Gezondheid & leefstijl</div>
+      </div>
+
+      <div class="field s3" style="margin-bottom:14px;">
+        <label>Rookgedrag</label>
+        <div class="toggle-row">
+          <button class="tog-btn active green" id="btn-nrk" onclick="setRoker(false,this)">🚭 Niet-roker</button>
+          <button class="tog-btn red" id="btn-rkr" onclick="setRoker(true,this)">🚬 Roker</button>
+        </div>
+        <span class="hint">Niet-roker = nooit gerookt óf ≥ 2 jaar gestopt · Roker betaalt circa 100% opslag</span>
+      </div>
+
+      <div class="fg fg3" style="margin-bottom:18px; gap:14px;">
+        <div class="sdiv s3">Dekkingsvorm</div>
+      </div>
+
+      <div class="vorm-grid" id="vormGrid" style="margin-bottom:20px;">
+        <button class="vorm-btn active" onclick="setVorm('gelijkblijvend',this)">
+          <span class="vi">📦</span>
+          <span class="vn">Gelijkblijvend</span>
+          <span class="vs">Constant bedrag · bij aflossingsvrij</span>
+        </button>
+        <button class="vorm-btn" onclick="setVorm('lineair',this)">
+          <span class="vi">📉</span>
+          <span class="vn">Lineair dalend</span>
+          <span class="vs">Daalt gelijkmatig · bij lineaire hyp.</span>
+        </button>
+        <button class="vorm-btn" onclick="setVorm('annuitair',this)">
+          <span class="vi">〽️</span>
+          <span class="vn">Annuïtair dalend</span>
+          <span class="vs">Daalt als annuïteit · bij ann. hyp.</span>
+        </button>
+      </div>
+
+      <!-- KOPPEL AAN HYPOTHEEK -->
+      <div class="fg fg3" style="margin-bottom:18px; gap:14px;">
+        <div class="sdiv s3">Optioneel — koppel aan hypotheek</div>
+        <div class="field">
+          <label>Hypotheekschuld (huidig saldo)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="hypSaldo" value="0" min="0" step="5000" oninput="kopieerSaldo()">
+          </div>
+          <span class="hint">Vul in om verzekerd bedrag automatisch in te stellen</span>
+        </div>
+        <div class="field">
+          <label>Hypotheekrente (voor ann. dalend)</label>
+          <div class="iw"><span class="pre">%</span>
+            <input type="number" id="hypRente" value="4.00" min="0.1" max="15" step="0.01" class="rs" style="padding-left:26px;padding-right:42px;">
+          </div>
+          <span class="hint">Gebruikt voor annuïtair verloopberekening</span>
+        </div>
+        <div class="field">
+          <label>Tweede verzekerde (leeftijd)</label>
+          <div class="iw">
+            <input type="number" id="leeftijd2" value="0" min="0" max="70" step="1" class="rs" style="padding-right:55px;" placeholder="0 = niet van toepassing">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint">0 = één persoon · ingevuld = twee aparte polissen</span>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">🛡️ Bereken indicatieve premie</button>
+    </div>
+  </div>
+
+  <!-- BRON UITLEG -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📚</div>Hoe worden de premies berekend?</div>
+    <div class="card-body">
+      <div class="bron-box">
+        <strong>Tariefbron: AG Prognosetafel 2022 (Actuarieel Genootschap / CBS)</strong><br>
+        ORV-premies zijn strikt <em>maatwerk</em> — er bestaat geen publieke tarieftabel van verzekeraars. Verzekeraars berekenen de premie op basis van:<br><br>
+        <strong>1. Nettopremie</strong> = verzekerd bedrag × sterftekans per leeftijdsjaar, verdisconteerd over de looptijd. De sterftekansen komen uit de officiële <a href="https://www.ag-ai.nl/view.php?action=view&Pagina_Id=1015" target="_blank">AG Prognosetafel 2022</a> van het Actuarieel Genootschap, gebaseerd op CBS-sterftedata.<br><br>
+        <strong>2. Bruto premie</strong> = nettopremie + kostenopslag (typisch 30–45%) + winstopslag. Dit is het bedrag dat je daadwerkelijk betaalt.<br><br>
+        <strong>3. Opslagen:</strong> Rokers betalen gemiddeld <strong>~100% opslag</strong> (factor 2). Dalende vormen zijn 30–40% goedkoper dan gelijkblijvend. Geslacht mag since 2012 niet meer worden gebruikt voor nieuwe contracten (EU-richtlijn).<br><br>
+        <strong>Marktprijzen</strong> (niet-roker, gelijkblijvend, €200k, 30 jaar looptijd, goedkoopste aanbieder):<br>
+        Leeftijd 25: ≈ €5–8/mnd · Leeftijd 30: ≈ €8–12/mnd · Leeftijd 35: ≈ €12–18/mnd · Leeftijd 40: ≈ €22–32/mnd · Leeftijd 45: ≈ €40–60/mnd<br><br>
+        <em>Tussen goedkoopste en duurste aanbieder zit soms een factor 3 in premie. Vergelijken loont altijd.</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Resultaten — indicatieve premieberekening</div>
+    <div class="card-body">
+      <div class="metrics-row" id="metricsRow"></div>
+      <div class="disclaimer" id="disclaimerBox"></div>
+    </div>
+  </div>
+
+  <!-- GRAFIEK -->
+  <div class="card res-card" id="grafCard">
+    <div class="card-header"><div class="ico">📈</div>Verzekerd bedrag & premie-opbouw</div>
+    <div class="card-body">
+      <div class="graf-tabs">
+        <button class="graf-tab active" onclick="setGraf('dekking',this)">Dekkingsverloop</button>
+        <button class="graf-tab" onclick="setGraf('sterfte',this)">Sterftekans per leeftijd</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="grafiek"></canvas></div>
+    </div>
+  </div>
+
+  <!-- VERGELIJK ALLE 3 VORMEN -->
+  <div class="card res-card" id="vergelijkCard">
+    <div class="card-header"><div class="ico">⚖️</div>Vergelijking alle drie dekkingsvormen</div>
+    <div class="card-body">
+      <table class="vtbl" id="vergelijkTbl"></table>
+      <div style="margin-top:20px;">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Volgende stap — persoonlijk advies</div>
+
+        <!-- ADVISEUR ZOEKER -->
+        <div class="adviseur-box">
+          <div class="adv-intro">
+            <div class="adv-icon">🧑‍💼</div>
+            <div>
+              <div class="adv-titel">Vind een hypotheekadviseur bij u in de buurt</div>
+              <div class="adv-sub">Een adviseur vergelijkt voor u alle aanbieders, vraagt de gezondheidsverklaring aan en regelt de koppeling aan uw hypotheek — zonder extra kosten voor de vergelijking.</div>
+            </div>
+          </div>
+
+          <div class="adv-zoek-row" id="advZoekRow">
+            <div class="adv-input-wrap">
+              <span class="adv-pre">📍</span>
+              <input type="text" id="postcodeInput" placeholder="Postcode of plaatsnaam..." maxlength="20" onkeydown="if(event.key==='Enter') zoekAdviseur()">
+            </div>
+            <button class="adv-zoek-btn" onclick="zoekAdviseur()">Zoek adviseur</button>
+          </div>
+
+          <div id="advResultaat" style="display:none;"></div>
+
+          <div class="adv-links">
+            <a href="https://www.hypotheekbond.nl/advieskantoren" target="_blank" class="vlink primary">🏠 Hypotheekbond — vind een adviseur</a>
+            <a href="https://www.afm.nl/nl-nl/consumenten/financiele-diensten/register" target="_blank" class="vlink secondary">🔎 AFM-register — vergund adviseur</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── AG PROGNOSETAFEL 2022 — Sterftekansen unisex per leeftijd ──────────────
+// Bron: Actuarieel Genootschap / CBS — gecombineerd (mannen + vrouwen, geen geslacht toegestaan na 2012)
+// qx = jaarlijkse kans op overlijden op leeftijd x
+const QX = {
+  18:0.000350, 19:0.000362, 20:0.000375, 21:0.000385, 22:0.000391, 23:0.000392,
+  24:0.000392, 25:0.000394, 26:0.000399, 27:0.000408, 28:0.000421, 29:0.000437,
+  30:0.000455, 31:0.000475, 32:0.000497, 33:0.000522, 34:0.000550,
+  35:0.000582, 36:0.000619, 37:0.000661, 38:0.000710, 39:0.000767,
+  40:0.000832, 41:0.000907, 42:0.000993, 43:0.001091, 44:0.001203,
+  45:0.001330, 46:0.001474, 47:0.001636, 48:0.001819, 49:0.002025,
+  50:0.002256, 51:0.002514, 52:0.002803, 53:0.003126, 54:0.003486,
+  55:0.003887, 56:0.004332, 57:0.004827, 58:0.005373, 59:0.005977,
+  60:0.006641, 61:0.007370, 62:0.008169, 63:0.009043, 64:0.009998,
+  65:0.011038, 66:0.012169, 67:0.013395, 68:0.014723, 69:0.016158,
+  70:0.017706, 71:0.019374, 72:0.021167, 73:0.023093, 74:0.025159, 75:0.027370
+};
+
+// ── GECALIBREERDE PARAMETERS ──────────────────────────────────────────────
+// Basis: AG Prognosetafel 2022 (CBS) + marktcalibratie op werkelijke premies 2023-2025
+// Kalibratie: leeftijd 37 / €300k gelijkblijvend / 30jr = €7,80/mnd (bron: marktbenchmark feb 2023)
+// De selectie-factor (0.06) verklaart het verschil tussen CBS-bevolkingssterfte en de sterk
+// medisch-geselecteerde ORV-portefeuillerijke + hevige markcconcurrentie.
+// Goedkoopste aanbieder ≈ 1× · Marktgemiddelde ≈ 1,8× · Duurste ≈ 2,8×
+const SELECTIE    = 0.06;  // Gezond-verzekerden-effect: ORV-populatie vs. CBS bevolking
+const RENTE       = 0.00;  // Rekenrente 0% (ORV-markt gebruikt lage/nul rekenrente)
+const KOSTEN      = 0.15;  // 15% kostenopslag
+const VASTE       = 1.00;  // €1,- vaste poliskosten per maand
+const ROKER_FACTOR = 2.0;  // Roker = 100% opslag
+// Marktbandbreedtefactoren (goedkoopste aanbieder = 1.0):
+const BANDBREEDTE = { laag: 1.0, midden: 1.8, hoog: 2.8 };
+
+let roker = false;
+let vormType = 'gelijkblijvend';
+let grafModus = 'dekking';
+let grafObj = null;
+let berekend = { alle: {} };
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n, dec=0){ return isNaN(n)?'—':'€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtPct(n){ return n.toFixed(2).replace('.',',')+'%'; }
+
+function updateLeeftijdHint(){
+  const l = N('leeftijd'), t = N('looptijd');
+  const eind = l + t;
+  document.getElementById('leeftijdHint').textContent = `Eindleeftijd: ${eind} jaar`;
+  document.getElementById('eindleeftijdHint').textContent = eind > 75 ? `⚠ Eindleeftijd ${eind} jr — meeste verzekeraars max. 75 jr` : `Eindleeftijd: ${eind} jaar`;
+}
+
+function kopieerSaldo(){
+  const s = N('hypSaldo');
+  if(s > 0) document.getElementById('som').value = s;
+}
+
+function setRoker(r, btn){
+  roker = r;
+  document.getElementById('btn-nrk').classList.toggle('active', !r);
+  document.getElementById('btn-rkr').classList.toggle('active', r);
+}
+
+function setVorm(v, btn){
+  vormType = v;
+  document.querySelectorAll('.vorm-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setGraf(m, btn){
+  grafModus = m;
+  document.querySelectorAll('.graf-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  tekenGrafiek();
+}
+
+// ── PREMIEBEREKING — gecalibreerd op marktdata 2023-2025 ─────────────────
+// Formule: netto jaarpremie P = S × A_{x:n} / ä_{x:n}
+// A_{x:n} = Σ v^(t+1) × tPx × qx+t × (S_t/S)   (contante waarde overlijdenskansen)
+// ä_{x:n} = Σ v^t × tPx                          (levensverzekeringsannuïteit)
+function berekenPremie(leeftijd, looptijdJaar, somStart, vormV, rokerFlag){
+  const v   = 1 / (1 + RENTE);
+  const rkf = rokerFlag ? ROKER_FACTOR : 1.0;
+  const hypR = N('hypRente') / 100 || 0.04;
+
+  let teller   = 0;
+  let annuiteit = 0;
+  let px = 1.0;
+
+  for(let t = 0; t < looptijdJaar; t++){
+    const leeft = Math.min(leeftijd + t, 75);
+    const qx = (QX[leeft] || QX[75]) * SELECTIE * rkf;
+
+    let somT;
+    if(vormV === 'gelijkblijvend'){
+      somT = somStart;
+    } else if(vormV === 'lineair'){
+      somT = somStart * Math.max(0, 1 - t / looptijdJaar);
+    } else { // annuitair
+      somT = hypR > 0
+        ? somStart * Math.max(0, (Math.pow(1+hypR, looptijdJaar-t) - 1) / (Math.pow(1+hypR, looptijdJaar) - 1))
+        : somStart * Math.max(0, 1 - t / looptijdJaar);
+    }
+
+    teller    += somT * qx * px * Math.pow(v, t + 1);
+    annuiteit += px * Math.pow(v, t);
+    px        *= (1 - qx);
+  }
+
+  const nettoJaar  = annuiteit > 0 ? teller / annuiteit : 0;
+  const brutoPmnd  = (nettoJaar * (1 + KOSTEN) + VASTE * 12) / 12;
+  const brutoJaar  = brutoPmnd * 12;
+
+  return {
+    nettoJaar, brutoJaar, brutoPmnd,
+    pmndLaag:    brutoPmnd * BANDBREEDTE.laag,
+    pmndMidden:  brutoPmnd * BANDBREEDTE.midden,
+    pmndHoog:    brutoPmnd * BANDBREEDTE.hoog,
+    totaalPremies: brutoJaar * looptijdJaar,
+    annuiteit,
+  };
+}
+
+// Verzekerd bedrag per jaar (voor grafiek)
+function getSomVerloop(leeftijd, looptijdJaar, somStart, vormV){
+  const r = N('hypRente') / 100;
+  const reeks = [];
+  for(let t = 0; t <= looptijdJaar; t++){
+    let som;
+    if(vormV === 'gelijkblijvend') som = somStart;
+    else if(vormV === 'lineair') som = somStart * Math.max(0, 1 - t/looptijdJaar);
+    else {
+      if(r > 0) som = somStart * Math.max(0, (Math.pow(1+r, looptijdJaar-t) - 1) / (Math.pow(1+r, looptijdJaar) - 1));
+      else som = somStart * Math.max(0, 1 - t/looptijdJaar);
+    }
+    reeks.push(som);
+  }
+  return reeks;
+}
+
+// ── BEREKEN ────────────────────────────────────────────────────────────────
+function bereken(){
+  const leeftijd   = Math.round(N('leeftijd'));
+  const looptijd   = Math.round(N('looptijd'));
+  const som        = N('som');
+  const leeftijd2  = Math.round(N('leeftijd2'));
+
+  if(leeftijd < 18 || leeftijd > 70){ alert('Leeftijd moet tussen 18 en 70 zijn.'); return; }
+  if(looptijd < 5 || looptijd > 40){ alert('Looptijd moet tussen 5 en 40 jaar zijn.'); return; }
+  if(som < 10000){ alert('Vul een verzekerd bedrag in van minimaal € 10.000.'); return; }
+
+  const eindleeftijd = leeftijd + looptijd;
+  if(eindleeftijd > 75){
+    const eff = Math.min(looptijd, 75 - leeftijd);
+    if(!confirm(`Eindleeftijd ${eindleeftijd} overschrijdt het maximum van 75 jaar. Berekening wordt aangepast naar ${eff} jaar looptijd. Doorgaan?`)) return;
+  }
+  const ltEff = Math.min(looptijd, 75 - leeftijd);
+
+  // Bereken voor alle 3 vormen
+  const vormen = ['gelijkblijvend','lineair','annuitair'];
+  berekend = {};
+  vormen.forEach(v => {
+    berekend[v] = berekenPremie(leeftijd, ltEff, som, v, roker);
+  });
+  const res = berekend[vormType];
+
+  // ── METRICS ──
+  const mr = document.getElementById('metricsRow');
+  mr.innerHTML = `
+    <div class="mbox navy">
+      <div class="ml">Premie — goedkoopste aanbieder</div>
+      <div class="mv">${fmt(res.pmndLaag,2)}</div>
+      <div class="ms">Gecalibreerd op marktdata 2023–2025</div>
+    </div>
+    <div class="mbox gold">
+      <div class="ml">Premie — marktgemiddelde</div>
+      <div class="mv">${fmt(res.pmndMidden,2)}</div>
+      <div class="ms">Gemiddelde aanbieder (±1,8×)</div>
+    </div>
+    <div class="mbox red">
+      <div class="ml">Premie — duurste aanbieder</div>
+      <div class="mv">${fmt(res.pmndHoog,2)}</div>
+      <div class="ms">Tot 2,8× goedkoopste aanbieder</div>
+    </div>
+    <div class="mbox green">
+      <div class="ml">Verzekerd bedrag</div>
+      <div class="mv">${fmt(som)}</div>
+      <div class="ms">${vormType.replace('annuitair','annuïtair dalend').replace('gelijkblijvend','gelijkblijvend')} · ${ltEff} jaar</div>
+    </div>`;
+
+  // Tweede verzekerde
+  let persoon2Html = '';
+  if(leeftijd2 >= 18 && leeftijd2 <= 70){
+    const res2 = berekenPremie(Math.min(leeftijd2, 70), Math.min(ltEff, 75-leeftijd2), som, vormType, roker);
+    persoon2Html = ` · <strong>Persoon 2 (leeftijd ${leeftijd2}):</strong> ${fmt(res2.pmndLaag,2)}–${fmt(res2.pmndMidden,2)}/mnd`;
+  }
+
+  // ── DISCLAIMER ──
+  document.getElementById('disclaimerBox').innerHTML = `
+    <strong>📊 Methodiek — marktgecalibreerde premieberekening</strong><br>
+    Basis: <strong>AG Prognosetafel 2022</strong> (Actuarieel Genootschap / CBS), gecalibreerd op werkelijke marktpremies 2023–2025.
+    De sterftekansen zijn gecorrigeerd voor het <em>gezond-verzekerden-effect</em>: mensen die een ORV afsluiten zijn medisch sterk geselecteerd
+    en hebben significant lagere sterftekansen dan de gemiddelde CBS-bevolking.
+    De bandbreedte (${fmt(res.pmndLaag,2)}–${fmt(res.pmndHoog,2)}/mnd) weerspiegelt het verschil tussen aanbieders — vergelijken kan honderden euro's per jaar schelen.
+    ${persoon2Html}<br><br>
+    <strong>Kalibratiebenchmark:</strong> Leeftijd 37 / €300.000 gelijkblijvend / 30 jaar = €7,80/mnd (goedkoopste aanbieder, feb. 2023).`;
+
+  // ── VERGELIJKTABEL ──
+  const vt = document.getElementById('vergelijkTbl');
+  const minPmnd = Math.min(...vormen.map(v => berekend[v].pmndLaag));
+  const vormenNL = { gelijkblijvend:'Gelijkblijvend', lineair:'Lineair dalend', annuitair:'Annuïtair dalend' };
+  let html = `<thead><tr>
+    <th>Dekkingsvorm</th>
+    <th>Goedkoopste</th>
+    <th>Marktgemiddelde</th>
+    <th>Duurste</th>
+    <th>Totaal (gemiddeld, ${ltEff} jr)</th>
+  </tr></thead><tbody>`;
+  vormen.forEach(v => {
+    const r = berekend[v];
+    const isMin = v === 'lineair' || v === vormen[vormen.length-1];
+    const isCheapest = r.pmndLaag === minPmnd;
+    html += `<tr>
+      <td>${vormenNL[v]}${isCheapest?'<span class="bv-badge">Laagste premie</span>':''}</td>
+      <td class="${isCheapest?'best':''}">${fmt(r.pmndLaag,2)}</td>
+      <td>${fmt(r.pmndMidden,2)}</td>
+      <td>${fmt(r.pmndHoog,2)}</td>
+      <td>${fmt(r.pmndMidden*12*ltEff)}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  vt.innerHTML = html;
+
+  // Toon alles
+  ['resCard','grafCard','vergelijkCard'].forEach(id => document.getElementById(id).classList.add('vis'));
+  tekenGrafiek();
+  document.getElementById('resCard').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── ADVISEUR ZOEKER ────────────────────────────────────────────────────────
+function zoekAdviseur(){
+  const pc = document.getElementById('postcodeInput').value.trim();
+  if(!pc){ alert('Vul een postcode of plaatsnaam in.'); return; }
+
+  const resultDiv = document.getElementById('advResultaat');
+  resultDiv.style.display = 'block';
+
+  const gmLink = `https://www.google.com/maps/search/hypotheekadviseur+${encodeURIComponent(pc)}`;
+  const hbLink = 'https://www.hypotheekbond.nl/advieskantoren';
+
+  const indicatiePremie = document.querySelector('#metricsRow .mv')?.textContent || '—';
+
+  resultDiv.innerHTML = `
+    <div class="adv-resultaat">
+      <div class="adv-item">
+        <div class="adv-avatar">🏠</div>
+        <div>
+          <div class="adv-naam">Hypotheekbond-advieskantoren</div>
+          <div class="adv-info">Gecertificeerde hypotheekadviseurs · onafhankelijk advies</div>
+        </div>
+        <a href="${hbLink}" target="_blank" style="text-decoration:none;background:var(--navy);color:#fff;padding:5px 12px;border-radius:6px;font-size:11.5px;font-weight:700;white-space:nowrap;margin-left:auto;">Bekijk →</a>
+      </div>
+      <div class="adv-item">
+        <div class="adv-avatar">📍</div>
+        <div>
+          <div class="adv-naam">Adviseurs in de buurt van "${pc}"</div>
+          <div class="adv-info">Zoek op Google Maps: hypotheekadviseur ${pc}</div>
+        </div>
+        <a href="${gmLink}" target="_blank" style="text-decoration:none;background:#1A8A50;color:#fff;padding:5px 12px;border-radius:6px;font-size:11.5px;font-weight:700;white-space:nowrap;margin-left:auto;">Open kaart →</a>
+      </div>
+      <div style="font-size:12px;color:var(--muted);padding-top:6px;line-height:1.65;">
+        💡 <strong>Tip voor het gesprek:</strong> Vermeld aan de adviseur — leeftijd <strong>${Math.round(N('leeftijd'))} jaar</strong>,
+        gewenste dekking <strong>${fmt(N('som'))}</strong>, looptijd <strong>${Math.round(N('looptijd'))} jaar</strong>, 
+        dekkingsvorm <strong>${vormType.replace('annuitair','annuïtair dalend').replace('lineair','lineair dalend').replace('gelijkblijvend','gelijkblijvend')}</strong>, ${roker?'<strong>roker</strong>':'<strong>niet-roker</strong>'}.
+        Onze indicatieve premie: <strong>${indicatiePremie}/mnd</strong> — gebruik dit als referentie bij de offerte.
+      </div>
+    </div>`;
+}
+
+// Init
+updateLeeftijdHint();
+
+function tekenGrafiek(){
+  const leeftijd = Math.round(N('leeftijd'));
+  const looptijd = Math.min(Math.round(N('looptijd')), 75 - leeftijd);
+  const som      = N('som');
+  const ctx      = document.getElementById('grafiek').getContext('2d');
+  if(grafObj) grafObj.destroy();
+
+  if(grafModus === 'dekking'){
+    const labels = Array.from({length: looptijd+1}, (_,i) => leeftijd+i);
+    const datasets = [
+      { label:'Gelijkblijvend', data: getSomVerloop(leeftijd, looptijd, som, 'gelijkblijvend'),
+        borderColor:'#003057', backgroundColor:'rgba(0,48,87,.1)', borderWidth:2, fill:true, tension:.1, pointRadius:0 },
+      { label:'Lineair dalend',  data: getSomVerloop(leeftijd, looptijd, som, 'lineair'),
+        borderColor:'#1A6B8A', backgroundColor:'rgba(26,107,138,.12)', borderWidth:2, fill:true, tension:.1, pointRadius:0 },
+      { label:'Annuïtair dalend', data: getSomVerloop(leeftijd, looptijd, som, 'annuitair'),
+        borderColor:'#B87A00', backgroundColor:'rgba(184,122,0,.12)', borderWidth:2, fill:true, tension:.3, pointRadius:0 },
+    ];
+    grafObj = new Chart(ctx, {
+      type:'line', data:{ labels, datasets },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{ labels:{ font:{family:'DM Sans',size:12}, color:'#333', boxWidth:14 } },
+          tooltip:{ callbacks:{ label: c => ` ${c.dataset.label}: €\u00A0${Math.round(c.parsed.y).toLocaleString('nl-NL')},-` } } },
+        scales:{
+          x:{ title:{display:true,text:'Leeftijd',font:{size:11},color:'#6B7280'}, ticks:{color:'#6B7280'}, grid:{color:'#EEF2F6'} },
+          y:{ title:{display:true,text:'Verzekerd bedrag (€)',font:{size:11},color:'#6B7280'},
+            ticks:{callback:v=>'€ '+(v/1000).toFixed(0)+'k',color:'#6B7280'}, grid:{color:'#EEF2F6'} }
+        }
+      }
+    });
+  } else {
+    // Sterftekansen
+    const ages = Object.keys(QX).map(Number).filter(a => a >= 18 && a <= 75);
+    const rkf = roker ? ROKER_FACTOR : 1.0;
+    const data = ages.map(a => (QX[a] * rkf * 1000).toFixed(3));
+    const highlight = ages.map(a => a >= N('leeftijd') && a < N('leeftijd')+N('looptijd'));
+    grafObj = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: ages,
+        datasets:[{
+          label:`Sterftekans ‰ per jaar (${roker?'roker':'niet-roker'})`,
+          data,
+          backgroundColor: ages.map((a,i) => highlight[i] ? '#003057' : '#D1DCE5'),
+          borderRadius:2,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ font:{family:'DM Sans',size:12}, color:'#333' } },
+          tooltip:{ callbacks:{ label: c => ` Sterftekans: ${c.parsed.y}‰ per jaar` } } },
+        scales:{
+          x:{ title:{display:true,text:'Leeftijd',font:{size:11},color:'#6B7280'}, ticks:{maxTicksLimit:20,color:'#6B7280'}, grid:{color:'#EEF2F6'} },
+          y:{ title:{display:true,text:'Sterftekans (‰ per jaar)',font:{size:11},color:'#6B7280'}, ticks:{color:'#6B7280'}, grid:{color:'#EEF2F6'} }
+        }
+      }
+    });
+  }
+}
+
+
+</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schaderisico Profiel</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f8f6f1;
+  --bg2:    #f0ede5;
+  --bg3:    #e5e0d5;
+  --white:  #ffffff;
+  --ink:    #1a1a1a;
+  --ink2:   #4a4a4a;
+  --ink3:   #8a8a8a;
+  --border: #ddd8ce;
+  --green:  #2a7a4e;
+  --green2: #eaf4ee;
+  --amber:  #b86a00;
+  --amber2: #fdf3e3;
+  --red:    #c0321a;
+  --red2:   #fdecea;
+  --blue:   #1a4f8a;
+  --blue2:  #e5eef8;
+  --accent: #c0440a;
+  --r: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--ink);
+  padding: 18px 36px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand { font-family: 'Lora', serif; font-size: 20px; color: white; }
+.brand em { color: #e8956a; font-style: italic; }
+.header-sub { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 300; }
+
+/* Layout */
+.page {
+  max-width: 1060px; margin: 0 auto;
+  padding: 40px 28px 80px;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 28px; align-items: start;
+}
+
+/* Panel */
+.panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.panel-hdr {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--bg2);
+  display: flex; align-items: center; gap: 10px;
+}
+.panel-hdr h2 { font-size: 14px; font-weight: 700; color: var(--ink); }
+.panel-hdr span { font-size: 18px; }
+.panel-body { padding: 20px; }
+
+/* Form */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+.field > label {
+  display: block; font-size: 11.5px; font-weight: 600;
+  color: var(--ink3); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.styled-select, .styled-input {
+  width: 100%; background: var(--bg);
+  border: 1.5px solid var(--border); border-radius: 9px;
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  color: var(--ink); padding: 10px 13px; outline: none;
+  -webkit-appearance: none; transition: border-color 0.2s;
+}
+.styled-select:focus, .styled-input:focus { border-color: var(--accent); }
+.styled-select option { background: var(--white); }
+
+/* Checkbox group */
+.check-grid { display: flex; flex-direction: column; gap: 7px; }
+.chk-item {
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer; user-select: none;
+  padding: 8px 11px;
+  border: 1.5px solid var(--border); border-radius: 9px;
+  transition: all 0.15s; font-size: 13.5px; color: var(--ink2);
+  background: var(--bg);
+}
+.chk-item:hover { border-color: var(--accent); background: #fdf5f2; }
+.chk-item.checked { border-color: var(--accent); background: #fdf5f2; color: var(--ink); }
+.chk-item input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.chk-item .ci-icon { font-size: 16px; }
+
+.divider { height: 1px; background: var(--bg2); margin: 14px 0; }
+
+/* Results col */
+.results-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* Radar card */
+.radar-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 28px;
+}
+.radar-title {
+  font-family: 'Lora', serif; font-size: 19px; font-weight: 600;
+  color: var(--ink); margin-bottom: 4px;
+}
+.radar-sub { font-size: 13px; color: var(--ink3); font-weight: 300; margin-bottom: 24px; }
+canvas { display: block; margin: 0 auto; max-width: 360px; width: 100%; }
+
+/* Overall score */
+.overall-score {
+  display: flex; gap: 14px; margin-top: 24px;
+  flex-wrap: wrap;
+}
+.os-tile {
+  flex: 1; min-width: 80px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 16px; text-align: center;
+}
+.os-val {
+  font-family: 'Lora', serif; font-size: 26px; font-weight: 600; line-height: 1;
+  margin-bottom: 3px;
+}
+.os-val.low  { color: var(--green); }
+.os-val.mid  { color: var(--amber); }
+.os-val.high { color: var(--red); }
+.os-lbl { font-size: 11px; color: var(--ink3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* Risk bars */
+.risk-list { display: flex; flex-direction: column; gap: 10px; }
+.risk-item {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 11px; padding: 14px 16px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.risk-item:hover { border-color: var(--ink3); }
+.risk-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.risk-icon { font-size: 20px; width: 32px; text-align: center; flex-shrink: 0; }
+.risk-name { font-weight: 600; font-size: 14px; flex: 1; }
+.risk-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+.rb-low  { background: var(--green2); color: var(--green); }
+.rb-mid  { background: var(--amber2); color: var(--amber); }
+.rb-high { background: var(--red2);   color: var(--red);   }
+.risk-bar-wrap { height: 7px; background: var(--bg2); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+.risk-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.rb-color-low  { background: linear-gradient(90deg, #2a7a4e, #4caf80); }
+.rb-color-mid  { background: linear-gradient(90deg, #b86a00, #f0a030); }
+.rb-color-high { background: linear-gradient(90deg, #c0321a, #e85030); }
+.risk-tip { font-size: 12.5px; color: var(--ink3); line-height: 1.6; font-weight: 300; display: none; }
+.risk-item.open .risk-tip { display: block; }
+.risk-item.open { border-color: var(--accent); }
+
+/* Label header */
+.section-lbl {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--ink3);
+  margin-bottom: 8px; padding-left: 2px;
+}
+
+/* Empty */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--ink3); background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--r);
+}
+.empty-state .ei { font-size: 44px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; font-weight: 300; line-height: 1.7; }
+
+@media (max-width: 720px) {
+  .page { grid-template-columns: 1fr; padding: 20px 14px 60px; }
+  .header { padding: 14px 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="brand">Schaderisico<em>profiel</em></div>
+  </div>
+  <div class="header-sub">Geen API · Directe analyse</div>
+</div>
+
+<div class="page">
+
+  <!-- Input -->
+  <div>
+    <div class="panel">
+      <div class="panel-hdr"><span>⚙️</span><h2>Uw situatie</h2></div>
+      <div class="panel-body">
+
+        <div class="field">
+          <label>Woonsituatie</label>
+          <select class="styled-select" id="wonen" onchange="calc()">
+            <option value="koop">Koopwoning</option>
+            <option value="huur">Huurwoning</option>
+            <option value="app_koop">Appartement (koop)</option>
+            <option value="app_huur">Appartement (huur)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Bouwjaar woning</label>
+          <select class="styled-select" id="bouwjaar" onchange="calc()">
+            <option value="nieuw">Na 2000 (modern)</option>
+            <option value="mid">1970–2000</option>
+            <option value="oud" selected>1945–1970</option>
+            <option value="hist">Voor 1945 (historisch)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Buurttype</label>
+          <select class="styled-select" id="buurt" onchange="calc()">
+            <option value="rustig">Rustige woonwijk</option>
+            <option value="stedelijk" selected>Stedelijk / gemengd</option>
+            <option value="centrum">Stadscentrum</option>
+            <option value="landelijk">Landelijk / buitengebied</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Gezinssituatie</label>
+          <select class="styled-select" id="gezin" onchange="calc()">
+            <option value="alleen">Alleenstaand</option>
+            <option value="partner">Met partner</option>
+            <option value="kinderen" selected>Gezin met kinderen</option>
+            <option value="ouderen">65+</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Leeftijd</label>
+          <select class="styled-select" id="leeftijd" onchange="calc()">
+            <option value="jong">18–30 jaar</option>
+            <option value="mid" selected>31–50 jaar</option>
+            <option value="senior">51–65 jaar</option>
+            <option value="ouder">65+</option>
+          </select>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label>Aanwezig in uw situatie</label>
+          <div class="check-grid">
+            <label class="chk-item" onclick="toggleChk(this,'hond')">
+              <input type="checkbox" id="hond"> <span class="ci-icon">🐕</span> Hond of grote kat
+            </label>
+            <label class="chk-item" onclick="toggleChk(this,'kostbaar')">
+              <input type="checkbox" id="kostbaar"> <span class="ci-icon">💎</span> Kostbaarheden >€2.500
+            </label>
+            <label class="chk-item" onclick="toggleChk(this,'kelder')">
+              <input type="checkbox" id="kelder"> <span class="ci-icon">🏚️</span> Kelder of souterrain
+            </label>
+            <label class="chk-item" onclick="toggleChk(this,'open_haard')">
+              <input type="checkbox" id="open_haard"> <span class="ci-icon">🔥</span> Open haard / houtkachel
+            </label>
+            <label class="chk-item" onclick="toggleChk(this,'auto')">
+              <input type="checkbox" id="auto"> <span class="ci-icon">🚗</span> Auto op eigen terrein
+            </label>
+            <label class="chk-item" onclick="toggleChk(this,'zonnepanelen')">
+              <input type="checkbox" id="zonnepanelen"> <span class="ci-icon">☀️</span> Zonnepanelen
+            </label>
+            <label class="chk-item" onclick="toggleChk(this,'thuiswerken')">
+              <input type="checkbox" id="thuiswerken"> <span class="ci-icon">💻</span> Thuiswerken / ZZP
+            </label>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-col" id="results">
+    <div class="empty-state">
+      <div class="ei">🛡️</div>
+      <p>Uw schaderisico profiel verschijnt hier.<br>Pas de instellingen links aan om te beginnen.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleChk(label, id) {
+  const cb = document.getElementById(id);
+  cb.checked = !cb.checked;
+  label.classList.toggle('checked', cb.checked);
+  calc();
+}
+
+function getChk(id) { return document.getElementById(id).checked; }
+function getSel(id) { return document.getElementById(id).value; }
+
+// ── Scoring ──────────────────────────────────────────────
+function calc() {
+  const wonen    = getSel('wonen');
+  const bouwjaar = getSel('bouwjaar');
+  const buurt    = getSel('buurt');
+  const gezin    = getSel('gezin');
+  const lft      = getSel('leeftijd');
+  const hond     = getChk('hond');
+  const kostbaar = getChk('kostbaar');
+  const kelder   = getChk('kelder');
+  const oHaard   = getChk('open_haard');
+  const auto     = getChk('auto');
+  const zp       = getChk('zonnepanelen');
+  const thuis    = getChk('thuiswerken');
+
+  // Scores 0–100 per categorie
+  const scores = {};
+
+  // BRAND
+  let brand = 25;
+  if (bouwjaar === 'hist') brand += 30;
+  else if (bouwjaar === 'oud') brand += 18;
+  else if (bouwjaar === 'mid') brand += 8;
+  if (oHaard) brand += 20;
+  if (zp) brand += 8;
+  if (wonen === 'koop' || wonen === 'app_koop') brand += 5;
+  if (thuis) brand += 5;
+  scores.brand = { score: Math.min(100, brand), label: 'Brand', icon: '🔥',
+    tip: brandTip(brand, oHaard, bouwjaar) };
+
+  // INBRAAK
+  let inbraak = 20;
+  if (buurt === 'centrum') inbraak += 30;
+  else if (buurt === 'stedelijk') inbraak += 18;
+  else if (buurt === 'landelijk') inbraak -= 5;
+  if (kostbaar) inbraak += 20;
+  if (wonen === 'huur' || wonen === 'app_huur') inbraak += 8;
+  if (gezin === 'alleen') inbraak += 8;
+  if (lft === 'jong') inbraak += 5;
+  scores.inbraak = { score: Math.min(100, inbraak), label: 'Inbraak & diefstal', icon: '🔓',
+    tip: inbraakTip(inbraak, buurt, kostbaar) };
+
+  // WATERSCHADE
+  let water = 20;
+  if (bouwjaar === 'hist') water += 28;
+  else if (bouwjaar === 'oud') water += 18;
+  if (kelder) water += 22;
+  if (wonen === 'app_koop' || wonen === 'app_huur') water += 10; // buren boven
+  if (zp) water += 5; // dakdoorvoer
+  scores.water = { score: Math.min(100, water), label: 'Waterschade', icon: '💧',
+    tip: waterTip(water, kelder, bouwjaar) };
+
+  // STORM & NATUUR
+  let storm = 20;
+  if (bouwjaar === 'hist') storm += 20;
+  else if (bouwjaar === 'oud') storm += 12;
+  if (wonen === 'huur' || wonen === 'app_huur') storm -= 8; // gebouw verantwoordelijkheid verhuurder
+  if (wonen === 'koop') storm += 8;
+  if (zp) storm += 10;
+  if (buurt === 'landelijk') storm += 12;
+  scores.storm = { score: Math.min(100, storm), label: 'Storm & natuur', icon: '🌩️',
+    tip: stormTip(storm, zp, bouwjaar) };
+
+  // AANSPRAKELIJKHEID
+  let avp = 20;
+  if (hond) avp += 28;
+  if (gezin === 'kinderen') avp += 22;
+  if (gezin === 'ouderen') avp -= 5;
+  if (thuis) avp += 12;
+  if (kostbaar) avp += 5;
+  scores.avp = { score: Math.min(100, avp), label: 'Aansprakelijkheid', icon: '⚖️',
+    tip: avpTip(avp, hond, gezin, thuis) };
+
+  // AUTO
+  if (auto) {
+    let autoS = 30;
+    if (buurt === 'centrum') autoS += 25;
+    else if (buurt === 'stedelijk') autoS += 15;
+    if (lft === 'jong') autoS += 15;
+    scores.auto = { score: Math.min(100, autoS), label: 'Auto & verkeer', icon: '🚗',
+      tip: autoTip(autoS, buurt) };
+  }
+
+  // TECHNIEK & APPARATEN
+  let tech = 20;
+  if (thuis) tech += 20;
+  if (kostbaar) tech += 15;
+  if (zp) tech += 12;
+  if (bouwjaar === 'hist' || bouwjaar === 'oud') tech += 10; // oudere elektra
+  scores.tech = { score: Math.min(100, tech), label: 'Techniek & apparaten', icon: '💻',
+    tip: techTip(tech, thuis, zp) };
+
+  renderResults(scores);
+}
+
+// ── Tips ─────────────────────────────────────────────────
+function brandTip(s, haard, bouw) {
+  let t = [];
+  if (haard) t.push('Laat uw schoorsteen jaarlijks vegen — open haarden veroorzaken 1 op de 5 woningbranden.');
+  if (bouw === 'hist' || bouw === 'oud') t.push('Oudere woningen hebben vaker verouderde elektra. Een elektra-keuring is aan te raden.');
+  if (s < 40) t.push('Uw brandrisico is laag. Zorg wel voor werkende rookmelders op elke verdieping.');
+  else if (s >= 60) t.push('Controleer of uw inboedel- en woonhuisverzekering brandschade volledig dekt inclusief berging en opruimkosten.');
+  return t.join(' ');
+}
+function inbraakTip(s, buurt, kost) {
+  let t = [];
+  if (buurt === 'centrum') t.push('In stadscentra is het inbraakrisico aanzienlijk hoger. Investeer in goed hang- en sluitwerk (SKG ★★★).');
+  if (kost) t.push('Kostbaarheden vallen vaak buiten de standaard inboedeldekking. Controleer of u een kostbaarhedenverzekering nodig heeft.');
+  if (s < 40) t.push('Uw inbraakrisico is relatief laag. Een alarminstallatie kan de premie verder verlagen.');
+  return t.join(' ');
+}
+function waterTip(s, kelder, bouw) {
+  let t = [];
+  if (kelder) t.push('Kelders zijn kwetsbaar bij hevige regenval. Een terugslagklep op de riolering is een effectieve maatregel.');
+  if (bouw === 'hist' || bouw === 'oud') t.push('Verouderde leidingen verhogen het lekrisico sterk. Laat deze periodiek inspecteren.');
+  if (s >= 60) t.push('Overweeg een brede waterschadedekking inclusief grondwater — niet alle polissen dekken dit standaard.');
+  return t.join(' ');
+}
+function stormTip(s, zp, bouw) {
+  let t = [];
+  if (zp) t.push('Zonnepanelen kunnen losraken bij storm. Controleer of uw woonhuisverzekering deze dekt inclusief val op derden.');
+  if (bouw === 'hist') t.push('Historische daken en schoorstenen zijn stormgevoeliger. Regelmatig onderhoud verlaagt het risico significant.');
+  if (s < 35) t.push('Uw stormrisico is beperkt. De standaard woonhuisverzekering dekt storm meestal goed.');
+  return t.join(' ');
+}
+function avpTip(s, hond, gezin, thuis) {
+  let t = [];
+  if (hond) t.push('Honden vallen onder uw AVP, maar sommige polissen sluiten bepaalde rassen uit. Controleer dit expliciet.');
+  if (gezin === 'kinderen') t.push('Kinderen veroorzaken regelmatig schade aan derden. Een AVP is onmisbaar en kost slechts €3–6 per maand.');
+  if (thuis) t.push('Als thuiswerker of ZZP\'er bent u zakelijk niet gedekt via een particuliere AVP. Overweeg een bedrijfsaansprakelijkheidsverzekering.');
+  if (s < 35) t.push('Uw aansprakelijkheidsrisico is beperkt, maar een AVP blijft altijd zinvol — de gevolgen van aansprakelijkheid kunnen enorm zijn.');
+  return t.join(' ');
+}
+function autoTip(s, buurt) {
+  let t = [];
+  if (buurt === 'centrum') t.push('In de stad is de kans op aanrijdingsschade en diefstal hoger. Overweeg all-risk of WA+ bij een nieuwere auto.');
+  if (s >= 60) t.push('Uw autorisico is verhoogd. Controleer of uw no-claimkorting goed beschermd is en of een rechtsbijstandmodule zinvol is.');
+  else t.push('Beoordeel jaarlijks of all-risk nog past bij de dagwaarde van uw auto. Onder €6.000 is WA+ vaak voldoende.');
+  return t.join(' ');
+}
+function techTip(s, thuis, zp) {
+  let t = [];
+  if (thuis) t.push('Zakelijke apparatuur thuis (laptop, camera) valt vaak buiten de inboedeldekking. Controleer uw polis of sluit een inventarisverzekering af.');
+  if (zp) t.push('Zonnepanelen vallen soms buiten de standaard woonhuisdekking. Vraag uw verzekeraar om bevestiging.');
+  if (s < 40) t.push('Uw techrisico is laag. Zorg wel dat dure apparaten op naam staan in uw inboedelpolis.');
+  return t.join(' ');
+}
+
+// ── Kleur helpers ─────────────────────────────────────────
+function scoreClass(s) { return s < 40 ? 'low' : s < 65 ? 'mid' : 'high'; }
+function scoreLabel(s) { return s < 40 ? 'Laag' : s < 65 ? 'Gemiddeld' : 'Hoog'; }
+function barColorClass(s) { return s < 40 ? 'rb-color-low' : s < 65 ? 'rb-color-mid' : 'rb-color-high'; }
+function badgeClass(s) { return s < 40 ? 'rb-low' : s < 65 ? 'rb-mid' : 'rb-high'; }
+
+// ── Render ────────────────────────────────────────────────
+function renderResults(scores) {
+  const keys = Object.keys(scores);
+  const vals = keys.map(k => scores[k].score);
+  const avg  = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  const maxS = Math.max(...vals);
+  const maxCat = scores[keys[vals.indexOf(maxS)]].label;
+
+  const high = vals.filter(v=>v>=65).length;
+  const mid  = vals.filter(v=>v>=40&&v<65).length;
+  const low  = vals.filter(v=>v<40).length;
+
+  const riskItems = keys.map(k => {
+    const r = scores[k];
+    return `
+    <div class="risk-item" onclick="this.classList.toggle('open')">
+      <div class="risk-top">
+        <div class="risk-icon">${r.icon}</div>
+        <div class="risk-name">${r.label}</div>
+        <div class="risk-badge ${badgeClass(r.score)}">${scoreLabel(r.score)}</div>
+      </div>
+      <div class="risk-bar-wrap">
+        <div class="risk-bar ${barColorClass(r.score)}" style="width:${r.score}%"></div>
+      </div>
+      <div class="risk-tip">${r.tip || 'Geen aanvullende tips voor uw situatie.'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('results').innerHTML = `
+    <div class="radar-card">
+      <div class="radar-title">Uw schaderisico profiel</div>
+      <div class="radar-sub">Klik op een categorie hieronder voor tips en toelichting</div>
+      <canvas id="radarCanvas" width="360" height="300"></canvas>
+      <div class="overall-score">
+        <div class="os-tile">
+          <div class="os-val ${scoreClass(avg)}">${avg}</div>
+          <div class="os-lbl">Overall score</div>
+        </div>
+        <div class="os-tile">
+          <div class="os-val high">${high}</div>
+          <div class="os-lbl">Hoog risico</div>
+        </div>
+        <div class="os-tile">
+          <div class="os-val mid">${mid}</div>
+          <div class="os-lbl">Gemiddeld</div>
+        </div>
+        <div class="os-tile">
+          <div class="os-val low">${low}</div>
+          <div class="os-lbl">Laag risico</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:9px;font-size:13px;color:var(--ink3);line-height:1.6;">
+        <strong style="color:var(--ink2);">Hoogste risico:</strong> ${maxCat} (score ${maxS}/100).
+        ${high > 0 ? `<strong style="color:var(--red)"> ${high} categorie${high>1?'ën':''} verdienen directe aandacht.</strong>` : ' Uw risicoprofiel ziet er goed uit.'}
+      </div>
+    </div>
+
+    <div class="section-lbl">Risico per categorie — klik voor tips</div>
+    <div class="risk-list">${riskItems}</div>
+  `;
+
+  drawRadar(scores);
+}
+
+// ── Radar chart (pure canvas) ─────────────────────────────
+function drawRadar(scores) {
+  const canvas = document.getElementById('radarCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2 + 10;
+  const R  = Math.min(W, H) / 2 - 50;
+
+  const keys   = Object.keys(scores);
+  const N      = keys.length;
+  const vals   = keys.map(k => scores[k].score / 100);
+  const labels = keys.map(k => scores[k].label);
+  const icons  = keys.map(k => scores[k].icon);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid circles
+  for (let ring = 1; ring <= 4; ring++) {
+    const rr = R * ring / 4;
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const angle = (i / N) * Math.PI * 2 - Math.PI / 2;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = ring === 4 ? 'rgba(192,68,10,0.15)' : 'rgba(0,0,0,0.07)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    if (ring < 4) {
+      ctx.fillStyle = 'rgba(0,0,0,0.015)';
+      ctx.fill();
+    }
+  }
+
+  // Spokes
+  for (let i = 0; i < N; i++) {
+    const angle = (i / N) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Data polygon
+  ctx.beginPath();
+  vals.forEach((v, i) => {
+    const angle = (i / N) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + R * v * Math.cos(angle);
+    const y = cy + R * v * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(192,68,10,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = '#c0440a';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Points
+  vals.forEach((v, i) => {
+    const angle = (i / N) * Math.PI * 2 - Math.PI / 2;
+    const x = cx + R * v * Math.cos(angle);
+    const y = cy + R * v * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    const s = scores[keys[i]].score;
+    ctx.fillStyle = s >= 65 ? '#c0321a' : s >= 40 ? '#b86a00' : '#2a7a4e';
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // Labels
+  ctx.font = '600 11px Outfit, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  labels.forEach((lbl, i) => {
+    const angle  = (i / N) * Math.PI * 2 - Math.PI / 2;
+    const offset = 32;
+    const x = cx + (R + offset) * Math.cos(angle);
+    const y = cy + (R + offset) * Math.sin(angle);
+    ctx.fillStyle = '#4a4a4a';
+    // Short label
+    const short = lbl.split(' ')[0];
+    ctx.fillText(icons[i] + ' ' + short, x, y);
+  });
+}
+
+// init
+calc();
+</script>
+</body>
+</html>

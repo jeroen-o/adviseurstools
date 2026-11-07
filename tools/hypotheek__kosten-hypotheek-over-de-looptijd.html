@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypotheek Vergelijker — Aflossingsvrij, Lineair & Annuïteit</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f0e8">
+<!-- HYPOTHEEK VERGELIJKER — Google Sites embed fragment -->
+<!-- Plakken in: Invoegen › Insluiten › Sluit code in            -->
+<!-- Geen externe afhankelijkheden — werkt volledig in sandbox   -->
+<style>
+/* BUG FIX: .hv* was fout — moet .hv,.hv * zijn (met spatie = descendant) */
+.hv, .hv *,
+.hv *::before,
+.hv *::after { box-sizing:border-box; margin:0; padding:0; }
+
+.hv {
+  --nv:#0f2240; --nv2:#1a3357; --tl:#00a991; --tl2:#007f6e;
+  --sd:#f4f0e8; --wh:#fff; --gl:#f1f3f6; --gm:#dde2ea; --gt:#6b7a90;
+  --af:#d94f22; --li:#00a991; --an:#3472c8;
+  --rd:10px; --sh:0 2px 14px rgba(15,34,64,.08);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:15px; color:var(--nv); background:var(--sd);
+  overflow-x:hidden; width:100%;
+}
+
+/* HEADER */
+.hv-hd { background:var(--nv); padding:0 16px; display:flex; align-items:center;
+  justify-content:space-between; flex-wrap:wrap; gap:8px; min-height:58px; position:relative; }
+.hv-hd::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,var(--tl),#00d4be 60%,transparent); }
+.hv-logo { display:flex; align-items:center; gap:10px; padding:8px 0; }
+.hv-lm { width:32px; height:32px; background:var(--tl); border-radius:7px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hv-lm svg { width:18px; height:18px; fill:#fff; }
+.hv-lt { font-size:1.05rem; font-weight:700; color:#fff; }
+.hv-tag { font-size:.68rem; color:#60d9cc; font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+@media(max-width:520px){ .hv-tag { display:none; } }
+.hv-pbtn { background:var(--tl); color:#fff; border:none; border-radius:7px;
+  padding:8px 16px; font-family:inherit; font-size:.82rem; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; gap:6px;
+  transition:background .2s; white-space:nowrap; }
+.hv-pbtn:hover  { background:var(--tl2); }
+.hv-pbtn:disabled { opacity:.6; cursor:wait; }
+.hv-pbtn svg { width:14px; height:14px; fill:currentColor; flex-shrink:0; }
+
+/* CONTAINER */
+.hv-ct { padding:18px 14px; }
+@media(min-width:580px){ .hv-ct { padding:24px 20px; } }
+.hv-ttl { font-size:1.4rem; font-weight:800; color:var(--nv); margin-bottom:3px; }
+@media(min-width:580px){ .hv-ttl { font-size:1.7rem; } }
+.hv-sub { color:var(--gt); font-size:.85rem; margin-bottom:20px; line-height:1.5; }
+
+/* INVOERVELDEN */
+.hv-ic { background:var(--wh); border-radius:var(--rd); box-shadow:var(--sh);
+  padding:16px 14px; margin-bottom:18px; border-top:4px solid var(--tl); }
+@media(min-width:580px){ .hv-ic { padding:20px 22px; } }
+.hv-itl { font-weight:700; font-size:.87rem; color:var(--nv); margin-bottom:13px; }
+.hv-ig { display:grid; grid-template-columns:1fr 1fr; gap:12px 15px; }
+@media(min-width:780px){ .hv-ig { grid-template-columns:repeat(4,1fr); } }
+.hv-fl label { display:block; font-size:.7rem; font-weight:700; color:var(--gt);
+  letter-spacing:.6px; text-transform:uppercase; margin-bottom:5px; }
+.hv-iw { position:relative; }
+.hv-px, .hv-sx { position:absolute; top:50%; transform:translateY(-50%);
+  font-size:.85rem; color:var(--gt); font-weight:500; pointer-events:none; }
+.hv-px { left:9px; } .hv-sx { right:9px; }
+.hv input[type=number],
+.hv select { width:100%; border:1.5px solid var(--gm); border-radius:7px;
+  padding:8px 11px; font-family:inherit; font-size:.9rem; color:var(--nv);
+  background:var(--gl); transition:border-color .2s; outline:none;
+  -webkit-appearance:none; appearance:none; }
+.hv input[type=number]:focus,
+.hv select:focus { border-color:var(--tl); background:var(--wh); }
+.hv-pp { padding-left:22px !important; }
+.hv-sp { padding-right:28px !important; }
+
+/* SUMMARY CARDS */
+.hv-sr { display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:18px; }
+@media(min-width:660px){ .hv-sr { grid-template-columns:1fr 1fr 1fr; } }
+.hv-sc { background:var(--wh); border-radius:var(--rd); box-shadow:var(--sh);
+  padding:15px; position:relative; overflow:hidden; }
+.hv-sc::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+.hv-sc.a::before { background:var(--af); }
+.hv-sc.l::before { background:var(--li); }
+.hv-sc.n::before { background:var(--an); }
+.hv-scl { font-size:.66rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:3px; }
+.hv-sc.a .hv-scl { color:var(--af); }
+.hv-sc.l .hv-scl { color:var(--li); }
+.hv-sc.n .hv-scl { color:var(--an); }
+.hv-scn { font-size:1rem; font-weight:800; color:var(--nv); margin-bottom:11px; }
+.hv-sm  { margin-bottom:7px; }
+.hv-sml { font-size:.7rem; color:var(--gt); margin-bottom:1px; }
+.hv-smv { font-size:.96rem; font-weight:700; color:var(--nv); }
+.hv-smv.big { font-size:1.18rem; }
+.hv-badge { display:inline-block; margin-top:8px; padding:3px 9px; border-radius:20px; font-size:.67rem; font-weight:700; }
+.hv-sc.a .hv-badge { background:#fdeee8; color:var(--af); }
+.hv-sc.l .hv-badge { background:#e4f7f4; color:var(--tl2); }
+.hv-sc.n .hv-badge { background:#e8eefa; color:var(--an); }
+
+/* NOTE */
+.hv-note { background:#e8f6f4; border-left:4px solid var(--tl); border-radius:8px;
+  padding:11px 14px; font-size:.8rem; color:#1a3a35; margin-bottom:20px; line-height:1.6; }
+.hv-note strong { color:var(--tl2); }
+
+/* SECTION TITLES */
+.hv-stl { font-size:1.1rem; font-weight:800; color:var(--nv); margin-bottom:11px;
+  display:flex; align-items:center; gap:9px; }
+.hv-stl::after { content:''; flex:1; height:1px; background:var(--gm); }
+
+/* TABEL */
+.hv-tc  { background:var(--wh); border-radius:var(--rd); box-shadow:var(--sh); overflow:hidden; margin-bottom:24px; }
+.hv-ts  { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.hv table { width:100%; border-collapse:collapse; min-width:440px; font-family:inherit; }
+.hv thead tr { background:var(--nv); }
+.hv thead th { padding:10px 12px; text-align:left; font-size:.7rem; font-weight:700;
+  letter-spacing:.8px; text-transform:uppercase; color:rgba(255,255,255,.55); }
+.hv thead th:first-child { color:#fff; }
+.hv thead th.a { color:#f4a070; }
+.hv thead th.l { color:#60d9cc; }
+.hv thead th.n { color:#8ab4f8; }
+.hv tbody tr { border-bottom:1px solid var(--gl); }
+.hv tbody tr:last-child { border-bottom:none; }
+.hv tbody tr:nth-child(even) { background:#f9fafb; }
+.hv tbody td { padding:9px 12px; font-size:.84rem; color:var(--nv); }
+.hv tbody td:first-child { color:var(--gt); font-size:.77rem; font-weight:600; }
+.hv-hl   { font-weight:700; }
+.hv-best { color:var(--tl2) !important; }
+.hv-wrst { color:var(--af)  !important; }
+
+/* GRAFIEKEN */
+.hv-cg { display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:20px; }
+@media(min-width:760px){
+  .hv-cg { grid-template-columns:1fr 1fr; gap:16px; }
+  .hv-cf { grid-column:1/-1; }
+}
+.hv-cc { background:var(--wh); border-radius:var(--rd); box-shadow:var(--sh); padding:14px 13px 11px; }
+@media(min-width:580px){ .hv-cc { padding:17px 17px 12px; } }
+.hv-ctit { font-weight:700; font-size:.85rem; color:var(--nv); margin-bottom:2px; }
+.hv-csub { font-size:.71rem; color:var(--gt); margin-bottom:10px; }
+.hv-cw   { position:relative; width:100%; }
+.hv-cw canvas { display:block; width:100% !important; height:220px; }
+.hv-leg  { display:flex; gap:13px; flex-wrap:wrap; margin-top:8px; padding-top:8px; border-top:1px solid var(--gl); }
+.hv-li   { display:flex; align-items:center; gap:5px; font-size:.74rem; color:var(--gt); }
+.hv-ld   { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+
+@media print {
+  .hv-pbtn, .hv-ic { display:none !important; }
+  .hv * { box-shadow:none !important; }
+}
+</style>
+
+<div class="hv">
+
+  <header class="hv-hd">
+    <div class="hv-logo">
+      <div class="hv-lm">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1V9z"/>
+          <polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="#fff" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <span class="hv-lt">Hypotheek Vergelijker</span>
+    </div>
+    <span class="hv-tag">Kosten over de looptijd</span>
+    <button class="hv-pbtn" id="hvPrint">
+      <svg viewBox="0 0 24 24">
+        <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/>
+      </svg>
+      Afdrukken
+    </button>
+  </header>
+
+  <div class="hv-ct">
+    <h1 class="hv-ttl">Hypotheekvormen Vergelijken</h1>
+    <p class="hv-sub">Bereken en vergelijk de totale kosten van aflossingsvrij, lineair en annuïteit over de volledige looptijd.</p>
+
+    <div class="hv-ic">
+      <div class="hv-itl">⚙ Hypotheekgegevens</div>
+      <div class="hv-ig">
+        <div class="hv-fl">
+          <label for="hvB">Hypotheekbedrag</label>
+          <div class="hv-iw">
+            <span class="hv-px">€</span>
+            <input type="number" id="hvB" class="hv-pp" value="350000" min="10000" max="9999999" step="1000">
+          </div>
+        </div>
+        <div class="hv-fl">
+          <label for="hvR">Rentepercentage</label>
+          <div class="hv-iw">
+            <input type="number" id="hvR" class="hv-sp" value="4.20" min="0.1" max="15" step="0.05">
+            <span class="hv-sx">%</span>
+          </div>
+        </div>
+        <div class="hv-fl">
+          <label for="hvL">Looptijd</label>
+          <div class="hv-iw">
+            <input type="number" id="hvL" class="hv-sp" value="30" min="5" max="40" step="1">
+            <span class="hv-sx">jr</span>
+          </div>
+        </div>
+        <div class="hv-fl">
+          <label for="hvS">Belastingaftrek</label>
+          <select id="hvS">
+            <option value="0">Geen aftrek</option>
+            <option value="35.75" selected>Schijf 1 — 35,75%</option>
+            <option value="37.56">Schijf 2 — 37,56%</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="hv-sr"  id="hvCards"></div>
+    <div class="hv-note" id="hvNote"></div>
+
+    <div class="hv-stl">Totaaloverzicht kosten</div>
+    <div class="hv-tc"><div class="hv-ts">
+      <table id="hvTbl">
+        <thead><tr>
+          <th>Kengetal</th>
+          <th class="a">Aflossingsvrij</th>
+          <th class="l">Lineair</th>
+          <th class="n">Annuïteit</th>
+        </tr></thead>
+        <tbody id="hvTbody"></tbody>
+      </table>
+    </div></div>
+
+    <div class="hv-stl">Grafieken</div>
+    <div class="hv-cg">
+
+      <div class="hv-cc hv-cf">
+        <div class="hv-ctit">Maandlast over de looptijd</div>
+        <div class="hv-csub">Bruto maandelijkse betaling per hypotheekvorm (rente + aflossing)</div>
+        <div class="hv-cw"><canvas id="cvM"></canvas></div>
+        <div class="hv-leg">
+          <div class="hv-li"><div class="hv-ld" style="background:#d94f22"></div>Aflossingsvrij</div>
+          <div class="hv-li"><div class="hv-ld" style="background:#00a991"></div>Lineair</div>
+          <div class="hv-li"><div class="hv-ld" style="background:#3472c8"></div>Annuïteit</div>
+        </div>
+      </div>
+
+      <div class="hv-cc">
+        <div class="hv-ctit">Resterende schuld</div>
+        <div class="hv-csub">Openstaand hypotheeksaldo per jaar</div>
+        <div class="hv-cw"><canvas id="cvS"></canvas></div>
+        <div class="hv-leg">
+          <div class="hv-li"><div class="hv-ld" style="background:#d94f22"></div>Aflossingsvrij</div>
+          <div class="hv-li"><div class="hv-ld" style="background:#00a991"></div>Lineair</div>
+          <div class="hv-li"><div class="hv-ld" style="background:#3472c8"></div>Annuïteit</div>
+        </div>
+      </div>
+
+      <div class="hv-cc">
+        <div class="hv-ctit">Cumulatieve rentekosten</div>
+        <div class="hv-csub">Netto betaalde rente (na belastingaftrek)</div>
+        <div class="hv-cw"><canvas id="cvR"></canvas></div>
+        <div class="hv-leg">
+          <div class="hv-li"><div class="hv-ld" style="background:#d94f22"></div>Aflossingsvrij</div>
+          <div class="hv-li"><div class="hv-ld" style="background:#00a991"></div>Lineair</div>
+          <div class="hv-li"><div class="hv-ld" style="background:#3472c8"></div>Annuïteit</div>
+        </div>
+      </div>
+
+    </div><!-- /hv-cg -->
+  </div><!-- /hv-ct -->
+</div><!-- /hv -->
+
+<script>
+(function(){
+'use strict';
+
+/* ─── Formatters ─────────────────────────────────────────── */
+function f(v)  { return '\u20ac\u202f' + Math.round(v).toLocaleString('nl-NL'); }
+function fk(v) {
+  if(v >= 1000000) return '\u20ac' + (v/1000000).toFixed(1).replace('.',',') + 'M';
+  if(v >= 1000)    return '\u20ac' + (v/1000).toFixed(0) + 'k';
+  return '\u20ac' + Math.round(v);
+}
+
+/* ─── Berekening ─────────────────────────────────────────── */
+function calc(bedrag, rj, jr, apc) {
+  var n   = jr * 12;
+  var r   = rj / 100 / 12;
+  var aft = apc / 100;
+  var alin = bedrag / n;
+  var ann  = (r === 0) ? bedrag / n
+             : bedrag * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
+
+  var A=[], L=[], N=[];
+  var rL=bedrag, rN=bedrag, cA=0, cL=0, cN=0;
+
+  for(var m=0; m<n; m++){
+    var ra=bedrag*r,  na=ra*(1-aft);  cA+=na;
+    A.push({br:ra, nr:na, bm:ra,        rs:bedrag,       cr:cA});
+
+    var rl=rL*r,      nl=rl*(1-aft);  cL+=nl; rL-=alin;
+    L.push({br:rl, nr:nl, bm:rl+alin,  rs:Math.max(0,rL), cr:cL});
+
+    var rn=rN*r, an2=ann-rn, nn=rn*(1-aft); cN+=nn; rN-=an2;
+    N.push({br:rn, nr:nn, bm:ann,       rs:Math.max(0,rN), cr:cN});
+  }
+  return {A:A, L:L, N:N, ann:ann, n:n};
+}
+
+function sum(arr, k){ return arr.reduce(function(s,v){ return s+v[k]; }, 0); }
+
+/* ─── Canvas grafiek ────────────────────────────────────── */
+function drawChart(id, series) {
+  var cvs = document.getElementById(id);
+  if(!cvs) return;
+
+  /* BUG FIX: offsetWidth kan 0 zijn als het iframe nog niet gesettled is.
+     Klim de DOM op totdat we een breedte hebben, of val terug op 600px. */
+  var W = 0, el = cvs;
+  while(W < 10 && el) { W = el.offsetWidth; el = el.parentElement; }
+  if(W < 10) W = 600;
+
+  var H   = 220;
+  var dpr = window.devicePixelRatio || 1;
+  cvs.width  = Math.round(W * dpr);
+  cvs.height = Math.round(H * dpr);
+  cvs.style.width  = W + 'px';
+  cvs.style.height = H + 'px';
+
+  var ctx = cvs.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  var P = {t:10, r:14, b:34, l:58};
+  var pw = W - P.l - P.r;
+  var ph = H - P.t - P.b;
+
+  /* waardenbereik */
+  var all = [];
+  series.forEach(function(s){ all = all.concat(s.d); });
+  var mn = Math.min.apply(null, all);
+  var mx = Math.max.apply(null, all);
+  if(mx === mn){ mx = mn + 1; }
+  /* afronding op nette stappen */
+  var rng  = mx - mn;
+  var mag  = Math.pow(10, Math.floor(Math.log(rng / 4) / Math.LN10));
+  mx = Math.ceil(mx / mag) * mag;
+  mn = Math.max(0, Math.floor(mn / mag) * mag);
+  var TICKS = 4;
+
+  function xp(i){ return P.l + i / (series[0].d.length - 1) * pw; }
+  function yp(v){ return P.t + ph - (v - mn) / (mx - mn) * ph; }
+
+  /* rasterlijnen + y-as labels */
+  ctx.font = '10px -apple-system,sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'right';
+  for(var t=0; t<=TICKS; t++){
+    var yv = mn + (mx - mn) * t / TICKS;
+    var y  = yp(yv);
+    ctx.strokeStyle = '#eef0f4'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(P.l, y); ctx.lineTo(P.l+pw, y); ctx.stroke();
+    ctx.fillStyle = '#8a96a8';
+    ctx.fillText(fk(yv), P.l - 5, y);
+  }
+
+  /* x-as labels — elke 5 jaar */
+  var nPts = series[0].d.length;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#8a96a8';
+  for(var k=0; k<nPts; k++){
+    if(k === 0 || k === nPts-1 || k % 5 === 0){
+      ctx.fillText('jr ' + k, xp(k), H - P.b + 5);
+    }
+  }
+
+  /* x-as lijn */
+  ctx.strokeStyle = '#dde2ea'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(P.l, P.t+ph); ctx.lineTo(P.l+pw, P.t+ph); ctx.stroke();
+
+  /* lijnen en vulling */
+  series.forEach(function(s){
+    /* vulling */
+    ctx.beginPath();
+    s.d.forEach(function(v,i){ i===0 ? ctx.moveTo(xp(i),yp(v)) : ctx.lineTo(xp(i),yp(v)); });
+    ctx.lineTo(xp(s.d.length-1), P.t+ph);
+    ctx.lineTo(P.l, P.t+ph);
+    ctx.closePath();
+    ctx.fillStyle = s.fill; ctx.fill();
+
+    /* lijn */
+    ctx.beginPath();
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    s.d.forEach(function(v,i){ i===0 ? ctx.moveTo(xp(i),yp(v)) : ctx.lineTo(xp(i),yp(v)); });
+    ctx.stroke();
+  });
+}
+
+/* ─── Grafiekdata opbouwen ───────────────────────────────── */
+var gData = {};
+
+function buildChartData(A, L, N, jr, bedrag){
+  var dMA=[],dML=[],dMN=[], dSA=[],dSL=[],dSN=[], dRA=[],dRL=[],dRN=[];
+  dMA.push(A[0].bm); dML.push(L[0].bm); dMN.push(N[0].bm);
+  dSA.push(bedrag);  dSL.push(bedrag);   dSN.push(bedrag);
+  dRA.push(0);       dRL.push(0);        dRN.push(0);
+  for(var k=1; k<=jr; k++){
+    var i = k*12 - 1;
+    dMA.push(A[i].bm); dML.push(L[i].bm); dMN.push(N[i].bm);
+    dSA.push(A[i].rs); dSL.push(L[i].rs); dSN.push(N[i].rs);
+    dRA.push(A[i].cr); dRL.push(L[i].cr); dRN.push(N[i].cr);
+  }
+  gData.M = [
+    {d:dMA, color:'#d94f22', fill:'rgba(217,79,34,.06)'},
+    {d:dML, color:'#00a991', fill:'rgba(0,169,145,.06)'},
+    {d:dMN, color:'#3472c8', fill:'rgba(52,114,200,.06)'}
+  ];
+  gData.S = [
+    {d:dSA, color:'#d94f22', fill:'rgba(217,79,34,.09)'},
+    {d:dSL, color:'#00a991', fill:'rgba(0,169,145,.09)'},
+    {d:dSN, color:'#3472c8', fill:'rgba(52,114,200,.09)'}
+  ];
+  gData.R = [
+    {d:dRA, color:'#d94f22', fill:'rgba(217,79,34,.06)'},
+    {d:dRL, color:'#00a991', fill:'rgba(0,169,145,.06)'},
+    {d:dRN, color:'#3472c8', fill:'rgba(52,114,200,.06)'}
+  ];
+}
+
+function drawAll(){
+  if(gData.M) drawChart('cvM', gData.M);
+  if(gData.S) drawChart('cvS', gData.S);
+  if(gData.R) drawChart('cvR', gData.R);
+}
+
+/* ─── Card helper ────────────────────────────────────────── */
+function card(cls, naam, ml, mlv, l2, v2, l3, v3, l4, v4, v4c, badge){
+  return '<div class="hv-sc '+cls+'">' +
+    '<div class="hv-scl">Hypotheekvorm</div>' +
+    '<div class="hv-scn">'+naam+'</div>' +
+    '<div class="hv-sm"><div class="hv-sml">'+ml+'</div>' +
+      '<div class="hv-smv big">'+mlv+'<span style="font-size:.58em;font-weight:400"> /mnd</span></div></div>' +
+    '<div class="hv-sm"><div class="hv-sml">'+l2+'</div><div class="hv-smv">'+v2+'</div></div>' +
+    '<div class="hv-sm"><div class="hv-sml">'+l3+'</div><div class="hv-smv">'+v3+'</div></div>' +
+    '<div class="hv-sm"><div class="hv-sml">'+l4+'</div>' +
+      '<div class="hv-smv" style="color:'+v4c+'">'+v4+'</div></div>' +
+    '<span class="hv-badge">'+badge+'</span>' +
+  '</div>';
+}
+
+/* ─── Hoofdrender ────────────────────────────────────────── */
+function render(){
+  var bedrag = parseFloat(document.getElementById('hvB').value) || 350000;
+  var rj     = parseFloat(document.getElementById('hvR').value) || 4.2;
+  var jr     = parseInt(document.getElementById('hvL').value)   || 30;
+  var apc    = parseFloat(document.getElementById('hvS').value) || 0;
+
+  var res = calc(bedrag, rj, jr, apc);
+  var A=res.A, L=res.L, N=res.N, ann=res.ann, n=res.n;
+
+  var tbA=sum(A,'br'), tbL=sum(L,'br'), tbN=sum(N,'br');
+  var tnA=sum(A,'nr'), tnL=sum(L,'nr'), tnN=sum(N,'nr');
+
+  /* Cards */
+  document.getElementById('hvCards').innerHTML =
+    card('a','Aflossingsvrij',
+      'Vaste maandlast — alleen rente', f(A[0].bm),
+      'Totaal bruto rente', f(tbA),
+      'Totaal netto rente (na aftrek)', f(tnA),
+      'Restschuld einde looptijd', f(bedrag), '#d94f22',
+      'Hoogste rentekosten') +
+    card('l','Lineair',
+      'Startmaandlast (daalt elke maand)', f(L[0].bm),
+      'Totaal bruto rente', f(tbL),
+      'Totaal netto rente (na aftrek)', f(tnL),
+      'Restschuld einde looptijd', '\u20ac\u202f0', '#007f6e',
+      'Laagste totale rente') +
+    card('n','Annuïteit',
+      'Vaste maandlast (bruto, constant)', f(ann),
+      'Totaal bruto rente', f(tbN),
+      'Totaal netto rente (na aftrek)', f(tnN),
+      'Restschuld einde looptijd', '\u20ac\u202f0', '#007f6e',
+      'Meest gekozen');
+
+  /* Note */
+  var besp = tnA - tnL;
+  document.getElementById('hvNote').innerHTML =
+    '<strong>Fiscale toelichting:</strong> Hypotheekrente is aftrekbaar in box\u00a01 tot maximaal het tarief van schijf\u00a01 (35,75% in 2026). ' +
+    (apc > 0
+      ? 'Bij '+apc+'% aftrek betaalt u bij lineair <strong>'+f(besp)+'</strong> minder netto rente dan bij aflossingsvrij. '
+      : 'Geen belastingaftrek geselecteerd. ') +
+    'Let op: bij aflossingsvrij blijft de volledige hoofdsom van <strong>'+f(bedrag)+'</strong> openstaan aan het einde (ballonaflossing).';
+
+  /* Tabel */
+  var rows = [
+    {lb:'Hypotheekbedrag',          av:f(bedrag),       lv:f(bedrag),       nv:f(bedrag)},
+    {lb:'Looptijd',                 av:jr+' jaar',      lv:jr+' jaar',      nv:jr+' jaar'},
+    {lb:'Startmaandlast bruto',     av:f(A[0].bm),      lv:f(L[0].bm),      nv:f(ann)},
+    {lb:'Eindmaandlast bruto',      av:f(A[n-1].bm),    lv:f(L[n-1].bm),    nv:f(ann)},
+    {lb:'Totaal bruto rente',       av:f(tbA), lv:f(tbL), nv:f(tbN), vv:[tbA,tbL,tbN], hl:1},
+    {lb:'Totaal netto rente (na aftrek)', av:f(tnA), lv:f(tnL), nv:f(tnN), vv:[tnA,tnL,tnN], hl:1},
+    {lb:'Belastingvoordeel rente',  av:f(tbA-tnA), lv:f(tbL-tnL), nv:f(tbN-tnN), hl:1},
+    {lb:'Totale uitgaven incl. aflossing', av:f(tbA+bedrag), lv:f(tbL+bedrag), nv:f(tbN+bedrag),
+      vv:[tbA+bedrag, tbL+bedrag, tbN+bedrag], hl:1},
+    {lb:'Restschuld na looptijd',   av:f(bedrag), lv:f(0), nv:f(0), vv:[bedrag,0,0], hl:1}
+  ];
+
+  document.getElementById('hvTbody').innerHTML = rows.map(function(row){
+    function cls(i){
+      var c = row.hl ? 'hv-hl' : '';
+      if(row.vv){
+        var mn=Math.min.apply(null,row.vv), mx=Math.max.apply(null,row.vv);
+        if(mn !== mx){
+          if(row.vv[i]===mn) c += ' hv-best';
+          if(row.vv[i]===mx) c += ' hv-wrst';
+        }
+      }
+      return c.trim();
+    }
+    return '<tr><td>'+row.lb+'</td><td class="'+cls(0)+'">'+row.av+'</td>' +
+      '<td class="'+cls(1)+'">'+row.lv+'</td><td class="'+cls(2)+'">'+row.nv+'</td></tr>';
+  }).join('');
+
+  /* Grafieken */
+  buildChartData(A, L, N, jr, bedrag);
+
+  /* Kleine timeout zodat de browser de DOM-breedte kan berekenen voor canvas */
+  setTimeout(drawAll, 150);
+}
+
+/* ─── Events — geen inline handlers (sandbox-veilig) ────── */
+['hvB','hvR','hvL'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', render);
+});
+document.getElementById('hvS').addEventListener('change', render);
+
+/* herteken bij resize */
+var rzTimer;
+window.addEventListener('resize', function(){
+  clearTimeout(rzTimer);
+  rzTimer = setTimeout(drawAll, 200);
+});
+
+/* ─── Afdrukken via window.open (werkt vanuit iframe) ────── */
+document.getElementById('hvPrint').addEventListener('click', function(){
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = '\u23F3 Even geduld\u2026';
+
+  setTimeout(function(){
+    var iM = document.getElementById('cvM').toDataURL('image/png');
+    var iS = document.getElementById('cvS').toDataURL('image/png');
+    var iR = document.getElementById('cvR').toDataURL('image/png');
+    var sH = document.getElementById('hvCards').innerHTML;
+    var tH = document.getElementById('hvTbl').innerHTML;
+    var nH = document.getElementById('hvNote').innerHTML;
+    var b  = document.getElementById('hvB').value;
+    var re = document.getElementById('hvR').value;
+    var lo = document.getElementById('hvL').value;
+    var sel = document.getElementById('hvS');
+    var schijf = sel.options[sel.selectedIndex].text;
+
+    var pw = window.open('','_blank','width=960,height=840,scrollbars=yes');
+    if(!pw){
+      alert('Pop-upblokkering actief \u2014 sta pop-ups toe voor deze pagina.');
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg> Afdrukken';
+      return;
+    }
+
+    var css = '*{box-sizing:border-box;margin:0;padding:0}' +
+      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:11px;color:#0f2240;background:#fff;padding:18px 26px}' +
+      'h1{font-size:1.3rem;font-weight:800;margin-bottom:2px}.sub{color:#6b7a90;font-size:.75rem;margin-bottom:11px}' +
+      '.params{display:flex;gap:15px;background:#f1f3f6;border-radius:7px;padding:8px 13px;margin-bottom:12px;font-size:.75rem;flex-wrap:wrap}' +
+      '.sr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:11px}' +
+      '.hv-sc{border-radius:7px;padding:11px 12px;position:relative;overflow:hidden;border:1px solid #dde2ea}' +
+      '.hv-sc::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}' +
+      '.hv-sc.a::before{background:#d94f22}.hv-sc.l::before{background:#00a991}.hv-sc.n::before{background:#3472c8}' +
+      '.hv-scl{font-size:.58rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}' +
+      '.hv-sc.a .hv-scl{color:#d94f22}.hv-sc.l .hv-scl{color:#00a991}.hv-sc.n .hv-scl{color:#3472c8}' +
+      '.hv-scn{font-size:.88rem;font-weight:800;color:#0f2240;margin-bottom:7px}' +
+      '.hv-sm{margin-bottom:4px}.hv-sml{font-size:.62rem;color:#6b7a90;margin-bottom:1px}' +
+      '.hv-smv{font-size:.8rem;font-weight:700}.hv-smv.big{font-size:.94rem}' +
+      '.hv-badge{display:inline-block;margin-top:5px;padding:2px 7px;border-radius:20px;font-size:.6rem;font-weight:700}' +
+      '.hv-sc.a .hv-badge{background:#fdeee8;color:#d94f22}.hv-sc.l .hv-badge{background:#e4f7f4;color:#007f6e}.hv-sc.n .hv-badge{background:#e8eefa;color:#3472c8}' +
+      '.note{background:#e8f6f4;border-left:3px solid #00a991;border-radius:6px;padding:8px 12px;font-size:.72rem;color:#1a3a35;margin-bottom:12px;line-height:1.5}' +
+      '.note strong{color:#007f6e}.sec{font-size:.9rem;font-weight:800;color:#0f2240;margin:11px 0 6px;border-bottom:1px solid #dde2ea;padding-bottom:3px}' +
+      'table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:.74rem}' +
+      'thead tr{background:#0f2240}thead th{padding:6px 10px;text-align:left;font-size:.64rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.6)}' +
+      'thead th:first-child{color:#fff}thead th.a{color:#f4a070}thead th.l{color:#60d9cc}thead th.n{color:#8ab4f8}' +
+      'tbody tr{border-bottom:1px solid #f1f3f6}tbody tr:nth-child(even){background:#f9fafb}' +
+      'tbody td{padding:5px 10px;color:#0f2240}tbody td:first-child{color:#6b7a90;font-size:.7rem;font-weight:600}' +
+      '.hv-hl{font-weight:700}.hv-best{color:#007f6e}.hv-wrst{color:#d94f22}' +
+      '.cg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.cf{grid-column:1/-1}' +
+      '.cc{border:1px solid #dde2ea;border-radius:7px;padding:9px 11px}' +
+      '.ct{font-weight:700;font-size:.73rem;color:#0f2240;margin-bottom:2px}.cs{font-size:.62rem;color:#6b7a90;margin-bottom:7px}' +
+      '.cc img{width:100%;height:auto;display:block}' +
+      '.lg{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;padding-top:6px;border-top:1px solid #f1f3f6}' +
+      '.li{display:flex;align-items:center;gap:4px;font-size:.63rem;color:#6b7a90}' +
+      '.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}' +
+      '.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:7px;border-bottom:2px solid #00a991}' +
+      '.dt{font-size:.65rem;color:#6b7a90}' +
+      '@media print{body{padding:8px 14px}@page{margin:9mm;size:A4}}';
+
+    var lg = '<div class="lg">' +
+      '<div class="li"><div class="ld" style="background:#d94f22"></div>Aflossingsvrij</div>' +
+      '<div class="li"><div class="ld" style="background:#00a991"></div>Lineair</div>' +
+      '<div class="li"><div class="ld" style="background:#3472c8"></div>Annuïteit</div></div>';
+
+    pw.document.write(
+      '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Rapport</title>' +
+      '<style>'+css+'</style></head><body>' +
+      '<div class="hdr"><div><h1>Hypotheekvormen Vergelijker</h1>' +
+      '<div class="sub">Kosten over de volledige looptijd</div></div>' +
+      '<div class="dt">'+new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})+'</div></div>' +
+      '<div class="params">' +
+      '<div><strong>Hypotheekbedrag:</strong> \u20ac '+Number(b).toLocaleString('nl-NL')+'</div>' +
+      '<div><strong>Rente:</strong> '+re+'%</div>' +
+      '<div><strong>Looptijd:</strong> '+lo+' jaar</div>' +
+      '<div><strong>Belastingaftrek:</strong> '+schijf+'</div></div>' +
+      '<div class="sr">'+sH+'</div>' +
+      '<div class="note">'+nH+'</div>' +
+      '<div class="sec">Totaaloverzicht kosten</div><table>'+tH+'</table>' +
+      '<div class="sec">Grafieken</div><div class="cg">' +
+      '<div class="cc cf"><div class="ct">Maandlast over de looptijd</div>' +
+        '<div class="cs">Bruto maandelijkse betaling per hypotheekvorm</div>' +
+        '<img src="'+iM+'">'+lg+'</div>' +
+      '<div class="cc"><div class="ct">Resterende schuld</div>' +
+        '<div class="cs">Openstaand hypotheeksaldo</div>' +
+        '<img src="'+iS+'">'+lg+'</div>' +
+      '<div class="cc"><div class="ct">Cumulatieve rentekosten</div>' +
+        '<div class="cs">Netto betaalde rente na aftrek</div>' +
+        '<img src="'+iR+'">'+lg+'</div>' +
+      '</div>' +
+      '<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt>' +
+      '</body></html>');
+    pw.document.close();
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor">' +
+      '<path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg> Afdrukken';
+  }, 300);
+});
+
+/* ─── Init ───────────────────────────────────────────────── */
+/* Gebruik DOMContentLoaded als fallback, maar de inline script
+   staat na de HTML dus het DOM is al klaar. Kleine timeout
+   voor Google Sites iframe die de layout nog settelt. */
+render();
+setTimeout(drawAll, 500); /* extra vangnet voor trage iframes */
+
+})();
+</script>
+</body>
+</html>

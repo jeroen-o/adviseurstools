@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORV Dekkingsbehoefte — Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#004580;--gold:#E5A138;--gold-lt:#FEF8EE;
+  --bg:#F4F7F9;--white:#fff;--text:#333;--muted:#6B7280;--border:#D1DCE5;
+  --green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;
+  --orange:#D97706;--orglt:#FEF3C7;--shadow:0 2px 14px rgba(0,48,87,.09);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:66px;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,0,0,.2);}
+.h-left{display:flex;align-items:center;gap:14px;}
+.h-icon{font-size:28px;}
+.h-title{font-family:'DM Serif Display',serif;font-size:20px;}
+.h-sub{font-size:11.5px;opacity:.7;}
+.h-badges{display:flex;gap:7px;}
+.badge{background:rgba(255,255,255,.13);color:#fff;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);}
+.badge.gold{background:var(--gold);color:var(--navy);border-color:var(--gold);}
+
+.main{max-width:900px;margin:0 auto;padding:28px 16px 72px;display:flex;flex-direction:column;gap:20px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;}
+.card-header{background:var(--navy);color:#fff;padding:13px 22px;font-weight:600;font-size:15px;display:flex;align-items:center;gap:10px;}
+.card-header .ico{font-size:18px;}
+.card-body{padding:22px;}
+
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.s3{grid-column:1/-1;}
+.sdiv{font-size:10.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.09em;padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+label{font-size:12.5px;font-weight:600;color:var(--navy);}
+.hint{font-size:11px;color:var(--muted);line-height:1.4;}
+.iw{position:relative;display:flex;align-items:center;}
+.pre{position:absolute;left:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.suf{position:absolute;right:10px;font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+input[type=number],select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);background:#fff;outline:none;transition:border-color .18s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:26px;}
+.iw input.rs{padding-left:10px;padding-right:48px;}
+
+.btn-calc{width:100%;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;cursor:pointer;transition:background .18s;margin-top:8px;}
+.btn-calc:hover{background:var(--navy2);}
+
+/* RESULTATEN */
+.res-card{display:none;}
+.res-card.vis{display:block;}
+
+/* DEKKINGS BAR */
+.dekking-wrap{background:#F0F4F8;border-radius:12px;padding:20px;margin-bottom:20px;}
+.dekking-titel{font-family:'DM Serif Display',serif;font-size:26px;color:var(--navy);margin-bottom:4px;}
+.dekking-sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+.stapel{display:flex;flex-direction:column;gap:8px;}
+.stapel-rij{display:flex;align-items:center;gap:12px;}
+.stapel-label{width:200px;font-size:12.5px;font-weight:600;color:var(--navy);flex-shrink:0;}
+.stapel-bar-bg{flex:1;height:22px;background:#e2e8f0;border-radius:5px;overflow:hidden;position:relative;}
+.stapel-bar{height:100%;border-radius:5px;transition:width .5s;}
+.stapel-val{width:110px;text-align:right;font-size:13px;font-weight:700;color:var(--navy);flex-shrink:0;}
+.stapel-pijl{width:24px;text-align:center;font-size:14px;flex-shrink:0;}
+
+/* CONCLUSIE BOX */
+.conclusie{border-radius:12px;padding:20px 24px;display:flex;align-items:flex-start;gap:16px;margin-bottom:20px;}
+.conclusie.ok{background:var(--grlt);border:2px solid #A7DFC2;}
+.conclusie.let-op{background:var(--orglt);border:2px solid #FCD34D;}
+.conclusie.nee{background:var(--redlt);border:2px solid #F5B7B1;}
+.conclusie-ico{font-size:38px;flex-shrink:0;}
+.conclusie-titel{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);}
+.conclusie-sub{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.55;}
+
+/* OPDELING KAARTEN */
+.splitgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+.split-card{border-radius:11px;overflow:hidden;}
+.split-head{padding:9px 14px;font-size:12.5px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px;}
+.split-head.hyp{background:var(--navy);}
+.split-head.ink{background:#6B21A8;}
+.split-body{background:#fff;border:1.5px solid var(--border);border-top:none;padding:12px 14px;border-radius:0 0 10px 10px;}
+.split-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #EEF2F6;font-size:13px;}
+.split-row:last-child{border-bottom:none;font-weight:700;color:var(--navy);}
+.split-row .neg{color:var(--green);}
+
+/* ANW BOX */
+.anw-box{background:var(--gold-lt);border-left:4px solid var(--gold);padding:13px 16px;border-radius:0 8px 8px 0;font-size:12.5px;color:var(--text);line-height:1.7;margin-bottom:16px;}
+.anw-box strong{color:#B87A00;}
+
+/* ADVIES LINK */
+.orv-link{display:flex;align-items:center;gap:14px;background:var(--navy);color:#fff;border-radius:12px;padding:18px 22px;text-decoration:none;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:background .18s;}
+.orv-link:hover{background:var(--navy2);}
+.orv-link-ico{font-size:32px;}
+.orv-link-titel{font-size:15px;font-weight:700;}
+.orv-link-sub{font-size:12px;opacity:.8;margin-top:2px;}
+.orv-link-arrow{margin-left:auto;font-size:22px;opacity:.7;}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .fg2,.fg3,.splitgrid{grid-template-columns:1fr;}
+  .s3{grid-column:span 1;}
+  .stapel-label{width:140px;}
+  .h-badges{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🛡️</div>
+    <div>
+      <div class="h-title">ORV Dekkingsbehoefte</div>
+      <div class="h-sub">Hoevéél verzekeren? Hypotheek · inkomen · ANW · nabestaandenpensioen</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">ANW 2026</span>
+    <span class="badge gold">Dekkingsanalyse</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- INVOER -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Situatie verzekerde</div>
+    <div class="card-body">
+
+      <div class="fg2" style="gap:14px;margin-bottom:18px;">
+        <div class="sdiv s3">Persoonlijk & hypotheek</div>
+
+        <div class="field">
+          <label>Bruto jaarinkomen verzekerde</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="inkVerzekerde" value="70000" min="0" step="1000" oninput="liveHint()">
+          </div>
+          <span class="hint" id="inkHint"></span>
+        </div>
+        <div class="field">
+          <label>Leeftijd verzekerde</label>
+          <div class="iw">
+            <input type="number" id="leeftijd" value="38" min="18" max="67" step="1" class="rs" style="padding-right:50px;">
+            <span class="suf">jaar</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Openstaand hypotheeksaldo</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="hypSaldo" value="300000" min="0" step="5000">
+          </div>
+          <span class="hint">Restschuld bij overlijden — volledig af te lossen</span>
+        </div>
+        <div class="field">
+          <label>Aflosvorm hypotheek</label>
+          <select id="aflosvorm">
+            <option value="gelijkblijvend" selected>Gelijkblijvend / aflossingsvrij</option>
+            <option value="dalend">Annuïtair / lineair dalend</option>
+          </select>
+          <span class="hint">Bij dalend: verzekerd bedrag kan meedalen (goedkoper)</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Nabestaanden & inkomensbehoefte</div>
+
+        <div class="field">
+          <label>Bruto jaarinkomen partner (achterblijver)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="inkPartner" value="40000" min="0" step="1000" oninput="liveHint()">
+          </div>
+          <span class="hint" id="partnerHint"></span>
+        </div>
+        <div class="field">
+          <label>Gewenst bruto maandinkomen nabestaanden</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="inkomensBehoefteMnd" value="4500" min="0" step="100">
+          </div>
+          <span class="hint">Wat heeft de achterblijver maandelijks nodig?</span>
+        </div>
+        <div class="field">
+          <label>Kinderen jonger dan 18 jaar</label>
+          <select id="kinderen">
+            <option value="0">Geen kinderen</option>
+            <option value="1" selected>1 kind</option>
+            <option value="2">2 kinderen</option>
+            <option value="3">3+ kinderen</option>
+          </select>
+          <span class="hint">Bepaalt ANW-recht (kind <18 = recht op uitkering)</span>
+        </div>
+        <div class="field">
+          <label>Gewenste dekkingsduur inkomen</label>
+          <div class="iw">
+            <input type="number" id="dekkingsDuur" value="20" min="1" max="40" step="1" class="rs" style="padding-right:50px;">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint">Tot AOW-leeftijd, jongste kind 18, of tot hypotheek af</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:4px;">Bestaande dekking & uitkeringen</div>
+
+        <div class="field">
+          <label>Nabestaandenpensioen werkgever (bruto/mnd)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="nbPensioen" value="500" min="0" step="100">
+          </div>
+          <span class="hint">Check UPO of pensioenoverzicht · wordt NIET verrekend met ANW</span>
+        </div>
+        <div class="field">
+          <label>ANW-uitkering verwacht</label>
+          <select id="anwRecht">
+            <option value="vol">Volledig (€1.775/mnd incl. vak.) — kind <18</option>
+            <option value="geen">Geen — partner werkt >€2.564/mnd of geen kind <18</option>
+            <option value="deels">Gedeeltelijk — partner heeft eigen inkomen</option>
+          </select>
+        </div>
+        <div class="field" id="anwDeelsVeld" style="display:none;">
+          <label>Geschatte ANW-uitkering (bruto/mnd)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="anwDeelsBedrag" value="800" min="0" step="50">
+          </div>
+          <span class="hint">Gebruik de ANW-rekentool van de SVB voor exact bedrag</span>
+        </div>
+        <div class="field">
+          <label>Bestaande ORV / overige levensverzekering</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="bestaandeOrv" value="0" min="0" step="5000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Eigen vermogen / spaargeld (beschikbaar)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="eigenVermogen" value="20000" min="0" step="5000">
+          </div>
+          <span class="hint">Buffer die nabestaanden kunnen inzetten</span>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">🛡️ Bereken benodigde ORV-dekking</button>
+    </div>
+  </div>
+
+  <!-- RESULTATEN -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Benodigde ORV-dekking</div>
+    <div class="card-body">
+      <div id="conclusieBox"></div>
+      <div class="dekking-wrap" id="dekkingWrap"></div>
+      <div class="splitgrid" id="splitGrid"></div>
+      <div class="anw-box" id="anwBox"></div>
+      <button class="orv-link" onclick="alert('Open de ORV Premietool om de maandpremie te berekenen op basis van deze dekking.')">
+        <span class="orv-link-ico">🛡️</span>
+        <div>
+          <div class="orv-link-titel">Bereken nu de maandpremie voor deze dekking</div>
+          <div class="orv-link-sub">Ga naar de ORV Premiecalculator — AG Prognosetafel 2022 · drie dekkingsvormen</div>
+        </div>
+        <span class="orv-link-arrow">→</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ANW 2026 bedragen (SVB, per 1-1-2026)
+const ANW = {
+  volledig:  1774.90,  // incl. vakantiegeld (€1.646,72 + €128,18)
+  minimum:    710.09,  // minimum na hoge inkomensverrekening
+  grens:     2564.48,  // boven dit bedrag eigen inkomen → alleen minimum
+};
+
+const N = id => parseFloat(document.getElementById(id).value) || 0;
+function fmt(n,dec=0){ const neg=n<0; return (neg?'−\u00A0':'')+'\u00A0€\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
+function fmtK(n){ return n>=1000?'\u00A0€\u00A0'+(n/1000).toFixed(0)+'k':fmt(n); }
+
+function liveHint(){
+  const i1=N('inkVerzekerde'), i2=N('inkPartner');
+  document.getElementById('inkHint').textContent = i1>0?`≈ ${fmt(i1/12,0)}/mnd bruto`:'';
+  document.getElementById('partnerHint').textContent = i2>0?`≈ ${fmt(i2/12,0)}/mnd bruto`:'';
+}
+
+document.getElementById('anwRecht').addEventListener('change',()=>{
+  const v=document.getElementById('anwRecht').value;
+  document.getElementById('anwDeelsVeld').style.display=v==='deels'?'flex':'none';
+});
+
+function berekenAnwMaand(){
+  const recht=document.getElementById('anwRecht').value;
+  const partnerMnd=N('inkPartner')/12;
+  if(recht==='geen') return 0;
+  if(recht==='deels') return N('anwDeelsBedrag');
+  // Volledig: check inkomensverrekening partner
+  const wml50=2294.40*0.50; // 50% WML vrijgesteld
+  if(partnerMnd<=0) return ANW.volledig;
+  if(partnerMnd>=ANW.grens) return ANW.minimum;
+  const boven=Math.max(0,partnerMnd-wml50);
+  const korting=boven*(2/3);
+  return Math.max(ANW.minimum, ANW.volledig-korting);
+}
+
+function bereken(){
+  const hypSaldo       = N('hypSaldo');
+  const inkVerzMnd     = N('inkVerzekerde')/12;
+  const inkPartnerMnd  = N('inkPartner')/12;
+  const behoefte       = N('inkomensBehoefteMnd');
+  const duur           = N('dekkingsDuur');
+  const nbPensioen     = N('nbPensioen');
+  const bestaandeOrv   = N('bestaandeOrv');
+  const eigenVermogen  = N('eigenVermogen');
+  const kinderen       = parseInt(document.getElementById('kinderen').value);
+
+  // ANW berekening
+  const anwMnd = berekenAnwMaand();
+
+  // Inkomen achterblijver na overlijden:
+  // Eigen inkomen + ANW + nabestaandenpensioen
+  const inkomenNaOverlijden = inkPartnerMnd + anwMnd + nbPensioen;
+
+  // Inkomenstekort per maand
+  const inkomensTekort = Math.max(0, behoefte - inkomenNaOverlijden);
+
+  // Benodigde kapitaal voor inkomensdekking (contante waarde, geen inflatie)
+  // Gebruik rekenrente van 1,5% na belasting (conservatief)
+  const rente = 0.015/12;
+  const n = duur * 12;
+  const kapitaalInkomen = inkomensTekort > 0
+    ? inkomensTekort * (1 - Math.pow(1+rente,-n)) / rente
+    : 0;
+
+  // Hypotheekdekking
+  const kapitaalHyp = hypSaldo; // volledig af te lossen
+
+  // Totale bruto behoefte
+  const brutoBehoefte = kapitaalInkomen + kapitaalHyp;
+
+  // Aftrek bestaande dekking
+  const afBestaandeOrv = bestaandeOrv;
+  const afEigenVermogen = eigenVermogen;
+  const totaalAf = afBestaandeOrv + afEigenVermogen;
+
+  // Benodigd ORV-bedrag
+  const benodigdOrv = Math.max(0, brutoBehoefte - totaalAf);
+
+  // Afronden op mooie stappen
+  const benodigdAfgerond = Math.ceil(benodigdOrv / 10000) * 10000;
+
+  // ── CONCLUSIE ──
+  const cbox = document.getElementById('conclusieBox');
+  const dekkingGraad = benodigdOrv > 0 ? bestaandeOrv / benodigdOrv * 100 : 100;
+  let concCls, concIco, concTitel, concSub;
+  if(benodigdOrv <= 0){
+    concCls='ok'; concIco='✅';
+    concTitel='Volledig gedekt — geen extra ORV nodig';
+    concSub=`Uw bestaande dekking (${fmt(bestaandeOrv)}) dekt de volledige behoefte. Controleer regelmatig of dit nog klopt bij wijzigingen in hypotheek of inkomen.`;
+  } else if(bestaandeOrv >= benodigdOrv*0.7){
+    concCls='let-op'; concIco='⚠️';
+    concTitel=`Gedeeltelijk gedekt — aanbevolen aanvulling: ${fmt(benodigdAfgerond)}`;
+    concSub=`U heeft een dekkingsgat van ${fmt(benodigdOrv)}. Uw nabestaanden lopen risico bij overlijden.`;
+  } else {
+    concCls='nee'; concIco='🔴';
+    concTitel=`Onderverzekerd — aanbevolen ORV: ${fmt(benodigdAfgerond)}`;
+    concSub=`Zonder verzekering is er een kapitaalstekort van ${fmt(benodigdOrv)}. Uw partner ${inkomensTekort>0?'kan de hypotheek niet betalen en':''}heeft onvoldoende inkomen om van te leven.`;
+  }
+  cbox.innerHTML=`<div class="conclusie ${concCls}">
+    <div class="conclusie-ico">${concIco}</div>
+    <div><div class="conclusie-titel">${concTitel}</div>
+    <div class="conclusie-sub">${concSub}</div></div></div>`;
+
+  // ── DEKKINGSBAR (stapeldiagram) ──
+  const maxBedrag = Math.max(brutoBehoefte, bestaandeOrv+eigenVermogen) || 1;
+  function bar(pct, kleur){ return `<div class="stapel-bar" style="width:${Math.min(100,pct).toFixed(1)}%;background:${kleur};"></div>`; }
+  document.getElementById('dekkingWrap').innerHTML = `
+    <div class="dekking-titel">${fmt(benodigdAfgerond)}</div>
+    <div class="dekking-sub">Aanbevolen ORV-dekking (afgerond op €10.000)</div>
+    <div class="stapel">
+      <div class="stapel-rij">
+        <div class="stapel-label">Hypotheeksaldo</div>
+        <div class="stapel-bar-bg">${bar(kapitaalHyp/maxBedrag*100,'#003057')}</div>
+        <div class="stapel-val">${fmtK(kapitaalHyp)}</div>
+      </div>
+      <div class="stapel-rij">
+        <div class="stapel-label">Inkomenstekort (PV)</div>
+        <div class="stapel-bar-bg">${bar(kapitaalInkomen/maxBedrag*100,'#6B21A8')}</div>
+        <div class="stapel-val">${fmtK(Math.round(kapitaalInkomen))}</div>
+      </div>
+      <div class="stapel-rij">
+        <div class="stapel-label"><strong>= Totale bruto behoefte</strong></div>
+        <div class="stapel-bar-bg">${bar(brutoBehoefte/maxBedrag*100,'#C0392B')}</div>
+        <div class="stapel-val"><strong>${fmtK(Math.round(brutoBehoefte))}</strong></div>
+      </div>
+      ${eigenVermogen>0?`<div class="stapel-rij">
+        <div class="stapel-label">− Eigen vermogen</div>
+        <div class="stapel-bar-bg">${bar(eigenVermogen/maxBedrag*100,'#1A8A50')}</div>
+        <div class="stapel-val neg">${fmtK(eigenVermogen)}</div>
+      </div>`:``}
+      ${bestaandeOrv>0?`<div class="stapel-rij">
+        <div class="stapel-label">− Bestaande ORV</div>
+        <div class="stapel-bar-bg">${bar(bestaandeOrv/maxBedrag*100,'#1A6B8A')}</div>
+        <div class="stapel-val neg">${fmtK(bestaandeOrv)}</div>
+      </div>`:``}
+      <div class="stapel-rij">
+        <div class="stapel-label"><strong>= Benodigd ORV</strong></div>
+        <div class="stapel-bar-bg">${bar(benodigdOrv/maxBedrag*100,benodigdOrv>0?'#E5A138':'#1A8A50')}</div>
+        <div class="stapel-val"><strong>${fmtK(Math.round(benodigdOrv))}</strong></div>
+      </div>
+    </div>`;
+
+  // ── SPLIT HYPOTHEEK / INKOMEN ──
+  document.getElementById('splitGrid').innerHTML = `
+    <div class="split-card">
+      <div class="split-head hyp">🏠 Hypotheekdekking</div>
+      <div class="split-body">
+        <div class="split-row"><span>Restschuld</span><span>${fmt(hypSaldo)}</span></div>
+        <div class="split-row"><span>Aflosvorm</span><span>${document.getElementById('aflosvorm').value==='dalend'?'Dalend (annuïtair)':'Gelijkblijvend'}</span></div>
+        <div class="split-row"><span><strong>Benodigde hypotheekdekking</strong></span><span><strong>${fmt(kapitaalHyp)}</strong></span></div>
+      </div>
+    </div>
+    <div class="split-card">
+      <div class="split-head ink">💼 Inkomensdekking</div>
+      <div class="split-body">
+        <div class="split-row"><span>Gewenste maandelijkse behoefte</span><span>${fmt(behoefte,2)}</span></div>
+        <div class="split-row"><span>Eigen inkomen partner</span><span class="neg">−${fmt(inkPartnerMnd,2)}</span></div>
+        <div class="split-row"><span>ANW-uitkering</span><span class="neg">−${fmt(anwMnd,2)}</span></div>
+        <div class="split-row"><span>Nabestaandenpensioen</span><span class="neg">−${fmt(nbPensioen,2)}</span></div>
+        <div class="split-row"><span>= Maandelijks tekort</span><span>${fmt(inkomensTekort,2)}</span></div>
+        <div class="split-row"><span>Dekkingsduur</span><span>${duur} jaar</span></div>
+        <div class="split-row"><span><strong>Benodigde inkomenskapitaal</strong></span><span><strong>${fmt(Math.round(kapitaalInkomen))}</strong></span></div>
+      </div>
+    </div>`;
+
+  // ── ANW BOX ──
+  const anwRecht=document.getElementById('anwRecht').value;
+  document.getElementById('anwBox').innerHTML = `
+    <strong>ANW-uitkering 2026 (SVB):</strong>
+    Uw partner ${anwRecht==='geen'?'heeft <strong>geen recht</strong> op ANW':anwRecht==='vol'?'heeft vermoedelijk recht op <strong>de volledige ANW</strong>':'heeft recht op een <strong>gedeeltelijke ANW</strong>'}.
+    Berekend bedrag: <strong>${fmt(anwMnd,2)}/mnd</strong>.
+    ${kinderen>0?'Kinderen <18 jaar geven recht op ANW — maar let op: bij hoog eigen inkomen (≥ €2.564/mnd) krimpt de uitkering tot het minimum van €710/mnd.':'Zonder kinderen <18 jaar: ANW-recht bestaat <em>alleen</em> bij ≥45% arbeidsongeschiktheid.'}
+    De ANW eindigt bij hertrouwen, samenwonen, of als het jongste kind 18 jaar wordt.
+    Nabestaandenpensioen van werkgever wordt <strong>niet</strong> verrekend met ANW.`;
+
+  document.getElementById('resCard').classList.add('vis');
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Init
+liveHint();
+</script>
+</body>
+</html>

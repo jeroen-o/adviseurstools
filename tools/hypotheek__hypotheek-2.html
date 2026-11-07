@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypotheek Adviseur Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f7;--bg2:#e2e9f3;--bg3:#d4dff0;--white:#fafcff;--ink:#141a26;--ink2:#3a4560;--ink3:#7a8ab0;--border:#c8d4e8;--green:#15803d;--green2:#dcfce7;--red:#b91c1c;--red2:#fee2e2;--amber:#b45309;--amber2:#fef3c7;--blue:#1d4ed8;--blue2:#dbeafe;--teal:#0d9488;--teal2:#ccfbf1;--brand:#1a3f7a;--brand2:#e8eff8;--r:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;}
+.app-header{background:var(--brand);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.app-logo{display:flex;align-items:center;gap:10px;}
+.app-logo-icon{width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.app-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;}
+.app-sub{font-size:11px;color:rgba(255,255,255,.5);}
+.app-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.tab-nav{background:var(--white);border-bottom:2px solid var(--brand);padding:0 20px;display:flex;overflow-x:auto;position:sticky;top:56px;z-index:99;}
+.tab-btn{padding:11px 14px;font-size:11.5px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;margin-bottom:-2px;}
+.tab-btn.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:700;}
+.panel{display:none;max-width:980px;margin:0 auto;padding:22px 18px 80px;}
+.panel.active{display:block;}
+.tool-header{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.tool-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--brand);background:var(--brand2);padding:2px 9px;border-radius:20px;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;}
+.tool-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:800;margin-bottom:3px;}
+.tool-desc{font-size:12.5px;color:var(--ink3);line-height:1.6;max-width:540px;}
+.two-col{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
+.card:last-child{margin-bottom:0;}
+.ch{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ct{font-size:11.5px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.4px;}
+.cb{padding:14px;}
+.f{margin-bottom:10px;}.f:last-child{margin-bottom:0;}
+.fl{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.fv{font-size:13px;color:var(--brand);font-weight:700;text-transform:none;}
+.in,.se{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);padding:7px 10px;outline:none;-webkit-appearance:none;transition:border-color .2s;}
+.in:focus,.se:focus{border-color:var(--brand);}
+.se option{background:var(--white);}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;background:var(--bg3);border-radius:4px;outline:none;cursor:pointer;margin-top:2px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;background:var(--brand);border-radius:50%;cursor:pointer;border:2px solid var(--white);}
+.slab{display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-top:2px;}
+.rs{display:flex;flex-direction:column;gap:11px;}
+.rh{background:var(--brand);border-radius:var(--r);padding:18px 22px;color:#fff;}
+.rh-e{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.rh-v{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;line-height:1;margin-bottom:3px;}
+.rh-c{font-size:12px;color:rgba(255,255,255,.6);}
+.kg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.kp{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;}
+.kl{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.kv{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+.g{color:var(--green);}.r{color:var(--red);}.a{color:var(--amber);}.b{color:var(--brand);}
+.al{border-radius:var(--r);padding:9px 12px;display:flex;gap:8px;border:1px solid;margin-bottom:6px;align-items:flex-start;}
+.al.ok{background:var(--green2);border-color:rgba(21,128,61,.25);}
+.al.wa{background:var(--amber2);border-color:rgba(180,83,9,.25);}
+.al.er{background:var(--red2);border-color:rgba(185,28,28,.25);}
+.al.in{background:var(--blue2);border-color:rgba(29,78,216,.25);}
+.al.nt{background:var(--bg2);border-color:var(--border);}
+.al-i{font-size:13px;flex-shrink:0;margin-top:1px;}
+.al strong{display:block;font-size:12.5px;font-weight:700;margin-bottom:1px;}
+.al span{font-size:11.5px;line-height:1.5;opacity:.85;}
+.ok strong{color:var(--green);}.wa strong{color:var(--amber);}.er strong{color:var(--red);}.in strong{color:var(--blue);}
+.dt{width:100%;border-collapse:collapse;font-size:12.5px;}
+.dt th{background:var(--bg2);padding:7px 10px;text-align:left;font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;}
+.dt td{padding:8px 10px;border-bottom:1px solid var(--bg2);}
+.dt .ri{text-align:right;}.dt tr:last-child td{border-bottom:none;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+/* Hypotheekvormen */
+.hv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hv-card{background:var(--white);border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;}
+.hv-card.active{border-color:var(--brand);background:var(--brand2);}
+.hv-icon{font-size:22px;margin-bottom:6px;}
+.hv-naam{font-size:13px;font-weight:700;margin-bottom:3px;}
+.hv-desc{font-size:11.5px;color:var(--ink3);}
+@media(max-width:720px){.two-col{grid-template-columns:1fr;}.kg{grid-template-columns:1fr 1fr;}.hv-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="app-logo"><div class="app-logo-icon">🏠</div>
+    <div><div class="app-title">Hypotheek Adviseur Suite</div><div class="app-sub">16 professionele tools · GHF-normen 2025</div></div>
+  </div>
+  <div class="app-badge">Suite · 16 tools</div>
+</header>
+<nav class="tab-nav">
+  <div class="tab-btn active" onclick="sw(0)">🏠 Max. Hypotheek</div>
+  <div class="tab-btn" onclick="sw(1)">💰 Toetsinkomen</div>
+  <div class="tab-btn" onclick="sw(2)">🛡️ NHG Check</div>
+  <div class="tab-btn" onclick="sw(3)">💳 Maandlast</div>
+  <div class="tab-btn" onclick="sw(4)">🌱 Starters</div>
+  <div class="tab-btn" onclick="sw(5)">📊 Woonquote</div>
+  <div class="tab-btn" onclick="sw(6)">🔒 Rentevaste Periode</div>
+  <div class="tab-btn" onclick="sw(7)">⚠️ Klantrisico</div>
+  <div class="tab-btn" onclick="sw(8)">🔁 Oversluiten</div>
+  <div class="tab-btn" onclick="sw(9)">☀️ Verduurzaming</div>
+  <div class="tab-btn" onclick="sw(10)">📉 LTV Tracker</div>
+  <div class="tab-btn" onclick="sw(11)">↩️ Bijleenregeling</div>
+  <div class="tab-btn" onclick="sw(12)">⚖️ Hypotheekvorm</div>
+  <div class="tab-btn" onclick="sw(13)">🏗️ Bouwdepot</div>
+  <div class="tab-btn" onclick="sw(14)">💸 Restschuld</div>
+  <div class="tab-btn" onclick="sw(15)">✅ Acceptatienorm</div>
+</nav>
+
+<!-- 0: MAX HYPOTHEEK -->
+<div class="panel active" id="p0">
+  <div class="tool-header"><div class="tool-badge">🏠 GHF 2025</div><div class="tool-title">Maximale Hypotheek Calculator</div><div class="tool-desc">Gebaseerd op GHF-financieringslastnormen 2025 inclusief toetsrente, energielabel-toeslag en tweede inkomen.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Inkomensgegevens</span></div><div class="cb">
+        <div class="f"><div class="fl">Bruto jaarinkomen 1 <span class="fv" id="mhI1V">€ 70.000</span></div><input type="range" id="mhI1" min="20000" max="300000" step="1000" value="70000" oninput="calcMh()"><div class="slab"><span>€20k</span><span>€300k</span></div></div>
+        <div class="f"><div class="fl">Bruto jaarinkomen 2 <span class="fv" id="mhI2V">€ 0</span></div><input type="range" id="mhI2" min="0" max="200000" step="1000" value="0" oninput="calcMh()"><div class="slab"><span>€0</span><span>€200k</span></div></div>
+        <div class="f"><div class="fl">Rentevaste periode</div><select class="se" id="mhRvp" onchange="calcMh()"><option value="5.0">5 jaar (toetsrente 5%)</option><option value="4.5">7 jaar</option><option value="4.2" selected>10 jaar</option><option value="3.8">20 jaar</option><option value="3.6">30 jaar</option></select></div>
+        <div class="f"><div class="fl">Energielabel woning</div><select class="se" id="mhLabel" onchange="calcMh()"><option value="0">G–D (geen toeslag)</option><option value="9000">C (€9.000)</option><option value="20000" selected>B (€20.000)</option><option value="30000">A (€30.000)</option><option value="50000">A+ t/m A++++ (€50.000)</option></select></div>
+        <div class="f"><div class="fl">Bestaande schulden (€/mnd)</div><input type="number" class="in" id="mhSchuld" value="0" oninput="calcMh()"></div>
+        <div class="f"><div class="fl">DUO-schuld</div><input type="number" class="in" id="mhDuo" value="0" placeholder="Totaal DUO restant" oninput="calcMh()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="mhResult"></div>
+  </div>
+</div>
+
+<!-- 1: TOETSINKOMEN -->
+<div class="panel" id="p1">
+  <div class="tool-header"><div class="tool-badge">💰 Inkomensbepaling</div><div class="tool-title">Toetsinkomen Bepaler</div><div class="tool-desc">Bereken het exacte toetsinkomen voor hypotheek inclusief vakantiegeld, 13e maand, bonus, variabel inkomen en overwerk.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Inkomenscomponenten</span></div><div class="cb">
+        <div class="f"><div class="fl">Vast bruto maandsalaris</div><input type="number" class="in" id="tiSalaris" value="5000" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Vakantiegeld (8% of anders)</div><select class="se" id="tiVak" onchange="calcTi()"><option value="0.08" selected>8% automatisch</option><option value="0">Niet van toepassing</option></select></div>
+        <div class="f"><div class="fl">13e maand / eindejaarsuitkering</div><input type="number" class="in" id="ti13" value="0" placeholder="jaarlijks bedrag" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Vaste bonus / winstdeling (jr)</div><input type="number" class="in" id="tiBonus" value="0" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Overwerk (gemiddeld/mnd, 3 jr)</div><input type="number" class="in" id="tiOverwerk" value="0" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Alimentatie ontvangen (jr)</div><input type="number" class="in" id="tiAlim" value="0" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Freelance / extra inkomen</div><input type="number" class="in" id="tiFreelance" value="0" placeholder="Gemiddeld 3 jaar" oninput="calcTi()"></div>
+        <div class="f"><div class="fl">Dienstverband</div><select class="se" id="tiDienst" onchange="calcTi()"><option value="vast" selected>Vast</option><option value="flex">Flexibel / tijdelijk</option><option value="zzp">ZZP (3-jr gem.)</option></select></div>
+      </div></div>
+    </div>
+    <div class="rs" id="tiResult"></div>
+  </div>
+</div>
+
+<!-- 2: NHG CHECK -->
+<div class="panel" id="p2">
+  <div class="tool-header"><div class="tool-badge">🛡️ NHG</div><div class="tool-title">NHG Quick Check 2025</div><div class="tool-desc">Controleer direct of uw klant in aanmerking komt voor NHG. Grens 2025: €450.000 (€477.000 bij energiemaatregelen).</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">NHG Parameters</span></div><div class="cb">
+        <div class="f"><div class="fl">Koopsom woning <span class="fv" id="nhgKoopV">€ 380.000</span></div><input type="range" id="nhgKoop" min="50000" max="600000" step="5000" value="380000" oninput="calcNhg()"><div class="slab"><span>€50k</span><span>€600k</span></div></div>
+        <div class="f"><div class="fl">Hypotheekbedrag <span class="fv" id="nhgHypV">€ 360.000</span></div><input type="range" id="nhgHyp" min="50000" max="600000" step="5000" value="360000" oninput="calcNhg()"><div class="slab"><span>€50k</span><span>€600k</span></div></div>
+        <div class="f"><div class="fl">Type transactie</div><select class="se" id="nhgType" onchange="calcNhg()"><option value="bestaand" selected>Bestaande woning</option><option value="nieuwbouw">Nieuwbouw</option><option value="oversluiten">Oversluiten</option></select></div>
+        <div class="f"><div class="fl">Energiebesparende voorzieningen?</div><select class="se" id="nhgEnergie" onchange="calcNhg()"><option value="nee" selected>Nee</option><option value="ja">Ja (verhoogde grens)</option></select></div>
+        <div class="f"><div class="fl">Actuele hypotheekrente (%)</div><input type="number" class="in" id="nhgRente" value="4.2" step="0.05" oninput="calcNhg()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="nhgResult"></div>
+  </div>
+</div>
+
+<!-- 3: MAANDLAST -->
+<div class="panel" id="p3">
+  <div class="tool-header"><div class="tool-badge">💳 Lastenoverzicht</div><div class="tool-title">Hypotheek Maandlast Calculator</div><div class="tool-desc">Bruto én netto maandlast berekening inclusief HRA, EWF en belastingteruggave. Alle hypotheekvormen.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Leninggegevens</span></div><div class="cb">
+        <div class="f"><div class="fl">Hypotheekbedrag <span class="fv" id="mlHypV">€ 350.000</span></div><input type="range" id="mlHyp" min="50000" max="1000000" step="5000" value="350000" oninput="calcMl()"><div class="slab"><span>€50k</span><span>€1M</span></div></div>
+        <div class="f"><div class="fl">Rente (%/jr) <span class="fv" id="mlRenteV">4,2%</span></div><input type="range" id="mlRente" min="1" max="8" step="0.05" value="4.2" oninput="calcMl()"><div class="slab"><span>1%</span><span>8%</span></div></div>
+        <div class="f"><div class="fl">Looptijd <span class="fv" id="mlLpV">30 jr</span></div><input type="range" id="mlLp" min="5" max="30" step="1" value="30" oninput="calcMl()"><div class="slab"><span>5</span><span>30 jr</span></div></div>
+        <div class="f"><div class="fl">Hypotheekvorm</div><select class="se" id="mlVorm" onchange="calcMl()"><option value="ann" selected>Annuïtair</option><option value="lin">Lineair</option><option value="aflvrij">Aflossingsvrij</option></select></div>
+        <div class="f"><div class="fl">Bruto gezinsinkomen</div><input type="number" class="in" id="mlInk" value="90000" oninput="calcMl()"></div>
+        <div class="f"><div class="fl">WOZ-waarde woning</div><input type="number" class="in" id="mlWoz" value="420000" oninput="calcMl()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="mlResult"></div>
+  </div>
+</div>
+
+<!-- 4: STARTERS -->
+<div class="panel" id="p4">
+  <div class="tool-header"><div class="tool-badge">🌱 Starters</div><div class="tool-title">Starterslening & OVB Check</div><div class="tool-desc">Check startersvoordelen: overdrachtsbelasting 0%, starterslening SVn en jubelton (afgeschaft 2024 — informatief).</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Klantgegevens</span></div><div class="cb">
+        <div class="f"><div class="fl">Leeftijd koper 1</div><input type="number" class="in" id="stLft1" value="27" oninput="calcSt()"></div>
+        <div class="f"><div class="fl">Leeftijd koper 2 (indien van toepassing)</div><input type="number" class="in" id="stLft2" value="0" placeholder="0 = niet van toepassing" oninput="calcSt()"></div>
+        <div class="f"><div class="fl">Koopsom woning <span class="fv" id="stKoopV">€ 320.000</span></div><input type="range" id="stKoop" min="50000" max="700000" step="5000" value="320000" oninput="calcSt()"><div class="slab"><span>€50k</span><span>€700k</span></div></div>
+        <div class="f"><div class="fl">Eerste koopwoning?</div><select class="se" id="stEerste" onchange="calcSt()"><option value="ja" selected>Ja</option><option value="nee">Nee</option></select></div>
+        <div class="f"><div class="fl">Gemeente starterslening?</div><select class="se" id="stGem" onchange="calcSt()"><option value="ja" selected>Ja, aanvragen</option><option value="nee">Nee / niet beschikbaar</option></select></div>
+        <div class="f"><div class="fl">Max. toetsinkomen (SVn)</div><input type="number" class="in" id="stSvnInk" value="50000" oninput="calcSt()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="stResult"></div>
+  </div>
+</div>
+
+<!-- 5: WOONQUOTE -->
+<div class="panel" id="p5">
+  <div class="tool-header"><div class="tool-badge">📊 Betaalbaarheid</div><div class="tool-title">Woonquote Analyse</div><div class="tool-desc">Bereken de woonquote (bruto én netto) en toets deze aan de GHF-betaalbaarheidsnorm voor verschillende inkomens.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Woonlasten & inkomen</span></div><div class="cb">
+        <div class="f"><div class="fl">Bruto hypotheeklast/mnd</div><input type="number" class="in" id="wqHyp" value="1400" oninput="calcWq()"></div>
+        <div class="f"><div class="fl">Eigenwoningforfait/mnd</div><input type="number" class="in" id="wqEwf" value="120" oninput="calcWq()"></div>
+        <div class="f"><div class="fl">Bruto jaarinkomen</div><input type="number" class="in" id="wqInk" value="75000" oninput="calcWq()"></div>
+        <div class="f"><div class="fl">VvE-bijdrage/mnd</div><input type="number" class="in" id="wqVve" value="0" oninput="calcWq()"></div>
+        <div class="f"><div class="fl">Servicekosten/mnd</div><input type="number" class="in" id="wqService" value="0" oninput="calcWq()"></div>
+        <div class="f"><div class="fl">Erfpachtcanon/mnd</div><input type="number" class="in" id="wqErfpacht" value="0" oninput="calcWq()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="wqResult"></div>
+  </div>
+</div>
+
+<!-- 6: RENTEVASTE PERIODE -->
+<div class="panel" id="p6">
+  <div class="tool-header"><div class="tool-badge">🔒 Renteadvies</div><div class="tool-title">Rentevaste Periode Advisor</div><div class="tool-desc">Adviseer de optimale rentevaste periode op basis van de persoonlijke situatie, risicobereidheid en renteverwachting.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Klantprofiel</span></div><div class="cb">
+        <div class="f"><div class="fl">Hypotheekbedrag <span class="fv" id="rvpHypV">€ 400.000</span></div><input type="range" id="rvpHyp" min="50000" max="1000000" step="5000" value="400000" oninput="calcRvp()"><div class="slab"><span>€50k</span><span>€1M</span></div></div>
+        <div class="f"><div class="fl">Risicobereidheid</div><select class="se" id="rvpRisico" onchange="calcRvp()"><option value="laag">Laag — zekerheid prioriteit</option><option value="midden" selected>Gemiddeld</option><option value="hoog">Hoog — risico acceptabel</option></select></div>
+        <div class="f"><div class="fl">Verwachte woonduur</div><select class="se" id="rvpWoon" onchange="calcRvp()"><option value="kort">< 5 jaar</option><option value="midden" selected>5–15 jaar</option><option value="lang">15+ jaar</option></select></div>
+        <div class="f"><div class="fl">Inkomensstabiliteit</div><select class="se" id="rvpInk" onchange="calcRvp()"><option value="stabiel" selected>Stabiel vast</option><option value="variabel">Variabel / groei verwacht</option><option value="onzeker">Onzeker</option></select></div>
+      </div></div>
+    </div>
+    <div class="rs" id="rvpResult"></div>
+  </div>
+</div>
+
+<!-- 7: KLANTRISICO -->
+<div class="panel" id="p7">
+  <div class="tool-header"><div class="tool-badge">⚠️ Risicoanalyse</div><div class="tool-title">Hypotheek Klantrisico Beoordeling</div><div class="tool-desc">Beoordeel het totale risicoprofiel van uw hypotheekklant op basis van inkomen, vermogen, situatie en onderpand.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Risicofactoren</span></div><div class="cb">
+        <div class="f"><div class="fl">LTV ratio (hyp/waarde) <span class="fv" id="krLtvV">90%</span></div><input type="range" id="krLtv" min="50" max="105" step="1" value="90" oninput="calcKr()"><div class="slab"><span>50%</span><span>105%</span></div></div>
+        <div class="f"><div class="fl">DTI ratio (last/inkomen) <span class="fv" id="krDtiV">30%</span></div><input type="range" id="krDti" min="10" max="50" step="1" value="30" oninput="calcKr()"><div class="slab"><span>10%</span><span>50%</span></div></div>
+        <div class="f"><div class="fl">Dienstverband</div><select class="se" id="krDienst" onchange="calcKr()"><option value="vast" selected>Vast</option><option value="flex">Flex/tijdelijk</option><option value="zzp">ZZP</option><option value="dga">DGA/Ondernemer</option></select></div>
+        <div class="f"><div class="fl">BKR registraties</div><select class="se" id="krBkr" onchange="calcKr()"><option value="geen" selected>Geen</option><option value="positief">Positief (lopend)</option><option value="achterstand">Achterstand (negatief)</option></select></div>
+        <div class="f"><div class="fl">Spaarbuffer na aankoop</div><select class="se" id="krBuffer" onchange="calcKr()"><option value="goed">Ruim (6+ mnd lasten)</option><option value="matig" selected>Matig (3–6 mnd)</option><option value="laag">Beperkt (<3 mnd)</option></select></div>
+        <div class="f"><div class="fl">Type woning</div><select class="se" id="krWoning" onchange="calcKr()"><option value="rijwoning" selected>Rijwoning bestaand</option><option value="nieuwbouw">Nieuwbouw</option><option value="app">Appartement</option><option value="bijzonder">Bijzonder onderpand</option></select></div>
+      </div></div>
+    </div>
+    <div class="rs" id="krResult"></div>
+  </div>
+</div>
+
+<!-- 8: OVERSLUITEN -->
+<div class="panel" id="p8">
+  <div class="tool-header"><div class="tool-badge">🔁 Oversluit Analyse</div><div class="tool-title">Hypotheek Oversluiten Calculator</div><div class="tool-desc">Analyseer of oversluiten voordelig is inclusief boeterente, afsluitkosten en terugverdientijd.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Huidige hypotheek</span></div><div class="cb">
+        <div class="f"><div class="fl">Restschuld <span class="fv" id="ovhRestV">€ 280.000</span></div><input type="range" id="ovhRest" min="50000" max="800000" step="5000" value="280000" oninput="calcOvh()"><div class="slab"><span>€50k</span><span>€800k</span></div></div>
+        <div class="f"><div class="fl">Huidige rente <span class="fv" id="ovhHrV">5,5%</span></div><input type="range" id="ovhHr" min="1" max="10" step="0.1" value="5.5" oninput="calcOvh()"><div class="slab"><span>1%</span><span>10%</span></div></div>
+        <div class="f"><div class="fl">Rest renteperiode (jr) <span class="fv" id="ovhRpV">4 jr</span></div><input type="range" id="ovhRp" min="1" max="25" step="1" value="4" oninput="calcOvh()"><div class="slab"><span>1</span><span>25 jr</span></div></div>
+      </div></div>
+      <div class="card"><div class="ch"><span class="ct">Nieuwe hypotheek</span></div><div class="cb">
+        <div class="f"><div class="fl">Nieuwe rente <span class="fv" id="ovhNrV">3,9%</span></div><input type="range" id="ovhNr" min="1" max="8" step="0.05" value="3.9" oninput="calcOvh()"><div class="slab"><span>1%</span><span>8%</span></div></div>
+        <div class="f"><div class="fl">Rest looptijd (jr) <span class="fv" id="ovhLpV">26 jr</span></div><input type="range" id="ovhLp" min="5" max="30" step="1" value="26" oninput="calcOvh()"><div class="slab"><span>5</span><span>30 jr</span></div></div>
+        <div class="f"><div class="fl">Advies-/notariskosten</div><input type="number" class="in" id="ovhKosten" value="2500" oninput="calcOvh()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="ovhResult"></div>
+  </div>
+</div>
+
+<!-- 9: VERDUURZAMING -->
+<div class="panel" id="p9">
+  <div class="tool-header"><div class="tool-badge">☀️ Duurzaamheid</div><div class="tool-title">Verduurzaming Financiering Tool</div><div class="tool-desc">Bereken de extra hypotheekruimte voor verduurzaming en het financieel rendement van energiemaatregelen.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Woning & maatregelen</span></div><div class="cb">
+        <div class="f"><div class="fl">Huidig energielabel</div><select class="se" id="vdHuidig" onchange="calcVd()"><option value="G">G</option><option value="F">F</option><option value="E">E</option><option value="D" selected>D</option><option value="C">C</option><option value="B">B</option></select></div>
+        <div class="f"><div class="fl">Gewenst energielabel na renovatie</div><select class="se" id="vdGewenst" onchange="calcVd()"><option value="B">B</option><option value="A">A</option><option value="Ap">A+</option><option value="App" selected>A++ / A+++</option></select></div>
+        <div class="f"><div class="fl">Huidig hypotheekbedrag</div><input type="number" class="in" id="vdHyp" value="280000" oninput="calcVd()"></div>
+        <div class="f"><div class="fl">Waarde woning</div><input type="number" class="in" id="vdWaarde" value="380000" oninput="calcVd()"></div>
+        <div class="f"><div class="fl">Geplande maatregelen budget</div><input type="number" class="in" id="vdBudget" value="40000" oninput="calcVd()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="vdResult"></div>
+  </div>
+</div>
+
+<!-- 10: LTV TRACKER -->
+<div class="panel" id="p10">
+  <div class="tool-header"><div class="tool-badge">📉 Loan-to-Value</div><div class="tool-title">LTV Ontwikkeling Tracker</div><div class="tool-desc">Toon de LTV-ontwikkeling door de looptijd. Wanneer bereikt de klant gunstige tariefschijven voor renteherziening?</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Parameters</span></div><div class="cb">
+        <div class="f"><div class="fl">Hypotheek <span class="fv" id="ltvHypV">€ 380.000</span></div><input type="range" id="ltvHyp" min="50000" max="1000000" step="5000" value="380000" oninput="calcLtv()"><div class="slab"><span>€50k</span><span>€1M</span></div></div>
+        <div class="f"><div class="fl">Woningwaarde <span class="fv" id="ltvWaardeV">€ 420.000</span></div><input type="range" id="ltvWaarde" min="50000" max="1500000" step="5000" value="420000" oninput="calcLtv()"><div class="slab"><span>€50k</span><span>€1.5M</span></div></div>
+        <div class="f"><div class="fl">Rente (%/jr) <span class="fv" id="ltvRenteV">4%</span></div><input type="range" id="ltvRente" min="1" max="8" step="0.05" value="4" oninput="calcLtv()"><div class="slab"><span>1%</span><span>8%</span></div></div>
+        <div class="f"><div class="fl">Woningwaardestijging (%/jr) <span class="fv" id="ltvGroeiV">2%</span></div><input type="range" id="ltvGroei" min="0" max="8" step="0.5" value="2" oninput="calcLtv()"><div class="slab"><span>0%</span><span>8%</span></div></div>
+      </div></div>
+    </div>
+    <div class="rs" id="ltvResult"></div>
+  </div>
+</div>
+
+<!-- 11: BIJLEENREGELING -->
+<div class="panel" id="p11">
+  <div class="tool-header"><div class="tool-badge">↩️ Fiscaal</div><div class="tool-title">Bijleenregeling Calculator</div><div class="tool-desc">Bereken de eigenwoningreserve en het maximaal aftrekbare hypotheekbedrag bij verhuizing van koop naar koop.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Verkoop oude woning</span></div><div class="cb">
+        <div class="f"><div class="fl">Verkoopprijs oude woning</div><input type="number" class="in" id="blVerkoop" value="380000" oninput="calcBl()"></div>
+        <div class="f"><div class="fl">Restschuld oude hypotheek</div><input type="number" class="in" id="blRestOud" value="200000" oninput="calcBl()"></div>
+        <div class="f"><div class="fl">Verkoopkosten</div><input type="number" class="in" id="blKosten" value="5000" oninput="calcBl()"></div>
+      </div></div>
+      <div class="card"><div class="ch"><span class="ct">Aankoop nieuwe woning</span></div><div class="cb">
+        <div class="f"><div class="fl">Koopprijs nieuwe woning</div><input type="number" class="in" id="blKoop" value="480000" oninput="calcBl()"></div>
+        <div class="f"><div class="fl">Gewenste hypotheek nieuwe woning</div><input type="number" class="in" id="blNieuwHyp" value="420000" oninput="calcBl()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="blResult"></div>
+  </div>
+</div>
+
+<!-- 12: HYPOTHEEKVORM -->
+<div class="panel" id="p12">
+  <div class="tool-header"><div class="tool-badge">⚖️ Productselectie</div><div class="tool-title">Hypotheekvorm Kiezer</div><div class="tool-desc">Vergelijk annuïtair, lineair en aflossingsvrij op maandlast, rentekosten en nettolasten over de gehele looptijd.</div></div>
+  <div class="card" style="margin-bottom:14px;"><div class="ch"><span class="ct">Basisgegevens</span></div><div class="cb" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+    <div class="f"><div class="fl">Hypotheek <span class="fv" id="hvHypV">€ 400.000</span></div><input type="range" id="hvHyp" min="50000" max="1000000" step="5000" value="400000" oninput="calcHv()"><div class="slab"><span>€50k</span><span>€1M</span></div></div>
+    <div class="f"><div class="fl">Rente <span class="fv" id="hvRenteV">4,2%</span></div><input type="range" id="hvRente" min="1" max="8" step="0.05" value="4.2" oninput="calcHv()"><div class="slab"><span>1%</span><span>8%</span></div></div>
+    <div class="f"><div class="fl">Looptijd <span class="fv" id="hvLpV">30 jr</span></div><input type="range" id="hvLp" min="5" max="30" step="1" value="30" oninput="calcHv()"><div class="slab"><span>5</span><span>30 jr</span></div></div>
+  </div></div>
+  <div id="hvResult"></div>
+</div>
+
+<!-- 13: BOUWDEPOT -->
+<div class="panel" id="p13">
+  <div class="tool-header"><div class="tool-badge">🏗️ Bouwdepot</div><div class="tool-title">Bouwdepot Kosten Calculator</div><div class="tool-desc">Bereken de werkelijke kosten van een bouwdepot: depotkosten, oplopende hypotheekrente en tijdlijn.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Bouwdepot parameters</span></div><div class="cb">
+        <div class="f"><div class="fl">Hypotheekbedrag inclusief depot</div><input type="number" class="in" id="bdHyp" value="500000" oninput="calcBd()"></div>
+        <div class="f"><div class="fl">Depotbedrag</div><input type="number" class="in" id="bdDepot" value="80000" oninput="calcBd()"></div>
+        <div class="f"><div class="fl">Hypotheekrente (%/jr)</div><input type="number" class="in" id="bdRente" value="4.2" step="0.05" oninput="calcBd()"></div>
+        <div class="f"><div class="fl">Bouwperiode (maanden)</div><select class="se" id="bdPeriode" onchange="calcBd()"><option value="6" selected>6 maanden</option><option value="12">12 maanden</option><option value="18">18 maanden</option><option value="24">24 maanden</option></select></div>
+        <div class="f"><div class="fl">Ontvangen depotvergoeding (%)</div><input type="number" class="in" id="bdVergoeding" value="0.5" step="0.1" oninput="calcBd()"></div>
+      </div></div>
+    </div>
+    <div class="rs" id="bdResult"></div>
+  </div>
+</div>
+
+<!-- 14: RESTSCHULD -->
+<div class="panel" id="p14">
+  <div class="tool-header"><div class="tool-badge">💸 Restschuld</div><div class="tool-title">Restschuld bij Verkoop Analyse</div><div class="tool-desc">Bereken de restschuld bij gedwongen verkoop of verkoop onder WOZ-waarde en de fiscale behandeling.</div></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="ch"><span class="ct">Woningsituatie</span></div><div class="cb">
+        <div class="f"><div class="fl">Hypotheek restschuld</div><input type="number" class="in" id="rsHyp" value="320000" oninput="calcRs()"></div>
+        <div class="f"><div class="fl">Verwachte verkoopprijs</div><input type="number" class="in" id="rsVerkoop" value="290000" oninput="calcRs()"></div>
+        <div class="f"><div class="fl">Makelaarskosten + overdrachtskosten</div><input type="number" class="in" id="rsKosten" value="6000" oninput="calcRs()"></div>
+        <div class="f"><div class="fl">NHG aanwezig?</div><select class="se" id="rsNhg" onchange="calcRs()"><option value="ja" selected>Ja</option><option value="nee">Nee</option></select></div>
+        <div class="f"><div class="fl">Reden gedwongen verkoop</div><select class="se" id="rsReden" onchange="calcRs()"><option value="ao">Arbeidsongeschiktheid</option><option value="scheiding" selected>Scheiding</option><option value="overlijden">Overlijden</option><option value="baanverlies">Baanverlies</option></select></div>
+      </div></div>
+    </div>
+    <div class="rs" id="rsResult"></div>
+  </div>
+</div>
+
+<!-- 15: ACCEPTATIENORM -->
+<div class="panel" id="p15">
+  <div class="tool-header"><div class="tool-badge">✅ Acceptatie</div><div class="tool-title">Acceptatienormen Checker</div><div class="tool-desc">Check of uw klant voldoet aan de acceptatiecriteria van de 5 grootste hypotheekverstrekkers in Nederland.</div></div>
+  <div class="card" style="margin-bottom:14px;"><div class="ch"><span class="ct">Klantprofiel checker</span></div><div class="cb" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="f"><div class="fl">Bruto inkomen</div><input type="number" class="in" id="anInk" value="70000" oninput="calcAn()"></div>
+    <div class="f"><div class="fl">Gewenste hypotheek</div><input type="number" class="in" id="anHyp" value="350000" oninput="calcAn()"></div>
+    <div class="f"><div class="fl">Woningwaarde</div><input type="number" class="in" id="anWaarde" value="390000" oninput="calcAn()"></div>
+    <div class="f"><div class="fl">Dienstverband</div><select class="se" id="anDienst" onchange="calcAn()"><option value="vast" selected>Vast</option><option value="flex">Flex</option><option value="zzp">ZZP</option></select></div>
+    <div class="f"><div class="fl">BKR problematiek</div><select class="se" id="anBkr" onchange="calcAn()"><option value="nee" selected>Geen</option><option value="ja">Ja</option></select></div>
+    <div class="f"><div class="fl">NHG aanvragen</div><select class="se" id="anNhg" onchange="calcAn()"><option value="ja" selected>Ja</option><option value="nee">Nee</option></select></div>
+  </div></div>
+  <div id="anResult"></div>
+</div>
+
+<script>
+function sw(n){document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===n));document.querySelectorAll('.tab-btn').forEach((t,i)=>t.classList.toggle('active',i===n));}
+function fmt(n){return '€\u00a0'+Math.round(n).toLocaleString('nl-NL');}
+function fmtD(n,d=2){return n.toFixed(d).replace('.',',')+'%';}
+function al(cls,icon,title,body){return `<div class="al ${cls}"><div class="al-i">${icon}</div><div><strong>${title}</strong><span>${body}</span></div></div>`;}
+function ann(h,r,m){const rm=r/100/12;if(rm===0)return h/m;return h*(rm*Math.pow(1+rm,m))/(Math.pow(1+rm,m)-1);}
+
+const GHF={getQ(i){const n=[[25000,.175],[30000,.205],[35000,.225],[40000,.240],[45000,.255],[50000,.265],[60000,.280],[70000,.290],[80000,.295],[100000,.300],[150000,.310],[999999,.320]];for(const[l,q]of n)if(i<=l)return q;return .32;}}
+
+// MAX HYPOTHEEK
+function calcMh(){
+  const i1=parseInt(document.getElementById('mhI1').value)||70000;
+  const i2=parseInt(document.getElementById('mhI2').value)||0;
+  const rvp=parseFloat(document.getElementById('mhRvp').value)||4.2;
+  const label=parseInt(document.getElementById('mhLabel').value)||20000;
+  const schuld=parseFloat(document.getElementById('mhSchuld').value)||0;
+  const duo=parseFloat(document.getElementById('mhDuo').value)||0;
+  document.getElementById('mhI1V').textContent=fmt(i1);
+  document.getElementById('mhI2V').textContent=fmt(i2);
+  const toets=i1+i2*0.9;
+  const q=GHF.getQ(toets);
+  const maxLast=Math.round(toets*q/12);
+  const toetsR=rvp<4.0?5.0:rvp;
+  const r=toetsR/100/12;
+  const basisHyp=Math.round(maxLast*(Math.pow(1+r,360)-1)/(r*Math.pow(1+r,360)));
+  const schuldenAft=Math.round(schuld*4.5+duo*0.065/12*4.5);
+  const maxHyp=Math.max(0,basisHyp+label-schuldenAft);
+  const nhg=maxHyp<=450000+label;
+  document.getElementById('mhResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Maximale Hypotheek</div><div class="rh-v">${fmt(maxHyp)}</div><div class="rh-c">Toetsinkomen: ${fmt(toets)} · Woonquota: ${fmtD(q*100,1)} · Toetsrente: ${fmtD(toetsR,1)}</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Basis max.</div><div class="kv b">${fmt(basisHyp)}</div></div>
+      <div class="kp"><div class="kl">Label toeslag</div><div class="kv g">+${fmt(label)}</div></div>
+      <div class="kp"><div class="kl">Max. maandlast</div><div class="kv">${fmt(maxLast)}</div></div>
+    </div>
+    ${nhg?al('ok','🛡️','NHG mogelijk','Maximale hypotheek valt binnen NHG-grens. Adviseer NHG — rentekorting ±0,4% = '+fmt(Math.round(maxHyp*0.004/12))+'/mnd.'):al('in','ℹ️','Buiten NHG-grens','Gewone hypotheek. Geen NHG-borgtochtpremie, maar ook geen korting.')}
+    ${schuld>0?al('wa','⚠️','Schulden verlagen hypotheek',`Bestaande schulden reduceren max. met ${fmt(schuldenAft)}. Advies: schulden aflossen vóór aanvraag.`):''}`;
+}
+calcMh();
+
+// TOETSINKOMEN
+function calcTi(){
+  const sal=parseFloat(document.getElementById('tiSalaris').value)||5000;
+  const vak=parseFloat(document.getElementById('tiVak').value)||0.08;
+  const x13=parseFloat(document.getElementById('ti13').value)||0;
+  const bonus=parseFloat(document.getElementById('tiBonus').value)||0;
+  const ow=parseFloat(document.getElementById('tiOverwerk').value)||0;
+  const alim=parseFloat(document.getElementById('tiAlim').value)||0;
+  const free=parseFloat(document.getElementById('tiFreelance').value)||0;
+  const dienst=document.getElementById('tiDienst').value;
+  const jaarsalaris=sal*12*(1+vak);
+  const totaal=jaarsalaris+x13+bonus*0.5+ow*12*0.5+alim+free*0.5;
+  const toets=dienst==='flex'?Math.round(totaal*0.9):dienst==='zzp'?Math.round(totaal*0.85):Math.round(totaal);
+  document.getElementById('tiResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Toetsinkomen Hypotheek</div><div class="rh-v">${fmt(toets)}</div><div class="rh-c">Bruto jaarsalaris: ${fmt(jaarsalaris)} · Inclusief toeslagen</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Basis salaris</div><div class="kv b">${fmt(jaarsalaris)}</div></div>
+      <div class="kp"><div class="kl">Variabele comp.</div><div class="kv">${fmt(bonus*0.5+ow*12*0.5)}</div></div>
+      <div class="kp"><div class="kl">Toetsinkomen</div><div class="kv g">${fmt(toets)}</div></div>
+    </div>
+    ${dienst!=='vast'?al('wa','⚠️',dienst==='flex'?'Flex: 10% afslag':'ZZP: 15% afslag + 3-jaarsgemiddelde vereist','Geldverstrekkers passen een afslag toe op variabel/ZZP-inkomen. Bewaar 3 jaar belastingaangiften.'):al('ok','✅','Vast inkomen — optimale situatie','Alle inkomenscomponenten worden volledig meegenomen door geldverstrekkers.')}`;
+}
+calcTi();
+
+// NHG
+function calcNhg(){
+  const koop=parseInt(document.getElementById('nhgKoop').value)||380000;
+  const hyp=parseInt(document.getElementById('nhgHyp').value)||360000;
+  const energie=document.getElementById('nhgEnergie').value;
+  const rente=parseFloat(document.getElementById('nhgRente').value)||4.2;
+  document.getElementById('nhgKoopV').textContent=fmt(koop);
+  document.getElementById('nhgHypV').textContent=fmt(hyp);
+  const grens=energie==='ja'?477000:450000;
+  const nhg=koop<=grens&&hyp<=grens&&hyp<=koop;
+  const prem=Math.round(hyp*0.006);
+  const renteKort=Math.round(hyp*0.004/12);
+  const ltv=Math.round(hyp/koop*100);
+  document.getElementById('nhgResult').innerHTML=`
+    <div class="rh" style="background:${nhg?'var(--brand)':'var(--red)'}">
+      <div class="rh-e">NHG Status 2025</div>
+      <div class="rh-v">${nhg?'✅ Aanvraagbaar':'❌ Niet mogelijk'}</div>
+      <div class="rh-c">Grens: ${fmt(grens)} · LTV: ${ltv}%</div>
+    </div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Borgtochtpremie</div><div class="kv ${nhg?'a':'r'}">${nhg?fmt(prem):'N.v.t.'}</div></div>
+      <div class="kp"><div class="kl">Rentevoordeel/mnd</div><div class="kv g">${nhg?fmt(renteKort):'—'}</div></div>
+      <div class="kp"><div class="kl">LTV ratio</div><div class="kv ${ltv<=90?'g':ltv<=100?'a':'r'}">${ltv}%</div></div>
+    </div>
+    ${nhg?al('ok','🛡️','NHG-voordelen',`Borgtochtpremie ${fmt(prem)} (aftrekbaar). Rente ${fmtD(0.4)} lager = ${fmt(renteKort)}/mnd besparing. Bescherming bij baanverlies/scheiding.`):
+    al('er','❌',`Koopsom ${fmt(koop)} overstijgt NHG-grens ${fmt(grens)}`,energie==='nee'?'Overweeg energiemaatregelen voor verhoogde grens (€477.000).':'Koopsom overstijgt ook verhoogde grens.')}`;
+}
+calcNhg();
+
+// MAANDLAST
+function calcMl(){
+  const hyp=parseInt(document.getElementById('mlHyp').value)||350000;
+  const rente=parseFloat(document.getElementById('mlRente').value)||4.2;
+  const lp=parseInt(document.getElementById('mlLp').value)||30;
+  const vorm=document.getElementById('mlVorm').value;
+  const ink=parseInt(document.getElementById('mlInk').value)||90000;
+  const woz=parseInt(document.getElementById('mlWoz').value)||420000;
+  document.getElementById('mlHypV').textContent=fmt(hyp);
+  document.getElementById('mlRenteV').textContent=fmtD(rente);
+  document.getElementById('mlLpV').textContent=lp+' jr';
+  const mnd=lp*12;
+  const ml=vorm==='ann'?Math.round(ann(hyp,rente,mnd)):
+    vorm==='lin'?Math.round(hyp/mnd+hyp*(rente/100/12)):
+    Math.round(hyp*(rente/100/12));
+  const rDeel=Math.round(hyp*(rente/100/12));
+  const ewf=Math.round(woz*0.0035/12);
+  const hra=Math.round(Math.max(0,rDeel-ewf)*0.3575);
+  const netto=ml-hra;
+  document.getElementById('mlResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Maandlast Hypotheek</div><div class="rh-v">${fmt(ml)}</div><div class="rh-c">Netto na HRA: ${fmt(netto)} · Belastingvoordeel: ${fmt(hra)}/mnd</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Rente/mnd</div><div class="kv r">${fmt(rDeel)}</div></div>
+      <div class="kp"><div class="kl">HRA teruggave</div><div class="kv g">${fmt(hra)}</div></div>
+      <div class="kp"><div class="kl">Totaal rente</div><div class="kv a">${fmt(Math.round(rDeel*12))}</div></div>
+    </div>
+    ${al('in','ℹ️','HRA 2025: 35,75% (schijf 1)','Hypotheekrenteaftrek is begrensd op het schijf 1 tarief. EWF (eigenwoningforfait) wordt eerst afgetrokken van de rente.')}`;
+}
+calcMl();
+
+// STARTERS
+function calcSt(){
+  const lft1=parseInt(document.getElementById('stLft1').value)||27;
+  const lft2=parseInt(document.getElementById('stLft2').value)||0;
+  const koop=parseInt(document.getElementById('stKoop').value)||320000;
+  const eerste=document.getElementById('stEerste').value;
+  const gem=document.getElementById('stGem').value;
+  const svnInk=parseInt(document.getElementById('stSvnInk').value)||50000;
+  document.getElementById('stKoopV').textContent=fmt(koop);
+  const ovbVrij=eerste==='ja'&&lft1>=18&&lft1<35&&koop<=525000;
+  const ovb=ovbVrij?0:Math.round(koop*0.02);
+  const svnMax=koop<=355000&&svnInk<=50000;
+  document.getElementById('stResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Startersvoordeel</div><div class="rh-v">${fmt(ovb===0?0:ovb)}</div><div class="rh-c">${ovbVrij?'0% OVB — starter vrijgesteld':'2% OVB van toepassing'}</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">OVB (2%)</div><div class="kv ${ovbVrij?'g':'r'}">${ovbVrij?'Vrijgesteld':fmt(Math.round(koop*0.02))}</div></div>
+      <div class="kp"><div class="kl">Starterslening SVn</div><div class="kv ${svnMax?'g':'r'}">${svnMax?'Mogelijk':'Niet van toepassing'}</div></div>
+      <div class="kp"><div class="kl">Koopsom < €525k</div><div class="kv ${koop<525000?'g':'r'}">${koop<525000?'✓':'✗'}</div></div>
+    </div>
+    ${!ovbVrij&&eerste==='ja'?al('er','🚨','Leeftijd of prijs overschreden','OVB-vrijstelling geldt voor 18–35 jaar én koopsom ≤ €525.000.'):ovbVrij?al('ok','✅',`OVB-besparing: ${fmt(Math.round(koop*0.02))}`,'0% OVB van toepassing — besparing t.o.v. 2% tarief.'):al('in','ℹ️','Niet eerste woning','2% OVB van toepassing.')}
+    ${gem==='ja'&&svnMax?al('ok','💡','Starterslening aanvraagbaar via SVn','Gemeente biedt starterslening. Klant voldoet aan inkomensnorm. Maximaal te lenen afhankelijk van gemeente.'):''}`;
+}
+calcSt();
+
+// WOONQUOTE
+function calcWq(){
+  const hyp=parseFloat(document.getElementById('wqHyp').value)||1400;
+  const ewf=parseFloat(document.getElementById('wqEwf').value)||120;
+  const ink=parseFloat(document.getElementById('wqInk').value)||75000;
+  const vve=parseFloat(document.getElementById('wqVve').value)||0;
+  const serv=parseFloat(document.getElementById('wqService').value)||0;
+  const erf=parseFloat(document.getElementById('wqErfpacht').value)||0;
+  const totWoon=hyp+vve+serv+erf;
+  const q_bruto=Math.round(totWoon*12/ink*100);
+  const hra=Math.round(Math.max(0,hyp*12-ewf*12)*0.3575);
+  const netto=Math.round(totWoon-hra/12);
+  const q_netto=Math.round(netto*12/ink*100);
+  const norm=GHF.getQ(ink)*100;
+  document.getElementById('wqResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Bruto Woonquote</div><div class="rh-v">${q_bruto}%</div><div class="rh-c">Netto: ${q_netto}% · GHF-norm: ${fmtD(norm,1)}</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Bruto woonlast</div><div class="kv">${fmt(totWoon)}/mnd</div></div>
+      <div class="kp"><div class="kl">Netto woonlast</div><div class="kv g">${fmt(netto)}/mnd</div></div>
+      <div class="kp"><div class="kl">GHF-norm</div><div class="kv ${q_bruto<=norm?'g':'r'}">${fmtD(norm,1)}</div></div>
+    </div>
+    ${al(q_bruto<=norm?'ok':'er',q_bruto<=norm?'✅':'⚠️',q_bruto<=norm?'Binnen GHF-norm':'Boven GHF-norm',`Bruto woonquote ${q_bruto}% ${q_bruto<=norm?'≤':'>'} GHF-norm ${fmtD(norm,1)}. ${q_bruto>norm?'Klant kan minder lenen dan gewenst. Zoek naar goedkopere woning of verhoog inkomen.':''}`)}`;
+}
+calcWq();
+
+// RENTEVASTE PERIODE
+function calcRvp(){
+  const hyp=parseInt(document.getElementById('rvpHyp').value)||400000;
+  const risico=document.getElementById('rvpRisico').value;
+  const woon=document.getElementById('rvpWoon').value;
+  const ink=document.getElementById('rvpInk').value;
+  document.getElementById('rvpHypV').textContent=fmt(hyp);
+  const scores={
+    risico:{laag:-2,midden:0,hoog:2},
+    woon:{kort:-2,midden:0,lang:2},
+    ink:{stabiel:1,variabel:0,onzeker:-1}
+  };
+  const score=scores.risico[risico]+scores.woon[woon]+scores.ink[ink];
+  const periodes={
+    [-5]:'1-2 jaar variabel',[-4]:'1-2 jaar variabel',[-3]:'5 jaar vast',[-2]:'5 jaar vast',[-1]:'5-10 jaar vast',
+    [0]:'10 jaar vast',[1]:'10-15 jaar vast',[2]:'15-20 jaar vast',[3]:'20-30 jaar vast',[4]:'30 jaar vast',[5]:'30 jaar vast'
+  };
+  const aanbevolen=periodes[score]||'10 jaar vast';
+  const renteDiff={short:4.8,mid:4.2,long:3.8};
+  document.getElementById('rvpResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Aanbevolen Rentevaste Periode</div><div class="rh-v">${aanbevolen}</div><div class="rh-c">Score: ${score} op schaal −5 tot +5</div></div>
+    ${al('ok','🎯','Advies op basis van profiel',`Risicobereidheid: ${risico} · Woonduur: ${woon} · Inkomen: ${ink}. Aanbeveling: ${aanbevolen}.`)}
+    ${al('in','📊','Afweging kort vs lang',`Korte rentevaste periode: lagere rente (~4,8%) maar renterisico. Lange periode: meer zekerheid (~3,8%) maar minder flexibiliteit. Verschil op ${fmt(hyp)}: ca. ${fmt(Math.round(hyp*(4.8-3.8)/100/12))}/mnd.`)}
+    ${woon==='kort'?al('wa','⚠️','Kort verwachte woonduur','Bij eventuele verkoop voor einde rentevaste periode kan boeterente worden berekend. Overweeg korte periode of flexibele hypotheek.'):''}`;
+}
+calcRvp();
+
+// KLANTRISICO
+function calcKr(){
+  const ltv=parseInt(document.getElementById('krLtv').value)||90;
+  const dti=parseInt(document.getElementById('krDti').value)||30;
+  const dienst=document.getElementById('krDienst').value;
+  const bkr=document.getElementById('krBkr').value;
+  const buffer=document.getElementById('krBuffer').value;
+  const woning=document.getElementById('krWoning').value;
+  document.getElementById('krLtvV').textContent=ltv+'%';
+  document.getElementById('krDtiV').textContent=dti+'%';
+  let score=0;
+  if(ltv>90)score+=2;else if(ltv>80)score+=1;
+  if(dti>35)score+=2;else if(dti>30)score+=1;
+  if(dienst==='flex')score+=1;else if(dienst==='zzp')score+=2;else if(dienst==='dga')score+=2;
+  if(bkr==='achterstand')score+=3;else if(bkr==='positief')score+=0;
+  if(buffer==='laag')score+=2;else if(buffer==='matig')score+=1;
+  if(woning==='bijzonder')score+=2;
+  const risico=score>=8?'Hoog':score>=4?'Gemiddeld':'Laag';
+  document.getElementById('krResult').innerHTML=`
+    <div class="rh" style="background:${score>=8?'var(--red)':score>=4?'var(--amber)':'var(--green)'}">
+      <div class="rh-e">Risicoscore Klant</div>
+      <div class="rh-v">${risico} (${score}/12)</div>
+      <div class="rh-c">Beoordeel extra documentatie en acceptatiekans</div>
+    </div>
+    ${bkr==='achterstand'?al('er','🚨','BKR achterstand — aanvraag zeer lastig','Negatieve BKR-registratie is vrijwel altijd een weigergrond. Bespreek saneringsopties.'):''}
+    ${ltv>100?al('er','🚨','LTV > 100% — onderwaterproblematiek','Schuld hoger dan woningwaarde. Extra zekerheden of NHG zijn vereist.'):ltv>90?al('wa','⚠️','LTV > 90% — beperkte geldverstrekkers','Boven 90% LTV zijn minder geldverstrekkers bereid. NHG vergroot kansen.'):al('ok','✅','LTV acceptabel','')}
+    ${score>=8?al('er','🚨','Hoog risicoprofiel — aanvraag risicovol','Overweeg aanvullende zekerheden, co-debiteur of lagere hypotheek.'):score>=4?al('wa','⚠️','Gemiddeld risico — zorgvuldig dossier opbouwen','Extra documentatie en sterke motivatie vereist.'):al('ok','✅','Laag risicoprofiel — goede acceptatiekansen','')}`;
+}
+calcKr();
+
+// OVERSLUITEN
+function calcOvh(){
+  const rest=parseInt(document.getElementById('ovhRest').value)||280000;
+  const hr=parseFloat(document.getElementById('ovhHr').value)||5.5;
+  const rp=parseInt(document.getElementById('ovhRp').value)||4;
+  const nr=parseFloat(document.getElementById('ovhNr').value)||3.9;
+  const lp=parseInt(document.getElementById('ovhLp').value)||26;
+  const kosten=parseFloat(document.getElementById('ovhKosten').value)||2500;
+  document.getElementById('ovhRestV').textContent=fmt(rest);
+  document.getElementById('ovhHrV').textContent=fmtD(hr);
+  document.getElementById('ovhRpV').textContent=rp+' jr';
+  document.getElementById('ovhNrV').textContent=fmtD(nr);
+  document.getElementById('ovhLpV').textContent=lp+' jr';
+  const renteverschil=Math.max(0,(hr-nr)/100);
+  const boete=Math.round(rest*renteverschil*rp);
+  const totKosten=boete+kosten;
+  const mlHuidig=Math.round(ann(rest,hr,lp*12));
+  const mlNieuw=Math.round(ann(rest,nr,lp*12));
+  const maandBesparing=mlHuidig-mlNieuw;
+  const nettoBesparing=maandBesparing*lp*12-totKosten;
+  const tv=maandBesparing>0?Math.ceil(totKosten/maandBesparing):999;
+  document.getElementById('ovhResult').innerHTML=`
+    <div class="rh" style="background:${nettoBesparing>5000?'var(--green)':nettoBesparing>0?'var(--amber)':'var(--red)'}">
+      <div class="rh-e">Netto Besparing Oversluiten</div>
+      <div class="rh-v">${nettoBesparing>0?'+':'-'}${fmt(Math.abs(nettoBesparing))}</div>
+      <div class="rh-c">Maandbesparing: ${fmt(maandBesparing)} · Terugverdientijd: ${tv<999?tv+' mnd':'Nooit'}</div>
+    </div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Boeterente</div><div class="kv r">${fmt(boete)}</div></div>
+      <div class="kp"><div class="kl">Advies+notaris</div><div class="kv a">${fmt(kosten)}</div></div>
+      <div class="kp"><div class="kl">Totale kosten</div><div class="kv r">${fmt(totKosten)}</div></div>
+    </div>
+    ${nettoBesparing>5000?al('ok','✅','Oversluiten sterk aanbevolen',`Maandlast daalt ${fmt(maandBesparing)}/mnd. Break-even na ${tv} maanden. Totale besparing: ${fmt(nettoBesparing)}.`):nettoBesparing>0?al('wa','⚠️','Marginaal voordeel',`Break-even pas na ${tv} maanden. Overweeg of u lang genoeg blijft wonen.`):al('er','❌','Oversluiten niet voordelig','Kosten overtreffen de rentebesparing. Wacht op einde rentevaste periode.')}`;
+}
+calcOvh();
+
+// VERDUURZAMING
+function calcVd(){
+  const budgetToeslag={B:20000,A:30000,Ap:40000,App:50000};
+  const budget=parseFloat(document.getElementById('vdBudget').value)||40000;
+  const gewenst=document.getElementById('vdGewenst').value;
+  const hyp=parseFloat(document.getElementById('vdHyp').value)||280000;
+  const waarde=parseFloat(document.getElementById('vdWaarde').value)||380000;
+  const toeslag=budgetToeslag[gewenst]||50000;
+  const extraLeen=Math.min(toeslag,budget);
+  const ltv=Math.round((hyp+extraLeen)/waarde*100);
+  const energieBesparing=Math.round(budget*0.05);
+  document.getElementById('vdResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Extra Hypotheekruimte Verduurzaming</div><div class="rh-v">+${fmt(toeslag)}</div><div class="rh-c">Label ${gewenst} toeslag · Budget: ${fmt(budget)}</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Label toeslag</div><div class="kv g">+${fmt(toeslag)}</div></div>
+      <div class="kp"><div class="kl">LTV na renovatie</div><div class="kv ${ltv<=100?'a':'r'}">${ltv}%</div></div>
+      <div class="kp"><div class="kl">Energiebesparing/jr</div><div class="kv g">~${fmt(energieBesparing)}</div></div>
+    </div>
+    ${al('ok','☀️','Verduurzamingshypotheek',`Klant kan ${fmt(extraLeen)} extra lenen voor energiemaatregelen. Dit vergroot de maximale hypotheek én verlaagt de energierekening met ~${fmt(energieBesparing)}/jr.`)}
+    ${ltv>100?al('er','🚨','LTV na verduurzaming > 100%','Extra borg of eigen middelen vereist.'):al('in','ℹ️','NHG-grens verduurzaming','NHG-grens voor energiemaatregelen: €477.000 (2025).')}`;
+}
+calcVd();
+
+// LTV TRACKER
+function calcLtv(){
+  const hyp=parseInt(document.getElementById('ltvHyp').value)||380000;
+  const waarde=parseInt(document.getElementById('ltvWaarde').value)||420000;
+  const rente=parseFloat(document.getElementById('ltvRente').value)||4;
+  const groei=parseFloat(document.getElementById('ltvGroei').value)||2;
+  document.getElementById('ltvHypV').textContent=fmt(hyp);
+  document.getElementById('ltvWaardeV').textContent=fmt(waarde);
+  document.getElementById('ltvRenteV').textContent=fmtD(rente);
+  document.getElementById('ltvGroeiV').textContent=fmtD(groei);
+  const rows=[1,5,10,15,20,25,30].map(j=>{
+    const mld=ann(hyp,rente,360);
+    let h=hyp;
+    for(let m=0;m<j*12;m++){h=Math.max(0,h-mld+h*(rente/100/12));}
+    const w=Math.round(waarde*Math.pow(1+groei/100,j));
+    const lv=Math.round(h/w*100);
+    return{j,h:Math.round(h),w,lv};
+  });
+  document.getElementById('ltvResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Huidige LTV</div><div class="rh-v">${Math.round(hyp/waarde*100)}%</div><div class="rh-c">Hypotheek: ${fmt(hyp)} · Waarde: ${fmt(waarde)}</div></div>
+    <div class="card"><div class="ch"><span class="ct">LTV Ontwikkeling</span></div><div class="cb">
+      <table class="dt"><tr><th>Jaar</th><th class="ri">Restschuld</th><th class="ri">Woningwaarde</th><th class="ri">LTV</th></tr>
+        ${rows.map(r=>`<tr><td>Jaar ${r.j}</td><td class="ri">${fmt(r.h)}</td><td class="ri">${fmt(r.w)}</td><td class="ri" style="font-weight:700;color:${r.lv<=80?'var(--green)':r.lv<=90?'var(--amber)':'var(--red)'};">${r.lv}%</td></tr>`).join('')}
+      </table>
+    </div></div>
+    ${al('in','💡','LTV-stappen en tarieven','Geldverstrekkers hanteren tarieven op basis van LTV-klassen (≤60%, ≤70%, ≤80%, ≤90%). Bij dalende LTV kan renteherziening voordelig zijn.')}`;
+}
+calcLtv();
+
+// BIJLEENREGELING
+function calcBl(){
+  const verkoop=parseFloat(document.getElementById('blVerkoop').value)||380000;
+  const restOud=parseFloat(document.getElementById('blRestOud').value)||200000;
+  const kosten=parseFloat(document.getElementById('blKosten').value)||5000;
+  const koop=parseFloat(document.getElementById('blKoop').value)||480000;
+  const nieuwHyp=parseFloat(document.getElementById('blNieuwHyp').value)||420000;
+  const overwaarde=Math.max(0,verkoop-restOud-kosten);
+  const maxAftrekbaar=Math.max(0,koop-overwaarde);
+  const extraZonderAftrek=Math.max(0,nieuwHyp-maxAftrekbaar);
+  document.getElementById('blResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Eigenwoningreserve</div><div class="rh-v">${fmt(overwaarde)}</div><div class="rh-c">Max. aftrekbaar: ${fmt(maxAftrekbaar)} · Extra zonder HRA: ${fmt(extraZonderAftrek)}</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Overwaarde</div><div class="kv g">${fmt(overwaarde)}</div></div>
+      <div class="kp"><div class="kl">Max HRA-deel</div><div class="kv b">${fmt(maxAftrekbaar)}</div></div>
+      <div class="kp"><div class="kl">Niet-aftrekbaar</div><div class="kv ${extraZonderAftrek>0?'r':'g'}">${fmt(extraZonderAftrek)}</div></div>
+    </div>
+    ${extraZonderAftrek>0?al('wa','⚠️',`${fmt(extraZonderAftrek)} niet aftrekbaar`,`De bijleenregeling verplicht de overwaarde (${fmt(overwaarde)}) te gebruiken voor de nieuwe woning. Het extra deel (${fmt(extraZonderAftrek)}) heeft geen HRA.`):al('ok','✅','Volledige hypotheek aftrekbaar','Geen bijleenproblematiek — de gehele hypotheek is fiscaal aftrekbaar.')}`;
+}
+calcBl();
+
+// HYPOTHEEKVORM
+function calcHv(){
+  const hyp=parseInt(document.getElementById('hvHyp').value)||400000;
+  const rente=parseFloat(document.getElementById('hvRente').value)||4.2;
+  const lp=parseInt(document.getElementById('hvLp').value)||30;
+  document.getElementById('hvHypV').textContent=fmt(hyp);
+  document.getElementById('hvRenteV').textContent=fmtD(rente);
+  document.getElementById('hvLpV').textContent=lp+' jr';
+  const mnd=lp*12;
+  const annMl=Math.round(ann(hyp,rente,mnd));
+  const linMl1=Math.round(hyp/mnd+hyp*(rente/100/12));
+  const linMlN=Math.round(hyp/mnd+(hyp/mnd)*(rente/100/12));
+  const aflMl=Math.round(hyp*(rente/100/12));
+  const totAnn=annMl*mnd;
+  const totLin=Math.round(hyp+hyp*(rente/100)*((mnd/12+1)/2));
+  const totAfl=aflMl*mnd;
+  document.getElementById('hvResult').innerHTML=`
+    <div class="card"><div class="ch"><span class="ct">Vergelijking hypotheekvormen</span></div><div class="cb">
+      <table class="dt">
+        <tr><th>Vorm</th><th class="ri">Maandlast (jr 1)</th><th class="ri">Maandlast (jr 30)</th><th class="ri">Totale rente</th><th class="ri">HRA mogelijk</th></tr>
+        <tr><td><strong>Annuïtair</strong></td><td class="ri">${fmt(annMl)}</td><td class="ri">${fmt(annMl)}</td><td class="ri" style="color:var(--amber);">${fmt(totAnn-hyp)}</td><td class="ri" style="color:var(--green);">✓ Ja</td></tr>
+        <tr><td><strong>Lineair</strong></td><td class="ri" style="color:var(--red);">${fmt(linMl1)}</td><td class="ri" style="color:var(--green);">${fmt(linMlN)}</td><td class="ri" style="color:var(--green);">${fmt(totLin-hyp)}</td><td class="ri" style="color:var(--green);">✓ Ja</td></tr>
+        <tr><td><strong>Aflossingsvrij</strong></td><td class="ri" style="color:var(--green);">${fmt(aflMl)}</td><td class="ri" style="color:var(--green);">${fmt(aflMl)}</td><td class="ri" style="color:var(--red);">${fmt(totAfl-hyp)}</td><td class="ri" style="color:var(--red);">✗ Nee (post-2013)</td></tr>
+      </table>
+    </div></div>
+    ${al('in','⚖️','Wanneer welke vorm?','Annuïtair: stabiele lasten, gangbaarst. Lineair: meer betalen nu, minder rente totaal, sneller vrij. Aflossingsvrij: alleen als geen NHG en bestaande hypotheek.')}`;
+}
+calcHv();
+
+// BOUWDEPOT
+function calcBd(){
+  const totalHyp=parseFloat(document.getElementById('bdHyp').value)||500000;
+  const depot=parseFloat(document.getElementById('bdDepot').value)||80000;
+  const rente=parseFloat(document.getElementById('bdRente').value)||4.2;
+  const periode=parseInt(document.getElementById('bdPeriode').value)||6;
+  const verg=parseFloat(document.getElementById('bdVergoeding').value)||0.5;
+  const basisHyp=totalHyp-depot;
+  const renteKosten=Math.round(depot*(rente/100/12)*periode);
+  const depotOpbrengst=Math.round(depot*(verg/100/12)*periode);
+  const nettoKosten=renteKosten-depotOpbrengst;
+  const maandRente=Math.round(basisHyp*(rente/100/12));
+  document.getElementById('bdResult').innerHTML=`
+    <div class="rh"><div class="rh-e">Nettokosten Bouwdepot</div><div class="rh-v">${fmt(nettoKosten)}</div><div class="rh-c">Rente ${periode} mnd: ${fmt(renteKosten)} − Vergoeding: ${fmt(depotOpbrengst)}</div></div>
+    <div class="kg">
+      <div class="kp"><div class="kl">Depot rente/mnd</div><div class="kv r">${fmt(Math.round(depot*(rente/100/12)))}</div></div>
+      <div class="kp"><div class="kl">Depotvergoeding/mnd</div><div class="kv g">${fmt(Math.round(depot*(verg/100/12)))}</div></div>
+      <div class="kp"><div class="kl">Basis maandlast</div><div class="kv">${fmt(maandRente)}</div></div>
+    </div>
+    ${al('in','ℹ️','Hoe bouwdepot werkt','Volledige hypotheek wordt verstrekt; bouwbedrag staat in depot. Over opgenomen deel betaalt u hypotheekrente, over depot ontvangt u lagere vergoeding. Verschil zijn de nettokosten.')}`;
+}
+calcBd();
+
+// RESTSCHULD
+function calcRs(){
+  const hyp=parseFloat(document.getElementById('rsHyp').value)||320000;
+  const verkoop=parseFloat(document.getElementById('rsVerkoop').value)||290000;
+  const kosten=parseFloat(document.getElementById('rsKosten').value)||6000;
+  const nhg=document.getElementById('rsNhg').value;
+  const reden=document.getElementById('rsReden').value;
+  const netto=verkoop-kosten;
+  const restschuld=Math.max(0,hyp-netto);
+  const nhgDekt=nhg==='ja'&&(reden==='ao'||reden==='overlijden'||reden==='scheiding'||reden==='baanverlies');
+  document.getElementById('rsResult').innerHTML=`
+    <div class="rh" style="background:${restschuld===0?'var(--green)':'var(--red)'}">
+      <div class="rh-e">Restschuld bij Verkoop</div>
+      <div class="rh-v">${restschuld>0?fmt(restschuld):'Geen restschuld!'}</div>
+      <div class="rh-c">Verkoopprijs: ${fmt(verkoop)} · Hypotheek: ${fmt(hyp)}</div>
+    </div>
+    ${restschuld>0?nhgDekt?al('ok','🛡️','NHG vergoedt restschuld!','Met NHG en een geldige reden (AO, scheiding, baanverlies, overlijden) vergoedt NHG de restschuld. Claim direct indienen bij Nationaal Instituut.'):
+    al('er','🚨',`Restschuld ${fmt(restschuld)} — persoonlijk schuld`,nhg==='nee'?'Geen NHG aanwezig. Klant blijft persoonlijk aansprakelijk voor restschuld. Overleg met geldverstrekker over regeling.':'NHG aanwezig maar reden voldoet mogelijk niet. Bespreek claimproces met Nationaal Instituut.'):
+    al('ok','✅','Geen restschuld',`Verkoopopbrengst (${fmt(netto)}) dekt de hypotheek volledig. Eventuele overwaarde is vrij beschikbaar.`)}`;
+}
+calcRs();
+
+// ACCEPTATIENORM
+function calcAn(){
+  const ink=parseFloat(document.getElementById('anInk').value)||70000;
+  const hyp=parseFloat(document.getElementById('anHyp').value)||350000;
+  const waarde=parseFloat(document.getElementById('anWaarde').value)||390000;
+  const dienst=document.getElementById('anDienst').value;
+  const bkr=document.getElementById('anBkr').value;
+  const nhg=document.getElementById('anNhg').value;
+  const ltv=Math.round(hyp/waarde*100);
+  const q=GHF.getQ(ink);
+  const maxHyp=Math.round(ink*q/12*(Math.pow(1+4.2/100/12,360)-1)/((4.2/100/12)*Math.pow(1+4.2/100/12,360)));
+  const voldoetInk=hyp<=maxHyp;
+  const voldoetLtv=ltv<=100;
+  const voldoetBkr=bkr==='nee';
+  const BANKEN=['ING','Rabobank','ABN AMRO','Volksbank','Obvion'];
+  const scores=BANKEN.map(b=>{
+    let ok=voldoetInk&&voldoetLtv&&voldoetBkr;
+    if(dienst==='zzp'&&b==='Volksbank')ok=false;
+    if(dienst==='flex'&&b==='Obvion')ok=ok;
+    return{b,ok};
+  });
+  document.getElementById('anResult').innerHTML=`
+    <div class="kg" style="grid-template-columns:repeat(3,1fr);">
+      <div class="kp"><div class="kl">Inkomen voldoet</div><div class="kv ${voldoetInk?'g':'r'}">${voldoetInk?'✓':'✗'} ${voldoetInk?'Ja':'Nee'}</div></div>
+      <div class="kp"><div class="kl">LTV ≤100%</div><div class="kv ${voldoetLtv?'g':'r'}">${voldoetLtv?'✓':'✗'} ${ltv}%</div></div>
+      <div class="kp"><div class="kl">BKR vrij</div><div class="kv ${voldoetBkr?'g':'r'}">${voldoetBkr?'✓':'✗'} ${voldoetBkr?'Ja':'Nee'}</div></div>
+    </div>
+    <div class="card"><div class="ch"><span class="ct">Acceptatiekansen per geldverstrekker</span></div><div class="cb">
+      ${scores.map(s=>`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--bg2);">
+        <div style="font-size:13px;font-weight:700;flex:1;">${s.b}</div>
+        <div style="font-size:13px;font-weight:700;color:${s.ok?'var(--green)':'var(--red)'};">${s.ok?'✓ Acceptabel':'✗ Risico'}</div>
+      </div>`).join('')}
+    </div></div>
+    ${!voldoetBkr?al('er','🚨','BKR registratie blokkeert aanvraag','Negatieve BKR is vrijwel altijd weigergrond. Raadpleeg klant over BKR-zuivering (5 jaar na aflossing).'):!voldoetInk?al('er','⚠️',`Max. hypotheek op inkomen: ${fmt(maxHyp)}`,`Gewenste hypotheek (${fmt(hyp)}) overstijgt maximum. Verlaag wens of zoek goedkopere woning.`):al('ok','✅','Klant voldoet aan basisnormen','Dossier opbouwen voor aanvraag.')}`;
+}
+calcAn();
+</script>
+</body>
+</html>

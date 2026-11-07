@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leencapaciteit & leningdelen — NIBUD 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #003057; --primary-light: #1a4a73;
+    --accent: #E5A138; --accent-light: #f4c577;
+    --bg: #F4F7F9; --white: #ffffff;
+    --text: #333333; --text-light: #6b7280;
+    --border: #e2e8f0;
+    --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    --box1: #2563eb; --box3: #db2777;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 24px 16px; min-height: 100vh; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: var(--white); padding: 32px; border-radius: 16px 16px 0 0; position: relative; overflow: hidden; }
+  .header::after { content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(229, 161, 56, 0.15) 0%, transparent 70%); pointer-events: none; }
+  .header h1 { font-family: 'DM Serif Display', serif; font-size: clamp(28px, 4vw, 42px); font-weight: 400; margin-bottom: 8px; position: relative; }
+  .header p { font-size: 16px; opacity: 0.9; position: relative; max-width: 700px; }
+  .tag { display: inline-block; background: var(--accent); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+  .btn-tables { position: absolute; top: 32px; right: 32px; background: var(--accent); color: var(--primary); border: none; padding: 10px 18px; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; z-index: 2; }
+  .btn-tables:hover { background: var(--accent-light); }
+  @media (max-width: 600px) { .btn-tables { position: static; margin-top: 16px; display: inline-block; } }
+  .main-grid { display: grid; grid-template-columns: 360px 1fr; gap: 0; background: var(--white); border-radius: 0 0 16px 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 48, 87, 0.08); }
+  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+  .inputs-panel { background: var(--bg); padding: 28px 24px; border-right: 1px solid var(--border); }
+  .results-panel { padding: 28px 24px; }
+  .input-group { margin-bottom: 20px; }
+  .input-group label { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+  .input-group .value-display { font-size: 14px; font-weight: 700; color: var(--accent); background: var(--white); padding: 2px 10px; border-radius: 6px; border: 1px solid var(--border); }
+  .input-wrapper { position: relative; }
+  .input-wrapper input[type="text"], .input-wrapper input[type="number"] { width: 100%; padding: 10px 12px 10px 34px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text); background: var(--white); }
+  .input-wrapper input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(229, 161, 56, 0.15); }
+  .input-wrapper .prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-weight: 600; font-size: 13px; pointer-events: none; }
+  input[type="range"] { width: 100%; height: 6px; background: var(--border); border-radius: 3px; outline: none; -webkit-appearance: none; margin-top: 6px; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; cursor: pointer; box-shadow: 0 2px 6px rgba(229, 161, 56, 0.4); }
+  input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: var(--accent); border-radius: 50%; cursor: pointer; border: none; box-shadow: 0 2px 6px rgba(229, 161, 56, 0.4); }
+  .applicant-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .applicant-card .applicant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .applicant-card .applicant-header h3 { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--primary); font-weight: 400; }
+  .applicant-card .input-group { margin-bottom: 12px; }
+  .applicant-card .input-group label { font-size: 12px; }
+  .full-input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text); background: var(--white); }
+  .full-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(229, 161, 56, 0.15); }
+  .aow-info { background: linear-gradient(135deg, #fff8ec 0%, #fff 100%); border: 1px solid var(--accent-light); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 12px; color: var(--primary); }
+  .aow-info strong { color: var(--accent); font-weight: 700; }
+  .aow-info .age-line { color: var(--text-light); font-size: 11px; margin-top: 2px; }
+  .aow-override label { display: block; font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px; }
+  .aow-fields { display: flex; align-items: center; gap: 6px; }
+  .aow-fields input { width: 56px; padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 500; text-align: center; background: var(--white); }
+  .aow-fields input:focus { outline: none; border-color: var(--accent); }
+  .aow-fields span { font-size: 12px; color: var(--text-light); }
+  .totals-summary { background: var(--primary); color: var(--white); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.6; }
+  .totals-summary .total-row { display: flex; justify-content: space-between; align-items: center; }
+  .totals-summary .total-row + .total-row { margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.15); }
+  .totals-summary strong { color: var(--accent-light); font-family: 'DM Serif Display', serif; font-size: 14px; font-weight: 400; }
+  .reductions-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-top: 14px; margin-bottom: 14px; }
+  .reductions-header { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .reductions-header h3 { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--primary); font-weight: 400; margin: 0; }
+  .reductions-card .input-group { margin-bottom: 10px; }
+  .reductions-card .input-group label { font-size: 12px; }
+  .reductions-card .input-wrapper { display: flex; align-items: center; }
+  .reductions-card .suffix { color: var(--text-light); font-size: 11px; margin-left: 4px; }
+  .reductions-total { margin-top: 8px; padding: 8px 12px; background: #fef2f2; border-radius: 6px; font-size: 12px; color: #991b1b; font-weight: 600; text-align: right; }
+  .reductions-total.zero { background: #f8fafc; color: var(--text-light); }
+  .enhancements-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+  .checkbox-row input[type="checkbox"] { margin-top: 3px; cursor: pointer; accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; }
+  .checkbox-content { flex: 1; }
+  .checkbox-title { font-size: 12px; font-weight: 700; color: #065f46; line-height: 1.3; }
+  .checkbox-sub { font-size: 11px; color: var(--text-light); margin-top: 2px; line-height: 1.4; }
+  .checkbox-row.disabled { opacity: 0.5; cursor: not-allowed; }
+  .checkbox-row.disabled input { cursor: not-allowed; }
+  .disclaimer-footer { background: #f8fafc; border-top: 3px solid var(--accent); padding: 24px 36px; margin-top: 40px; }
+  .disclaimer-footer h3 { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--primary); font-weight: 400; margin-bottom: 10px; }
+  .disclaimer-footer p { font-size: 12px; color: var(--text-light); line-height: 1.55; margin-bottom: 8px; max-width: 900px; }
+  .disclaimer-footer strong { color: var(--text); }
+  .disclaimer-footer .build-info { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-light); letter-spacing: 0.3px; }
+  .tweetrap-mix-table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 13px; }
+  .tweetrap-mix-table th { background: var(--primary); color: white; padding: 9px 10px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .tweetrap-mix-table th.numeric { text-align: right; }
+  .tweetrap-mix-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  .tweetrap-mix-table td.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+  .tweetrap-mix-table tr.optimal { background: linear-gradient(90deg, #fef3c7 0%, transparent 100%); }
+  .tweetrap-mix-table tr.optimal td { font-weight: 600; }
+  .tweetrap-mix-table .opt-badge { display: inline-block; background: var(--accent); color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; margin-left: 6px; }
+  .tweetrap-mix-table .delta { font-size: 11px; color: var(--text-light); }
+  .tweetrap-disclaimer { font-size: 11px; color: var(--text-light); margin-top: 8px; padding: 10px 14px; background: #fffbea; border-left: 3px solid var(--accent); border-radius: 4px; }
+  .methodology-note { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; font-size: 12px; color: var(--text-light); line-height: 1.55; }
+  .methodology-note strong { color: var(--primary); font-weight: 700; }
+  .methodology-note code { background: var(--white); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, 'SF Mono', monospace; font-size: 11px; color: var(--primary); }
+  .chart-persons { display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 16px; background: #f8fafc; border-radius: 8px; margin-top: 10px; font-size: 12px; }
+  .age-second { color: var(--text-light); font-size: 12px; font-weight: 400; }
+  .now-tag { background: var(--accent); color: var(--primary); font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-left: 4px; vertical-align: middle; }
+  .chart-persons .person-card { display: flex; flex-direction: column; gap: 2px; }
+  .chart-persons .person-name { font-weight: 700; color: var(--primary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .chart-persons .person-detail { color: var(--text-light); font-size: 11px; }
+  .chart-persons .person-detail strong { color: var(--text); font-weight: 600; }
+  .scenarios-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .scenario-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: all 0.2s; }
+  .scenario-card.primary { background: linear-gradient(135deg, #fff8ec 0%, #fff 100%); border-color: var(--accent); border-width: 2px; }
+  .scenario-header { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .scenario-card.primary .scenario-header { border-color: var(--accent-light); }
+  .scenario-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--primary); line-height: 1.1; }
+  .scenario-sublabel { font-size: 11px; color: var(--text-light); margin-top: 4px; line-height: 1.4; }
+  .scenario-rows { display: flex; flex-direction: column; gap: 6px; }
+  .scenario-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+  .scenario-row .tag-b1 { background: #dbeafe; color: var(--box1); padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+  .scenario-row .tag-b3 { background: #fce7f3; color: var(--box3); padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+  .scenario-row strong { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--primary); font-weight: 400; }
+  .scenario-flp { font-size: 10px; color: var(--text-light); margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); text-align: center; }
+  .scenario-adjustments { font-size: 10px; margin-top: 8px; padding: 6px 8px; background: #f8fafc; border-radius: 4px; text-align: center; line-height: 1.5; }
+  .scenario-adjustments .adj-down { color: #991b1b; font-weight: 600; }
+  .scenario-adjustments .adj-up { color: #065f46; font-weight: 600; }
+  .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .summary-card { background: var(--bg); padding: 14px; border-radius: 10px; border-left: 4px solid var(--primary); }
+  .summary-card.box1 { border-left-color: var(--box1); }
+  .summary-card.box3 { border-left-color: var(--box3); }
+  .summary-card.highlight { background: linear-gradient(135deg, #fff8ec 0%, #fff 100%); border-left-color: var(--accent); }
+  .summary-card .label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 4px; }
+  .summary-card .value { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--primary); line-height: 1.1; }
+  .summary-card .sub { font-size: 11px; color: var(--text-light); margin-top: 3px; }
+
+  .parts-section { background: linear-gradient(135deg, #f8fafc 0%, #fff 100%); border: 2px solid var(--primary); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+  .parts-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+  .parts-title-block { flex: 1; min-width: 250px; }
+  .parts-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--primary); margin-bottom: 4px; }
+  .parts-subtitle { font-size: 13px; color: var(--text-light); }
+  .parts-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { background: var(--primary); color: var(--white); border: none; padding: 8px 14px; border-radius: 7px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .btn:hover { background: var(--primary-light); }
+  .btn.secondary { background: var(--accent); color: var(--primary); }
+  .btn.secondary:hover { background: var(--accent-light); }
+  .btn.outline { background: var(--white); color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn.outline:hover { background: var(--bg); }
+
+  .part-row { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; display: grid; gap: 10px; grid-template-columns: 36px 1fr 36px; align-items: center; }
+  .part-row.box1 { border-left: 4px solid var(--box1); }
+  .part-row.box3 { border-left: 4px solid var(--box3); }
+  .part-num { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--primary); }
+  .part-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+  .part-field { display: flex; flex-direction: column; gap: 2px; }
+  .part-field label { font-size: 10px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+  .part-field input, .part-field select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 500; background: var(--white); width: 100%; }
+  .part-field input:focus, .part-field select:focus { outline: none; border-color: var(--accent); }
+  .part-field .input-wrap { position: relative; }
+  .part-field .input-wrap input { padding-left: 22px; }
+  .part-field .input-wrap .prefix { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 12px; font-weight: 600; pointer-events: none; }
+  .part-field .input-wrap .suffix { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 12px; font-weight: 600; pointer-events: none; }
+  .part-field .input-wrap input.with-suffix { padding-left: 8px; padding-right: 26px; }
+  .part-info { font-size: 11px; color: var(--text-light); margin-top: 8px; padding: 6px 10px; background: var(--bg); border-radius: 6px; line-height: 1.5; }
+  .part-info strong { color: var(--primary); font-weight: 600; }
+  .btn-remove { width: 28px; height: 28px; border-radius: 50%; background: #fee2e2; color: var(--danger); border: none; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .btn-remove:hover { background: #fecaca; }
+  .btn-remove:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .totals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 18px 0 16px; }
+  .total-card { background: var(--white); padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); }
+  .total-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: var(--text-light); margin-bottom: 4px; }
+  .total-card .value { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--primary); line-height: 1.1; }
+  .total-card .sub { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+
+  .toets-bars { display: grid; gap: 10px; }
+  .toets-bar { background: var(--white); border-radius: 10px; padding: 12px 14px; border: 1px solid var(--border); }
+  .toets-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+  .toets-bar-title { font-size: 13px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+  .toets-bar-status { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+  .toets-bar-status.ok { background: #ecfdf5; color: #065f46; }
+  .toets-bar-status.fail { background: #fef2f2; color: #991b1b; }
+  .toets-bar-track { height: 18px; background: var(--bg); border-radius: 4px; overflow: hidden; position: relative; }
+  .toets-bar-fill { height: 100%; transition: width 0.3s; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: var(--white); font-size: 11px; font-weight: 700; }
+  .toets-bar-fill.ok { background: linear-gradient(90deg, #10b981 0%, #34d399 100%); }
+  .toets-bar-fill.fail { background: linear-gradient(90deg, #ef4444 0%, #f87171 100%); }
+  .toets-bar-meta { font-size: 11px; color: var(--text-light); margin-top: 6px; display: flex; justify-content: space-between; }
+
+  .chart-section { margin-bottom: 24px; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--primary); margin-bottom: 4px; }
+  .section-subtitle { font-size: 13px; color: var(--text-light); margin-bottom: 14px; }
+  .chart-container { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 18px 12px 10px; }
+  .chart-svg { width: 100%; height: auto; display: block; }
+  .chart-legend { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--text-light); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .legend-line { width: 16px; height: 3px; border-radius: 2px; }
+  .legend-block { width: 14px; height: 12px; border-radius: 2px; }
+
+  .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table.results { width: 100%; border-collapse: collapse; background: var(--white); font-size: 13px; }
+  table.results thead { background: var(--primary); color: var(--white); }
+  table.results th { padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  table.results th.numeric, table.results td.numeric { text-align: right; }
+  table.results td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  table.results tr:last-child td { border-bottom: none; }
+  table.results tr.pension-row { background: #fff8ec; }
+  table.results tr.pension-row td:first-child { font-weight: 700; color: var(--accent); }
+  table.results tbody tr:hover { background: var(--bg); }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .badge-work { background: #dbeafe; color: #1e40af; }
+  .badge-pension { background: #fed7aa; color: #9a3412; }
+  .badge-box1 { background: #dbeafe; color: var(--box1); }
+  .badge-box3 { background: #fce7f3; color: var(--box3); }
+  .info-box { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid var(--primary); padding: 14px 18px; border-radius: 8px; margin-top: 14px; font-size: 13px; line-height: 1.6; }
+  .info-box strong { color: var(--primary); }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 48, 87, 0.6); z-index: 100; padding: 20px; overflow-y: auto; }
+  .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+  .info-modal { max-width: 820px; }
+  .info-modal-body { padding: 24px 28px; max-height: 75vh; overflow-y: auto; }
+  .info-section { margin-bottom: 28px; }
+  .info-section:last-child { margin-bottom: 8px; }
+  .info-section h3 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; color: var(--primary); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); }
+  .info-section p { font-size: 13px; color: var(--text); line-height: 1.65; margin-bottom: 10px; }
+  .info-section p strong { color: var(--primary); font-weight: 700; }
+  .info-section p em { color: var(--text-light); font-style: italic; }
+  .info-section ul { margin: 8px 0 12px 22px; }
+  .info-section ul li { font-size: 13px; color: var(--text); line-height: 1.65; margin-bottom: 6px; }
+  .info-section ul li strong { color: var(--primary); }
+  .info-section ul.sources li { font-size: 12px; }
+  .formula-box { background: #f8fafc; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 10px 0; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; color: var(--primary); line-height: 1.8; }
+  .formula-box div { margin-bottom: 2px; }
+  .info-table { width: 100%; border-collapse: collapse; margin: 10px 0 12px; font-size: 12px; }
+  .info-table th { background: var(--primary); color: white; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .info-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .info-table tr:nth-child(even) td { background: #fafbfc; }
+  .modal { background: var(--white); border-radius: 16px; max-width: 1000px; width: 100%; margin: 20px auto; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); overflow: hidden; }
+  .modal-header { background: var(--primary); color: var(--white); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h2 { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; }
+  .modal-close { background: rgba(255,255,255,0.15); border: none; color: var(--white); width: 32px; height: 32px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: background 0.2s; }
+  .modal-close:hover { background: rgba(255,255,255,0.3); }
+  .modal-tabs { display: flex; background: var(--bg); border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .modal-tab { padding: 12px 18px; background: none; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-light); border-bottom: 3px solid transparent; transition: color 0.2s; white-space: nowrap; }
+  .modal-tab:hover { color: var(--primary); }
+  .modal-tab.active { color: var(--primary); border-bottom-color: var(--accent); background: var(--white); }
+  .modal-body { padding: 18px 24px; overflow: auto; flex: 1; }
+  .modal-table-info { font-size: 13px; color: var(--text-light); margin-bottom: 12px; line-height: 1.5; }
+  .modal-table-info strong { color: var(--primary); }
+  .modal-table-wrapper { overflow: auto; max-height: 60vh; border: 1px solid var(--border); border-radius: 8px; }
+  table.flp { border-collapse: separate; border-spacing: 0; font-size: 12px; width: 100%; }
+  table.flp thead th { position: sticky; top: 0; background: var(--primary); color: var(--white); padding: 8px 10px; text-align: right; font-weight: 600; font-size: 11px; z-index: 2; }
+  table.flp thead th:first-child { text-align: left; position: sticky; left: 0; z-index: 3; }
+  table.flp tbody td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+  table.flp tbody td:first-child { text-align: left; position: sticky; left: 0; background: var(--white); font-weight: 600; color: var(--primary); border-right: 1px solid var(--border); }
+  table.flp tbody tr:nth-child(even) td { background: #fafbfc; }
+  table.flp tbody tr:nth-child(even) td:first-child { background: #fafbfc; }
+  table.flp tbody tr:hover td { background: #fff8ec; }
+  table.flp tbody tr:hover td:first-child { background: #fff8ec; }
+  table.flp th.highlight, table.flp td.highlight { background: var(--accent-light) !important; color: var(--primary) !important; font-weight: 700; }
+
+  .footer { margin-top: 20px; padding: 14px; background: var(--white); border-radius: 12px; font-size: 11px; color: var(--text-light); text-align: center; border: 1px solid var(--border); }
+  .footer strong { color: var(--primary); }
+  .tooltip { display: inline-block; margin-left: 4px; width: 14px; height: 14px; background: var(--text-light); color: var(--white); border-radius: 50%; font-size: 10px; text-align: center; line-height: 14px; cursor: help; font-weight: 700; position: relative; }
+  .tooltip:hover::after { content: attr(data-tip); position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--primary); color: var(--white); padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 400; white-space: normal; width: 220px; z-index: 10; line-height: 1.4; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+  @media (max-width: 600px) {
+    body { padding: 12px 8px; }
+    .header { padding: 24px 20px; }
+    .inputs-panel, .results-panel { padding: 18px 14px; }
+    .parts-section { padding: 18px 14px; }
+    .part-row { grid-template-columns: 28px 1fr 28px; padding: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <span class="tag">GHF 2026 · officiële NIBUD-tabellen</span>
+    <h1>Leencapaciteit & leningdelen</h1>
+    <p>Stel een hypotheek samen uit meerdere leningdelen (box 1 + box 3, eigen rente en looptijd) en zie direct of het binnen de GHF 2026-norm past — werkend én pensioen.</p>
+    <button class="btn-tables" id="openTablesBtn">📊 Bekijk NIBUD-tabellen</button>
+    <button class="btn-tables" id="openInfoBtn">📖 Toelichting</button>
+  </header>
+
+  <div class="main-grid">
+    <aside class="inputs-panel">
+      <div class="applicant-card" id="card1">
+        <div class="applicant-header">
+          <h3>Aanvrager</h3>
+        </div>
+        <div class="input-group">
+          <label>Geboortedatum</label>
+          <input type="date" id="birthDate1" value="1966-01-15" class="full-input">
+        </div>
+        <div class="aow-info" id="aowInfo1"></div>
+        <div class="input-group">
+          <label>Bruto jaarinkomen werkend</label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="salary1" value="100.000" inputmode="numeric"></div>
+        </div>
+        <div class="input-group">
+          <label>Bruto jaarinkomen pensioen</label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="pension1" value="30.000" inputmode="numeric"></div>
+        </div>
+        <div class="aow-override">
+          <label>AOW-leeftijd <span class="tooltip" data-tip="Auto-berekend uit geboortedatum, maar je kunt de waarde overrulen.">i</span></label>
+          <div class="aow-fields">
+            <input type="number" id="aowYears1" min="60" max="75" value="67"><span>jr</span>
+            <input type="number" id="aowMonths1" min="0" max="11" value="3"><span>mnd</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn outline" id="togglePartnerBtn" style="width:100%;margin-bottom:18px;">+ Partner toevoegen</button>
+
+      <div class="applicant-card" id="card2" style="display:none;">
+        <div class="applicant-header">
+          <h3>Partner</h3>
+          <button class="btn-remove" id="removePartnerBtn" title="Verwijder partner">×</button>
+        </div>
+        <div class="input-group">
+          <label>Geboortedatum</label>
+          <input type="date" id="birthDate2" value="1969-01-15" class="full-input">
+        </div>
+        <div class="aow-info" id="aowInfo2"></div>
+        <div class="input-group">
+          <label>Bruto jaarinkomen werkend</label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="salary2" value="50.000" inputmode="numeric"></div>
+        </div>
+        <div class="input-group">
+          <label>Bruto jaarinkomen pensioen</label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="pension2" value="18.000" inputmode="numeric"></div>
+        </div>
+        <div class="aow-override">
+          <label>AOW-leeftijd</label>
+          <div class="aow-fields">
+            <input type="number" id="aowYears2" min="60" max="75" value="67"><span>jr</span>
+            <input type="number" id="aowMonths2" min="0" max="11" value="6"><span>mnd</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="totals-summary" id="totalsSummary"></div>
+
+      <div class="input-group">
+        <label>Toetsrente bij vast <10jr <span class="value-display" id="toetsRateDisplay">5,00%</span> <span class="tooltip" data-tip="GHF-toetsrente: bij rentevastperiode korter dan 10 jaar wordt de hoogste van werkelijke rente en deze toetsrente gebruikt.">i</span></label>
+        <input type="range" id="toetsRate" min="3" max="7" value="5" step="0.1">
+      </div>
+
+      <div class="reductions-card">
+        <div class="reductions-header">
+          <h3>Verlagingen</h3>
+          <span class="tooltip" data-tip="Verplichtingen die in mindering komen op de maandlast-ruimte. Vul de werkelijke maandlast in (DUO-overzicht, BKR, etc.).">i</span>
+        </div>
+        <div class="input-group">
+          <label>Studieschuld DUO <span class="tooltip" data-tip="Maandbedrag volgens DUO-bevestiging. Bruteringsfactor wordt automatisch toegepast.">i</span></label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="studieschuldMnd" value="0" inputmode="numeric"><span class="suffix">/mnd</span></div>
+        </div>
+        <div class="input-group">
+          <label>Lopende kredieten (BKR) <span class="tooltip" data-tip="Werkelijke maandlast doorlopend krediet, persoonlijke lening, leasing — uit BKR-overzicht. DK: 2% van limiet als geen werkelijke last bekend.">i</span></label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="lopendeLenMnd" value="0" inputmode="numeric"><span class="suffix">/mnd</span></div>
+        </div>
+        <div class="input-group">
+          <label>Alimentatie partner/kinderen</label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="alimentatieMnd" value="0" inputmode="numeric"><span class="suffix">/mnd</span></div>
+        </div>
+        <div class="input-group">
+          <label>Erfpachtcanon</label>
+          <div class="input-wrapper"><span class="prefix">€</span><input type="text" id="erfpachtJaar" value="0" inputmode="numeric"><span class="suffix">/jr</span></div>
+        </div>
+        <div class="reductions-total" id="reductionsTotalDisplay">Totaal: € 0/mnd</div>
+      </div>
+
+      <div class="enhancements-card">
+        <label class="checkbox-row">
+          <input type="checkbox" id="nietKwetsbaarToggle">
+          <div class="checkbox-content">
+            <div class="checkbox-title">Verhoging niet-kwetsbare groep (€17.000)</div>
+            <div class="checkbox-sub">Alleenverdieners met inkomen boven startinkomen (€30k werkend / €29k AOW). Conform Tijdelijke regeling hypothecair krediet.</div>
+          </div>
+        </label>
+      </div>
+    </aside>
+
+    <section class="results-panel">
+      <div id="scenariosGrid" class="scenarios-grid"></div>
+
+      <div class="methodology-note">
+        <strong>NIBUD-rekenmethodiek tweeverdieners 2026:</strong>
+        Het financieringslastpercentage (FLP) wordt opgezocht op basis van het <em>rekeninkomen</em> =
+        <code>MAX(inkomen 1, inkomen 2) + MIN(inkomen 1, inkomen 2) × F23</code>, waar F23 = 1,0 voor 2026
+        (tweede inkomen telt volledig mee). De maximale maandlast volgt vervolgens uit: FLP × gezamenlijk
+        inkomen ÷ 12. Voor 2026 zijn rekeninkomen en gezamenlijk inkomen identiek; bij historische factoren
+        (2018: ±0,5; 2022: ±0,9) zou de FLP-lookup een lagere waarde geven.
+      </div>
+
+      <div class="chart-section" id="tweetrapMixSection" style="display:none;">
+        <h2 class="section-title">Tweetrap-mix optimalisatie</h2>
+        <p class="section-subtitle">Welke combinatie van box 1/box 3 voor deel A en deel B levert binnen NIBUD-normen de hoogste max hypotheek op? <strong>Aflosvorm:</strong> deel A altijd annuïtair (moet aflossen vóór pensioen); deel B annuïtair óf aflossingsvrij — voor de NIBUD-toets gelijk (aflosvrij = fictie 30-jr annuïtair).</p>
+        <div id="tweetrapMixContent"></div>
+        <p class="tweetrap-disclaimer">⚠ Voor pure max-hypotheek-binnen-toets is box 1 altijd gunstiger (hogere FLP). Box 3 is een keuze voor andere redenen: geen 30-jaar-grens renteaftrek, geen aflossingsverplichting, vermogensbelasting-overweging.</p>
+      </div>
+
+      <div class="chart-section" id="momentsSection">
+        <h2 class="section-title">Max hypotheek per pensioenfase</h2>
+        <p class="section-subtitle">30jr annuïtair, rente 4%, dual-toets. Eerste/tweede persoon op leeftijd (oudste eerst).</p>
+        <div class="table-wrapper">
+          <table class="results">
+            <thead>
+              <tr>
+                <th>Moment</th>
+                <th>Status</th>
+                <th class="numeric">Toetsink.</th>
+                <th class="numeric">Max Box 1</th>
+                <th class="numeric">Max Box 3</th>
+              </tr>
+            </thead>
+            <tbody id="momentsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="parts-section">
+        <div class="parts-header">
+          <div class="parts-title-block">
+            <h2 class="parts-title">Samengestelde leningdelen</h2>
+            <p class="parts-subtitle">Voeg leningdelen toe met eigen box, rente, looptijd en aflosvorm. Onderaan zie je de toets-status voor werkend én pensioen.</p>
+          </div>
+          <div class="parts-actions">
+            <button class="btn outline" id="addPartBtn">+ Leningdeel</button>
+            <button class="btn secondary" id="presetTweetrapBtn">↻ Tweetrap-preset</button>
+            <button class="btn" id="recalcBtn" style="background:var(--accent);color:var(--primary);">⟳ Bereken</button>
+          </div>
+        </div>
+
+        <div id="partsList"></div>
+
+        <div class="totals-grid">
+          <div class="total-card">
+            <div class="label">Totaal geleend</div>
+            <div class="value" id="totalAmount">—</div>
+            <div class="sub" id="totalAmountSub">som van alle delen</div>
+          </div>
+          <div class="total-card">
+            <div class="label">Maandlast werkend</div>
+            <div class="value" id="totalMonthlyWork">—</div>
+            <div class="sub" id="totalMonthlyWorkSub">som incl. test-lasten aflosvrij</div>
+          </div>
+          <div class="total-card">
+            <div class="label">Maandlast pensioen</div>
+            <div class="value" id="totalMonthlyPension">—</div>
+            <div class="sub" id="totalMonthlyPensionSub">alleen nog lopende delen</div>
+          </div>
+        </div>
+
+        <div class="toets-bars">
+          <div class="toets-bar">
+            <div class="toets-bar-header">
+              <span class="toets-bar-title">Werkend-toets <span class="tooltip" data-tip="Per leningdeel wordt de maandlast getoetst tegen de FLP-norm (box 1 of box 3) voor het werkende inkomen. De fracties worden opgeteld.">i</span></span>
+              <span class="toets-bar-status" id="statusWork">—</span>
+            </div>
+            <div class="toets-bar-track"><div class="toets-bar-fill" id="fillWork" style="width:0%;"><span id="fillWorkText"></span></div></div>
+            <div class="toets-bar-meta"><span id="metaWorkLeft">—</span><span id="metaWorkRight">—</span></div>
+          </div>
+          <div class="toets-bar">
+            <div class="toets-bar-header">
+              <span class="toets-bar-title">Pensioen-toets <span class="tooltip" data-tip="Alleen leningdelen die bij pensionering nog lopen worden getoetst tegen het pensioeninkomen via AOW-FLP-tabellen.">i</span></span>
+              <span class="toets-bar-status" id="statusPens">—</span>
+            </div>
+            <div class="toets-bar-track"><div class="toets-bar-fill" id="fillPens" style="width:0%;"><span id="fillPensText"></span></div></div>
+            <div class="toets-bar-meta"><span id="metaPensLeft">—</span><span id="metaPensRight">—</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <h4 style="font-size:12px;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Maandlasten over de tijd</h4>
+          <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;">
+            <svg id="timelineChart" class="chart-svg" viewBox="0 0 720 260" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <h2 class="section-title">Pensioenklif: max box 1-hypotheek per leeftijd</h2>
+        <p class="section-subtitle">Bij wisseling van toetsinkomen (10 jaar vóór pensioen) zakt de leencapaciteit naar het pensioen-niveau.</p>
+        <div class="chart-container">
+          <svg id="chart" class="chart-svg" viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-line" style="background:#003057;"></div>Standaard box 1 (30jr)</div>
+            <div class="legend-item"><div class="legend-line" style="background:#E5A138;"></div>Tweetrap-optimaal</div>
+            <div class="legend-item"><div class="legend-line" style="background:#cbd5e1;"></div>Salaris-theoretisch</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Klif 1e AOW</div>
+            <div class="legend-item" id="legend-klif2" style="display:none;"><div class="legend-dot" style="background:#3b82f6;"></div>Klif 2e AOW</div>
+          </div>
+          <div id="chart-persons" class="chart-persons"></div>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="results">
+          <thead>
+            <tr>
+              <th>Leeftijd</th>
+              <th>Status</th>
+              <th class="numeric">Toetsink.</th>
+              <th class="numeric">Max box 1</th>
+              <th class="numeric">Max box 3</th>
+              <th class="numeric">Max tweetrap</th>
+              <th class="numeric">Extra</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="info-box">
+        <strong>💡 Hoe werkt de dual-toets?</strong> Per leningdeel wordt de toets-maandlast bepaald (annuïtair: werkelijke last; aflossingsvrij: lasten alsof 30-jaar annuïtair). Die last wordt afgezet tegen de FLP-norm voor dat box-type, inkomensniveau en rente. De fracties van alle delen worden opgeteld; samen mogen ze niet boven 100%. De pensioen-toets bekijkt alleen delen die op pensioendatum nog lopen.
+      </div>
+    </section>
+  </div>
+
+  <div class="disclaimer-footer">
+    <h3>Disclaimer</h3>
+    <p><strong>Indicatief rekenmodel.</strong> Deze tool is een hulpmiddel ter ondersteuning van het hypotheekadvies, geen vervanging daarvan. Aan de uitkomsten kunnen geen rechten worden ontleend. Voor een persoonlijk hypotheekadvies dat voldoet aan de AFM Leidraad Hypotheekadvisering 2026 (inclusief kennis-en-ervaring-toets, klantbeeld en geschiktheidstoetsing) raadpleeg een erkend financieel of hypothecair planner.</p>
+    <p><strong>Wat de tool wél doet:</strong> berekening van maximale hypotheek op basis van de NIBUD-financieringslastpercentages 2026 (vier tabellen, 4.272 cellen), SVB AOW-tabel 2026, drie pensioenmomenten, tweetrap-mix optimalisatie, verlagingen (DUO, BKR, alimentatie, erfpacht) en verhoging niet-kwetsbare groep volgens de Tijdelijke regeling hypothecair krediet.</p>
+    <p><strong>Wat de tool níet doet:</strong> LTV-toets (max 100%/106% marktwaarde), NHG-toets en -premie, maximale aflossingsvrij-grens (50% marktwaarde), geldverstrekker-specifieke acceptatiecriteria, indexatie van inkomens, rentestress-test, risicodekking (ORV/AOV), estate planning. Werkelijke maximale hypotheek kan ook afhangen van energielabel, BKR-status, en kwaliteit van het inkomensbewijs (vast/variabel/ZZP). Geldverstrekkers kunnen strengere óf soepelere acceptatie hanteren.</p>
+    <p><strong>Bron tabellen:</strong> Bijlage Financieringslastnormen 2026 (Ministerie van BZK / NIBUD), SVB AOW-leeftijdstabel 2026.</p>
+    <div class="build-info">
+      Tool versie 7 · Berekend op 13-05-2026 · F23 = 1,0 (tweeverdieners-factor 2026) · IB-tarieven 2026: schijf 1 35,75% / schijf 2 37,56% · Hypotheekrenteaftrek begrensd op 35,75%
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>NIBUD Financieringslastpercentages 2026</h2>
+      <button class="modal-close" id="modalCloseBtn">×</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="werkend">Werkend (box 1)</button>
+      <button class="modal-tab" data-tab="aow">AOW (box 1)</button>
+      <button class="modal-tab" data-tab="box3_werkend">Werkend (box 3)</button>
+      <button class="modal-tab" data-tab="box3_aow">AOW (box 3)</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-table-info" id="modalInfo"></div>
+      <div class="modal-table-wrapper">
+        <table class="flp" id="modalTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toelichting Modal -->
+<div class="modal-overlay" id="infoModalOverlay">
+  <div class="modal info-modal">
+    <div class="modal-header">
+      <h2>Toelichting bij de tool</h2>
+      <button class="modal-close" id="infoModalCloseBtn">×</button>
+    </div>
+    <div class="modal-body info-modal-body">
+
+      <section class="info-section">
+        <h3>1. Wat doet deze tool?</h3>
+        <p>Deze tool berekent voor een aanvrager (en optionele partner) de <strong>maximale hypotheek volgens de NIBUD-financieringslastnormen 2026</strong> op drie momenten: huidige situatie, eerste persoon AOW, en tweede persoon AOW. Voor elk moment toont de tool zowel een box 1- (aftrekbaar) als een box 3- (niet aftrekbaar) uitkomst. Onderliggend wordt per leningdeel een dual-toets uitgevoerd (werkend én pensioen).</p>
+        <p>De tool gebruikt de <strong>officiële Bijlage Financieringslastnormen 2026</strong> van het Ministerie van BZK (NIBUD-systematiek) — 4 tabellen, 4.272 cellen, alle exact identiek aan de bron geverifieerd.</p>
+      </section>
+
+      <section class="info-section">
+        <h3>2. Inputs — wat moet je invullen?</h3>
+        <ul>
+          <li><strong>Geboortedatum</strong> per persoon — de AOW-leeftijd wordt automatisch opgezocht in de SVB-tabel 2026 (12 cohorten, 1964–2000). Handmatig overrulbaar.</li>
+          <li><strong>Bruto jaarinkomen werkend</strong> — vast loon inclusief vakantiegeld, eindejaarsuitkering en structurele componenten.</li>
+          <li><strong>Bruto jaarinkomen pensioen</strong> — verwacht totaal pensioeninkomen (AOW + ouderdomspensioen + lijfrente).</li>
+          <li><strong>Toetsrente bij vast <10jr</strong> — slider voor de GHF-toetsrente (default 5,00%).</li>
+          <li><strong>Verlagingen</strong> — DUO-maandlast, lopende BKR-kredieten, alimentatie, erfpacht.</li>
+          <li><strong>Verhoging niet-kwetsbare groep</strong> — checkbox voor de €17.000-regeling (Tijdelijke regeling hypothecair krediet).</li>
+        </ul>
+      </section>
+
+      <section class="info-section">
+        <h3>3. NIBUD-rekenmethodiek tweeverdieners 2026</h3>
+        <p>Volgens de Bijlage 'overige parameters' B22–G23 geldt voor tweeverdieners:</p>
+        <div class="formula-box">
+          <div>rekeninkomen = MAX(inkomen 1, inkomen 2) + MIN(inkomen 1, inkomen 2) × F23</div>
+          <div>gezamenlijk inkomen = inkomen 1 + inkomen 2</div>
+          <div>max maandlast = FLP(rekeninkomen) × gezamenlijk inkomen ÷ 12</div>
+          <div>max hypotheek = max maandlast ÷ annuïteitsfactor(30jr, rente)</div>
+        </div>
+        <p>Waarbij <strong>F23 = 1,0 voor 2026</strong> (tweede inkomen telt volledig mee). Historisch was deze factor lager: ±0,5 in 2018, ±0,9 in 2022. Voor 2026 zijn rekeninkomen en gezamenlijk inkomen daardoor identiek — bij toekomstige F23 < 1 zou de FLP-lookup op een lager rekeninkomen plaatsvinden.</p>
+        <p>De FLP-waarde wordt opgezocht met <strong>bilineaire interpolatie</strong> over inkomensregels × rentekolommen (12 rentebanden van 1,25% tot 6,75%, in stappen van 0,5%).</p>
+      </section>
+
+      <section class="info-section">
+        <h3>4. Drie pensioenmomenten</h3>
+        <p>Voor elk moment wordt de toets uitgevoerd met de relevante inkomens en FLP-tabel:</p>
+        <table class="info-table">
+          <tr><th>Moment</th><th>Inkomen</th><th>FLP-tabel</th></tr>
+          <tr><td><strong>Nu</strong></td><td>Beide salaris (of pensioen indien al AOW)</td><td>werkend (of AOW bij gemengd/AOW)</td></tr>
+          <tr><td><strong>1e persoon AOW</strong></td><td>Pensioen oudste + salaris jongste</td><td>AOW (min. één persoon AOW-gerechtigd)</td></tr>
+          <tr><td><strong>2e persoon AOW</strong></td><td>Pensioen oudste + pensioen jongste</td><td>AOW</td></tr>
+        </table>
+        <p>De "eerste" en "tweede" persoon worden bepaald op <strong>leeftijd</strong> (oudste = eerste), niet op invoervolgorde. Per scenario wordt zowel box 1 (aftrekbaar, hoger FLP) als box 3 (niet aftrekbaar, lager FLP) berekend.</p>
+      </section>
+
+      <section class="info-section">
+        <h3>5. Pensioenklif-grafiek & tabel</h3>
+        <p>Voor elke afsluitleeftijd (oudste-leeftijd-as) berekent de tool drie toetsen en kiest de <strong>bindende</strong> (= laagste) toets:</p>
+        <ul>
+          <li><strong>Werkend-toets</strong> — actief zolang >10 jaar van de 1e AOW.</li>
+          <li><strong>1e AOW-toets</strong> — actief vanaf 10 jaar vóór de 1e AOW (pensioen oudste + salaris jongste). AOW-FLP, omdat minstens één persoon AOW-gerechtigd is.</li>
+          <li><strong>2e AOW-toets</strong> — actief vanaf 10 jaar vóór de 2e AOW (beide pensioen). AOW-FLP.</li>
+        </ul>
+        <p>Bij overlap (de 2e AOW-toets is al actief vóór de 1e AOW is gepasseerd) wint de strengste — meestal de 2e AOW-toets bij klein leeftijdsverschil.</p>
+      </section>
+
+      <section class="info-section">
+        <h3>6. Tweetrap-strategie</h3>
+        <p>Een hypotheek opgedeeld in twee leningdelen:</p>
+        <ul>
+          <li><strong>Deel A</strong> — korte looptijd (jaren tot 1e AOW), annuïtair → moet vóór pensioen afgelost zijn, ruimt op werkend-toets ruimte op.</li>
+          <li><strong>Deel B</strong> — 30 jaar, annuïtair óf aflossingsvrij → blijft doorlopen na pensioen, draagbaar op pensioen-toets.</li>
+        </ul>
+        <p>De tool berekent vier box-combinaties (deel A box 1/3 × deel B box 1/3) en toont in de sectie "Tweetrap-mix optimalisatie" welke de hoogste max oplevert. <strong>Voor pure max-hypotheek-binnen-toets wint box 1 altijd</strong> (hogere FLP-percentages). Box 3 is een keuze voor andere redenen (geen 30-jaar-grens renteaftrek, geen aflossingsverplichting).</p>
+        <p><em>Aflosvorm-detail:</em> aflossingsvrij wordt voor NIBUD-toets behandeld als 30-jr annuïtair fictie — gelijk aan annuïtair voor toets. Lineair geeft hogere toets-last (aflossing + rente in jaar 1) → niet optimaal.</p>
+      </section>
+
+      <section class="info-section">
+        <h3>7. Verlagingen</h3>
+        <p>De volgende verplichtingen worden in mindering gebracht op de bruto maandlast vóórdat de max hypotheek wordt berekend:</p>
+        <ul>
+          <li><strong>Studieschuld DUO</strong> — maandlast volgens DUO-bevestiging.</li>
+          <li><strong>Lopende kredieten (BKR)</strong> — werkelijke maandlast. Voor doorlopend krediet zonder werkelijke last: 2% van de kredietlimiet.</li>
+          <li><strong>Alimentatie</strong> — maandelijkse verplichting partner of kinderen.</li>
+          <li><strong>Erfpachtcanon</strong> — jaarlijks bedrag (wordt door tool gedeeld door 12).</li>
+        </ul>
+        <div class="formula-box">
+          <div>netto maandlast = bruto maandlast − totale verlagingen</div>
+          <div>max hypotheek = maxLoan(netto maandlast, rente, 30jr)</div>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h3>8. Verhoging niet-kwetsbare groep (€17.000)</h3>
+        <p>Conform de <strong>Tijdelijke regeling hypothecair krediet</strong> (Excel-formule B43): de maximale hypotheek mag met €17.000 verhoogd worden indien:</p>
+        <ul>
+          <li>Er is geen tweede inkomen (alleenverdiener)</li>
+          <li>Inkomen ≥ startinkomen: €30.000 werkend / €29.000 AOW</li>
+          <li>De toggle in de tool staat aan</li>
+        </ul>
+        <p>De €17.000 wordt direct opgeteld bij de max hypotheek (na de maxLoan-berekening). Als de voorwaarden niet voldoen wordt de verhoging genegeerd, ook al staat de checkbox aan.</p>
+      </section>
+
+      <section class="info-section">
+        <h3>9. Toetsrente bij rentevast <10 jaar</h3>
+        <p>Voor leningdelen met rentevastperiode korter dan 10 jaar geldt de GHF-regel: <strong>hoogste van werkelijke rente en toetsrente</strong>. De toets-maandlast én de FLP-lookup gebruiken deze toetsrente. De globale slider in het input-paneel (default 5,00%) bepaalt de waarde.</p>
+      </section>
+
+      <section class="info-section">
+        <h3>10. Wat doet de tool NIET</h3>
+        <p>Deze tool is een rekenmodel, geen advies. De volgende elementen zijn NIET ingebouwd en moeten apart worden beoordeeld:</p>
+        <ul>
+          <li><strong>LTV-toets</strong> — max 100% van de marktwaarde (106% bij verduurzaming)</li>
+          <li><strong>NHG-toets</strong> — kostengrens, premie, lagere rente onder de grens</li>
+          <li><strong>Aflossingsvrij-grens</strong> — max 50% marktwaarde voor nieuwe aflossingsvrije hypotheken</li>
+          <li><strong>Geldverstrekker-criteria</strong> — afwijkende acceptatie, energielabel-toeslagen</li>
+          <li><strong>Indexatie</strong> — inkomens, AOW-uitkering, pensioenrechten over 30 jaar</li>
+          <li><strong>Rentestress-test</strong> — wat bij rentestijging na de rentevastperiode</li>
+          <li><strong>Risicodekking</strong> — ORV, AOV, overlijden, arbeidsongeschiktheid</li>
+          <li><strong>Estate planning</strong> — familiehypotheek, schenkingen, generatie-overdracht</li>
+        </ul>
+      </section>
+
+      <section class="info-section">
+        <h3>11. Bronnen</h3>
+        <ul class="sources">
+          <li><strong>Bijlage Financieringslastnormen 2026</strong> — Ministerie van BZK / NIBUD (4 tabellen, 4.272 cellen embedded)</li>
+          <li><strong>SVB AOW-leeftijdstabel 2026</strong> — 12 cohorten, geboortedata 01-10-1964 t/m 31-12-2000</li>
+          <li><strong>AFM Leidraad Hypotheekadvisering 2026</strong> — kader voor adviespraktijk</li>
+          <li><strong>Tijdelijke regeling hypothecair krediet</strong> — verhoging niet-kwetsbare groepen</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const FLP_DATA = {"rates":[1.25,1.75,2.25,2.75,3.25,3.75,4.25,4.75,5.25,5.75,6.25,6.75],"werkend":[[30000,15.5,16.5,17.5,18.4,19.3,20.1,20.9,21.6,22.2,22.7,23.2,23.7],[31000,16.2,17.3,18.3,19.3,20.2,21.2,22.0,22.7,23.4,24.1,24.6,25.1],[32000,16.7,17.9,19.0,20.1,21.1,22.1,23.0,23.8,24.6,25.3,25.9,26.4],[33000,17.1,18.3,19.5,20.6,21.6,22.6,23.6,24.6,25.4,26.1,26.8,27.4],[34000,17.3,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[35000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[36000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[37000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[38000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[39000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[40000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[41000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[42000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[43000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[44000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[45000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[46000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[47000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[48000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[49000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[50000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[51000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[52000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[53000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[54000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[55000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[56000,17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[57000,17.5,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[58000,17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[59000,17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[60000,17.7,18.7,19.7,20.7,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[61000,17.7,18.7,19.7,20.7,21.7,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[62000,17.8,18.8,19.8,20.7,21.7,22.7,23.6,24.6,25.5,26.4,27.3,28.1],[63000,17.8,18.9,19.9,20.9,21.8,22.7,23.7,24.6,25.5,26.4,27.3,28.1],[64000,17.9,18.9,19.9,21.0,21.9,22.8,23.7,24.6,25.5,26.4,27.3,28.1],[65000,18.0,19.0,20.0,21.0,22.0,22.9,23.8,24.7,25.5,26.4,27.3,28.1],[66000,18.1,19.1,20.1,21.1,22.1,23.0,23.9,24.7,25.6,26.4,27.3,28.1],[67000,18.2,19.2,20.2,21.2,22.2,23.1,24.0,24.8,25.7,26.5,27.3,28.1],[68000,18.3,19.4,20.4,21.4,22.3,23.2,24.1,25.0,25.8,26.7,27.4,28.2],[69000,18.5,19.5,20.5,21.5,22.5,23.4,24.3,25.1,26.0,26.8,27.6,28.3],[70000,18.6,19.7,20.7,21.7,22.7,23.6,24.5,25.3,26.2,27.0,27.8,28.5],[71000,18.8,19.9,20.9,21.9,22.9,23.8,24.7,25.6,26.4,27.2,28.0,28.7],[72000,19.0,20.0,21.1,22.1,23.1,24.1,25.0,25.8,26.6,27.4,28.2,28.9],[73000,19.1,20.2,21.3,22.3,23.3,24.3,25.2,26.0,26.9,27.6,28.4,29.2],[74000,19.3,20.4,21.5,22.5,23.5,24.5,25.4,26.3,27.1,27.9,28.6,29.3],[75000,19.4,20.5,21.6,22.6,23.7,24.6,25.6,26.4,27.3,28.1,28.8,29.5],[76000,19.5,20.6,21.7,22.8,23.8,24.8,25.7,26.6,27.5,28.2,29.0,29.7],[77000,19.6,20.8,21.9,22.9,24.0,24.9,25.9,26.8,27.6,28.4,29.2,29.9],[78000,19.7,20.9,22.0,23.1,24.1,25.1,26.1,27.0,27.8,28.6,29.4,30.1],[79000,19.8,20.9,22.1,23.2,24.2,25.2,26.2,27.1,27.9,28.7,29.5,30.2],[80000,19.9,21.0,22.2,23.2,24.3,25.3,26.3,27.2,28.1,28.9,29.6,30.3],[81000,20.0,21.1,22.2,23.3,24.3,25.4,26.4,27.3,28.1,29.0,29.7,30.4],[82000,20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.3,28.2,29.0,29.8,30.5],[83000,20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.4,28.2,29.1,29.9,30.6],[84000,20.2,21.3,22.4,23.4,24.5,25.5,26.5,27.4,28.3,29.1,29.9,30.6],[85000,20.2,21.3,22.4,23.5,24.5,25.5,26.5,27.4,28.3,29.2,29.9,30.7],[86000,20.2,21.4,22.5,23.5,24.6,25.6,26.5,27.4,28.4,29.2,30.0,30.7],[87000,20.3,21.4,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.2,30.0,30.8],[88000,20.4,21.5,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.3,30.1,30.8],[89000,20.5,21.5,22.6,23.7,24.7,25.7,26.6,27.6,28.4,29.3,30.1,30.8],[90000,20.5,21.6,22.6,23.7,24.7,25.7,26.7,27.6,28.5,29.3,30.1,30.9],[91000,20.5,21.6,22.7,23.7,24.8,25.8,26.7,27.6,28.5,29.3,30.2,30.9],[92000,20.6,21.7,22.7,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[93000,20.7,21.7,22.8,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[94000,20.8,21.8,22.8,23.9,24.9,25.9,26.9,27.8,28.6,29.5,30.2,31.0],[95000,20.8,21.9,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.3,31.0],[96000,20.9,21.9,23.0,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0],[97000,21.0,22.0,23.0,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.4,31.1],[98000,21.0,22.1,23.1,24.1,25.1,26.1,27.0,27.9,28.8,29.6,30.4,31.1],[99000,21.1,22.1,23.2,24.2,25.1,26.1,27.1,28.0,28.8,29.6,30.4,31.2],[100000,21.1,22.2,23.2,24.2,25.2,26.1,27.1,28.0,28.9,29.7,30.5,31.2],[101000,21.2,22.2,23.3,24.3,25.3,26.2,27.1,28.0,28.9,29.7,30.5,31.2],[102000,21.2,22.3,23.4,24.4,25.3,26.3,27.1,28.1,28.9,29.8,30.5,31.3],[103000,21.3,22.4,23.4,24.4,25.4,26.3,27.2,28.1,29.0,29.8,30.6,31.3],[104000,21.3,22.4,23.5,24.5,25.5,26.4,27.3,28.1,29.0,29.8,30.6,31.3],[105000,21.3,22.5,23.5,24.5,25.5,26.5,27.3,28.2,29.1,29.9,30.6,31.4],[106000,21.4,22.5,23.6,24.6,25.6,26.5,27.4,28.2,29.1,29.9,30.7,31.4],[107000,21.4,22.5,23.7,24.7,25.6,26.6,27.5,28.3,29.1,30.0,30.7,31.5],[108000,21.5,22.6,23.7,24.7,25.7,26.7,27.5,28.4,29.2,30.0,30.8,31.5],[109000,21.5,22.6,23.7,24.8,25.8,26.7,27.6,28.4,29.2,30.0,30.8,31.5],[110000,21.6,22.7,23.7,24.8,25.8,26.7,27.7,28.5,29.3,30.0,30.8,31.5],[111000,21.6,22.7,23.8,24.8,25.9,26.8,27.7,28.5,29.3,30.1,30.8,31.6],[112000,21.7,22.8,23.8,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.9,31.6],[113000,21.7,22.8,23.9,24.9,25.9,26.9,27.8,28.7,29.4,30.2,30.9,31.7],[114000,21.8,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.2,30.9,31.7],[115000,21.8,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0,31.7],[116000,21.8,22.9,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.3,31.0,31.7],[117000,21.9,23.0,24.1,25.1,26.1,27.0,28.0,28.8,29.6,30.4,31.1,31.8],[118000,21.9,23.0,24.1,25.1,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8],[119000,22.0,23.1,24.1,25.2,26.2,27.1,28.0,28.9,29.7,30.5,31.2,31.9],[120000,22.0,23.1,24.2,25.2,26.2,27.2,28.1,28.9,29.8,30.5,31.3,31.9],[121000,22.0,23.2,24.2,25.3,26.3,27.2,28.1,29.0,29.8,30.6,31.3,32.0],[122000,22.1,23.2,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.4,32.0],[123000,22.1,23.2,24.3,25.4,26.4,27.3,28.2,29.1,29.9,30.7,31.4,32.1],[124000,22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],[125000,22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]],"aow":[[29000,18.5,18.9,19.4,19.7,20.1,20.4,20.7,20.9,21.1,21.3,21.5,21.7],[30000,19.2,19.8,20.3,20.8,21.1,21.5,21.8,22.1,22.3,22.5,22.7,22.9],[31000,19.9,20.6,21.2,21.7,22.1,22.5,22.8,23.1,23.4,23.7,23.9,24.1],[32000,20.5,21.2,21.8,22.4,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2],[33000,20.9,21.7,22.3,22.9,23.5,24.0,24.5,24.8,25.2,25.5,25.7,26.0],[34000,21.2,22.0,22.8,23.4,24.0,24.5,25.1,25.5,25.9,26.2,26.5,26.7],[35000,21.6,22.4,23.1,23.9,24.5,25.1,25.6,26.1,26.5,26.9,27.2,27.5],[36000,21.8,22.7,23.5,24.3,24.9,25.6,26.1,26.6,27.1,27.5,27.9,28.2],[37000,21.9,22.9,23.8,24.6,25.3,26.0,26.6,27.1,27.5,28.0,28.4,28.8],[38000,22.0,23.1,24.0,24.9,25.7,26.3,27.0,27.5,28.0,28.4,28.9,29.2],[39000,22.1,23.2,24.2,25.1,25.9,26.6,27.3,27.9,28.4,28.9,29.3,29.7],[40000,22.2,23.3,24.3,25.2,26.1,26.9,27.6,28.2,28.8,29.3,29.7,30.1],[41000,22.3,23.4,24.4,25.3,26.3,27.1,27.9,28.5,29.1,29.6,30.1,30.5],[42000,22.4,23.5,24.5,25.5,26.4,27.3,28.1,28.8,29.4,30.0,30.5,30.9],[43000,22.5,23.6,24.6,25.6,26.6,27.4,28.3,29.0,29.7,30.3,30.8,31.3],[44000,22.7,23.7,24.8,25.8,26.7,27.6,28.4,29.2,29.9,30.6,31.1,31.6],[45000,22.8,23.9,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.8,31.4,31.9],[46000,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,30.9,31.6,32.2],[47000,23.1,24.1,25.2,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8,32.4],[48000,23.1,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.3,32.0,32.6],[49000,23.3,24.4,25.5,26.5,27.5,28.3,29.2,30.0,30.8,31.5,32.2,32.8],[50000,23.4,24.6,25.6,26.7,27.6,28.6,29.4,30.2,31.0,31.7,32.4,33.0],[51000,23.6,24.8,25.8,26.8,27.9,28.8,29.7,30.5,31.3,32.0,32.7,33.3],[52000,23.9,25.0,26.2,27.2,28.1,29.1,30.0,30.8,31.6,32.3,33.0,33.7],[53000,24.2,25.4,26.5,27.5,28.5,29.4,30.4,31.2,32.0,32.7,33.5,34.1],[54000,24.5,25.7,26.8,27.9,28.9,29.8,30.7,31.6,32.4,33.2,33.9,34.5],[55000,24.8,26.0,27.2,28.3,29.3,30.3,31.1,32.0,32.9,33.6,34.3,35.0],[56000,25.0,26.4,27.6,28.6,29.7,30.7,31.6,32.4,33.2,34.0,34.7,35.5],[57000,25.2,26.6,27.9,29.0,30.0,31.1,32.0,32.8,33.7,34.4,35.2,35.9],[58000,25.3,26.8,28.1,29.4,30.4,31.4,32.4,33.3,34.1,34.8,35.5,36.3],[59000,25.4,27.0,28.4,29.6,30.8,31.8,32.8,33.7,34.5,35.3,36.0,36.6],[60000,25.5,27.1,28.6,29.9,31.1,32.1,33.1,34.1,34.9,35.7,36.4,37.1],[61000,25.6,27.2,28.7,30.1,31.4,32.5,33.5,34.4,35.3,36.1,36.8,37.5],[62000,25.7,27.3,28.9,30.4,31.6,32.8,33.8,34.8,35.7,36.5,37.2,37.9],[63000,25.8,27.4,29.0,30.5,31.9,33.0,34.1,35.1,36.0,36.8,37.6,38.3],[64000,25.8,27.6,29.1,30.7,32.1,33.3,34.4,35.4,36.3,37.2,37.9,38.6],[65000,25.9,27.6,29.2,30.8,32.3,33.6,34.6,35.6,36.6,37.5,38.3,39.0],[66000,25.9,27.6,29.4,30.9,32.4,33.8,34.9,36.0,36.8,37.8,38.6,39.3],[67000,26.0,27.7,29.4,31.0,32.5,34.0,35.2,36.2,37.1,38.0,38.9,39.7],[68000,26.0,27.7,29.5,31.1,32.6,34.1,35.4,36.4,37.5,38.3,39.2,40.0],[69000,26.1,27.8,29.5,31.2,32.7,34.2,35.6,36.7,37.7,38.6,39.4,40.3],[70000,26.2,27.9,29.6,31.3,32.8,34.3,35.7,36.9,37.9,38.9,39.7,40.5],[71000,26.2,27.9,29.6,31.3,32.9,34.4,35.8,37.1,38.2,39.1,39.9,40.7],[72000,26.3,28.0,29.7,31.4,33.0,34.5,35.9,37.3,38.4,39.4,40.3,41.0],[73000,26.4,28.0,29.7,31.4,33.1,34.6,36.0,37.3,38.4,39.5,40.5,41.3],[74000,26.5,28.1,29.7,31.4,33.1,34.7,36.1,37.3,38.4,39.5,40.6,41.6],[75000,26.5,28.2,29.8,31.4,33.1,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[76000,26.6,28.3,29.9,31.5,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[77000,26.7,28.3,30.0,31.6,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[78000,26.8,28.4,30.0,31.6,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[79000,26.9,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[80000,27.1,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[81000,27.2,28.6,30.2,31.8,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[82000,27.2,28.8,30.2,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[83000,27.3,28.8,30.3,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[84000,27.4,28.9,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[85000,27.5,29.0,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[86000,27.6,29.1,30.5,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[87000,27.7,29.1,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[88000,27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[89000,27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[90000,27.7,29.2,30.6,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[91000,27.8,29.2,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[92000,27.8,29.3,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[93000,27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[94000,27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[95000,27.9,29.3,30.8,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[96000,27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[97000,27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[98000,28.0,29.4,30.8,32.2,33.6,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[99000,28.0,29.4,30.9,32.2,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[100000,28.0,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[101000,28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[102000,28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[103000,28.1,29.6,30.9,32.3,33.7,34.9,36.2,37.3,38.4,39.5,40.6,41.7],[104000,28.2,29.6,31.0,32.3,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[105000,28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[106000,28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[107000,28.3,29.7,31.1,32.4,33.7,35.0,36.3,37.4,38.5,39.6,40.6,41.7],[108000,28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.4,38.5,39.6,40.6,41.7],[109000,28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.5,38.5,39.6,40.6,41.7],[110000,28.4,29.8,31.2,32.5,33.8,35.1,36.3,37.5,38.6,39.6,40.6,41.7]],"box3_werkend":[[30000,14.0,14.2,14.5,14.7,14.9,15.1,15.2,15.4,15.6,15.7,15.8,16.0],[31000,14.5,14.8,15.0,15.2,15.4,15.6,15.8,16.0,16.1,16.3,16.4,16.6],[32000,15.0,15.3,15.5,15.7,16.0,16.2,16.3,16.5,16.7,16.8,17.0,17.1],[33000,15.3,15.6,15.8,16.1,16.3,16.5,16.7,16.8,17.0,17.2,17.3,17.5],[34000,15.6,15.8,16.1,16.3,16.5,16.7,16.9,17.1,17.3,17.4,17.6,17.7],[35000,15.7,16.0,16.2,16.5,16.7,16.9,17.1,17.3,17.5,17.6,17.8,17.9],[36000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[37000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[38000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[39000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[40000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[41000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[42000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[43000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[44000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[45000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[46000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[47000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[48000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[49000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[50000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[51000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[52000,15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],[53000,15.9,16.2,16.4,16.7,16.9,17.1,17.3,17.5,17.6,17.8,17.9,18.1],[54000,15.9,16.2,16.5,16.7,16.9,17.1,17.3,17.5,17.7,17.8,18.0,18.1],[55000,16.0,16.3,16.5,16.8,17.0,17.2,17.4,17.6,17.8,17.9,18.1,18.2],[56000,16.1,16.3,16.6,16.8,17.1,17.3,17.5,17.7,17.8,18.0,18.2,18.3],[57000,16.1,16.4,16.7,16.9,17.1,17.4,17.5,17.7,17.9,18.1,18.2,18.4],[58000,16.2,16.5,16.7,17.0,17.2,17.4,17.6,17.8,18.0,18.1,18.3,18.4],[59000,16.3,16.5,16.8,17.0,17.3,17.5,17.7,17.9,18.0,18.2,18.4,18.5],[60000,16.3,16.6,16.9,17.1,17.3,17.5,17.7,17.9,18.1,18.3,18.4,18.6],[61000,16.4,16.7,16.9,17.2,17.4,17.6,17.8,18.0,18.2,18.3,18.5,18.6],[62000,16.4,16.7,17.0,17.2,17.5,17.7,17.9,18.1,18.3,18.4,18.6,18.7],[63000,16.5,16.8,17.1,17.3,17.5,17.8,18.0,18.2,18.3,18.5,18.7,18.8],[64000,16.6,16.9,17.1,17.4,17.6,17.9,18.1,18.2,18.4,18.6,18.7,18.9],[65000,16.7,17.0,17.2,17.5,17.7,17.9,18.2,18.3,18.5,18.7,18.8,19.0],[66000,16.7,17.0,17.3,17.6,17.8,18.0,18.2,18.4,18.6,18.8,19.0,19.1],[67000,16.8,17.1,17.4,17.7,17.9,18.1,18.4,18.5,18.7,18.9,19.1,19.2],[68000,16.9,17.3,17.6,17.8,18.1,18.3,18.5,18.7,18.9,19.0,19.2,19.3],[69000,17.0,17.3,17.7,18.0,18.2,18.4,18.6,18.8,19.0,19.2,19.3,19.5],[70000,17.2,17.5,17.8,18.1,18.4,18.6,18.8,19.0,19.2,19.4,19.5,19.7],[71000,17.3,17.6,17.9,18.2,18.5,18.7,19.0,19.2,19.3,19.5,19.7,19.8],[72000,17.5,17.8,18.1,18.4,18.7,18.9,19.1,19.3,19.5,19.7,19.9,20.0],[73000,17.7,18.0,18.3,18.5,18.8,19.1,19.3,19.5,19.7,19.9,20.0,20.2],[74000,17.8,18.1,18.4,18.7,19.0,19.3,19.5,19.7,19.9,20.1,20.2,20.4],[75000,18.0,18.3,18.6,18.8,19.1,19.4,19.6,19.8,20.0,20.2,20.4,20.6],[76000,18.1,18.4,18.7,19.0,19.2,19.5,19.8,20.0,20.2,20.4,20.5,20.7],[77000,18.2,18.6,18.8,19.1,19.4,19.7,19.9,20.1,20.3,20.5,20.7,20.9],[78000,18.3,18.7,19.0,19.3,19.5,19.8,20.0,20.3,20.5,20.7,20.8,21.0],[79000,18.5,18.8,19.1,19.4,19.6,19.9,20.2,20.4,20.6,20.8,21.0,21.1],[80000,18.5,18.9,19.2,19.5,19.8,20.0,20.3,20.5,20.7,20.9,21.1,21.3],[81000,18.6,19.0,19.3,19.6,19.9,20.1,20.4,20.6,20.9,21.0,21.2,21.4],[82000,18.7,19.1,19.4,19.7,20.0,20.2,20.5,20.7,21.0,21.2,21.3,21.5],[83000,18.8,19.1,19.5,19.8,20.1,20.3,20.6,20.8,21.0,21.3,21.4,21.6],[84000,18.9,19.2,19.6,19.9,20.2,20.4,20.6,20.9,21.1,21.3,21.5,21.7],[85000,19.0,19.3,19.7,20.0,20.2,20.5,20.7,20.9,21.2,21.4,21.6,21.8],[86000,19.1,19.4,19.7,20.0,20.3,20.6,20.8,21.0,21.3,21.5,21.7,21.9],[87000,19.1,19.5,19.8,20.1,20.4,20.6,20.9,21.1,21.3,21.6,21.8,21.9],[88000,19.2,19.5,19.8,20.2,20.5,20.7,21.0,21.2,21.4,21.7,21.9,22.0],[89000,19.3,19.6,19.9,20.3,20.5,20.8,21.0,21.3,21.5,21.7,21.9,22.1],[90000,19.3,19.7,20.0,20.3,20.6,20.9,21.1,21.3,21.6,21.8,22.0,22.2],[91000,19.4,19.7,20.1,20.4,20.7,20.9,21.2,21.4,21.6,21.8,22.1,22.3],[92000,19.5,19.8,20.1,20.4,20.7,21.0,21.3,21.5,21.7,21.9,22.1,22.3],[93000,19.5,19.9,20.2,20.5,20.8,21.1,21.3,21.6,21.8,22.0,22.2,22.4],[94000,19.6,19.9,20.3,20.6,20.8,21.1,21.4,21.6,21.8,22.0,22.2,22.5],[95000,19.6,20.0,20.3,20.6,20.9,21.2,21.5,21.7,21.9,22.1,22.3,22.5],[96000,19.7,20.0,20.4,20.7,21.0,21.3,21.5,21.8,22.0,22.2,22.4,22.5],[97000,19.7,20.1,20.4,20.7,21.0,21.3,21.6,21.8,22.0,22.3,22.4,22.6],[98000,19.8,20.2,20.5,20.8,21.1,21.4,21.6,21.9,22.1,22.3,22.5,22.7],[99000,19.8,20.2,20.5,20.9,21.2,21.4,21.7,22.0,22.2,22.4,22.6,22.7],[100000,19.9,20.2,20.6,20.9,21.2,21.5,21.8,22.0,22.2,22.4,22.6,22.8],[101000,19.9,20.3,20.7,21.0,21.3,21.5,21.8,22.1,22.3,22.5,22.7,22.9],[102000,20.0,20.3,20.7,21.0,21.3,21.6,21.8,22.1,22.4,22.6,22.8,22.9],[103000,20.1,20.4,20.7,21.1,21.4,21.7,21.9,22.2,22.4,22.6,22.8,23.0],[104000,20.1,20.5,20.8,21.1,21.4,21.7,22.0,22.2,22.5,22.7,22.9,23.1],[105000,20.1,20.5,20.8,21.2,21.5,21.8,22.0,22.3,22.5,22.7,22.9,23.1],[106000,20.2,20.6,20.9,21.2,21.5,21.8,22.1,22.3,22.6,22.8,23.0,23.2],[107000,20.2,20.6,20.9,21.2,21.6,21.9,22.1,22.4,22.6,22.8,23.0,23.2],[108000,20.3,20.7,21.0,21.3,21.6,21.9,22.2,22.4,22.6,22.9,23.1,23.3],[109000,20.3,20.7,21.0,21.3,21.7,22.0,22.2,22.5,22.7,22.9,23.1,23.3],[110000,20.3,20.7,21.1,21.4,21.7,22.0,22.3,22.5,22.7,23.0,23.2,23.4],[111000,20.4,20.8,21.1,21.4,21.7,22.0,22.3,22.6,22.8,23.0,23.2,23.4],[112000,20.4,20.8,21.2,21.5,21.8,22.1,22.4,22.6,22.8,23.0,23.3,23.5],[113000,20.4,20.8,21.2,21.5,21.8,22.1,22.4,22.6,22.9,23.1,23.3,23.5],[114000,20.5,20.8,21.2,21.5,21.8,22.2,22.4,22.7,22.9,23.1,23.3,23.5],[115000,20.5,20.9,21.3,21.6,21.9,22.2,22.5,22.7,22.9,23.2,23.4,23.6],[116000,20.5,20.9,21.3,21.6,21.9,22.2,22.5,22.8,23.0,23.2,23.4,23.6],[117000,20.6,20.9,21.3,21.7,22.0,22.2,22.5,22.8,23.0,23.2,23.4,23.7],[118000,20.6,21.0,21.4,21.7,22.0,22.3,22.6,22.8,23.1,23.3,23.5,23.7],[119000,20.7,21.0,21.4,21.7,22.0,22.3,22.6,22.9,23.1,23.3,23.5,23.7],[120000,20.7,21.1,21.4,21.8,22.1,22.3,22.6,22.9,23.1,23.4,23.6,23.8],[121000,20.7,21.1,21.4,21.8,22.1,22.4,22.7,22.9,23.2,23.4,23.6,23.8],[122000,20.8,21.1,21.5,21.8,22.2,22.4,22.7,23.0,23.2,23.4,23.6,23.8],[123000,20.8,21.2,21.5,21.9,22.2,22.5,22.7,23.0,23.3,23.5,23.7,23.9],[124000,20.8,21.2,21.5,21.9,22.2,22.5,22.8,23.1,23.3,23.5,23.7,23.9],[125000,20.9,21.2,21.6,21.9,22.3,22.6,22.8,23.1,23.3,23.6,23.8,24.0]],"box3_aow":[[29000,17.9,18.2,18.5,18.8,19.0,19.3,19.5,19.7,19.9,20.1,20.2,20.4],[30000,18.6,18.9,19.2,19.5,19.8,20.0,20.2,20.4,20.6,20.8,21.0,21.1],[31000,19.2,19.5,19.8,20.1,20.4,20.6,20.8,21.1,21.3,21.5,21.6,21.8],[32000,19.7,20.0,20.3,20.6,20.9,21.2,21.4,21.6,21.8,22.0,22.2,22.4],[33000,20.0,20.3,20.7,21.0,21.2,21.5,21.7,22.0,22.2,22.4,22.6,22.8],[34000,20.2,20.5,20.9,21.2,21.4,21.7,22.0,22.2,22.4,22.6,22.8,23.0],[35000,20.3,20.7,21.0,21.3,21.6,21.9,22.1,22.3,22.6,22.8,23.0,23.1],[36000,20.5,20.8,21.1,21.4,21.7,22.0,22.2,22.5,22.7,22.9,23.1,23.3],[37000,20.6,20.9,21.2,21.6,21.8,22.1,22.4,22.6,22.8,23.0,23.2,23.4],[38000,20.7,21.0,21.4,21.7,22.0,22.2,22.5,22.7,22.9,23.1,23.3,23.5],[39000,20.8,21.1,21.4,21.7,22.0,22.3,22.6,22.8,23.0,23.2,23.4,23.6],[40000,20.8,21.2,21.5,21.8,22.1,22.4,22.6,22.9,23.1,23.3,23.5,23.7],[41000,20.9,21.3,21.6,21.9,22.2,22.5,22.7,23.0,23.2,23.4,23.6,23.8],[42000,21.1,21.4,21.8,22.1,22.4,22.6,22.9,23.1,23.4,23.6,23.8,24.0],[43000,21.2,21.6,21.9,22.2,22.5,22.8,23.1,23.3,23.5,23.7,23.9,24.1],[44000,21.4,21.7,22.1,22.4,22.7,23.0,23.2,23.5,23.7,23.9,24.1,24.3],[45000,21.5,21.9,22.2,22.5,22.8,23.1,23.4,23.6,23.8,24.1,24.3,24.4],[46000,21.6,22.0,22.3,22.7,23.0,23.2,23.5,23.8,24.0,24.2,24.4,24.6],[47000,21.7,22.1,22.5,22.8,23.1,23.4,23.6,23.9,24.1,24.3,24.5,24.7],[48000,21.9,22.2,22.6,22.9,23.2,23.5,23.8,24.0,24.2,24.5,24.7,24.9],[49000,22.0,22.4,22.8,23.1,23.4,23.7,24.0,24.2,24.5,24.7,24.9,25.1],[50000,22.1,22.5,22.9,23.3,23.6,23.9,24.1,24.4,24.6,24.8,25.1,25.3],[51000,22.2,22.7,23.1,23.4,23.7,24.0,24.3,24.6,24.8,25.0,25.2,25.4],[52000,22.4,22.8,23.2,23.6,23.9,24.2,24.5,24.8,25.0,25.2,25.4,25.6],[53000,22.6,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2,25.4,25.6,25.8],[54000,22.7,23.1,23.5,23.9,24.2,24.5,24.8,25.1,25.3,25.5,25.8,26.0],[55000,22.8,23.2,23.6,24.0,24.4,24.7,24.9,25.2,25.5,25.7,25.9,26.1],[56000,22.9,23.3,23.7,24.1,24.5,24.8,25.1,25.4,25.6,25.8,26.1,26.3],[57000,23.1,23.5,23.8,24.2,24.6,24.9,25.2,25.5,25.7,26.0,26.2,26.4],[58000,23.2,23.6,24.0,24.3,24.7,25.0,25.3,25.6,25.9,26.1,26.3,26.5],[59000,23.2,23.7,24.0,24.4,24.8,25.1,25.4,25.7,25.9,26.2,26.4,26.6],[60000,23.3,23.7,24.1,24.4,24.8,25.1,25.4,25.7,26.0,26.2,26.4,26.7],[61000,23.3,23.7,24.1,24.5,24.8,25.2,25.5,25.8,26.0,26.3,26.5,26.7],[62000,23.4,23.8,24.2,24.5,24.9,25.2,25.5,25.8,26.1,26.3,26.5,26.8],[63000,23.4,23.8,24.2,24.6,24.9,25.2,25.6,25.9,26.2,26.4,26.6,26.8],[64000,23.5,23.9,24.3,24.7,25.0,25.3,25.7,25.9,26.2,26.5,26.7,26.9],[65000,23.5,24.0,24.3,24.7,25.1,25.4,25.7,26.0,26.3,26.5,26.8,27.0],[66000,23.6,24.0,24.4,24.8,25.1,25.5,25.8,26.1,26.4,26.6,26.9,27.1],[67000,23.7,24.1,24.5,24.9,25.2,25.6,25.9,26.2,26.5,26.7,27.0,27.2],[68000,23.8,24.2,24.6,25.0,25.3,25.7,26.0,26.2,26.6,26.8,27.1,27.3],[69000,23.9,24.3,24.7,25.1,25.4,25.8,26.0,26.3,26.6,26.9,27.2,27.4],[70000,23.9,24.3,24.7,25.2,25.5,25.8,26.1,26.4,26.7,27.0,27.2,27.5],[71000,24.0,24.4,24.8,25.2,25.6,25.9,26.2,26.5,26.8,27.1,27.3,27.6],[72000,24.1,24.6,24.9,25.3,25.7,26.1,26.4,26.6,26.9,27.1,27.4,27.7],[73000,24.3,24.7,25.1,25.5,25.9,26.2,26.5,26.8,27.1,27.3,27.6,27.8],[74000,24.4,24.9,25.3,25.6,26.0,26.3,26.7,27.0,27.2,27.5,27.7,28.0],[75000,24.5,25.0,25.4,25.8,26.1,26.5,26.8,27.1,27.4,27.6,27.9,28.2],[76000,24.6,25.1,25.6,25.9,26.3,26.6,27.0,27.3,27.5,27.8,28.0,28.3],[77000,24.8,25.3,25.7,26.1,26.4,26.8,27.1,27.4,27.7,28.0,28.2,28.4],[78000,24.9,25.4,25.8,26.2,26.6,26.9,27.3,27.6,27.9,28.1,28.3,28.6],[79000,25.1,25.5,26.0,26.4,26.7,27.1,27.4,27.7,28.0,28.3,28.5,28.7],[80000,25.2,25.6,26.1,26.5,26.9,27.2,27.5,27.9,28.2,28.4,28.7,28.9],[81000,25.3,25.8,26.2,26.6,27.0,27.3,27.7,28.0,28.3,28.6,28.8,29.0],[82000,25.4,25.9,26.3,26.7,27.1,27.5,27.8,28.1,28.4,28.7,28.9,29.2],[83000,25.5,26.0,26.4,26.8,27.2,27.6,27.9,28.2,28.5,28.8,29.1,29.3],[84000,25.6,26.1,26.5,26.9,27.3,27.7,28.0,28.3,28.7,28.9,29.2,29.4],[85000,25.7,26.2,26.6,27.0,27.4,27.8,28.1,28.4,28.7,29.0,29.3,29.5],[86000,25.8,26.3,26.7,27.1,27.5,27.9,28.2,28.5,28.8,29.1,29.4,29.6],[87000,25.8,26.4,26.8,27.2,27.6,28.0,28.3,28.6,28.9,29.2,29.5,29.7],[88000,25.9,26.4,26.9,27.3,27.6,28.0,28.4,28.7,29.0,29.2,29.5,29.8],[89000,26.0,26.4,26.9,27.3,27.7,28.1,28.4,28.7,29.0,29.3,29.6,29.9],[90000,26.0,26.5,26.9,27.4,27.7,28.1,28.5,28.8,29.1,29.4,29.7,29.9],[91000,26.1,26.5,27.0,27.4,27.8,28.2,28.5,28.9,29.1,29.4,29.7,29.9],[92000,26.1,26.5,27.0,27.5,27.8,28.2,28.6,28.9,29.2,29.4,29.7,30.0],[93000,26.1,26.6,27.0,27.5,27.9,28.2,28.6,28.9,29.2,29.5,29.7,30.0],[94000,26.2,26.6,27.1,27.5,27.9,28.3,28.6,29.0,29.3,29.5,29.8,30.1],[95000,26.2,26.7,27.1,27.6,28.0,28.3,28.7,29.0,29.3,29.6,29.8,30.1],[96000,26.2,26.7,27.1,27.6,28.0,28.3,28.7,29.0,29.3,29.6,29.9,30.1],[97000,26.3,26.7,27.2,27.6,28.0,28.4,28.7,29.1,29.4,29.7,29.9,30.2],[98000,26.3,26.8,27.2,27.6,28.0,28.4,28.7,29.1,29.4,29.7,29.9,30.2],[99000,26.3,26.8,27.2,27.7,28.1,28.5,28.8,29.1,29.4,29.7,30.0,30.2],[100000,26.4,26.8,27.3,27.7,28.1,28.5,28.8,29.2,29.5,29.8,30.0,30.3],[101000,26.4,26.9,27.3,27.7,28.1,28.5,28.9,29.2,29.5,29.8,30.1,30.3],[102000,26.4,26.9,27.3,27.7,28.2,28.5,28.9,29.2,29.5,29.8,30.1,30.3],[103000,26.5,26.9,27.4,27.8,28.2,28.6,28.9,29.2,29.6,29.8,30.1,30.4],[104000,26.5,27.0,27.4,27.8,28.2,28.6,29.0,29.3,29.6,29.9,30.2,30.4],[105000,26.5,27.0,27.4,27.8,28.3,28.6,29.0,29.3,29.6,29.9,30.2,30.4],[106000,26.6,27.0,27.5,27.9,28.3,28.6,29.0,29.3,29.7,29.9,30.2,30.5],[107000,26.6,27.1,27.5,27.9,28.3,28.7,29.0,29.4,29.7,30.0,30.2,30.5],[108000,26.6,27.1,27.5,27.9,28.3,28.7,29.1,29.4,29.7,30.0,30.3,30.5],[109000,26.6,27.1,27.6,28.0,28.3,28.7,29.1,29.4,29.7,30.0,30.3,30.6],[110000,26.7,27.1,27.6,28.0,28.4,28.8,29.1,29.4,29.8,30.1,30.3,30.6]]};
+
+// ============ FLP-lookup met bilineaire interpolatie ============
+function getFLP(income, type, rate) {
+  const table = FLP_DATA[type];
+  const rates = FLP_DATA.rates;
+  rate = Math.max(rates[0], Math.min(rates[rates.length - 1], rate));
+  let r0 = 0;
+  while (r0 < rates.length - 1 && rates[r0 + 1] <= rate) r0++;
+  if (r0 >= rates.length - 1) r0 = rates.length - 2;
+  const r1 = r0 + 1;
+  const rt = (rate - rates[r0]) / (rates[r1] - rates[r0]);
+  const minInc = table[0][0], maxInc = table[table.length - 1][0];
+  income = Math.max(minInc, Math.min(maxInc, income));
+  let i0 = 0;
+  while (i0 < table.length - 1 && table[i0 + 1][0] <= income) i0++;
+  if (i0 >= table.length - 1) i0 = table.length - 2;
+  const i1 = i0 + 1;
+  const it = (i1 > i0 && table[i1][0] !== table[i0][0]) ? (income - table[i0][0]) / (table[i1][0] - table[i0][0]) : 0;
+  const flp00 = table[i0][r0 + 1], flp01 = table[i0][r1 + 1];
+  const flp10 = table[i1][r0 + 1], flp11 = table[i1][r1 + 1];
+  const flp0 = flp00 + (flp01 - flp00) * rt;
+  const flp1 = flp10 + (flp11 - flp10) * rt;
+  return flp0 + (flp1 - flp0) * it;
+}
+function maxMonthly(income, type, rate) { return getFLP(income, type, rate) / 100 * income / 12; }
+function maxLoan(m, r, t) { const ri = r/100/12, n = t*12; if (ri === 0) return m*n; return m * (1 - Math.pow(1+ri, -n)) / ri; }
+function monthlyAnn(L, r, t) { const ri = r/100/12, n = t*12; if (ri === 0) return L/n; return L * ri / (1 - Math.pow(1+ri, -n)); }
+function parseEuro(v) { return parseInt(String(v).replace(/\D/g, '')) || 0; }
+function formatEuro(v) { return '€ ' + Math.round(v).toLocaleString('nl-NL'); }
+function formatEuroShort(v) { if (v >= 1e6) return '€ ' + (v/1e6).toFixed(1).replace('.', ',') + 'M'; if (v >= 1000) return '€ ' + Math.round(v/1000) + 'k'; return '€ ' + Math.round(v); }
+function fmtPct(v) { return v.toFixed(1).replace('.', ',') + '%'; }
+function parseFloatNL(v) { return parseFloat(String(v).replace(',', '.')) || 0; }
+
+// ============ Leningdelen state ============
+let parts = [];
+let nextPartId = 1;
+
+// ============ AOW-tabel (SVB 2026) en datum-helpers ============
+const AOW_TABLE = [
+  { from: '1964-10-01', to: '1966-09-30', years: 67, months: 3 },
+  { from: '1966-10-01', to: '1970-06-30', years: 67, months: 6 },
+  { from: '1970-07-01', to: '1973-03-31', years: 67, months: 9 },
+  { from: '1973-04-01', to: '1975-12-31', years: 68, months: 0 },
+  { from: '1976-01-01', to: '1978-09-30', years: 68, months: 3 },
+  { from: '1978-10-01', to: '1982-06-30', years: 68, months: 6 },
+  { from: '1982-07-01', to: '1985-03-31', years: 68, months: 9 },
+  { from: '1985-04-01', to: '1988-12-31', years: 69, months: 0 },
+  { from: '1989-01-01', to: '1991-09-30', years: 69, months: 3 },
+  { from: '1991-10-01', to: '1995-06-30', years: 69, months: 6 },
+  { from: '1995-07-01', to: '1999-03-31', years: 69, months: 9 },
+  { from: '1999-04-01', to: '2000-12-31', years: 70, months: 0 },
+];
+function calcAOWAge(birthDateStr) {
+  if (!birthDateStr) return { years: 67, months: 0 };
+  const entry = AOW_TABLE.find(e => birthDateStr >= e.from && birthDateStr <= e.to);
+  if (entry) return { years: entry.years, months: entry.months };
+  const yr = parseInt(birthDateStr.substring(0, 4));
+  if (yr && yr < 1964) return { years: 67, months: 0 };
+  if (yr && yr > 2000) return { years: 70, months: 0 };
+  return { years: 67, months: 0 };
+}
+function ageInYears(birthDateStr) {
+  if (!birthDateStr) return 0;
+  const b = new Date(birthDateStr);
+  if (isNaN(b)) return 0;
+  return (new Date() - b) / (365.25 * 24 * 60 * 60 * 1000);
+}
+function formatAOW(yrs, mnds) {
+  if (mnds === 0) return `${yrs} jaar`;
+  return `${yrs} jaar en ${mnds} maand${mnds === 1 ? '' : 'en'}`;
+}
+function formatYearsMonths(years) {
+  if (years < 0) return 'verlopen';
+  const y = Math.floor(years);
+  const m = Math.round((years - y) * 12);
+  if (m === 12) return `${y + 1} jaar`;
+  if (m === 0) return `${y} jaar`;
+  return `${y}j ${m}m`;
+}
+
+// ============ State: aanvrager(s) ============
+let hasPartner = false;
+
+function readApplicant(id) {
+  const birthEl = document.getElementById('birthDate' + id);
+  if (!birthEl) return null;
+  const birthDate = birthEl.value;
+  const salary = parseEuro(document.getElementById('salary' + id).value);
+  const pension = parseEuro(document.getElementById('pension' + id).value);
+  const aowYears = parseInt(document.getElementById('aowYears' + id).value) || 67;
+  const aowMonths = parseInt(document.getElementById('aowMonths' + id).value) || 0;
+  const age = ageInYears(birthDate);
+  const aowAge = aowYears + aowMonths / 12;
+  const yearsToAOW = aowAge - age;
+  return { id, birthDate, salary, pension, aowYears, aowMonths, age, aowAge, yearsToAOW };
+}
+
+function getInputs() {
+  const a1 = readApplicant(1);
+  const a2 = hasPartner ? readApplicant(2) : null;
+  const all = a2 ? [a1, a2] : [a1];
+  const totalSalary = all.reduce((s, a) => s + a.salary, 0);
+  const totalPension = all.reduce((s, a) => s + a.pension, 0);
+  // Primaire persoon = degene met de minste jaren tot AOW (eerste in pensioen)
+  const primary = [...all].sort((a, b) => a.yearsToAOW - b.yearsToAOW)[0];
+
+  // Verlagingen (alle in maandbedragen)
+  const studieMnd = parseEuro(document.getElementById('studieschuldMnd').value);
+  const lopendMnd = parseEuro(document.getElementById('lopendeLenMnd').value);
+  const alimMnd = parseEuro(document.getElementById('alimentatieMnd').value);
+  const erfJaar = parseEuro(document.getElementById('erfpachtJaar').value);
+  const verlagingenMnd = studieMnd + lopendMnd + alimMnd + erfJaar / 12;
+
+  // Verhoging niet-kwetsbare groep (€17.000)
+  // Voorwaarde: solo én primaire-inkomen > startinkomen (€30k werkend / €29k AOW)
+  const verhogingToggle = document.getElementById('nietKwetsbaarToggle').checked;
+  const isSolo = !a2;
+  const isPrimaryAOW = primary.age >= primary.aowAge;
+  const startInk = isPrimaryAOW ? 29000 : 30000;
+  const primaryInkomen = isPrimaryAOW ? primary.pension : primary.salary;
+  const verhogingActief = verhogingToggle && isSolo && primaryInkomen > startInk;
+  const verhoging = verhogingActief ? 17000 : 0;
+
+  return {
+    age: Math.round(primary.age),
+    salary: totalSalary,
+    pension: totalPension,
+    pensionAge: Math.round(primary.aowAge),
+    toetsRate: parseFloat(document.getElementById('toetsRate').value),
+    applicants: all,
+    primary,
+    verlagingenMnd,
+    verlagingenDetail: { studieMnd, lopendMnd, alimMnd, erfMnd: erfJaar / 12 },
+    verhoging,
+    verhogingActief,
+    verhogingToggle,
+  };
+}
+
+// ============ Drie scenario's: Nu / Eerste AOW / Tweede AOW ============
+// NIBUD-vuistregel tweeverdieners 2026 (Bijlage Financieringslastnormen 2026, 'overige parameters' B22-G23)
+// "Hanteer het financieringslastpercentage dat hoort bij 1 keer het hoogste inkomen plus F23 keer het laagste inkomen"
+// 2026: F23 = 1.0 (tweede inkomen telt volledig mee). Historisch lager (2018: 0.5, 2022: 0.9).
+const NIBUD_F23 = 1.0;
+
+function calcRekeninkomen(inc1, inc2) {
+  // Officiële NIBUD-formule: rekeninkomen voor FLP-lookup
+  if (!inc2 || inc2 <= 0) return inc1;
+  if (!inc1 || inc1 <= 0) return inc2;
+  return Math.max(inc1, inc2) + Math.min(inc1, inc2) * NIBUD_F23;
+}
+
+function calcScenario(label, sublabel, inc1, inc2, flpType, refRate, verlagingenMnd, verhoging) {
+  // Eén scenario berekenen volgens officiële NIBUD-formule:
+  //   rekeninkomen → FLP-lookup
+  //   gezamenlijk inkomen × FLP → bruto max maandlast
+  //   bruto − verlagingen = netto beschikbaar voor hypotheek
+  //   netto / annuiteit → max hypotheek
+  //   + verhoging niet-kwetsbare groep
+  const reken = calcRekeninkomen(inc1, inc2 || 0);
+  const gezamenlijk = (inc1 || 0) + (inc2 || 0);
+  if (gezamenlijk <= 0) return null;
+  verlagingenMnd = verlagingenMnd || 0;
+  verhoging = verhoging || 0;
+  const flp_b1 = getFLP(reken, flpType, refRate);
+  const flp_b3 = getFLP(reken, 'box3_' + flpType, refRate);
+  const bruto_b1 = flp_b1 / 100 * gezamenlijk / 12;
+  const bruto_b3 = flp_b3 / 100 * gezamenlijk / 12;
+  const netto_b1 = Math.max(0, bruto_b1 - verlagingenMnd);
+  const netto_b3 = Math.max(0, bruto_b3 - verlagingenMnd);
+  return {
+    label, sublabel,
+    rekeninkomen: reken,
+    gezamenlijk,
+    flpType,
+    flp_b1, flp_b3,
+    bruto_maandlast_b1: bruto_b1, bruto_maandlast_b3: bruto_b3,
+    netto_maandlast_b1: netto_b1, netto_maandlast_b3: netto_b3,
+    verlagingenMnd, verhoging,
+    max_b1: maxLoan(netto_b1, refRate, 30) + verhoging,
+    max_b3: maxLoan(netto_b3, refRate, 30) + verhoging,
+  };
+}
+
+function calc3Scenarios(applicants, refRate, verlagingenMnd, verhoging) {
+  verlagingenMnd = verlagingenMnd || 0;
+  verhoging = verhoging || 0;
+  // Sorteer op leeftijd: oudste eerst (= eerste persoon op leeftijd)
+  const sorted = [...applicants].sort((a, b) => b.age - a.age);
+  const oudste = sorted[0];
+  const jongste = sorted[1] || null;
+  const isSolo = !jongste;
+
+  // SCENARIO 1: NU — per persoon salaris als nog werkend, anders pensioen
+  const inc1_now = oudste.age >= oudste.aowAge ? oudste.pension : oudste.salary;
+  const inc2_now = jongste ? (jongste.age >= jongste.aowAge ? jongste.pension : jongste.salary) : 0;
+  const anyNowAOW = (oudste.age >= oudste.aowAge) || (jongste && jongste.age >= jongste.aowAge);
+  const allNowAOW = (oudste.age >= oudste.aowAge) && (!jongste || jongste.age >= jongste.aowAge);
+  const s1Type = anyNowAOW ? 'aow' : 'werkend';
+  const gez_now = inc1_now + inc2_now;
+  let s1Sub;
+  if (isSolo) {
+    s1Sub = allNowAOW ? `Gepensioneerd · € ${gez_now.toLocaleString('nl-NL')}` : `Werkend · € ${gez_now.toLocaleString('nl-NL')}`;
+  } else {
+    s1Sub = allNowAOW ? `Beide gepensioneerd · totaal € ${gez_now.toLocaleString('nl-NL')}` :
+            anyNowAOW ? `Gemengd (1 AOW, 1 werkend) · totaal € ${gez_now.toLocaleString('nl-NL')}` :
+            `Beide werkend · totaal € ${gez_now.toLocaleString('nl-NL')}`;
+  }
+  const s1 = calcScenario('Nu', s1Sub, inc1_now, inc2_now, s1Type, refRate, verlagingenMnd, verhoging);
+
+  // SCENARIO 2: Eerste persoon AOW (oudste pensioen, jongste nog salaris of solo pensioen)
+  let s2 = null;
+  if (oudste.yearsToAOW > 0) {
+    const inc1_s2 = oudste.pension;
+    const inc2_s2 = isSolo ? 0 : jongste.salary;
+    const gez_s2 = inc1_s2 + inc2_s2;
+    const s2Sub = isSolo
+      ? `Pensioen · € ${gez_s2.toLocaleString('nl-NL')} · over ${formatYearsMonths(oudste.yearsToAOW)}`
+      : `Pensioen oudste + salaris jongste · totaal € ${gez_s2.toLocaleString('nl-NL')} · over ${formatYearsMonths(oudste.yearsToAOW)}`;
+    s2 = calcScenario(isSolo ? 'Met pensioen' : 'Eerste persoon AOW', s2Sub, inc1_s2, inc2_s2, 'aow', refRate, verlagingenMnd, verhoging);
+  }
+
+  // SCENARIO 3: Tweede persoon AOW (beide pensioen)
+  let s3 = null;
+  if (jongste && jongste.yearsToAOW > 0) {
+    const inc1_s3 = oudste.pension;
+    const inc2_s3 = jongste.pension;
+    const gez_s3 = inc1_s3 + inc2_s3;
+    const s3Sub = `Beide gepensioneerd · totaal € ${gez_s3.toLocaleString('nl-NL')} · over ${formatYearsMonths(jongste.yearsToAOW)}`;
+    s3 = calcScenario('Tweede persoon AOW', s3Sub, inc1_s3, inc2_s3, 'aow', refRate, verlagingenMnd, verhoging);
+  }
+
+  return { oudste, jongste, s1, s2, s3, isSolo };
+}
+
+function renderScenarios(applicants, refRate, verlagingenMnd, verhoging) {
+  const sc = calc3Scenarios(applicants, refRate, verlagingenMnd, verhoging);
+  const el = document.getElementById('scenariosGrid');
+  if (!el) return;
+
+  function card(s, isPrimary) {
+    if (!s) return '';
+    const flpInfo = (s.rekeninkomen !== s.gezamenlijk)
+      ? `FLP @ rekeninkomen € ${Math.round(s.rekeninkomen).toLocaleString('nl-NL')}: b1 ${s.flp_b1.toFixed(1).replace('.', ',')}% · b3 ${s.flp_b3.toFixed(1).replace('.', ',')}%`
+      : `FLP @ € ${Math.round(s.gezamenlijk).toLocaleString('nl-NL')}: b1 ${s.flp_b1.toFixed(1).replace('.', ',')}% · b3 ${s.flp_b3.toFixed(1).replace('.', ',')}%`;
+    // Adjustments-regel (alleen tonen als er verlagingen of verhoging actief is)
+    let adjustments = '';
+    if (s.verlagingenMnd > 0 || s.verhoging > 0) {
+      const parts = [];
+      if (s.verlagingenMnd > 0) parts.push(`<span class="adj-down">−${formatEuro(s.verlagingenMnd)}/mnd verlagingen</span>`);
+      if (s.verhoging > 0) parts.push(`<span class="adj-up">+${formatEuro(s.verhoging)} niet-kwetsbaar</span>`);
+      adjustments = `<div class="scenario-adjustments">${parts.join(' · ')}</div>`;
+    }
+    return `
+      <div class="scenario-card ${isPrimary ? 'primary' : ''}">
+        <div class="scenario-header">
+          <div class="scenario-title">${s.label}</div>
+          <div class="scenario-sublabel">${s.sublabel}</div>
+        </div>
+        <div class="scenario-rows">
+          <div class="scenario-row">
+            <span class="tag-b1">Box 1</span>
+            <strong>${formatEuro(s.max_b1)}</strong>
+          </div>
+          <div class="scenario-row">
+            <span class="tag-b3">Box 3</span>
+            <strong>${formatEuro(s.max_b3)}</strong>
+          </div>
+        </div>
+        ${adjustments}
+        <div class="scenario-flp">${flpInfo}</div>
+      </div>`;
+  }
+
+  let html = card(sc.s1, true);
+  html += card(sc.s2, false);
+  if (sc.s3) html += card(sc.s3, false);
+  el.innerHTML = html;
+}
+
+// ============ Tweetrap-mix render ============
+function renderTweetrapMix(inp, refRate) {
+  const section = document.getElementById('tweetrapMixSection');
+  const content = document.getElementById('tweetrapMixContent');
+  if (!section || !content) return;
+
+  const sorted = [...inp.applicants].sort((a, b) => b.age - a.age);
+  const oudste = sorted[0];
+  const jongste = sorted[1] || null;
+  const yToFirstAOW = oudste.aowAge - oudste.age;
+
+  if (yToFirstAOW <= 0 || yToFirstAOW >= 10) {
+    section.style.display = 'none';
+    return;
+  }
+
+  // Bouw toetsen-array zoals in calculate() (vereenvoudigd: alleen voor variants-functie)
+  const toetsen = []; // niet nodig — calcTweetrapVariants gebruikt het niet direct
+  const varianten = calcTweetrapVariants(yToFirstAOW, refRate, oudste, jongste, toetsen);
+  if (!varianten || varianten.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  const beste = varianten[0];
+
+  let html = `<table class="tweetrap-mix-table">
+    <thead>
+      <tr>
+        <th>Box-combinatie</th>
+        <th class="numeric">Deel A (~${yToFirstAOW.toFixed(1)}jr)</th>
+        <th class="numeric">Deel B (30jr)</th>
+        <th class="numeric">Totaal</th>
+        <th class="numeric">Δ vs optimaal</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  varianten.forEach((v, i) => {
+    const isOpt = i === 0;
+    const delta = isOpt ? '' : `–${formatEuroShort(beste.total - v.total)}`;
+    html += `<tr class="${isOpt ? 'optimal' : ''}">
+      <td>${v.label}${isOpt ? '<span class="opt-badge">optimaal</span>' : ''}</td>
+      <td class="numeric">${formatEuro(v.dA)}</td>
+      <td class="numeric">${formatEuro(v.dB)}</td>
+      <td class="numeric"><strong>${formatEuro(v.total)}</strong></td>
+      <td class="numeric delta">${delta}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Voeg analyse-info toe over wat de gebruiker invult
+  const userParts = parts || [];
+  if (userParts.length > 0) {
+    const box1Count = userParts.filter(p => p.box === 1).length;
+    const box3Count = userParts.filter(p => p.box === 3).length;
+    const huidige_box1 = box1Count > 0 && box3Count === 0 ? 'box 1' : (box3Count > 0 && box1Count === 0 ? 'box 3' : 'gemengd');
+    const huidige_var = (box1Count > 0 && box3Count === 0) ? varianten.find(v => v.dealA_box === 1 && v.dealB_box === 1)
+                      : (box3Count > 0 && box1Count === 0) ? varianten.find(v => v.dealA_box === 3 && v.dealB_box === 3)
+                      : null;
+    if (huidige_var) {
+      const verlies = beste.total - huidige_var.total;
+      const tip = verlies > 1000
+        ? `Je huidige leningdelen-mix volgt <strong>${huidige_box1}</strong>. Door over te stappen op <strong>${beste.label}</strong> zou de max ${formatEuroShort(verlies)} hoger zijn.`
+        : `Je huidige leningdelen-mix (<strong>${huidige_box1}</strong>) is al ${verlies === 0 ? 'gelijk aan' : 'praktisch gelijk aan'} de optimale mix.`;
+      html += `<p style="font-size:12px;color:var(--text-light);margin-top:4px;">📊 ${tip}</p>`;
+    }
+  }
+  content.innerHTML = html;
+}
+
+// ============ Drie pensioenmomenten ============
+// Sorteer op leeftijd (oudste = eerste met pensioen)
+function pensionOrder(applicants) {
+  return [...applicants].sort((a, b) => b.age - a.age);
+}
+function calcMaxAtMoment(scenario, applicants, rate = 4.0, term = 30) {
+  // scenario: 'now' | 'first' | 'second'
+  const order = pensionOrder(applicants);
+  const first = order[0]; // oudste
+  const second = order[1] || null;
+  let t = 0;
+  if (scenario === 'first') t = Math.max(0, first.yearsToAOW);
+  else if (scenario === 'second') { if (!second) return null; t = Math.max(0, second.yearsToAOW); }
+  // Per persoon: gepensioneerd op moment t?
+  let totalIncome = 0;
+  let pensionedCount = 0;
+  applicants.forEach(a => {
+    const ageAtT = a.age + t;
+    const isPens = ageAtT >= a.aowAge - 0.001;
+    if (isPens) { totalIncome += a.pension; pensionedCount++; }
+    else { totalIncome += a.salary; }
+  });
+  // FLP: alleen AOW als IEDEREEN gepensioneerd is (anders nog ten minste 1 werkend → werkend-FLP)
+  const allPensioned = pensionedCount === applicants.length;
+  const flpType1 = allPensioned ? 'aow' : 'werkend';
+  const flpType3 = allPensioned ? 'box3_aow' : 'box3_werkend';
+  const flp1 = getFLP(totalIncome, flpType1, rate);
+  const flp3 = getFLP(totalIncome, flpType3, rate);
+  const monthly1 = flp1 / 100 * totalIncome / 12;
+  const monthly3 = flp3 / 100 * totalIncome / 12;
+  return {
+    scenario, t, totalIncome, pensionedCount,
+    totalApplicants: applicants.length,
+    flpType1, flpType3, flp1, flp3,
+    monthly1, monthly3,
+    maxLoan1: maxLoan(monthly1, rate, term),
+    maxLoan3: maxLoan(monthly3, rate, term),
+    triggerApplicant: scenario === 'first' ? first : (scenario === 'second' ? second : null),
+  };
+}
+
+function renderMomentsTable(applicants) {
+  const tbody = document.getElementById('momentsTableBody');
+  if (!tbody) return;
+  const order = pensionOrder(applicants);
+  const scenarios = [
+    { key: 'now', label: 'Nu', desc: 'huidige inkomensmix' },
+    { key: 'first', label: '1<sup>e</sup> met pensioen', desc: order[0] ? `over ${formatYearsMonths(Math.max(0, order[0].yearsToAOW))}` : '—' },
+  ];
+  if (order.length > 1) {
+    scenarios.push({ key: 'second', label: '2<sup>e</sup> met pensioen', desc: `over ${formatYearsMonths(Math.max(0, order[1].yearsToAOW))}` });
+  }
+  let html = '';
+  scenarios.forEach(s => {
+    const r = calcMaxAtMoment(s.key, applicants);
+    if (!r) return;
+    const mix = r.pensionedCount === 0 ? `${applicants.length} werkend` :
+                (r.pensionedCount === applicants.length ? `${applicants.length} AOW` :
+                `${r.pensionedCount}/${applicants.length} AOW`);
+    html += `<tr>
+      <td><strong>${s.label}</strong><br><span style="font-size:11px;color:var(--text-light);">${s.desc}</span></td>
+      <td><span class="badge ${r.pensionedCount === 0 ? 'badge-work' : 'badge-pension'}">${mix}</span></td>
+      <td class="numeric">${formatEuro(r.totalIncome)}</td>
+      <td class="numeric"><strong style="color:var(--box1);">${formatEuro(r.maxLoan1)}</strong><br><span style="font-size:10px;color:var(--text-light);">FLP ${r.flp1.toFixed(1).replace('.', ',')}%</span></td>
+      <td class="numeric"><strong style="color:var(--box3);">${formatEuro(r.maxLoan3)}</strong><br><span style="font-size:10px;color:var(--text-light);">FLP ${r.flp3.toFixed(1).replace('.', ',')}%</span></td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+function getToetsRate(part, globalToets) {
+  if (part.fixedYrs >= 10) return part.rate;
+  return Math.max(part.rate, globalToets);
+}
+function partTestPayment(part, globalToets) {
+  // NIBUD: bij vast <10jr toetsen op toetsrente. Aflosvrij: fictief 30jr annuïtair.
+  const r = getToetsRate(part, globalToets);
+  if (part.repayment === 'aflosvrij') return monthlyAnn(part.amount, r, 30);
+  if (part.repayment === 'lineair') {
+    // GHF: eerste-jaars-last (hoogst): aflossing + rente over volledig bedrag
+    return part.amount / (part.term * 12) + part.amount * r / 100 / 12;
+  }
+  return monthlyAnn(part.amount, r, part.term);
+}
+function partActualPayment(part, yearsFromStart) {
+  if (yearsFromStart >= part.term) return 0;
+  const r = part.rate; // werkelijke rente voor weergave
+  if (part.repayment === 'aflosvrij') return part.amount * r / 100 / 12;
+  if (part.repayment === 'lineair') {
+    const monthlyPrincipal = part.amount / (part.term * 12);
+    const principalLeft = part.amount - monthlyPrincipal * yearsFromStart * 12;
+    return monthlyPrincipal + principalLeft * r / 100 / 12;
+  }
+  return monthlyAnn(part.amount, r, part.term);
+}
+
+function checkParts(testParts, income, group, globalToets) {
+  // group: 'werkend' of 'aow'. Per deel: box1 → group; box3 → 'box3_'+group
+  // FLP-lookup gebruikt toetsrente (= werkelijke rente bij vast ≥10, anders max)
+  let fraction = 0, payment = 0;
+  for (const p of testParts) {
+    const flpType = (p.box === 1) ? group : 'box3_' + group;
+    const toetsR = getToetsRate(p, globalToets);
+    const maxM = maxMonthly(income, flpType, toetsR);
+    const pay = partTestPayment(p, globalToets);
+    if (maxM > 0) fraction += pay / maxM;
+    payment += pay;
+  }
+  return { fraction, payment, fits: fraction <= 1.001 };
+}
+
+function calcOptimalTweetrap(inp) {
+  const yrs = Math.max(0, inp.pensionAge - inp.age);
+  if (yrs <= 0 || yrs >= 10 || inp.salary <= inp.pension) return null;
+  // Deel B: max box 1 over 30jr op pensioeninkomen
+  const maxMpens = maxMonthly(inp.pension, 'aow', 4); // standaard rente 4%
+  const dealB = maxLoan(maxMpens, 4, 30);
+  // Deel A: ruimte = max werkend - lasten deel B; annuïtair termA = yearsToPension
+  const maxMwerk = maxMonthly(inp.salary, 'werkend', 4);
+  const monthlyB = monthlyAnn(dealB, 4, 30);
+  const availA = Math.max(0, maxMwerk - monthlyB);
+  const dealA = maxLoan(availA, 4, yrs);
+  return { dealA, dealB, termA: yrs, total: dealA + dealB };
+}
+
+// ============ Render leningdelen UI ============
+function renderParts() {
+  const container = document.getElementById('partsList');
+  container.innerHTML = '';
+  parts.forEach((p, idx) => {
+    const row = document.createElement('div');
+    row.className = 'part-row ' + (p.box === 1 ? 'box1' : 'box3');
+    row.innerHTML = `
+      <div class="part-num">${idx + 1}</div>
+      <div>
+        <div class="part-fields">
+          <div class="part-field">
+            <label>Bedrag</label>
+            <div class="input-wrap"><span class="prefix">€</span><input type="text" data-id="${p.id}" data-field="amount" value="${p.amount.toLocaleString('nl-NL')}" inputmode="numeric"></div>
+          </div>
+          <div class="part-field">
+            <label>Type</label>
+            <select data-id="${p.id}" data-field="box">
+              <option value="1" ${p.box===1?'selected':''}>Box 1</option>
+              <option value="3" ${p.box===3?'selected':''}>Box 3</option>
+            </select>
+          </div>
+          <div class="part-field">
+            <label>Rente</label>
+            <div class="input-wrap"><input class="with-suffix" type="text" data-id="${p.id}" data-field="rate" value="${p.rate.toString().replace('.', ',')}" inputmode="decimal"><span class="suffix">%</span></div>
+          </div>
+          <div class="part-field">
+            <label>Vast <span class="tooltip" data-tip="Rentevaste periode in jaren. Bij <10 jaar wordt de GHF-toetsrente toegepast i.p.v. de werkelijke rente.">i</span></label>
+            <div class="input-wrap"><input class="with-suffix" type="number" data-id="${p.id}" data-field="fixedYrs" value="${p.fixedYrs}" min="1" max="30"><span class="suffix">jr</span></div>
+          </div>
+          <div class="part-field">
+            <label>Looptijd</label>
+            <div class="input-wrap"><input class="with-suffix" type="number" data-id="${p.id}" data-field="term" value="${p.term}" min="1" max="40"><span class="suffix">jr</span></div>
+          </div>
+          <div class="part-field">
+            <label>Aflosvorm</label>
+            <select data-id="${p.id}" data-field="repayment">
+              <option value="annuitair" ${p.repayment==='annuitair'?'selected':''}>Annuïtair</option>
+              <option value="lineair" ${p.repayment==='lineair'?'selected':''}>Lineair</option>
+              <option value="aflosvrij" ${p.repayment==='aflosvrij'?'selected':''}>Aflossingsvrij</option>
+            </select>
+          </div>
+        </div>
+        <div class="part-info" id="partInfo-${p.id}"></div>
+      </div>
+      <button class="btn-remove" data-id="${p.id}" ${parts.length === 1 ? 'disabled' : ''} title="Verwijder">×</button>
+    `;
+    container.appendChild(row);
+  });
+  // Hook up events (zowel input voor live typen als change voor select-elementen op alle browsers)
+  container.querySelectorAll('input, select').forEach(el => {
+    const handler = (e) => {
+      const id = parseInt(e.target.dataset.id);
+      const field = e.target.dataset.field;
+      const p = parts.find(x => x.id === id);
+      if (!p) return;
+      if (field === 'amount') {
+        let val = e.target.value.replace(/\D/g, '');
+        p.amount = parseInt(val) || 0;
+        const pos = e.target.selectionStart;
+        e.target.value = val ? parseInt(val).toLocaleString('nl-NL') : '';
+        try { e.target.setSelectionRange(e.target.value.length, e.target.value.length); } catch(_) {}
+      } else if (field === 'box') {
+        p.box = parseInt(e.target.value);
+        const row = e.target.closest('.part-row');
+        if (row) row.className = 'part-row ' + (p.box === 1 ? 'box1' : 'box3');
+      } else if (field === 'rate') {
+        p.rate = parseFloatNL(e.target.value);
+      } else if (field === 'fixedYrs') {
+        p.fixedYrs = Math.max(1, parseInt(e.target.value) || 1);
+      } else if (field === 'term') {
+        p.term = Math.max(1, parseInt(e.target.value) || 1);
+      } else if (field === 'repayment') {
+        p.repayment = e.target.value;
+      }
+      calculate();
+    };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
+  });
+  container.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = parseInt(e.target.dataset.id);
+      parts = parts.filter(p => p.id !== id);
+      renderParts();
+      calculate();
+    });
+  });
+}
+
+function addPart(preset) {
+  parts.push(Object.assign({
+    id: nextPartId++, amount: 100000, box: 1, rate: 4.0, fixedYrs: 10, term: 30, repayment: 'annuitair'
+  }, preset || {}));
+  renderParts();
+  calculate();
+}
+
+function setTweetrapPreset() {
+  const inp = getInputs();
+  const opt = calcOptimalTweetrap(inp);
+  if (!opt) {
+    alert('Tweetrap-preset werkt alleen bij leeftijd binnen 10 jaar voor pensioen en salaris > pensioen.');
+    return;
+  }
+  parts = [
+    { id: nextPartId++, amount: Math.round(opt.dealA), box: 1, rate: 4.0, fixedYrs: 10, term: opt.termA, repayment: 'annuitair' },
+    { id: nextPartId++, amount: Math.round(opt.dealB), box: 1, rate: 4.0, fixedYrs: 10, term: 30, repayment: 'annuitair' }
+  ];
+  renderParts();
+  calculate();
+}
+
+// ============ Tweetrap-mix optimalisatie ============
+// Probeer alle 4 box-combinaties (deel A box1/3 × deel B box1/3) en sorteer hoog→laag.
+// Aflosvorm:
+//   - Deel A: altijd annuïtair (anders is het geen tweetrap — moet aflossen vóór pensioen)
+//   - Deel B: annuïtair óf aflossingsvrij — voor NIBUD-toets identiek (aflosvrij wordt
+//     getoetst als 30-jr annuïtair fictie). Lineair geeft hogere toets-last (eerste jaar
+//     aflossing+rente) dus minder max — niet meegenomen als optimum.
+function calcTweetrapVariants(yToFirstAOW, refRate, oudsteApp, jongsteApp, toetsen) {
+  if (yToFirstAOW <= 0 || yToFirstAOW >= 10) return null;
+  // Werkende-inkomen (rekeninkomen + gezamenlijk)
+  const inc1w = oudsteApp.salary;
+  const inc2w = jongsteApp ? jongsteApp.salary : 0;
+  const rekenW = calcRekeninkomen(inc1w, inc2w);
+  const gezW = inc1w + inc2w;
+  // Voor deel A: gebruik max werkend-maandlast minus mB (deel B annuïteit)
+  // Voor deel B: gebruik de strengste pensioen-toets (laagste max in box variant)
+  // Bepaal pensioenscenarios uit toetsen (P1: 1e AOW, P2: 2e AOW)
+  // Maar voor varianten moeten we per box opnieuw rekenen
+  const pensScenarios = [];
+  // 1e AOW (oudste pensioen + jongste salaris)
+  {
+    const inc1 = oudsteApp.pension;
+    const inc2 = jongsteApp ? jongsteApp.salary : 0;
+    const reken = calcRekeninkomen(inc1, inc2);
+    const gez = inc1 + inc2;
+    if (gez > 0) pensScenarios.push({ name: '1e AOW (gemengd)', reken, gez });
+  }
+  // 2e AOW (beide pensioen)
+  if (jongsteApp) {
+    const inc1 = oudsteApp.pension;
+    const inc2 = jongsteApp.pension;
+    const reken = calcRekeninkomen(inc1, inc2);
+    const gez = inc1 + inc2;
+    if (gez > 0) pensScenarios.push({ name: '2e AOW (beide pens.)', reken, gez });
+  } else {
+    // Solo: alleen 1e AOW (= eigen pensioen)
+  }
+
+  const varianten = [];
+  for (const dealA_box of [1, 3]) {
+    for (const dealB_box of [1, 3]) {
+      // Werkend-toets voor deel A
+      const flpA = getFLP(rekenW, dealA_box === 1 ? 'werkend' : 'box3_werkend', refRate);
+      const mw = flpA / 100 * gezW / 12;
+      // Pensioen-toets voor deel B (laagste over alle pensioen-scenarios)
+      let dB = Infinity;
+      let dB_scenario = '';
+      pensScenarios.forEach(sc => {
+        const flpB = getFLP(sc.reken, dealB_box === 1 ? 'aow' : 'box3_aow', refRate);
+        const mB_max = flpB / 100 * sc.gez / 12;
+        const candidate = maxLoan(mB_max, refRate, 30);
+        if (candidate < dB) { dB = candidate; dB_scenario = sc.name; }
+      });
+      if (!isFinite(dB)) dB = 0;
+      const mB_ann = monthlyAnn(dB, refRate, 30);
+      const avA = Math.max(0, mw - mB_ann);
+      const dA = maxLoan(avA, refRate, yToFirstAOW);
+      varianten.push({
+        label: `Deel A box ${dealA_box} · Deel B box ${dealB_box}`,
+        dealA_box, dealB_box,
+        dA, dB, total: dA + dB,
+        mw, mB: mB_ann,
+        dB_scenario,
+        flpA, // werkend-FLP
+      });
+    }
+  }
+  varianten.sort((a, b) => b.total - a.total);
+  return varianten;
+}
+
+// ============ Hoofdberekening ============
+function calculate() {
+  const inp = getInputs();
+  document.getElementById('toetsRateDisplay').textContent = inp.toetsRate.toFixed(2).replace('.', ',') + '%';
+  const refRate = 4.0;
+
+  // Drie scenario-kaarten renderen (Nu / Eerste AOW / Tweede AOW)
+  renderScenarios(inp.applicants, refRate, inp.verlagingenMnd, inp.verhoging);
+
+  // Tweetrap-mix optimalisatie sectie
+  renderTweetrapMix(inp, refRate);
+
+  // Per-deel info-regel updaten (toetsrente, toets-last, werkelijke last)
+  parts.forEach(p => {
+    const info = document.getElementById('partInfo-' + p.id);
+    if (!info) return;
+    const toetsR = getToetsRate(p, inp.toetsRate);
+    const testPay = partTestPayment(p, inp.toetsRate);
+    const realPay = partActualPayment(p, 0); // jaar 1
+    const tag = p.fixedYrs >= 10 ? 'werkelijke rente' : 'toetsrente actief';
+    const diff = Math.abs(toetsR - p.rate) > 0.01;
+    info.innerHTML = `<strong>Toets:</strong> ${toetsR.toFixed(2).replace('.', ',')}% (${tag}) → € ${Math.round(testPay).toLocaleString('nl-NL')}/mnd · <strong>Werkelijk:</strong> € ${Math.round(realPay).toLocaleString('nl-NL')}/mnd${p.repayment==='lineair'?' (jaar 1, neemt af)':''}${diff ? ' <span style="color:var(--warning);font-weight:700;">⚠ toetsrente afwijkend</span>' : ''}`;
+  });
+
+  // Toets samengestelde leningdelen
+  const yearsToPension = Math.max(0, inp.pensionAge - inp.age);
+  const workParts = parts;
+  const pensParts = parts.filter(p => p.term > yearsToPension);
+  const workRes = checkParts(workParts, inp.salary, 'werkend', inp.toetsRate);
+  const pensRes = pensParts.length > 0 ? checkParts(pensParts, inp.pension, 'aow', inp.toetsRate) : { fraction: 0, payment: 0, fits: true };
+
+  const totalAmount = parts.reduce((s, p) => s + p.amount, 0);
+  document.getElementById('totalAmount').textContent = formatEuro(totalAmount);
+  document.getElementById('totalAmountSub').textContent = `${parts.length} leningdeel${parts.length>1?'en':''}`;
+  document.getElementById('totalMonthlyWork').textContent = formatEuro(workRes.payment);
+  document.getElementById('totalMonthlyWorkSub').textContent = `tot. test-last`;
+  document.getElementById('totalMonthlyPension').textContent = formatEuro(pensRes.payment);
+  document.getElementById('totalMonthlyPensionSub').textContent = pensParts.length === 0 ? 'alles afgelost' : `${pensParts.length} deel${pensParts.length>1?'en':''} loopt door`;
+
+  // Status balken
+  const maxWworkPay = workParts.reduce((s, p) => {
+    const flpType = (p.box === 1) ? 'werkend' : 'box3_werkend';
+    return s + maxMonthly(inp.salary, flpType, p.rate) * (partTestPayment(p) > 0 ? 1 : 0);
+  }, 0);
+  // Simpeler: toon fractie als percentage, max balk = 100%
+  updateBar('Work', workRes, inp.salary, 'werkend');
+  updateBar('Pens', pensRes, inp.pension, 'aow', pensParts.length === 0);
+
+  renderTimeline(inp);
+
+  // Pensioenklif-grafiek + tabel
+  const startAge = Math.max(25, inp.age - 5);
+  const endAge = Math.min(80, inp.pensionAge + 5);
+
+  // Sorteer op leeftijd: oudste eerst
+  const sortedApps = [...inp.applicants].sort((a, b) => b.age - a.age);
+  const oudsteApp = sortedApps[0];
+  const jongsteApp = sortedApps[1] || null;
+  const ageDiff = jongsteApp ? oudsteApp.age - jongsteApp.age : 0;
+
+  const verlagingenMnd = inp.verlagingenMnd || 0;
+  const verhoging = inp.verhoging || 0;
+  const results = [];
+  for (let a = startAge; a <= endAge; a++) {
+    // Per persoon bepalen op leeftijd a: gepensioneerd of werkend?
+    const oudsteAOW = a >= oudsteApp.aowAge;
+    const jongsteAOW = jongsteApp ? (a - ageDiff) >= jongsteApp.aowAge : false;
+    const yToFirstAOW = oudsteApp.aowAge - a; // negatief = al gepasseerd
+    const yToSecondAOW = jongsteApp ? (jongsteApp.aowAge - (a - ageDiff)) : Infinity;
+
+    // Bereken alle relevante toetsen voor deze leeftijd
+    // monthly = bruto maandlast (FLP × inkomen / 12); netto = monthly − verlagingen; loan = maxLoan(netto) + verhoging
+    const toetsen = [];
+
+    // Toets W: werkend (alleen relevant als geen enkele persoon AOW en >10jr van 1e AOW)
+    if (!oudsteAOW && !jongsteAOW && yToFirstAOW > 10) {
+      const inc1 = oudsteApp.salary;
+      const inc2 = jongsteApp ? jongsteApp.salary : 0;
+      const reken = calcRekeninkomen(inc1, inc2);
+      const gez = inc1 + inc2;
+      const flp = getFLP(reken, 'werkend', refRate);
+      const bruto = flp / 100 * gez / 12;
+      const netto = Math.max(0, bruto - verlagingenMnd);
+      toetsen.push({ income: gez, reken, type: 'werkend', flp, monthly: bruto, netto, loan: maxLoan(netto, refRate, 30) + verhoging, status: 'Werkend', isPens: false });
+    }
+
+    // Toets P1: 1e AOW-toets (binnen 10jr van 1e AOW, of oudste reeds AOW)
+    if (yToFirstAOW <= 10) {
+      const inc1 = oudsteApp.pension;
+      const inc2 = jongsteApp ? (jongsteAOW ? jongsteApp.pension : jongsteApp.salary) : 0;
+      const reken = calcRekeninkomen(inc1, inc2);
+      const gez = inc1 + inc2;
+      const flp = getFLP(reken, 'aow', refRate);
+      const bruto = flp / 100 * gez / 12;
+      const netto = Math.max(0, bruto - verlagingenMnd);
+      const status = !jongsteApp ? (oudsteAOW ? 'Gepensioneerd' : 'Pens. in toets')
+                   : (oudsteAOW && !jongsteAOW) ? '1e AOW (gemengd)'
+                   : (oudsteAOW && jongsteAOW) ? 'Beide AOW (1e-toets)'
+                   : 'Pens. in toets (1e AOW)';
+      toetsen.push({ income: gez, reken, type: 'aow', flp, monthly: bruto, netto, loan: maxLoan(netto, refRate, 30) + verhoging, status, isPens: true });
+    }
+
+    // Toets P2: 2e AOW-toets (alleen relevant bij 2 personen en binnen 10jr van 2e AOW)
+    if (jongsteApp && yToSecondAOW <= 10) {
+      const inc1 = oudsteApp.pension;
+      const inc2 = jongsteApp.pension;
+      const reken = calcRekeninkomen(inc1, inc2);
+      const gez = inc1 + inc2;
+      const flp = getFLP(reken, 'aow', refRate);
+      const bruto = flp / 100 * gez / 12;
+      const netto = Math.max(0, bruto - verlagingenMnd);
+      const status = jongsteAOW ? 'Beide AOW' : 'Pens. in toets (2e AOW)';
+      toetsen.push({ income: gez, reken, type: 'aow', flp, monthly: bruto, netto, loan: maxLoan(netto, refRate, 30) + verhoging, status, isPens: true });
+    }
+
+    // Bindende toets = laagste max hypotheek
+    toetsen.sort((x, y) => x.loan - y.loan);
+    const binding = toetsen[0];
+
+    // loanSalary referentie: salaris-theoretisch als beide nog inkomen hadden
+    let loanSalary = null;
+    if (binding.isPens) {
+      const inc1s = oudsteApp.salary;
+      const inc2s = jongsteApp ? jongsteApp.salary : 0;
+      const rekenS = calcRekeninkomen(inc1s, inc2s);
+      const gezS = inc1s + inc2s;
+      if (gezS > 0) {
+        const flpS = getFLP(rekenS, 'werkend', refRate);
+        const ms = flpS / 100 * gezS / 12;
+        loanSalary = maxLoan(ms, refRate, 30);
+      }
+    }
+
+    // Tweetrap-mix: probeer 4 box-combinaties en kies de hoogste totaal
+    let tweetrap = binding.loan;
+    let tweetrapVariants = null;
+    if (yToFirstAOW > 0 && yToFirstAOW < 10 && !oudsteAOW) {
+      tweetrapVariants = calcTweetrapVariants(yToFirstAOW, refRate, oudsteApp, jongsteApp, toetsen);
+      if (tweetrapVariants && tweetrapVariants.length > 0) {
+        tweetrap = tweetrapVariants[0].total; // hoogste variant
+      }
+    }
+
+    results.push({
+      age: a,
+      testIncome: binding.income,
+      rekenIncome: binding.reken,
+      isPens: binding.isPens,
+      status: binding.status,
+      flp: binding.flp,
+      monthly: binding.monthly,
+      loan: binding.loan,
+      loanSalary, tweetrap,
+      tweetrapVariants  // alle 4 varianten (gesorteerd hoog→laag) voor de optimalisatie-sectie
+    });
+  }
+
+  renderChart(results, inp);
+  renderTable(results, inp.age, inp.pensionAge, refRate, inp);
+  renderMomentsTable(inp.applicants);
+}
+
+function updateBar(suffix, res, income, group, hidden) {
+  const fill = document.getElementById('fill' + suffix);
+  const text = document.getElementById('fill' + suffix + 'Text');
+  const status = document.getElementById('status' + suffix);
+  const left = document.getElementById('meta' + suffix + 'Left');
+  const right = document.getElementById('meta' + suffix + 'Right');
+  const pct = Math.min(100, res.fraction * 100);
+  fill.style.width = pct + '%';
+  fill.className = 'toets-bar-fill ' + (res.fits ? 'ok' : 'fail');
+  text.textContent = pct > 12 ? pct.toFixed(0) + '%' : '';
+  status.className = 'toets-bar-status ' + (res.fits ? 'ok' : 'fail');
+  if (hidden) {
+    status.textContent = 'Geen delen na pensioen';
+    left.textContent = 'Niets te toetsen';
+    right.textContent = '';
+  } else {
+    status.textContent = res.fits ? '✓ Past binnen norm' : '✗ Overschrijdt norm';
+    left.textContent = `Inkomensgebruik: ${(res.fraction * 100).toFixed(1)}%`;
+    right.textContent = `Maandlast tot.: ${formatEuro(res.payment)}`;
+  }
+}
+
+// ============ Timeline-grafiek ============
+function renderTimeline(inp) {
+  const svg = document.getElementById('timelineChart');
+  const W = 720, H = 260;
+  const PAD = { top: 28, right: 120, bottom: 44, left: 70 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+  const maxYears = Math.max(...parts.map(p => p.term), 30);
+  const yearsToPension = Math.max(0, inp.pensionAge - inp.age);
+
+  // Bouw cumulatieve maandlast over jaar (test-lasten voor weergave)
+  const monthlyByYear = [];
+  for (let y = 0; y < maxYears; y++) {
+    let total = 0;
+    const partsAtY = [];
+    parts.forEach(p => {
+      const pay = partActualPayment(p, y);
+      if (pay > 0) partsAtY.push({ part: p, pay });
+      total += pay;
+    });
+    monthlyByYear.push({ total, partsAtY });
+  }
+  const maxM = Math.max(
+    ...monthlyByYear.map(d => d.total),
+    maxMonthly(inp.salary, 'werkend', 4),
+    maxMonthly(inp.pension, 'aow', 4)
+  ) * 1.2;
+
+  const xScale = y => PAD.left + (y / maxYears) * cw;
+  const yScale = m => PAD.top + ch - (m / maxM) * ch;
+
+  let html = '';
+  html += `<rect x="${PAD.left}" y="${PAD.top}" width="${cw}" height="${ch}" fill="#fafbfc" stroke="#e2e8f0"/>`;
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const v = (maxM / 4) * i, y = yScale(v);
+    html += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="2,3"/>`;
+    html += `<text x="${PAD.left - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#6b7280">${formatEuroShort(v)}</text>`;
+  }
+
+  // Gestapelde maandlasten per leningdeel
+  const colors = ['#003057', '#E5A138', '#2563eb', '#db2777', '#10b981', '#7c3aed'];
+  for (let y = 0; y < maxYears; y++) {
+    let stackBottom = 0;
+    monthlyByYear[y].partsAtY.forEach(({ part, pay }, i) => {
+      const partIdx = parts.findIndex(p => p.id === part.id);
+      const color = colors[partIdx % colors.length];
+      const yTop = yScale(stackBottom + pay);
+      const yBot = yScale(stackBottom);
+      const x0 = xScale(y), x1 = xScale(y + 1);
+      html += `<rect x="${x0}" y="${yTop}" width="${x1 - x0 + 0.5}" height="${yBot - yTop}" fill="${color}" opacity="0.85"/>`;
+      stackBottom += pay;
+    });
+  }
+
+  // Normen
+  const yMaxWork = yScale(maxMonthly(inp.salary, 'werkend', 4));
+  const yMaxPens = yScale(maxMonthly(inp.pension, 'aow', 4));
+  html += `<line x1="${PAD.left}" y1="${yMaxWork}" x2="${W - PAD.right}" y2="${yMaxWork}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+  html += `<text x="${W - PAD.right + 4}" y="${yMaxWork + 4}" font-size="10" fill="#ef4444" font-weight="600">norm werk b1</text>`;
+  html += `<line x1="${PAD.left}" y1="${yMaxPens}" x2="${W - PAD.right}" y2="${yMaxPens}" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+  html += `<text x="${W - PAD.right + 4}" y="${yMaxPens + 4}" font-size="10" fill="#ef4444" font-weight="600">norm pens b1</text>`;
+
+  // Sorteer applicants op leeftijd (oudste eerst)
+  const sortedApps = [...inp.applicants].sort((a, b) => b.age - a.age);
+  const oudsteApp = sortedApps[0];
+  const jongsteApp = sortedApps[1] || null;
+
+  // Pensioen-marker 1 (oudste)
+  if (yearsToPension > 0 && yearsToPension <= maxYears) {
+    const xP = xScale(yearsToPension);
+    const aowLab = `${oudsteApp.aowYears}j${oudsteApp.aowMonths > 0 ? oudsteApp.aowMonths : ''}`;
+    html += `<line x1="${xP}" y1="${PAD.top}" x2="${xP}" y2="${PAD.top + ch}" stroke="#1a4a73" stroke-width="2"/>`;
+    html += `<text x="${xP}" y="${PAD.top - 2}" text-anchor="middle" font-size="10" fill="#1a4a73" font-weight="700">${jongsteApp ? '1e' : ''} AOW jr ${yearsToPension.toFixed ? yearsToPension.toFixed(1) : yearsToPension} (${aowLab})</text>`;
+  }
+  // Pensioen-marker 2 (jongste, indien aanwezig)
+  if (jongsteApp && jongsteApp.yearsToAOW > 0 && jongsteApp.yearsToAOW <= maxYears) {
+    const xP2 = xScale(jongsteApp.yearsToAOW);
+    const aowLab2 = `${jongsteApp.aowYears}j${jongsteApp.aowMonths > 0 ? jongsteApp.aowMonths : ''}`;
+    html += `<line x1="${xP2}" y1="${PAD.top}" x2="${xP2}" y2="${PAD.top + ch}" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+    html += `<text x="${xP2}" y="${PAD.top + ch + 14}" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">2e AOW jr ${jongsteApp.yearsToAOW.toFixed(1)} (${aowLab2})</text>`;
+  }
+
+  // X-as
+  const step = maxYears <= 15 ? 2 : 5;
+  for (let y = 0; y <= maxYears; y += step) {
+    html += `<text x="${xScale(y)}" y="${H - PAD.bottom + 14}" text-anchor="middle" font-size="10" fill="#6b7280">${y}j</text>`;
+  }
+  html += `<text x="${PAD.left + cw / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#333" font-weight="600">Jaren vanaf afsluiten</text>`;
+
+  // Legenda per leningdeel
+  let lx = PAD.left + 8, ly = PAD.top + 8;
+  parts.forEach((p, i) => {
+    const color = colors[i % colors.length];
+    html += `<rect x="${lx}" y="${ly - 8}" width="12" height="10" fill="${color}" opacity="0.85"/>`;
+    html += `<text x="${lx + 16}" y="${ly}" font-size="10" fill="#333">Deel ${i+1} (b${p.box}, ${p.term}j)</text>`;
+    lx += 120;
+    if (lx > W - PAD.right - 100) { lx = PAD.left + 8; ly += 14; }
+  });
+
+  svg.innerHTML = html;
+}
+
+// ============ Pensioenklif-grafiek (met hover-tooltips) ============
+let chartState = null;
+
+function renderChart(results, inp) {
+  const currentAge = inp.age;
+  const pensionAge = inp.pensionAge;
+  // Sorteer op leeftijd: oudste eerst, jongste tweede
+  const sorted = [...inp.applicants].sort((a, b) => b.age - a.age);
+  const oudste = sorted[0];
+  const jongste = sorted[1] || null;
+  const ageDiff = jongste ? oudste.age - jongste.age : 0;
+  // Jongste's AOW geprojecteerd op oudste's leeftijds-as
+  const aow2OnOudste = jongste ? (jongste.aowAge + ageDiff) : null;
+
+  const svg = document.getElementById('chart');
+  const W = 720, H = 360;
+  const PAD = { top: 28, right: 24, bottom: 70, left: 80 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+  const maxVal = Math.max(...results.flatMap(r => [r.loan, r.tweetrap, r.loanSalary || 0])) * 1.1;
+  const minAge = results[0].age, maxAge = results[results.length - 1].age;
+  const xScale = a => PAD.left + ((a - minAge) / (maxAge - minAge)) * cw;
+  const yScale = v => PAD.top + ch - (v / maxVal) * ch;
+
+  chartState = { results, PAD, W, H, cw, ch, minAge, maxAge, maxVal, currentAge, pensionAge };
+
+  let html = '';
+  html += `<rect x="${PAD.left}" y="${PAD.top}" width="${cw}" height="${ch}" fill="#fafbfc" stroke="#e2e8f0"/>`;
+  for (let i = 0; i <= 5; i++) {
+    const v = (maxVal / 5) * i, y = yScale(v);
+    html += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="2,3"/>`;
+    html += `<text x="${PAD.left - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#6b7280">${formatEuroShort(v)}</text>`;
+  }
+
+  // X-as: leeftijd oudste (hoofdregel) + leeftijd jongste (sub-regel) als applicable
+  const step = Math.ceil(results.length / 8);
+  results.forEach((r, i) => {
+    if (i % step === 0 || i === results.length - 1) {
+      html += `<text x="${xScale(r.age)}" y="${H - PAD.bottom + 16}" text-anchor="middle" font-size="11" fill="#6b7280">${r.age}j</text>`;
+      if (jongste) {
+        const jAge = r.age - ageDiff;
+        if (jAge >= 0) html += `<text x="${xScale(r.age)}" y="${H - PAD.bottom + 30}" text-anchor="middle" font-size="10" fill="#94a3b8">(${jAge.toFixed(0)}j)</text>`;
+      }
+    }
+  });
+  if (jongste) {
+    html += `<text x="${PAD.left + cw / 2}" y="${H - 24}" text-anchor="middle" font-size="11" fill="#333" font-weight="600">Leeftijd oudste persoon</text>`;
+    html += `<text x="${PAD.left + cw / 2}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#94a3b8">(leeftijd jongste tussen haakjes)</text>`;
+  } else {
+    html += `<text x="${PAD.left + cw / 2}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#333" font-weight="600">Afsluitleeftijd</text>`;
+  }
+
+  // KLIF-ZONE 2 (jongste): lichter rood, getekend EERST zodat 1e zone er overheen valt
+  if (aow2OnOudste !== null) {
+    const xCS2 = Math.max(PAD.left, xScale(Math.max(minAge, aow2OnOudste - 10)));
+    const xCE2 = Math.min(W - PAD.right, xScale(aow2OnOudste));
+    if (xCE2 > xCS2) html += `<rect x="${xCS2}" y="${PAD.top}" width="${xCE2 - xCS2}" height="${ch}" fill="#3b82f6" opacity="0.06"/>`;
+  }
+  // KLIF-ZONE 1 (oudste): donker rood
+  const cliffStart = pensionAge - 10;
+  const xCS = Math.max(PAD.left, xScale(Math.max(minAge, cliffStart)));
+  const xCE = Math.min(W - PAD.right, xScale(pensionAge));
+  if (xCE > xCS) html += `<rect x="${xCS}" y="${PAD.top}" width="${xCE - xCS}" height="${ch}" fill="#ef4444" opacity="0.08"/>`;
+
+  // AOW-LIJN 2 (jongste, eerst zodat 1e er overheen valt indien dichtbij)
+  if (aow2OnOudste !== null) {
+    const xP2 = xScale(aow2OnOudste);
+    if (xP2 >= PAD.left && xP2 <= W - PAD.right) {
+      html += `<line x1="${xP2}" y1="${PAD.top}" x2="${xP2}" y2="${PAD.top + ch}" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.85"/>`;
+      const aow2Label = `${jongste.aowYears}j${jongste.aowMonths > 0 ? jongste.aowMonths : ''}`;
+      html += `<text x="${xP2}" y="${PAD.top - 4}" text-anchor="middle" font-size="10" fill="#3b82f6" font-weight="700">2e AOW (${aow2Label})</text>`;
+    }
+  }
+  // AOW-LIJN 1 (oudste)
+  const xP = xScale(pensionAge);
+  if (xP >= PAD.left && xP <= W - PAD.right) {
+    html += `<line x1="${xP}" y1="${PAD.top}" x2="${xP}" y2="${PAD.top + ch}" stroke="#1a4a73" stroke-width="2" stroke-dasharray="4,3"/>`;
+    const oudsteAowLabel = `${oudste.aowYears}j${oudste.aowMonths > 0 ? oudste.aowMonths : ''}`;
+    const labelText = jongste ? `1e AOW (${oudsteAowLabel})` : `AOW ${pensionAge}`;
+    html += `<text x="${xP}" y="${PAD.top - 16}" text-anchor="middle" font-size="11" fill="#1a4a73" font-weight="700">${labelText}</text>`;
+  }
+
+  // Salaris-theoretisch (stippel)
+  const sP = results.filter(r => r.loanSalary);
+  if (sP.length > 0) {
+    const path = sP.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xScale(r.age)} ${yScale(r.loanSalary)}`).join(' ');
+    html += `<path d="${path}" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4,4"/>`;
+  }
+  // Tweetrap-lijn (oranje)
+  const pT = results.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xScale(r.age)} ${yScale(r.tweetrap)}`).join(' ');
+  html += `<path d="${pT}" fill="none" stroke="#E5A138" stroke-width="2.5" opacity="0.95"/>`;
+  // Hoofdlijn
+  const pM = results.map((r, i) => `${i === 0 ? 'M' : 'L'} ${xScale(r.age)} ${yScale(r.loan)}`).join(' ');
+  const area = pM + ` L ${xScale(maxAge)} ${PAD.top + ch} L ${xScale(minAge)} ${PAD.top + ch} Z`;
+  html += `<path d="${area}" fill="#003057" opacity="0.08"/>`;
+  html += `<path d="${pM}" fill="none" stroke="#003057" stroke-width="3"/>`;
+
+  results.forEach(r => {
+    const cur = r.age === currentAge;
+    const color = r.isPens && r.loanSalary ? '#ef4444' : '#003057';
+    html += `<circle cx="${xScale(r.age)}" cy="${yScale(r.loan)}" r="${cur ? 7 : 3}" fill="${color}" stroke="white" stroke-width="2"/>`;
+    if (r.tweetrap > r.loan + 1000) {
+      html += `<circle cx="${xScale(r.age)}" cy="${yScale(r.tweetrap)}" r="${cur ? 6 : 3}" fill="#E5A138" stroke="white" stroke-width="2"/>`;
+    }
+    if (cur) {
+      html += `<circle cx="${xScale(r.age)}" cy="${yScale(r.loan)}" r="11" fill="none" stroke="${color}" stroke-width="2" opacity="0.4"/>`;
+      html += `<g transform="translate(${xScale(r.age)},${yScale(r.loan) + 22})"><rect x="-46" y="-13" width="92" height="20" rx="4" fill="#003057"/><text x="0" y="1" text-anchor="middle" font-size="11" fill="white" font-weight="700">std ${formatEuroShort(r.loan)}</text></g>`;
+      if (r.tweetrap > r.loan + 1000) {
+        html += `<g transform="translate(${xScale(r.age)},${yScale(r.tweetrap) - 16})"><rect x="-52" y="-13" width="104" height="20" rx="4" fill="#E5A138"/><text x="0" y="1" text-anchor="middle" font-size="11" fill="#003057" font-weight="700">2trap ${formatEuroShort(r.tweetrap)}</text></g>`;
+      }
+    }
+  });
+
+  // Lege groep voor hover-elementen (wordt gevuld door mousemove handler)
+  html += `<g id="chartHoverGroup"></g>`;
+  // Onzichtbare rect over de plot-area voor mouse-capture (laatst zodat hij bovenop ligt)
+  html += `<rect id="chartHoverArea" x="${PAD.left}" y="${PAD.top}" width="${cw}" height="${ch}" fill="transparent" style="cursor:crosshair;"/>`;
+
+  svg.innerHTML = html;
+
+  // Persons-info onder de grafiek
+  const personsEl = document.getElementById('chart-persons');
+  const legendKlif2 = document.getElementById('legend-klif2');
+  if (personsEl) {
+    if (jongste) {
+      if (legendKlif2) legendKlif2.style.display = 'flex';
+      personsEl.innerHTML = `
+        <div class="person-card">
+          <div class="person-name">1e persoon (oudste)</div>
+          <div class="person-detail">Leeftijd nu: <strong>${formatYearsMonths(oudste.age)}</strong></div>
+          <div class="person-detail">AOW-leeftijd: <strong>${formatAOW(oudste.aowYears, oudste.aowMonths)}</strong></div>
+          <div class="person-detail">AOW over: <strong>${formatYearsMonths(oudste.yearsToAOW)}</strong></div>
+        </div>
+        <div class="person-card">
+          <div class="person-name">2e persoon (jongste)</div>
+          <div class="person-detail">Leeftijd nu: <strong>${formatYearsMonths(jongste.age)}</strong></div>
+          <div class="person-detail">AOW-leeftijd: <strong>${formatAOW(jongste.aowYears, jongste.aowMonths)}</strong></div>
+          <div class="person-detail">AOW over: <strong>${formatYearsMonths(jongste.yearsToAOW)}</strong></div>
+        </div>
+        <div class="person-card">
+          <div class="person-name">Leeftijdsverschil</div>
+          <div class="person-detail"><strong>${ageDiff.toFixed(1)} jaar</strong></div>
+          <div class="person-detail">2e AOW op leeftijd oudste: <strong>${aow2OnOudste.toFixed(1)}j</strong></div>
+        </div>`;
+    } else {
+      if (legendKlif2) legendKlif2.style.display = 'none';
+      personsEl.innerHTML = `
+        <div class="person-card">
+          <div class="person-name">Aanvrager</div>
+          <div class="person-detail">Leeftijd nu: <strong>${formatYearsMonths(oudste.age)}</strong></div>
+          <div class="person-detail">AOW-leeftijd: <strong>${formatAOW(oudste.aowYears, oudste.aowMonths)}</strong></div>
+          <div class="person-detail">AOW over: <strong>${formatYearsMonths(oudste.yearsToAOW)}</strong></div>
+        </div>`;
+    }
+  }
+}
+
+function handleChartHover(e) {
+  if (!chartState) return;
+  const { results, PAD, W, H, cw, ch, minAge, maxAge, maxVal } = chartState;
+  const svg = document.getElementById('chart');
+  const rect = svg.getBoundingClientRect();
+  const svgX = (e.clientX - rect.left) * W / rect.width;
+  const age = Math.round(minAge + (svgX - PAD.left) / cw * (maxAge - minAge));
+  if (age < minAge || age > maxAge) { clearChartHover(); return; }
+  const result = results.find(r => r.age === age);
+  if (!result) { clearChartHover(); return; }
+
+  const xScale = a => PAD.left + ((a - minAge) / (maxAge - minAge)) * cw;
+  const yScale = v => PAD.top + ch - (v / maxVal) * ch;
+  const x = xScale(age);
+
+  let html = '';
+  // Verticale hover-lijn
+  html += `<line x1="${x}" y1="${PAD.top}" x2="${x}" y2="${PAD.top + ch}" stroke="#003057" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>`;
+  // Highlight punten op alle lijnen
+  if (result.loanSalary) {
+    html += `<circle cx="${x}" cy="${yScale(result.loanSalary)}" r="5" fill="#cbd5e1" stroke="white" stroke-width="2"/>`;
+  }
+  if (result.tweetrap > result.loan + 1000) {
+    html += `<circle cx="${x}" cy="${yScale(result.tweetrap)}" r="6" fill="#E5A138" stroke="white" stroke-width="2"/>`;
+  }
+  html += `<circle cx="${x}" cy="${yScale(result.loan)}" r="6" fill="#003057" stroke="white" stroke-width="2"/>`;
+
+  // Tooltip-box met regels
+  const lines = [];
+  lines.push({ text: `${age} jaar — ${result.status}`, bold: true, color: '#E5A138' });
+  lines.push({ text: `Toetsinkomen: ${formatEuroShort(result.testIncome)}`, color: '#cbd5e1' });
+  lines.push({ text: `Standaard box 1: ${formatEuro(result.loan)}`, color: 'white' });
+  if (result.tweetrap > result.loan + 1000) {
+    const extra = result.tweetrap - result.loan;
+    lines.push({ text: `Tweetrap: ${formatEuro(result.tweetrap)} (+${formatEuroShort(extra)})`, color: '#f4c577' });
+  }
+  if (result.loanSalary) {
+    lines.push({ text: `Salaris-theoretisch: ${formatEuro(result.loanSalary)}`, color: '#cbd5e1' });
+  }
+
+  const boxW = 200, boxH = 14 + lines.length * 16;
+  // Flip naar links als hover-positie rechts van midden
+  const boxX = x > (PAD.left + cw / 2) ? x - boxW - 12 : x + 12;
+  const boxY = Math.max(PAD.top + 5, Math.min(PAD.top + ch - boxH - 5, yScale(result.loan) - boxH / 2));
+
+  html += `<g transform="translate(${boxX}, ${boxY})">`;
+  html += `<rect x="0" y="0" width="${boxW}" height="${boxH}" rx="6" fill="#003057" opacity="0.96" stroke="#E5A138" stroke-width="1"/>`;
+  lines.forEach((line, i) => {
+    html += `<text x="10" y="${17 + i * 16}" font-size="${line.bold ? 12 : 11}" font-weight="${line.bold ? 700 : 500}" fill="${line.color}">${line.text}</text>`;
+  });
+  html += `</g>`;
+
+  document.getElementById('chartHoverGroup').innerHTML = html;
+}
+
+function clearChartHover() {
+  const g = document.getElementById('chartHoverGroup');
+  if (g) g.innerHTML = '';
+}
+
+function renderTable(results, currentAge, pensionAge, refRate, inp) {
+  const tbody = document.getElementById('tableBody');
+  refRate = refRate || 4.0;
+  // Sorteer op leeftijd: oudste eerst
+  const sortedApps = inp ? [...inp.applicants].sort((a, b) => b.age - a.age) : [];
+  const jongste = sortedApps[1] || null;
+  const ageDiff = jongste ? sortedApps[0].age - jongste.age : 0;
+
+  // Update tabel-header dynamisch
+  const headerLeeftijd = document.querySelector('table.results thead tr th:first-child');
+  if (headerLeeftijd) headerLeeftijd.innerHTML = jongste ? 'Leeftijd 1e (2e)' : 'Leeftijd';
+
+  let html = '';
+  results.forEach(r => {
+    const isPM = r.age === pensionAge, cur = r.age === currentAge;
+    const rowClass = isPM ? 'pension-row' : '';
+    // Toon "60j (57j)" bij 2 personen, anders "60j"
+    const jAge = jongste ? r.age - ageDiff : null;
+    let ageLbl;
+    if (jongste) {
+      const jLabel = jAge >= 0 ? `${Math.round(jAge)}j` : '—';
+      ageLbl = cur
+        ? `<strong>${r.age}j (${jLabel})</strong> <span class="now-tag">nu</span>`
+        : `${r.age}j <span class="age-second">(${jLabel})</span>`;
+    } else {
+      ageLbl = cur ? `<strong>${r.age}j</strong> <span class="now-tag">nu</span>` : `${r.age}j`;
+    }
+    const badge = r.isPens
+      ? `<span class="badge badge-pension">${r.status}</span>`
+      : `<span class="badge badge-work">${r.status}</span>`;
+    const flpB3 = getFLP(r.testIncome, r.isPens ? 'box3_aow' : 'box3_werkend', refRate);
+    const mB3 = flpB3 / 100 * r.testIncome / 12;
+    const loanB3 = maxLoan(mB3, refRate, 30);
+    const extra = r.tweetrap - r.loan;
+    const hasExtra = extra > 1000;
+    html += `<tr class="${rowClass}">
+      <td>${ageLbl}</td>
+      <td>${badge}</td>
+      <td class="numeric">${formatEuroShort(r.testIncome)}</td>
+      <td class="numeric"><strong>${formatEuro(r.loan)}</strong></td>
+      <td class="numeric">${formatEuro(loanB3)}</td>
+      <td class="numeric">${hasExtra ? `<span style="color:var(--accent);font-weight:700;">${formatEuro(r.tweetrap)}</span>` : '<span style="color:var(--text-light);">—</span>'}</td>
+      <td class="numeric">${hasExtra ? `<span style="color:var(--accent);font-weight:700;">+${formatEuroShort(extra)}</span>` : '—'}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// ============ Modal: NIBUD-tabellen ============
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  renderModalTable('werkend');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function renderModalTable(type) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === type));
+  const labels = {
+    werkend: { title: 'Niet-AOW-gerechtigden (werkend), box 1 (aftrekbaar)', desc: 'FLP-percentage = maximaal deel van bruto jaarinkomen dat aan hypotheeklasten mag worden besteed. Voor <strong>aftrekbare</strong> leningdelen van werkenden.' },
+    aow: { title: 'AOW-gerechtigden (gepensioneerd), box 1', desc: 'Voor <strong>aftrekbare</strong> leningdelen van gepensioneerden. Hoger dan werkenden bij lage inkomens, want pensioen heeft minder vaste lasten.' },
+    box3_werkend: { title: 'Niet-AOW (werkend), box 3 (niet aftrekbaar)', desc: 'Voor <strong>niet-aftrekbare</strong> delen (bv. na 30 jaar, of bewust in box 3). Lager dan box 1 omdat de netto-last hoger uitvalt.' },
+    box3_aow: { title: 'AOW (gepensioneerd), box 3', desc: 'Voor <strong>niet-aftrekbare</strong> delen bij gepensioneerden.' }
+  };
+  document.getElementById('modalInfo').innerHTML = `<strong>${labels[type].title}.</strong> ${labels[type].desc}`;
+  const table = FLP_DATA[type];
+  const rates = FLP_DATA.rates;
+  const inp = getInputs();
+  // Bepaal welke kolom dichtst bij meest gebruikte rente (van leningdeel 1, anders 4%)
+  const focusRate = parts[0] ? parts[0].rate : 4.0;
+  let focusCol = 0;
+  let minDist = Infinity;
+  rates.forEach((r, i) => { const d = Math.abs(r - focusRate); if (d < minDist) { minDist = d; focusCol = i; } });
+  let html = '<thead><tr><th>Bruto ink.</th>';
+  rates.forEach((r, i) => {
+    html += `<th class="${i === focusCol ? 'highlight' : ''}">${r.toFixed(2).replace('.', ',')}%</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  table.forEach(row => {
+    html += `<tr><td>${formatEuro(row[0])}</td>`;
+    for (let i = 1; i <= 12; i++) {
+      html += `<td class="${i - 1 === focusCol ? 'highlight' : ''}">${row[i].toFixed(1).replace('.', ',')}%</td>`;
+    }
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('modalTable').innerHTML = html;
+}
+document.getElementById('openTablesBtn').addEventListener('click', openModal);
+document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+document.querySelectorAll('.modal-tab').forEach(t => {
+  t.addEventListener('click', () => renderModalTable(t.dataset.tab));
+});
+
+// Info-modal (Toelichting)
+function openInfoModal() { document.getElementById('infoModalOverlay').classList.add('open'); }
+function closeInfoModal() { document.getElementById('infoModalOverlay').classList.remove('open'); }
+document.getElementById('openInfoBtn').addEventListener('click', openInfoModal);
+document.getElementById('infoModalCloseBtn').addEventListener('click', closeInfoModal);
+document.getElementById('infoModalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'infoModalOverlay') closeInfoModal();
+});
+// ESC sluit beide modals
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeModal(); closeInfoModal(); }
+});
+
+// ============ Input events ============
+function fmtEuroInput(input) {
+  let val = input.value.replace(/\D/g, '');
+  input.value = val ? parseInt(val).toLocaleString('nl-NL') : '';
+}
+// (Oude #salary/#pension handlers vervangen door per-aanvrager handlers — zie onBirthDateChange + wire-up sectie)
+// ============ AOW-info en totalen updaten ============
+function refreshApplicantUI() {
+  [1, 2].forEach(id => {
+    const card = document.getElementById('card' + id);
+    if (!card || card.style.display === 'none') return;
+    const a = readApplicant(id);
+    if (!a) return;
+    const aowInfoEl = document.getElementById('aowInfo' + id);
+    if (aowInfoEl) {
+      const aowAuto = calcAOWAge(a.birthDate);
+      const isOverride = (aowAuto.years !== a.aowYears) || (aowAuto.months !== a.aowMonths);
+      aowInfoEl.innerHTML = `Leeftijd: <strong>${formatYearsMonths(a.age)}</strong> · AOW: <strong>${formatAOW(a.aowYears, a.aowMonths)}</strong>` +
+        (isOverride ? ' <span style="color:var(--warning);">⚠ handmatig</span>' : '') +
+        `<div class="age-line">AOW over ${formatYearsMonths(a.yearsToAOW)}${a.yearsToAOW < 10 && a.yearsToAOW > 0 ? ' · in pensioenklif-zone' : ''}</div>`;
+    }
+  });
+  // Totalen-summary
+  const inp = getInputs();
+  const totalsEl = document.getElementById('totalsSummary');
+  if (totalsEl) {
+    let html = `<div class="total-row"><span>Totaal salaris</span><strong>${formatEuro(inp.salary)}</strong></div>`;
+    html += `<div class="total-row"><span>Totaal pensioen</span><strong>${formatEuro(inp.pension)}</strong></div>`;
+    html += `<div class="total-row"><span>Eerste AOW over</span><strong>${formatYearsMonths(inp.primary.yearsToAOW)}</strong></div>`;
+    totalsEl.innerHTML = html;
+  }
+}
+
+function onBirthDateChange(id) {
+  const dateEl = document.getElementById('birthDate' + id);
+  if (!dateEl) return;
+  const aow = calcAOWAge(dateEl.value);
+  document.getElementById('aowYears' + id).value = aow.years;
+  document.getElementById('aowMonths' + id).value = aow.months;
+  refreshApplicantUI();
+  calculate();
+}
+
+// Wire up applicant-1 events
+['birthDate1'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => onBirthDateChange(1));
+});
+['salary1', 'pension1'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { fmtEuroInput(document.getElementById(id)); refreshApplicantUI(); calculate(); });
+});
+['aowYears1', 'aowMonths1'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { refreshApplicantUI(); calculate(); });
+});
+
+// Toggle partner
+document.getElementById('togglePartnerBtn').addEventListener('click', () => {
+  hasPartner = true;
+  document.getElementById('card2').style.display = 'block';
+  document.getElementById('togglePartnerBtn').style.display = 'none';
+  // Wire up partner events (eerste keer)
+  if (!document.getElementById('birthDate2').dataset.wired) {
+    document.getElementById('birthDate2').addEventListener('change', () => onBirthDateChange(2));
+    ['salary2', 'pension2'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => { fmtEuroInput(document.getElementById(id)); refreshApplicantUI(); calculate(); });
+    });
+    ['aowYears2', 'aowMonths2'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => { refreshApplicantUI(); calculate(); });
+    });
+    document.getElementById('birthDate2').dataset.wired = '1';
+  }
+  onBirthDateChange(2); // syncs AOW from birthdate
+});
+document.getElementById('removePartnerBtn').addEventListener('click', () => {
+  hasPartner = false;
+  document.getElementById('card2').style.display = 'none';
+  document.getElementById('togglePartnerBtn').style.display = 'block';
+  refreshApplicantUI();
+  calculate();
+});
+
+['toetsRate'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calculate);
+});
+
+// Verlagingen-velden
+['studieschuldMnd', 'lopendeLenMnd', 'alimentatieMnd', 'erfpachtJaar'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    fmtEuroInput(el);
+    updateReductionsTotal();
+    calculate();
+  });
+});
+// Niet-kwetsbare-groep checkbox
+document.getElementById('nietKwetsbaarToggle').addEventListener('change', calculate);
+
+function updateReductionsTotal() {
+  const total = parseEuro(document.getElementById('studieschuldMnd').value) +
+                parseEuro(document.getElementById('lopendeLenMnd').value) +
+                parseEuro(document.getElementById('alimentatieMnd').value) +
+                parseEuro(document.getElementById('erfpachtJaar').value) / 12;
+  const el = document.getElementById('reductionsTotalDisplay');
+  if (el) {
+    el.textContent = `Totaal: ${formatEuro(total)}/mnd`;
+    el.classList.toggle('zero', total === 0);
+  }
+}
+document.getElementById('addPartBtn').addEventListener('click', () => addPart());
+document.getElementById('presetTweetrapBtn').addEventListener('click', setTweetrapPreset);
+document.getElementById('recalcBtn').addEventListener('click', () => {
+  calculate();
+  // Visuele bevestiging: korte pulse op de knop
+  const btn = document.getElementById('recalcBtn');
+  btn.style.transform = 'scale(0.95)';
+  btn.style.transition = 'transform 0.1s';
+  setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
+});
+
+// ============ Init ============
+window.addEventListener('DOMContentLoaded', () => {
+  // Chart-hover handlers eenmalig koppelen
+  const chartSvg = document.getElementById('chart');
+  chartSvg.addEventListener('mousemove', handleChartHover);
+  chartSvg.addEventListener('mouseleave', clearChartHover);
+
+  // Default: hasPartner = true → partner-card direct zichtbaar maken en events wiren
+  hasPartner = true;
+  document.getElementById('card2').style.display = 'block';
+  document.getElementById('togglePartnerBtn').style.display = 'none';
+  document.getElementById('birthDate2').addEventListener('change', () => onBirthDateChange(2));
+  ['salary2', 'pension2'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { fmtEuroInput(document.getElementById(id)); refreshApplicantUI(); calculate(); });
+  });
+  ['aowYears2', 'aowMonths2'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { refreshApplicantUI(); calculate(); });
+  });
+  document.getElementById('birthDate2').dataset.wired = '1';
+
+  // AOW-velden synchroniseren met geboortedatum
+  onBirthDateChange(1);
+  onBirthDateChange(2);
+
+  // Default: 75% van het tweetrap-optimum, afgerond op €1.000 — oogt comfortabel binnen norm
+  const inp = getInputs();
+  const opt = calcOptimalTweetrap(inp);
+  if (opt) {
+    parts = [
+      { id: nextPartId++, amount: Math.round(opt.dealA * 0.75 / 1000) * 1000, box: 1, rate: 4.0, fixedYrs: 10, term: opt.termA, repayment: 'annuitair' },
+      { id: nextPartId++, amount: Math.round(opt.dealB * 0.75 / 1000) * 1000, box: 1, rate: 4.0, fixedYrs: 10, term: 30, repayment: 'annuitair' }
+    ];
+  } else {
+    parts = [{ id: nextPartId++, amount: 200000, box: 1, rate: 4.0, fixedYrs: 10, term: 30, repayment: 'annuitair' }];
+  }
+  renderParts();
+  calculate();
+});
+</script>
+</body>
+</html>

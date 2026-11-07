@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypotheekcalculator — Nationale Hypotheekbond</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:    #003057;
+  --navy2:   #004580;
+  --gold:    #E5A138;
+  --gold-lt: #FEF8EE;
+  --bg:      #F4F7F9;
+  --white:   #FFFFFF;
+  --text:    #333333;
+  --muted:   #6B7280;
+  --border:  #D1DCE5;
+  --green:   #1A8A50;
+  --green-lt:#E8F7EF;
+  --ann:     #003057;
+  --lin:     #1A6B8A;
+  --afv:     #B87A00;
+  --shadow:  0 2px 16px rgba(0,48,87,.09);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--navy);
+  color: #fff;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 66px;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 3px 20px rgba(0,0,0,.20);
+}
+.h-left { display: flex; align-items: center; gap: 14px; }
+.h-icon { font-size: 28px; }
+.h-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+.h-sub   { font-size: 11.5px; opacity: .7; margin-top: 1px; }
+.h-badges { display: flex; gap: 7px; }
+.badge {
+  background: rgba(255,255,255,.13); color: #fff;
+  font-size: 10.5px; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: .05em; text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,.2);
+}
+.badge.gold { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+
+/* ── MAIN ── */
+.main {
+  max-width: 980px; margin: 0 auto;
+  padding: 28px 16px 72px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  background: var(--navy); color: #fff;
+  padding: 14px 22px; font-weight: 600; font-size: 15px;
+  display: flex; align-items: center; gap: 10px;
+}
+.card-header .ico { font-size: 19px; }
+.card-body { padding: 22px; }
+
+/* ── FORM ── */
+.fg { display: grid; gap: 14px; }
+.fg-2 { grid-template-columns: 1fr 1fr; }
+.fg-3 { grid-template-columns: 1fr 1fr 1fr; }
+.fg-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.s2 { grid-column: span 2; }
+.s3 { grid-column: 1/-1; }
+
+.sdiv {
+  font-size: 10.5px; font-weight: 700; color: var(--gold);
+  text-transform: uppercase; letter-spacing: .09em;
+  padding-bottom: 5px; border-bottom: 1px solid var(--border);
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: 12.5px; font-weight: 600; color: var(--navy); }
+.hint { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+.iw { position: relative; display: flex; align-items: center; }
+.pre { position: absolute; left: 10px; font-size: 13px; font-weight: 600; color: var(--muted); pointer-events: none; }
+.suf { position: absolute; right: 10px; font-size: 13px; font-weight: 600; color: var(--muted); pointer-events: none; }
+
+input[type=number], input[type=date], select {
+  width: 100%; padding: 9px 10px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text);
+  background: #fff; outline: none; transition: border-color .18s;
+  -moz-appearance: textfield;
+  appearance: auto;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input[type=number]:focus, input[type=date]:focus, select:focus { border-color: var(--navy); }
+.iw input { padding-left: 26px; }
+.iw input.rs { padding-left: 10px; padding-right: 40px; }
+
+/* ── AFLOSVORM TABS ── */
+.av-tabs { display: flex; gap: 0; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 0; }
+.av-tab {
+  flex: 1; padding: 11px 8px; text-align: center; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  background: #fff; border: none; transition: all .18s;
+  border-right: 1.5px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.av-tab:last-child { border-right: none; }
+.av-tab .ti { font-size: 20px; }
+.av-tab .tn { font-size: 12.5px; font-weight: 700; }
+.av-tab .ts { font-size: 10.5px; color: var(--muted); }
+.av-tab:hover { background: var(--bg); }
+.av-tab.active { background: var(--navy); color: #fff; }
+.av-tab.active .ts { color: rgba(255,255,255,.65); }
+
+/* ── BTN CALC ── */
+.btn-calc {
+  width: 100%; padding: 14px; background: var(--navy); color: #fff;
+  border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif;
+  font-size: 17px; font-weight: 700; cursor: pointer; transition: background .18s;
+  letter-spacing: .01em; margin-top: 8px;
+}
+.btn-calc:hover { background: var(--navy2); }
+
+/* ── RESULTATEN ── */
+.res-card { display: none; }
+.res-card.vis { display: block; }
+
+/* ── VERGELIJK KAARTEN (3 naast elkaar) ── */
+.vorm-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 4px; }
+.vorm-card {
+  border-radius: 12px; overflow: hidden;
+  border: 2px solid transparent; transition: transform .2s, box-shadow .2s;
+}
+.vorm-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,48,87,.13); }
+.vorm-card.ann { border-color: var(--ann); }
+.vorm-card.lin { border-color: var(--lin); }
+.vorm-card.afv { border-color: var(--afv); }
+.vc-head {
+  padding: 12px 16px; color: #fff; font-weight: 700; font-size: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.vc-head.ann { background: var(--ann); }
+.vc-head.lin { background: var(--lin); }
+.vc-head.afv { background: var(--afv); }
+.vc-body { padding: 14px 16px; background: #fff; }
+.vc-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid #EEF2F6; }
+.vc-row:last-child { border-bottom: none; }
+.vc-lbl { font-size: 11.5px; color: var(--muted); }
+.vc-val { font-size: 15px; font-weight: 700; color: var(--navy); }
+.vc-val.big { font-family: 'DM Serif Display', serif; font-size: 22px; }
+.vc-val.green { color: var(--green); }
+.vc-badge {
+  display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 10px; margin-left: 6px; vertical-align: middle;
+}
+.badge-best { background: #E8F7EF; color: var(--green); }
+.badge-laag { background: #EFF4F9; color: var(--navy); }
+
+/* ── GRAFIEK TABS ── */
+.graf-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.graf-tab {
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border); background: #fff; color: var(--muted);
+  transition: all .15s;
+}
+.graf-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* ── AMORTISATIETABEL ── */
+.atbl-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.atbl-tab {
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border); background: #fff; color: var(--muted);
+  transition: all .15s;
+}
+.atbl-tab.ann.active { background: var(--ann); color: #fff; border-color: var(--ann); }
+.atbl-tab.lin.active { background: var(--lin); color: #fff; border-color: var(--lin); }
+.atbl-tab.afv.active { background: var(--afv); color: #fff; border-color: var(--afv); }
+
+.tbl-wrap { overflow-x: auto; }
+.atbl {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.atbl thead th {
+  padding: 9px 12px; text-align: right;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: #fff; white-space: nowrap;
+}
+.atbl thead th:first-child { text-align: left; }
+.atbl thead.ann th { background: var(--ann); }
+.atbl thead.lin th { background: var(--lin); }
+.atbl thead.afv th { background: var(--afv); }
+.atbl td { padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: right; }
+.atbl td:first-child { text-align: left; font-weight: 600; }
+.atbl tr:nth-child(even) td { background: #F8FAFB; }
+.atbl tfoot td {
+  padding: 10px 12px; font-weight: 700; font-size: 12.5px;
+  border-top: 2px solid var(--border); background: #F0F4F8; text-align: right;
+  color: var(--navy);
+}
+.atbl tfoot td:first-child { text-align: left; }
+
+.btn-tbl {
+  background: none; border: 1.5px solid var(--border); color: var(--navy);
+  border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .15s; margin-top: 10px;
+}
+.btn-tbl:hover { background: var(--bg); border-color: var(--navy); }
+
+/* ── INFO BOX ── */
+.info-box {
+  background: #EFF4F9; border-left: 4px solid var(--navy);
+  border-radius: 0 8px 8px 0; padding: 14px 18px;
+  font-size: 13px; color: var(--text); line-height: 1.75;
+}
+.info-box strong { color: var(--navy); }
+.info-box .row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+.info-box .kv { display: flex; flex-direction: column; }
+.info-box .kv .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.info-box .kv .vv { font-size: 15px; font-weight: 700; color: var(--navy); }
+
+/* ── CANVAS ── */
+canvas { width: 100% !important; }
+.canvas-wrap { position: relative; height: 280px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 680px) {
+  .fg-2, .fg-3, .fg-4 { grid-template-columns: 1fr; }
+  .s2, .s3 { grid-column: span 1; }
+  .vorm-cards { grid-template-columns: 1fr; }
+  .av-tabs { flex-wrap: wrap; }
+  .av-tab { flex: none; width: 100%; }
+  .h-badges { display: none; }
+}
+@media (max-width: 400px) {
+  .main { padding: 16px 10px 60px; }
+  .card-body { padding: 14px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <div class="h-icon">🏠</div>
+    <div>
+      <div class="h-title">Hypotheekcalculator</div>
+      <div class="h-sub">Aflossingsvrij · Annuïteiten · Lineair — maandlasten & rentekosten</div>
+    </div>
+  </div>
+  <div class="h-badges">
+    <span class="badge">Alle 3 vormen</span>
+    <span class="badge gold">Incl. schema</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ── INVOER ── -->
+  <div class="card">
+    <div class="card-header"><div class="ico">📝</div>Leninggegevens</div>
+    <div class="card-body">
+
+      <div class="fg fg-3" style="margin-bottom:18px; gap:14px;">
+        <div class="sdiv s3">Hypotheekgegevens</div>
+
+        <div class="field">
+          <label>Hoofdsom</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="hoofdsom" value="300000" min="1000" step="5000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Nominale rente (per jaar)</label>
+          <div class="iw"><span class="pre">%</span>
+            <input type="number" id="rente" value="4.00" min="0.01" max="20" step="0.01" class="rs" style="padding-left:26px;padding-right:42px;">
+          </div>
+        </div>
+        <div class="field">
+          <label>Looptijd</label>
+          <div class="iw">
+            <input type="number" id="looptijdJaar" value="30" min="1" max="50" step="1" class="rs" style="padding-right:50px;" oninput="jaarNaarMnd()">
+            <span class="suf">jaar</span>
+          </div>
+          <span class="hint" id="looptijdHint">= 360 maanden</span>
+        </div>
+
+        <div class="sdiv s3" style="margin-top:6px;">Welke aflosvorm berekenen?</div>
+      </div>
+
+      <!-- AFLOSVORM KIEZER -->
+      <div class="av-tabs" id="avTabs" style="margin-bottom:18px;">
+        <button class="av-tab active" id="tab-alle" onclick="setVorm('alle', this)">
+          <span class="ti">⚖️</span>
+          <span class="tn">Vergelijk alle</span>
+          <span class="ts">Annuïtair · Lineair · Aflvrij</span>
+        </button>
+        <button class="av-tab" id="tab-annuitair" onclick="setVorm('annuitair', this)">
+          <span class="ti">📉</span>
+          <span class="tn">Annuïteiten</span>
+          <span class="ts">Gelijke bruto last</span>
+        </button>
+        <button class="av-tab" id="tab-lineair" onclick="setVorm('lineair', this)">
+          <span class="ti">📊</span>
+          <span class="tn">Lineair</span>
+          <span class="ts">Gelijke netto aflossing</span>
+        </button>
+        <button class="av-tab" id="tab-aflossingsvrij" onclick="setVorm('aflossingsvrij', this)">
+          <span class="ti">➡️</span>
+          <span class="tn">Aflossingsvrij</span>
+          <span class="ts">Alleen rente betalen</span>
+        </button>
+      </div>
+
+      <!-- EXTRA OPTIES -->
+      <div class="fg fg-2" style="gap:14px; margin-bottom:4px;">
+        <div class="field">
+          <label>Box 1 belastingtarief (voor netto last)</label>
+          <div class="iw">
+            <input type="number" id="tarief" value="35.75" min="0" max="55" step="0.01" class="rs" style="padding-right:42px;">
+            <span class="suf">%</span>
+          </div>
+          <span class="hint">Hypotheekrenteaftrek — 2026: 35,75% (schijf 1) of 37,56% (schijf 2)</span>
+        </div>
+        <div class="field">
+          <label>Toon schema per</label>
+          <select id="schemaMode">
+            <option value="jaar">Per jaar (samenvatting)</option>
+            <option value="maand">Per maand (volledig)</option>
+          </select>
+          <span class="hint">Weergave in het aflossingsschema</span>
+        </div>
+      </div>
+
+      <button class="btn-calc" onclick="bereken()">🏠 Bereken hypotheeklasten</button>
+    </div>
+  </div>
+
+  <!-- ── RESULTATEN ── -->
+  <div class="card res-card" id="resCard">
+    <div class="card-header"><div class="ico">💡</div>Uitkomst — <span id="resTitle">alle aflosvormen vergeleken</span></div>
+    <div class="card-body">
+
+      <!-- VERGELIJKKAARTEN -->
+      <div class="vorm-cards" id="vCards"></div>
+
+      <!-- INFO BOX -->
+      <div class="info-box" id="infoBox" style="margin-top:16px;"></div>
+
+    </div>
+  </div>
+
+  <!-- ── GRAFIEK ── -->
+  <div class="card res-card" id="grafCard">
+    <div class="card-header"><div class="ico">📈</div>Grafisch overzicht</div>
+    <div class="card-body">
+      <div class="graf-tabs" id="grafTabs">
+        <button class="graf-tab active" onclick="setGraf('saldo',this)">Saldo-verloop</button>
+        <button class="graf-tab" onclick="setGraf('maandlast',this)">Maandlasten</button>
+        <button class="graf-tab" onclick="setGraf('rente',this)">Cumulatieve rente</button>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="grafiek"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AFLOSSINGSSCHEMA ── -->
+  <div class="card res-card" id="tblCard">
+    <div class="card-header"><div class="ico">📋</div>Aflossingsschema</div>
+    <div class="card-body">
+      <div class="atbl-tabs" id="atblTabs"></div>
+      <div class="tbl-wrap">
+        <table class="atbl" id="atbl"></table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let vorm = 'alle';
+let grafModus = 'saldo';
+let tblVorm = 'annuitair';
+let grafObj = null;
+let resultaten = {};
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+const N = n => parseFloat(document.getElementById(n).value) || 0;
+function fmt(n, dec=0){
+  if(isNaN(n)) return '—';
+  return '€\u00A0' + n.toLocaleString('nl-NL', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
+function fmtK(n){ return '€\u00A0' + (n/1000).toLocaleString('nl-NL',{minimumFractionDigits:0,maximumFractionDigits:1}) + 'k'; }
+function fmtPct(n){ return n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%'; }
+
+function jaarNaarMnd(){
+  const j = N('looptijdJaar');
+  document.getElementById('looptijdHint').textContent = '= ' + (j*12) + ' maanden';
+}
+
+function setVorm(v, btn){
+  vorm = v;
+  document.querySelectorAll('.av-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setGraf(modus, btn){
+  grafModus = modus;
+  document.querySelectorAll('.graf-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  tekenGrafiek();
+}
+
+function setTblVorm(v){
+  tblVorm = v;
+  document.querySelectorAll('.atbl-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.atbl-tab.${v}`)?.classList.add('active');
+  tekenTabel();
+}
+
+// ── SIMULATIE ─────────────────────────────────────────────────────────────
+function simuleer(hoofdsom, rJaar, nMnd, aflosvorm){
+  const rMnd = rJaar / 100 / 12;
+  const ann = rMnd > 0 ? hoofdsom * rMnd / (1 - Math.pow(1+rMnd, -nMnd)) : hoofdsom/nMnd;
+  const linAfl = hoofdsom / nMnd;
+
+  const rows = [];
+  let saldo = hoofdsom;
+  let totRente = 0, totAfl = 0;
+
+  for(let t=1; t<=nMnd && saldo > 0.001; t++){
+    const rente = saldo * rMnd;
+    let afl;
+    if(aflosvorm === 'annuitair')       afl = Math.min(ann - rente, saldo);
+    else if(aflosvorm === 'lineair')    afl = Math.min(linAfl, saldo);
+    else                                afl = 0; // aflossingsvrij
+
+    const maandlast = rente + afl;
+    totRente += rente;
+    totAfl   += afl;
+
+    rows.push({
+      mnd: t, saldo,
+      rente, afl, maandlast,
+      saldoNa: Math.max(0, saldo - afl),
+      cumRente: totRente
+    });
+    saldo = Math.max(0, saldo - afl);
+  }
+
+  return {
+    rows,
+    maandlast1: rows[0]?.maandlast ?? 0,
+    maandlastLaatste: rows[rows.length-1]?.maandlast ?? 0,
+    totRente,
+    totBetaald: hoofdsom + totRente,
+    looptijd: rows.length,
+    ann: (aflosvorm === 'annuitair') ? ann : null,
+    linAfl: (aflosvorm === 'lineair') ? linAfl : null,
+  };
+}
+
+// ── BEREKEN ────────────────────────────────────────────────────────────────
+function bereken(){
+  const H    = N('hoofdsom');
+  const r    = N('rente');
+  const n    = N('looptijdJaar') * 12;
+  const ib   = N('tarief');
+
+  if(H<=0 || r<=0 || n<1){ alert('Vul geldige invoer in.'); return; }
+
+  const vormen = vorm === 'alle'
+    ? ['annuitair','lineair','aflossingsvrij']
+    : [vorm];
+
+  resultaten = {};
+  vormen.forEach(v => { resultaten[v] = simuleer(H, r, n, v); });
+
+  // ── VERGELIJKKAARTEN ──
+  const vCards = document.getElementById('vCards');
+  vCards.innerHTML = '';
+  vCards.style.gridTemplateColumns = vormen.length === 1 ? '1fr' : vormen.length === 2 ? '1fr 1fr' : '1fr 1fr 1fr';
+
+  const labels = {
+    annuitair:     { ti:'📉', nm:'Annuïteiten',    cls:'ann' },
+    lineair:       { ti:'📊', nm:'Lineair',         cls:'lin' },
+    aflossingsvrij:{ ti:'➡️', nm:'Aflossingsvrij',  cls:'afv' },
+  };
+
+  // Bepaal laagste totale rente voor "best" badge
+  const minRente = Math.min(...vormen.map(v => resultaten[v].totRente));
+
+  vormen.forEach(v => {
+    const res = resultaten[v];
+    const lb  = labels[v];
+    const nettoMl = res.maandlast1 - (res.maandlast1 > 0 ? (res.rows[0]?.rente ?? 0) * ib/100 : 0);
+    const isBest = res.totRente === minRente && vormen.length > 1;
+
+    // Netto maandlast (bruto - renteaftrek)
+    const nettoMaand = res.maandlast1 - (res.rows[0]?.rente ?? 0) * ib/100;
+
+    const card = document.createElement('div');
+    card.className = `vorm-card ${lb.cls}`;
+    card.innerHTML = `
+      <div class="vc-head ${lb.cls}">
+        <span>${lb.ti}</span>
+        <span>${lb.nm}${isBest ? '<span class="vc-badge badge-best">Laagste rente</span>' : ''}</span>
+      </div>
+      <div class="vc-body">
+        <div class="vc-row">
+          <span class="vc-lbl">${v==='annuitair'?'Vaste maandlast':v==='lineair'?'Maandlast mnd 1':'Maandlast (rente)'}</span>
+          <span class="vc-val big">${fmt(res.maandlast1,2)}</span>
+        </div>
+        ${v==='lineair'?`<div class="vc-row"><span class="vc-lbl">Maandlast laatste maand</span><span class="vc-val">${fmt(res.maandlastLaatste,2)}</span></div>`:''}
+        <div class="vc-row">
+          <span class="vc-lbl">Netto maandlast (mnd 1) <sup>*</sup></span>
+          <span class="vc-val">${fmt(nettoMaand,2)}</span>
+        </div>
+        <div class="vc-row">
+          <span class="vc-lbl">Totale rentekosten</span>
+          <span class="vc-val ${isBest?'green':''}">${fmt(res.totRente,0)}</span>
+        </div>
+        <div class="vc-row">
+          <span class="vc-lbl">Totaal betaald (H + rente)</span>
+          <span class="vc-val">${fmt(res.totBetaald,0)}</span>
+        </div>
+        ${v!=='aflossingsvrij'?`<div class="vc-row"><span class="vc-lbl">Looptijd</span><span class="vc-val">${Math.ceil(res.looptijd/12)} jaar</span></div>`:''}
+      </div>`;
+    vCards.appendChild(card);
+  });
+
+  // ── INFO BOX ──
+  const infoEl = document.getElementById('infoBox');
+  const totalesEl = vormen.map(v => {
+    const res = resultaten[v];
+    const lb  = labels[v];
+    return `<div class="kv"><span class="k">${lb.nm} — totaal rente</span><span class="vv">${fmt(res.totRente,0)}</span></div>`;
+  }).join('');
+  infoEl.innerHTML = `
+    <strong>Toelichting berekeningsbasis:</strong> Hoofdsom ${fmt(H,0)} · Nominale rente ${fmtPct(r)} · Looptijd ${N('looptijdJaar')} jaar (${n} maanden) · IB-tarief ${fmtPct(ib)}<br>
+    <span style="color:var(--muted);font-size:11.5px;">* Netto = bruto maandlast minus renteaftrek (IB-tarief × rentecomponent). De aftrek is in de eerste maand het hoogst bij lineair en annuïtair, en constant bij aflossingsvrij.</span>
+    <div class="row" style="margin-top:12px;">${totalesEl}</div>`;
+
+  // Titelbalk
+  const titels = { alle:'alle drie aflosvormen vergeleken', annuitair:'annuïteitenhypotheek', lineair:'lineaire hypotheek', aflossingsvrij:'aflossingsvrije hypotheek' };
+  document.getElementById('resTitle').textContent = titels[vorm] || '';
+
+  // Toon resultaten
+  document.getElementById('resCard').classList.add('vis');
+  document.getElementById('grafCard').classList.add('vis');
+  document.getElementById('tblCard').classList.add('vis');
+
+  // Default tabel-tab
+  tblVorm = vormen[0];
+  const atblTabs = document.getElementById('atblTabs');
+  atblTabs.innerHTML = '';
+  vormen.forEach(v => {
+    const lb = labels[v];
+    const btn = document.createElement('button');
+    btn.className = `atbl-tab ${v}${v===tblVorm?' active':''}`;
+    btn.textContent = `${lb.ti} ${lb.nm}`;
+    btn.onclick = () => setTblVorm(v);
+    atblTabs.appendChild(btn);
+  });
+
+  // Grafiek & tabel
+  tekenGrafiek();
+  tekenTabel();
+
+  document.getElementById('resCard').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── GRAFIEK ────────────────────────────────────────────────────────────────
+const kleuren = { annuitair:'#003057', lineair:'#1A6B8A', aflossingsvrij:'#B87A00' };
+const namen   = { annuitair:'Annuïteiten', lineair:'Lineair', aflossingsvrij:'Aflossingsvrij' };
+
+function tekenGrafiek(){
+  const ctx = document.getElementById('grafiek').getContext('2d');
+  if(grafObj) grafObj.destroy();
+
+  const vormen = Object.keys(resultaten);
+  const maxMnd = Math.max(...vormen.map(v => resultaten[v].rows.length));
+  const step = Math.max(1, Math.floor(maxMnd/80));
+
+  const labels = [];
+  for(let t=0; t<=maxMnd; t+=step) labels.push(t);
+
+  const datasets = vormen.map(v => {
+    const rows = resultaten[v].rows;
+    const data = labels.map(t => {
+      if(t === 0){
+        return grafModus === 'saldo' ? N('hoofdsom') : grafModus === 'maandlast' ? rows[0]?.maandlast : 0;
+      }
+      const row = rows[t-1];
+      if(!row) return grafModus === 'saldo' ? 0 : (grafModus === 'maandlast' ? rows[rows.length-1]?.maandlast : rows[rows.length-1]?.cumRente) ?? null;
+      return grafModus === 'saldo' ? row.saldoNa : grafModus === 'maandlast' ? row.maandlast : row.cumRente;
+    });
+    return {
+      label: namen[v], data,
+      borderColor: kleuren[v],
+      backgroundColor: kleuren[v] + '15',
+      borderWidth: 2.5,
+      fill: grafModus === 'saldo',
+      tension: .35,
+      pointRadius: 0,
+    };
+  });
+
+  const yFmt = grafModus === 'maandlast'
+    ? v => '€ ' + Math.round(v).toLocaleString('nl-NL')
+    : v => '€ ' + (v/1000).toFixed(0) + 'k';
+
+  grafObj = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { font: { family:'DM Sans', size:12 }, color:'#333', boxWidth:16 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: € ${Math.round(ctx.parsed.y).toLocaleString('nl-NL')}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display:true, text:'Maand', font:{size:11}, color:'#6B7280' },
+          ticks: { maxTicksLimit: 15, color:'#6B7280' },
+          grid: { color:'#EEF2F6' }
+        },
+        y: {
+          title: { display:true, text: grafModus==='saldo'?'Saldo (€)':grafModus==='maandlast'?'Maandlast (€)':'Cumulatieve rente (€)', font:{size:11}, color:'#6B7280' },
+          ticks: { callback: yFmt, color:'#6B7280' },
+          grid: { color:'#EEF2F6' }
+        }
+      }
+    }
+  });
+}
+
+// ── TABEL ──────────────────────────────────────────────────────────────────
+function tekenTabel(){
+  const res = resultaten[tblVorm];
+  if(!res) return;
+
+  const modus = document.getElementById('schemaMode').value;
+  const cls   = tblVorm;
+  const H     = N('hoofdsom');
+  const ib    = N('tarief');
+
+  let html = `<thead class="${cls}"><tr>
+    <th style="text-align:left">${modus==='jaar'?'Jaar':'Maand'}</th>
+    <th>Saldo begin</th>
+    <th>Rente</th>
+    <th>Aflossing</th>
+    <th>Maandlast</th>
+    <th>Netto last <sup>*</sup></th>
+    <th>Saldo eind</th>
+    <th>Cum. rente</th>
+  </tr></thead><tbody>`;
+
+  let totRente=0, totAfl=0, totBruto=0, totNetto=0;
+
+  if(modus === 'jaar'){
+    const maxJaar = Math.ceil(res.rows.length / 12);
+    for(let jr=1; jr<=maxJaar; jr++){
+      const slice = res.rows.slice((jr-1)*12, jr*12);
+      if(slice.length === 0) break;
+      const rJr   = slice.reduce((s,r)=>s+r.rente,0);
+      const aJr   = slice.reduce((s,r)=>s+r.afl,0);
+      const mlJr  = slice.reduce((s,r)=>s+r.maandlast,0);
+      const nJr   = slice.reduce((s,r)=>s+r.maandlast - r.rente*ib/100, 0);
+      const sB    = slice[0].saldo;
+      const sE    = slice[slice.length-1].saldoNa;
+      const cumR  = slice[slice.length-1].cumRente;
+      totRente+=rJr; totAfl+=aJr; totBruto+=mlJr; totNetto+=nJr;
+      html += `<tr>
+        <td>Jaar ${jr}</td>
+        <td>${fmt(sB,0)}</td>
+        <td>${fmt(rJr,2)}</td>
+        <td>${fmt(aJr,2)}</td>
+        <td>${fmt(mlJr,2)}</td>
+        <td>${fmt(nJr,2)}</td>
+        <td>${fmt(sE,0)}</td>
+        <td>${fmt(cumR,0)}</td>
+      </tr>`;
+    }
+  } else {
+    res.rows.forEach(r => {
+      const netto = r.maandlast - r.rente * ib/100;
+      totRente+=r.rente; totAfl+=r.afl; totBruto+=r.maandlast; totNetto+=netto;
+      html += `<tr>
+        <td>${r.mnd}</td>
+        <td>${fmt(r.saldo,2)}</td>
+        <td>${fmt(r.rente,2)}</td>
+        <td>${fmt(r.afl,2)}</td>
+        <td>${fmt(r.maandlast,2)}</td>
+        <td>${fmt(netto,2)}</td>
+        <td>${fmt(r.saldoNa,2)}</td>
+        <td>${fmt(r.cumRente,0)}</td>
+      </tr>`;
+    });
+  }
+
+  html += `</tbody><tfoot><tr>
+    <td>Totaal</td>
+    <td>${fmt(H,0)}</td>
+    <td>${fmt(totRente,2)}</td>
+    <td>${fmt(totAfl,2)}</td>
+    <td>${fmt(totBruto,2)}</td>
+    <td>${fmt(totNetto,2)}</td>
+    <td>—</td>
+    <td>${fmt(totRente,0)}</td>
+  </tr></tfoot>`;
+
+  document.getElementById('atbl').innerHTML = html;
+
+  // Update tab actief
+  document.querySelectorAll('.atbl-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.atbl-tab.${tblVorm}`)?.classList.add('active');
+}
+
+// Init
+jaarNaarMnd();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</body>
+</html>

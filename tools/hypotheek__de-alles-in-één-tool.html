@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypotheek Advies Tool 2026</title>
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+font-family: 'Segoe UI', Arial, sans-serif;
+background: #F4F7F9;
+color: #333333;
+font-size: 16px;
+line-height: 1.6;
+min-height: 100vh;
+}
+
+/* ========== LAYOUT ========== */
+.app-wrapper { max-width: 920px; margin: 0 auto; padding: 24px 16px 60px; }
+
+/* ========== HEADER ========== */
+.app-header {
+background: linear-gradient(135deg, #003057 0%, #004a8a 100%);
+border-radius: 16px 16px 0 0;
+padding: 28px 36px 24px;
+color: white;
+position: relative;
+overflow: hidden;
+}
+.app-header::after {
+content: ‘’;
+position: absolute;
+top: -40px; right: -40px;
+width: 180px; height: 180px;
+border-radius: 50%;
+background: rgba(255,255,255,0.05);
+}
+.app-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.app-header p { font-size: 14px; color: rgba(255,255,255,0.75); }
+.header-badge {
+display: inline-block;
+background: #E5A138;
+color: white;
+font-size: 11px;
+font-weight: 700;
+padding: 3px 10px;
+border-radius: 20px;
+margin-bottom: 8px;
+letter-spacing: 0.5px;
+text-transform: uppercase;
+}
+
+/* ========== WIZARD STEPS ========== */
+.steps-bar {
+background: white;
+border-left: 1px solid #E0E6ED;
+border-right: 1px solid #E0E6ED;
+padding: 20px 36px;
+display: flex;
+align-items: center;
+gap: 0;
+}
+.step-item {
+display: flex;
+align-items: center;
+flex: 1;
+position: relative;
+}
+.step-item:not(:last-child)::after {
+content: ‘’;
+flex: 1;
+height: 2px;
+background: #E0E6ED;
+margin: 0 8px;
+transition: background 0.3s;
+}
+.step-item.done:not(:last-child)::after { background: #003057; }
+.step-num {
+width: 36px; height: 36px;
+border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 14px; font-weight: 700;
+border: 2px solid #E0E6ED;
+background: white;
+color: #999;
+flex-shrink: 0;
+transition: all 0.3s;
+z-index: 1;
+}
+.step-item.active .step-num {
+background: #003057; border-color: #003057; color: white;
+}
+.step-item.done .step-num {
+background: #27AE60; border-color: #27AE60; color: white;
+font-size: 16px;
+}
+.step-label {
+font-size: 12px;
+color: #999;
+white-space: nowrap;
+margin-left: 8px;
+font-weight: 500;
+}
+.step-item.active .step-label { color: #003057; font-weight: 700; }
+.step-item.done .step-label { color: #27AE60; }
+
+/* ========== CARDS & SECTIONS ========== */
+.content-area {
+background: white;
+border: 1px solid #E0E6ED;
+border-top: none;
+border-radius: 0 0 16px 16px;
+padding: 36px;
+}
+.card {
+background: #F4F7F9;
+border: 1px solid #E0E6ED;
+border-radius: 12px;
+padding: 24px;
+margin-bottom: 20px;
+}
+.card-title {
+font-size: 16px;
+font-weight: 700;
+color: #003057;
+margin-bottom: 16px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.card-title .icon { font-size: 20px; }
+.section-divider {
+border: none;
+border-top: 2px solid #E5A138;
+margin: 28px 0;
+opacity: 0.3;
+}
+
+/* ========== FORM ELEMENTS ========== */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+label {
+font-size: 13px;
+font-weight: 600;
+color: #003057;
+}
+label .req { color: #E74C3C; margin-left: 2px; }
+label .hint {
+font-weight: 400;
+color: #777;
+font-size: 12px;
+margin-left: 4px;
+}
+input[type=“text”], input[type=“number”], input[type=“date”], select, textarea {
+width: 100%;
+padding: 11px 14px;
+border: 1.5px solid #E0E6ED;
+border-radius: 8px;
+font-size: 15px;
+background: white;
+color: #333;
+transition: border-color 0.2s, box-shadow 0.2s;
+font-family: inherit;
+}
+input:focus, select:focus, textarea:focus {
+border-color: #003057;
+outline: none;
+box-shadow: 0 0 0 3px rgba(0,48,87,0.08);
+}
+input.error { border-color: #E74C3C; }
+.input-prefix-group { position: relative; }
+.input-prefix-group .prefix {
+position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+color: #777; font-size: 15px; font-weight: 600; pointer-events: none;
+}
+.input-prefix-group input { padding-left: 28px; }
+.input-suffix-group { position: relative; }
+.input-suffix-group .suffix {
+position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+color: #777; font-size: 13px; pointer-events: none;
+}
+.input-suffix-group input { padding-right: 36px; }
+.toggle-group {
+display: flex; gap: 8px; flex-wrap: wrap;
+}
+.toggle-btn {
+padding: 8px 18px;
+border: 2px solid #E0E6ED;
+border-radius: 8px;
+background: white;
+color: #555;
+font-size: 14px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.2s;
+}
+.toggle-btn.active {
+background: #003057;
+border-color: #003057;
+color: white;
+}
+.toggle-btn:hover:not(.active) { border-color: #003057; color: #003057; }
+
+/* ========== INFO BOXES ========== */
+.info-box {
+border-left: 3px solid #E5A138;
+background: #FFFBF3;
+padding: 12px 16px;
+border-radius: 0 8px 8px 0;
+font-size: 13px;
+color: #555;
+margin-top: 8px;
+}
+.info-box strong { color: #003057; }
+.warn-box {
+border-left: 3px solid #E74C3C;
+background: #FFF5F5;
+padding: 12px 16px;
+border-radius: 0 8px 8px 0;
+font-size: 13px;
+color: #c0392b;
+}
+.success-box {
+border-left: 3px solid #27AE60;
+background: #F0FFF4;
+padding: 12px 16px;
+border-radius: 0 8px 8px 0;
+font-size: 13px;
+color: #1e8449;
+}
+
+/* ========== BUTTONS ========== */
+.btn {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 12px 28px;
+border-radius: 10px;
+font-size: 15px;
+font-weight: 600;
+cursor: pointer;
+border: none;
+transition: all 0.2s;
+font-family: inherit;
+}
+.btn-primary {
+background: #003057; color: white;
+}
+.btn-primary:hover { background: #004a8a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,48,87,0.25); }
+.btn-cta {
+background: #E5A138; color: white; font-size: 16px; font-weight: 700; padding: 14px 32px;
+}
+.btn-cta:hover { background: #d4922e; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(229,161,56,0.35); }
+.btn-outline {
+background: white; color: #003057; border: 2px solid #003057;
+}
+.btn-outline:hover { background: #003057; color: white; }
+.btn-ghost {
+background: transparent; color: #777; border: none; padding: 10px 16px;
+}
+.btn-ghost:hover { color: #003057; }
+.btn-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; }
+
+/* ========== RESULT BLOCKS ========== */
+.result-hero {
+background: linear-gradient(135deg, #003057 0%, #004a8a 100%);
+border-radius: 16px;
+padding: 28px 32px;
+color: white;
+margin-bottom: 20px;
+position: relative;
+overflow: hidden;
+}
+.result-hero::before {
+content: ‘’;
+position: absolute;
+top: -50px; right: -50px;
+width: 200px; height: 200px;
+border-radius: 50%;
+background: rgba(255,255,255,0.05);
+}
+.result-hero-label { font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+.result-hero-amount { font-size: 42px; font-weight: 700; color: white; line-height: 1; }
+.result-hero-sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 6px; }
+.result-hero-badge {
+display: inline-block;
+background: #E5A138;
+color: white;
+font-size: 11px;
+font-weight: 700;
+padding: 3px 10px;
+border-radius: 20px;
+margin-bottom: 12px;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+}
+
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.result-card {
+background: white;
+border: 1px solid #E0E6ED;
+border-radius: 12px;
+padding: 20px;
+}
+.result-card-label { font-size: 12px; color: #777; font-weight: 500; margin-bottom: 4px; }
+.result-card-value { font-size: 22px; font-weight: 700; color: #003057; }
+.result-card-sub { font-size: 12px; color: #999; margin-top: 2px; }
+.result-card.accent { border-color: #E5A138; background: #FFFBF3; }
+.result-card.accent .result-card-value { color: #E5A138; }
+.result-card.success { border-color: #27AE60; background: #F0FFF4; }
+.result-card.success .result-card-value { color: #27AE60; }
+.result-card.warning { border-color: #E74C3C; background: #FFF5F5; }
+.result-card.warning .result-card-value { color: #E74C3C; }
+
+.breakdown-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; }
+.breakdown-table tr { border-bottom: 1px solid #F0F4F8; }
+.breakdown-table tr:last-child { border-bottom: none; border-top: 2px solid #003057; font-weight: 700; }
+.breakdown-table td { padding: 9px 4px; }
+.breakdown-table td:last-child { text-align: right; font-weight: 600; }
+.breakdown-table .plus { color: #27AE60; }
+.breakdown-table .minus { color: #E74C3C; }
+.breakdown-table .total-row td { color: #003057; font-size: 15px; }
+
+/* ========== SCENARIO CARDS ========== */
+.scenario-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 16px; }
+.scenario-card {
+border: 1px solid #E0E6ED;
+border-radius: 12px;
+padding: 18px;
+background: white;
+}
+.scenario-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.scenario-icon { font-size: 24px; }
+.scenario-title { font-size: 13px; font-weight: 700; color: #003057; }
+.scenario-amount { font-size: 20px; font-weight: 700; }
+.scenario-label { font-size: 11px; color: #999; }
+.scenario-ok .scenario-amount { color: #27AE60; }
+.scenario-warn .scenario-amount { color: #E5A138; }
+.scenario-bad .scenario-amount { color: #E74C3C; }
+.scenario-bar-track { height: 6px; background: #E0E6ED; border-radius: 3px; margin-top: 8px; }
+.scenario-bar-fill { height: 6px; border-radius: 3px; transition: width 0.5s; }
+
+/* ========== NHG BADGE ========== */
+.nhg-badge {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+padding: 8px 16px;
+border-radius: 8px;
+font-size: 14px;
+font-weight: 700;
+}
+.nhg-yes { background: #E8F8EF; color: #27AE60; border: 1.5px solid #27AE60; }
+.nhg-no { background: #FFF0F0; color: #E74C3C; border: 1.5px solid #E74C3C; }
+.nhg-maybe { background: #FFF8E8; color: #E5A138; border: 1.5px solid #E5A138; }
+
+/* ========== CHECKLIST ========== */
+.checklist { list-style: none; }
+.checklist li {
+display: flex; align-items: flex-start; gap: 10px;
+padding: 8px 0;
+border-bottom: 1px solid #F0F4F8;
+font-size: 14px;
+}
+.checklist li:last-child { border-bottom: none; }
+.checklist li .check-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.checklist li.ok .check-icon { color: #27AE60; }
+.checklist li.warn .check-icon { color: #E5A138; }
+.checklist li.bad .check-icon { color: #E74C3C; }
+.checklist li .check-text { flex: 1; }
+.checklist li .check-val { font-weight: 700; color: #003057; }
+
+/* ========== DISCLAIMER ========== */
+.disclaimer {
+font-size: 12px;
+color: #777;
+background: #F8FAFC;
+border: 1px solid #E0E6ED;
+border-radius: 8px;
+padding: 12px 16px;
+margin-top: 24px;
+line-height: 1.5;
+}
+
+/* ========== PROGRESS INDICATOR ========== */
+.calc-indicator {
+text-align: center;
+padding: 40px;
+color: #777;
+font-size: 14px;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 640px) {
+.app-wrapper { padding: 12px 8px 40px; }
+.app-header { padding: 20px; }
+.content-area { padding: 20px; }
+.form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+.result-grid { grid-template-columns: 1fr; }
+.scenario-grid { grid-template-columns: 1fr; }
+.steps-bar { padding: 16px; }
+.step-label { display: none; }
+}
+
+/* ========== HIDDEN UTILITY ========== */
+.hidden { display: none !important; }
+</style>
+
+</head>
+<body>
+<div class="app-wrapper">
+
+<!-- ===== HEADER ===== -->
+
+<div class="app-header">
+<div class="header-badge">Trhk 2026 · AFM Leidraad · NHG 2026</div>
+<h1>🏠 Hypotheek Advies Tool 2026</h1>
+<p>Maximale hypotheek · Maandlasten · Scenarioanalyse · Adviesrapport</p>
+</div>
+
+<!-- ===== STEPS BAR ===== -->
+
+<div class="steps-bar">
+<div class="step-item active" id="step-indicator-1">
+<div class="step-num" id="step-num-1">1</div>
+<span class="step-label">Klant & Inkomen</span>
+</div>
+<div class="step-item" id="step-indicator-2">
+<div class="step-num" id="step-num-2">2</div>
+<span class="step-label">Woning & Hypotheek</span>
+</div>
+<div class="step-item" id="step-indicator-3">
+<div class="step-num" id="step-num-3">3</div>
+<span class="step-label">Verplichtingen</span>
+</div>
+<div class="step-item" id="step-indicator-4">
+<div class="step-num" id="step-num-4">4</div>
+<span class="step-label">Resultaten</span>
+</div>
+</div>
+
+<!-- ===== CONTENT AREA ===== -->
+
+<div class="content-area">
+
+```
+<!-- ===================== STAP 1: KLANT & INKOMEN ===================== -->
+<div id="step1">
+<div class="card">
+<div class="card-title"><span class="icon">👤</span> Klantgegevens</div>
+<div class="form-grid">
+<div class="form-group">
+<label for="klantNaam">Naam klant <span class="req">*</span></label>
+<input type="text" id="klantNaam" placeholder="Bijv. Familie De Vries">
+</div>
+<div class="form-group">
+<label for="adviseurNaam">Naam adviseur</label>
+<input type="text" id="adviseurNaam" placeholder="Uw naam">
+</div>
+<div class="form-group">
+<label for="geboortedatum1">Geboortedatum aanvrager <span class="req">*</span></label>
+<input type="date" id="geboortedatum1">
+</div>
+<div class="form-group">
+<label for="adviesDatum">Datum advies</label>
+<input type="date" id="adviesDatum">
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="icon">👥</span> Huishoudsituatie</div>
+<div class="form-group" style="margin-bottom:16px">
+<label>Huishoudsituatie <span class="req">*</span></label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="situatie" data-val="alleenstaand" id="btn-alleenstaand">Alleenstaand</button>
+<button type="button" class="toggle-btn" data-group="situatie" data-val="samen" id="btn-samen">Met partner</button>
+</div>
+</div>
+<div class="form-grid">
+<div class="form-group">
+<label for="inkomen1">Bruto jaarinkomen aanvrager <span class="req">*</span> <span class="hint">(incl. vakantiegeld)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="inkomen1" placeholder="50000" min="0" step="1000">
+</div>
+</div>
+<div class="form-group" id="inkomen2-group">
+<label for="inkomen2">Bruto jaarinkomen partner <span class="hint">(100% meetellen)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="inkomen2" placeholder="0" min="0" step="1000">
+</div>
+</div>
+</div>
+<div class="info-box" id="inkomen-hint">
+<strong>Tweeverdieners (Trhk 2026):</strong> Beide inkomens tellen voor 100% mee bij de bepaling van het toetsinkomen.
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="icon">🎯</span> Fiscale situatie</div>
+<div class="form-grid">
+<div class="form-group">
+<label>AOW-gerechtigde? <span class="hint">(67 jaar of ouder)</span></label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="aow" data-val="nee" id="btn-aow-nee">Nee</button>
+<button type="button" class="toggle-btn" data-group="aow" data-val="ja" id="btn-aow-ja">Ja</button>
+</div>
+</div>
+<div class="form-group">
+<label>Hypotheekrente fiscaal aftrekbaar?</label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="aftrek" data-val="box1" id="btn-box1">Ja (Box 1)</button>
+<button type="button" class="toggle-btn" data-group="aftrek" data-val="box3" id="btn-box3">Nee (Box 3)</button>
+</div>
+</div>
+</div>
+<div class="info-box" id="aow-auto-hint" style="margin-top:12px">
+<strong>Let op:</strong> De AOW-leeftijd is automatisch bepaald op basis van de geboortedatum. Controleer en pas indien nodig aan.
+</div>
+</div>
+
+<div class="btn-nav">
+<div></div>
+<button type="button" class="btn btn-cta" id="next1">Volgende: Woning & Hypotheek →</button>
+</div>
+</div>
+
+<!-- ===================== STAP 2: WONING & HYPOTHEEK ===================== -->
+<div id="step2" class="hidden">
+<div class="card">
+<div class="card-title"><span class="icon">🏡</span> Woninggegevens</div>
+<div class="form-grid">
+<div class="form-group">
+<label for="woningWaarde">Marktwaarde / aankoopprijs <span class="req">*</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="woningWaarde" placeholder="350000" min="0" step="5000">
+</div>
+</div>
+<div class="form-group">
+<label for="gewenstBedrag">Gewenst hypotheekbedrag <span class="req">*</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="gewenstBedrag" placeholder="300000" min="0" step="5000">
+</div>
+</div>
+</div>
+<div id="ltv-feedback" class="info-box" style="margin-top:8px">
+Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="icon">📊</span> Hypotheekparameters</div>
+<div class="form-grid">
+<div class="form-group">
+<label for="rente">Geoffreerde hypotheekrente <span class="req">*</span></label>
+<div class="input-suffix-group">
+<input type="number" id="rente" placeholder="4.25" min="0" max="15" step="0.05">
+<span class="suffix">%</span>
+</div>
+</div>
+<div class="form-group">
+<label for="rvp">Rentevaste periode <span class="req">*</span></label>
+<select id="rvp">
+<option value="1">1 jaar (variabel)</option>
+<option value="2">2 jaar</option>
+<option value="5">5 jaar</option>
+<option value="10" selected>10 jaar</option>
+<option value="15">15 jaar</option>
+<option value="20">20 jaar</option>
+<option value="30">30 jaar (vast)</option>
+</select>
+</div>
+<div class="form-group">
+<label for="looptijd">Looptijd hypotheek</label>
+<select id="looptijd">
+<option value="30" selected>30 jaar (standaard)</option>
+<option value="25">25 jaar</option>
+<option value="20">20 jaar</option>
+<option value="15">15 jaar</option>
+<option value="10">10 jaar</option>
+</select>
+</div>
+<div class="form-group">
+<label for="aflosvorm">Aflosvorm</label>
+<select id="aflosvorm">
+<option value="annuitair">Annuïtair (fiscaal verplicht)</option>
+<option value="lineair">Lineair</option>
+<option value="aflossingsvrij">Aflossingsvrij (niet aftrekbaar)</option>
+</select>
+</div>
+</div>
+<div id="toetsrente-info" class="info-box">
+<strong>Toetsrente:</strong> Bij RVP ≥ 10 jaar wordt de geoffreerde rente gebruikt. Bij RVP < 10 jaar geldt de minimale toetsrente van <strong>5,0%</strong> (AFM Q1 2026).
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="icon">⚡</span> Energielabel</div>
+<div class="form-group" style="margin-bottom:16px">
+<label>Energielabel woning <span class="req">*</span></label>
+<div class="toggle-group" id="label-toggle">
+<button type="button" class="toggle-btn active" data-group="label" data-val="EFG">E/F/G</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="CD">C/D</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="AB">A/B</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="Aplusplus">A+/A++</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="Aplusplusplus">A+++</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="Aplusplusplusplus">A++++</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="Aplusplusplusplus_garantie">A++++ garantie</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="geen">Geen label</button>
+</div>
+</div>
+<div id="label-info" class="info-box">
+<strong>E/F/G (standaard):</strong> Geen extra leenruimte. Standaardtabel van toepassing. Let op hogere energielasten.
+</div>
+
+<hr class="section-divider">
+
+<div class="form-grid">
+<div class="form-group">
+<label>Verduurzaming meefinancieren? (EBV)</label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="ebv" data-val="nee" id="btn-ebv-nee">Nee</button>
+<button type="button" class="toggle-btn" data-group="ebv" data-val="ja" id="btn-ebv-ja">Ja</button>
+</div>
+</div>
+<div class="form-group" id="ebv-bedrag-group" style="display:none">
+<label for="ebvBedrag">EBV-bedrag (verduurzaming)</label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="ebvBedrag" placeholder="15000" min="0" step="1000">
+</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="icon">🛡️</span> NHG</div>
+<div class="form-group">
+<label>Nationale Hypotheek Garantie (NHG) gewenst?</label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="nhg" data-val="ja" id="btn-nhg-ja">Ja, indien mogelijk</button>
+<button type="button" class="toggle-btn" data-group="nhg" data-val="nee" id="btn-nhg-nee">Nee</button>
+</div>
+</div>
+<div class="info-box" style="margin-top:12px">
+<strong>NHG-grens 2026:</strong> Uniforme grens voor alle woningtypen. Controleer de actuele kostengrens op nhg.nl.
+</div>
+</div>
+
+<div class="btn-nav">
+<button type="button" class="btn btn-ghost" id="prev2">← Terug</button>
+<button type="button" class="btn btn-cta" id="next2">Volgende: Verplichtingen →</button>
+</div>
+</div>
+
+<!-- ===================== STAP 3: VERPLICHTINGEN ===================== -->
+<div id="step3" class="hidden">
+<div class="card">
+<div class="card-title"><span class="icon">📚</span> Studielening (DUO)</div>
+<div class="form-grid">
+<div class="form-group">
+<label for="duoMaandlast">Wettelijke maandlast DUO <span class="hint">(huidig termijnbedrag)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="duoMaandlast" placeholder="0" min="0" step="10">
+</div>
+</div>
+<div class="form-group">
+<label for="duoRestschuld">Restschuld studielening <span class="hint">(ter informatie)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="duoRestschuld" placeholder="0" min="0" step="1000">
+</div>
+</div>
+</div>
+<div id="duo-brutering-info" class="info-box" style="display:none">
+<strong>Brutering studielening:</strong> De maandlast wordt gebruteerd met factor <span id="duo-factor">1,25</span>. Dit verlaagt de beschikbare maandruimte voor de hypotheek. <strong>Effect op max. hypotheek: −€<span id="duo-effect">0</span></strong>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="icon">💳</span> Overige financiële verplichtingen</div>
+<div class="form-grid">
+<div class="form-group">
+<label for="kredietMaandlast">Consumptief krediet <span class="hint">(totale maandlast)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="kredietMaandlast" placeholder="0" min="0" step="50">
+</div>
+</div>
+<div class="form-group">
+<label for="alimentatieMaandlast">Alimentatie <span class="hint">(maandelijks)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="alimentatieMaandlast" placeholder="0" min="0" step="50">
+</div>
+</div>
+<div class="form-group">
+<label for="erfpachtJaar">Erfpachtcanon <span class="hint">(per jaar)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="erfpachtJaar" placeholder="0" min="0" step="100">
+</div>
+</div>
+<div class="form-group">
+<label for="overigeVerplichtingen">Overige verplichtingen <span class="hint">(maand)</span></label>
+<div class="input-prefix-group">
+<span class="prefix">€</span>
+<input type="number" id="overigeVerplichtingen" placeholder="0" min="0" step="50">
+</div>
+</div>
+</div>
+<div class="info-box">
+<strong>Brutering (Trhk 2026):</strong> Verplichtingen waarvan de rente niet aftrekbaar is (consumptief krediet, private lease) dienen te worden gebruteerd bij een box 1-hypotheek. De tool past dit automatisch toe.
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="icon">⚠️</span> Risicosignalering (AFM Leidraad)</div>
+<div class="form-grid">
+<div class="form-group">
+<label>Kinderwens aanwezig?</label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="kinderwens" data-val="nee" id="btn-kw-nee">Nee</button>
+<button type="button" class="toggle-btn" data-group="kinderwens" data-val="ja" id="btn-kw-ja">Ja (toekomstig)</button>
+</div>
+</div>
+<div class="form-group">
+<label>Pensioen binnen 10 jaar?</label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="pensioen10j" data-val="nee" id="btn-p10-nee">Nee</button>
+<button type="button" class="toggle-btn" data-group="pensioen10j" data-val="ja" id="btn-p10-ja">Ja</button>
+</div>
+</div>
+<div class="form-group">
+<label>Maximaal lenen (LTI ≥ 95%)?</label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="maxlenen" data-val="nee" id="btn-ml-nee">Nee</button>
+<button type="button" class="toggle-btn" data-group="maxlenen" data-val="ja" id="btn-ml-ja">Ja</button>
+</div>
+</div>
+<div class="form-group">
+<label>AO-verzekering aanwezig?</label>
+<div class="toggle-group">
+<button type="button" class="toggle-btn active" data-group="aoverzekering" data-val="nee" id="btn-ao-nee">Nee / Onbekend</button>
+<button type="button" class="toggle-btn" data-group="aoverzekering" data-val="ja" id="btn-ao-ja">Ja</button>
+</div>
+</div>
+</div>
+<div class="info-box">
+<strong>AFM Leidraad 2025:</strong> Bij maximaal lenen, kinderwens of pensioen binnen 10 jaar dient de adviseur uitgebreider stil te staan bij het uitgavenpatroon, toekomstige inkomensscenario's en spaargedrag. Dit wordt meegenomen in het adviesrapport.
+</div>
+</div>
+
+<div class="btn-nav">
+<button type="button" class="btn btn-ghost" id="prev3">← Terug</button>
+<button type="button" class="btn btn-cta" id="next3">Berekenen & Resultaten →</button>
+</div>
+</div>
+
+<!-- ===================== STAP 4: RESULTATEN ===================== -->
+<div id="step4" class="hidden">
+<div id="results-container">
+<div class="calc-indicator">⚙️ Berekeningen worden uitgevoerd...</div>
+</div>
+
+<div class="btn-nav" id="step4-nav" style="display:none">
+<button type="button" class="btn btn-ghost" id="prev4">← Aanpassen</button>
+<button type="button" class="btn btn-cta" id="printBtn">🖨️ Adviesrapport afdrukken</button>
+</div>
+</div>
+```
+
+</div><!-- /content-area -->
+</div><!-- /app-wrapper -->
+
+<script>
+// ============================================================
+// FINANCIERINGSLASTNORMEN 2026 — OFFICIËLE TABELLEN (Bijlage Trhk 2026)
+// Bron: Bijlage-financieringslastnormen-2026.xlsx
+// Rente-index: 0=<=1.5%, 1=1.5-2%, 2=2-2.5%, 3=2.5-3%, 4=3-3.5%, 5=3.5-4%,
+// 6=4-4.5%, 7=4.5-5%, 8=5-5.5%, 9=5.5-6%, 10=6-6.5%, 11=>=6.5%
+// ============================================================
+
+const FL_NAOW = {
+30000:[15.5,16.5,17.5,18.4,19.3,20.1,20.9,21.6,22.2,22.7,23.2,23.7],
+31000:[16.2,17.3,18.3,19.3,20.2,21.2,22.0,22.7,23.4,24.1,24.6,25.1],
+32000:[16.7,17.9,19.0,20.1,21.1,22.1,23.0,23.8,24.6,25.3,25.9,26.4],
+33000:[17.1,18.3,19.5,20.6,21.6,22.6,23.6,24.6,25.4,26.1,26.8,27.4],
+34000:[17.3,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+35000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+36000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+37000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+38000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+39000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+40000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+41000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+42000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+43000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+44000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+45000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+46000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+47000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+48000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+49000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+50000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+51000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+52000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+53000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+54000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+55000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+56000:[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+57000:[17.5,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+58000:[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+59000:[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+60000:[17.7,18.7,19.7,20.7,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+61000:[17.7,18.7,19.7,20.7,21.7,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+62000:[17.8,18.8,19.8,20.7,21.7,22.7,23.6,24.6,25.5,26.4,27.3,28.1],
+63000:[17.8,18.9,19.9,20.9,21.8,22.7,23.7,24.6,25.5,26.4,27.3,28.1],
+64000:[17.9,18.9,19.9,21.0,21.9,22.8,23.7,24.6,25.5,26.4,27.3,28.1],
+65000:[18.0,19.0,20.0,21.0,22.0,22.9,23.8,24.7,25.5,26.4,27.3,28.1],
+66000:[18.1,19.1,20.1,21.1,22.1,23.0,23.9,24.7,25.6,26.4,27.3,28.1],
+67000:[18.2,19.2,20.2,21.2,22.2,23.1,24.0,24.8,25.7,26.5,27.3,28.1],
+68000:[18.3,19.4,20.4,21.4,22.3,23.2,24.1,25.0,25.8,26.7,27.4,28.2],
+69000:[18.5,19.5,20.5,21.5,22.5,23.4,24.3,25.1,26.0,26.8,27.6,28.3],
+70000:[18.6,19.7,20.7,21.7,22.7,23.6,24.5,25.3,26.2,27.0,27.8,28.5],
+71000:[18.8,19.9,20.9,21.9,22.9,23.8,24.7,25.6,26.4,27.2,28.0,28.7],
+72000:[19.0,20.0,21.1,22.1,23.1,24.1,25.0,25.8,26.6,27.4,28.2,28.9],
+73000:[19.1,20.2,21.3,22.3,23.3,24.3,25.2,26.0,26.9,27.6,28.4,29.2],
+74000:[19.3,20.4,21.5,22.5,23.5,24.5,25.4,26.3,27.1,27.9,28.6,29.3],
+75000:[19.4,20.5,21.6,22.6,23.7,24.6,25.6,26.4,27.3,28.1,28.8,29.5],
+76000:[19.5,20.6,21.7,22.8,23.8,24.8,25.7,26.6,27.5,28.2,29.0,29.7],
+77000:[19.6,20.8,21.9,22.9,24.0,24.9,25.9,26.8,27.6,28.4,29.2,29.9],
+78000:[19.7,20.9,22.0,23.1,24.1,25.1,26.1,27.0,27.8,28.6,29.4,30.1],
+79000:[19.8,20.9,22.1,23.2,24.2,25.2,26.2,27.1,27.9,28.7,29.5,30.2],
+80000:[19.9,21.0,22.2,23.2,24.3,25.3,26.3,27.2,28.1,28.9,29.6,30.3],
+81000:[20.0,21.1,22.2,23.3,24.3,25.4,26.4,27.3,28.1,29.0,29.7,30.4],
+82000:[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.3,28.2,29.0,29.8,30.5],
+83000:[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.4,28.2,29.1,29.9,30.6],
+84000:[20.2,21.3,22.4,23.4,24.5,25.5,26.5,27.4,28.3,29.1,29.9,30.6],
+85000:[20.2,21.3,22.4,23.5,24.5,25.5,26.5,27.4,28.3,29.2,29.9,30.7],
+86000:[20.2,21.4,22.5,23.5,24.6,25.6,26.5,27.4,28.4,29.2,30.0,30.7],
+87000:[20.3,21.4,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.2,30.0,30.8],
+88000:[20.4,21.5,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.3,30.1,30.8],
+89000:[20.5,21.5,22.6,23.7,24.7,25.7,26.6,27.6,28.4,29.3,30.1,30.8],
+90000:[20.5,21.6,22.6,23.7,24.7,25.7,26.7,27.6,28.5,29.3,30.1,30.9],
+91000:[20.5,21.6,22.7,23.7,24.8,25.8,26.7,27.6,28.5,29.3,30.2,30.9],
+92000:[20.6,21.7,22.7,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],
+93000:[20.7,21.7,22.8,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],
+94000:[20.8,21.8,22.8,23.9,24.9,25.9,26.9,27.8,28.6,29.5,30.2,31.0],
+95000:[20.8,21.9,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.3,31.0],
+96000:[20.9,21.9,23.0,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0],
+97000:[21.0,22.0,23.0,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.4,31.1],
+98000:[21.0,22.1,23.1,24.1,25.1,26.1,27.0,27.9,28.8,29.6,30.4,31.1],
+99000:[21.1,22.1,23.2,24.2,25.1,26.1,27.1,28.0,28.8,29.6,30.4,31.2],
+100000:[21.1,22.2,23.2,24.2,25.2,26.1,27.1,28.0,28.9,29.7,30.5,31.2],
+101000:[21.2,22.2,23.3,24.3,25.3,26.2,27.1,28.0,28.9,29.7,30.5,31.2],
+102000:[21.2,22.3,23.4,24.4,25.3,26.3,27.1,28.1,28.9,29.8,30.5,31.3],
+103000:[21.3,22.4,23.4,24.4,25.4,26.3,27.2,28.1,29.0,29.8,30.6,31.3],
+104000:[21.3,22.4,23.5,24.5,25.5,26.4,27.3,28.1,29.0,29.8,30.6,31.3],
+105000:[21.3,22.5,23.5,24.5,25.5,26.5,27.3,28.2,29.1,29.9,30.6,31.4],
+106000:[21.4,22.5,23.6,24.6,25.6,26.5,27.4,28.2,29.1,29.9,30.7,31.4],
+107000:[21.4,22.5,23.7,24.7,25.6,26.6,27.5,28.3,29.1,30.0,30.7,31.5],
+108000:[21.5,22.6,23.7,24.7,25.7,26.7,27.5,28.4,29.2,30.0,30.8,31.5],
+109000:[21.5,22.6,23.7,24.8,25.8,26.7,27.6,28.4,29.2,30.0,30.8,31.5],
+110000:[21.6,22.7,23.7,24.8,25.8,26.7,27.7,28.5,29.3,30.0,30.8,31.5],
+111000:[21.6,22.7,23.8,24.8,25.9,26.8,27.7,28.5,29.3,30.1,30.8,31.6],
+112000:[21.7,22.8,23.8,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.9,31.6],
+113000:[21.7,22.8,23.9,24.9,25.9,26.9,27.8,28.7,29.4,30.2,30.9,31.7],
+114000:[21.8,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.2,30.9,31.7],
+115000:[21.8,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0,31.7],
+116000:[21.8,22.9,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.3,31.0,31.7],
+117000:[21.9,23.0,24.1,25.1,26.1,27.0,28.0,28.8,29.6,30.4,31.1,31.8],
+118000:[21.9,23.0,24.1,25.1,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8],
+119000:[22.0,23.1,24.1,25.2,26.2,27.1,28.0,28.9,29.7,30.5,31.2,31.9],
+120000:[22.0,23.1,24.2,25.2,26.2,27.2,28.1,28.9,29.8,30.5,31.3,31.9],
+121000:[22.0,23.2,24.2,25.3,26.3,27.2,28.1,29.0,29.8,30.6,31.3,32.0],
+122000:[22.1,23.2,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.4,32.0],
+123000:[22.1,23.2,24.3,25.4,26.4,27.3,28.2,29.1,29.9,30.7,31.4,32.1],
+124000:[22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],
+125000:[22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]
+};
+
+const FL_AOW = {
+29000:[18.5,18.9,19.4,19.7,20.1,20.4,20.7,20.9,21.1,21.3,21.5,21.7],
+30000:[19.2,19.8,20.3,20.8,21.1,21.5,21.8,22.1,22.3,22.5,22.7,22.9],
+31000:[19.9,20.6,21.2,21.7,22.1,22.5,22.8,23.1,23.4,23.7,23.9,24.1],
+32000:[20.5,21.2,21.8,22.4,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2],
+33000:[20.9,21.7,22.3,22.9,23.5,24.0,24.5,24.8,25.2,25.5,25.7,26.0],
+34000:[21.2,22.0,22.8,23.4,24.0,24.5,25.1,25.5,25.9,26.2,26.5,26.7],
+35000:[21.6,22.4,23.1,23.9,24.5,25.1,25.6,26.1,26.5,26.9,27.2,27.5],
+36000:[21.8,22.7,23.5,24.3,24.9,25.6,26.1,26.6,27.1,27.5,27.9,28.2],
+37000:[21.9,22.9,23.8,24.6,25.3,26.0,26.6,27.1,27.5,28.0,28.4,28.8],
+38000:[22.0,23.1,24.0,24.9,25.7,26.3,27.0,27.5,28.0,28.4,28.9,29.2],
+39000:[22.1,23.2,24.2,25.1,25.9,26.6,27.3,27.9,28.4,28.9,29.3,29.7],
+40000:[22.2,23.3,24.3,25.2,26.1,26.9,27.6,28.2,28.8,29.3,29.7,30.1],
+41000:[22.3,23.4,24.4,25.3,26.3,27.1,27.9,28.5,29.1,29.6,30.1,30.5],
+42000:[22.4,23.5,24.5,25.5,26.4,27.3,28.1,28.8,29.4,30.0,30.5,30.9],
+43000:[22.5,23.6,24.6,25.6,26.6,27.4,28.3,29.0,29.7,30.3,30.8,31.3],
+44000:[22.7,23.7,24.8,25.8,26.7,27.6,28.4,29.2,29.9,30.6,31.1,31.6],
+45000:[22.8,23.9,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.8,31.4,31.9],
+46000:[22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,30.9,31.6,32.2],
+47000:[23.1,24.1,25.2,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8,32.4],
+48000:[23.1,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.3,32.0,32.6],
+49000:[23.3,24.4,25.5,26.5,27.5,28.3,29.2,30.0,30.8,31.5,32.2,32.8],
+50000:[23.4,24.6,25.6,26.7,27.6,28.6,29.4,30.2,31.0,31.7,32.4,33.0],
+55000:[24.8,26.0,27.2,28.3,29.3,30.3,31.1,32.0,32.9,33.6,34.3,35.0],
+60000:[25.5,27.1,28.6,29.9,31.1,32.1,33.1,34.1,34.9,35.7,36.4,37.1],
+65000:[25.9,27.6,29.2,30.8,32.3,33.6,34.6,35.6,36.6,37.5,38.3,39.0],
+70000:[26.2,27.9,29.6,31.3,32.8,34.3,35.7,36.9,37.9,38.9,39.7,40.5],
+75000:[26.5,28.2,29.8,31.4,33.1,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+80000:[27.1,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+85000:[27.5,29.0,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+90000:[27.7,29.2,30.6,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+95000:[27.9,29.3,30.8,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+100000:[28.0,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+105000:[28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],
+110000:[28.4,29.8,31.2,32.5,33.8,35.1,36.3,37.5,38.6,39.6,40.6,41.7]
+};
+
+const FL_NAOW_BOX3 = {
+30000:[14.0,14.2,14.5,14.7,14.9,15.1,15.2,15.4,15.6,15.7,15.8,16.0],
+35000:[15.7,16.0,16.2,16.5,16.7,16.9,17.1,17.3,17.5,17.6,17.8,17.9],
+40000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+50000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+60000:[16.3,16.6,16.9,17.1,17.3,17.5,17.7,17.9,18.1,18.3,18.4,18.6],
+70000:[17.2,17.5,17.8,18.1,18.4,18.6,18.8,19.0,19.2,19.4,19.5,19.7],
+80000:[18.5,18.9,19.2,19.5,19.8,20.0,20.3,20.5,20.7,20.9,21.1,21.3],
+90000:[19.3,19.7,20.0,20.3,20.6,20.9,21.1,21.3,21.6,21.8,22.0,22.2],
+100000:[19.9,20.2,20.6,20.9,21.2,21.5,21.8,22.0,22.2,22.4,22.6,22.8],
+110000:[20.3,20.7,21.1,21.4,21.7,22.0,22.3,22.5,22.7,23.0,23.2,23.4],
+125000:[20.9,21.2,21.6,21.9,22.3,22.6,22.8,23.1,23.3,23.6,23.8,24.0]
+};
+
+// ============================================================
+// HELPER FUNCTIES
+// ============================================================
+
+function nf(n, decimals = 0) {
+if (isNaN(n) || n === null || n === undefined) return '—';
+return new Intl.NumberFormat('nl-NL', {
+minimumFractionDigits: decimals,
+maximumFractionDigits: decimals
+}).format(n);
+}
+
+function euro(n, decimals = 0) {
+return '€\u00A0' + nf(n, decimals);
+}
+
+function pct(n, decimals = 1) {
+return nf(n, decimals) + '%';
+}
+
+// Rente-index bepalen (0-11)
+function getRenteIndex(r) {
+const grenzen = [0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065];
+const idx = grenzen.findIndex(g => r <= g);
+return idx === -1 ? 11 : idx;
+}
+
+// FL-percentage opzoeken
+function getFL(tabel, toetsrente, inkomen) {
+const idx = getRenteIndex(toetsrente);
+let table;
+if (tabel === 'naow') table = FL_NAOW;
+else if (tabel === 'aow') table = FL_AOW;
+else table = FL_NAOW_BOX3;
+
+const keys = Object.keys(table).map(Number).sort((a,b) => a-b);
+const minKey = keys[0];
+const maxKey = keys[keys.length - 1];
+const inkomenRounded = Math.max(minKey, Math.min(maxKey, Math.round(inkomen / 1000) * 1000));
+
+// Zoek dichtstbijzijnde sleutel
+let closest = keys[0];
+let minDiff = Math.abs(inkomenRounded - keys[0]);
+for (const k of keys) {
+const d = Math.abs(inkomenRounded - k);
+if (d < minDiff) { minDiff = d; closest = k; }
+}
+
+return (table[closest][idx] || table[minKey][idx]) / 100;
+}
+
+// Annuïteitsfactor
+function annFactor(r, n_maanden) {
+const rm = r / 12;
+if (rm < 0.0001) return 1 / n_maanden;
+return rm * Math.pow(1 + rm, n_maanden) / (Math.pow(1 + rm, n_maanden) - 1);
+}
+
+// Max hypotheek vanuit FL-percentage
+function maxHypotheekLTI(inkomen, tabel, toetsrente, looptijdJaar) {
+const fl = getFL(tabel, toetsrente, inkomen);
+const brutoMaandlast = (inkomen * fl) / 12;
+return brutoMaandlast / annFactor(toetsrente, looptijdJaar * 12);
+}
+
+// Eigenwoningforfait berekenen
+function berekenEWF(wozWaarde) {
+if (wozWaarde <= 12500) return 0;
+if (wozWaarde <= 25000) return wozWaarde * 0.001;
+if (wozWaarde <= 50000) return wozWaarde * 0.002;
+if (wozWaarde <= 75000) return wozWaarde * 0.0025;
+if (wozWaarde <= 1350000) return wozWaarde * 0.0035;
+return 4725 + (wozWaarde - 1350000) * 0.0235;
+}
+
+// Box 1 belasting berekenen
+function berekenBox1(inkomen) {
+const s1 = 38883, s2 = 78426;
+if (inkomen <= s1) return inkomen * 0.3575;
+if (inkomen <= s2) return s1 * 0.3575 + (inkomen - s1) * 0.3756;
+return s1 * 0.3575 + (s2 - s1) * 0.3756 + (inkomen - s2) * 0.495;
+}
+
+// Netto maandlast berekening
+function berekenNettoMaandlast(hypotheek, rente, looptijdJaar, wozWaarde, inkomen) {
+const brutoMaand = hypotheek * annFactor(rente, looptijdJaar * 12);
+const renteJaar = hypotheek * rente; // eerste jaar, benadering
+const aftrekPct = Math.min(0.3575, 0.3575); // begrensd op 35,75%
+const aftrekJaar = renteJaar * aftrekPct;
+const ewf = berekenEWF(wozWaarde);
+const nettoRenteVoordeel = Math.max(0, aftrekJaar - ewf * aftrekPct);
+const nettoMaand = brutoMaand - (nettoRenteVoordeel / 12);
+return { brutoMaand, nettoMaand, renteJaar, aftrekJaar, ewf };
+}
+
+// Bruteringsfactor studielening
+function getBruteringFactor(toetsrente) {
+const r = toetsrente * 100;
+if (r <= 1.5) return 1.05;
+if (r <= 2.0) return 1.05;
+if (r <= 2.5) return 1.10;
+if (r <= 3.0) return 1.15;
+if (r <= 3.5) return 1.20;
+if (r <= 4.0) return 1.20;
+if (r <= 4.5) return 1.25;
+if (r <= 5.0) return 1.30;
+if (r <= 5.5) return 1.30;
+if (r <= 6.0) return 1.35;
+if (r <= 6.5) return 1.40;
+return 1.40;
+}
+
+// Energielabel opslag
+function getLabelOpslag(label) {
+const opslagen = {
+'EFG': 0, 'CD': 5000, 'AB': 10000,
+'Aplusplus': 20000, 'Aplusplusplus': 25000,
+'Aplusplusplusplus': 30000, 'Aplusplusplusplus_garantie': 40000,
+'geen': 0
+};
+return opslagen[label] || 0;
+}
+
+// NHG grens 2026 (indicatief - check nhg.nl voor definitief)
+const NHG_GRENS_2026 = 435000;
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+// Stap 1
+klantNaam: '', adviseurNaam: '',
+geboortedatum1: '', adviesDatum: '',
+situatie: 'alleenstaand',
+inkomen1: 0, inkomen2: 0,
+aow: 'nee', aftrek: 'box1',
+// Stap 2
+woningWaarde: 0, gewenstBedrag: 0,
+rente: 0, rvp: 10, looptijd: 30, aflosvorm: 'annuitair',
+label: 'EFG', ebv: 'nee', ebvBedrag: 0, nhg: 'ja',
+// Stap 3
+duoMaandlast: 0, duoRestschuld: 0,
+kredietMaandlast: 0, alimentatieMaandlast: 0,
+erfpachtJaar: 0, overigeVerplichtingen: 0,
+kinderwens: 'nee', pensioen10j: 'nee', maxlenen: 'nee', aoverzekering: 'nee'
+};
+
+// ============================================================
+// UI STATE HELPERS
+// ============================================================
+function getVal(id, fallback = 0) {
+const el = document.getElementById(id);
+if (!el) return fallback;
+const v = el.value;
+if (el.type === 'number') return parseFloat(v) || 0;
+return v || fallback;
+}
+
+function getToggle(group) {
+const btns = document.querySelectorAll(`.toggle-btn[data-group="${group}"]`);
+for (const btn of btns) { if (btn.classList.contains('active')) return btn.dataset.val; }
+return null;
+}
+
+// ============================================================
+// WIZARD NAVIGATIE
+// ============================================================
+let currentStep = 1;
+
+function showStep(n) {
+for (let i = 1; i <= 4; i++) {
+const el = document.getElementById('step' + i);
+if (el) el.classList.toggle('hidden', i !== n);
+const ind = document.getElementById('step-indicator-' + i);
+const num = document.getElementById('step-num-' + i);
+if (ind) {
+ind.classList.remove('active', 'done');
+if (i === n) ind.classList.add('active');
+if (i < n) { ind.classList.add('done'); if (num) num.textContent = '✓'; }
+if (i >= n && num) num.textContent = String(i);
+}
+}
+currentStep = n;
+window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function readStep1() {
+state.klantNaam = getVal('klantNaam', '');
+state.adviseurNaam = getVal('adviseurNaam', '');
+state.geboortedatum1 = getVal('geboortedatum1', '');
+state.adviesDatum = getVal('adviesDatum', '');
+state.situatie = getToggle('situatie') || 'alleenstaand';
+state.inkomen1 = getVal('inkomen1');
+state.inkomen2 = getVal('inkomen2');
+state.aow = getToggle('aow') || 'nee';
+state.aftrek = getToggle('aftrek') || 'box1';
+}
+
+function readStep2() {
+state.woningWaarde = getVal('woningWaarde');
+state.gewenstBedrag = getVal('gewenstBedrag');
+state.rente = getVal('rente') / 100;
+state.rvp = parseInt(getVal('rvp', '10'));
+state.looptijd = parseInt(getVal('looptijd', '30'));
+state.aflosvorm = getVal('aflosvorm', 'annuitair');
+state.label = getToggle('label') || 'EFG';
+state.ebv = getToggle('ebv') || 'nee';
+state.ebvBedrag = getVal('ebvBedrag');
+state.nhg = getToggle('nhg') || 'ja';
+}
+
+function readStep3() {
+state.duoMaandlast = getVal('duoMaandlast');
+state.duoRestschuld = getVal('duoRestschuld');
+state.kredietMaandlast = getVal('kredietMaandlast');
+state.alimentatieMaandlast = getVal('alimentatieMaandlast');
+state.erfpachtJaar = getVal('erfpachtJaar');
+state.overigeVerplichtingen = getVal('overigeVerplichtingen');
+state.kinderwens = getToggle('kinderwens') || 'nee';
+state.pensioen10j = getToggle('pensioen10j') || 'nee';
+state.maxlenen = getToggle('maxlenen') || 'nee';
+state.aoverzekering = getToggle('aoverzekering') || 'nee';
+}
+
+// ============================================================
+// CORE BEREKENING
+// ============================================================
+function bereken() {
+const {
+situatie, inkomen1, inkomen2, aow, aftrek,
+woningWaarde, gewenstBedrag, rente, rvp, looptijd, aflosvorm,
+label, ebv, ebvBedrag, nhg,
+duoMaandlast, kredietMaandlast, alimentatieMaandlast, erfpachtJaar, overigeVerplichtingen
+} = state;
+
+// Toetsinkomen
+const toetsinkomen = inkomen1 + inkomen2;
+
+// Toetsrente: min 5% bij RVP < 10 jaar
+const toetsrente = (rvp < 10) ? Math.max(rente, 0.05) : rente;
+
+// FL-tabel selectie
+const tabelType = aow === 'ja' ? 'aow' : (aftrek === 'box3' ? 'b3naow' : 'naow');
+
+// Startsleutel voor AOW-tabel
+const minInkomenAOW = 29000;
+const effectiefInkomen = Math.max(aow === 'ja' ? minInkomenAOW : 30000, toetsinkomen);
+
+// FL-percentage
+const flPct = getFL(tabelType, toetsrente, effectiefInkomen);
+
+// Max hypotheek basis (LTI)
+const maxHypLTI_basis = maxHypotheekLTI(effectiefInkomen, tabelType, toetsrente, looptijd);
+
+// Alleenstaanden-opslag
+const alleenstaandeGrens = aow === 'ja' ? 29000 : 30000;
+const alleenstaandeOpslag = (situatie === 'alleenstaand' && inkomen2 === 0 && inkomen1 > alleenstaandeGrens) ? 17000 : 0;
+
+// Energielabel-opslag (bij aankoop)
+const labelOpslag = getLabelOpslag(label);
+
+// EBV-opslag (verduurzaming)
+const ebvOpslagMax = {
+'EFG': 20000, 'CD': 15000, 'AB': 10000,
+'Aplusplus': 10000, 'Aplusplusplus': 0,
+'Aplusplusplusplus': 0, 'Aplusplusplusplus_garantie': 0,
+'geen': 10000
+};
+const ebvOpslag = (ebv === 'ja') ? Math.min(ebvBedrag || 0, ebvOpslagMax[label] || 0) : 0;
+
+// Beschikbare bruto maandruimte (voor aftrek verplichtingen)
+const brutoBeschikbaarMaand = (effectiefInkomen * flPct) / 12;
+
+// Verplichtingen aftrekken (gebruteerd voor box1)
+const bruteringFactor = (aftrek === 'box1') ? getBruteringFactor(toetsrente) : 1.0;
+const duoGebruteerd = duoMaandlast * bruteringFactor;
+const kredietGebruteerd = kredietMaandlast * bruteringFactor;
+const alimentatieGebruteerd = alimentatieMaandlast; // alimentatie is aftrekbaar
+const erfpachtMaand = erfpachtJaar / 12;
+const overigeGebruteerd = overigeVerplichtingen * bruteringFactor;
+
+const totaalVerplichtingenMaand = duoGebruteerd + kredietGebruteerd + alimentatieGebruteerd + erfpachtMaand + overigeGebruteerd;
+const nettoBeschikbaarMaand = Math.max(0, brutoBeschikbaarMaand - totaalVerplichtingenMaand);
+
+// Max hypotheek na verplichtingen
+const maxHypLTI_naVerplichtingen = nettoBeschikbaarMaand / annFactor(toetsrente, looptijd * 12);
+
+// Max hypotheek met opslagen
+const maxHypLTI_finaal = maxHypLTI_naVerplichtingen + alleenstaandeOpslag + labelOpslag + ebvOpslag;
+
+// LTV check
+const maxHypLTV = woningWaarde * 1.00;
+const maxHypLTV_EBV = ebv === 'ja' ? woningWaarde * 1.06 : woningWaarde;
+
+// Definitief maximum
+const maxHyp = Math.floor(Math.min(maxHypLTI_finaal, maxHypLTV_EBV));
+
+// Gewenste hypotheek toets
+const gewenstToets = gewenstBedrag > 0 ? gewenstBedrag : maxHyp;
+const ltv = woningWaarde > 0 ? (gewenstToets / woningWaarde) * 100 : 0;
+const lti = toetsinkomen > 0 ? (gewenstToets / toetsinkomen) : 0;
+const benutting = maxHyp > 0 ? (gewenstToets / maxHypLTI_finaal) * 100 : 0;
+
+// NHG check
+const nhgMogelijk = woningWaarde <= NHG_GRENS_2026 && gewenstToets <= NHG_GRENS_2026;
+const nhgCheck = nhg === 'ja' ? (nhgMogelijk ? 'ja' : 'nee') : 'niet_gewenst';
+
+// Maandlasten (o.b.v. gewenste of max hypotheek)
+const rekHyp = gewenstBedrag > 0 ? Math.min(gewenstBedrag, maxHyp) : Math.min(maxHyp, woningWaarde || maxHyp);
+const woz = woningWaarde || rekHyp;
+const maandInfo = berekenNettoMaandlast(rekHyp, rente, looptijd, woz, inkomen1);
+
+// Scenarioanalyse: +2% rente (na 10 jaar)
+const renteScenario = rente + 0.02;
+const hypotheekNa10Jaar = rekHyp * Math.pow(1 + rente / 12, -120) /
+Math.pow(1 + rente / 12, 12 * looptijd - 120) *
+(Math.pow(1 + rente / 12, 12 * looptijd) - 1) /
+(Math.pow(1 + rente / 12, 12 * looptijd - 120) - 1);
+const maandLastNa10Jaar = hypotheekNa10Jaar * annFactor(renteScenario, (looptijd - 10) * 12);
+const stijgingMaandlast = maandLastNa10Jaar - maandInfo.brutoMaand;
+
+// Scenarioanalyse: 70% inkomen (AO)
+const inkomenAO = toetsinkomen * 0.70;
+const maxHypAO = maxHypotheekLTI(Math.max(aow === 'ja' ? minInkomenAOW : 30000, inkomenAO), tabelType, toetsrente, looptijd);
+const maandlastAO_pct = (toetsinkomen > 0) ? (maandInfo.brutoMaand * 12 / inkomenAO) * 100 : 0;
+
+// Eigenaarslasten
+const eigenaarslasten = woz * 0.013335;
+
+// Risico-signalen
+const risicos = [];
+if (ltv > 100) risicos.push({ type: 'bad', text: `LTV van ${pct(ltv,1)} overschrijdt het maximum van 100% (of 106% bij EBV)` });
+if (benutting > 100) risicos.push({ type: 'bad', text: `Gewenste hypotheek overschrijdt de maximale leenruimte` });
+if (benutting > 95) risicos.push({ type: 'warn', text: `Maximaal lenen: uitgebreid stilstaan bij uitgavenpatroon vereist (AFM Leidraad)` });
+if (state.kinderwens === 'ja') risicos.push({ type: 'warn', text: `Kinderwens: doorrekenen effect op inkomen en woonlasten bij eventuele teruggang in arbeid` });
+if (state.pensioen10j === 'ja') risicos.push({ type: 'warn', text: `Pensioen binnen 10 jaar: toets of hypotheek betaalbaar blijft op pensioenniveau (Trhk-verplichting)` });
+if (stijgingMaandlast > 200) risicos.push({ type: 'warn', text: `Renteschok +2%: maandlast stijgt met ${euro(stijgingMaandlast)}/mnd bij herziening` });
+if (state.aoverzekering === 'nee') risicos.push({ type: 'warn', text: `Geen AO-verzekering: adviseer doorrekening arbeidsongeschiktheidsscenario` });
+if (ltv < 101 && benutting <= 100) risicos.push({ type: 'ok', text: `LTV ${pct(ltv,1)} — binnen toegestane norm van 100%` });
+if (nhgCheck === 'ja') risicos.push({ type: 'ok', text: `NHG mogelijk: woningwaarde en hypotheekbedrag binnen NHG-grens 2026` });
+
+return {
+toetsinkomen, toetsrente, tabelType, flPct,
+maxHypLTI_basis, alleenstaandeOpslag, labelOpslag, ebvOpslag,
+totaalVerplichtingenMaand, brutoBeschikbaarMaand, nettoBeschikbaarMaand,
+maxHypLTI_naVerplichtingen, maxHypLTI_finaal, maxHypLTV,
+maxHyp, gewenstToets, rekHyp, ltv, lti, benutting,
+nhgMogelijk, nhgCheck, duoGebruteerd, kredietGebruteerd,
+bruteringFactor, maandInfo,
+renteScenario, hypotheekNa10Jaar, maandLastNa10Jaar, stijgingMaandlast,
+inkomenAO, maxHypAO, maandlastAO_pct,
+eigenaarslasten, woz, risicos
+};
+}
+
+// ============================================================
+// RESULTATEN RENDEREN
+// ============================================================
+function renderResults() {
+const r = bereken();
+const container = document.getElementById('results-container');
+const nav = document.getElementById('step4-nav');
+if (nav) nav.style.display = 'flex';
+
+// NHG badge
+let nhgBadge = '';
+if (state.nhg === 'nee') {
+nhgBadge = '<span class="nhg-badge nhg-no">🛡️ NHG niet gewenst</span>';
+} else if (r.nhgCheck === 'ja') {
+nhgBadge = '<span class="nhg-badge nhg-yes">✅ NHG mogelijk</span>';
+} else {
+nhgBadge = '<span class="nhg-badge nhg-no">❌ NHG niet mogelijk (boven grens)</span>';
+}
+
+// Scenario kleuren
+function scenarioClass(pct_) {
+if (pct_ < 35) return 'scenario-ok';
+if (pct_ < 45) return 'scenario-warn';
+return 'scenario-bad';
+}
+
+const maandlastPctHuidig = r.toetsinkomen > 0 ? (r.maandInfo.brutoMaand * 12 / r.toetsinkomen * 100) : 0;
+const maandlastPctScenario = r.toetsinkomen > 0 ? (r.maandLastNa10Jaar * 12 / r.toetsinkomen * 100) : 0;
+
+// Checklist items
+const checkItems = r.risicos.map(ri => `
+<li class="${ri.type}">
+<span class="check-icon">${ri.type === 'ok' ? '✅' : ri.type === 'warn' ? '⚠️' : '❌'}</span>
+<span class="check-text">${ri.text}</span>
+</li>
+`).join('');
+
+// Breakdown tabel
+const duoEffectMaand = r.duoGebruteerd;
+const kredietEffectMaand = r.kredietGebruteerd;
+
+container.innerHTML = `
+<!-- HERO: Maximale Hypotheek -->
+<div class="result-hero">
+<div class="result-hero-badge">Maximale leenruimte 2026</div>
+<div class="result-hero-label">Maximale hypotheek (LTI conform Trhk 2026)</div>
+<div class="result-hero-amount">${euro(r.maxHyp)}</div>
+<div class="result-hero-sub">
+Toetsinkomen ${euro(r.toetsinkomen)} · Toetsrente ${pct(r.toetsrente*100, 2)} · FL-percentage ${pct(r.flPct*100, 1)}
+</div>
+</div>
+
+<!-- KERNGETALLEN -->
+<div class="result-grid">
+<div class="result-card">
+<div class="result-card-label">Bruto maandlast</div>
+<div class="result-card-value">${euro(r.maandInfo.brutoMaand)}</div>
+<div class="result-card-sub">o.b.v. ${euro(r.rekHyp)} hypotheek, ${pct(state.rente*100,2)} rente</div>
+</div>
+<div class="result-card success">
+<div class="result-card-label">Netto maandlast</div>
+<div class="result-card-value">${euro(r.maandInfo.nettoMaand)}</div>
+<div class="result-card-sub">Na renteaftrek (${pct(3.575,1)}) en EWF</div>
+</div>
+<div class="result-card">
+<div class="result-card-label">Loan-to-Value (LTV)</div>
+<div class="result-card-value ${r.ltv > 100 ? 'warning' : ''}">${pct(r.ltv, 1)}</div>
+<div class="result-card-sub">Max 100% (106% bij EBV)</div>
+</div>
+<div class="result-card">
+<div class="result-card-label">Loan-to-Income (LTI)</div>
+<div class="result-card-value">${nf(r.lti, 1)}×</div>
+<div class="result-card-sub">Verhouding hypotheek / inkomen</div>
+</div>
+<div class="result-card accent">
+<div class="result-card-label">Renteaftrekvoordeel</div>
+<div class="result-card-value">${euro(r.maandInfo.aftrekJaar / 12)}<span style="font-size:14px">/mnd</span></div>
+<div class="result-card-sub">${euro(r.maandInfo.aftrekJaar)}/jaar (35,75%)</div>
+</div>
+<div class="result-card">
+<div class="result-card-label">Eigenaarslasten</div>
+<div class="result-card-value">${euro(r.eigenaarslasten / 12)}<span style="font-size:14px">/mnd</span></div>
+<div class="result-card-sub">Onderhoud, OZB, opstal (1,33% WOZ)</div>
+</div>
+</div>
+
+<!-- NHG -->
+<div style="margin-bottom:16px">
+${nhgBadge}
+${r.nhgCheck === 'ja' ? `<span style="font-size:13px; color:#555; margin-left:12px">Woningwaarde ${euro(state.woningWaarde)} ≤ NHG-grens ${euro(NHG_GRENS_2026)}</span>` : ''}
+</div>
+
+<!-- OPBOUW BEREKENING -->
+<div class="card">
+<div class="card-title"><span class="icon">🔢</span> Opbouw maximale hypotheek</div>
+<table class="breakdown-table">
+<tr><td>Maximale hypotheek o.b.v. FL-tabel (${state.aow==='ja'?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'})</td><td>${euro(r.maxHypLTI_basis)}</td></tr>
+${r.totaalVerplichtingenMaand > 0 ? `<tr class="minus"><td>− Verplichtingen (gebruteerd, factor ${nf(r.bruteringFactor, 2)})</td><td>−${euro((r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen))}</td></tr>` : ''}
+${r.alleenstaandeOpslag > 0 ? `<tr class="plus"><td>+ Alleenstaanden-opslag (Trhk art. 3a)</td><td>+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
+${r.labelOpslag > 0 ? `<tr class="plus"><td>+ Energielabel-opslag (${state.label})</td><td>+${euro(r.labelOpslag)}</td></tr>` : ''}
+${r.ebvOpslag > 0 ? `<tr class="plus"><td>+ EBV-opslag verduurzaming</td><td>+${euro(r.ebvOpslag)}</td></tr>` : ''}
+<tr class="total-row"><td>Maximale hypotheek LTI</td><td>${euro(r.maxHypLTI_finaal)}</td></tr>
+<tr><td>Maximale hypotheek LTV (100% van ${euro(state.woningWaarde || r.maxHyp)})</td><td>${euro(r.maxHypLTV)}</td></tr>
+<tr class="total-row"><td>✅ Definitief maximum (laagste van LTI / LTV)</td><td>${euro(r.maxHyp)}</td></tr>
+</table>
+</div>
+
+<!-- SCENARIOANALYSE -->
+<div class="card">
+<div class="card-title"><span class="icon">📈</span> Scenarioanalyse (AFM Leidraad 2025)</div>
+<div class="scenario-grid">
+<!-- Huidig -->
+<div class="scenario-card scenario-ok">
+<div class="scenario-card-header">
+<span class="scenario-icon">✅</span>
+<div class="scenario-title">Huidige situatie</div>
+</div>
+<div class="scenario-amount">${euro(r.maandInfo.brutoMaand)}<span style="font-size:14px">/mnd</span></div>
+<div class="scenario-label">Bruto maandlast (${pct(maandlastPctHuidig, 1)} v. inkomen)</div>
+<div class="scenario-bar-track"><div class="scenario-bar-fill" style="width:${Math.min(100, maandlastPctHuidig/50*100)}%; background:#27AE60"></div></div>
+</div>
+<!-- Renteschok +2% -->
+<div class="scenario-card ${scenarioClass(maandlastPctScenario)}">
+<div class="scenario-card-header">
+<span class="scenario-icon">📊</span>
+<div class="scenario-title">Renteschok +2% (na 10 jr)</div>
+</div>
+<div class="scenario-amount">${euro(r.maandLastNa10Jaar)}<span style="font-size:14px">/mnd</span></div>
+<div class="scenario-label">+${euro(r.stijgingMaandlast)}/mnd · ${pct(maandlastPctScenario, 1)} v. inkomen</div>
+<div class="scenario-bar-track"><div class="scenario-bar-fill" style="width:${Math.min(100, maandlastPctScenario/50*100)}%; background:${maandlastPctScenario < 35 ? '#27AE60' : maandlastPctScenario < 45 ? '#E5A138' : '#E74C3C'}"></div></div>
+</div>
+<!-- Arbeidsongeschiktheid 70% -->
+<div class="scenario-card ${scenarioClass(r.maandlastAO_pct)}">
+<div class="scenario-card-header">
+<span class="scenario-icon">🏥</span>
+<div class="scenario-title">Arbeidsongeschiktheid (70%)</div>
+</div>
+<div class="scenario-amount">${pct(r.maandlastAO_pct, 1)}</div>
+<div class="scenario-label">v. AO-inkomen (${euro(r.inkomenAO)}/jr)</div>
+<div class="scenario-bar-track"><div class="scenario-bar-fill" style="width:${Math.min(100, r.maandlastAO_pct/50*100)}%; background:${r.maandlastAO_pct < 35 ? '#27AE60' : r.maandlastAO_pct < 45 ? '#E5A138' : '#E74C3C'}"></div></div>
+</div>
+</div>
+</div>
+
+<!-- RISICO CHECKLIST -->
+<div class="card">
+<div class="card-title"><span class="icon">🔍</span> AFM Advies-checklist</div>
+<ul class="checklist">
+${checkItems}
+</ul>
+</div>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+<strong>Disclaimer:</strong> Deze berekening is gebaseerd op de Tijdelijke regeling hypothecair krediet (Trhk) 2026, de officiële financieringslastnormen 2026 (Nibud/ministerie) en de AFM Leidraad Hypotheekadvisering (december 2025). De uitkomsten zijn indicatief. De definitieve hypotheekbeslissing ligt bij de geldverstrekker. Deze tool vervangt geen individueel hypotheekadvies in de zin van artikel 4:23 Wft. Controleer altijd de actuele NHG-grens via nhg.nl. Datum berekening: ${new Date().toLocaleDateString('nl-NL')}.
+</div>
+`;
+}
+
+// ============================================================
+// PRINT RAPPORT
+// ============================================================
+function printRapport() {
+const r = bereken();
+const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: 'long', year: 'numeric' });
+const klant = state.klantNaam || 'Klant';
+const adviseur = state.adviseurNaam || '—';
+
+// Risico-samenvatting
+const risicoBad = r.risicos.filter(x => x.type === 'bad').map(x => `<li style="color:#c0392b">❌ ${x.text}</li>`).join('');
+const risicoWarn = r.risicos.filter(x => x.type === 'warn').map(x => `<li style="color:#8a6d00">⚠️ ${x.text}</li>`).join('');
+const risicoOk = r.risicos.filter(x => x.type === 'ok').map(x => `<li style="color:#1e8449">✅ ${x.text}</li>`).join('');
+
+const html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Hypotheekadviesrapport — ${klant}</title>
+<style>
+@page { size: A4; margin: 20mm 20mm 25mm 20mm; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; font-size: 10.5pt; color: #333; line-height: 1.5; }
+.page-break { page-break-after: always; }
+
+/* HEADER */
+.rapport-header { border-bottom: 3px solid #003057; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+.rapport-header h1 { font-size: 18pt; color: #003057; margin-bottom: 2px; }
+.rapport-header .sub { font-size: 9pt; color: #777; }
+.rapport-header .meta { font-size: 9pt; color: #555; text-align: right; }
+
+/* BADGE */
+.badge { display: inline-block; background: #E5A138; color: white; font-size: 8pt; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
+
+/* SECTIONS */
+.sectie { margin-bottom: 18px; }
+.sectie-titel { font-size: 11pt; font-weight: 700; color: #003057; border-left: 4px solid #E5A138; padding-left: 8px; margin-bottom: 10px; }
+
+/* TABLES */
+table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+th { background: #003057; color: white; padding: 7px 10px; text-align: left; font-size: 9.5pt; }
+td { padding: 6px 10px; border-bottom: 1px solid #E8EDF2; }
+tr:nth-child(even) td { background: #F8FAFC; }
+.total-row td { font-weight: 700; color: #003057; border-top: 2px solid #003057; border-bottom: none; font-size: 11pt; }
+.td-right { text-align: right; font-weight: 600; }
+.plus { color: #27AE60; }
+.minus { color: #E74C3C; }
+
+/* KEY FIGURES */
+.kf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.kf-box { border: 1px solid #E0E6ED; border-radius: 6px; padding: 10px 12px; }
+.kf-label { font-size: 8.5pt; color: #777; }
+.kf-value { font-size: 16pt; font-weight: 700; color: #003057; line-height: 1.1; }
+.kf-sub { font-size: 8pt; color: #999; }
+.kf-box.accent { border-color: #E5A138; }
+.kf-box.accent .kf-value { color: #E5A138; }
+.kf-box.green { border-color: #27AE60; }
+.kf-box.green .kf-value { color: #27AE60; }
+
+/* SCENARIOS */
+.sc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.sc-box { border: 1px solid #E0E6ED; border-radius: 6px; padding: 10px 12px; }
+.sc-title { font-size: 8.5pt; font-weight: 700; color: #555; margin-bottom: 4px; }
+.sc-value { font-size: 14pt; font-weight: 700; }
+.sc-sub { font-size: 8pt; color: #999; }
+
+/* CHECKLIST */
+.cl { list-style: none; }
+.cl li { padding: 4px 0; font-size: 9.5pt; border-bottom: 1px solid #F0F4F8; }
+
+/* FOOTER */
+.rapport-footer { position: fixed; bottom: 12mm; left: 0; right: 0; border-top: 1px solid #E0E6ED; padding-top: 4px; font-size: 8pt; color: #999; display: flex; justify-content: space-between; padding-left: 20mm; padding-right: 20mm; }
+
+/* DISCLAIMER */
+.disclaimer-print { font-size: 8pt; color: #999; border-top: 1px solid #E0E6ED; padding-top: 8px; margin-top: 16px; }
+
+@media print { .no-print { display: none; } }
+</style>
+
+</head>
+<body>
+
+<div class="rapport-footer">
+<span>Hypotheekadviesrapport — ${klant} — ${datum}</span>
+<span>Trhk 2026 · AFM Leidraad · NHG 2026 · Vertrouwelijk</span>
+</div>
+
+<!-- ===== PAGINA 1: SAMENVATTING ===== -->
+
+<div class="rapport-header">
+<div>
+<div class="badge">HYPOTHEEKADVIESRAPPORT 2026</div>
+<h1>🏠 Hypotheekadvies</h1>
+<div class="sub">Trhk 2026 · Officiële FL-tabellen (Nibud) · AFM Leidraad december 2025</div>
+</div>
+<div class="meta">
+<div><strong>Klant:</strong> ${klant}</div>
+<div><strong>Adviseur:</strong> ${adviseur}</div>
+<div><strong>Datum:</strong> ${datum}</div>
+<div><strong>Referentie:</strong> HA-${Date.now().toString().slice(-6)}</div>
+</div>
+</div>
+
+<!-- SAMENVATTING -->
+
+<div class="sectie">
+<div class="sectie-titel">📊 Uitkomst advies — samenvatting</div>
+<div class="kf-grid">
+<div class="kf-box accent">
+<div class="kf-label">Maximale hypotheek</div>
+<div class="kf-value">${euro(r.maxHyp)}</div>
+<div class="kf-sub">Conform Trhk 2026, na alle correcties</div>
+</div>
+<div class="kf-box">
+<div class="kf-label">Bruto maandlast</div>
+<div class="kf-value">${euro(r.maandInfo.brutoMaand)}</div>
+<div class="kf-sub">${euro(r.rekHyp)} · ${pct(state.rente*100,2)} · ${state.looptijd} jr</div>
+</div>
+<div class="kf-box green">
+<div class="kf-label">Netto maandlast</div>
+<div class="kf-value">${euro(r.maandInfo.nettoMaand)}</div>
+<div class="kf-sub">Na renteaftrek 35,75% en EWF</div>
+</div>
+<div class="kf-box">
+<div class="kf-label">FL-percentage</div>
+<div class="kf-value">${pct(r.flPct*100,1)}</div>
+<div class="kf-sub">${state.aow==='ja'?'AOW':'Niet-AOW'} · ${state.aftrek==='box3'?'Box 3':'Box 1'} · ${pct(r.toetsrente*100,2)} toetsrente</div>
+</div>
+<div class="kf-box">
+<div class="kf-label">LTV</div>
+<div class="kf-value">${pct(r.ltv,1)}</div>
+<div class="kf-sub">Max 100% standaard · 106% bij EBV</div>
+</div>
+<div class="kf-box">
+<div class="kf-label">NHG</div>
+<div class="kf-value" style="font-size:12pt">${r.nhgCheck === 'ja' ? '✅ Mogelijk' : r.nhgCheck === 'niet_gewenst' ? '— Niet gewenst' : '❌ Niet mogelijk'}</div>
+<div class="kf-sub">Grens 2026: ${euro(NHG_GRENS_2026)}</div>
+</div>
+</div>
+</div>
+
+<!-- OPBOUW BEREKENING -->
+
+<div class="sectie">
+<div class="sectie-titel">🔢 Opbouw maximale hypotheek</div>
+<table>
+<tr><th>Component</th><th style="text-align:right">Bedrag</th></tr>
+<tr><td>Maximale hypotheek FL-tabel (${state.aow==='ja'?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'}, toetsinkomen ${euro(r.toetsinkomen)}, FL ${pct(r.flPct*100,1)})</td><td class="td-right">${euro(r.maxHypLTI_basis)}</td></tr>
+${r.totaalVerplichtingenMaand > 0 ? `<tr><td class="minus">− Effect verplichtingen (maandlast ${euro(r.totaalVerplichtingenMaand)}, gebruteerd factor ${nf(r.bruteringFactor,2)})</td><td class="td-right minus">−${euro(r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen)}</td></tr>` : ''}
+${r.alleenstaandeOpslag > 0 ? `<tr><td class="plus">+ Alleenstaanden-opslag (Trhk 2026 art. 3a, inkomen > ${euro(state.aow==='ja'?29000:30000)})</td><td class="td-right plus">+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
+${r.labelOpslag > 0 ? `<tr><td class="plus">+ Energielabel-opslag bij aankoop (label ${state.label})</td><td class="td-right plus">+${euro(r.labelOpslag)}</td></tr>` : ''}
+${r.ebvOpslag > 0 ? `<tr><td class="plus">+ EBV-opslag verduurzaming (label ${state.label})</td><td class="td-right plus">+${euro(r.ebvOpslag)}</td></tr>` : ''}
+<tr class="total-row"><td>Maximale hypotheek LTI (na alle correcties)</td><td class="td-right">${euro(r.maxHypLTI_finaal)}</td></tr>
+<tr><td>Maximale hypotheek LTV (${euro(state.woningWaarde || r.maxHyp)} × 100%)</td><td class="td-right">${euro(r.maxHypLTV)}</td></tr>
+<tr class="total-row"><td>✅ Definitief maximum (laagste van LTI / LTV)</td><td class="td-right">${euro(r.maxHyp)}</td></tr>
+</table>
+</div>
+
+<!-- MAANDLASTEN -->
+
+<div class="sectie">
+<div class="sectie-titel">💳 Maandlasten</div>
+<table>
+<tr><th>Post</th><th style="text-align:right">Maand</th><th style="text-align:right">Jaar</th></tr>
+<tr><td>Bruto hypotheeklast (annuïtair, ${pct(state.rente*100,2)}, ${state.looptijd} jr)</td><td class="td-right">${euro(r.maandInfo.brutoMaand)}</td><td class="td-right">${euro(r.maandInfo.brutoMaand*12)}</td></tr>
+<tr><td class="plus">− Renteaftrek (${pct(3.575,1)}, jaar 1)</td><td class="td-right plus">−${euro(r.maandInfo.aftrekJaar/12)}</td><td class="td-right plus">−${euro(r.maandInfo.aftrekJaar)}</td></tr>
+<tr><td>+ Eigenwoningforfait (${pct((r.woz <= 75000 ? 0.35 : 0.35),2)} van WOZ ${euro(r.woz)})</td><td class="td-right">${euro(r.maandInfo.ewf/12)}</td><td class="td-right">${euro(r.maandInfo.ewf)}</td></tr>
+<tr class="total-row"><td>Netto maandlast hypotheek</td><td class="td-right">${euro(r.maandInfo.nettoMaand)}</td><td class="td-right">${euro(r.maandInfo.nettoMaand*12)}</td></tr>
+<tr><td>Eigenaarslasten (onderhoud, OZB, opstal, waterschap)</td><td class="td-right">${euro(r.eigenaarslasten/12)}</td><td class="td-right">${euro(r.eigenaarslasten)}</td></tr>
+<tr class="total-row"><td>Totale netto woonlasten</td><td class="td-right">${euro(r.maandInfo.nettoMaand + r.eigenaarslasten/12)}</td><td class="td-right">${euro((r.maandInfo.nettoMaand + r.eigenaarslasten/12)*12)}</td></tr>
+</table>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ===== PAGINA 2: SCENARIOANALYSE & RISICO ===== -->
+
+<div class="rapport-header">
+<div>
+<div class="badge">SCENARIOANALYSE</div>
+<h1>📈 Risicoanalyse en scenario's</h1>
+</div>
+<div class="meta">
+<div><strong>Klant:</strong> ${klant}</div>
+<div><strong>Datum:</strong> ${datum}</div>
+</div>
+</div>
+
+<!-- SCENARIOANALYSE -->
+
+<div class="sectie">
+<div class="sectie-titel">Doorrekening relevante scenario's (AFM Leidraad 2025)</div>
+<div class="sc-grid">
+<div class="sc-box">
+<div class="sc-title">✅ Huidige situatie</div>
+<div class="sc-value" style="color:#27AE60">${euro(r.maandInfo.brutoMaand)}/mnd</div>
+<div class="sc-sub">Bruto · ${pct((r.maandInfo.brutoMaand*12/r.toetsinkomen*100),1)} van toetsinkomen</div>
+<div style="height:4px; background:#E0E6ED; border-radius:2px; margin-top:6px"><div style="width:${Math.min(100, r.maandInfo.brutoMaand*12/r.toetsinkomen*100/50*100)}%; height:4px; background:#27AE60; border-radius:2px"></div></div>
+</div>
+<div class="sc-box">
+<div class="sc-title">📊 Renteschok +2% na 10 jaar</div>
+<div class="sc-value" style="color:${(r.maandLastNa10Jaar*12/r.toetsinkomen*100) < 40 ? '#E5A138' : '#E74C3C'}">${euro(r.maandLastNa10Jaar)}/mnd</div>
+<div class="sc-sub">+${euro(r.stijgingMaandlast)}/mnd · Rente ${pct(r.renteScenario*100,2)}</div>
+<div style="height:4px; background:#E0E6ED; border-radius:2px; margin-top:6px"><div style="width:${Math.min(100, r.maandLastNa10Jaar*12/r.toetsinkomen*100/50*100)}%; height:4px; background:#E5A138; border-radius:2px"></div></div>
+</div>
+<div class="sc-box">
+<div class="sc-title">🏥 Arbeidsongeschiktheid 70%</div>
+<div class="sc-value" style="color:${r.maandlastAO_pct < 40 ? '#E5A138' : '#E74C3C'}">${pct(r.maandlastAO_pct,1)}</div>
+<div class="sc-sub">Van AO-inkomen ${euro(r.inkomenAO)}/jr</div>
+<div style="height:4px; background:#E0E6ED; border-radius:2px; margin-top:6px"><div style="width:${Math.min(100, r.maandlastAO_pct/50*100)}%; height:4px; background:${r.maandlastAO_pct < 40 ? '#E5A138' : '#E74C3C'}; border-radius:2px"></div></div>
+</div>
+</div>
+</div>
+
+<!-- RISICO CHECKLIST -->
+
+<div class="sectie">
+<div class="sectie-titel">🔍 Advies-checklist (conform AFM Leidraad hypotheekadvisering dec. 2025)</div>
+<ul class="cl">
+${risicoBad}
+${risicoWarn}
+${risicoOk}
+${state.kinderwens === 'ja' ? '<li style="color:#8a6d00">⚠️ Kinderwens: doorrekenen scenario teruggang arbeid / inkomstenderving</li>' : ''}
+${state.pensioen10j === 'ja' ? '<li style="color:#8a6d00">⚠️ Pensioen binnen 10 jaar: toets haalbaarheid op pensioenniveau (art. C.7.12 NHG / Trhk)</li>' : ''}
+${state.aoverzekering === 'nee' ? '<li style="color:#8a6d00">⚠️ Geen AO-verzekering: inventariseer bestaande voorzieningen (WIA, werkgever) en advies over gewenste dekking</li>' : '<li style="color:#1e8449">✅ AO-verzekering aanwezig: bestaande dekking in dossier vastleggen</li>'}
+</ul>
+</div>
+
+<!-- KLANTGEGEVENS TABEL -->
+
+<div class="sectie">
+<div class="sectie-titel">📋 Klant- en situatiegegevens (inventarisatie)</div>
+<table>
+<tr><td><strong>Klant</strong></td><td>${klant}</td><td><strong>Adviseur</strong></td><td>${adviseur}</td></tr>
+<tr><td><strong>Situatie</strong></td><td>${state.situatie === 'alleenstaand' ? 'Alleenstaand' : 'Met partner'}</td><td><strong>AOW</strong></td><td>${state.aow === 'ja' ? 'Ja' : 'Nee'}</td></tr>
+<tr><td><strong>Inkomen aanvrager</strong></td><td>${euro(state.inkomen1)}</td><td><strong>Inkomen partner</strong></td><td>${euro(state.inkomen2)}</td></tr>
+<tr><td><strong>Toetsinkomen</strong></td><td colspan="3"><strong>${euro(r.toetsinkomen)}</strong> (100% + 100% conform Trhk 2026)</td></tr>
+<tr><td><strong>Woningwaarde</strong></td><td>${euro(state.woningWaarde)}</td><td><strong>Energielabel</strong></td><td>${state.label}</td></tr>
+<tr><td><strong>Geoffreerde rente</strong></td><td>${pct(state.rente*100,2)}</td><td><strong>RVP</strong></td><td>${state.rvp} jaar</td></tr>
+<tr><td><strong>Toetsrente</strong></td><td>${pct(r.toetsrente*100,2)}</td><td><strong>Looptijd</strong></td><td>${state.looptijd} jaar</td></tr>
+${r.totaalVerplichtingenMaand > 0 ? `<tr><td><strong>Verplichtingen</strong></td><td colspan="3">${euro(r.totaalVerplichtingenMaand)}/mnd (gebruteerd, factor ${nf(r.bruteringFactor,2)})</td></tr>` : ''}
+</table>
+</div>
+
+<div class="disclaimer-print">
+<strong>Disclaimer & bronvermelding:</strong> Berekening conform Tijdelijke regeling hypothecair krediet (Trhk) 2026, Staatscourant 2025 nr. 36471. Financieringslastpercentages: officiële bijlage Nibud/ministerie (bijlage-financieringslastnormen-2026.xlsx), afgerond op 0,1% (nieuw 2026). AFM Leidraad Hypotheekadvisering december 2025 (consultatieversie). NHG Voorwaarden en normen 2026-1. Impact Financiële Opleidingen Cijferkaart januari 2026. Toetsrente conform AFM-besluit Q1 2026: 5,0%. Dit rapport is opgesteld op ${datum} en is uitsluitend bedoeld als indicatief adviesinstrument. Het vervangt geen individueel hypotheekadvies in de zin van artikel 4:23 Wft. Controleer altijd de actuele NHG-grens via nhg.nl. Geen rechten ontleenbaar.
+</div>
+
+<script>window.print();<\/script>
+</body>
+</html>`;
+
+const win = window.open('', '_blank', 'width=900,height=700');
+if (win) {
+win.document.write(html);
+win.document.close();
+} else {
+alert('Sta pop-ups toe in je browser om het rapport te kunnen afdrukken.');
+}
+}
+
+// ============================================================
+// EVENT LISTENERS — TOGGLE BUTTONS
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+
+// Datum vandaag instellen
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('adviesDatum').value = today;
+
+// Toggle button logica
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+btn.addEventListener('click', function() {
+const group = this.dataset.group;
+document.querySelectorAll(`.toggle-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+this.classList.add('active');
+
+// Side effects
+if (group === 'situatie') {
+const isSamen = this.dataset.val === 'samen';
+const g = document.getElementById('inkomen2-group');
+const hint = document.getElementById('inkomen-hint');
+if (g) g.style.opacity = isSamen ? '1' : '0.4';
+if (!isSamen && document.getElementById('inkomen2')) document.getElementById('inkomen2').value = '0';
+}
+if (group === 'ebv') {
+const grp = document.getElementById('ebv-bedrag-group');
+if (grp) grp.style.display = this.dataset.val === 'ja' ? 'flex' : 'none';
+}
+if (group === 'aow') {
+// AOW hint tonen
+const hint = document.getElementById('aow-auto-hint');
+if (hint) hint.style.display = 'block';
+}
+if (group === 'label') {
+updateLabelInfo(this.dataset.val);
+}
+});
+});
+
+function updateLabelInfo(label) {
+const infoBox = document.getElementById('label-info');
+if (!infoBox) return;
+const infos = {
+'EFG': '<strong>E/F/G (standaard):</strong> Geen extra leenruimte. Hogere energielasten meegewogen in FL-tabel. Wijs klant op verduurzamingsmogelijkheden (max €20.000 EBV).',
+'CD': '<strong>C/D:</strong> Extra leenruimte <strong>€5.000</strong> bovenop standaard.',
+'AB': '<strong>A/B:</strong> Extra leenruimte <strong>€10.000</strong> bovenop standaard.',
+'Aplusplus': '<strong>A+/A++:</strong> Extra leenruimte <strong>€20.000</strong> bovenop standaard.',
+'Aplusplusplus': '<strong>A+++:</strong> Extra leenruimte <strong>€25.000</strong> (verlaagd in 2026 vanwege verminderd zonnepaneel-rendement / afschaffing saldering 2027).',
+'Aplusplusplusplus': '<strong>A++++:</strong> Extra leenruimte <strong>€30.000</strong> (verlaagd in 2026 t.o.v. 2025).',
+'Aplusplusplusplus_garantie': '<strong>A++++ met garantie (EPG ≥10 jaar):</strong> Extra leenruimte <strong>€40.000</strong> (verlaagd in 2026).',
+'geen': '<strong>Geen geldig energielabel:</strong> Geen extra leenruimte bij aankoop. Wel max €10.000 EBV mogelijk bij verbouwing.'
+};
+infoBox.innerHTML = infos[label] || '';
+}
+
+// LTV feedback live
+function updateLTV() {
+const woning = parseFloat(document.getElementById('woningWaarde').value) || 0;
+const hyp = parseFloat(document.getElementById('gewenstBedrag').value) || 0;
+const box = document.getElementById('ltv-feedback');
+if (!box) return;
+if (woning > 0 && hyp > 0) {
+const ltv = (hyp / woning) * 100;
+const kleur = ltv > 106 ? '#c0392b' : ltv > 100 ? '#8a6d00' : '#1e8449';
+box.style.borderLeftColor = kleur;
+box.innerHTML = `<strong>LTV: ${ltv.toFixed(1)}%</strong>  |  Max 100% standaard · 106% bij EBV. ${ltv > 100 ? '<span style="color:#c0392b">⚠️ Overschrijding! Controleer EBV-bedrag.</span>' : '<span style="color:#1e8449">✅ Binnen norm.</span>'}`;
+} else {
+box.innerHTML = 'Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.';
+}
+}
+document.getElementById('woningWaarde').addEventListener('input', updateLTV);
+document.getElementById('gewenstBedrag').addEventListener('input', updateLTV);
+
+// Toetsrente info live
+document.getElementById('rvp').addEventListener('change', function() {
+const rvp = parseInt(this.value);
+const rente = parseFloat(document.getElementById('rente').value) || 0;
+const box = document.getElementById('toetsrente-info');
+if (!box) return;
+if (rvp < 10) {
+const toetsrente = Math.max(rente, 5.0);
+box.innerHTML = `<strong>⚠️ Toetsrente 5%!</strong> RVP van ${rvp} jaar is korter dan 10 jaar — toetsrente is <strong>5,0%</strong> conform Trhk 2026 (AFM Q1 2026). Geoffreerde rente ${rente.toFixed(2)}% is lager en wordt niet gebruikt voor de LTI-berekening.`;
+box.style.borderLeftColor = '#E5A138';
+} else {
+box.innerHTML = `<strong>Toetsrente:</strong> RVP ≥ 10 jaar — geoffreerde rente (${rente.toFixed(2)}%) wordt gebruikt als toetsrente.`;
+box.style.borderLeftColor = '#E5A138';
+}
+});
+
+// DUO brutering feedback
+function updateDuoBrutering() {
+const duo = parseFloat(document.getElementById('duoMaandlast').value) || 0;
+const rente = parseFloat(document.getElementById('rente').value) / 100 || 0.0425;
+const rvp = parseInt(document.getElementById('rvp').value) || 10;
+const toetsrente = rvp < 10 ? Math.max(rente, 0.05) : rente;
+const factor = getBruteringFactor(toetsrente);
+const box = document.getElementById('duo-brutering-info');
+if (!box) return;
+if (duo > 0) {
+const effect = (duo * factor) / annFactor(toetsrente, 30 * 12);
+box.style.display = 'block';
+document.getElementById('duo-factor').textContent = factor.toFixed(2);
+document.getElementById('duo-effect').textContent = nf(effect, 0);
+} else {
+box.style.display = 'none';
+}
+}
+document.getElementById('duoMaandlast').addEventListener('input', updateDuoBrutering);
+
+// Geboortedatum → AOW auto-detect
+document.getElementById('geboortedatum1').addEventListener('change', function() {
+if (!this.value) return;
+const geb = new Date(this.value);
+const nu = new Date();
+const leeftijd = (nu - geb) / (365.25 * 24 * 3600 * 1000);
+if (leeftijd >= 67) {
+document.querySelectorAll('.toggle-btn[data-group="aow"]').forEach(b => b.classList.remove('active'));
+document.getElementById('btn-aow-ja').classList.add('active');
+} else {
+document.querySelectorAll('.toggle-btn[data-group="aow"]').forEach(b => b.classList.remove('active'));
+document.getElementById('btn-aow-nee').classList.add('active');
+}
+});
+
+// ============================================================
+// WIZARD NAVIGATIE
+// ============================================================
+document.getElementById('next1').addEventListener('click', function() {
+readStep1();
+if (!state.klantNaam) { alert('Vul de naam van de klant in.'); return; }
+if (!state.inkomen1 || state.inkomen1 <= 0) { alert('Vul een bruto jaarinkomen in.'); return; }
+showStep(2);
+});
+
+document.getElementById('prev2').addEventListener('click', function() { showStep(1); });
+document.getElementById('next2').addEventListener('click', function() {
+readStep2();
+if (!state.woningWaarde || state.woningWaarde <= 0) { alert('Vul de woningwaarde in.'); return; }
+if (!state.rente || state.rente <= 0) { alert('Vul de hypotheekrente in.'); return; }
+showStep(3);
+});
+
+document.getElementById('prev3').addEventListener('click', function() { showStep(2); });
+document.getElementById('next3').addEventListener('click', function() {
+readStep3();
+showStep(4);
+setTimeout(renderResults, 100);
+});
+
+document.getElementById('prev4').addEventListener('click', function() {
+showStep(3);
+const nav = document.getElementById('step4-nav');
+if (nav) nav.style.display = 'none';
+});
+
+document.getElementById('printBtn').addEventListener('click', function() {
+readStep1(); readStep2(); readStep3();
+printRapport();
+});
+
+});
+</script>
+
+</body>
+</html>
+

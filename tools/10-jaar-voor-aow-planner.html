@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Looptijdanalyse — CHF 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#002A54;--navy-mid:#003a70;--navy-light:#e8eef5;
+  --orange:#FF6600;--orange-light:#fff2e8;
+  --text:#333332;--border:#d8d8d8;
+  --green:#1a6b3c;--green-light:#eaf4ee;--red:#c0392b;
+  --r:6px;--rl:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:13px;color:var(--text);background:#fff;width:100%}
+.topbar{background:var(--navy-mid);color:#fff;padding:10px 16px;font-size:13px;font-weight:700;letter-spacing:.04em}
+.section{padding:14px 16px;border-bottom:1px solid var(--border)}
+.sec-label{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.sec-label::before{content:'';width:7px;height:7px;background:var(--orange);transform:rotate(45deg);display:inline-block;flex-shrink:0}
+.fg{display:grid;gap:10px}
+.fg-2{grid-template-columns:1fr 1fr}
+.fg-3{grid-template-columns:1fr 1fr 1fr}
+.fg-4{grid-template-columns:1fr 1fr 1fr 1fr}
+@media(max-width:640px){.fg-3,.fg-4{grid-template-columns:1fr 1fr}}
+@media(max-width:380px){.fg-2,.fg-3,.fg-4{grid-template-columns:1fr}}
+.field label{display:block;font-size:11px;color:#777;font-weight:700;margin-bottom:3px}
+.field input,.field select{width:100%;border:1px solid var(--border);border-radius:var(--r);padding:6px 9px;font-size:13px;color:var(--text);background:#fff}
+.field input:focus,.field select:focus{outline:2px solid var(--navy);outline-offset:-1px;border-color:transparent}
+/* AOW INFO BAR */
+.aow-bar{background:var(--green-light);border-left:3px solid var(--green);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7;margin:0 16px 14px}
+.aow-bar strong{color:var(--green)}
+.aow-bar .aow-grid{display:grid;grid-template-columns:repeat(3,auto);gap:4px 20px;margin-top:4px}
+.aow-bar .aow-item .lbl{font-size:10px;color:#666}
+.aow-bar .aow-item .val{font-size:13px;font-weight:700;color:var(--navy)}
+.aow-bar .note{font-size:10px;color:#888;margin-top:6px;border-top:1px solid #c0ddc9;padding-top:4px}
+/* LENINGDELEN */
+.deel{background:var(--navy-light);border-radius:var(--r);border-left:3px solid var(--navy);padding:10px;margin-bottom:8px}
+.deel.box3{border-left-color:var(--orange)}
+.deel-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.deel-nr{font-size:11px;font-weight:700;color:var(--navy);text-transform:uppercase}
+.del-btn{background:none;border:1px solid var(--red);color:var(--red);border-radius:3px;padding:2px 8px;font-size:11px;cursor:pointer}
+.del-btn:hover{background:var(--red);color:#fff}
+.deel .field label{color:#555;font-size:11px}
+.deel .field input,.deel .field select{font-size:12px;padding:5px 7px;background:#fff}
+.rvp-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:3px 8px;border-radius:3px;font-weight:700;margin-top:4px}
+.rvp-ok{background:var(--green-light);color:var(--green)}
+.rvp-warn{background:var(--orange-light);color:#c05000}
+.add-btn{border:1.5px dashed var(--navy);background:none;color:var(--navy);border-radius:var(--r);padding:7px;width:100%;font-size:12px;cursor:pointer;margin-top:4px}
+.add-btn:hover{background:var(--navy-light)}
+.calc-btn{width:100%;background:var(--orange);color:#fff;border:none;border-radius:3px;padding:11px;font-size:14px;font-weight:700;cursor:pointer}
+.calc-btn:hover{opacity:.88}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--navy-light);border-radius:var(--r);padding:10px 12px}
+.kpi .lbl{font-size:10px;color:#888;margin-bottom:2px}
+.kpi .val{font-size:15px;font-weight:700;color:var(--navy)}
+.kpi .sub{font-size:10px;color:#aaa;margin-top:1px}
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:#666;margin-bottom:10px}
+.leg{display:flex;align-items:center;gap:5px}
+.ld{width:14px;height:4px;border-radius:2px;flex-shrink:0}
+.toggles{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tog{font-size:11px;padding:4px 10px;border-radius:3px;border:1px solid var(--border);background:#fff;cursor:pointer;color:#666}
+.tog.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+/* COLLAPSE */
+.collapse-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--navy-light);cursor:pointer;border-bottom:1px solid var(--border);user-select:none}
+.collapse-hdr:hover{background:#d8e4f0}
+.collapse-title{font-size:12px;font-weight:700;color:var(--navy)}
+.collapse-arrow{font-size:13px;color:var(--navy);transition:transform .2s;display:inline-block}
+.collapse-arrow.open{transform:rotate(180deg)}
+.collapse-body{display:none;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.collapse-body.open{display:block}
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:820px}
+th{background:var(--navy);color:#fff;padding:6px 8px;text-align:left;font-size:10px;white-space:nowrap;font-weight:700}
+td{padding:5px 8px;border-bottom:0.5px solid #eee;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.aow td{background:#eaf4ee;font-weight:700}
+tr.pen td{background:#fff3e8}
+tr.rvp-change td{background:#f0f8ff}
+.badge{font-size:9px;padding:2px 5px;border-radius:3px;font-weight:700;display:inline-block}
+.b-aow{background:#eaf4ee;color:var(--green)}
+.b-pen{background:var(--orange-light);color:#c05000}
+.b-hui{background:var(--navy-light);color:var(--navy)}
+.b-contract{background:#e8f0ff;color:#1a3c8f}
+.pos{color:var(--green)}.neg{color:var(--red);font-weight:700}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="topbar">Looptijdanalyse — CHF 2026</div>
+
+<!-- 1. AANVRAGER -->
+<div class="section" id="sec-aanvrager">
+  <div class="sec-label">Aanvrager</div>
+  <div class="fg fg-4">
+    <div class="field"><label>Naam</label><input id="naam" value="Aanvrager"></div>
+    <div class="field"><label>Geboortedatum</label><input id="geboortedatum" type="date" value="1970-03-01" oninput="updateAowBar()"></div>
+    <div class="field"><label>Huidig inkomen (€/jr)</label><input id="inkomen" type="number" value="50000" min="0"></div>
+    <div class="field"><label>AOW-inkomen (€/jr)</label><input id="aow_inkomen" type="number" value="20000" min="0"></div>
+  </div>
+  <div class="fg fg-4" style="margin-top:10px">
+    <div class="field"><label>Standaard toetsrente (%)</label><input id="toetsrente" type="number" value="5.0" step="0.1" min="1" max="10"></div>
+    <div></div><div></div><div></div>
+  </div>
+</div>
+
+<!-- AOW INFO BAR -->
+<div class="aow-bar hidden" id="aow-bar">
+  <strong id="aow-bar-title">AOW-leeftijd</strong>
+  <div class="aow-grid" id="aow-grid"></div>
+  <div class="note" id="aow-note"></div>
+</div>
+
+<!-- 2. LENINGDELEN -->
+<div class="section">
+  <div class="sec-label">Leningdelen</div>
+  <div id="delen-wrap"></div>
+  <button class="add-btn" onclick="addDeel()">+ Leningdeel toevoegen</button>
+</div>
+
+<!-- BEREKEN -->
+<div class="section" style="border-bottom:2px solid var(--navy)">
+  <button class="calc-btn" onclick="bereken()">▶  Bereken looptijdanalyse — 30 jaar</button>
+</div>
+
+<!-- 3. KPI -->
+<div class="section hidden" id="sec-kpi">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="lbl">Max hypotheek nu</div><div class="val" id="k1">—</div><div class="sub" id="k1s"></div></div>
+    <div class="kpi"><div class="lbl">Max maandlast nu</div><div class="val" id="k2">—</div><div class="sub" id="k2s"></div></div>
+    <div class="kpi"><div class="lbl">AOW-ingangsdatum</div><div class="val" id="k3">—</div><div class="sub" id="k3s"></div></div>
+    <div class="kpi"><div class="lbl">Pensioendrempel per</div><div class="val" id="k4">—</div><div class="sub">10-jaar CHF-drempel</div></div>
+  </div>
+</div>
+
+<!-- 4. GRAFIEK -->
+<div class="section hidden" id="sec-chart">
+  <div class="sec-label" id="chart-label">Maximale hypotheekruimte</div>
+  <div class="toggles">
+    <button class="tog active" id="tog-hyp" onclick="setView('hyp')">Hypotheek (€)</button>
+    <button class="tog" id="tog-mnd" onclick="setView('mnd')">Maandlast (€)</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="ld" style="background:#002A54"></div>Max (rest. looptijd) — huidig</div>
+    <div class="leg"><div class="ld" style="background:#FF6600"></div>Max (rest. looptijd) — pensioenscenario</div>
+    <div class="leg"><div class="ld" style="background:#888"></div>Max (rest. looptijd) — na AOW</div>
+    <div class="leg"><div class="ld" style="background:#1a6b3c"></div>Max (30 jr vast)</div>
+    <div class="leg"><div class="ld" style="background:#FF6600;opacity:.5"></div>Werkelijke schuld</div>
+    <div class="leg"><div class="ld" style="background:#1a3c8f;border-top:2px dotted #1a3c8f;height:2px"></div>Toetsrente → contractrente</div>
+  </div>
+  <div style="position:relative;width:100%">
+    <canvas id="mainChart" role="img" aria-label="Maximale hypotheek 30 jaar maandoverzicht" style="width:100%"></canvas>
+  </div>
+</div>
+
+<!-- 5. MAANDOVERZICHT -->
+<div class="hidden" id="sec-table">
+  <div class="collapse-hdr" onclick="toggleTable()">
+    <span class="collapse-title" id="coll-title">Maandoverzicht — 360 maanden uitklappen</span>
+    <span class="collapse-arrow" id="coll-arrow">▼</span>
+  </div>
+  <div class="collapse-body" id="coll-body">
+    <table>
+      <thead><tr>
+        <th>Mnd</th><th>Datum</th><th>Leeftijd</th><th>Norm</th>
+        <th>Eff. toetsrente</th>
+        <th>Max maandlast</th>
+        <th>Max hyp. (rest. looptijd)</th>
+        <th>Max hyp. (30 jr vast)</th>
+        <th>Werkelijke schuld</th>
+        <th>Box 3 schuld</th>
+        <th>Actuele last</th>
+        <th>Marge</th>
+      </tr></thead>
+      <tbody id="tbl-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="hidden" id="sec-toelichting" style="padding:14px 16px;border-top:1px solid var(--border);background:#fafafa">
+  <div class="sec-label" style="margin-bottom:10px">Toelichting kolommen</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="background:#fff;border-left:3px solid var(--navy);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7">
+      <strong style="color:var(--navy);display:block;margin-bottom:4px">Max hyp. (rest. looptijd)</strong>
+      Hoeveel kan de klant lenen als de hypotheek uiterlijk op maand 360 — 30 jaar vanaf vandaag — volledig afgelost moet zijn? De resterende terugbetaaltermijn krimpt elke maand mee. Over 10 jaar is er nog 240 maanden over, over 20 jaar nog 120 maanden. De maximale hypotheek daalt daardoor automatisch naarmate de einddatum nadert, ook als het inkomen en de maandlast gelijk blijven.<br><br>
+      <em style="color:#888">Gebruik: beheercriteria, doorlopende toets, past de huidige hypotheek nog binnen de norm?</em>
+    </div>
+    <div style="background:#fff;border-left:3px solid var(--green);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7">
+      <strong style="color:var(--green);display:block;margin-bottom:4px">Max hyp. (30 jr vast)</strong>
+      Hoeveel kan de klant op dát toekomstige moment lenen als hij op dát moment een geheel nieuwe 30-jaars hypotheek afsluit? De terugbetaaltermijn staat altijd vast op 360 maanden, ongeacht het tijdstip in de grafiek. Alleen het inkomen (en de norm) bepaalt de uitkomst — niet de resterende looptijd van de huidige hypotheek.<br><br>
+      <em style="color:#888">Gebruik: oversluiting, renteherziening, nieuwe hypotheek op een later moment — wat is de leencapaciteit dan?</em>
+    </div>
+  </div>
+  <div style="margin-top:12px;background:#fff;border-left:3px solid var(--orange);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7">
+    <strong style="color:#c05000;display:block;margin-bottom:4px">Concreet verschil — voorbeeld bij €1.000/mnd max maandlast en 5% toetsrente</strong>
+    <table style="min-width:0;width:auto;margin-top:4px">
+      <thead><tr>
+        <th style="background:var(--navy);color:#fff;padding:4px 10px;font-size:10px">Moment</th>
+        <th style="background:var(--navy);color:#fff;padding:4px 10px;font-size:10px">Rest. looptijd</th>
+        <th style="background:var(--navy);color:#fff;padding:4px 10px;font-size:10px">30 jr vast</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:4px 10px;border-bottom:0.5px solid #eee">Nu (mnd 0)</td><td style="padding:4px 10px;border-bottom:0.5px solid #eee">€ 186.282</td><td style="padding:4px 10px;border-bottom:0.5px solid #eee;color:var(--green);font-weight:700">€ 186.282</td></tr>
+        <tr><td style="padding:4px 10px;border-bottom:0.5px solid #eee">Over 10 jaar (mnd 120)</td><td style="padding:4px 10px;border-bottom:0.5px solid #eee">€ 151.525</td><td style="padding:4px 10px;border-bottom:0.5px solid #eee;color:var(--green);font-weight:700">€ 186.282</td></tr>
+        <tr><td style="padding:4px 10px">Over 20 jaar (mnd 240)</td><td style="padding:4px 10px">€ 94.281</td><td style="padding:4px 10px;color:var(--green);font-weight:700">€ 186.282</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+// ── CHF NORMENTABELLEN 2026 ───────────────────────────────────
+// Kolommen: 0=≤1.5% … 7=4.5-5% … 11=≥6.5%
+// CHF niet-AOW tabel start officieel bij 30.000 (Trhk 2026 bijlage)
+// Inkomen onder minimum: laagste rij wordt gebruikt (conservatief)
+const CHF_NIET=[
+  [30000,.155,.165,.175,.184,.193,.201,.209,.216,.222,.227,.232,.237],
+  [31000,.162,.173,.183,.193,.202,.212,.220,.227,.234,.241,.246,.251],
+  [32000,.167,.179,.190,.201,.211,.221,.230,.238,.246,.253,.259,.264],
+  [33000,.171,.183,.195,.206,.216,.226,.236,.246,.254,.261,.268,.274],
+  [34000,.173,.185,.196,.206,.216,.226,.236,.246,.255,.264,.273,.281],
+  [125000,.174,.185,.196,.206,.216,.226,.236,.246,.255,.264,.273,.281]
+];
+// CHF AOW-tabel start officieel bij 29.000 (Trhk 2026 bijlage)
+// Inkomen onder minimum: laagste rij wordt gebruikt (conservatief)
+const CHF_AOW=[
+  [29000,.185,.189,.194,.197,.201,.204,.207,.209,.211,.213,.215,.217],
+  [30000,.192,.198,.203,.208,.211,.215,.218,.221,.223,.225,.227,.229],
+  [31000,.199,.206,.212,.217,.221,.225,.228,.231,.234,.237,.239,.241],
+  [32000,.205,.212,.218,.224,.230,.234,.238,.241,.244,.247,.249,.252],
+  [33000,.209,.217,.223,.229,.235,.240,.245,.248,.252,.255,.257,.260],
+  [34000,.212,.220,.228,.234,.240,.245,.251,.255,.259,.262,.265,.267],
+  [35000,.216,.224,.231,.239,.245,.251,.256,.261,.265,.269,.272,.275],
+  [40000,.222,.233,.243,.252,.261,.269,.276,.282,.288,.293,.297,.301],
+  [45000,.228,.239,.249,.259,.268,.277,.286,.294,.301,.308,.314,.319],
+  [50000,.234,.246,.256,.267,.276,.286,.294,.302,.310,.317,.324,.330],
+  [60000,.258,.271,.283,.294,.305,.315,.324,.333,.341,.349,.356,.362],
+  [70000,.266,.279,.291,.302,.312,.322,.331,.340,.348,.355,.362,.369],
+  [80000,.270,.283,.295,.306,.317,.326,.336,.344,.353,.360,.367,.373],
+  [100000,.274,.286,.299,.310,.320,.330,.340,.348,.357,.364,.371,.377],
+  [125000,.278,.290,.302,.313,.323,.333,.342,.351,.360,.367,.374,.380]
+];
+
+function rKol(r){const g=[.015,.02,.025,.03,.035,.04,.045,.05,.055,.06,.065];for(let i=0;i<g.length;i++)if(r<=g[i])return i;return 11;}
+function quota(tbl,ink,k){let rij=tbl[0];for(const r of tbl){if(r[0]<=ink)rij=r;else break;}return rij[k+1];}
+function af(r,n){if(n<=0)return 0;if(r<.000001)return n;return(1-Math.pow(1+r,-n))/r;}
+function E(n){return new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);}
+function Ek(n){return'€'+Math.round(n/1000)+'k';}
+function fmtDt(d){return d.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});}
+function fmtDtS(d){return d.toLocaleDateString('nl-NL',{month:'short',year:'numeric'});}
+
+// ── AOW-LEEFTIJD BEREKENING ───────────────────────────────────
+// Conform SVB-schema / Wet verhoging AOW-leeftijd (Stb. 2012, 328)
+// Geboortejaar → {jaar, maanden extra boven 65}
+const AOW_SCHEMA=[
+  [1947, 65, 0],
+  [1948, 65, 3],
+  [1949, 65, 6],
+  [1950, 65, 9],
+  [1951, 66, 0],
+  [1952, 66, 4],
+  [1953, 66, 8],
+  [1954, 67, 0],  // 1954 en later: 67 jaar (huidig vastgesteld)
+];
+
+function calcAow(geb){
+  const jaar = geb.getFullYear();
+  let row = AOW_SCHEMA[AOW_SCHEMA.length-1]; // default 67
+  for(let i=0;i<AOW_SCHEMA.length;i++){
+    if(jaar<=AOW_SCHEMA[i][0]){row=AOW_SCHEMA[i];break;}
+  }
+  const [,aowJr,aowMnd] = row;
+  const datum = new Date(geb);
+  datum.setFullYear(datum.getFullYear()+aowJr);
+  datum.setMonth(datum.getMonth()+aowMnd);
+  return {jaar:aowJr, maanden:aowMnd, datum,
+    label: aowMnd===0 ? aowJr+' jaar' : aowJr+' jaar en '+aowMnd+' maanden'};
+}
+
+function updateAowBar(){
+  const inp=document.getElementById('geboortedatum').value;
+  if(!inp)return;
+  const geb=new Date(inp);
+  if(isNaN(geb))return;
+  const aow=calcAow(geb);
+  const bar=document.getElementById('aow-bar');
+  bar.classList.remove('hidden');
+  document.getElementById('aow-bar-title').textContent='Berekende AOW-leeftijd op basis van geboortedatum';
+  const grid=document.getElementById('aow-grid');
+  grid.innerHTML=`
+    <div class="aow-item"><div class="lbl">AOW-leeftijd</div><div class="val">${aow.label}</div></div>
+    <div class="aow-item"><div class="lbl">Verwachte AOW-datum</div><div class="val">${fmtDt(aow.datum)}</div></div>
+    <div class="aow-item"><div class="lbl">Jaren tot AOW</div><div class="val">${Math.max(0,(aow.datum-new Date())/(365.25*24*3600*1000)).toFixed(1).replace('.',',')} jaar</div></div>`;
+  const note=document.getElementById('aow-note');
+  if(geb.getFullYear()>=1954){
+    note.textContent='Voor geboortejaren vanaf 1954 geldt de huidige wettelijke AOW-leeftijd van 67 jaar. Mogelijke indexatie na 2027 (koppeling levensverwachting) is nog niet vastgesteld en niet meegenomen.';
+  } else {
+    note.textContent='AOW-leeftijd conform gepubliceerd SVB-schema (Wet verhoging AOW-leeftijd, Stb. 2012, 328).';
+  }
+}
+
+// ── LENINGDELEN ───────────────────────────────────────────────
+let cnt=0, ids=[];
+
+function addDeel(def={}){
+  if(ids.length>=6){alert('Max 6 leningdelen');return;}
+  const id=++cnt; ids.push(id);
+  const d={naam:def.naam||'Leningdeel '+id,bedrag:def.bedrag||150000,
+    rente:def.rente||4.2,looptijd:def.looptijd||30,type:def.type||'ann',
+    box:def.box||1,rvpDatum:def.rvpDatum||''};
+  const el=document.createElement('div');
+  el.id='d'+id; el.className='deel'+(d.box===3?' box3':'');
+  el.innerHTML=`
+    <div class="deel-hdr">
+      <span class="deel-nr">Leningdeel ${id}</span>
+      <button class="del-btn" onclick="delDeel(${id})">Verwijder</button>
+    </div>
+    <div class="fg fg-3" style="gap:8px">
+      <div class="field"><label>Naam</label><input id="d${id}n" value="${d.naam}"></div>
+      <div class="field"><label>Hoofdsom (€)</label><input id="d${id}b" type="number" value="${d.bedrag}" min="0" step="1000"></div>
+      <div class="field"><label>Rente (%/jr)</label><input id="d${id}r" type="number" value="${d.rente}" step="0.01" min="0" oninput="updateRvpBadge(${id})"></div>
+    </div>
+    <div class="fg fg-4" style="gap:8px;margin-top:8px">
+      <div class="field"><label>Looptijd (jaar)</label><input id="d${id}l" type="number" value="${d.looptijd}" min="1" max="30"></div>
+      <div class="field"><label>Rentevast tot</label><input id="d${id}v" type="date" value="${d.rvpDatum}" oninput="updateRvpBadge(${id})"></div>
+      <div class="field"><label>Type</label><select id="d${id}t">
+        <option value="ann"${d.type==='ann'?' selected':''}>Annuïteit</option>
+        <option value="lin"${d.type==='lin'?' selected':''}>Lineair</option>
+        <option value="afl"${d.type==='afl'?' selected':''}>Aflossingsvrij</option>
+      </select></div>
+      <div class="field"><label>Fiscale box</label><select id="d${id}x" onchange="bxStyle(${id})">
+        <option value="1"${d.box===1?' selected':''}>Box 1 (renteaftrek)</option>
+        <option value="3"${d.box===3?' selected':''}>Box 3 (geen aftrek)</option>
+      </select></div>
+    </div>
+    <div id="d${id}badge" style="margin-top:6px"></div>`;
+  document.getElementById('delen-wrap').appendChild(el);
+  updateRvpBadge(id);
+}
+
+function delDeel(id){const i=ids.indexOf(id);if(i>-1)ids.splice(i,1);document.getElementById('d'+id)?.remove();}
+
+function bxStyle(id){const b=parseInt(document.getElementById('d'+id+'x').value);const el=document.getElementById('d'+id);if(el)el.className='deel'+(b===3?' box3':'');}
+
+function updateRvpBadge(id){
+  const rvpInp=document.getElementById('d'+id+'v');
+  const badge=document.getElementById('d'+id+'badge');
+  if(!rvpInp||!badge)return;
+  const rvpDatum=rvpInp.value?new Date(rvpInp.value):null;
+  if(!rvpDatum){badge.innerHTML='';return;}
+  const now=new Date();
+  const jaarRest=(rvpDatum-now)/(365.25*24*3600*1000);
+  const rente=parseFloat(document.getElementById('d'+id+'r')?.value)||0;
+  if(jaarRest>=10){
+    badge.innerHTML=`<span class="rvp-badge rvp-ok">✓ RVP ≥ 10 jaar — toetsing op contractrente ${rente.toFixed(2).replace('.',',')}%</span>`;
+  } else if(jaarRest>0){
+    const jr=Math.floor(jaarRest), mnd=Math.round((jaarRest-jr)*12);
+    badge.innerHTML=`<span class="rvp-badge rvp-warn">⚠ RVP nog ${jr} jr ${mnd} mnd — toetsrente minimaal 5,0%</span>`;
+  } else {
+    badge.innerHTML=`<span class="rvp-badge rvp-warn">⚠ Rentevastperiode verstreken — toetsrente minimaal 5,0%</span>`;
+  }
+}
+
+function getDelen(){
+  return ids.map(id=>({
+    bedrag:parseFloat(document.getElementById('d'+id+'b')?.value)||0,
+    rente:parseFloat(document.getElementById('d'+id+'r')?.value)||0,
+    looptijd:parseInt(document.getElementById('d'+id+'l')?.value)||30,
+    type:document.getElementById('d'+id+'t')?.value||'ann',
+    box:parseInt(document.getElementById('d'+id+'x')?.value)||1,
+    rvpDatum:document.getElementById('d'+id+'v')?.value?new Date(document.getElementById('d'+id+'v').value):null
+  }));
+}
+
+function restSchuld(d,m){
+  const H=d.bedrag,r=d.rente/100/12,n=d.looptijd*12;
+  if(m>=n)return 0;
+  if(d.type==='afl')return H;
+  if(d.type==='lin')return H*(n-m)/n;
+  if(r<.000001)return H*(n-m)/n;
+  return H*(Math.pow(1+r,n)-Math.pow(1+r,m))/(Math.pow(1+r,n)-1);
+}
+function maandlastD(d,m){
+  const H=d.bedrag,r=d.rente/100/12,n=d.looptijd*12;
+  if(m>=n)return 0;
+  if(d.type==='afl')return H*r;
+  if(d.type==='lin')return H/n+restSchuld(d,m)*r;
+  if(r<.000001)return H/n;
+  return H*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+}
+
+// ── EFFECTIEVE TOETSRENTE ─────────────────────────────────────
+// CHF 2026: RVP >= 10 jaar op toetsmoment → toets op feitelijke contractrente
+// (ongeacht of deze hoger of lager is dan de standaard toetsrente van 5%)
+function effectieveToetsrente(delen, calcDate, defaultTr){
+  let contractRente = null;
+  for(const d of delen){
+    if(!d.rvpDatum) continue;
+    const jaarRest=(d.rvpDatum-calcDate)/(365.25*24*3600*1000);
+    if(jaarRest>=10){
+      const cr=d.rente/100;
+      // Neem laagste kwalificerende contractrente (meest gunstig voor lener)
+      if(contractRente===null||cr<contractRente) contractRente=cr;
+    }
+  }
+  // Kwalificeert: gebruik contractrente (ook als > 5%)
+  // Niet: gebruik standaard toetsrente (minimum 5%)
+  return contractRente!==null ? contractRente : defaultTr;
+}
+
+// ── HOOFDBEREKENING ───────────────────────────────────────────
+let data=[], chartInst=null, view='hyp';
+
+function bereken(){
+  const geb=new Date(document.getElementById('geboortedatum').value);
+  if(isNaN(geb)){alert('Ongeldige geboortedatum');return;}
+  const ink=parseFloat(document.getElementById('inkomen').value)||0;
+  const aowInk=parseFloat(document.getElementById('aow_inkomen').value)||0;
+  const naam=document.getElementById('naam').value||'Aanvrager';
+  const defaultTr=parseFloat(document.getElementById('toetsrente').value)/100||0.05;
+  if(!ink){alert('Vul huidig inkomen in');return;}
+
+  const aow=calcAow(geb);
+  const aowDatum=aow.datum;
+  const delen=getDelen();
+  const start=new Date(); start.setDate(1);
+  data=[];
+
+  for(let m=0;m<=360;m++){
+    const dt=new Date(start.getFullYear(),start.getMonth()+m,1);
+    const age=(dt-geb)/(365.25*24*3600*1000);
+    const isAOW=dt>=aowDatum;
+    const toAOW=(aowDatum-dt)/(365.25*24*3600*1000);
+    const pen=!isAOW&&toAOW<=10;
+
+    // Effectieve toetsrente op dit moment
+    const effTr=effectieveToetsrente(delen,dt,defaultTr);
+    const usesContract=delen.some(d=>d.rvpDatum&&(d.rvpDatum-dt)/(365.25*24*3600*1000)>=10);
+    const kol=rKol(effTr);
+    const rm=effTr/12;
+
+    let mnd,norm;
+    if(isAOW){mnd=aowInk*quota(CHF_AOW,aowInk,kol)/12;norm='AOW';}
+    else if(pen){mnd=Math.min(ink*quota(CHF_NIET,ink,kol)/12,aowInk*quota(CHF_AOW,aowInk,kol)/12);norm='Pensioen';}
+    else{mnd=ink*quota(CHF_NIET,ink,kol)/12;norm='Huidig';}
+
+    const maxH=Math.round(mnd*af(rm,360-m));
+    const maxH30=Math.round(mnd*af(rm,360));
+
+    let s1=0,s3=0,ml=0;
+    for(const d of delen){const rs=restSchuld(d,m);d.box===3?s3+=rs:s1+=rs;ml+=maandlastD(d,m);}
+
+    const isBday=m>0&&dt.getMonth()===geb.getMonth()&&dt.getDate()===1;
+    data.push({m,dt,age,ageYr:Math.floor(age),isAOW,pen,norm,isBday,
+      effTr,usesContract,mnd:Math.round(mnd),maxH,maxH30,
+      schuld:Math.round(s1+s3),s3:Math.round(s3),ml:Math.round(ml)});
+  }
+
+  // KPI's
+  const d0=data[0];
+  const aowIdx=data.findIndex(d=>d.isAOW);
+  const penIdx=data.findIndex(d=>d.pen);
+  document.getElementById('k1').textContent=E(d0.maxH);
+  document.getElementById('k1s').textContent=d0.norm+' · eff. rente '+(d0.effTr*100).toFixed(2).replace('.',',')+'%';
+  document.getElementById('k2').textContent=E(d0.mnd)+'/mnd';
+  document.getElementById('k2s').textContent='CHF 2026 · toetsrente '+(d0.effTr*100).toFixed(2).replace('.',',')+'%';
+  if(aowIdx>0){const a=data[aowIdx];document.getElementById('k3').textContent=fmtDtS(a.dt);document.getElementById('k3s').textContent='Leeftijd '+aow.label;}
+  else document.getElementById('k3').textContent='Buiten 30 jaar';
+  if(penIdx>0)document.getElementById('k4').textContent=fmtDtS(data[penIdx].dt);
+  else document.getElementById('k4').textContent='n.v.t.';
+
+  document.getElementById('chart-label').textContent=naam+' — maximale hypotheekruimte (30 jaar, per maand)';
+  ['sec-kpi','sec-chart','sec-table','sec-toelichting'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
+  renderChart();
+  renderTable();
+}
+
+// ── GRAFIEK ──────────────────────────────────────────────────
+function renderChart(){
+  if(chartInst){chartInst.destroy();chartInst=null;}
+  const isH=view==='hyp';
+  const lbl=data.map((d,i)=>i%12===0?d.dt.toLocaleDateString('nl-NL',{month:'short',year:'2-digit'}):'');
+  const yA=data.map(d=>isH?d.maxH:d.mnd);
+  const yC=data.map(d=>isH?d.maxH30:d.mnd);
+  const yB=data.map(d=>isH?d.schuld:d.ml);
+  // Toetsrente overlay: lijn die aangeeft waar contractrente actief is (1 = actief, 0 = niet)
+  const yR=data.map(d=>d.usesContract?1:0);
+  const defaultTr=parseFloat(document.getElementById('toetsrente').value)||5.0;
+
+  const bg=data.map(d=>d.isAOW?'rgba(120,120,120,.65)':d.pen?'rgba(255,102,0,.7)':'rgba(0,42,84,.75)');
+
+  const canvas=document.getElementById('mainChart');
+  const h=Math.max(240,Math.min(340,Math.round((canvas.parentElement?.offsetWidth||600)*.42)));
+  canvas.style.height=h+'px';
+
+  chartInst=new Chart(canvas,{
+    type:'bar',
+    data:{labels:lbl,datasets:[
+      // Balken: max hypotheek resterende looptijd
+      {label:'Max hyp. (rest. looptijd)',data:yA,backgroundColor:bg,borderWidth:0,barPercentage:.98,categoryPercentage:1,order:4,yAxisID:'y'},
+      // Lijn: max hypotheek 30 jr vast
+      {label:'Max hyp. (30 jr vast)',data:yC,type:'line',borderColor:'#1a6b3c',backgroundColor:'transparent',borderWidth:2,borderDash:[3,2],pointRadius:0,tension:.3,order:2,yAxisID:'y'},
+      // Lijn: werkelijke schuld
+      {label:'Werkelijke schuld',data:yB,type:'line',borderColor:'#FF6600',backgroundColor:'transparent',borderWidth:2,borderDash:[5,3],pointRadius:0,tension:.3,order:3,yAxisID:'y'},
+      // Lijn: contractrente actief indicator op tweede as
+      {label:'Contractrente actief',data:yR,type:'line',borderColor:'rgba(26,60,143,.7)',backgroundColor:'rgba(26,60,143,.08)',fill:true,borderWidth:1.5,borderDash:[2,2],pointRadius:0,tension:0,order:1,yAxisID:'y2'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:250},
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        title:items=>{const d=data[items[0].dataIndex];return d.dt.toLocaleDateString('nl-NL',{month:'long',year:'numeric'})+' · '+Math.floor(d.age)+' jaar';},
+        label:item=>{
+          const d=data[item.dataIndex];
+          if(item.datasetIndex===0) return' Max (rest. looptijd): '+(isH?E(d.maxH):E(d.mnd)+'/mnd')+' ['+d.norm+']';
+          if(item.datasetIndex===1) return' Max (30 jr vast): '+(isH?E(d.maxH30):E(d.mnd)+'/mnd');
+          if(item.datasetIndex===2) return' Werkelijk: '+(isH?E(d.schuld):E(d.ml)+'/mnd');
+          if(item.datasetIndex===3&&d.usesContract) return' Contractrente actief: '+(d.effTr*100).toFixed(2).replace('.',',')+'% (i.p.v. '+defaultTr+'%)';
+          return null;
+        },
+        filter:item=>item.datasetIndex<3||(item.datasetIndex===3&&data[item.dataIndex].usesContract)
+      }}},
+      scales:{
+        x:{ticks:{autoSkip:false,maxRotation:0,font:{size:9},color:'#999'},grid:{display:false}},
+        y:{position:'left',ticks:{callback:v=>isH?Ek(v):E(v),font:{size:9},color:'#999'},grid:{color:'rgba(0,0,0,.05)'}},
+        y2:{position:'right',min:0,max:1,display:true,
+          ticks:{display:false},grid:{display:false},
+          title:{display:true,text:'Contract\nrente',font:{size:9},color:'#aaa'}}
+      }
+    }
+  });
+}
+
+function setView(v){
+  view=v;
+  document.getElementById('tog-hyp').className='tog'+(v==='hyp'?' active':'');
+  document.getElementById('tog-mnd').className='tog'+(v==='mnd'?' active':'');
+  if(data.length)renderChart();
+}
+
+// ── TABEL ────────────────────────────────────────────────────
+function renderTable(){
+  const tbody=document.getElementById('tbl-rows');
+  tbody.innerHTML='';
+  const frag=document.createDocumentFragment();
+  let prevContract=null;
+  data.forEach(d=>{
+    const tr=document.createElement('tr');
+    const contractChanged=(prevContract!==null&&d.usesContract!==prevContract);
+    if(d.isAOW) tr.className='aow';
+    else if(d.pen) tr.className='pen';
+    else if(contractChanged) tr.className='rvp-change';
+    prevContract=d.usesContract;
+    const marge=d.maxH-d.schuld;
+    const nm=d.norm==='AOW'?'<span class="badge b-aow">AOW</span>':d.norm==='Pensioen'?'<span class="badge b-pen">Pensioen</span>':'<span class="badge b-hui">Huidig</span>';
+    const rBadge=d.usesContract
+      ?`<span class="badge b-contract">${(d.effTr*100).toFixed(2).replace('.',',')}% contract</span>`
+      :`${(d.effTr*100).toFixed(2).replace('.',',')}%`;
+    const ms=d.schuld>0?(marge>=0?'<span class="pos">+'+E(marge)+'</span>':'<span class="neg">▼'+E(-marge)+'</span>'):'—';
+    const dtStr=d.dt.toLocaleDateString('nl-NL',{month:'short',year:'numeric'});
+    const bdayFlag=d.isBday?` <span title="Verjaardag: ${d.ageYr} jaar" style="font-size:13px">🚩</span>`:'';
+    tr.innerHTML=
+      `<td>${d.m}</td><td>${dtStr}${bdayFlag}</td><td>${d.ageYr} jr</td><td>${nm}</td>`+
+      `<td>${rBadge}</td>`+
+      `<td>${E(d.mnd)}</td><td><strong>${E(d.maxH)}</strong></td><td style="color:var(--green)">${E(d.maxH30)}</td>`+
+      `<td>${d.schuld>0?E(d.schuld):'—'}</td><td>${d.s3>0?E(d.s3):'—'}</td>`+
+      `<td>${d.ml>0?E(d.ml):'—'}</td><td>${ms}</td>`;
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+}
+
+function toggleTable(){
+  const body=document.getElementById('coll-body');
+  const arrow=document.getElementById('coll-arrow');
+  const open=body.classList.toggle('open');
+  arrow.classList.toggle('open',open);
+  document.getElementById('coll-title').textContent=
+    open?'Maandoverzicht — 360 maanden inklappen':'Maandoverzicht — 360 maanden uitklappen';
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+addDeel({naam:'Annuïtair (Box 1)',bedrag:200000,rente:4.2,looptijd:20,type:'ann',box:1,rvpDatum:'2035-04-01'});
+addDeel({naam:'Aflossingsvrij (Box 3)',bedrag:50000,rente:4.2,looptijd:30,type:'afl',box:3,rvpDatum:'2031-04-01'});
+updateAowBar();
+setTimeout(bereken,100);
+</script>
+</body>
+</html>

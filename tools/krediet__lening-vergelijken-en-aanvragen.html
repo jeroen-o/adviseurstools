@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Persoonlijke Lening Tool</title>
+<style>
+:root{
+  --navy:#002A54;--navy-mid:#003a70;--navy-light:#e8eef5;
+  --orange:#FF6600;--orange-light:#fff2e8;
+  --text:#333332;--border:#d8d8d8;
+  --green:#1a6b3c;--green-bg:#eaf5ee;
+  --red:#c0392b;--red-bg:#fdecea;
+  --amber:#b45309;--amber-bg:#fffbe6;
+  --radius:6px;--radius-lg:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f4f6f9;min-height:100vh;}
+
+/* HEADER */
+.header{background:var(--navy);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:12px;}
+.header-logo{font-size:20px;font-weight:700;}
+.header-logo span{color:var(--orange);}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-left:auto;}
+
+/* TAB BAR */
+.tab-bar{background:var(--navy-mid);display:flex;padding:0 24px;gap:0;border-bottom:3px solid rgba(255,255,255,0.08);}
+.tab{padding:13px 22px;font-size:14px;font-weight:700;color:rgba(255,255,255,0.6);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-3px;transition:all 0.15s;white-space:nowrap;user-select:none;}
+.tab:hover{color:rgba(255,255,255,0.9);}
+.tab.active{color:#fff;border-bottom:3px solid var(--orange);}
+
+/* STICKY BAR (tab 1 only) */
+.sticky-bar{position:sticky;top:0;z-index:100;background:var(--navy-mid);color:#fff;display:flex;align-items:stretch;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.sb-col{flex:1;padding:10px 20px;display:flex;flex-direction:column;gap:2px;}
+.sb-col.divider{flex:0;width:1px;background:rgba(255,255,255,0.15);}
+.sb-label{font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.4px;}
+.sb-val{font-size:17px;font-weight:700;}
+.sb-sub{font-size:11px;color:rgba(255,255,255,0.5);}
+.sb-col.huid .sb-val{color:#60a5fa;}
+.sb-col.nieuw .sb-val{color:#4ade80;}
+.sb-col.diff .sb-val{font-size:15px;}
+.diff-pos{color:#4ade80;}.diff-neg{color:#ff7f6e;}
+
+/* PANELS */
+.panel{display:none;}
+.panel.active{display:block;}
+.main{padding:20px 24px 80px;max-width:1000px;margin:0 auto;}
+
+/* CARDS */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:10px 16px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;background:var(--navy-light);color:var(--navy);}
+.card-header::before{content:'';display:inline-block;width:8px;height:8px;background:var(--orange);transform:rotate(45deg);flex-shrink:0;}
+.card-header.blue{background:#eff6ff;color:#1e40af;}
+.card-header.blue::before{background:#3b82f6;}
+.card-header.green{background:#f0fdf4;color:#166534;}
+.card-header.green::before{background:#22c55e;}
+.card-body{padding:16px;}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px 20px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px 16px;}
+@media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:680px){.compare-grid{grid-template-columns:1fr;}}
+
+/* FIELDS */
+.f{display:flex;flex-direction:column;gap:4px;}
+.f label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;}
+.f label span.req{color:var(--orange);}
+.f input,.f select,.f textarea{border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:14px;font-family:Arial,sans-serif;color:var(--text);background:#fff;width:100%;transition:border-color 0.15s;}
+.f textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 2px rgba(0,42,84,0.1);}
+.f input[readonly]{background:#f5f5f5;font-weight:700;}
+.f .hint{font-size:11px;color:#888;margin-top:2px;}
+.f .cr{font-size:11px;font-weight:700;margin-top:2px;color:var(--orange);}
+.f .cr.green{color:var(--green);}
+.f .cr.red{color:var(--red);}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;}
+.badge-blue{background:#dbeafe;color:#1e40af;}
+.badge-green{background:#dcfce7;color:#166534;}
+
+/* RESULT BOXES (tab 2) */
+.result-block{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+@media(max-width:600px){.result-block{grid-template-columns:1fr;}}
+.rb{border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center;}
+.rb .rb-lbl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.3px;}
+.rb .rb-val{font-size:24px;font-weight:700;color:var(--navy);margin:6px 0 2px;}
+.rb .rb-sub{font-size:12px;color:#aaa;}
+.rb.accent{border-color:var(--orange);background:var(--orange-light);}
+.rb.accent .rb-val{color:var(--orange);}
+.rb.green{border-color:var(--green);background:var(--green-bg);}
+.rb.green .rb-val{color:var(--green);}
+.rb.red{border-color:var(--red);background:var(--red-bg);}
+.rb.red .rb-val{color:var(--red);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--navy);color:#fff;padding:7px 12px;text-align:left;font-size:11px;}
+.tbl th.r{text-align:right;}
+.tbl td{padding:7px 12px;border-bottom:1px solid #f0f0f0;}
+.tbl td.r{text-align:right;}
+.tbl tr:nth-child(even) td{background:#fafafa;}
+
+/* COMPARE TABLE */
+.cmp-table{width:100%;border-collapse:collapse;}
+.cmp-table th{background:var(--navy);color:#fff;padding:9px 16px;text-align:left;font-size:12px;font-weight:700;}
+.cmp-table th.hcol{background:#1e40af;}.cmp-table th.ncol{background:#166534;}.cmp-table th.dcol{background:#374151;}
+.cmp-table td{padding:10px 16px;border-bottom:1px solid #f0f0f0;font-size:14px;}
+.cmp-table tr:nth-child(even) td{background:#fafafa;}
+.cmp-table td.lbl{font-weight:600;color:#444;font-size:13px;}
+.cmp-table td.hv{color:#1e40af;font-weight:700;}
+.cmp-table td.nv{color:#166534;font-weight:700;}
+.cmp-table td.dv{font-weight:700;}
+.ds{color:var(--green);}.dc{color:var(--red);}
+.cmp-table tr.tot td{background:#f8f9fb;font-weight:700;font-size:15px;}
+
+/* BARS */
+.bar-wrap{padding:16px;border-top:1px solid #f0f0f0;}
+.bar-label{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px;}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.bar-name{width:110px;font-size:13px;color:#444;text-align:right;flex-shrink:0;}
+.bar-track{flex:1;background:#f0f0f0;border-radius:20px;height:28px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:20px;display:flex;align-items:center;padding-left:10px;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;transition:width 0.4s ease;}
+.bar-fill.huid{background:linear-gradient(90deg,#3b82f6,#1d4ed8);}
+.bar-fill.nieuw{background:linear-gradient(90deg,#22c55e,#15803d);}
+.bar-amt{width:90px;font-size:13px;font-weight:700;flex-shrink:0;}
+.bar-amt.huid{color:#1e40af;}.bar-amt.nieuw{color:#166534;}
+
+/* ADVICE */
+.advice{border-radius:var(--radius);padding:14px 18px;font-size:13px;line-height:1.65;margin:16px;}
+.advice strong{display:block;font-size:14px;margin-bottom:4px;}
+.advice-green{background:var(--green-bg);border-left:4px solid var(--green);color:#1a4731;}
+.advice-amber{background:var(--amber-bg);border-left:4px solid #d97706;color:#92400e;}
+.advice-red{background:var(--red-bg);border-left:4px solid var(--red);color:#7f1d1d;}
+
+/* AMORT */
+.amort-wrap{overflow-x:auto;max-height:300px;overflow-y:auto;}
+.amort-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.amort-tbl th{background:var(--navy);color:#fff;padding:6px 10px;text-align:right;position:sticky;top:0;z-index:1;font-size:11px;}
+.amort-tbl th:first-child{text-align:left;}
+.amort-tbl td{padding:5px 10px;border-bottom:1px solid #f0f0f0;text-align:right;}
+.amort-tbl td:first-child{text-align:left;color:#666;}
+.amort-tbl tr:nth-child(even) td{background:#fafafa;}
+.amort-tbl td.h{color:#1e40af;}.amort-tbl td.n{color:#166534;}
+.amort-tbl tr.yr td{background:#e8eef5!important;font-weight:700;}
+.amort-tbl tr.he td{background:#dbeafe!important;font-weight:700;}
+.amort-tbl tr.ne td{background:#dcfce7!important;font-weight:700;}
+
+/* SLIDER */
+.slider-wrap{padding:16px;border-top:1px solid #f0f0f0;}
+.slider-row{display:flex;align-items:center;gap:12px;}
+.slider-lbl{width:160px;font-size:13px;color:#444;flex-shrink:0;}
+input[type=range]{flex:1;accent-color:var(--green);}
+.slider-val{width:90px;font-size:13px;font-weight:700;color:#166534;text-align:right;}
+
+/* SECTION TITLE */
+.st{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid var(--orange);display:inline-block;}
+
+/* INFO BOX */
+.ib{background:var(--navy-light);border-left:3px solid var(--navy);border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--navy);margin-bottom:14px;line-height:1.55;}
+
+/* AANVRAAG FORM */
+.section-divider{display:flex;align-items:center;gap:12px;margin:20px 0 14px;}
+.section-divider span{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.section-divider::before{background:linear-gradient(90deg,transparent,var(--orange));}
+.section-divider::after{background:linear-gradient(90deg,var(--orange),transparent);}
+
+.email-preview{background:#f8f9fb;border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:13px;line-height:1.7;font-family:'Courier New',monospace;white-space:pre-wrap;margin-top:12px;color:#333;max-height:300px;overflow-y:auto;}
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-lg);padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafafa;position:relative;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--orange);background:var(--orange-light);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.uz-icon{font-size:32px;margin-bottom:8px;}
+.uz-title{font-weight:700;color:var(--navy);font-size:14px;}
+.uz-sub{font-size:12px;color:#888;margin-top:4px;}
+.file-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+.file-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;}
+.file-icon{font-size:20px;flex-shrink:0;width:28px;text-align:center;}
+.file-info{flex:1;min-width:0;}
+.file-name{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-meta{font-size:11px;color:#888;margin-top:1px;}
+.file-remove{background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;padding:2px 6px;border-radius:3px;flex-shrink:0;transition:color 0.15s;}
+.file-remove:hover{color:var(--red);}
+.upload-note{font-size:12px;color:var(--amber);background:var(--amber-bg);border-radius:var(--radius);padding:8px 12px;margin-top:10px;line-height:1.5;}
+.upload-note strong{display:block;}
+
+.send-btn{background:var(--orange);color:#fff;border:none;border-radius:var(--radius);padding:11px 28px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity 0.15s;font-family:Arial,sans-serif;}
+.send-btn:hover{opacity:0.88;}
+
+/* DISCLAIMER */
+.disclaimer{background:var(--amber-bg);border:1px solid #fde68a;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#92400e;line-height:1.55;margin-bottom:16px;}
+
+/* FOOTER */
+.footer-bar{position:fixed;bottom:0;left:0;right:0;background:var(--navy);display:flex;align-items:center;justify-content:flex-end;padding:10px 24px;gap:10px;z-index:200;box-shadow:0 -2px 12px rgba(0,0,0,0.18);}
+.btn{padding:9px 20px;border-radius:3px;border:none;font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.15s;}
+.btn:hover{opacity:0.88;}
+.btn-p{background:var(--orange);color:#fff;}
+
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">Persoonlijke <span>Lening</span></div>
+  <div class="header-sub">Maandlast • Vergelijker • Aanvraag</div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab active" onclick="showTab('tab-ml',this)">💰 Maandlast berekenen</div>
+  <div class="tab" onclick="showTab('tab-vgl',this)">⚖ Lening vergelijken</div>
+  <div class="tab" onclick="showTab('tab-aav',this)">📄 Lening aanvragen</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TAB 1: MAANDLAST BEREKENEN
+     ══════════════════════════════════════════════ -->
+<div class="panel active" id="tab-ml">
+  <div class="main">
+
+    <div class="card mt12">
+      <div class="card-header">Leninggegevens</div>
+      <div class="card-body">
+        <div class="g3">
+          <div class="f">
+            <label>Hoofdsom <span class="req">*</span></label>
+            <input type="number" id="ml-som" value="10000" min="0" step="500" oninput="berekenML()">
+          </div>
+          <div class="f">
+            <label>Rente per jaar (%)</label>
+            <input type="number" id="ml-rente" value="7.5" min="0" max="30" step="0.1" oninput="berekenML()">
+          </div>
+          <div class="f">
+            <label>Looptijd (maanden)</label>
+            <input type="number" id="ml-lt" value="60" min="6" max="180" step="6" oninput="clampML();berekenML()">
+            <span class="hint">6 t/m 180 maanden (max. 15 jaar)</span>
+          </div>
+        </div>
+        <div class="slider-wrap" style="padding:12px 0 0;">
+          <div class="slider-row">
+            <span class="slider-lbl">Looptijd: 6 → 180 mnd</span>
+            <input type="range" id="ml-slider" min="6" max="180" step="6" value="60" oninput="el('ml-lt').value=this.value;clampML();berekenML();" style="accent-color:var(--orange);">
+            <span class="slider-val" id="ml-slider-lbl" style="color:var(--orange);">60 mnd</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTAAT BLOKKEN -->
+    <div class="result-block" id="ml-results">
+      <div class="rb accent">
+        <div class="rb-lbl">Maandlast</div>
+        <div class="rb-val" id="ml-res-ml">–</div>
+        <div class="rb-sub" id="ml-res-sub">per maand</div>
+      </div>
+      <div class="rb green">
+        <div class="rb-lbl">Totale rente</div>
+        <div class="rb-val" id="ml-res-rente">–</div>
+        <div class="rb-sub" id="ml-res-rp">–</div>
+      </div>
+      <div class="rb">
+        <div class="rb-lbl">Totaal te betalen</div>
+        <div class="rb-val" id="ml-res-tot">–</div>
+        <div class="rb-sub" id="ml-res-totsub">hoofdsom + rente</div>
+      </div>
+    </div>
+
+    <!-- VERGELIJK LOOPTIJDEN -->
+    <div class="card">
+      <div class="card-header">Vergelijking looptijden (zelfde hoofdsom & rente)</div>
+      <div class="card-body" style="padding:0;">
+        <table class="tbl" id="ml-lt-tbl">
+          <thead><tr>
+            <th>Looptijd</th>
+            <th class="r">Maandlast</th>
+            <th class="r">Totale rente</th>
+            <th class="r">Totaal te betalen</th>
+            <th class="r">Rentepercentage totaal</th>
+          </tr></thead>
+          <tbody id="ml-lt-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AFLOSSCHEMA -->
+    <div class="card">
+      <div class="card-header">Aflosschema (jaarlijkse weergave)</div>
+      <div class="card-body" style="padding:0;">
+        <div class="amort-wrap">
+          <table class="amort-tbl">
+            <thead><tr>
+              <th style="text-align:left">Periode</th>
+              <th class="r">Maandlast</th>
+              <th class="r">Rente</th>
+              <th class="r">Aflossing</th>
+              <th class="r">Restschuld</th>
+            </tr></thead>
+            <tbody id="ml-amort-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">Annuïtaire berekening. Werkelijke lasten kunnen afwijken door aanbiedersbeleid of afsluitkosten. Aan deze berekening kunnen geen rechten worden ontleend.</div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TAB 2: LENING VERGELIJKEN
+     ══════════════════════════════════════════════ -->
+<div class="panel" id="tab-vgl">
+
+  <!-- STICKY -->
+  <div class="sticky-bar" id="vgl-sticky">
+    <div class="sb-col huid">
+      <span class="sb-label">■ Huidige lening – maandlast</span>
+      <span class="sb-val" id="b-hml">–</span>
+      <span class="sb-sub" id="b-hlt">–</span>
+    </div>
+    <div class="sb-col divider"></div>
+    <div class="sb-col nieuw">
+      <span class="sb-label">■ Nieuwe lening – maandlast</span>
+      <span class="sb-val" id="b-nml">–</span>
+      <span class="sb-sub" id="b-nlt">–</span>
+    </div>
+    <div class="sb-col divider"></div>
+    <div class="sb-col diff">
+      <span class="sb-label">Verschil maandlast</span>
+      <span class="sb-val" id="b-dml">–</span>
+      <span class="sb-sub">per maand</span>
+    </div>
+    <div class="sb-col divider"></div>
+    <div class="sb-col diff">
+      <span class="sb-label">Extra rentelast totaal</span>
+      <span class="sb-val" id="b-dr">–</span>
+      <span class="sb-sub">verschil totale rente</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="compare-grid mt12">
+      <div class="card">
+        <div class="card-header blue"><span class="badge badge-blue">Huidig</span> Huidige lening</div>
+        <div class="card-body">
+          <div class="g2">
+            <div class="f"><label>Hoofdsom / restschuld</label>
+              <input type="number" id="h-som" value="15000" min="0" step="500" oninput="berekenVGL()"></div>
+            <div class="f"><label>Rente per jaar (%)</label>
+              <input type="number" id="h-rente" value="7.5" min="0" max="30" step="0.1" oninput="berekenVGL()"></div>
+            <div class="f"><label>Resterende looptijd</label>
+              <select id="h-lt" onchange="berekenVGL()">
+                <option value="6">6 mnd</option><option value="12">12 mnd (1 jr)</option>
+                <option value="18">18 mnd</option><option value="24">24 mnd (2 jr)</option>
+                <option value="30">30 mnd</option><option value="36">36 mnd (3 jr)</option>
+                <option value="42">42 mnd</option><option value="48">48 mnd (4 jr)</option>
+                <option value="54">54 mnd</option><option value="60" selected>60 mnd (5 jr)</option>
+                <option value="72">72 mnd (6 jr)</option><option value="84">84 mnd (7 jr)</option>
+                <option value="96">96 mnd (8 jr)</option><option value="108">108 mnd (9 jr)</option>
+                <option value="120">120 mnd (10 jr)</option>
+              </select></div>
+            <div class="f"><label>Maandlast (berekend)</label>
+              <input type="text" id="h-ml" readonly>
+              <span class="cr" id="h-rente-tot"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header green"><span class="badge badge-green">Vergelijk</span> Nieuwe / verlengde lening</div>
+        <div class="card-body">
+          <div class="g2">
+            <div class="f"><label>Nieuw leenbedrag</label>
+              <input type="number" id="n-som" value="15000" min="0" step="500" oninput="berekenVGL()"></div>
+            <div class="f"><label>Rente per jaar (%)</label>
+              <input type="number" id="n-rente" value="7.5" min="0" max="30" step="0.1" oninput="berekenVGL()"></div>
+            <div class="f"><label>Nieuwe looptijd (mnd)</label>
+              <input type="number" id="n-lt" value="120" min="6" max="180" step="6" oninput="clampVGL();berekenVGL()">
+              <span class="hint">Max. 180 maanden (15 jaar)</span></div>
+            <div class="f"><label>Maandlast (berekend)</label>
+              <input type="text" id="n-ml" readonly>
+              <span class="cr green" id="n-rente-tot"></span></div>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-row">
+              <span class="slider-lbl">6 mnd → 180 mnd</span>
+              <input type="range" id="n-slider" min="6" max="180" step="6" value="120" oninput="el('n-lt').value=this.value;clampVGL();berekenVGL();">
+              <span class="slider-val" id="n-slider-lbl">120 mnd</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARE TABLE -->
+    <div class="card mb16">
+      <div class="card-header">Vergelijking</div>
+      <div class="card-body" style="padding:0;">
+        <table class="cmp-table">
+          <thead><tr>
+            <th>Kengetal</th>
+            <th class="hcol">■ Huidige lening</th>
+            <th class="ncol">■ Nieuwe lening</th>
+            <th class="dcol">Verschil</th>
+          </tr></thead>
+          <tbody id="cmp-tbody"></tbody>
+        </table>
+        <div class="bar-wrap">
+          <div class="bar-label">Maandlast visualisatie</div>
+          <div class="bar-row">
+            <span class="bar-name">Huidig</span>
+            <div class="bar-track"><div class="bar-fill huid" id="bar-huid">–</div></div>
+            <span class="bar-amt huid" id="bar-hamt">–</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name">Nieuw</span>
+            <div class="bar-track"><div class="bar-fill nieuw" id="bar-nieuw">–</div></div>
+            <span class="bar-amt nieuw" id="bar-namt">–</span>
+          </div>
+        </div>
+        <!-- HYPOTHEEK CAPACITEIT INSTELLINGEN -->
+        <div style="background:linear-gradient(135deg,#002A54 0%,#003a70 100%);padding:16px 20px;border-top:3px solid var(--orange);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:22px;">🏠</span>
+            <span style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.3px;">Indicatieve extra hypotheekcapaciteit</span>
+            <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.5);font-style:italic;">Pas parameters aan</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px;">Toetsrente (%)</label>
+              <input type="number" id="hyp-toets-rente" value="5.0" min="1" max="15" step="0.1"
+                oninput="berekenVGL()"
+                style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;font-family:Arial,sans-serif;">
+              <span style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:3px;display:block;">Min. GHF 2026: 5,0%</span>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px;">Looptijd (jaar)</label>
+              <input type="number" id="hyp-looptijd" value="30" min="5" max="40" step="1"
+                oninput="berekenVGL()"
+                style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.12);color:#fff;font-size:14px;font-weight:700;font-family:Arial,sans-serif;">
+              <span style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:3px;display:block;">5 t/m 40 jaar</span>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px;">Fiscale behandeling</label>
+              <div style="display:flex;flex-direction:column;gap:5px;margin-top:2px;">
+                <label style="display:flex;align-items:center;gap:7px;cursor:pointer;padding:5px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);">
+                  <input type="radio" name="box-type" id="box1-radio" value="box1" checked onchange="berekenVGL()" style="accent-color:#60a5fa;flex-shrink:0;">
+                  <span style="font-size:12px;font-weight:700;color:#93c5fd;">Box 1 – Hypotheek (HRA)</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:7px;cursor:pointer;padding:5px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);">
+                  <input type="radio" name="box-type" id="box3-radio" value="box3" onchange="berekenVGL()" style="accent-color:#aaa;flex-shrink:0;">
+                  <span style="font-size:12px;color:rgba(255,255,255,0.6);">Box 3 – Overig (geen HRA)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <!-- RESULT ROW -->
+          <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:12px 16px;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;gap:0;" id="hyp-cap-row">
+            <div style="flex:1;border-right:1px solid rgba(255,255,255,0.15);padding-right:16px;">
+              <div style="font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.3px;">Vrijgekomen budget (netto)</div>
+              <div style="font-size:18px;font-weight:700;color:#60a5fa;margin-top:3px;" id="hyp-freed">–</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">PL Box 3 → geen aftrek</div>
+            </div>
+            <div style="flex:1;padding:0 16px;border-right:1px solid rgba(255,255,255,0.15);">
+              <div style="font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.3px;">Bruto annuïteit</div>
+              <div style="font-size:18px;font-weight:700;color:#e2e8f0;margin-top:3px;" id="hyp-gross">–</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;" id="hyp-net-lbl">–</div>
+            </div>
+            <div style="flex:1.4;padding-left:16px;">
+              <div style="font-size:11px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.3px;">Indicatieve extra hypotheek</div>
+              <div style="font-size:26px;font-weight:700;color:#4ade80;margin-top:3px;letter-spacing:-0.5px;" id="hyp-cap">–</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;" id="hyp-cap-sub">–</div>
+            </div>
+          </div>
+        </div>
+        <div id="vgl-advice"></div>
+      </div>
+    </div>
+
+    <!-- AMORT VERGELIJK -->
+    <div class="card">
+      <div class="card-header">Aflosschema vergelijking</div>
+      <div class="card-body" style="padding:0;">
+        <div class="amort-wrap">
+          <table class="amort-tbl">
+            <thead><tr>
+              <th style="text-align:left">Maand</th>
+              <th class="h">H. Last</th><th class="h">H. Rente</th><th class="h">H. Aflos</th><th class="h">H. Rest</th>
+              <th class="n">N. Last</th><th class="n">N. Rente</th><th class="n">N. Aflos</th><th class="n">N. Rest</th>
+            </tr></thead>
+            <tbody id="vgl-amort-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">Annuïtaire berekening. Aan deze berekening kunnen geen rechten worden ontleend.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TAB 3: LENING AANVRAGEN
+     ══════════════════════════════════════════════ -->
+<div class="panel" id="tab-aav">
+  <div class="main">
+
+    <div class="card mt12">
+      <div class="card-header">Leningaanvraag</div>
+      <div class="card-body">
+
+        <!-- DOSSIERNUMMER -->
+        <div class="g2 mb16" style="max-width:480px;">
+          <div class="f">
+            <label>Dossiernr. <span class="req">*</span></label>
+            <input type="text" id="aav-dossier" placeholder="bv. 2025-0042" oninput="updatePreview()" style="font-size:16px;font-weight:700;letter-spacing:0.5px;">
+          </div>
+          <div class="f">
+            <label>Datum aanvraag</label>
+            <input type="text" id="aav-datum" readonly style="background:#f5f5f5;font-weight:700;color:var(--navy);">
+          </div>
+        </div>
+
+        <!-- ADVISEUR -->
+        <div class="section-divider"><span>👤 Gegevens adviseur</span></div>
+        <div class="g3 mb16">
+          <div class="f"><label>Naam adviseur <span class="req">*</span></label>
+            <input type="text" id="adv-naam" placeholder="Voor- en achternaam" oninput="updatePreview()"></div>
+          <div class="f"><label>Bedrijfsnaam</label>
+            <input type="text" id="adv-bedrijf" placeholder="Kantoor / organisatienaam" oninput="updatePreview()"></div>
+          <div class="f"><label>Adres</label>
+            <input type="text" id="adv-adres" placeholder="Straat + huisnummer" oninput="updatePreview()"></div>
+          <div class="f"><label>Postcode & woonplaats</label>
+            <input type="text" id="adv-pc" placeholder="1234 AB Plaatsnaam" oninput="updatePreview()"></div>
+          <div class="f"><label>Telefoon</label>
+            <input type="tel" id="adv-tel" placeholder="06-12345678" oninput="updatePreview()"></div>
+          <div class="f"><label>E-mailadres <span class="req">*</span></label>
+            <input type="email" id="adv-email" placeholder="adviseur@kantoor.nl" oninput="updatePreview()"></div>
+        </div>
+
+        <!-- KLANT 1 -->
+        <div class="section-divider"><span>👥 Klantgegevens aanvrager 1</span></div>
+        <div class="g3 mb16">
+          <div class="f"><label>Naam <span class="req">*</span></label>
+            <input type="text" id="k1-naam" placeholder="Voor- en achternaam" oninput="updatePreview()"></div>
+          <div class="f"><label>Geboortedatum</label>
+            <input type="date" id="k1-geb" oninput="updatePreview()"></div>
+          <div class="f"><label>Adres</label>
+            <input type="text" id="k1-adres" placeholder="Straat + huisnummer" oninput="updatePreview()"></div>
+          <div class="f"><label>Postcode & woonplaats</label>
+            <input type="text" id="k1-pc" placeholder="1234 AB Plaatsnaam" oninput="updatePreview()"></div>
+          <div class="f"><label>Telefoon</label>
+            <input type="tel" id="k1-tel" placeholder="06-12345678" oninput="updatePreview()"></div>
+          <div class="f"><label>E-mailadres</label>
+            <input type="email" id="k1-email" placeholder="klant@email.nl" oninput="updatePreview()"></div>
+        </div>
+
+        <!-- KLANT 2 -->
+        <div class="section-divider"><span>👥 Klantgegevens aanvrager 2 (indien van toepassing)</span></div>
+        <div class="g3 mb16">
+          <div class="f"><label>Naam</label>
+            <input type="text" id="k2-naam" placeholder="Voor- en achternaam" oninput="updatePreview()"></div>
+          <div class="f"><label>Geboortedatum</label>
+            <input type="date" id="k2-geb" oninput="updatePreview()"></div>
+          <div class="f"><label>Adres</label>
+            <input type="text" id="k2-adres" placeholder="Straat + huisnummer" oninput="updatePreview()"></div>
+          <div class="f"><label>Postcode & woonplaats</label>
+            <input type="text" id="k2-pc" placeholder="1234 AB Plaatsnaam" oninput="updatePreview()"></div>
+          <div class="f"><label>Telefoon</label>
+            <input type="tel" id="k2-tel" placeholder="06-12345678" oninput="updatePreview()"></div>
+          <div class="f"><label>E-mailadres</label>
+            <input type="email" id="k2-email" placeholder="klant2@email.nl" oninput="updatePreview()"></div>
+        </div>
+
+        <!-- LENINGGEGEVENS -->
+        <div class="section-divider"><span>💰 Leninggegevens</span></div>
+        <div class="g3 mb16">
+          <div class="f"><label>Gewenste hoofdsom <span class="req">*</span></label>
+            <input type="number" id="aav-som" placeholder="bv. 15000" min="0" step="500" oninput="updatePreview()"></div>
+          <div class="f"><label>Gewenste looptijd</label>
+            <select id="aav-lt" onchange="updatePreview()">
+              <option value="">-- Kies looptijd --</option>
+              <option value="12">12 maanden (1 jaar)</option>
+              <option value="24">24 maanden (2 jaar)</option>
+              <option value="36">36 maanden (3 jaar)</option>
+              <option value="48">48 maanden (4 jaar)</option>
+              <option value="60">60 maanden (5 jaar)</option>
+              <option value="72">72 maanden (6 jaar)</option>
+              <option value="84">84 maanden (7 jaar)</option>
+              <option value="96">96 maanden (8 jaar)</option>
+              <option value="120">120 maanden (10 jaar)</option>
+              <option value="180">180 maanden (15 jaar)</option>
+            </select></div>
+          <div class="f"><label>Doel van de lening <span class="req">*</span></label>
+            <select id="aav-doel" onchange="updatePreview()">
+              <option value="">-- Kies doel --</option>
+              <option value="Woningverbetering / verbouwing">Woningverbetering / verbouwing</option>
+              <option value="Verduurzaming (isolatie / warmtepomp)">Verduurzaming (isolatie / warmtepomp)</option>
+              <option value="Voertuig (auto / motor)">Voertuig (auto / motor)</option>
+              <option value="Consolidatie bestaande schulden">Consolidatie bestaande schulden</option>
+              <option value="Medische kosten">Medische kosten</option>
+              <option value="Studie / opleiding">Studie / opleiding</option>
+              <option value="Overig (zie opmerkingen)">Overig (zie opmerkingen)</option>
+            </select></div>
+        </div>
+
+        <!-- OPMERKINGEN -->
+        <div class="section-divider"><span>📋 Opmerkingen</span></div>
+        <div class="f mb16">
+          <label>Overige opmerkingen / toelichting</label>
+          <textarea id="aav-opmerking" placeholder="Vul hier aanvullende informatie in, zoals specifiek doel, huidige financiële situatie of bijzondere omstandigheden..." rows="4" oninput="updatePreview()"></textarea>
+        </div>
+
+        <!-- DOCUMENTEN UPLOAD -->
+        <div class="section-divider"><span>📎 Documenten bijvoegen</span></div>
+        <div class="upload-zone" id="upload-zone"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="handleDrop(event)">
+          <input type="file" id="file-input" multiple
+                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx,.txt"
+                 onchange="handleFiles(this.files)">
+          <div class="uz-icon">📎</div>
+          <div class="uz-title">Klik om documenten te selecteren of sleep ze hierheen</div>
+          <div class="uz-sub">PDF, Word, Excel, afbeeldingen • Meerdere bestanden tegelijk mogelijk</div>
+        </div>
+        <div class="file-list" id="file-list"></div>
+        <div class="upload-note mt8">
+          <strong>⚠ Let op: bestanden worden niet automatisch bijgevoegd in de e-mail</strong>
+          De bestandsnamen worden vermeld in de e-mailtekst. Voeg de documenten handmatig toe als bijlage in uw e-mailprogramma nadat u op “Verzend per e-mail” klikt.
+        </div>
+
+        <!-- EMAIL PREVIEW -->
+        <div class="section-divider"><span>📧 E-mail voorvertoning</span></div>
+        <div class="email-preview" id="email-preview">Vul de gegevens in om de e-mailinhoud te zien...</div>
+
+        <!-- BUTTONS -->
+        <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+          <button class="send-btn" onclick="verzendEmail()">📧 Verzend per e-mail</button>
+          <button class="btn btn-p" style="background:var(--navy);" onclick="printAanvraag()">⌦ Afdrukken</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-bar">
+  <button class="btn btn-p" onclick="printHuidigTabblad()">⌦ Afdrukken</button>
+</div>
+
+<script>
+const el  = id => document.getElementById(id);
+const v   = id => parseFloat(el(id).value) || 0;
+const sv  = id => el(id).value.trim();
+const fmt = n  => '\u20AC\u00a0' + Math.round(n).toLocaleString('nl-NL');
+const fmtD = n => { const s=n>0?'+':''; return s+'\u20AC\u00a0'+Math.abs(Math.round(n)).toLocaleString('nl-NL'); }
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(id, el2) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el(id).classList.add('active');
+  el2.classList.add('active');
+  // Show/hide sticky bar
+  const sticky = el('vgl-sticky');
+  if (sticky) sticky.style.display = id==='tab-vgl' ? 'flex' : 'none';
+}
+
+// ── ANNUÏTEIT ──────────────────────────────────────────────────────────────────
+function ann(som, rJaar, n) {
+  if (som<=0||n<=0) return 0;
+  const r = rJaar/100/12;
+  if (r===0) return som/n;
+  return som*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+}
+
+// ── TAB 1: MAANDLAST ──────────────────────────────────────────────────────────
+function clampML() {
+  let val=parseInt(el('ml-lt').value)||60;
+  val=Math.max(6,Math.min(180,val));
+  el('ml-lt').value=val;
+  el('ml-slider').value=val;
+  el('ml-slider-lbl').textContent=val+' mnd';
+}
+
+function berekenML() {
+  const som=v('ml-som'), r=v('ml-rente'), lt=parseInt(el('ml-lt').value)||60;
+  clampML();
+  const ml=ann(som,r,lt);
+  const tot=ml*lt;
+  const rente=tot-som;
+  const rp=som>0?(rente/som*100).toFixed(1):'0';
+
+  el('ml-res-ml').textContent=fmt(ml);
+  el('ml-res-rente').textContent=fmt(rente);
+  el('ml-res-rp').textContent=rp+'% van hoofdsom';
+  el('ml-res-tot').textContent=fmt(tot);
+
+  // Looptijdentabel
+  const lts=[12,24,36,48,60,72,84,96,120,180];
+  el('ml-lt-tbody').innerHTML=lts.map(m=>{
+    const ml2=ann(som,r,m);
+    const tot2=ml2*m;
+    const ren2=tot2-som;
+    const rp2=som>0?(ren2/som*100).toFixed(1):'0';
+    const isCur=m===lt;
+    return `<tr style="${isCur?'background:var(--orange-light);font-weight:700;':''}" >
+      <td>${m} mnd (${m/12} ${m===12?'jaar':'jaar'})</td>
+      <td class="r">${fmt(ml2)}</td>
+      <td class="r">${fmt(ren2)}</td>
+      <td class="r">${fmt(tot2)}</td>
+      <td class="r">${rp2}%</td>
+    </tr>`;
+  }).join('');
+
+  // Aflosschema
+  let rest=som; const rMnd=r/100/12;
+  const rows=[];
+  for(let m=1;m<=lt;m++){
+    const rn=rest*rMnd;
+    const af=Math.min(ml-rn,rest);
+    rest=Math.max(0,rest-af);
+    const showRow=m===1||m%12===0||m===lt;
+    if(showRow){
+      const lbl=m===lt?`Mnd ${m} (Einde)`:m%12===0?`Jaar ${m/12}`:m===1?'Mnd 1':'';
+      const isEnd=m===lt;
+      rows.push(`<tr class="${m%12===0?'yr':''}" ${isEnd?'style="background:#fff3e0;font-weight:700;"':''}>
+        <td>${lbl}</td>
+        <td class="r">${fmt(ml)}</td>
+        <td class="r">${fmt(rn)}</td>
+        <td class="r">${fmt(af)}</td>
+        <td class="r">${fmt(rest)}</td>
+      </tr>`);
+    }
+  }
+  el('ml-amort-tbody').innerHTML=rows.join('');
+}
+
+// ── TAB 2: VERGELIJKEN ────────────────────────────────────────────────────────
+function clampVGL(){
+  let v2=parseInt(el('n-lt').value)||120;
+  v2=Math.max(6,Math.min(180,v2));
+  el('n-lt').value=v2;
+  el('n-slider').value=v2;
+  el('n-slider-lbl').textContent=v2+' mnd';
+}
+
+function berekenVGL(){
+  const hS=v('h-som'),hR=v('h-rente'),hL=parseInt(el('h-lt').value);
+  const nS=v('n-som'),nR=v('n-rente');
+  let nL=parseInt(el('n-lt').value)||120;
+  nL=Math.max(6,Math.min(180,nL));
+  el('n-slider').value=nL; el('n-slider-lbl').textContent=nL+' mnd';
+
+  const hML=ann(hS,hR,hL), nML=ann(nS,nR,nL);
+  const hTot=hML*hL, nTot=nML*nL;
+  const hRen=hTot-hS, nRen=nTot-nS;
+  const dML=nML-hML, dRen=nRen-hRen;
+
+  el('h-ml').value=fmt(hML); el('h-rente-tot').textContent=`Totale rente: ${fmt(hRen)}`;
+  el('n-ml').value=fmt(nML); el('n-rente-tot').textContent=`Totale rente: ${fmt(nRen)}`;
+
+  const hjr=hL%12===0?`${hL/12} jr`:`${hL} mnd`;
+  const njr=nL%12===0?`${nL/12} jr`:`${nL} mnd`;
+  el('b-hml').textContent=fmt(hML); el('b-hlt').textContent=`${hjr} · ${hR.toFixed(1)}%`;
+  el('b-nml').textContent=fmt(nML); el('b-nlt').textContent=`${njr} · ${nR.toFixed(1)}%`;
+  const dmlEl=el('b-dml'); dmlEl.textContent=fmtD(dML)+'/mnd'; dmlEl.className='sb-val '+(dML<=0?'diff-pos':'diff-neg');
+  const drEl=el('b-dr'); drEl.textContent=fmtD(dRen); drEl.className='sb-val '+(dRen<=0?'diff-pos':'diff-neg');
+
+  const rows=[
+    ['Leenbedrag',fmt(hS),fmt(nS),fmtD(nS-hS),nS>hS?'dc':nS<hS?'ds':''],
+    ['Rente p.j.',hR.toFixed(2)+'%',nR.toFixed(2)+'%',fmtD(nR-hR)+'%',nR>hR?'dc':nR<hR?'ds':''],
+    ['Looptijd',`${hL} mnd`,`${nL} mnd`,fmtD(nL-hL)+' mnd',nL>hL?'dc':'ds'],
+    ['Maandlast',fmt(hML),fmt(nML),fmtD(dML)+'/mnd',dML>0?'dc':'ds'],
+    ['Totale betaling',fmt(hTot),fmt(nTot),fmtD(nTot-hTot),nTot>hTot?'dc':'ds'],
+    ['Totale rente',fmt(hRen),fmt(nRen),fmtD(dRen),dRen>0?'dc':'ds'],
+  ];
+  el('cmp-tbody').innerHTML=rows.map((r,i)=>`<tr class="${i===rows.length-1?'tot':''}">
+    <td class="lbl">${r[0]}</td><td class="hv">${r[1]}</td><td class="nv">${r[2]}</td>
+    <td class="dv ${r[4]}">${r[3]}</td></tr>`).join('');
+
+  const mx=Math.max(hML,nML,1);
+  el('bar-huid').style.width=Math.round(hML/mx*100)+'%'; el('bar-huid').textContent=fmt(hML);
+  el('bar-nieuw').style.width=Math.round(nML/mx*100)+'%'; el('bar-nieuw').textContent=fmt(nML);
+  el('bar-hamt').textContent=fmt(hML); el('bar-namt').textContent=fmt(nML);
+
+  const besparing = hML - nML;
+
+  // Fiscale behandeling extra hypotheek
+  const isBox1 = document.getElementById('box1-radio') && document.getElementById('box1-radio').checked;
+  // HRA 2026: max 37,48% aftrek. Gemiddelde rentefractie over 30jr bij 5% ≈ 50%.
+  const aftrekPct   = 0.3748;
+  const intFracGem  = 0.50;
+  const hraFactor   = aftrekPct * intFracGem;
+  const netFactor   = 1 - hraFactor;
+  const toetsRenteEl = document.getElementById('hyp-toets-rente');
+  const toetsRente  = toetsRenteEl ? (parseFloat(toetsRenteEl.value)||5.0) : 5.0;
+  const looptijdEl  = document.getElementById('hyp-looptijd');
+  const hypLtJaar   = Math.max(5, Math.min(40, parseInt((looptijdEl ? looptijdEl.value : '30'))||30));
+  const hypLtMnd    = hypLtJaar * 12;
+  const rT          = toetsRente / 100 / 12;
+  const pvFactor    = (1 - Math.pow(1 + rT, -hypLtMnd)) / rT;
+
+  const effectiefBudget = besparing > 0 ? (isBox1 ? besparing / netFactor : besparing) : 0;
+  const extraHyp = besparing > 0 ? Math.round(effectiefBudget * pvFactor) : 0;
+  const maandlastHyp = besparing > 0 ? Math.round(effectiefBudget) : 0;
+  const netMaandlast = besparing > 0 ? Math.round(effectiefBudget * netFactor) : 0;
+
+  // Update result row in dark panel
+  if (document.getElementById('hyp-freed')) {
+    const ltJaar = hypLtJaar;
+    document.getElementById('hyp-freed').textContent  = besparing > 0 ? fmt(besparing)+'/mnd' : '–';
+    document.getElementById('hyp-gross').textContent  = besparing > 0 ? fmt(maandlastHyp)+'/mnd bruto' : '–';
+    document.getElementById('hyp-net-lbl').textContent = isBox1
+      ? 'Netto na HRA: '+fmt(netMaandlast)+'/mnd'
+      : 'Box 3: geen HRA voordeel';
+    document.getElementById('hyp-cap').textContent    = besparing > 0 ? fmt(extraHyp) : '–';
+    document.getElementById('hyp-cap-sub').textContent = toetsRente.toFixed(1)+'%, '+ltJaar+' jr, '+(isBox1?'Box 1 (HRA 37,48%)':'Box 3');
+  }
+
+  function advRow(lbl, val, valStyle) {
+    return '<tr><td style="padding:5px 10px 5px 0;width:50%;">' + lbl + '</td>' +
+           '<td style="padding:5px 0;font-weight:700;' + (valStyle||'') + '">' + val + '</td></tr>';
+  }
+  function advTable(rows, borderColor) {
+    return '<table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:13px;">' + rows + '</table>';
+  }
+  function hypotheekBlok() { return ''; }
+
+  let ac, advHtml;
+  if (besparing > 0 && dRen > 0) {
+    const tv = Math.round(dRen / besparing);
+    ac = 'advice-amber';
+    const rows =
+      advRow('Huidige maandlast', fmt(hML)) +
+      advRow('Nieuwe maandlast', fmt(nML)) +
+      '<tr style="border-top:2px solid #fde68a;"><td style="padding:7px 10px 5px 0;font-weight:700;">Verschil maandlast</td>' +
+      '<td style="padding:7px 0;font-size:17px;font-weight:700;color:#d97706;">' + fmt(besparing) + ' minder/mnd</td></tr>' +
+      advRow('Meerkosten totale rente', '+ ' + fmt(dRen), 'color:#c0392b;') +
+      advRow('Besparing terugverdiend na', tv + ' maanden');
+    advHtml = '<strong>⚠ Afweging: lagere maandlast vs. hogere totale rentekosten</strong>' +
+      advTable(rows) + hypotheekBlok('#fde68a', besparing, extraHyp, maandlastHyp, netMaandlast, isBox1);
+
+  } else if (besparing > 0 && dRen <= 0) {
+    ac = 'advice-green';
+    const rows =
+      advRow('Huidige maandlast', fmt(hML)) +
+      advRow('Nieuwe maandlast', fmt(nML)) +
+      '<tr style="border-top:2px solid #86efac;"><td style="padding:7px 10px 5px 0;font-weight:700;">Verschil maandlast</td>' +
+      '<td style="padding:7px 0;font-size:17px;font-weight:700;color:var(--green);">' + fmt(besparing) + ' minder/mnd</td></tr>' +
+      advRow('Rentebesparing totaal', fmt(-dRen), 'color:var(--green);');
+    advHtml = '<strong>✓ Gunstig scenario</strong>' +
+      advTable(rows) + hypotheekBlok('#86efac', besparing, extraHyp, maandlastHyp, netMaandlast, isBox1);
+
+  } else {
+    ac = 'advice-red';
+    const rows =
+      advRow('Huidige maandlast', fmt(hML)) +
+      advRow('Nieuwe maandlast', fmt(nML)) +
+      '<tr style="border-top:2px solid #fca5a5;"><td style="padding:7px 10px 5px 0;font-weight:700;">Verschil maandlast</td>' +
+      '<td style="padding:7px 0;font-size:17px;font-weight:700;color:var(--red);">' + fmt(-besparing) + ' meer/mnd</td></tr>' +
+      advRow('Rentebesparing totaal', fmt(-dRen), 'color:var(--green);');
+    advHtml = '<strong>⚠ Hogere maandlast</strong>' +
+      advTable(rows) +
+      '<p style="font-size:13px;margin-top:6px;">Hogere maandlast maar lagere totale rente. Financieel voordeliger als de hogere last haalbaar is.</p>';
+  }
+  el('vgl-advice').innerHTML = '<div class="advice ' + ac + '">' + advHtml + '</div>';
+
+  // Amort vergelijk
+  const rH=hR/100/12, rN=nR/100/12;
+  let hRest=hS, nRest=nS;
+  const mx2=Math.max(hL,nL);
+  const ar=[];
+  for(let m=1;m<=mx2;m++){
+    const show=m===1||m%12===0||m===hL||m===nL||m===mx2;
+    let hml='',hren='',haf='',hrs='',nml='',nren='',naf='',nrs='';
+    const isHE=m===hL, isNE=m===nL;
+    if(m<=hL&&hRest>0.005){const rn=hRest*rH;const af=Math.min(hML-rn,hRest);hRest=Math.max(0,hRest-af);if(show){hml=fmt(hML);hren=fmt(rn);haf=fmt(af);hrs=fmt(hRest);}}
+    else if(show&&m>hL){hrs=fmt(0);}
+    if(m<=nL&&nRest>0.005){const rn=nRest*rN;const af=Math.min(nML-rn,nRest);nRest=Math.max(0,nRest-af);if(show){nml=fmt(nML);nren=fmt(rn);naf=fmt(af);nrs=fmt(nRest);}}
+    else if(show&&m>nL){nrs=fmt(0);}
+    if(show){
+      const lbl=isHE?`Mnd ${m} ■H`:isNE?`Mnd ${m} ■N`:m%12===0?`Jaar ${m/12}`:`Mnd ${m}`;
+      ar.push(`<tr class="${m%12===0?'yr':''} ${isHE?'he':isNE?'ne':''}">
+        <td>${lbl}</td>
+        <td class="h">${hml}</td><td class="h">${hren}</td><td class="h">${haf}</td><td class="h">${hrs}</td>
+        <td class="n">${nml}</td><td class="n">${nren}</td><td class="n">${naf}</td><td class="n">${nrs}</td>
+      </tr>`);
+    }
+  }
+  el('vgl-amort-tbody').innerHTML=ar.join('');
+}
+
+// ── TAB 3: AANVRAAG ───────────────────────────────────────────────────────────
+function fmtDate(d){if(!d)return '';const p=d.split('-');return p[2]+'-'+p[1]+'-'+p[0];}
+
+// UPLOAD
+let uploadedFiles = [];
+function fileIcon(name){
+  const ext=(name.split('.').pop()||'').toLowerCase();
+  if(ext==='pdf') return '\ud83d\udcc4';
+  if(['doc','docx'].includes(ext)) return '\ud83d\udcdd';
+  if(['xls','xlsx'].includes(ext)) return '\ud83d\udcca';
+  if(['jpg','jpeg','png','gif'].includes(ext)) return '\ud83d\uddbc';
+  return '\ud83d\udcce';
+}
+function fmtSize(b){
+  if(b<1024) return b+' B';
+  if(b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(1)+' MB';
+}
+function handleFiles(files){
+  for(const f of files){
+    if(!uploadedFiles.find(u=>u.name===f.name&&u.size===f.size)) uploadedFiles.push(f);
+  }
+  el('upload-zone').classList.remove('drag');
+  el('file-input').value='';
+  renderFileList(); updatePreview();
+}
+function handleDrop(e){
+  e.preventDefault();
+  el('upload-zone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+function removeFile(idx){uploadedFiles.splice(idx,1);renderFileList();updatePreview();}
+function renderFileList(){
+  const list=el('file-list');
+  if(!uploadedFiles.length){list.innerHTML='';return;}
+  list.innerHTML=uploadedFiles.map((f,i)=>
+    '<div class="file-item">'+
+    '<span class="file-icon">'+fileIcon(f.name)+'</span>'+
+    '<div class="file-info"><div class="file-name">'+f.name+'</div>'+
+    '<div class="file-meta">'+fmtSize(f.size)+' \u2022 '+(f.type||'onbekend type')+'</div></div>'+
+    '<button class="file-remove" onclick="removeFile('+i+')" title="Verwijder">×</button>'+
+    '</div>').join('');
+}
+function updatePreview(){
+  const adv={naam:sv('adv-naam'),bedrijf:sv('adv-bedrijf'),adres:sv('adv-adres'),pc:sv('adv-pc'),tel:sv('adv-tel'),email:sv('adv-email')};
+  const k1={naam:sv('k1-naam'),geb:sv('k1-geb'),adres:sv('k1-adres'),pc:sv('k1-pc'),tel:sv('k1-tel'),email:sv('k1-email')};
+  const k2={naam:sv('k2-naam'),geb:sv('k2-geb'),adres:sv('k2-adres'),pc:sv('k2-pc'),tel:sv('k2-tel'),email:sv('k2-email')};
+  const aav={som:v('aav-som'),lt:el('aav-lt').value,doel:sv('aav-doel'),opmerking:sv('aav-opmerking')};
+  const datum=new Date().toLocaleDateString('nl-NL');
+  const dossier=sv('aav-dossier');
+
+  let txt=`LENINGAANVRAAG\n${'='.repeat(50)}\n`;
+  txt+=`Dossiernr:  ${dossier||'– (nog niet ingevuld)'}\n`;
+  txt+=`Datum:      ${datum}\n`;
+  txt+=`${'='.repeat(50)}\n\n`;
+  txt+=`ADVISEUR\n${'-'.repeat(30)}\n`;
+  txt+=`Naam:           ${adv.naam||'–'}\n`;
+  if(adv.bedrijf) txt+=`Bedrijf:        ${adv.bedrijf}\n`;
+  if(adv.adres)   txt+=`Adres:          ${adv.adres}\n`;
+  if(adv.pc)      txt+=`Woonplaats:     ${adv.pc}\n`;
+  if(adv.tel)     txt+=`Telefoon:       ${adv.tel}\n`;
+  txt+=`E-mail:         ${adv.email||'–'}\n\n`;
+
+  txt+=`AANVRAGER 1\n${'-'.repeat(30)}\n`;
+  txt+=`Naam:           ${k1.naam||'–'}\n`;
+  if(k1.geb)    txt+=`Geboortedatum:  ${fmtDate(k1.geb)}\n`;
+  if(k1.adres)  txt+=`Adres:          ${k1.adres}\n`;
+  if(k1.pc)     txt+=`Woonplaats:     ${k1.pc}\n`;
+  if(k1.tel)    txt+=`Telefoon:       ${k1.tel}\n`;
+  if(k1.email)  txt+=`E-mail:         ${k1.email}\n`;
+  txt+='\n';
+
+  if(k2.naam){
+    txt+=`AANVRAGER 2\n${'-'.repeat(30)}\n`;
+    txt+=`Naam:           ${k2.naam}\n`;
+    if(k2.geb)   txt+=`Geboortedatum:  ${fmtDate(k2.geb)}\n`;
+    if(k2.adres) txt+=`Adres:          ${k2.adres}\n`;
+    if(k2.pc)    txt+=`Woonplaats:     ${k2.pc}\n`;
+    if(k2.tel)   txt+=`Telefoon:       ${k2.tel}\n`;
+    if(k2.email) txt+=`E-mail:         ${k2.email}\n`;
+    txt+='\n';
+  }
+
+  txt+=`LENINGGEGEVENS\n${'-'.repeat(30)}\n`;
+  txt+=`Gewenste hoofdsom:  ${aav.som>0?fmt(aav.som):'–'}\n`;
+  txt+=`Gewenste looptijd:  ${aav.lt||'–'} maanden\n`;
+  txt+=`Doel:               ${aav.doel||'–'}\n\n`;
+
+  if(aav.opmerking){
+    txt+=`OPMERKINGEN\n${'-'.repeat(30)}\n${aav.opmerking}\n\n`;
+  }
+
+    if(uploadedFiles.length>0){
+    txt+='BIJGEVOEGDE DOCUMENTEN\n'+'-'.repeat(30)+'\n';
+    uploadedFiles.forEach(function(f,i){txt+=(i+1)+'. '+f.name+' ('+fmtSize(f.size)+')\n';});
+    txt+='\nVoeg bovenstaande bestanden handmatig toe als bijlage.\n\n';
+  }
+  txt+=`${'='.repeat(50)}\nIndicatieve berekening via Persoonlijke Lening Tool.\nAan deze aanvraag kunnen geen rechten worden ontleend.`;
+  el('email-preview').textContent=txt;
+}
+
+function verzendEmail(){
+  const naam=sv('k1-naam')||'klant';
+  const adv=sv('adv-email');
+  const subj=encodeURIComponent(`Leningaanvraag – ${naam} – ${new Date().toLocaleDateString('nl-NL')}`);
+  const body=encodeURIComponent(el('email-preview').textContent);
+  const to=adv||'';
+  window.location.href=`mailto:${to}?subject=${subj}&body=${body}`;
+}
+
+function printAanvraag(){
+  const w=window.open('','_blank');
+  const content=`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Leningaanvraag</title>
+  <style>body{font-family:Arial,sans-serif;font-size:13px;color:#333;padding:30px;max-width:700px;margin:0 auto;}
+  pre{white-space:pre-wrap;font-family:'Courier New',monospace;font-size:12px;line-height:1.7;background:#f8f8f8;padding:20px;border:1px solid #ddd;border-radius:6px;}
+  h2{color:#002A54;margin-bottom:16px;}
+  </style></head><body><h2>Leningaanvraag</h2><pre>${el('email-preview').textContent}</pre></body></html>`;
+  w.document.write(content);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),400);
+}
+
+function printHuidigTabblad(){
+  const w=window.open('','_blank');
+  w.document.write(document.documentElement.outerHTML);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),600);
+}
+
+// PRINT CSS
+const ps=document.createElement('style');
+ps.media='print';
+ps.textContent='.tab-bar,.footer-bar,.sticky-bar{display:none!important}body{background:#fff}.main{padding:10px}.amort-wrap{max-height:none!important;}';
+document.head.appendChild(ps);
+
+// INIT
+el('vgl-sticky').style.display='none';
+el('aav-datum').value=new Date().toLocaleDateString('nl-NL');
+berekenML();
+berekenVGL();
+updatePreview();
+</script>
+</body>
+</html>

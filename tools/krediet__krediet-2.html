@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krediet Adviseur Suite</title>
+<style>
+:root{--navy:#002A54;--nm:#003a70;--nl:#e8eef5;--or:#FF6600;--ol:#fff2e8;--tx:#333332;--bd:#d8d8d8;--gn:#1a6b3c;--rd:#c0392b;--r:6px;--rl:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;font-size:15px;color:var(--tx);background:#f4f6f9;}
+.nav-bar{background:var(--nm);}
+.nav-row{display:grid;grid-template-columns:repeat(4,1fr);}
+.nr2{border-top:1px solid rgba(255,255,255,.12);}
+.mt{padding:9px 5px;color:rgba(255,255,255,.65);font-size:11px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s;}
+.mt:hover{color:#fff;background:rgba(255,255,255,.05);}
+.mt.active{color:#fff;border-bottom-color:var(--or);background:rgba(255,255,255,.07);}
+.main{padding:18px;}
+.pan{display:none;}.pan.active{display:block;}
+.hero{margin-bottom:16px;}
+.badge{display:inline-block;background:var(--nl);color:var(--navy);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.hero h2{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.hero p{font-size:13px;color:#666;line-height:1.5;}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--rl);margin-bottom:13px;overflow:hidden;}
+.ch{background:var(--nl);padding:9px 16px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:7px;}
+.ch::before{content:'';display:inline-block;width:7px;height:7px;background:var(--or);transform:rotate(45deg);flex-shrink:0;}
+.cb{padding:15px;}
+.g2{display:grid;grid-template-columns:290px 1fr;gap:14px;align-items:start;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+@media(max-width:800px){.g2{grid-template-columns:1fr;}.g3,.g4{grid-template-columns:1fr 1fr;}}
+.field{margin-bottom:11px;}.field:last-child{margin-bottom:0;}
+.field label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#666;margin-bottom:3px;}
+.fv{font-size:12px;font-weight:700;color:var(--or);}
+.fi{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);font-size:13.5px;color:var(--tx);background:#fff;}
+.fi:focus{outline:none;border-color:var(--navy);}
+.fw{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:var(--r);font-size:13.5px;color:var(--tx);background:#fff;cursor:pointer;}
+.fw:focus{outline:none;border-color:var(--navy);}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--nl);border-radius:4px;outline:none;cursor:pointer;margin:3px 0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--or);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--or);cursor:pointer;border:2px solid #fff;}
+.slab{display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:1px;}
+.sc{background:var(--nl);border-radius:var(--r);padding:10px 12px;}
+.sc-l{font-size:11px;color:#666;margin-bottom:2px;}
+.sc-v{font-size:16px;font-weight:700;color:var(--navy);}
+.sc.hi{background:var(--ol);}.sc.hi .sc-v{color:var(--or);}
+.sc.gn{background:#eaf3ee;}.sc.gn .sc-v{color:var(--gn);}
+.sc.rd{background:#fdf3f3;}.sc.rd .sc-v{color:var(--rd);}
+.sc.bl{background:#e8eef8;}.sc.bl .sc-v{color:#1a508a;}
+.sc.am{background:#fdf6e0;}.sc.am .sc-v{color:#a86800;}
+.hs{background:var(--navy);border-radius:var(--rl);padding:16px 20px;color:#fff;margin-bottom:11px;}
+.hs-l{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px;}
+.hs-v{font-size:26px;font-weight:700;line-height:1;margin-bottom:3px;color:#ffb366;}
+.hs-s{font-size:12px;color:rgba(255,255,255,.5);}
+.hs.rd{background:var(--rd);}
+.hs.gn{background:var(--gn);}
+.ib{border-radius:var(--r);padding:9px 12px;margin-bottom:7px;border-left:4px solid;display:flex;gap:9px;align-items:flex-start;}
+.ib-i{font-size:14px;flex-shrink:0;margin-top:1px;}
+.ib-b strong{display:block;font-size:13px;font-weight:700;margin-bottom:1px;}
+.ib-b span{font-size:12px;line-height:1.5;}
+.ib.ok{background:#eaf3ee;border-color:var(--gn);}.ib.ok .ib-b strong{color:var(--gn);}
+.ib.wa{background:#fdf6e0;border-color:#a86800;}.ib.wa .ib-b strong{color:#a86800;}
+.ib.er{background:#fdf3f3;border-color:var(--rd);}.ib.er .ib-b strong{color:var(--rd);}
+.ib.in{background:#e8eef8;border-color:#1a508a;}.ib.in .ib-b strong{color:#1a508a;}
+.ib.hl{background:var(--ol);border-color:var(--or);}.ib.hl .ib-b strong{color:var(--or);}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--navy);color:#fff;padding:6px 10px;text-align:right;font-weight:600;}
+.tbl th:first-child,.tbl td:first-child{text-align:left;font-weight:600;color:var(--navy);}
+.tbl tbody tr:nth-child(even){background:var(--nl);}
+.tbl td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--bd);}
+/* Steps */
+.step-list{position:relative;padding-left:28px;}
+.step-list::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--bd);}
+.step-item{position:relative;padding-bottom:12px;}
+.step-dot{position:absolute;left:-23px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;}
+.step-t{font-size:13px;font-weight:700;color:var(--navy);}
+.step-s{font-size:12px;color:#666;margin-top:2px;}
+.step-fase{font-size:11px;color:var(--or);font-weight:700;margin-left:6px;}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="nav-row nr1">
+    <button class="mt active" onclick="sw(0)" id="t0">📋 Aflossingstabel</button>
+    <button class="mt" onclick="sw(1)" id="t1">💸 Rentelast & EJP</button>
+    <button class="mt" onclick="sw(2)" id="t2">🏢 Zakelijk Krediet</button>
+    <button class="mt" onclick="sw(3)" id="t3">⚖️ Cons. vs Hyp.</button>
+  </div>
+  <div class="nav-row nr2">
+    <button class="mt" onclick="sw(4)" id="t4">💔 Krediet Scheiding</button>
+    <button class="mt" onclick="sw(5)" id="t5">🤝 Betalingsregeling</button>
+    <button class="mt" onclick="sw(6)" id="t6">🔄 Doorlopend Krediet</button>
+    <button class="mt" onclick="sw(7)" id="t7">🗺️ Sanering Roadmap</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ 0: AFLOSSINGSTABEL ═══ -->
+<div class="pan active" id="p0">
+  <div class="hero"><div class="badge">Aflossingsoverzicht</div><h2>📋 Gedetailleerde Aflossingstabel</h2><p>Volledige aflossingstabel per jaar voor een persoonlijke lening — annuïtair of lineair.</p></div>
+  <div class="card"><div class="ch">Leningparameters</div><div class="cb" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+    <div class="field"><label>Leningbedrag <span class="fv" id="atBV">€ 15.000</span></label>
+      <input type="range" id="atB" min="500" max="150000" step="500" value="15000" oninput="calcAt()"><div class="slab"><span>€500</span><span>€150k</span></div></div>
+    <div class="field"><label>Rente (%/jr) <span class="fv" id="atRV">7,5%</span></label>
+      <input type="range" id="atR" min="1" max="20" step="0.25" value="7.5" oninput="calcAt()"><div class="slab"><span>1%</span><span>20%</span></div></div>
+    <div class="field"><label>Looptijd (mnd) <span class="fv" id="atLV">60 mnd</span></label>
+      <input type="range" id="atL" min="6" max="120" step="6" value="60" oninput="calcAt()"><div class="slab"><span>6</span><span>120</span></div></div>
+    <div class="field"><label>Aflossingstype</label><select class="fw" id="atT" onchange="calcAt()"><option value="ann" selected>Annuïtair</option><option value="lin">Lineair</option></select></div>
+  </div></div>
+  <div id="atRes"></div>
+</div>
+
+<!-- ═══ 1: RENTELAST ANALYSE ═══ -->
+<div class="pan" id="p1">
+  <div class="hero"><div class="badge">Renteanalyse</div><h2>💸 Rentelast & Effectief Jaarpercentage (EJP)</h2><p>Bereken de totale rentelast, het wettelijk verplichte EJP (IRR-methode) en vergelijk rentescenario's.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Leninggegevens</div><div class="cb">
+      <div class="field"><label>Leningbedrag <span class="fv" id="rlBV">€ 20.000</span></label>
+        <input type="range" id="rlB" min="500" max="100000" step="500" value="20000" oninput="calcRl()"><div class="slab"><span>€500</span><span>€100k</span></div></div>
+      <div class="field"><label>Nominale rente (%/jr) <span class="fv" id="rlRV">8%</span></label>
+        <input type="range" id="rlR" min="1" max="20" step="0.25" value="8" oninput="calcRl()"><div class="slab"><span>1%</span><span>20%</span></div></div>
+      <div class="field"><label>Looptijd (mnd) <span class="fv" id="rlLV">48 mnd</span></label>
+        <input type="range" id="rlL" min="6" max="120" step="6" value="48" oninput="calcRl()"><div class="slab"><span>6</span><span>120</span></div></div>
+      <div class="field"><label>Afsluitkosten eenmalig (€)</label><input type="number" class="fi" id="rlAfsl" value="0" oninput="calcRl()"></div>
+      <div class="field"><label>Verplichte verzekering (€/mnd)</label><input type="number" class="fi" id="rlVerz" value="0" oninput="calcRl()"></div>
+    </div></div>
+    <div id="rlRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 2: ZAKELIJK KREDIET ═══ -->
+<div class="pan" id="p2">
+  <div class="hero"><div class="badge">Zakelijk Krediet</div><h2>🏢 Zakelijk Krediet Vergelijker</h2><p>Vergelijk bancair krediet, Qredits en fintechleningen naast elkaar. Bereken de werkelijke maandlasten en totaalkosten.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Kredietbehoefte</div><div class="cb">
+      <div class="field"><label>Gewenst bedrag <span class="fv" id="zkBV">€ 50.000</span></label>
+        <input type="range" id="zkB" min="5000" max="500000" step="5000" value="50000" oninput="calcZk()"><div class="slab"><span>€5k</span><span>€500k</span></div></div>
+      <div class="field"><label>Doel</label><select class="fw" id="zkDoel" onchange="calcZk()"><option value="werkkapitaal" selected>Werkkapitaal</option><option value="investering">Investering</option><option value="overbrugging">Overbrugging</option><option value="groei">Groeifinancering</option></select></div>
+      <div class="field"><label>Jaaromzet (€)</label><input type="number" class="fi" id="zkOmzet" value="300000" oninput="calcZk()"></div>
+      <div class="field"><label>Bedrijfsleeftijd</label><select class="fw" id="zkLeeft" onchange="calcZk()"><option value="starter">Starter (< 2 jr)</option><option value="gevestigd" selected>Gevestigd (2–10 jr)</option><option value="volwassen">Volwassen (10+ jr)</option></select></div>
+      <div class="field"><label>Looptijd gewenst</label><select class="fw" id="zkLp" onchange="calcZk()"><option value="12">12 maanden</option><option value="36" selected>36 maanden</option><option value="60">60 maanden</option><option value="84">84 maanden</option></select></div>
+    </div></div>
+    <div id="zkRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 3: CONSUMPTIEF VS HYPOTHECAIR ═══ -->
+<div class="pan" id="p3">
+  <div class="hero"><div class="badge">Kredietvergelijking</div><h2>⚖️ Consumptief vs Hypothecair Krediet</h2><p>Wanneer is een persoonlijke lening beter dan meefinancieren in de hypotheek? Inclusief fiscale behandeling en totaalkosten.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Financieringsbehoefte</div><div class="cb">
+      <div class="field"><label>Lening bedrag <span class="fv" id="cvBV">€ 25.000</span></label>
+        <input type="range" id="cvB" min="2000" max="100000" step="1000" value="25000" oninput="calcCv()"><div class="slab"><span>€2k</span><span>€100k</span></div></div>
+      <div class="field"><label>Doel lening</label><select class="fw" id="cvDoel" onchange="calcCv()"><option value="verbouw" selected>Verbouwing woning</option><option value="auto">Auto</option><option value="zon">Zonnepanelen</option><option value="overig">Overig consumptief</option></select></div>
+      <div class="field"><label>Hypotheekrente (%/jr)</label><input type="number" class="fi" id="cvHypR" value="4.2" step="0.1" oninput="calcCv()"></div>
+      <div class="field"><label>Consumptieve rente (%/jr)</label><input type="number" class="fi" id="cvConsR" value="7.5" step="0.1" oninput="calcCv()"></div>
+      <div class="field"><label>Looptijd vergelijking (jaar)</label><select class="fw" id="cvLp" onchange="calcCv()"><option value="5">5 jaar</option><option value="10" selected>10 jaar</option><option value="15">15 jaar</option><option value="20">20 jaar</option></select></div>
+      <div class="field"><label>HRA belastingschijf</label><select class="fw" id="cvSchijf" onchange="calcCv()"><option value="0.3575" selected>35,75% (schijf 1 — 2025)</option><option value="0">Geen HRA</option></select></div>
+    </div></div>
+    <div id="cvRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 4: KREDIET SCHEIDING ═══ -->
+<div class="pan" id="p4">
+  <div class="hero"><div class="badge">Scheiding</div><h2>💔 Krediet & Schulden bij Scheiding</h2><p>Analyseer gezamenlijke schulden bij scheiding: hoofdelijkheid, verdeling en impact op kredietwaardigheid.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Gezamenlijke schulden</div><div class="cb">
+      <div class="field"><label>Gezamenlijke hypotheek (€)</label><input type="number" class="fi" id="ksHyp" value="320000" oninput="calcKs()"></div>
+      <div class="field"><label>Gezamenlijke persoonlijke lening (€)</label><input type="number" class="fi" id="ksLen" value="12000" oninput="calcKs()"></div>
+      <div class="field"><label>Gezamenlijke roodstand/DKL (€)</label><input type="number" class="fi" id="ksDkl" value="2500" oninput="calcKs()"></div>
+      <div class="field"><label>Privéschuld partner 1 (€)</label><input type="number" class="fi" id="ksP1" value="0" oninput="calcKs()"></div>
+      <div class="field"><label>Privéschuld partner 2 (€)</label><input type="number" class="fi" id="ksP2" value="5000" oninput="calcKs()"></div>
+      <div class="field"><label>Huwelijksvorm</label><select class="fw" id="ksVorm" onchange="calcKs()"><option value="gvg" selected>Gemeenschap van goederen</option><option value="hvw">Huwelijkse voorwaarden</option></select></div>
+      <div class="field"><label>Inkomen partner 1 (netto/mnd, €)</label><input type="number" class="fi" id="ksI1" value="3000" oninput="calcKs()"></div>
+      <div class="field"><label>Inkomen partner 2 (netto/mnd, €)</label><input type="number" class="fi" id="ksI2" value="2000" oninput="calcKs()"></div>
+    </div></div>
+    <div id="ksRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 5: BETALINGSREGELING ═══ -->
+<div class="pan" id="p5">
+  <div class="hero"><div class="badge">Minnelijk traject</div><h2>🤝 Betalingsregeling Simulator</h2><p>Simuleer een betalingsregeling met schuldeisers: bereken het maandbedrag, looptijd en kans op akkoord.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Schuldsituatie</div><div class="cb">
+      <div class="field"><label>Totale schuld <span class="fv" id="brSV">€ 18.000</span></label>
+        <input type="range" id="brS" min="500" max="200000" step="500" value="18000" oninput="calcBr()"><div class="slab"><span>€500</span><span>€200k</span></div></div>
+      <div class="field"><label>Aantal schuldeisers</label><select class="fw" id="brSche" onchange="calcBr()"><option value="1">1</option><option value="2">2</option><option value="3" selected>3–5</option><option value="6">6–10</option><option value="11">10+</option></select></div>
+      <div class="field"><label>Netto beschikbaar voor aflossing (€/mnd)</label><input type="number" class="fi" id="brB" value="400" oninput="calcBr()"></div>
+      <div class="field"><label>Verwachte medewerking schuldeisers</label><select class="fw" id="brM" onchange="calcBr()"><option value="goed" selected>Goed (coöperatief)</option><option value="matig">Matig (1 blokkeert)</option><option value="slecht">Moeilijk</option></select></div>
+      <div class="field"><label>Aanbieding percentage</label><select class="fw" id="brA" onchange="calcBr()"><option value="0.25">25 cent op de euro</option><option value="0.50" selected>50 cent op de euro</option><option value="0.75">75 cent op de euro</option><option value="1.0">Volledig (100%)</option></select></div>
+    </div></div>
+    <div id="brRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 6: DOORLOPEND KREDIET ═══ -->
+<div class="pan" id="p6">
+  <div class="hero"><div class="badge">Doorlopend Krediet</div><h2>🔄 Doorlopend Krediet Analyse</h2><p>Analyseer DKL: aflostijd, rentekosten bij minimale aflossing en het gevaar van de "nooit-aflossen-val".</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">DKL Gegevens</div><div class="cb">
+      <div class="field"><label>Kredietlimiet <span class="fv" id="dkLimV">€ 10.000</span></label>
+        <input type="range" id="dkLim" min="500" max="75000" step="500" value="10000" oninput="calcDk()"><div class="slab"><span>€500</span><span>€75k</span></div></div>
+      <div class="field"><label>Huidig opgenomen saldo <span class="fv" id="dkSaldoV">€ 7.500</span></label>
+        <input type="range" id="dkSaldo" min="0" max="75000" step="500" value="7500" oninput="calcDk()"><div class="slab"><span>€0</span><span>€75k</span></div></div>
+      <div class="field"><label>Rente (%/jr) <span class="fv" id="dkRV">10%</span></label>
+        <input type="range" id="dkR" min="3" max="22" step="0.5" value="10" oninput="calcDk()"><div class="slab"><span>3%</span><span>22%</span></div></div>
+      <div class="field"><label>Maandelijkse aflossing (€)</label><input type="number" class="fi" id="dkAflos" value="150" oninput="calcDk()"></div>
+      <div class="field"><label>Maandelijks extra opname (€)</label><input type="number" class="fi" id="dkOpname" value="0" oninput="calcDk()"></div>
+    </div></div>
+    <div id="dkRes"></div>
+  </div>
+</div>
+
+<!-- ═══ 7: SANERING ROADMAP ═══ -->
+<div class="pan" id="p7">
+  <div class="hero"><div class="badge">Schuldhulp Route</div><h2>🗺️ Kredietsanering Stappenplan</h2><p>Persoonlijk schuldsaneringsplan op basis van de individuele schuldsituatie. Van intake tot schone lei — per stap uitgelegd.</p></div>
+  <div class="g2">
+    <div class="card"><div class="ch">Schuldsituatie invullen</div><div class="cb">
+      <div class="field"><label>Totale schuld (€)</label><input type="number" class="fi" id="srSchuld" value="35000" oninput="calcSr()"></div>
+      <div class="field"><label>Netto inkomen (€/mnd)</label><input type="number" class="fi" id="srInk" value="1800" oninput="calcSr()"></div>
+      <div class="field"><label>Woonlasten (€/mnd)</label><input type="number" class="fi" id="srWoon" value="700" oninput="calcSr()"></div>
+      <div class="field"><label>Soort schulden</label><select class="fw" id="srSoort" onchange="calcSr()"><option value="consument" selected>Consumentenkrediet</option><option value="gemengd">Gemengd</option><option value="overheid">Overheidsschulden</option></select></div>
+      <div class="field"><label>Eerder hulptraject?</label><select class="fw" id="srEerder" onchange="calcSr()"><option value="nee" selected>Nee</option><option value="ja">Ja</option></select></div>
+      <div class="field"><label>BKR-problematiek?</label><select class="fw" id="srBkr" onchange="calcSr()"><option value="nee" selected>Nee / positief</option><option value="ja">Ja, negatief</option></select></div>
+    </div></div>
+    <div id="srRes"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function sw(n){
+  document.querySelectorAll('.pan').forEach((p,i)=>p.classList.toggle('active',i===n));
+  for(let i=0;i<8;i++){const t=document.getElementById('t'+i);if(t)t.classList.toggle('active',i===n);}
+}
+function fmt(n){if(n===null||isNaN(n)||!isFinite(n))return'—';return'€\u202F'+Math.round(n).toLocaleString('nl-NL');}
+function fmtP(n,d=1){return n.toFixed(d).replace('.',',')+'%';}
+function ib(cls,icon,t,b){return`<div class="ib ${cls}"><div class="ib-i">${icon}</div><div class="ib-b"><strong>${t}</strong><span>${b}</span></div></div>`;}
+
+// ── GEDEELDE FUNCTIES ─────────────────────────────────────────
+function ann(h,r,m){
+  const rm=r/100/12;
+  if(rm===0)return h/m;
+  return h*(rm*Math.pow(1+rm,m))/(Math.pow(1+rm,m)-1);
+}
+
+// EJP via bisectie (IRR-methode) — wettelijk correcte methode
+function calcEjp(bedrag, ml, lp, afsl, verz){
+  const nettoBedrag=bedrag-afsl; // nettouitbetaling
+  const maandBetaling=ml+verz;
+  let lo=0.0001, hi=2.0;
+  for(let i=0;i<100;i++){
+    const mid=(lo+hi)/2;
+    const rm=mid/12;
+    const pv=maandBetaling*(1-Math.pow(1+rm,-lp))/rm;
+    if(pv>nettoBedrag) lo=mid; else hi=mid;
+  }
+  // EJP = jaarlijks equivalent = (1+rm)^12 - 1
+  const rm=(lo+hi)/2/12;
+  return ((Math.pow(1+rm,12)-1)*100);
+}
+
+// ── 0: AFLOSSINGSTABEL ───────────────────────────────────────
+function calcAt(){
+  const b=+document.getElementById('atB').value||15000;
+  const r=+document.getElementById('atR').value||7.5;
+  const lp=+document.getElementById('atL').value||60;
+  const type=document.getElementById('atT').value;
+  document.getElementById('atBV').textContent=fmt(b);
+  document.getElementById('atRV').textContent=fmtP(r);
+  document.getElementById('atLV').textContent=lp+' mnd';
+  const rm=r/100/12;
+  const ml=type==='ann'?Math.round(ann(b,r,lp)):Math.round(b/lp+b*rm);
+  // TOTALEN:
+  // Annuïtair: ml × lp
+  // Lineair CORRECT: bedrag × (rente/100/12) × (lp+1)/2
+  const totaal=type==='ann'?ml*lp:Math.round(b+b*rm*(lp+1)/2);
+  const rente=totaal-b;
+  const jaren=Math.ceil(lp/12);
+  // Simuleer saldo per jaar
+  const rows=[];
+  let saldo=b;
+  for(let j=0;j<jaren;j++){
+    const saldoBegin=Math.round(saldo);
+    let renteJr=0, aflosJr=0;
+    const maandenDitJaar=Math.min(12, lp-j*12);
+    for(let m=0;m<maandenDitJaar;m++){
+      const maandRente=saldo*rm;
+      renteJr+=maandRente;
+      if(type==='ann'){saldo=saldo*(1+rm)-ml;}
+      else{const mAflos=b/lp;aflosJr+=mAflos;saldo=Math.max(0,saldo-mAflos);}
+      if(type==='ann') aflosJr+=(ml-maandRente);
+    }
+    rows.push({j:j+1,saldoBegin,renteJr:Math.round(renteJr),aflosJr:Math.round(aflosJr),saldoEind:Math.max(0,Math.round(saldo))});
+  }
+  document.getElementById('atRes').innerHTML=`
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Maandlast</div><div class="sc-v">${fmt(ml)}</div></div>
+      <div class="sc rd"><div class="sc-l">Totale rente</div><div class="sc-v">${fmt(rente)}</div></div>
+      <div class="sc"><div class="sc-l">Totaal terug</div><div class="sc-v">${fmt(totaal)}</div></div>
+    </div>
+    <div class="card"><div class="ch">Aflossingstabel per jaar</div><div class="cb" style="overflow-x:auto">
+      <table class="tbl"><thead><tr><th>Jaar</th><th>Saldo begin</th><th>Rente</th><th>Aflossing</th><th>Saldo einde</th></tr></thead><tbody>
+        ${rows.map(r=>`<tr><td>Jaar ${r.j}</td><td>${fmt(r.saldoBegin)}</td><td style="color:var(--rd)">${fmt(r.renteJr)}</td><td style="color:var(--gn)">${fmt(r.aflosJr)}</td><td style="font-weight:700">${fmt(r.saldoEind)}</td></tr>`).join('')}
+      </tbody></table>
+    </div></div>
+    ${ib('in','💡','Vervroegde aflossing','Extra aflossen spaart het meest in de eerste jaren wanneer het saldo nog hoog is. Controleer of er boeterente geldt.')}`;
+}
+calcAt();
+
+// ── 1: RENTELAST & EJP ───────────────────────────────────────
+function calcRl(){
+  const b=+document.getElementById('rlB').value||20000;
+  const r=+document.getElementById('rlR').value||8;
+  const lp=+document.getElementById('rlL').value||48;
+  const afsl=+document.getElementById('rlAfsl').value||0;
+  const verz=+document.getElementById('rlVerz').value||0;
+  document.getElementById('rlBV').textContent=fmt(b);
+  document.getElementById('rlRV').textContent=fmtP(r);
+  document.getElementById('rlLV').textContent=lp+' mnd';
+  const ml=Math.round(ann(b,r,lp));
+  const totaal=ml*lp;
+  const renteKosten=totaal-b;
+  const ejp=calcEjp(b,ml,lp,afsl,verz);
+  const verschil=ejp-r;
+  document.getElementById('rlRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Effectief Jaarpercentage (EJP)</div><div class="hs-v">${fmtP(ejp,2)}</div>
+      <div class="hs-s">Nominale rente: ${fmtP(r)} · Totale rentekosten: ${fmt(renteKosten)}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Maandlast</div><div class="sc-v">${fmt(ml)}</div></div>
+      <div class="sc rd"><div class="sc-l">Rentekosten totaal</div><div class="sc-v">${fmt(renteKosten)}</div></div>
+      <div class="sc ${verschil>1?'rd':verschil>0.1?'am':'gn'}"><div class="sc-l">EJP</div><div class="sc-v">${fmtP(ejp,2)}</div></div>
+    </div>
+    ${verz>0||afsl>0?ib('wa','⚠️','EJP hoger dan nominale rente',`Afsluitkosten (${fmt(afsl)}) en/of verzekering (${fmt(verz)}/mnd) verhogen het EJP naar ${fmtP(ejp,2)} vs nominaal ${fmtP(r)}. EJP is de wettelijk verplichte vergelijkingsmaatstaf.`):ib('ok','✅','EJP gelijk aan nominale rente','Geen bijkomende kosten — transparante leningconstructie.')}
+    ${ib('in','ℹ️','EJP berekend via IRR-methode','Het EJP is berekend conform de EU Richtlijn Consumentenkrediet: de interne rentevoet waarbij de contante waarde van alle betalingen gelijk is aan het nettouitbetaalde bedrag.')}
+    <div class="card"><div class="ch">Rentescenario vergelijking</div><div class="cb">
+      <table class="tbl"><thead><tr><th>Rente</th><th>Maandlast</th><th>Totale rente</th><th>EJP</th></tr></thead><tbody>
+        ${[r*0.8,r,r*1.2].map(rr=>{const m2=Math.round(ann(b,rr,lp));const e=calcEjp(b,m2,lp,afsl,verz);return`<tr ${rr===r?'style="background:var(--nl)"':''}><td>${fmtP(rr,2)}</td><td>${fmt(m2)}</td><td>${fmt(m2*lp-b)}</td><td style="font-weight:700">${fmtP(e,2)}</td></tr>`}).join('')}
+      </tbody></table>
+    </div></div>`;
+}
+calcRl();
+
+// ── 2: ZAKELIJK KREDIET ──────────────────────────────────────
+function calcZk(){
+  const b=+document.getElementById('zkB').value||50000;
+  const doel=document.getElementById('zkDoel').value;
+  const omzet=+document.getElementById('zkOmzet').value||300000;
+  const leeft=document.getElementById('zkLeeft').value;
+  const lp=+document.getElementById('zkLp').value||36;
+  document.getElementById('zkBV').textContent=fmt(b);
+  const AANBIEDERS=[
+    {naam:'Rabobank / ING / ABN',rente:leeft==='starter'?9:5,minBedrag:25000,starter:false,tijd:'2–4 weken',zeker:'Ja/borg'},
+    {naam:'Qredits (MKB-fonds)',rente:6.75,minBedrag:5000,maxBedrag:250000,starter:true,tijd:'1–2 weken',zeker:'Borg'},
+    {naam:'Fintech (Funding Circle e.a.)',rente:leeft==='starter'?14:9,minBedrag:10000,starter:true,tijd:'2–5 dagen',zeker:'Nee'},
+  ];
+  const beschikbaar=AANBIEDERS.filter(a=>!(a.starter===false&&leeft==='starter')&&b>=(a.minBedrag||0)&&b<=(a.maxBedrag||Infinity));
+  document.getElementById('zkRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Zakelijk Krediet Analyse</div><div class="hs-v">${fmt(b)}</div>
+      <div class="hs-s">Doel: ${doel} · Looptijd: ${lp} mnd · Omzet: ${fmt(omzet)}</div></div>
+    <div class="card"><div class="ch">Aanbieders vergelijking</div><div class="cb">
+      <table class="tbl"><thead><tr><th>Aanbieder</th><th>Rente/jr</th><th>Maandlast</th><th>Doorlooptijd</th><th>Zekerheid</th></tr></thead><tbody>
+        ${beschikbaar.map(a=>{const ml=Math.round(ann(b,a.rente,lp));const tot=ml*lp;return`<tr><td><strong>${a.naam}</strong></td><td>${fmtP(a.rente)}</td><td style="font-weight:700">${fmt(ml)}</td><td>${a.tijd}</td><td>${a.zeker}</td></tr>`;}).join('')}
+      </tbody></table>
+    </div></div>
+    ${leeft==='starter'?ib('wa','⚠️','Starter — banken terughoudend','ING/Rabobank/ABN vereisen doorgaans 3 jaar bedrijfshistorie. Focus op Qredits (MKB-fonds, ook voor starters) of fintech.'):ib('ok','✅','Gevestigd bedrijf — ruime keuze','Klant komt in aanmerking voor bancair krediet tegen scherpe rente.')}
+    ${ib('in','💡','Totaalkosten vergelijken',`Over ${lp} mnd looptijd zijn de totale kosten: ${beschikbaar.map(a=>`${a.naam.split(' ')[0]}: ${fmt(Math.round(ann(b,a.rente,lp)*lp-b))} rente`).join(' · ')}.`)}`;
+}
+calcZk();
+
+// ── 3: CONSUMPTIEF VS HYPOTHECAIR ────────────────────────────
+function calcCv(){
+  const b=+document.getElementById('cvB').value||25000;
+  const doel=document.getElementById('cvDoel').value;
+  const hypR=+document.getElementById('cvHypR').value||4.2;
+  const consR=+document.getElementById('cvConsR').value||7.5;
+  const lpJr=+document.getElementById('cvLp').value||10;
+  const schijf=+document.getElementById('cvSchijf').value||0.3575;
+  document.getElementById('cvBV').textContent=fmt(b);
+  const mnd=lpJr*12;
+  const mlHyp=Math.round(ann(b,hypR,mnd));
+  const mlCons=Math.round(ann(b,consR,mnd));
+  const totHyp=mlHyp*mnd;
+  const totCons=mlCons*mnd;
+  // CORRECT: werkelijke rentekosten = totaal annuïteit - hoofdsom
+  const renteHyp=totHyp-b;
+  const renteCons=totCons-b;
+  const hraVoordeel=Math.round(renteHyp*schijf);
+  const nettHyp=totHyp-hraVoordeel;
+  const voordeel=totCons-nettHyp;
+  const hypBeter=doel==='verbouw'||doel==='zon';
+  document.getElementById('cvRes').innerHTML=`
+    <div class="hs ${voordeel>0?'':'rd'}"><div class="hs-l">${voordeel>0?'Hypothecair voordeliger':'Consumptief eenvoudiger'}</div>
+      <div class="hs-v">${fmt(Math.abs(voordeel))} verschil (${lpJr} jr)</div>
+      <div class="hs-s">Hyp. netto: ${fmt(nettHyp)} · Consumptief: ${fmt(totCons)}</div></div>
+    <div class="g4" style="margin-bottom:11px">
+      <div class="sc bl"><div class="sc-l">Hyp. maandlast</div><div class="sc-v">${fmt(mlHyp)}</div></div>
+      <div class="sc rd"><div class="sc-l">Cons. maandlast</div><div class="sc-v">${fmt(mlCons)}</div></div>
+      <div class="sc gn"><div class="sc-l">HRA voordeel totaal</div><div class="sc-v">${fmt(hraVoordeel)}</div></div>
+      <div class="sc am"><div class="sc-l">Renteverschil</div><div class="sc-v">${fmt(renteCons-renteHyp)}</div></div>
+    </div>
+    <div class="card"><div class="ch">Kostenvergelijking over ${lpJr} jaar</div><div class="cb">
+      <table class="tbl"><thead><tr><th>Post</th><th>Hypothecair</th><th>Consumptief</th></tr></thead><tbody>
+        <tr><td>Rentekosten bruto</td><td>${fmt(renteHyp)}</td><td>${fmt(renteCons)}</td></tr>
+        <tr><td>HRA belastingvoordeel</td><td style="color:var(--gn)">−${fmt(hraVoordeel)}</td><td>—</td></tr>
+        <tr><td style="font-weight:700">Netto totaalkosten</td><td style="font-weight:700;color:var(--gn)">${fmt(nettHyp)}</td><td style="font-weight:700;color:var(--rd)">${fmt(totCons)}</td></tr>
+      </tbody></table>
+    </div></div>
+    ${doel==='verbouw'?ib('ok','✅','Verbouwing — hypothecair aanbevolen','Verbouwingskosten meefinancieren is fiscaal voordelig én heeft lagere rente. Overweeg bouwdepot.'):doel==='auto'?ib('wa','⚠️','Auto — consumptief meer gebruikelijk','Auto meefinancieren in hypotheek is risicovoller (geen stabiel onderpand). Persoonlijke lening is gangbaarder.'):ib('in','ℹ️','Weeg voordelen en risico\'s af','Lagere rente en HRA-voordeel van hypothecair vs. flexibiliteit, eenvoud en kortere looptijd van persoonlijke lening.')}`;
+}
+calcCv();
+
+// ── 4: KREDIET BIJ SCHEIDING ─────────────────────────────────
+function calcKs(){
+  const hyp=+document.getElementById('ksHyp').value||320000;
+  const len=+document.getElementById('ksLen').value||12000;
+  const dkl=+document.getElementById('ksDkl').value||2500;
+  const p1=+document.getElementById('ksP1').value||0;
+  const p2=+document.getElementById('ksP2').value||5000;
+  const vorm=document.getElementById('ksVorm').value;
+  const i1=+document.getElementById('ksI1').value||3000;
+  const i2=+document.getElementById('ksI2').value||2000;
+  const gezSchuld=len+dkl;
+  const totaal=hyp+gezSchuld+p1+p2;
+  // Verdeling gezamenlijke schulden
+  const sleutel=vorm==='gvg'?0.5:i1/(i1+i2||1);
+  const deel1=Math.round(gezSchuld*sleutel)+p1;
+  const deel2=Math.round(gezSchuld*(1-sleutel))+p2;
+  document.getElementById('ksRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Totale schulden bij scheiding</div><div class="hs-v">${fmt(totaal)}</div>
+      <div class="hs-s">Gezamenlijk (excl. hyp): ${fmt(gezSchuld)} · Privé: ${fmt(p1+p2)}</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc rd"><div class="sc-l">Aandeel partner 1</div><div class="sc-v">${fmt(deel1)}</div></div>
+      <div class="sc rd"><div class="sc-l">Aandeel partner 2</div><div class="sc-v">${fmt(deel2)}</div></div>
+      <div class="sc bl"><div class="sc-l">Hypotheek (apart)</div><div class="sc-v">${fmt(hyp)}</div></div>
+    </div>
+    ${ib('er','🚨','Hoofdelijkheid gezamenlijke schulden','Bij gezamenlijke schulden zijn beide partners hoofdelijk aansprakelijk. Een scheidingsconvenant ontslaat NIET van aansprakelijkheid jegens de schuldeiser!')}
+    ${ib('wa','⚠️','Hypotheek — beslissing vereist','Woning verkopen, partner neemt over of tijdelijk aanhouden. Elke optie heeft fiscale en kredietgevolgen. Notaris en adviseur inschakelen.')}
+    ${ib('in','ℹ️','BKR na scheiding','Gezamenlijke BKR-registraties blijven voor beide partners zichtbaar. Zorg dat schulden bij scheiding op één naam komen zodat de ander schoon staat voor nieuwe aanvragen.')}`;
+}
+calcKs();
+
+// ── 5: BETALINGSREGELING ──────────────────────────────────────
+function calcBr(){
+  const schuld=+document.getElementById('brS').value||18000;
+  const sche=+document.getElementById('brSche').value||3;
+  const beschikbaar=+document.getElementById('brB').value||400;
+  const medew=document.getElementById('brM').value;
+  const aanbod=+document.getElementById('brA').value||0.5;
+  document.getElementById('brSV').textContent=fmt(schuld);
+  const aanbiedingBedrag=Math.round(schuld*aanbod);
+  const maanden=beschikbaar>0?Math.ceil(aanbiedingBedrag/beschikbaar):9999;
+  const korting=schuld-aanbiedingBedrag;
+  const kans={goed:75,matig:50,slecht:25}[medew]||50;
+  document.getElementById('brRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Aanbieding betalingsregeling</div><div class="hs-v">${fmt(aanbiedingBedrag)}</div>
+      <div class="hs-s">${Math.round(aanbod*100)}% van schuld · Kans op akkoord: ~${kans}%</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc gn"><div class="sc-l">Kwijtschelding</div><div class="sc-v">${fmt(korting)}</div></div>
+      <div class="sc am"><div class="sc-l">Looptijd regeling</div><div class="sc-v">${maanden<999?maanden+' mnd':'> 10 jr'}</div></div>
+      <div class="sc ${kans>60?'gn':kans>35?'am':'rd'}"><div class="sc-l">Succeskans</div><div class="sc-v">~${kans}%</div></div>
+    </div>
+    ${ib('in','ℹ️','Minnelijk traject stappen','1. Volledig schuldoverzicht · 2. Budget (VTLB) opstellen · 3. Voorstel naar alle schuldeisers · 4. 8 weken wachttijd reactie · 5. WSNP bij mislukking.')}
+    ${medew==='slecht'?ib('wa','⚠️','Lage kans op akkoord','Overweeg WSNP als alternatief of inschakelen gemeentelijke schuldhulpverlening voor professionele ondersteuning.'):ib('ok','✅','Redelijke kansen','Minnelijk traject is de goedkoopste en snelste route. Begin zo snel mogelijk.')}`;
+}
+calcBr();
+
+// ── 6: DOORLOPEND KREDIET ────────────────────────────────────
+function calcDk(){
+  const lim=+document.getElementById('dkLim').value||10000;
+  const saldo=+document.getElementById('dkSaldo').value||7500;
+  const rente=+document.getElementById('dkR').value||10;
+  const aflos=+document.getElementById('dkAflos').value||150;
+  const opname=+document.getElementById('dkOpname').value||0;
+  document.getElementById('dkLimV').textContent=fmt(lim);
+  document.getElementById('dkSaldoV').textContent=fmt(saldo);
+  document.getElementById('dkRV').textContent=fmtP(rente);
+  const rm=rente/100/12;
+  const maandRente=Math.round(saldo*rm);
+  const netto=aflos-maandRente-opname;
+  if(netto<=0){
+    document.getElementById('dkRes').innerHTML=`
+      <div class="hs rd"><div class="hs-l">Gevaar!</div><div class="hs-v">Nooit-aflossen-val</div>
+        <div class="hs-s">Aflossing dekt de rente niet — schuld neemt toe</div></div>
+      ${ib('er','🚨','U lost nooit af!',`Rentelast ${fmt(maandRente)}/mnd + opname ${fmt(opname)}/mnd = ${fmt(maandRente+opname)}/mnd kosten. Uw aflossing van ${fmt(aflos)}/mnd is onvoldoende.`)}
+      ${ib('wa','⚠️','Minimum aflossing',`Verhoog maandaflossing naar minimaal ${fmt(maandRente+opname+50)}/mnd om de schuld niet verder te laten groeien.`)}`;
+    return;
+  }
+  // Simuleer werkelijke aflostermijn (met dalende rente)
+  let v=saldo, m=0, totRente=0;
+  while(v>0&&m<1200){
+    const mRente=v*rm;
+    totRente+=mRente;
+    v=Math.max(0,v+mRente-aflos+opname);
+    m++;
+  }
+  document.getElementById('dkRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Aflostermijn DKL</div><div class="hs-v">${m} maanden (${Math.round(m/12)} jr)</div>
+      <div class="hs-s">Rente/mnd nu: ${fmt(maandRente)} · Effectieve netto aflos: ${fmt(netto)}/mnd</div></div>
+    <div class="g3" style="margin-bottom:11px">
+      <div class="sc rd"><div class="sc-l">Maandrente (nu)</div><div class="sc-v">${fmt(maandRente)}</div></div>
+      <div class="sc rd"><div class="sc-l">Totale rentekosten</div><div class="sc-v">${fmt(Math.round(totRente))}</div></div>
+      <div class="sc gn"><div class="sc-l">Schuldenvrij na</div><div class="sc-v">${Math.round(m/12)} jaar</div></div>
+    </div>
+    ${ib('wa','⚠️','DKL heeft hogere rente dan persoonlijke lening','Overweeg het DKL over te sluiten naar een persoonlijke lening met vaste looptijd en lagere rente. Dit geeft structuur en bespaart rente.')}
+    ${ib('in','💡','Conversie naar persoonlijke lening',`Bij persoonlijke lening ${fmtP(rente*0.75)} (schatting) over ${m} maanden is maandlast ${fmt(Math.round(ann(saldo,rente*0.75,m)))} en totale rente ${fmt(Math.round(ann(saldo,rente*0.75,m)*m-saldo))} vs huidig ${fmt(Math.round(totRente))}.`)}`;
+}
+calcDk();
+
+// ── 7: SANERING ROADMAP ──────────────────────────────────────
+function calcSr(){
+  const schuld=+document.getElementById('srSchuld').value||35000;
+  const ink=+document.getElementById('srInk').value||1800;
+  const woon=+document.getElementById('srWoon').value||700;
+  const soort=document.getElementById('srSoort').value;
+  const eerder=document.getElementById('srEerder').value;
+  const bkr=document.getElementById('srBkr').value;
+  // VTLB = Vrij Te Laten Bedrag — vereenvoudigd
+  const vtlb=Math.max(0,Math.round(ink-woon-600));
+  const route=eerder==='ja'?'WSNP (rechtbank)':schuld>50000||soort==='overheid'?'Gemeentelijke schuldhulp / WSNP':'Minnelijk traject';
+  const ltMinnelijk=vtlb>0?Math.ceil(schuld*0.5/vtlb):999;
+  const stappen=[
+    {fase:'Direct',dot:'var(--or)',t:'Budgetoverzicht opstellen',s:`Alle inkomsten en uitgaven in kaart. VTLB berekend: ${fmt(vtlb)}/mnd beschikbaar voor aflossing.`},
+    {fase:'Week 1–2',dot:'#888',t:'Schuldinventarisatie',s:'BKR-overzicht opvragen bij BKR Tiel. Alle schuldeisers met bedragen en rentes documenteren.'},
+    {fase:'Week 2–4',dot:'#888',t:'Gemeente schuldhulpverlening',s:'Aanmelden bij gemeentelijke schuldhulpverlening. Wachttijd wettelijk max. 4 weken (Wgs art. 4).'},
+    {fase:'Mnd 1–3',dot:'#888',t:route==='Minnelijk traject'?'Minnelijk voorstel sturen':'WSNP aanvragen bij rechtbank',s:route==='Minnelijk traject'?`Aanbieding aan alle schuldeisers tegelijk: 50% kwijtschelding in ${ltMinnelijk<999?ltMinnelijk:'> 120'} mnd.`:'Rechtbank beoordeelt WSNP-toelating. Bewindvoerder wordt aangesteld voor 3 jaar.'},
+    {fase:'Na 3 jaar',dot:'var(--gn)',t:'Schone lei',s:`Schulden kwijtgescholden na succesvol traject. BKR A-codering vervalt 5 jaar na afsluiting.`},
+  ];
+  document.getElementById('srRes').innerHTML=`
+    <div class="hs"><div class="hs-l">Aanbevolen route</div><div class="hs-v" style="font-size:20px">${route}</div>
+      <div class="hs-s">Beschikbaar: ${fmt(vtlb)}/mnd · Schuld: ${fmt(schuld)}</div></div>
+    <div class="card"><div class="ch">Persoonlijk stappenplan</div><div class="cb">
+      <div class="step-list">
+        ${stappen.map(s=>`<div class="step-item"><div class="step-dot" style="background:${s.dot}"></div>
+          <div class="step-t">${s.t} <span class="step-fase">[${s.fase}]</span></div>
+          <div class="step-s">${s.s}</div>
+        </div>`).join('')}
+      </div>
+    </div></div>
+    ${bkr==='ja'?ib('wa','⚠️','Negatieve BKR beperkt opties','Nieuwe kredietverlening onmogelijk tijdens traject. Focus op aflossen — BKR A-codering verdwijnt 5 jaar na aflossing.'):ib('ok','✅','BKR geen belemmering','Geen negatieve BKR — minnelijk traject heeft goede kansen.')}
+    ${ib('in','ℹ️','Wgs — Wet gemeentelijke schuldhulpverlening','Iedere inwoner heeft recht op schuldhulpverlening. Gemeente moet binnen 4 weken eerste gesprek inplannen. Volledig en juist aanmelden versnelt het traject.')}`;
+}
+calcSr();
+</script>
+</body>
+</html>

@@ -1,0 +1,2734 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draagplichtovereenkomst Assistent — Hypotheekadvies Tool</title>
+  <meta name="description" content="Professionele tool voor het opstellen en beoordelen van draagplichtovereenkomsten voor hypotheekadviseurs.">
+
+  <!-- DNS prefetch voor snellere CDN-laadtijd -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+  <!-- Suppress Babel in-browser transformer warning (not needed for end users) -->
+  <script>
+    (function() {
+      var _warn = console.warn.bind(console);
+      console.warn = function() {
+        if (arguments[0] && typeof arguments[0] === 'string' &&
+            arguments[0].indexOf('in-browser Babel') !== -1) return;
+        _warn.apply(console, arguments);
+      };
+    })();
+  </script>
+
+  <!-- React + ReactDOM (productie builds, geen dev-waarschuwingen) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Babel standalone voor JSX-transpilatie in de browser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #F8F4EE; font-family: Georgia, "Times New Roman", serif; }
+    #root { min-height: 100vh; }
+
+    /* Loading screen */
+    #loading {
+      position: fixed; inset: 0;
+      background: #0B1F3A;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity 0.4s ease;
+    }
+    #loading.fade-out { opacity: 0; pointer-events: none; }
+    .loader-logo {
+      color: #D4A017; font-size: 42px; margin-bottom: 20px; letter-spacing: 2px;
+    }
+    .loader-title {
+      color: #fff; font-size: 18px; font-weight: 700;
+      font-family: Georgia, serif; margin-bottom: 6px;
+    }
+    .loader-sub {
+      color: #94A3B8; font-size: 13px; font-family: sans-serif; margin-bottom: 32px;
+    }
+    .loader-bar-wrap {
+      width: 240px; height: 4px; background: rgba(255,255,255,0.1);
+      border-radius: 2px; overflow: hidden;
+    }
+    .loader-bar {
+      height: 100%; width: 0%; background: #D4A017; border-radius: 2px;
+      animation: loadbar 2.2s ease-in-out forwards;
+    }
+    @keyframes loadbar {
+      0%   { width: 0%; }
+      40%  { width: 60%; }
+      80%  { width: 85%; }
+      100% { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Laadscherm zichtbaar totdat React gereed is -->
+  <div id="loading">
+    <div class="loader-logo">🏠</div>
+    <div class="loader-title">Draagplichtovereenkomst Assistent</div>
+    <div class="loader-sub">Hypotheekadvies Tool — wordt geladen…</div>
+    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+  </div>
+
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useCallback } = React;
+
+
+// ═══════════════════════════════════════════════════════════════════
+// DESIGN TOKENS
+// ═══════════════════════════════════════════════════════════════════
+const C = {
+  navy: "#0B1F3A", navyMid: "#132A4E", navyLight: "#1E3A5F", navyGlass: "rgba(11,31,58,0.06)",
+  gold: "#B8860B", goldLight: "#D4A017", goldPale: "#FFF8E7",
+  cream: "#F8F4EE", white: "#FFFFFF",
+  green: "#1A6B52", greenLight: "#EAF5F0",
+  red: "#B91C1C", redLight: "#FEF2F2",
+  orange: "#C05621", orangeLight: "#FFF7ED",
+  blue: "#1D4ED8", blueLight: "#EFF6FF",
+  gray: "#6B7280", grayLight: "#F3F4F6", grayMid: "#E5E7EB",
+  border: "#D9D0BF",
+  text: "#1E293B", textMid: "#475569", textLight: "#94A3B8",
+};
+
+const fam = { serif: "'Georgia', 'Times New Roman', serif", sans: "'system-ui', 'Segoe UI', sans-serif" };
+
+// ═══════════════════════════════════════════════════════════════════
+// ADVIESRAPPORT TEKSTEN (from project files 6.1–6.13)
+// ═══════════════════════════════════════════════════════════════════
+const ADVIES_TEKSTEN = [
+  {
+    id: "1", tag: "draagplicht+vergoedingsrechten", label: "Volledig — draagplicht én vergoedingsrechten",
+    situatie: "Beide onderwerpen besproken, algemene verwijzing",
+    tekst: `Draagplicht en vergoedingsrechten
+
+Wanneer een relatie eindigt, is het van groot belang dat vooraf is vastgelegd wie welke financiële lasten draagt en welke aanspraken er bestaan op vergoeding van eerder gedane investeringen. Denk daarbij aan eigen vermogen dat bij aankoop is ingebracht, aflossingen die uit privémiddelen zijn voldaan of verbouwingen die door één van beiden zijn bekostigd. Deze afspraken vloeien niet automatisch voort uit de wijze waarop de hypotheek is geregistreerd.
+
+Als adviseur signaleren wij de relevante aandachtspunten. De juridische uitwerking en vastlegging is een taak voor de notaris of een juridisch adviseur. Wij adviseren om deze afspraken schriftelijk te laten vastleggen, zodat onduidelijkheid achteraf wordt voorkomen.`
+  },
+  {
+    id: "2", tag: "draagplicht+vergoedingsrechten", label: "Compact — korte signalering",
+    situatie: "Beknopte vermelding in adviesrapport",
+    tekst: `Draagplicht en vergoedingsrechten
+
+Afspraken over wie de hypotheeklasten intern draagt en wie recht heeft op vergoeding van geleverde bijdragen, dienen juridisch te worden geborgd. Wij wijzen u op dit aandachtspunt; de inhoudelijke vastlegging vindt plaats via de notaris of juridisch adviseur.`
+  },
+  {
+    id: "3", tag: "draagplicht", label: "Strak — hypotheekregistratie ≠ interne verdeling",
+    situatie: "Nadruk op verschil externe en interne verhouding",
+    tekst: `Draagplicht
+
+Het feit dat een hypotheek op twee namen staat, zegt niets over hoe de financiële lasten en de opbrengst bij verkoop onderling zijn verdeeld. De interne verhouding tussen u en uw partner dient afzonderlijk te worden vastgelegd in een draagplichtovereenkomst.`
+  },
+  {
+    id: "4", tag: "draagplicht", label: "Cliëntgericht — belang van schriftelijke vastlegging",
+    situatie: "Toegankelijke toon, nadruk op duidelijkheid",
+    tekst: `Draagplicht
+
+Mondelinge afspraken over wie wat betaalt en wie recht heeft op welk deel van de opbrengst, zijn achteraf moeilijk te bewijzen. Schriftelijke vastlegging biedt beide partners duidelijkheid over de ingebrachte middelen, de verdeling van de lasten en de aanspraken bij verkoop of relatiebeëindiging.`
+  },
+  {
+    id: "5", tag: "draagplicht", label: "Standaard — verwijzing naar opgestelde overeenkomst",
+    situatie: "Adviseur heeft draagplichtovereenkomst opgesteld",
+    placeholders: ["[AANVRAGER]", "[PARTNER]"],
+    tekst: `Draagplicht en leningdelen
+
+Op verzoek van [AANVRAGER] en [PARTNER] hebben wij een draagplichtovereenkomst opgesteld. In dit document zijn de afspraken vastgelegd over de interne draagplicht per leningdeel, alsmede over de betaling van de maandelijkse hypotheekverplichtingen en de daarmee samenhangende kosten.
+
+De draagplichtovereenkomst heeft uitsluitend betrekking op de onderlinge verhouding tussen u beiden. De overeenkomst laat de hoofdelijke aansprakelijkheid jegens de geldverstrekker onverlet. Zolang de hypotheek op beider naam staat, kan de geldverstrekker ieder van u aanspreken voor het volledige uitstaande bedrag.`
+  },
+  {
+    id: "6", tag: "draagplicht", label: "Compact — verwijzing overeenkomst",
+    situatie: "Korte, directe verwijzing",
+    tekst: `Draagplicht
+
+Op uw verzoek is een draagplichtovereenkomst opgesteld. Daarin zijn de interne draagplicht per leningdeel en de betalingsafspraken ten aanzien van de hypotheeklasten en bijkomende kosten vastgelegd. Dit document regelt uitsluitend uw onderlinge verhouding en wijzigt de hoofdelijke aansprakelijkheid jegens de geldverstrekker niet.`
+  },
+  {
+    id: "7", tag: "draagplicht", label: "Dossiervorming & betalingsdiscipline centraal",
+    situatie: "Nadruk op uitvoerbaarheid en dossiervorming",
+    tekst: `Draagplicht en betalingsafspraken
+
+Met het oog op een goede dossiervorming en betalingsdiscipline is door ons een draagplichtovereenkomst opgesteld. Dit document legt per leningdeel vast wie welk deel van de hypotheekschuld intern draagt, en beschrijft op welke wijze de maandelijkse hypotheeklasten en bijkomende kosten door u worden voldaan en onderling worden verrekend.
+
+De vastlegging is bedoeld om misverstanden en discussies in de toekomst te voorkomen. De geldverstrekker is aan deze afspraken niet gebonden; de hoofdelijke aansprakelijkheid blijft van kracht.`
+  },
+  {
+    id: "8", tag: "vergoedingsrechten", label: "Vergoedingsrechten — standaard",
+    situatie: "Alleen overeenkomst vergoedingsrechten opgesteld",
+    placeholders: ["[AANVRAGER]", "[PARTNER]"],
+    tekst: `Vergoedingsrechten
+
+Op verzoek van [AANVRAGER] en [PARTNER] hebben wij een overeenkomst vergoedingsrechten opgesteld. Dit document legt de onderlinge aanspraken vast die voortvloeien uit de inbreng van eigen vermogen, extra aflossingen en investeringen in de woning.
+
+De overeenkomst heeft betrekking op uw interne vermogensverhouding en is bedoeld om financiële aanspraken aantoonbaar te maken. De eigendomsverhoudingen en de rechtspositie jegens derden worden door dit document niet gewijzigd. Voor juridische verankering kan nadere toetsing of notariële vastlegging wenselijk zijn.`
+  },
+  {
+    id: "9", tag: "draagplicht+vergoedingsrechten", label: "Beide documenten — volledig",
+    situatie: "Draagplichtovereenkomst én overeenkomst vergoedingsrechten opgesteld",
+    placeholders: ["[AANVRAGER]", "[PARTNER]"],
+    tekst: `Draagplicht en vergoedingsrechten
+
+Op uw verzoek hebben wij zowel een draagplichtovereenkomst als een overeenkomst vergoedingsrechten opgesteld. In deze documenten zijn respectievelijk (i) de interne draagplicht per leningdeel en de wijze van betaling en verrekening van hypotheeklasten en kosten, en (ii) de onderlinge aanspraken wegens inbreng van eigen vermogen, aflossingen of investeringen in de woning vastgelegd.
+
+Beide documenten regelen uitsluitend uw interne verhouding. Zij laten de hoofdelijke aansprakelijkheid jegens de geldverstrekker onverlet en binden derden niet zonder aanvullende juridische stappen.`
+  },
+  {
+    id: "10", tag: "scheiding", label: "Scheidingscontext — tijdelijke afspraken",
+    situatie: "Relatiebeëindiging, tijdelijke draagplicht tot verkoop of overname",
+    tekst: `Draagplicht bij relatiebeëindiging
+
+In verband met de (voorgenomen) beëindiging van de relatie is op uw verzoek een draagplichtovereenkomst opgesteld voor de overgangsperiode. Dit document bevat de interne afspraken over de betaling van de hypotheeklasten en de verdeling van de draagplicht per leningdeel gedurende de periode tot het moment van verkoop of overname van de woning, inclusief eventuele verrekenafspraken.
+
+Het betreft uitsluitend interne afspraken. Zolang de hypotheek op beider naam staat, blijft de hoofdelijke aansprakelijkheid jegens de geldverstrekker voor beiden van kracht.`
+  },
+  {
+    id: "11", tag: "draagplicht", label: "Verwijzing draagplichtovereenkomst — volledig",
+    situatie: "Volledige verwijzing inclusief betalingen en verrekening",
+    tekst: `Draagplicht
+
+Op uw verzoek is een draagplichtovereenkomst opgesteld. Dit document legt per leningdeel vast wie welk deel van de hypotheekschuld intern draagt, en bevat afspraken over de betaling en eventuele onderlinge verrekening van de maandelijkse hypotheeklasten en daarmee samenhangende kosten. De overeenkomst heeft uitsluitend betrekking op uw onderlinge verhouding en laat de hoofdelijke aansprakelijkheid jegens de geldverstrekker onverlet.`
+  },
+  {
+    id: "12", tag: "vergoedingsrechten", label: "Verwijzing overeenkomst vergoedingsrechten",
+    situatie: "Alleen vergoedingsrechten, volledige verwijzing",
+    tekst: `Vergoedingsrechten
+
+Op uw verzoek is een overeenkomst vergoedingsrechten opgesteld. Dit document legt de onderlinge aanspraken vast die samenhangen met de inbreng van eigen vermogen, extra aflossingen en investeringen in de woning. De overeenkomst heeft uitsluitend betrekking op uw interne vermogensverhouding en wijzigt eigendomsverhoudingen of de rechtspositie jegens derden niet automatisch.`
+  },
+  {
+    id: "13", tag: "draagplicht+vergoedingsrechten", label: "Beide documenten — compact",
+    situatie: "Draagplicht én vergoedingsrechten, beknopte formulering",
+    tekst: `Draagplicht en vergoedingsrechten
+
+Op uw verzoek zijn een draagplichtovereenkomst en een overeenkomst vergoedingsrechten opgesteld. Deze documenten bevatten de interne afspraken over (i) de verdeling van de draagplicht per leningdeel en de betaling en verrekening van hypotheeklasten en kosten, en (ii) de onderlinge aanspraken wegens inbreng van eigen vermogen, aflossingen of investeringen in de woning. Beide documenten regelen uitsluitend uw onderlinge verhouding en laten de hoofdelijke aansprakelijkheid jegens de geldverstrekker onverlet.`
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// DOSSIER CHECKLIST ITEMS
+// ═══════════════════════════════════════════════════════════════════
+const CHECKLIST = [
+  {
+    sectie: "1. Inventarisatie klantgegevens",
+    kleur: C.navy,
+    items: [
+      "Burgerlijke staat beide partners vastgelegd (ongehuwd / huwelijkse voorwaarden / gemeenschap van goederen)",
+      "BSN-nummers genoteerd voor beide partners",
+      "Eigendomsverhouding woning bepaald en vastgelegd (%/%)",
+      "Eigendomsverhouding afgestemd op gewenste fiscale structuur",
+      "Relatieplannen besproken (trouwen / geregistreerd partnerschap in de toekomst?)",
+    ]
+  },
+  {
+    sectie: "2. Eigenwoningverleden",
+    kleur: C.navyMid,
+    items: [
+      "Eigenwoningverleden aanvrager in kaart gebracht (EWR, BEWS, renteaftrekjaren, aflossingsstand)",
+      "Eigenwoningverleden partner in kaart gebracht (EWR, BEWS, renteaftrekjaren, aflossingsstand)",
+      "Maximale EWS per persoon berekend (incl. partnerregeling indien van toepassing)",
+      "Overgangsrecht (art. 10bis.1 Wet IB 2001) per persoon geïdentificeerd en toegepast",
+      "Aflossingsstanden vorige lening(en) vastgelegd en verwerkt",
+      "30-jaarsperiodes renteaftrek per partner bepaald",
+      "Niet-toegepaste EWV-elementen gedocumenteerd in dossier",
+    ]
+  },
+  {
+    sectie: "3. Fiscale structuur & kan-bepaling",
+    kleur: "#1D4ED8",
+    items: [
+      "Kan-bepaling overgangsrecht besproken: willen partners het overgangsrecht gezamenlijk toepassen? (art. 10bis.1 lid 3 Wet IB 2001)",
+      "Gevolgen kan-bepaling uitgelegd: definitieve, onomkeerbare keuze — renteaftrekjaren gaan mee over",
+      "Keuze kan-bepaling vastgelegd in dossier en indien van toepassing in draagplichtovereenkomst",
+      "Fiscale opzet leningdelen afgestemd op eigenwoningverleden (oud/nieuw recht, overgangsrecht)",
+      "Renteaftrek per leningdeel correct toebedeeld aan de draagplichtige partner",
+      "Eigenwoningreserve per partner correct berekend op basis van draagplicht",
+      "Fiscale uitruil eigenwoningverleden expliciet uitgesloten in overeenkomst (indien van toepassing)",
+    ]
+  },
+  {
+    sectie: "4. Eigen vermogen & vergoedingsrechten",
+    kleur: C.green,
+    items: [
+      "Eigen middelen per partner geïnventariseerd (spaargeld, erfenis, schenking, overwaarde vorige woning)",
+      "Ongelijke inbreng eigen vermogen vastgelegd",
+      "Vergoedingsrechten besproken: nominaal of waardestijging proportioneel?",
+      "Aflossingen uit privévermogen in de toekomst besproken (impact op draagplicht)",
+      "Overeenkomst vergoedingsrechten noodzakelijk? → beslissing gedocumenteerd",
+    ]
+  },
+  {
+    sectie: "5. Leningdelen & draagplicht",
+    kleur: C.gold,
+    items: [
+      "Leningdelen opgesplitst conform gewenste draagplicht per partner",
+      "Per leningdeel: bedrag, soort (annuïtair/lineair/aflossingsvrij), recht (oud/nieuw), renteaftrekbaarheid",
+      "Draagplicht per leningdeel per partner vastgesteld en overeengekomen",
+      "Draagplicht afgestemd op eigendomsverhouding en inbreng eigen vermogen",
+      "Periodieke aflossingen vs. extra aflossingen besproken (effect op draagplicht)",
+    ]
+  },
+  {
+    sectie: "6. Documenten",
+    kleur: C.orange,
+    items: [
+      "Draagplichtovereenkomst opgesteld of besproken (noodzakelijkheid gedocumenteerd)",
+      "Overeenkomst vergoedingsrechten opgesteld of besproken (indien relevant)",
+      "Concept ter beoordeling aangeboden aan notaris/jurist",
+      "Scheidingscontext overeenkomst opgesteld indien van toepassing",
+      "Adviesrapport bevat verwijzing naar opgestelde documenten (tekst 6.5 t/m 6.13)",
+      "Cliënten hebben kopie ontvangen en getekend",
+      "Getekende stukken in klantdossier opgeslagen",
+    ]
+  },
+  {
+    sectie: "7. Specifieke waarschuwingen",
+    kleur: C.red,
+    items: [
+      "Cliënten gewaarschuwd: draagplichtovereenkomst vervalt bij huwelijk in gemeenschap van goederen",
+      "Indien trouwen gepland: ALLE 4 gevolgen besproken — (1) overeenkomst vervalt, (2) leningdelen mengen, (3) EWV mengt inclusief aflossingsstanden, (4) nieuw toetsmoment box 3",
+      "Huwelijkse voorwaarden aanbevolen als cliënten individuele draagplicht willen behouden na huwelijk",
+      "Cliënten gewaarschuwd: overeenkomst herzien bij verkoop, aankoop nieuwe woning, extra aflossing of huwelijk",
+      "Hoofdelijke aansprakelijkheid richting geldverstrekker uitgelegd (externe vs. interne werking)",
+      "34% echtscheidingsstatistiek en financieel risico bij ontbreken vastlegging besproken",
+    ]
+  },
+  {
+    sectie: "8. Verjaring & anti-verjaringsbeding",
+    kleur: "#7C3AED",
+    items: [
+      "Verjaringsrisico besproken: bij ongehuwde samenwoners verjaart een vordering na 5 jaar (art. 3:306 BW)",
+      "Drie opties aangeboden: draagplichtovereenkomst, anti-verjaringsbeding via notaris, periodieke stuiting",
+      "Anti-verjaringsbeding via notaris aanbevolen bij inbreng eigen vermogen door ongehuwde samenwoners",
+      "Indien gekozen voor periodieke stuiting: datum eerste stuiting vastgelegd en herinnering ingepland",
+      "Cliënten geïnformeerd dat bij huwelijk de verjaringstermijn niet meer loopt (automatische bescherming)",
+    ]
+  },
+  {
+    sectie: "9. Box 3 & bijleenregeling",
+    kleur: "#DC2626",
+    items: [
+      "Bijleenregeling berekend per partner: max. aftrekbare EWS = verwervingskosten × eigendomsaandeel − EWR + bijleenstand",
+      "Gecontroleerd of EWR volledig wordt ingebracht — zo niet: box 3-deel berekend en gecommuniceerd",
+      "Cliënten geïnformeerd: EWR niet volledig inbrengen leidt tot box 3-deel in de hypotheek (geen renteaftrek)",
+      "Aflossingsvrije leningdelen na 1-1-2013 gecontroleerd: geen renteaftrek (art. 3.119a Wet IB 2001)",
+      "Bij trouwen: nieuw toetsmoment gepland om box 3-verhuizing van hypotheekdelen te voorkomen",
+    ]
+  },
+  {
+    sectie: "10. Verplichte vs. extra aflossingen",
+    kleur: C.orange,
+    items: [
+      "Onderscheid verplichte maandelijkse aflossing vs. extra aflossing uitgelegd aan cliënten",
+      "Verplichte aflossing gezamenlijk leningdeel: géén automatisch vergoedingsrecht — tenzij teruggevorderd binnen 1 jaar",
+      "Extra aflossing gezamenlijk leningdeel: wél vergoedingsrecht — vastgelegd in overeenkomst vergoedingsrechten",
+      "Aflossing op leningdeel waarvan ander draagplichtig is: altijd vergoedingsrecht — opeisbaarheid bij verkoop vastgelegd",
+      "Waarderingsbasis vergoedingsrecht bepaald: nominaal of proportioneel (waardestijging) — vastgelegd in overeenkomst",
+    ]
+  },
+  {
+    sectie: "11. Schenkbelasting & informed consent",
+    kleur: "#6D28D9",
+    items: [
+      "Scenario-vergelijking gemaakt: wettelijk (A), individueel zonder kan-bepaling (B), individueel met kan-bepaling (C indien BEWS aanwezig)",
+      "Alle drie scenario's getoond aan cliënten — bewuste keuze gedocumenteerd (informed consent)",
+      "Schenkbelasting-risico beoordeeld: afwijkt draagplicht van eerlijke verdeling zonder zakelijke rechtvaardiging?",
+      "Zakelijke rechtvaardiging vastgelegd: BEWS-toewijzing, ongelijke inbreng, eigenwoningverleden (Besluit 30-1-2018)",
+      "Indien schenkbelasting-risico aanwezig zonder rechtvaardiging: notaris expliciet geïnformeerd",
+      "Cliënten schriftelijk akkoord gegaan met gekozen draagplicht na inzage scenario-berekeningen",
+      "Partijverklaring in overeenkomst: beide partners begrijpen de inhoud en handelen vrij",
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// SCORE LOGIC
+// ═══════════════════════════════════════════════════════════════════
+function berekenAdvies(form) {
+  // ── BLOKKEER: individuele benadering niet mogelijk bij algehele gemeenschap ──
+  // Art. 1:94 BW: woning valt in gemeenschap → draagplichtovereenkomst heeft geen effect
+  if (form.relatievorm === "gehuwd_gemeen") {
+    return {
+      factoren: [],
+      totaal: 0,
+      niveau: "Niet van toepassing",
+      kleur: "green",
+      geblokkeerd: true,
+      advies: "Bij een huwelijk in algehele gemeenschap van goederen (art. 1:94 BW) valt de woning — en daarmee de hypotheekschuld — in de gemeenschap. Een interne draagplichtovereenkomst is dan juridisch niet effectief: de schulden zijn al 50/50 gemeenschappelijk van rechtswege. Individueel benaderen is hier niet mogelijk. Bespreek met de notaris of huwelijkse voorwaarden gewenst zijn als cliënten de draagplicht wél individueel willen regelen.",
+      aanbevolenDocs: [],
+    };
+  }
+
+  const factoren = [];
+  const ev1 = parseFloat(form.eigenVermogen1) || 0;
+  const ev2 = parseFloat(form.eigenVermogen2) || 0;
+
+  // ── RELATIEVORM ──
+  if (form.relatievorm === "ongehuwd") {
+    factoren.push({ score: 3, kleur: "red", label: "Ongehuwde samenwoners (geen contract)", uitleg: "Wettelijke 50/50 draagplicht (art. 6:10 BW) geldt onverkort. Draagplichtovereenkomst is de enige manier om hiervan af te wijken." });
+  }
+  if (form.relatievorm === "samenwoners_contract") {
+    factoren.push({ score: 2, kleur: "orange", label: "Samenwoners met samenlevingscontract", uitleg: "Een samenlevingscontract regelt doorgaans géén draagplicht. Een aanvullende draagplichtovereenkomst blijft noodzakelijk." });
+  }
+  if (form.relatievorm === "gehuwd_koude") {
+    factoren.push({ score: 2, kleur: "orange", label: "Gehuwd op huwelijkse voorwaarden (koude uitsluiting)", uitleg: "Huwelijkse voorwaarden sluiten gemeenschap uit, maar regelen de interne draagplicht niet automatisch." });
+  }
+  if (form.relatievorm === "gehuwd_beperkt") {
+    factoren.push({ score: 1, kleur: "orange", label: "Beperkte gemeenschap van goederen", uitleg: "Voorhuwelijkse schulden/bezittingen vallen buiten de gemeenschap. Controleer of de hypotheek in of buiten de gemeenschap valt." });
+  }
+  if (form.relatievorm === "geregistreerd") {
+    factoren.push({ score: 2, kleur: "orange", label: "Geregistreerd partnerschap", uitleg: "Vergelijkbaar met huwelijk — bepaal of gemeenschap van goederen van toepassing is." });
+  }
+
+  // ── EIGEN VERMOGEN & VERJARING ──
+  if (Math.abs(ev1 - ev2) > 500) {
+    factoren.push({ score: 3, kleur: "red", label: "Ongelijke inbreng eigen vermogen", uitleg: `${ev1 > ev2 ? form.naam1 || "Aanvrager" : form.naam2 || "Partner"} brengt significant meer eigen geld in. Zonder overeenkomst zijn vergoedingsrechten moeilijk bewijsbaar.` });
+  }
+  // Verjaring: samenwoners — vordering verjaart na 5 jaar (art. 3:306 BW)
+  if ((form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract") && (ev1 > 500 || ev2 > 500)) {
+    factoren.push({ score: 2, kleur: "red", label: "⏱️ Verjaringsrisico vergoedingsrecht (5 jaar — art. 3:306 BW)", uitleg: "Bij ongehuwde samenwoners verjaart een vordering uit vergoedingsrecht na 5 jaar (art. 3:306 BW), tenzij tijdig gestuit. Bij gehuwden loopt de verjaring niet tijdens het huwelijk. Overweeg een anti-verjaringsbeding (via notaris) of periodieke stuiting om het recht te bewaren." });
+  }
+
+  // ── EIGENWONINGVERLEDEN ──
+  if (form.ewv1 || form.ewv2) {
+    factoren.push({ score: 3, kleur: "red", label: "Eigenwoningverleden aanwezig", uitleg: "Verschillende renteaftrekperioden en EWR's dreigen fiscaal te 'mengen'. Zonder draagplichtovereenkomst kan dit leiden tot verlies van renteaftrekjaren." });
+  }
+  if (form.ewv1 && form.ewv2) {
+    factoren.push({ score: 2, kleur: "red", label: "Beide partners hebben eigenwoningverleden", uitleg: "Dubbele complexiteit: twee eigenwoningverledens met mogelijk verschillende BEWS, EWR en resterende renteaftrekjaren." });
+  }
+  if (parseFloat(form.bews1 || 0) > 0 || parseFloat(form.bews2 || 0) > 0) {
+    factoren.push({ score: 2, kleur: "red", label: "Overgangsrecht (BEWS) aanwezig", uitleg: "BEWS (art. 10bis.1 Wet IB 2001) geeft recht op aflossingsvrij lenen met renteaftrek. Moet per persoon worden toegepast of via de kan-bepaling gezamenlijk (onomkeerbaar)." });
+  }
+
+  // ── BOX 3 RISICO: EWR niet volledig ingebracht ──
+  const K_b3 = (parseFloat(form.aankoopprijs) || 0) + (parseFloat(form.verwervingskosten) || 0);
+  const H_b3 = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0), 0);
+  if (K_b3 > 0 && H_b3 > 0) {
+    [["1", form.naam1 || "Aanvrager"], ["2", form.naam2 || "Partner"]].forEach(([p, naam]) => {
+      const ewr = parseFloat(form[`ewr${p}`] || 0);
+      const bijleen = parseFloat(form[`afsstand${p}`] || 0);
+      const eigendomPct = (parseFloat(p === "1" ? form.eigendom1 : form.eigendom2) || 50) / 100;
+      const draagplicht = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0) * (parseFloat(p === "1" ? l.draag1 : l.draag2) || 50) / 100, 0);
+      const maxEWS = Math.max(0, K_b3 * eigendomPct - ewr + bijleen);
+      const box3Deel = Math.max(0, draagplicht - maxEWS);
+      if (box3Deel > 1000) {
+        factoren.push({ score: 3, kleur: "red", label: `🚫 Box 3-deel in hypotheek — ${naam} (€ ${Math.round(box3Deel).toLocaleString("nl-NL")},-)`, uitleg: `${naam} brengt de EWR niet volledig in. € ${Math.round(box3Deel).toLocaleString("nl-NL")},- van de hypotheek valt daardoor in box 3 — géén renteaftrek over dit deel. Bijleenregeling (art. 3.119aa Wet IB 2001): max aftrekbare EWS = verwervingskosten × eigendomsaandeel − EWR + bijleenstand = € ${Math.round(maxEWS).toLocaleString("nl-NL")},-.` });
+      }
+    });
+  }
+
+  // ── EIGENDOMSVERDELING ──
+  const e1 = parseFloat(form.eigendom1) || 50;
+  const e2 = parseFloat(form.eigendom2) || 50;
+  if (Math.abs(e1 - e2) > 2) {
+    factoren.push({ score: 2, kleur: "orange", label: "Ongelijke eigendomsverdeling", uitleg: `Eigendomsverdeling ${e1}/${e2} wijkt af van 50/50. Draagplicht dient hierop te worden afgestemd.` });
+  }
+  if (form.leningdelen.length > 1) {
+    factoren.push({ score: 1, kleur: "blue", label: "Meerdere leningdelen", uitleg: "Expliciete toewijzing per leningdeel is nodig voor fiscale doelmatigheid en juridische helderheid." });
+  }
+  if (form.leningdelen.some(l => l.recht === "oud")) {
+    factoren.push({ score: 2, kleur: "orange", label: "Overgangsrecht in leningdelen verwerkt", uitleg: "Leningdelen met oud recht (aflossingsvrij met renteaftrek) moeten expliciet worden toebedeeld aan de rechthebbende partner." });
+  }
+  if (form.context === "scheiding") {
+    factoren.push({ score: 3, kleur: "red", label: "Scheidingscontext", uitleg: "Tijdelijke draagplichtafspraken nodig tot verkoop of overname. Gebruik specifieke scheidingsvariant overeenkomst." });
+  }
+
+  // ── TROUWEN — 4 GEVOLGEN ──
+  if (form.trouwenPlannen && (form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract")) {
+    factoren.push({ score: 3, kleur: "red", label: "⚠️ Trouwplannen — 4 kritische gevolgen bij huwelijk zonder voorwaarden", uitleg: "(1) Draagplichtovereenkomst vervalt van rechtswege. (2) Alle leningdelen mengen naar de eigendomsverhouding (wettelijke regeling). (3) Volledige eigenwoningverleden van beide partners mengt, inclusief niet-toegepaste aflossingsstanden. (4) Nieuw toetsmoment nodig: hypotheek dient opnieuw beoordeeld te worden om te voorkomen dat delen naar box 3 verhuizen. Adviseer huwelijkse voorwaarden." });
+  }
+
+  // ── SCHENKBELASTING ──
+  const H_sb = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0), 0);
+  if (K_b3 > 0 && H_sb > 0) {
+    const e1_sb = (parseFloat(form.eigendom1) || 50) / 100;
+    const eerlijk1 = Math.max(0, K_b3 * e1_sb - ev1);
+    const eerlijk2 = Math.max(0, K_b3 * (1 - e1_sb) - ev2);
+    const D1_sb = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0) * (parseFloat(l.draag1) || 50) / 100, 0);
+    const afwijking = Math.max(Math.abs(D1_sb - eerlijk1), Math.abs(H_sb - D1_sb - eerlijk2));
+    if (afwijking > 6633) {
+      const heeftRechtvaardiging = (form.ewv1 || form.ewv2) || Math.abs(ev1 - ev2) > 500;
+      factoren.push({ score: heeftRechtvaardiging ? 1 : 3, kleur: heeftRechtvaardiging ? "orange" : "red", label: heeftRechtvaardiging ? "Schenkbelasting-risico (gemitigeerd)" : "⚠️ Mogelijk schenkbelasting-risico", uitleg: `De draagplicht wijkt € ${Math.round(afwijking).toLocaleString("nl-NL")},- af van de 'eerlijke' verdeling. ${heeftRechtvaardiging ? "Zakelijke rechtvaardiging aanwezig (EWV/ongelijke inbreng) — gedekt door Besluit 30-1-2018. Leg expliciet vast." : "Zonder zakelijke rechtvaardiging: risico op kwalificatie als schenking (art. 1 lid 1 sub f SW 1956). Bespreek met notaris. Zie tab Scenario's."}` });
+    }
+  }
+
+  const totaal = factoren.reduce((s, f) => s + f.score, 0);
+  let niveau, kleur, advies, aanbevolenDocs;
+
+  if (totaal <= 3) {
+    niveau = "Laag risico"; kleur = "green";
+    advies = "Het risico is beperkt. Een draagplichtovereenkomst biedt echter altijd extra zekerheid bij toekomstige wijzigingen. Bespreek met cliënten.";
+    aanbevolenDocs = ["draagplicht"];
+  } else if (totaal <= 7) {
+    niveau = "Aanbevolen"; kleur = "orange";
+    advies = "Een draagplichtovereenkomst wordt sterk aanbevolen. Meerdere factoren zijn aanwezig die bij relatiebeëindiging tot discussie of verlies van belastingvoordeel kunnen leiden.";
+    aanbevolenDocs = (Math.abs(ev1 - ev2) > 500) ? ["draagplicht", "vergoedingsrechten"] : ["draagplicht"];
+  } else {
+    niveau = "Noodzakelijk"; kleur = "red";
+    advies = "Een draagplichtovereenkomst is noodzakelijk. Meerdere ernstige risicofactoren aanwezig. Zonder vastlegging dreigen verlies van renteaftrek, financiële claims en langdurige juridische geschillen.";
+    aanbevolenDocs = (Math.abs(ev1 - ev2) > 500) ? ["draagplicht", "vergoedingsrechten"] : ["draagplicht"];
+    if (form.context === "scheiding") aanbevolenDocs = ["scheiding"];
+  }
+
+  return { factoren, totaal, niveau, kleur, advies, aanbevolenDocs, geblokkeerd: false };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════════════
+async function callClaude(prompt) {
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, messages: [{ role: "user", content: prompt }] }),
+  });
+  const d = await r.json();
+  return d.content?.[0]?.text || "Fout bij genereren.";
+}
+
+function buildDraagplichtPrompt(form) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  return `Stel een professionele, juridisch correcte DRAAGPLICHTOVEREENKOMST op in het Nederlands voor een hypotheekadviseur. Gebruik een gestructureerde modelopbouw met genummerde artikelen.
+
+PARTIJEN:
+- ${n1}, geboortedatum: ${form.geb1 || "..."}, BSN: ${form.bsn1 || "..."}
+- ${n2}, geboortedatum: ${form.geb2 || "..."}, BSN: ${form.bsn2 || "..."}
+- Relatievorm: ${form.relatievorm}
+- Adres woning: ${form.adres}
+- Koopsom: € ${parseFloat(form.aankoopprijs || 0).toLocaleString("nl-NL")}
+- Verwervingskosten: € ${parseFloat(form.verwervingskosten || 0).toLocaleString("nl-NL")}
+
+EIGENDOMSVERDELING: ${n1} ${form.eigendom1}% / ${n2} ${form.eigendom2}%
+
+EIGEN MIDDELEN:
+- ${n1}: € ${parseFloat(form.eigenVermogen1 || 0).toLocaleString("nl-NL")}
+- ${n2}: € ${parseFloat(form.eigenVermogen2 || 0).toLocaleString("nl-NL")}
+
+LENINGDELEN (geldverstrekker: ${form.geldverstrekker || "..."}):
+${form.leningdelen.map((l, i) => `  Leningdeel ${i+1}: € ${parseFloat(l.bedrag || 0).toLocaleString("nl-NL")} — ${l.soort} — ${l.recht === "oud" ? `Overgangsrecht (art. 10bis.1 Wet IB 2001)` : "Nieuw recht"} — Draagplicht: ${n1} ${l.draag1}% / ${n2} ${l.draag2}%`).join("\n")}
+
+${form.bews1 > 0 || form.bews2 > 0 ? `OVERGANGSRECHT:\n- ${n1}: BEWS € ${parseFloat(form.bews1||0).toLocaleString("nl-NL")}, nog ${form.jaren1||0} renteaftrekjaren\n- ${n2}: BEWS € ${parseFloat(form.bews2||0).toLocaleString("nl-NL")}, nog ${form.jaren2||0} renteaftrekjaren\n- Kan-bepaling overgangsrecht gezamenlijk toepassen: ${form.kanBepaling ? "JA" : "NEE"}` : ""}
+
+${form.bijzonderheden ? `BIJZONDERHEDEN: ${form.bijzonderheden}` : ""}
+
+Datum: ${new Date().toLocaleDateString("nl-NL")}
+
+Structuur van de overeenkomst (verplicht):
+1. Partijen en doel
+2. Artikel 1 — Uitgangspunten (aankoop/kosten, financiering)
+3. Artikel 2 — Overeenkomst inzake de draagplicht (per leningdeel, met tabel)
+4. Artikel 3 — Aflossingen: maak EXPLICIET onderscheid tussen:
+   a) Verplichte maandelijkse aflossing op gezamenlijk leningdeel → geen automatisch vergoedingsrecht (tenzij teruggevorderd binnen 1 jaar na kalenderjaar)
+   b) Extra (niet-verplichte) aflossing op gezamenlijk leningdeel → wél vergoedingsrecht
+   c) Aflossing op leningdeel waarvoor ander draagplichtig is → altijd vergoedingsrecht
+5. Artikel 4 — Hoofdelijke aansprakelijkheid
+6. Artikel 5 — Civiele gevolgen
+7. Artikel 6 — Fiscale gevolgen (inclusief uitsluiting menging fiscaal verleden)
+8. Artikel 7 — Toepasselijk recht
+9. Ondertekeningsblok
+
+Gebruik professionele juridische taal. Vermeld expliciet dat de overeenkomst de hoofdelijke aansprakelijkheid richting de geldverstrekker NIET wijzigt. Sluit menging fiscaal verleden expliciet uit.`;
+}
+
+function buildVergoedingsrechtenPrompt(form) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  return `Stel een professionele OVEREENKOMST VERGOEDINGSRECHTEN op in het Nederlands.
+
+PARTIJEN:
+- ${n1} (BSN: ${form.bsn1 || "..."})
+- ${n2} (BSN: ${form.bsn2 || "..."})
+- Adres woning: ${form.adres}
+- Koopsom: € ${parseFloat(form.aankoopprijs || 0).toLocaleString("nl-NL")}
+
+EIGEN MIDDELEN:
+- ${n1}: € ${parseFloat(form.eigenVermogen1 || 0).toLocaleString("nl-NL")}
+- ${n2}: € ${parseFloat(form.eigenVermogen2 || 0).toLocaleString("nl-NL")}
+
+EIGENDOMSVERDELING: ${n1} ${form.eigendom1}% / ${n2} ${form.eigendom2}%
+
+${form.bijzonderheden ? `BIJZONDERHEDEN: ${form.bijzonderheden}` : ""}
+
+Datum: ${new Date().toLocaleDateString("nl-NL")}
+
+Verplichte onderdelen:
+1. Partijen en doel
+2. Artikel 1 — Vergoedingsrecht wegens inbreng eigen middelen bij aankoop (nominaal of naar rato waardestijging)
+3. Artikel 2 — Vergoedingsrecht wegens aflossingen uit privévermogen
+4. Artikel 3 — Vergoedingsrecht wegens verbouwingen/investeringen
+5. Artikel 4 — Opeisbaarheid (bij verkoop, verdeling of overlijden)
+6. Artikel 5 — Waarderingsbasis (nominaal tenzij anders overeengekomen)
+7. Artikel 6 — Gevolgen huwelijk/geregistreerd partnerschap
+8. Ondertekeningsblok
+
+Gebruik professionele juridische taal. Vermeld dat de overeenkomst eigendomsverhoudingen niet automatisch wijzigt.`;
+}
+
+function buildScheidingPrompt(form) {
+  const n1 = form.naam1 || "Aanvrager", n2 = form.naam2 || "Partner";
+  return `Stel een DRAAGPLICHTOVEREENKOMST BIJ RELATIEBEËINDIGING op in het Nederlands. Dit is een tijdelijke overeenkomst voor de periode tot verkoop of overname van de woning.
+
+PARTIJEN:
+- ${n1} (BSN: ${form.bsn1 || "..."})
+- ${n2} (BSN: ${form.bsn2 || "..."})
+- Adres woning: ${form.adres}
+
+LENINGDELEN:
+${form.leningdelen.map((l, i) => `  Leningdeel ${i+1}: € ${parseFloat(l.bedrag || 0).toLocaleString("nl-NL")} — Draagplicht: ${n1} ${l.draag1}% / ${n2} ${l.draag2}%`).join("\n")}
+
+${form.bijzonderheden ? `BIJZONDERHEDEN: ${form.bijzonderheden}` : ""}
+
+Datum: ${new Date().toLocaleDateString("nl-NL")}
+
+Verplichte onderdelen:
+1. Partijen en context (relatiebeëindiging)
+2. Artikel 1 — Looptijd overeenkomst (tot verkoop/overname)
+3. Artikel 2 — Tijdelijke draagplicht per leningdeel
+4. Artikel 3 — Betalingsafspraken hypotheeklasten tijdens looptijd
+5. Artikel 4 — Verrekenafspraken bij te veel/te weinig betalen
+6. Artikel 5 — Hoofdelijke aansprakelijkheid (ongewijzigd)
+7. Artikel 6 — Gevolgen verkoop of overname
+8. Ondertekeningsblok
+
+Benadruk dat de geldverstrekker beide partners kan blijven aanspreken.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// REUSABLE UI COMPONENTS
+// ═══════════════════════════════════════════════════════════════════
+const inp = { width: "100%", padding: "9px 11px", border: `1.5px solid ${C.border}`, borderRadius: 7, fontSize: 13.5, color: C.text, background: C.white, boxSizing: "border-box", fontFamily: fam.sans, outline: "none" };
+const sel = { ...inp, cursor: "pointer", appearance: "auto" };
+const btnPrimary = { background: C.navy, color: C.white, border: "none", padding: "10px 22px", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: 13.5, fontFamily: fam.sans };
+const btnSecondary = { background: "transparent", color: C.navy, border: `2px solid ${C.border}`, padding: "8px 20px", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 13.5, fontFamily: fam.sans };
+const btnGold = { background: C.gold, color: C.white, border: "none", padding: "10px 22px", borderRadius: 8, fontWeight: 800, cursor: "pointer", fontSize: 13.5, fontFamily: fam.sans };
+const btnSm = { ...btnSecondary, padding: "5px 12px", fontSize: 12 };
+
+function Field({ label, hint, required, children }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: C.navy, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.07em", fontFamily: fam.sans }}>
+        {label}{required && <span style={{ color: C.red }}> *</span>}
+      </label>
+      {hint && <p style={{ fontSize: 11, color: C.gray, margin: "0 0 5px", lineHeight: 1.4, fontFamily: fam.sans }}>{hint}</p>}
+      {children}
+    </div>
+  );
+}
+
+function InfoBox({ type = "info", children }) {
+  const map = { info: [C.blue, C.blueLight], warn: [C.orange, C.orangeLight], danger: [C.red, C.redLight], ok: [C.green, C.greenLight] };
+  const [fg, bg] = map[type];
+  return (
+    <div style={{ background: bg, borderLeft: `4px solid ${fg}`, borderRadius: "0 8px 8px 0", padding: "12px 16px", marginBottom: 18 }}>
+      <p style={{ margin: 0, fontSize: 12.5, color: fg, lineHeight: 1.65, fontFamily: fam.sans }}>{children}</p>
+    </div>
+  );
+}
+
+function SectionH({ children, sub }) {
+  return (
+    <div style={{ borderBottom: `2px solid ${C.border}`, paddingBottom: 10, marginBottom: 20 }}>
+      <h3 style={{ margin: 0, color: C.navy, fontSize: 16, fontWeight: 700, fontFamily: fam.serif }}>{children}</h3>
+      {sub && <p style={{ margin: "4px 0 0", fontSize: 12, color: C.gray, fontFamily: fam.sans }}>{sub}</p>}
+    </div>
+  );
+}
+
+function CheckCard({ label, sub, checked, onChange }) {
+  return (
+    <div onClick={() => onChange(!checked)} style={{ border: `2px solid ${checked ? C.gold : C.border}`, borderRadius: 10, padding: "14px 16px", cursor: "pointer", background: checked ? C.goldPale : C.white, transition: "all 0.15s", display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
+      <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${checked ? C.gold : C.border}`, background: checked ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+        {checked && <span style={{ color: C.white, fontSize: 12, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+      </div>
+      <div>
+        <div style={{ fontSize: 13, color: C.navy, fontWeight: 600, fontFamily: fam.sans }}>{label}</div>
+        {sub && <div style={{ fontSize: 11.5, color: C.gray, marginTop: 3, lineHeight: 1.4 }}>{sub}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Badge({ kleur, label }) {
+  const map = { green: [C.green, C.greenLight], orange: [C.orange, C.orangeLight], red: [C.red, C.redLight], blue: [C.blue, C.blueLight] };
+  const [fg, bg] = map[kleur] || [C.gray, C.grayLight];
+  return <span style={{ background: bg, color: fg, border: `1px solid ${fg}22`, borderRadius: 20, padding: "3px 11px", fontSize: 11.5, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: fam.sans }}>{label}</span>;
+}
+
+function CopyBtn({ text }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    const doCopy = () => {
+      // Fallback for cross-origin iframes (Google Sites) where clipboard API is blocked
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0";
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2200);
+      } catch (e2) {
+        alert("Kopiëren mislukt. Selecteer de tekst handmatig.");
+      }
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        setCopied(true); setTimeout(() => setCopied(false), 2200);
+      }).catch(doCopy);
+    } else {
+      doCopy();
+    }
+  };
+  return <button onClick={copy} style={{ ...btnSm, background: copied ? C.greenLight : C.grayLight, color: copied ? C.green : C.navy, border: `1px solid ${copied ? C.green : C.border}` }}>{copied ? "✓ Gekopieerd" : "📋 Kopieer"}</button>;
+}
+
+function StapBar({ stap, totaal }) {
+  return (
+    <div style={{ display: "flex", gap: 5, marginBottom: 24 }}>
+      {Array.from({ length: totaal }).map((_, i) => (
+        <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < stap ? C.gold : i === stap ? C.goldLight : C.border, transition: "background 0.3s" }} />
+      ))}
+    </div>
+  );
+}
+
+function RisicoMeter({ score, max = 12 }) {
+  const pct = Math.min((score / max) * 100, 100);
+  const kleur = score <= 3 ? C.green : score <= 7 ? C.orange : C.red;
+  return (
+    <div style={{ textAlign: "center" }}>
+      <div style={{ fontSize: 11, color: C.gray, marginBottom: 6, fontFamily: fam.sans, textTransform: "uppercase", letterSpacing: "0.08em" }}>Risicoscore</div>
+      <div style={{ position: "relative", width: 88, height: 88, margin: "0 auto" }}>
+        <svg viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r="34" fill="none" stroke={C.grayMid} strokeWidth="9" />
+          <circle cx="44" cy="44" r="34" fill="none" stroke={kleur} strokeWidth="9"
+            strokeDasharray={`${2 * Math.PI * 34 * pct / 100} ${2 * Math.PI * 34}`}
+            strokeLinecap="round" transform="rotate(-90 44 44)"
+            style={{ transition: "stroke-dasharray 0.8s ease" }} />
+        </svg>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 22, fontWeight: 800, color: kleur, fontFamily: fam.sans }}>{score}</span>
+          <span style={{ fontSize: 10, color: C.gray, fontFamily: fam.sans }}>/{max}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VerdelingBar({ p1, p2, n1, n2, kleur1 = C.navy, kleur2 = C.gold }) {
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ display: "flex", height: 26, borderRadius: 7, overflow: "hidden" }}>
+        <div style={{ width: `${p1}%`, background: kleur1, display: "flex", alignItems: "center", justifyContent: "center", transition: "width 0.4s" }}>
+          {p1 > 12 && <span style={{ color: C.white, fontSize: 11, fontWeight: 700, fontFamily: fam.sans }}>{p1}%</span>}
+        </div>
+        <div style={{ width: `${p2}%`, background: kleur2, display: "flex", alignItems: "center", justifyContent: "center", transition: "width 0.4s" }}>
+          {p2 > 12 && <span style={{ color: p2 > 0 ? C.navy : C.white, fontSize: 11, fontWeight: 700, fontFamily: fam.sans }}>{p2}%</span>}
+        </div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.gray, fontFamily: fam.sans, marginTop: 5 }}>
+        <span>■ {n1}</span><span>■ {n2}</span>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// WIZARD STEPS
+// ═══════════════════════════════════════════════════════════════════
+function Stap1({ form, up }) {
+  const willMarry = form.trouwenPlannen && (form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract");
+  return (
+    <div>
+      <SectionH sub="Namen, burgerlijke staat en relatievorm">Stap 1 — Partnergegevens</SectionH>
+      <div className="rg2">
+        <Field label="Naam aanvrager" required><input style={inp} value={form.naam1} onChange={e => up("naam1", e.target.value)} placeholder="Voornaam Achternaam" /></Field>
+        <Field label="Naam partner" required><input style={inp} value={form.naam2} onChange={e => up("naam2", e.target.value)} placeholder="Voornaam Achternaam" /></Field>
+        <Field label="Geboortedatum aanvrager"><input style={inp} type="date" value={form.geb1} onChange={e => up("geb1", e.target.value)} /></Field>
+        <Field label="Geboortedatum partner"><input style={inp} type="date" value={form.geb2} onChange={e => up("geb2", e.target.value)} /></Field>
+        <Field label="BSN aanvrager"><input style={inp} value={form.bsn1} onChange={e => up("bsn1", e.target.value)} placeholder="123456789" /></Field>
+        <Field label="BSN partner"><input style={inp} value={form.bsn2} onChange={e => up("bsn2", e.target.value)} placeholder="123456789" /></Field>
+      </div>
+      <Field label="Adres woning" required><input style={inp} value={form.adres} onChange={e => up("adres", e.target.value)} placeholder="Straatnaam 1, 1234 AB Woonplaats" /></Field>
+      <div className="rg2" style={{ alignItems: "end" }}>
+        <Field label="Aankoopprijs (€)" required><input style={inp} type="number" value={form.aankoopprijs} onChange={e => up("aankoopprijs", e.target.value)} placeholder="400000" /></Field>
+        <Field label="Verwervingskosten / k.k. (€)" hint="Overdrachtsbelasting, notariskosten, etc."><input style={inp} type="number" value={form.verwervingskosten} onChange={e => up("verwervingskosten", e.target.value)} placeholder="20000" /></Field>
+        <Field label="Geldverstrekker"><input style={inp} value={form.geldverstrekker} onChange={e => up("geldverstrekker", e.target.value)} placeholder="Bijv. Rabobank, ING, ABN AMRO" /></Field>
+        <Field label="Context">
+          <select style={sel} value={form.context} onChange={e => up("context", e.target.value)}>
+            <option value="aankoop">Aankoop woning</option>
+            <option value="oversluiting">Oversluiting / herfinanciering</option>
+            <option value="scheiding">Relatiebeëindiging / scheiding</option>
+            <option value="verbouwing">Verbouwing / extra investering</option>
+          </select>
+        </Field>
+      </div>
+      <Field label="Relatievorm" required>
+        <select style={sel} value={form.relatievorm} onChange={e => up("relatievorm", e.target.value)}>
+          <option value="ongehuwd">Ongehuwd samenwonend (geen samenlevingscontract)</option>
+          <option value="samenwoners_contract">Ongehuwd samenwonend (met samenlevingscontract)</option>
+          <option value="gehuwd_koude">Gehuwd op huwelijkse voorwaarden — koude uitsluiting</option>
+          <option value="gehuwd_beperkt">Gehuwd — beperkte gemeenschap van goederen (wet 2018)</option>
+          <option value="gehuwd_gemeen">Gehuwd — algehele gemeenschap van goederen</option>
+          <option value="geregistreerd">Geregistreerd partnerschap</option>
+        </select>
+      </Field>
+      {(form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract") && (
+        <CheckCard label="Partners hebben plannen om te trouwen of geregistreerd partnerschap aan te gaan" sub="Belangrijk: de draagplichtovereenkomst vervalt bij een huwelijk in gemeenschap van goederen" checked={form.trouwenPlannen} onChange={v => up("trouwenPlannen", v)} />
+      )}
+      {willMarry && (
+        <div style={{ background: C.redLight, border: `2px solid ${C.red}`, borderRadius: 12, padding: 18, marginTop: 8 }}>
+          <div style={{ fontWeight: 800, color: C.red, fontSize: 14, marginBottom: 10, fontFamily: fam.sans }}>⚠️ Kritische waarschuwing — huwelijk zonder huwelijkse voorwaarden heeft 4 gevolgen</div>
+          {[
+            ["1", "Draagplichtovereenkomst vervalt van rechtswege", "De overeenkomst heeft geen effect meer — de wettelijke 50/50 verdeling treedt in werking."],
+            ["2", "Alle leningdelen mengen naar de eigendomsverhouding", "Openstaande leningen worden gemengd conform bezitsverhouding — individuele toewijzing vervalt."],
+            ["3", "Volledig eigenwoningverleden van beide partners mengt", "Inclusief niet-toegepaste aflossingsstanden, resterende renteaftrekjaren en BEWS. Dit kan niet worden teruggedraaid."],
+            ["4", "Nieuw toetsmoment vereist — risico op box 3", "Hypotheek dient opnieuw beoordeeld te worden om te voorkomen dat delen naar box 3 verhuizen (geen renteaftrek)."],
+          ].map(([nr, titel, sub]) => (
+            <div key={nr} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
+              <div style={{ background: C.red, color: C.white, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0, fontFamily: fam.sans }}>{nr}</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: C.red, fontFamily: fam.sans }}>{titel}</div>
+                <div style={{ fontSize: 12, color: "#7f1d1d", fontFamily: fam.sans, marginTop: 2, lineHeight: 1.5 }}>{sub}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{ marginTop: 10, padding: "10px 14px", background: C.white, borderRadius: 8, fontSize: 12.5, color: C.navy, fontFamily: fam.sans, fontWeight: 600 }}>
+            ✅ Oplossing: adviseer huwelijkse voorwaarden bij de notaris. Daarin kan de draagplichtovereenkomst worden opgenomen of doorverwezen, waardoor de individuele benadering behouden blijft.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stap2({ form, up }) {
+  const e1 = parseFloat(form.eigendom1) || 50;
+  const e2 = 100 - e1;
+  return (
+    <div>
+      <SectionH sub="Hoeveel procent van de woning heeft iedere partner juridisch in eigendom?">Stap 2 — Eigendomsverdeling</SectionH>
+      <InfoBox type="info">De eigendomsverdeling is de juridische verhouding in het kadaster. Deze kan afwijken van de draagplicht op de hypotheek. Beide moeten bewust worden bepaald.</InfoBox>
+      <div className="rg2">
+        <Field label={`Aandeel ${form.naam1 || "Aanvrager"} (%)`} required>
+          <input style={inp} type="number" min="0" max="100" value={form.eigendom1}
+            onChange={e => { up("eigendom1", e.target.value); up("eigendom2", String(Math.max(0, 100 - (parseFloat(e.target.value) || 0)))); }} />
+        </Field>
+        <Field label={`Aandeel ${form.naam2 || "Partner"} (%)`} required>
+          <input style={inp} type="number" min="0" max="100" value={form.eigendom2}
+            onChange={e => { up("eigendom2", e.target.value); up("eigendom1", String(Math.max(0, 100 - (parseFloat(e.target.value) || 0)))); }} />
+        </Field>
+      </div>
+      <div style={{ background: C.grayLight, borderRadius: 10, padding: 16 }}>
+        <div style={{ fontSize: 12, color: C.gray, fontFamily: fam.sans, marginBottom: 6 }}>Eigendomsverdeling visueel</div>
+        <VerdelingBar p1={e1} p2={e2} n1={form.naam1 || "Aanvrager"} n2={form.naam2 || "Partner"} />
+      </div>
+      {Math.abs(e1 - 50) > 2 && (
+        <InfoBox type="warn" style={{ marginTop: 14 }}>Ongelijke eigendomsverdeling ({e1}/{e2}) — de draagplicht op de hypotheek dient hier in beginsel op aan te sluiten, tenzij inbreng van eigen vermogen of eigenwoningverleden aanleiding geeft tot afwijking.</InfoBox>
+      )}
+    </div>
+  );
+}
+
+function EwvPersoon({ naam, prefix, form, up }) {
+  const heeftEwv = form[`ewv${prefix}`];
+  const heeftBews = heeftEwv && parseFloat(form[`bews${prefix}`] || 0) > 0;
+  return (
+    <div style={{ background: C.grayLight, borderRadius: 12, padding: 18, marginBottom: 16 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.navy, marginBottom: 12, fontFamily: fam.sans }}>
+        {naam || (prefix === "1" ? "Aanvrager" : "Partner")}
+      </div>
+      <CheckCard label={`${naam || (prefix === "1" ? "Aanvrager" : "Partner")} heeft eerder een eigen woning gehad`} sub="Selecteer dit als er sprake is van een eigenwoningverleden" checked={heeftEwv} onChange={v => up(`ewv${prefix}`, v)} />
+      {heeftEwv && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
+          <div className="rg2">
+            <Field label="EWR — eigenwoningreserve (€)" half hint="EWR = verkoopprijs vorige woning − resterende EWS − verkoopkosten. Dit bedrag moet bij aankoop nieuwe woning worden 'ingebracht' (bijleenregeling, art. 3.119aa Wet IB 2001).">
+              <input style={inp} type="number" value={form[`ewr${prefix}`] || ""} onChange={e => up(`ewr${prefix}`, e.target.value)} placeholder="0" />
+            </Field>
+            <Field label="BEWS — bestaande eigenwoningschuld per 31-12-2012 (€)" half hint="BEWS = de TOTALE resterende eigenwoningschuld per 31-12-2012 (art. 10bis.1 Wet IB 2001). Niet alleen het aflossingsvrije deel — ook annuïtaire, lineaire of spaarhypotheken die vóór 1-1-2013 liepen tellen mee.">
+              <input style={inp} type="number" value={form[`bews${prefix}`] || ""} onChange={e => up(`bews${prefix}`, e.target.value)} placeholder="0" />
+            </Field>
+            <Field label="Resterende renteaftrekjaren" half hint="Voer het RESTERENDE aantal jaren in (= 30 − reeds benutte jaren). Voorbeeld: 8 jaar aftrek genoten → voer 22 in. Bij overgangsrecht (BEWS): resterende jaren uit de vorige looptijd.">
+              <input style={inp} type="number" min="0" max="30" value={form[`jaren${prefix}`] || ""} onChange={e => up(`jaren${prefix}`, e.target.value)} placeholder="bijv. 22" />
+            </Field>
+            <Field label="Bijleenstand (resterende EWS bij verkoop) (€)" half hint="De resterende eigenwoningschuld op het moment van verkoop van de vorige woning. Vermindert — samen met de EWR — de maximale aftrekbare EWS voor de nieuwe woning (bijleenstand-check).">
+              <input style={inp} type="number" value={form[`afsstand${prefix}`] || ""} onChange={e => up(`afsstand${prefix}`, e.target.value)} placeholder="0" />
+            </Field>
+          </div>
+          {heeftBews && (
+            <InfoBox type="warn">⚠️ Overgangsrecht aanwezig. Controleer of het BEWS-bedrag past bij het eigendomsaandeel. Vraag ook of de kan-bepaling van toepassing is (zie stap 4).</InfoBox>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stap3({ form, up }) {
+  return (
+    <div>
+      <SectionH sub="EWR, BEWS, renteaftrekjaren en aflossingsstanden per partner">Stap 3 — Eigenwoningverleden</SectionH>
+      <InfoBox type="info">Vier zaken kunnen in het eigenwoningverleden aanwezig zijn: (1) eigenwoningreserve (EWR), (2) 30-jaarsperiode resterende renteaftrek, (3) overgangsrecht/BEWS, (4) aflossingsstanden. Leg ze per persoon zorgvuldig vast.</InfoBox>
+      <EwvPersoon naam={form.naam1} prefix="1" form={form} up={up} />
+      <EwvPersoon naam={form.naam2} prefix="2" form={form} up={up} />
+    </div>
+  );
+}
+
+function Stap4({ form, up }) {
+  const heeftBews = parseFloat(form.bews1 || 0) > 0 || parseFloat(form.bews2 || 0) > 0;
+  if (!heeftBews) return (
+    <div>
+      <SectionH sub="Kan-bepaling overgangsrecht (art. 10bis.1 lid 3 Wet IB 2001)">Stap 4 — Kan-bepaling overgangsrecht</SectionH>
+      <InfoBox type="ok">Geen overgangsrecht (BEWS) vastgesteld bij beide partners. Deze stap is niet van toepassing. Klik op 'Volgende' om door te gaan.</InfoBox>
+    </div>
+  );
+  return (
+    <div>
+      <SectionH sub="Kan-bepaling overgangsrecht (art. 10bis.1 lid 3 Wet IB 2001)">Stap 4 — Kan-bepaling overgangsrecht</SectionH>
+      <InfoBox type="danger">⚠️ <strong>Let op: dit is een onomkeerbare, definitieve keuze.</strong> Als het overgangsrecht gezamenlijk wordt toegepast, is het definitief verdeeld. De renteaftrekjaren gaan mee over. Dit kan niet worden teruggedraaid.</InfoBox>
+      <div style={{ background: "#FFFBEB", border: `2px solid ${C.gold}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+        <div style={{ fontWeight: 700, color: C.navy, fontSize: 14, marginBottom: 8, fontFamily: fam.sans }}>Wat is de kan-bepaling?</div>
+        <p style={{ margin: 0, fontSize: 13, color: C.textMid, lineHeight: 1.7, fontFamily: fam.sans }}>
+          Partners kunnen het overgangsrecht (BEWS) van één partner <em>gezamenlijk</em> toepassen naar rato van het schuldaandeel (art. 10bis.1 derde lid Wet IB 2001). <strong>Voorwaarden:</strong> (1) beiden zijn fiscale partners (art. 1.2 Wet IB 2001), (2) de woning is de eigen woning van beiden (gemeenschappelijk hoofdverblijf), (3) de aanspraak op BEWS bestaat bij ten minste één partner. Gevolg: het overgangsrecht wordt definitief en onomkeerbaar over beide schulddelen verdeeld, en de resterende renteaftrekjaren van de partner mét BEWS gaan deels over op de ander.
+        </p>
+      </div>
+      <div style={{ background: C.grayLight, borderRadius: 10, padding: 16, marginBottom: 16 }}>
+        <div className="rg2" style={{ marginBottom: 12 }}>
+          {[["1", form.naam1 || "Aanvrager"], ["2", form.naam2 || "Partner"]].map(([p, naam]) => (
+            parseFloat(form[`bews${p}`] || 0) > 0 && (
+              <div key={p} style={{ background: C.white, borderRadius: 8, padding: 12, border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.navy, fontFamily: fam.sans, marginBottom: 6 }}>{naam}</div>
+                <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans }}>BEWS: <strong>€ {parseFloat(form[`bews${p}`]).toLocaleString("nl-NL")}</strong></div>
+                <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans }}>Resterende jaren: <strong>{form[`jaren${p}`] || "?"}</strong></div>
+              </div>
+            )
+          ))}
+        </div>
+      </div>
+      <Field label="Willen partners het overgangsrecht gezamenlijk toepassen? (kan-bepaling)">
+        <select style={sel} value={form.kanBepaling ? "ja" : "nee"} onChange={e => up("kanBepaling", e.target.value === "ja")}>
+          <option value="nee">Nee — overgangsrecht individueel per persoon toepassen</option>
+          <option value="ja">Ja — gezamenlijk toepassen naar rato schuldaandeel (art. 10bis.1 lid 3)</option>
+        </select>
+      </Field>
+      {form.kanBepaling && (
+        <InfoBox type="danger">⚠️ Kan-bepaling gekozen. Leg deze keuze expliciet vast in de draagplichtovereenkomst én in het dossier. Dit is definitief en onherroepelijk.</InfoBox>
+      )}
+      {!form.kanBepaling && (
+        <InfoBox type="info">Individuele toepassing — overgangsrecht wordt per persoon toegewezen aan de desbetreffende leningdelen. De draagplicht voor overgangsrecht-leningdelen wordt uitsluitend aan de rechthebbende partner toegewezen.</InfoBox>
+      )}
+    </div>
+  );
+}
+
+function Stap5({ form, up }) {
+  const ev1 = parseFloat(form.eigenVermogen1) || 0;
+  const ev2 = parseFloat(form.eigenVermogen2) || 0;
+  const totaal = ev1 + ev2;
+  return (
+    <div>
+      <SectionH sub="Inbreng eigen middelen en vergoedingsrechten">Stap 5 — Eigen vermogen inbreng</SectionH>
+      <InfoBox type="info">Ongelijke inbreng van eigen vermogen creëert vergoedingsrechten. Leg vast wie wat inbrengt en op welke basis de vergoeding later plaatsvindt (nominaal of naar rato waardestijging).</InfoBox>
+      <div className="rg2">
+        <Field label={`Inbreng ${form.naam1 || "Aanvrager"} (€)`} required hint="Eigen geld, erfenis, schenking, opbrengst vorige woning">
+          <input style={inp} type="number" value={form.eigenVermogen1} onChange={e => up("eigenVermogen1", e.target.value)} placeholder="0" />
+        </Field>
+        <Field label={`Inbreng ${form.naam2 || "Partner"} (€)`} required hint="Eigen geld, erfenis, schenking, opbrengst vorige woning">
+          <input style={inp} type="number" value={form.eigenVermogen2} onChange={e => up("eigenVermogen2", e.target.value)} placeholder="0" />
+        </Field>
+      </div>
+      {totaal > 0 && (
+        <div style={{ background: C.grayLight, borderRadius: 10, padding: 16, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: C.gray, marginBottom: 6, fontFamily: fam.sans }}>Verdeling eigen vermogen</div>
+          <VerdelingBar p1={totaal > 0 ? Math.round(ev1 / totaal * 100) : 50} p2={totaal > 0 ? Math.round(ev2 / totaal * 100) : 50} n1={form.naam1 || "Aanvrager"} n2={form.naam2 || "Partner"} kleur1={C.navy} kleur2={C.gold} />
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 12, fontFamily: fam.sans }}>
+            <span style={{ color: C.navy }}>€ {ev1.toLocaleString("nl-NL")}</span>
+            <span style={{ color: C.textMid }}>Totaal: € {totaal.toLocaleString("nl-NL")}</span>
+            <span style={{ color: C.gold }}>€ {ev2.toLocaleString("nl-NL")}</span>
+          </div>
+        </div>
+      )}
+      {Math.abs(ev1 - ev2) > 500 && totaal > 0 && (
+        <InfoBox type="warn">Ongelijke inbreng. Overweeg een overeenkomst vergoedingsrechten naast de draagplichtovereenkomst.</InfoBox>
+      )}
+
+      {/* Verjaringsrisico voor samenwoners */}
+      {(form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract") && totaal > 500 && (
+        <div style={{ background: C.redLight, border: `1.5px solid ${C.red}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+          <div style={{ fontWeight: 700, color: C.red, fontSize: 13.5, marginBottom: 10, fontFamily: fam.sans }}>⏱️ Verjaringsrisico — actie vereist (art. 3:306 BW)</div>
+          <p style={{ margin: "0 0 10px", fontSize: 12.5, color: "#7f1d1d", lineHeight: 1.65, fontFamily: fam.sans }}>
+            Bij ongehuwde samenwoners verjaart een vergoedingsrecht na <strong>5 jaar</strong> (art. 3:306 BW), tenzij tijdig gestuit of een anti-verjaringsbeding is opgenomen. Bij gehuwden loopt de verjaring <em>niet</em> tijdens het huwelijk. Zonder actie verliest de inbrengende partner zijn/haar recht op terugbetaling.
+          </p>
+          <div style={{ fontWeight: 700, color: C.red, fontSize: 12, marginBottom: 8, fontFamily: fam.sans }}>Drie opties om verjaring te voorkomen:</div>
+          {[
+            ["Draagplichtovereenkomst", "Legt de schuldverhouding civiel vast — maar stuit de verjaring niet automatisch."],
+            ["Anti-verjaringsbeding via notaris (aanbevolen)", "Notariële akte met anti-verjaringsbeding voorkomt verjaring permanent. Verplicht via notaris."],
+            ["Periodieke stuiting (art. 3:317 BW)", "Schriftelijke aanmaning of erkenning stuit de verjaring. Herhaal vóór het verstrijken van 5 jaar."],
+          ].map(([t, s], i) => (
+            <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, padding: "8px 10px", background: C.white, borderRadius: 7 }}>
+              <span style={{ color: C.red, fontWeight: 700 }}>{i + 1}.</span>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 12.5, color: C.navy, fontFamily: fam.sans }}>{t}</div>
+                <div style={{ fontSize: 11.5, color: C.textMid, fontFamily: fam.sans, marginTop: 2 }}>{s}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <Field label="Waarderingsbasis vergoedingsrecht" hint="Hoe wordt de vergoeding bij verkoop bepaald?">
+        <select style={sel} value={form.waarderingsBasis || "nominaal"} onChange={e => up("waarderingsBasis", e.target.value)}>
+          <option value="nominaal">Nominaal — terugbetaling van het ingebrachte bedrag</option>
+          <option value="proportioneel">Proportioneel — naar rato van waardestijging woning</option>
+          <option value="overleg">Nader te bepalen in overleg / via notaris</option>
+        </select>
+      </Field>
+      <Field label="Welke documenten zijn gewenst?">
+        <select style={sel} value={form.gewensteDocs || "draagplicht"} onChange={e => up("gewensteDocs", e.target.value)}>
+          <option value="draagplicht">Alleen draagplichtovereenkomst</option>
+          <option value="vergoedingsrechten">Alleen overeenkomst vergoedingsrechten</option>
+          <option value="beide">Beide documenten</option>
+          <option value="scheiding">Draagplichtovereenkomst scheidingscontext</option>
+        </select>
+      </Field>
+    </div>
+  );
+}
+
+function Stap6({ form, up }) {
+  const upLD = (i, k, v) => {
+    const ld = [...form.leningdelen];
+    ld[i] = { ...ld[i], [k]: v };
+    if (k === "draag1") ld[i].draag2 = String(Math.max(0, 100 - (parseFloat(v) || 0)));
+    if (k === "draag2") ld[i].draag1 = String(Math.max(0, 100 - (parseFloat(v) || 0)));
+    up("leningdelen", ld);
+  };
+  const addLD = () => up("leningdelen", [...form.leningdelen, { bedrag: "", soort: "annuïtair", recht: "nieuw", draag1: "50", draag2: "50" }]);
+  const delLD = i => up("leningdelen", form.leningdelen.filter((_, j) => j !== i));
+
+  return (
+    <div>
+      <SectionH sub="Bedrag, soort, recht en draagplicht per leningdeel">Stap 6 — Leningdelen & Draagplicht</SectionH>
+      <InfoBox type="info">Splits leningdelen zodanig dat de draagplicht per persoon overeenkomt met de gewenste fiscale en civiele situatie. Leningdelen met overgangsrecht worden uitsluitend toegewezen aan de rechthebbende partner (tenzij kan-bepaling van toepassing).</InfoBox>
+      {form.leningdelen.map((ld, i) => (
+        <div key={i} style={{ background: i % 2 === 0 ? C.grayLight : "#FAFAF8", borderRadius: 12, padding: 16, marginBottom: 12, border: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontWeight: 700, color: C.navy, fontSize: 13.5, fontFamily: fam.sans }}>Leningdeel {i + 1}</span>
+            {form.leningdelen.length > 1 && <button onClick={() => delLD(i)} style={{ ...btnSm, color: C.red, border: `1px solid ${C.red}` }}>✕ Verwijder</button>}
+          </div>
+          <div className="rg3ld">
+            <Field label="Bedrag (€)"><input style={inp} type="number" value={ld.bedrag} onChange={e => upLD(i, "bedrag", e.target.value)} placeholder="200000" /></Field>
+            <Field label="Soort">
+              <select style={sel} value={ld.soort} onChange={e => upLD(i, "soort", e.target.value)}>
+                <option value="annuïtair">Annuïtair</option>
+                <option value="lineair">Lineair</option>
+                <option value="aflossingsvrij">Aflossingsvrij</option>
+              </select>
+            </Field>
+            <Field label="Recht / regime">
+              <select style={sel} value={ld.recht} onChange={e => upLD(i, "recht", e.target.value)}>
+                <option value="nieuw">Nieuw recht (na 1-1-2013)</option>
+                <option value="oud">Overgangsrecht (art. 10bis.1)</option>
+              </select>
+            </Field>
+          </div>
+          <div style={{ background: C.white, borderRadius: 8, padding: 12, border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: C.navy, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: fam.sans }}>Interne draagplicht</div>
+            <div className="rg2">
+              <Field label={`${form.naam1 || "Aanvrager"} (%)`}><input style={inp} type="number" min="0" max="100" value={ld.draag1} onChange={e => upLD(i, "draag1", e.target.value)} /></Field>
+              <Field label={`${form.naam2 || "Partner"} (%)`}><input style={inp} type="number" min="0" max="100" value={ld.draag2} onChange={e => upLD(i, "draag2", e.target.value)} /></Field>
+            </div>
+            <VerdelingBar p1={parseFloat(ld.draag1) || 0} p2={parseFloat(ld.draag2) || 0} n1={form.naam1 || "Aanvrager"} n2={form.naam2 || "Partner"} />
+          </div>
+          {ld.recht === "oud" && (
+            <div style={{ marginTop: 10 }}>
+              <InfoBox type="warn">Overgangsrecht (BEWS) — wijs dit leningdeel toe aan de partner met het BEWS-recht. Controleer of het bedrag past binnen het BEWS-saldo van die partner. Gebruik de kan-bepaling (stap 4) als het BEWS-saldo onvoldoende is.</InfoBox>
+            </div>
+          )}
+          {ld.soort === "aflossingsvrij" && ld.recht === "nieuw" && (
+            <div style={{ marginTop: 10 }}>
+              <InfoBox type="danger">🚫 <strong>Geen renteaftrek mogelijk!</strong> Aflossingsvrije leningen afgesloten ná 1 januari 2013 komen NIET in aanmerking voor hypotheekrenteaftrek (art. 3.119a Wet IB 2001 — aflossingsverplichting). Wijzig naar annuïtair of lineair voor renteaftrek, of gebruik overgangsrecht (BEWS) indien aanwezig.</InfoBox>
+            </div>
+          )}
+        </div>
+      ))}
+      <button onClick={addLD} style={{ ...btnSecondary, marginBottom: 16 }}>+ Leningdeel toevoegen</button>
+
+      {/* Bijleenregeling max EWS check */}
+      {(() => {
+        const K = (parseFloat(form.aankoopprijs)||0) + (parseFloat(form.verwervingskosten)||0);
+        const checks = [["1", form.naam1||"Aanvrager"], ["2", form.naam2||"Partner"]].map(([p, naam]) => {
+          const eigendomPct = (parseFloat(p==="1" ? form.eigendom1 : form.eigendom2)||50)/100;
+          const ewr = parseFloat(form[`ewr${p}`]||0);
+          const bijleenstand = parseFloat(form[`afsstand${p}`]||0);
+          const maxEWS = Math.max(0, K * eigendomPct - ewr + bijleenstand);
+          const draagplicht = form.leningdelen.reduce((s,l) => s + (parseFloat(l.bedrag)||0)*(parseFloat(p==="1"?l.draag1:l.draag2)||50)/100, 0);
+          const overschrijding = draagplicht - maxEWS;
+          const box3Deel = Math.max(0, overschrijding);
+          const box3Rente = box3Deel * 0.04; // indicatief 4% rente
+          return { naam, maxEWS, draagplicht, overschrijding, ewr, bijleenstand, box3Deel, box3Rente };
+        });
+        const heeftEWR = checks.some(c => c.ewr > 0);
+        if (!heeftEWR || K === 0) return null;
+        return (
+          <div style={{ background: C.white, borderRadius: 12, border: `1.5px solid ${C.border}`, padding: 18, marginBottom: 14 }}>
+            <div style={{ fontWeight: 700, color: C.navy, fontSize: 13.5, marginBottom: 6, fontFamily: fam.sans }}>
+              Bijleenregeling check (art. 3.119aa Wet IB 2001)
+            </div>
+            <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans, marginBottom: 12 }}>
+              Max. aftrekbare EWS per partner = verwervingskosten × eigendomsaandeel − EWR + bijleenstand. Draagplicht boven dit maximum is <strong>box 3 — géén renteaftrek</strong>.
+            </div>
+            {checks.map((c, i) => (
+              <div key={i} style={{ padding: "12px 14px", marginBottom: 8, borderRadius: 8, background: c.box3Deel > 500 ? C.redLight : C.greenLight, borderLeft: `3px solid ${c.box3Deel > 500 ? C.red : C.green}` }}>
+                <div style={{ fontWeight: 700, fontSize: 12.5, color: c.box3Deel > 500 ? C.red : C.green, fontFamily: fam.sans, marginBottom: c.box3Deel > 500 ? 8 : 0 }}>
+                  {c.naam} — Max. EWS: € {Math.round(c.maxEWS).toLocaleString("nl-NL")} | Draagplicht: € {Math.round(c.draagplicht).toLocaleString("nl-NL")}
+                  {c.box3Deel > 500 ? ` | 🚫 Box 3: € ${Math.round(c.box3Deel).toLocaleString("nl-NL")}` : " ✓ Binnen max. EWS (box 1)"}
+                </div>
+                {c.box3Deel > 500 && (
+                  <div style={{ fontSize: 11.5, color: "#7f1d1d", fontFamily: fam.sans, lineHeight: 1.6 }}>
+                    <strong>€ {Math.round(c.box3Deel).toLocaleString("nl-NL")} valt in box 3</strong> — over dit deel is de rente niet aftrekbaar.
+                    Indicatief verlies renteaftrek (4% rente, 36,97% tarief): <strong>€ {Math.round(c.box3Rente * 0.3697).toLocaleString("nl-NL")} per jaar</strong> minder aftrek.
+                    Oorzaak: EWR van € {Math.round(c.ewr).toLocaleString("nl-NL")} is niet volledig ingebracht.
+                    Oplossing: inbreng verhogen met € {Math.round(c.box3Deel).toLocaleString("nl-NL")} om box 3-deel te elimineren.
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+      <Field label="Bijzonderheden / toelichting" hint="Bijv. erfenis, schenking, verbouwing, overbrugging, bestaand samenlevingscontract">
+        <textarea style={{ ...inp, minHeight: 72, resize: "vertical" }} value={form.bijzonderheden} onChange={e => up("bijzonderheden", e.target.value)} placeholder="Optioneel..." />
+      </Field>
+
+      {/* Onderscheid verplichte vs. extra aflossingen */}
+      <div style={{ background: "#FFFBEB", border: `1.5px solid ${C.gold}`, borderRadius: 12, padding: 16, marginTop: 4 }}>
+        <div style={{ fontWeight: 700, color: C.navy, fontSize: 13, marginBottom: 10, fontFamily: fam.sans }}>
+          📋 Onderscheid verplichte vs. extra aflossingen — vergoedingsrecht
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {[
+            { titel: "Verplichte maandelijkse aflossing op gezamenlijk leningdeel", kleur: C.green, bg: C.greenLight, tekst: "Géén vergoedingsrecht — tenzij de meer-betalende partner het meerdere terugvordert binnen 1 jaar na afloop van het kalenderjaar. Daarna vervalt dit recht. Gevolg: beide partners delen evenredig in de overwaarde die door verplichte aflossingen is opgebouwd." },
+            { titel: "Extra (niet-verplichte) aflossing op gezamenlijk leningdeel", kleur: C.orange, bg: C.orangeLight, tekst: "Wél vergoedingsrecht — de aflossende partner heeft een vordering op de ander ter grootte van diens aandeel in de extra aflossing. Leg dit vast in de overeenkomst vergoedingsrechten, inclusief de waarderingsbasis (nominaal of proportioneel)." },
+            { titel: "Aflossing op leningdeel waarvoor ander draagplichtig is", kleur: C.red, bg: C.redLight, tekst: "Altijd vergoedingsrecht — de aflossende partner betaalt de schuld van de ander. Dit is een directe vordering op de wederpartij. Leg de opeisbaarheid vast: doorgaans bij verkoop of verdeling van de woning." },
+          ].map((r, i) => (
+            <div key={i} style={{ background: r.bg, borderLeft: `3px solid ${r.kleur}`, borderRadius: 8, padding: "10px 12px" }}>
+              <div style={{ fontWeight: 700, fontSize: 12, color: r.kleur, fontFamily: fam.sans, marginBottom: 4 }}>{r.titel}</div>
+              <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans, lineHeight: 1.55 }}>{r.tekst}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RESULT PANEL
+// ═══════════════════════════════════════════════════════════════════
+function ResultaatPanel({ form, advies, setTab }) {
+  // Gehuwd in gemeenschap: individuele benadering niet mogelijk
+  if (advies.geblokkeerd) {
+    return (
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(11,31,58,.1)", padding: 32 }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 20 }}>
+          <div style={{ fontSize: 36 }}>⚖️</div>
+          <div>
+            <Badge kleur="green" label="Niet van toepassing" />
+            <h3 style={{ margin: "10px 0 8px", color: C.navy, fontSize: 18, fontFamily: fam.serif }}>Individuele benadering niet mogelijk</h3>
+            <p style={{ margin: 0, fontSize: 13.5, color: C.textMid, lineHeight: 1.75, fontFamily: fam.sans }}>{advies.advies}</p>
+          </div>
+        </div>
+        <div style={{ background: C.blueLight, borderRadius: 10, padding: "14px 18px", borderLeft: `4px solid ${C.blue}` }}>
+          <div style={{ fontWeight: 700, color: C.blue, fontSize: 13, fontFamily: fam.sans, marginBottom: 6 }}>Wettelijke grondslag — art. 1:94 BW</div>
+          <p style={{ margin: 0, fontSize: 12.5, color: C.blue, fontFamily: fam.sans, lineHeight: 1.6 }}>
+            In een algehele gemeenschap van goederen zijn alle schulden en bezittingen van rechtswege gemeenschappelijk. Een interne draagplichtovereenkomst heeft hier geen juridisch effect: de hypotheekschuld is al 50/50 verdeeld conform de wet. Wil het stel de draagplicht individueel regelen, dan zijn <strong>huwelijkse voorwaarden</strong> nodig — dit vereist een notariële akte.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Hoofdkaart */}
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(11,31,58,.1)", padding: 28, marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: C.gray, textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: fam.sans }}>Advies voor</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: C.navy, margin: "4px 0 10px", fontFamily: fam.serif }}>{form.naam1 || "Aanvrager"} & {form.naam2 || "Partner"}</div>
+            <Badge kleur={advies.kleur} label={advies.niveau} />
+            <p style={{ fontSize: 13.5, color: C.textMid, lineHeight: 1.75, margin: "14px 0 0", fontFamily: fam.sans }}>{advies.advies}</p>
+          </div>
+          <RisicoMeter score={advies.totaal} />
+        </div>
+      </div>
+
+      {/* Risicofactoren */}
+      {advies.factoren.length > 0 && (
+        <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 18 }}>
+          <SectionH>Geïdentificeerde risicofactoren</SectionH>
+          {advies.factoren.map((f, i) => (
+            <div key={i} style={{ display: "flex", gap: 14, marginBottom: 14, padding: "12px 14px", background: f.kleur === "red" ? C.redLight : f.kleur === "orange" ? C.orangeLight : f.kleur === "blue" ? C.blueLight : C.greenLight, borderRadius: 10, borderLeft: `4px solid ${f.kleur === "red" ? C.red : f.kleur === "orange" ? C.orange : f.kleur === "blue" ? C.blue : C.green}` }}>
+              <div style={{ flexShrink: 0, fontWeight: 800, fontSize: 14, color: f.kleur === "red" ? C.red : f.kleur === "orange" ? C.orange : f.kleur === "blue" ? C.blue : C.green, marginTop: 1 }}>◆</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 3, fontFamily: fam.sans }}>{f.label}</div>
+                <div style={{ fontSize: 12.5, color: C.textMid, lineHeight: 1.6, fontFamily: fam.sans }}>{f.uitleg}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Samenvatting leningdelen */}
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 18 }}>
+        <SectionH>Leningdelen samenvatting</SectionH>
+        <div className="scenario-table" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: fam.sans }}>
+            <thead>
+              <tr style={{ background: C.navy }}>
+                {["#", "Bedrag", "Soort", "Recht", form.naam1 || "Aanvrager", form.naam2 || "Partner"].map(h => (
+                  <th key={h} style={{ color: C.goldLight, padding: "9px 12px", textAlign: "left", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {form.leningdelen.map((ld, i) => (
+                <tr key={i} style={{ background: i % 2 === 0 ? C.cream : C.white }}>
+                  <td style={{ padding: "10px 12px", color: C.textMid }}>{i + 1}</td>
+                  <td style={{ padding: "10px 12px" }}>€ {parseFloat(ld.bedrag || 0).toLocaleString("nl-NL")},-</td>
+                  <td style={{ padding: "10px 12px" }}>{ld.soort}</td>
+                  <td style={{ padding: "10px 12px" }}>{ld.recht === "oud" ? <span style={{ color: C.orange, fontWeight: 600 }}>Overgangsrecht</span> : "Nieuw recht"}</td>
+                  <td style={{ padding: "10px 12px" }}><strong>{ld.draag1}%</strong></td>
+                  <td style={{ padding: "10px 12px" }}><strong>{ld.draag2}%</strong></td>
+                </tr>
+              ))}
+              <tr style={{ background: C.navyGlass, fontWeight: 700 }}>
+                <td style={{ padding: "10px 12px" }} colSpan={2}>Totaal hypotheek: € {form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0), 0).toLocaleString("nl-NL")}</td>
+                <td colSpan={4} />
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Aanbevolen acties */}
+      <div style={{ background: C.navy, borderRadius: 16, padding: 24, marginBottom: 18 }}>
+        <div style={{ color: C.goldLight, fontWeight: 700, fontSize: 15, marginBottom: 16, fontFamily: fam.sans }}>Aanbevolen vervolgstappen</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+          {[
+            { icon: "📝", label: "Adviesrapport tekst", sub: "Selecteer de juiste paragraaf", tab: 3 },
+            { icon: "📄", label: "Documenten genereren", sub: "Draagplicht- en/of vergoedingsovereenkomst", tab: 4 },
+            { icon: "✅", label: "Dossier checklist", sub: "Controleer volledigheid dossier", tab: 5 },
+          ].map((a, i) => (
+            <button key={i} onClick={() => setTab(a.tab)} style={{ background: C.navyMid, border: `1px solid ${C.navyLight}`, borderRadius: 10, padding: 16, cursor: "pointer", textAlign: "left" }}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{a.icon}</div>
+              <div style={{ color: C.white, fontWeight: 700, fontSize: 13, fontFamily: fam.sans }}>{a.label}</div>
+              <div style={{ color: C.textLight, fontSize: 11.5, marginTop: 3, fontFamily: fam.sans }}>{a.sub}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB 2: ADVIESRAPPORT TEKSTEN
+// ═══════════════════════════════════════════════════════════════════
+function AdviesrapportTab({ form }) {
+  const [filter, setFilter] = useState("alle");
+  const [expanded, setExpanded] = useState(null);
+
+  const n1 = form?.naam1 || "[AANVRAGER]";
+  const n2 = form?.naam2 || "[PARTNER]";
+
+  const gevuld = (tekst) => tekst.replace("[AANVRAGER]", n1).replace("[PARTNER]", n2);
+
+  const tags = ["alle", "draagplicht", "vergoedingsrechten", "draagplicht+vergoedingsrechten", "scheiding"];
+  const gefilterd = ADVIES_TEKSTEN.filter(t => filter === "alle" || t.tag === filter);
+
+  const ev1 = parseFloat(form?.eigenVermogen1 || 0);
+  const ev2 = parseFloat(form?.eigenVermogen2 || 0);
+  const hasVergoeding = Math.abs(ev1 - ev2) > 500;
+  const isScheiding = form?.context === "scheiding";
+
+  const aanbevolen = (t) => {
+    if (isScheiding && t.tag === "scheiding") return true;
+    if (!isScheiding && hasVergoeding && t.id === "9") return true;
+    if (!isScheiding && !hasVergoeding && t.id === "5") return true;
+    return false;
+  };
+
+  return (
+    <div>
+      <div style={{ background: C.navy, borderRadius: 16, padding: 24, marginBottom: 24, display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ fontSize: 32 }}>📝</div>
+        <div>
+          <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: fam.sans }}>Adviesrapport</div>
+          <div style={{ color: C.white, fontSize: 19, fontWeight: 700, fontFamily: fam.serif }}>Adviesrapport Tekstbibliotheek</div>
+          <div style={{ color: C.textLight, fontSize: 12.5, marginTop: 2, fontFamily: fam.sans }}>13 kant-en-klare varianten — kopieer de passende tekst direct naar uw adviesrapport</div>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+        {tags.map(t => (
+          <button key={t} onClick={() => setFilter(t)} style={{ padding: "6px 14px", borderRadius: 20, border: `1.5px solid ${filter === t ? C.navy : C.border}`, background: filter === t ? C.navy : C.white, color: filter === t ? C.white : C.navy, fontWeight: filter === t ? 700 : 400, cursor: "pointer", fontSize: 12.5, fontFamily: fam.sans }}>
+            {t === "alle" ? "Alle" : t === "draagplicht" ? "Draagplicht" : t === "vergoedingsrechten" ? "Vergoedingsrechten" : t === "draagplicht+vergoedingsrechten" ? "Beide" : "Scheiding"}
+          </button>
+        ))}
+      </div>
+
+      {form?.naam1 && (
+        <InfoBox type="info">Varianten worden automatisch ingevuld met: <strong>{n1}</strong> en <strong>{n2}</strong></InfoBox>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {gefilterd.map((t) => {
+          const isOpen = expanded === t.id;
+          const isAanbevolen = aanbevolen(t);
+          const tekst = gevuld(t.tekst);
+          return (
+            <div key={t.id} style={{ background: C.white, borderRadius: 12, boxShadow: "0 2px 12px rgba(11,31,58,.06)", border: `1.5px solid ${isAanbevolen ? C.gold : C.border}`, overflow: "hidden" }}>
+              <div onClick={() => setExpanded(isOpen ? null : t.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", cursor: "pointer", userSelect: "none" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 700, color: C.navy, fontSize: 13.5, fontFamily: fam.sans }}>{t.id} — {t.label}</span>
+                    {isAanbevolen && <span style={{ background: C.goldPale, color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700, fontFamily: fam.sans }}>★ Aanbevolen</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.gray, marginTop: 3, fontFamily: fam.sans }}>{t.situatie}</div>
+                </div>
+                <span style={{ color: C.gray, fontSize: 16, marginLeft: 12 }}>{isOpen ? "▲" : "▼"}</span>
+              </div>
+              {isOpen && (
+                <div style={{ borderTop: `1px solid ${C.border}`, padding: "16px 18px" }}>
+                  <div style={{ background: C.cream, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.8, color: C.text, whiteSpace: "pre-wrap", fontFamily: fam.serif, marginBottom: 12 }}>
+                    {tekst}
+                  </div>
+                  <CopyBtn text={tekst} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB 3: DOCUMENTEN GENERATOR
+// ═══════════════════════════════════════════════════════════════════
+function DocumentenTab({ form }) {
+  const [docType, setDocType] = useState(form?.gewensteDocs || "draagplicht");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const generate = async () => {
+    setLoading(true);
+    setResult("");
+    try {
+      let prompt;
+      if (docType === "draagplicht") prompt = buildDraagplichtPrompt(form);
+      else if (docType === "vergoedingsrechten") prompt = buildVergoedingsrechtenPrompt(form);
+      else if (docType === "scheiding") prompt = buildScheidingPrompt(form);
+      else prompt = buildDraagplichtPrompt(form) + "\n\n---\n\nStel daarna ook een aparte OVEREENKOMST VERGOEDINGSRECHTEN op:\n\n" + buildVergoedingsrechtenPrompt(form);
+      const r = await callClaude(prompt);
+      setResult(r);
+    } catch (e) { setResult("Fout: " + e.message); }
+    setLoading(false);
+  };
+
+  const types = [
+    { value: "draagplicht", label: "Draagplichtovereenkomst", icon: "📋", sub: "Interne draagplicht per leningdeel" },
+    { value: "vergoedingsrechten", label: "Overeenkomst vergoedingsrechten", icon: "💰", sub: "Inbreng eigen vermogen, aflossingen, verbouwingen" },
+    { value: "beide", label: "Beide documenten", icon: "📑", sub: "Draagplicht én vergoedingsrechten" },
+    { value: "scheiding", label: "Scheidingscontext", icon: "⚖️", sub: "Tijdelijke afspraken tot verkoop/overname" },
+  ];
+
+  return (
+    <div>
+      <div style={{ background: C.navy, borderRadius: 16, padding: 24, marginBottom: 24, display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ fontSize: 32 }}>📄</div>
+        <div>
+          <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: fam.sans }}>AI Generator</div>
+          <div style={{ color: C.white, fontSize: 19, fontWeight: 700, fontFamily: fam.serif }}>Documenten Genereren</div>
+          <div style={{ color: C.textLight, fontSize: 12.5, marginTop: 2, fontFamily: fam.sans }}>Op basis van de ingevulde gegevens — altijd ter beoordeling door notaris/jurist</div>
+        </div>
+      </div>
+
+      {!form?.naam1 && (
+        <InfoBox type="warn">Vul eerst de wizard in (tabblad Analyse) om de gegevens te gebruiken voor het genereren. U kunt ook direct genereren met een generieke opzet.</InfoBox>
+      )}
+
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 18 }}>
+        <SectionH>Kies het te genereren document</SectionH>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
+          {types.map(t => (
+            <div key={t.value} onClick={() => setDocType(t.value)} style={{ border: `2px solid ${docType === t.value ? C.navy : C.border}`, borderRadius: 10, padding: 14, cursor: "pointer", background: docType === t.value ? C.navyGlass : C.white, transition: "all 0.15s" }}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{t.icon}</div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: C.navy, fontFamily: fam.sans }}>{t.label}</div>
+              <div style={{ fontSize: 11.5, color: C.gray, marginTop: 3, fontFamily: fam.sans }}>{t.sub}</div>
+            </div>
+          ))}
+        </div>
+        <button onClick={generate} disabled={loading} style={{ ...btnGold, opacity: loading ? 0.7 : 1, display: "flex", alignItems: "center", gap: 8 }}>
+          {loading ? "⏳ Genereren..." : "✨ Genereer document"}
+        </button>
+      </div>
+
+      {result && (
+        <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+            <SectionH>{types.find(t => t.value === docType)?.label} — Concept</SectionH>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ background: C.orangeLight, color: C.orange, padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: fam.sans }}>CONCEPT</span>
+              <CopyBtn text={result} />
+            </div>
+          </div>
+          <div style={{ background: C.cream, border: `1px solid ${C.border}`, borderRadius: 10, padding: "20px 24px", fontSize: 13, lineHeight: 2, color: C.text, whiteSpace: "pre-wrap", fontFamily: fam.serif, maxHeight: 600, overflowY: "auto" }}>
+            {result}
+          </div>
+          <div style={{ marginTop: 14, padding: "12px 16px", background: C.redLight, borderRadius: 8, borderLeft: `4px solid ${C.red}` }}>
+            <p style={{ margin: 0, fontSize: 12, color: C.red, fontWeight: 700, fontFamily: fam.sans }}>⚠️ Juridische disclaimer</p>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#7f1d1d", fontFamily: fam.sans }}>Dit concept is uitsluitend indicatief. De definitieve overeenkomst dient te worden opgesteld en/of getoetst door een notaris of juridisch adviseur. Het concept wijzigt geen rechten of verplichtingen.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB 4: DOSSIER CHECKLIST
+// ═══════════════════════════════════════════════════════════════════
+function DossierTab() {
+  const init = {};
+  CHECKLIST.forEach(s => s.items.forEach((item, i) => { init[`${s.sectie}-${i}`] = false; }));
+  const [checked, setChecked] = useState(init);
+
+  const toggle = (k) => setChecked(c => ({ ...c, [k]: !c[k] }));
+  const totaalItems = Object.keys(checked).length;
+  const afgerond = Object.values(checked).filter(Boolean).length;
+  const pct = Math.round((afgerond / totaalItems) * 100);
+
+  return (
+    <div>
+      <div style={{ background: C.navy, borderRadius: 16, padding: 24, marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <div style={{ fontSize: 32 }}>✅</div>
+            <div>
+              <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: fam.sans }}>AFM Dossier</div>
+              <div style={{ color: C.white, fontSize: 19, fontWeight: 700, fontFamily: fam.serif }}>Dossier Checklist</div>
+              <div style={{ color: C.textLight, fontSize: 12.5, marginTop: 2, fontFamily: fam.sans }}>Draagplichtovereenkomst — volledigheidscontrole</div>
+            </div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: pct === 100 ? "#4ADE80" : C.goldLight, fontFamily: fam.sans }}>{pct}%</div>
+            <div style={{ color: C.textLight, fontSize: 12, fontFamily: fam.sans }}>{afgerond}/{totaalItems} voltooid</div>
+          </div>
+        </div>
+        <div style={{ marginTop: 16, height: 8, background: C.navyLight, borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4ADE80" : C.gold, borderRadius: 4, transition: "width 0.4s" }} />
+        </div>
+      </div>
+
+      {CHECKLIST.map((sectie, si) => {
+        const items = sectie.items;
+        const done = items.filter((_, i) => checked[`${sectie.sectie}-${i}`]).length;
+        return (
+          <div key={si} style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ margin: 0, color: sectie.kleur, fontSize: 14, fontWeight: 700, fontFamily: fam.sans }}>{sectie.sectie}</h3>
+              <span style={{ fontSize: 12, fontFamily: fam.sans, background: done === items.length ? C.greenLight : C.grayLight, color: done === items.length ? C.green : C.gray, padding: "3px 10px", borderRadius: 20, fontWeight: 600 }}>{done}/{items.length}</span>
+            </div>
+            {items.map((item, i) => {
+              const k = `${sectie.sectie}-${i}`;
+              const isChecked = checked[k];
+              return (
+                <div key={i} onClick={() => toggle(k)} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 12px", borderRadius: 8, cursor: "pointer", background: isChecked ? C.greenLight : "transparent", marginBottom: 4, transition: "background 0.15s" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${isChecked ? C.green : C.border}`, background: isChecked ? C.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 }}>
+                    {isChecked && <span style={{ color: C.white, fontSize: 11, fontWeight: 900 }}>✓</span>}
+                  </div>
+                  <span style={{ fontSize: 13, color: isChecked ? C.green : C.text, lineHeight: 1.6, textDecoration: isChecked ? "line-through" : "none", fontFamily: fam.sans, transition: "color 0.15s" }}>{item}</span>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+
+      {pct === 100 && (
+        <div style={{ background: C.greenLight, border: `2px solid ${C.green}`, borderRadius: 16, padding: 20, textAlign: "center" }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+          <div style={{ fontWeight: 700, color: C.green, fontSize: 16, fontFamily: fam.sans }}>Dossier volledig!</div>
+          <div style={{ color: C.green, fontSize: 13, marginTop: 4, fontFamily: fam.sans }}>Alle controlepunten zijn afgevinkt. Het dossier is gereed.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB 5: KENNISBANK
+// ═══════════════════════════════════════════════════════════════════
+function KennisbankTab() {
+  const [open, setOpen] = useState(0);
+  const secties = [
+    {
+      icon: "⚖️", titel: "Wat is een draagplichtovereenkomst?", kleur: C.navy,
+      inhoud: `Als twee partners samen een hypotheek afsluiten, zijn zij jegens de bank allebei volledig aansprakelijk. Wat er intern tussen hen geldt — wie hoeveel draagt, wie recht heeft op de opbrengst bij verkoop — staat daar volledig los van. Zonder schriftelijke afspraken bepaalt de wet dat standaard: 50/50, ongeacht wie wat heeft ingebracht.
+
+Een draagplichtovereenkomst wijkt af van die wettelijke standaard (art. 6:10 BW). In de overeenkomst leggen partners onderling vast wie welk deel van de hypotheekschuld intern draagt. Dat kan afwijken van de eigendomsverdeling in het kadaster, en is met name van belang als er sprake is van ongelijke inbreng van eigen vermogen, een verschillend eigenwoningverleden, een ongelijke eigendomsverdeling of meerdere leningdelen met uiteenlopende fiscale eigenschappen.
+
+Kernpunt: de overeenkomst regelt uitsluitend de interne verhouding. De bank kan beide partners altijd aanspreken voor de volledige hypotheekschuld — dat verandert niet.`
+    },
+    {
+      icon: "🔢", titel: "Het eigenwoningverleden — 4 elementen", kleur: C.navyMid,
+      inhoud: `In het eigenwoningverleden kunnen vier zaken aanwezig zijn:
+
+1. Eigenwoningreserve (EWR)
+De EWR is de overwaarde die overblijft na verkoop: verkoopprijs minus resterende EWS en verkoopkosten. De EWR moet worden ingebracht bij aankoop van de nieuwe woning (bijleenregeling). Bij ongelijke eigendomsverdeling wordt de EWR naar rato verdeeld.
+
+2. 30-jaarsperiode (reeds genoten renteaftrekjaren)
+Hypotheekrente is maximaal 30 jaar aftrekbaar. Wie al eerder renteaftrek heeft gehad, heeft minder jaren over. Dit is persoonsgebonden en mag niet worden uitgewisseld zonder draagplichtovereenkomst.
+
+3. Overgangsrecht / BEWS (Bestaande Eigen Woningschuld)
+Hypotheken afgesloten vóór 1 januari 2013 vallen onder het overgangsrecht (art. 10bis.1 Wet IB 2001). Dit geeft recht op renteaftrek voor aflossingsvrije leningen. Het BEWS-bedrag mag maximaal gelijk zijn aan de resterende schuld op 31 december 2012.
+
+4. Aflossingsstanden
+De aflossingsstand geeft aan hoeveel er al is afgelost op de vorige lening. Dit bepaalt de maximale annuïtaire of lineaire lening bij de nieuwe woning (bijleenstand).`
+    },
+    {
+      icon: "📌", titel: "De kan-bepaling — overgangsrecht gezamenlijk toepassen", kleur: "#1D4ED8",
+      inhoud: `Artikel 10bis.1, derde lid Wet IB 2001 geeft partners de mogelijkheid om het overgangsrecht van één partner gezamenlijk toe te passen, naar rato van ieders aandeel in de schuld.
+
+Dit is een kan-bepaling: het is een keuze, geen verplichting.
+
+Wanneer relevant?
+Als één partner meer BEWS heeft dan zijn/haar aandeel in de schuld, of als de partner zonder overgangsrecht ook wil profiteren van de aflossingsvrije constructie.
+
+Gevolgen van de kan-bepaling:
+• Het overgangsrecht wordt definitief en onomkeerbaar verdeeld
+• De resterende renteaftrekjaren van de partner met overgangsrecht gaan deels mee over naar de andere partner
+• Leg de keuze altijd expliciet vast in de draagplichtovereenkomst en het dossier
+
+Advies: bespreek de kan-bepaling altijd expliciet met beide partners. Als het overgangsrecht gezamenlijk wordt toegepast, is het definitief verdeeld en kan dit niet worden teruggedraaid.`
+    },
+    {
+      icon: "✅", titel: "Wanneer is een draagplichtovereenkomst noodzakelijk?", kleur: C.green,
+      inhoud: `Een draagplichtovereenkomst is (sterk) aanbevolen of noodzakelijk bij:
+
+Ongehuwd samenwonenden
+Zonder overeenkomst geldt wettelijk 50/50 (art. 6:10 BW), ongeacht wie meer betaalt of inbrengt. Dit is de meest voorkomende situatie.
+
+Ongelijke inbreng eigen vermogen
+Als één partner meer eigen geld inbrengt, ontstaan vergoedingsrechten. De overeenkomst legt dit bewijsbaar vast — inclusief de waarderingsbasis (nominaal of proportioneel).
+
+Eigenwoningverleden bij één of beide partners
+Verschillende renteaftrekperioden en EWR's dreigen fiscaal te 'mengen'. Een draagplichtovereenkomst sluit dit expliciet uit en beschermt ieders fiscale positie.
+
+Overgangsrecht (BEWS) aanwezig
+Aflossingsvrij lenen met renteaftrek is persoonsgebonden. Door correcte toewijzing van leningdelen en draagplicht behoudt de rechthebbende partner zijn overgangsrecht.
+
+Meerdere leningdelen
+Expliciete toewijzing per leningdeel is nodig voor fiscale doelmatigheid.`
+    },
+    {
+      icon: "❌", titel: "Wanneer is een draagplichtovereenkomst minder relevant?", kleur: C.orange,
+      inhoud: `Gehuwd in algehele gemeenschap van goederen
+Bij dit huwelijksgoederenregime vallen woning en hypotheek van rechtswege in de gemeenschap. Alle schulden en bezittingen zijn al 50/50 gedeeld — een draagplichtovereenkomst heeft hier geen juridisch effect.
+
+Volledig gelijke situatie
+Als beide partners starter zijn, geen eigenwoningverleden hebben, een gelijk eigen vermogen inbrengen en 50/50 eigenaar worden, is het risico gering. Toch geldt ook hier: bij aankoop van een woning worden verwervingskosten altijd uit eigen middelen voldaan, waardoor er vrijwel altijd sprake is van enige ongelijkheid. Een kort gesprek met de adviseur is altijd zinvol.
+
+Kosten-batenafweging
+Notariële vastlegging kost extra geld. Bij een volledig symmetrische situatie kan een adviseur concluderen dat het risico beperkt is. Adviseer echter altijd om de afweging schriftelijk te documenteren — zowel voor de cliënt als ter bescherming van de adviseur.`
+    },
+    {
+      icon: "⚠️", titel: "Vervallen van de overeenkomst — trouwen", kleur: C.red,
+      inhoud: `Een draagplichtovereenkomst vervalt bij huwelijk in gemeenschap van goederen.
+
+Het gevolg is dat iedere partner alsnog draagplichtig wordt voor de helft van de schuld, ongeacht wat er in de overeenkomst stond. Vergoedingsrechten die zijn opgebouwd kunnen ook gedeeltelijk verloren gaan (voor de helft die in de gemeenschap valt).
+
+Om dit te voorkomen:
+Adviseer cliënten die plannen hebben om te trouwen om huwelijkse voorwaarden te maken. Daarin kan de draagplichtovereenkomst worden opgenomen of doorverwezen.
+
+Hetzelfde geldt voor het aangaan van een geregistreerd partnerschap zonder partnerschapsvoorwaarden.
+
+Adviseer ook: de overeenkomst moet worden herzien bij:
+• Verkoop van de woning
+• Aankoop van een nieuwe woning
+• Extra aflossing (niet periodiek)
+• Verbouwing met ongelijke inbreng
+• Huwelijk of geregistreerd partnerschap`
+    },
+    {
+      icon: "🏗️", titel: "Individuele benadering — wanneer mogelijk en wanneer niet?", kleur: C.navy,
+      inhoud: `De individuele benadering (draagplichtovereenkomst) is ALLEEN mogelijk als de woning NIET in een wettelijke gemeenschap van goederen valt (art. 1:94 BW).
+
+Wanneer WEL individueel benaderen:
+• Ongehuwde samenwoners (geen of met samenlevingscontract)
+• Gehuwd op huwelijkse voorwaarden (koude uitsluiting of beperkte gemeenschap)
+• Geregistreerd partnerschap met voorwaarden
+
+Wanneer NIET individueel benaderen:
+• Gehuwd in algehele gemeenschap van goederen — de woning en hypotheek vallen in de gemeenschap en zijn al van rechtswege 50/50 verdeeld. Een draagplichtovereenkomst heeft hier geen juridisch effect.
+
+Wil een koppel in gemeenschap tóch individueel regelen? Dan zijn huwelijkse voorwaarden nodig via een notariële akte. Hierin kan de draagplichtovereenkomst worden opgenomen of doorverwezen. Let op: huwelijkse voorwaarden vereisen een notarieel verleden akte en zijn niet via een onderhandse overeenkomst te regelen.`
+    },
+    {
+      icon: "📦", titel: "Box 3-deel in de hypotheek — bijleenregeling", kleur: "#DC2626",
+      inhoud: `Als een partner de eigenwoningreserve (EWR) niet volledig inbrengt bij aankoop van een nieuwe woning, ontstaat een box 3-deel in de hypotheek. Over dat deel is de rente NIET aftrekbaar.
+
+Berekening (bijleenregeling, art. 3.119aa Wet IB 2001):
+Maximale aftrekbare EWS = verwervingskosten × eigendomsaandeel − EWR + bijleenstand
+
+Voorbeeld: verwervingskosten €500.000, eigendom 50%, EWR €80.000, bijleenstand €0:
+Max EWS = €250.000 − €80.000 = €170.000
+
+Als de draagplicht van deze partner €200.000 is, dan:
+Box 3-deel = €200.000 − €170.000 = €30.000 (géén renteaftrek)
+Jaarlijks renteaftrekverlies (4% rente, 36,97% tarief) = €30.000 × 4% × 36,97% ≈ €444
+
+Drie oplossingen:
+1. EWR volledig inbrengen als eigen vermogen (elimineert box 3-deel)
+2. Draagplicht verlagen tot max. EWS (kleiner leningdeel)
+3. Bewust accepteren en documenteren
+
+Let op: ook bij trouwen zonder huwelijkse voorwaarden kan een hertoetsmoment leiden tot box 3-verhuizing van hypotheekdelen.`
+    },
+    {
+      icon: "⏱️", titel: "Verjaring van vergoedingsrechten (art. 3:306 BW)", kleur: "#7C3AED",
+      inhoud: `Bij ongehuwde samenwoners geldt de gewone verjaringstermijn van 5 jaar (art. 3:306 BW). Een vordering uit vergoedingsrecht verjaart 5 jaar na opeisbaarheid, tenzij tijdig gestuit.
+
+Bij gehuwden en geregistreerde partners: de verjaring loopt NIET tijdens het huwelijk/partnerschap (art. 3:321 lid 1 sub a BW). Dit is een fundamenteel verschil.
+
+Drie manieren om verjaring te voorkomen bij samenwoners:
+
+1. Anti-verjaringsbeding via notaris (sterkste optie)
+Een notariële akte bevat een beding dat verjaring uitsluit of uitstelt. Dit geeft permanente bescherming zolang de overeenkomst geldt. Vereist notariële medewerking.
+
+2. Periodieke stuiting (art. 3:317 BW)
+Stuiting door schriftelijke aanmaning of schriftelijke erkenning door de schuldenaar stuit de verjaring. De termijn begint opnieuw te lopen. Herhaal vóór elke 5-jaarstermijn. Leg de stuiting schriftelijk vast met datum.
+
+3. Draagplichtovereenkomst als civiele vastlegging
+Stuit de verjaring op zichzelf niet automatisch, maar is een bewijsmiddel. Combineer altijd met een van de bovenstaande opties.
+
+Praktisch advies: voer bij het opmaken van de overeenkomst een vaste stuitingsdatum in het dossier in. Stel een kalenderherinnering in voor 4,5 jaar na inbreng.`
+    },
+    {
+      icon: "🔄", titel: "Gevolgen van trouwen — 4 kritische punten", kleur: C.red,
+      inhoud: `Wanneer ongehuwde samenwoners met een draagplichtovereenkomst besluiten te trouwen ZONDER huwelijkse voorwaarden, treden er 4 kritische gevolgen op:
+
+1. Draagplichtovereenkomst vervalt van rechtswege
+De overeenkomst heeft geen effect meer. De wettelijke 50/50-verdeling treedt in werking alsof de overeenkomst nooit heeft bestaan.
+
+2. Alle leningdelen mengen naar de eigendomsverhouding
+Openstaande leningen worden gemengd conform de bezitsverhouding. De individuele toewijzing per leningdeel vervalt.
+
+3. Volledig eigenwoningverleden van beide partners mengt
+Inclusief niet-toegepaste aflossingsstanden, resterende renteaftrekjaren en BEWS van beide partners. Dit is definitief en kan niet worden teruggedraaid.
+
+4. Nieuw toetsmoment vereist — risico op box 3-verhuizing
+De hypotheek dient opnieuw beoordeeld te worden om te voorkomen dat leningdelen naar box 3 verhuizen doordat de EWS-grenzen verschuiven.
+
+Oplossing: huwelijkse voorwaarden (of partnerschapsvoorwaarden). Hierin kan de draagplichtovereenkomst worden doorverwezen of opgenomen. Dit is een notariële akte — tijdig te regelen, vóór het huwelijk.
+
+Let op: vergoedingsrechten die zijn opgebouwd als samenwoners kunnen voor de helft verloren gaan als ze in de huwelijksgemeenschap vallen. Een anti-verjaringsbeding voorafgaand aan het huwelijk is dan extra belangrijk.`
+    },
+    {
+      icon: "💳", titel: "Verplichte vs. extra aflossingen — vergoedingsrecht", kleur: C.orange,
+      inhoud: `De draagplichtovereenkomst regelt wie de hypotheekschuld draagt, maar niet altijd wie wat betaalt. Bij aflossingen ontstaan vergoedingsrechten — maar alleen in bepaalde situaties.
+
+Verplichte maandelijkse aflossing op een GEZAMENLIJK leningdeel:
+→ GEEN automatisch vergoedingsrecht
+Beide partners delen in de opgebouwde overwaarde, tenzij de meer-betalende partner het meerdere binnen 1 jaar na afloop van het kalenderjaar terugvordert. Daarna vervalt dit recht.
+
+Extra (niet-verplichte) aflossing op een GEZAMENLIJK leningdeel:
+→ WEL vergoedingsrecht
+De meer-betalende partner heeft een vordering op de ander ter grootte van diens aandeel in de extra aflossing. Leg de opeisbaarheid vast (doorgaans bij verkoop).
+
+Aflossing op een leningdeel waarvoor de ANDER draagplichtig is:
+→ ALTIJD vergoedingsrecht
+Dit is een directe betalingsverplichting die de ander overneemt. De vordering is onmiddellijk opeisbaar of bij verkoop, afhankelijk van de afspraken.
+
+Waarderingsbasis:
+• Nominaal: terugbetaling van het exact ingebrachte bedrag
+• Proportioneel: naar rato waardestijging woning (bijv. inbreng €50.000 op €300.000 woning = 1/6 deel; bij waardestijging naar €450.000 = vordering €75.000)
+
+Leg de keuze expliciet vast in de overeenkomst vergoedingsrechten. De notaris kan beide varianten passeren.`
+    },
+    {
+      icon: "🤝", titel: "Partnerregeling bij max. EWS-berekening", kleur: C.blue,
+      inhoud: `De partnerregeling (art. 3.111 lid 8 Wet IB 2001) staat toe dat fiscale partners elkaars EWS-ruimte benutten onder bepaalde voorwaarden. Dit is relevant bij de maximale EWS-berekening per partner.
+
+Standaard: elke partner heeft zijn/haar eigen maximale EWS op basis van eigen eigendomsaandeel, EWR en bijleenstand.
+
+Partnerregeling: als fiscale partners kunnen zij kiezen om de woning als gezamenlijke eigen woning aan te merken, waarbij de EWS-ruimte gezamenlijk wordt beoordeeld. Dit kan voordelig zijn als één partner meer EWS-ruimte heeft dan de ander.
+
+Voorwaarden voor de partnerregeling:
+• Beide zijn het gehele jaar fiscale partners (art. 1.2 Wet IB 2001)
+• De woning is de eigen woning van beiden (hoofdverblijf)
+• Keuze wordt gemaakt in de aangifte inkomstenbelasting
+
+Let op: bij een draagplichtovereenkomst kiest het paar bewust voor een individuele benadering, waarbij fiscale vermenging wordt uitgesloten. De partnerregeling en de draagplichtovereenkomst kunnen naast elkaar bestaan, maar de keuze dient bewust en gedocumenteerd te zijn.
+
+Advies: bespreek de partnerregeling altijd met de adviseur en/of belastingadviseur wanneer er sprake is van asymmetrische EWS-ruimte.`
+    },
+    {
+      icon: "🏛️", titel: "Wettelijk kader", kleur: C.gray,
+      inhoud: `Artikel 6:10 BW (hoofdregel):
+"Hoofdelijke schuldenaren zijn, ieder voor het gedeelte van de schuld dat hem in hun onderlinge verhouding aangaat, verplicht in de schuld bij te dragen."
+
+De wet stelt gelijke draagplicht als standaard bij gezamenlijke schulden. Partners kunnen hier contractueel van afwijken — dat is precies wat de draagplichtovereenkomst doet.
+
+Artikel 10bis.1 Wet IB 2001 (overgangsrecht):
+Regelt de renteaftrek voor leningen die voor 1 januari 2013 zijn aangegaan. Lid 3 bevat de kan-bepaling voor gezamenlijke toepassing.
+
+Bijleenregeling (art. 3.119a Wet IB 2001):
+Verplichte inbreng van de eigenwoningreserve bij aankoop van een nieuwe eigen woning. Bepaalt de maximale eigenwoningschuld.
+
+Tuchtrechtelijke aansprakelijkheid adviseur:
+Het niet signaleren van de noodzaak tot een draagplichtovereenkomst kan leiden tot tuchtrechtelijke aansprakelijkheid als cliënten schade lijden door verlies van renteaftrek of financiële claims.`
+    },
+  ];
+
+  return (
+    <div>
+      <div style={{ background: C.navy, borderRadius: 16, padding: 24, marginBottom: 24, display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ fontSize: 32 }}>📚</div>
+        <div>
+          <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: fam.sans }}>Kennisbank</div>
+          <div style={{ color: C.white, fontSize: 19, fontWeight: 700, fontFamily: fam.serif }}>Belang & Onbelang — Draagplichtovereenkomst</div>
+          <div style={{ color: C.textLight, fontSize: 12.5, marginTop: 2, fontFamily: fam.sans }}>Juridisch, fiscaal en praktisch overzicht voor de hypotheekadviseur</div>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {secties.map((s, i) => {
+          const isOpen = open === i;
+          return (
+            <div key={i} style={{ background: C.white, borderRadius: 14, boxShadow: "0 2px 14px rgba(11,31,58,.06)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
+              <div onClick={() => setOpen(isOpen ? -1 : i)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", cursor: "pointer", userSelect: "none" }}>
+                <span style={{ fontSize: 22 }}>{s.icon}</span>
+                <span style={{ flex: 1, fontWeight: 700, color: s.kleur, fontSize: 14, fontFamily: fam.sans }}>{s.titel}</span>
+                <span style={{ color: C.gray }}>{isOpen ? "▲" : "▼"}</span>
+              </div>
+              {isOpen && (
+                <div style={{ borderTop: `1px solid ${C.border}`, padding: "16px 20px" }}>
+                  <p style={{ margin: 0, fontSize: 13.5, color: C.textMid, lineHeight: 1.85, whiteSpace: "pre-wrap", fontFamily: fam.sans }}>{s.inhoud}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SCENARIO BEREKENINGS-HULPFUNCTIES
+// ═══════════════════════════════════════════════════════════════════
+
+function euro(n) {
+  if (!isFinite(n)) return "—";
+  return "€\u00A0" + Math.round(n).toLocaleString("nl-NL") + ",-";
+}
+
+function pct(n) {
+  if (!isFinite(n)) return "—";
+  return n.toFixed(2) + "%";
+}
+
+function bereken(form, verkoopprijs, renteperc, belastingtarief) {
+  const K  = (parseFloat(form?.aankoopprijs) || 0) + (parseFloat(form?.verwervingskosten) || 0);
+  const H  = (form?.leningdelen || []).reduce((s, l) => s + (parseFloat(l.bedrag) || 0), 0);
+  const E1 = (parseFloat(form?.eigendom1) || 50) / 100;
+  const E2 = 1 - E1;
+  const EV1 = parseFloat(form?.eigenVermogen1) || 0;
+  const EV2 = parseFloat(form?.eigenVermogen2) || 0;
+  const V   = parseFloat(verkoopprijs) || K * 1.15;
+  const r   = parseFloat(renteperc) / 100;
+  const t   = parseFloat(belastingtarief) / 100;
+
+  const D1 = (form?.leningdelen || []).reduce((s, l) =>
+    s + (parseFloat(l.bedrag) || 0) * (parseFloat(l.draag1) || 50) / 100, 0) || H * 0.5;
+  const D2 = H - D1;
+
+  const A = {
+    draag1: H * 0.5, draag2: H * 0.5,
+    opbrengst1: V * E1 - H * 0.5, opbrengst2: V * E2 - H * 0.5,
+    // EWR = verkoopprijs × eigendomsaandeel − eigenwoningschuld (draagplicht)
+    // Let op: EV NIET aftrekken — eigen inbreng zit al in de lagere draagplicht verdisconteerd.
+    // Bestaande EWR uit vorige woning NIET opgeteld (zie toelichting).
+    ewr1: Math.max(0, V * E1 - H * 0.5), ewr2: Math.max(0, V * E2 - H * 0.5),
+    rente1: H * 0.5 * r, rente2: H * 0.5 * r,
+    // Hypotheekrenteaftrek: per 2023 maximaal tarief schijf 1 (36,97%) voor iedereen.
+    aftrek1: H * 0.5 * r * t, aftrek2: H * 0.5 * r * t,
+  };
+
+  const B = {
+    draag1: D1, draag2: D2,
+    opbrengst1: V * E1 - D1, opbrengst2: V * E2 - D2,
+    ewr1: Math.max(0, V * E1 - D1), ewr2: Math.max(0, V * E2 - D2),
+    rente1: D1 * r, rente2: D2 * r,
+    aftrek1: D1 * r * t, aftrek2: D2 * r * t,
+  };
+
+  const diff1 = { draag: B.draag1-A.draag1, opbrengst: B.opbrengst1-A.opbrengst1, ewr: B.ewr1-A.ewr1, aftrek: B.aftrek1-A.aftrek1 };
+  const diff2 = { draag: B.draag2-A.draag2, opbrengst: B.opbrengst2-A.opbrengst2, ewr: B.ewr2-A.ewr2, aftrek: B.aftrek2-A.aftrek2 };
+
+  const eerlijk1 = Math.max(0, K * E1 - EV1);
+  const eerlijk2 = Math.max(0, K * E2 - EV2);
+  const schenkingAan1 = eerlijk1 > D1 ? eerlijk1 - D1 : 0;
+  const schenkingAan2 = eerlijk2 > D2 ? eerlijk2 - D2 : 0;
+
+  const VRIJSTELLING_JAARLIJKS = 6633;
+  const SCHIJF1_GRENS = 152368;
+  function berekenSB(bedrag) {
+    if (bedrag <= VRIJSTELLING_JAARLIJKS) return 0;
+    const b = bedrag - VRIJSTELLING_JAARLIJKS;
+    return b <= SCHIJF1_GRENS ? b * 0.10 : SCHIJF1_GRENS * 0.10 + (b - SCHIJF1_GRENS) * 0.20;
+  }
+
+  // Geen schenkbelasting tussen gehuwden/geregistreerd partnerschap (art. 33 lid 5 SW 1956)
+  const geenSbTussenPartners = ["gehuwd_gemeen", "gehuwd_koude", "gehuwd_beperkt", "geregistreerd"]
+    .includes(form?.relatievorm);
+
+  const rechtvaardigingen = [];
+  // Besluit Staatssecretaris van Financiën 30 januari 2018 (nr. 2018-3514):
+  // draagplicht gebaseerd op EWV/BEWS/eigen inbreng wordt NIET als schenking aangemerkt.
+  if ((form?.ewv1 || form?.ewv2) && (parseFloat(form?.bews1) > 0 || parseFloat(form?.bews2) > 0))
+    rechtvaardigingen.push("BEWS-toewijzing o.b.v. overgangsrecht (art. 10bis.1 Wet IB 2001) — gedekt door Besluit 30-1-2018");
+  if (Math.abs(EV1 - EV2) > 500)
+    rechtvaardigingen.push(`Ongelijke inbreng eigen vermogen (€\u00A0${Math.round(Math.abs(EV1-EV2)).toLocaleString("nl-NL")} verschil) — gedekt door Besluit 30-1-2018`);
+  if (Math.abs(E1 - 0.5) > 0.01)
+    rechtvaardigingen.push(`Ongelijke eigendomsverdeling (${Math.round(E1*100)}/${Math.round(E2*100)}) — zakelijke grondslag`);
+  if ((form?.ewv1 || false) !== (form?.ewv2 || false))
+    rechtvaardigingen.push("Asymmetrisch eigenwoningverleden — renteaftrekjaren ongelijk, zakelijke grondslag");
+
+  // Bestaande EWR uit vorige woning (cumulatief — telt op bij nieuwe EWR)
+  const ewrOud1 = parseFloat(form?.ewr1 || 0);
+  const ewrOud2 = parseFloat(form?.ewr2 || 0);
+
+  // ── SCENARIO C: Individueel MÉT kan-bepaling (alleen als BEWS aanwezig) ──
+  // Kan-bepaling: BEWS wordt naar rato schuldaandeel over beide partners verdeeld
+  const bews1 = parseFloat(form?.bews1 || 0);
+  const bews2 = parseFloat(form?.bews2 || 0);
+  const heeftBEWS = bews1 > 0 || bews2 > 0;
+  // Bij kan-bepaling: overgangsrecht-leningdelen worden naar rato verdeeld over totale schuld
+  // Draagplicht wijzigt niet (dat is civiel), maar de BEWS wordt gezamenlijk toegepast
+  // Fiscaal effect: renteaftrekjaren van partner MET bews gaan deels over op partner ZONDER bews
+  const jaren1 = parseFloat(form?.jaren1 || 30);
+  const jaren2 = parseFloat(form?.jaren2 || 30);
+  // Gewogen resterende renteaftrekjaren bij kan-bepaling (naar rato schuldaandeel)
+  const kanJaren1 = H > 0 ? (D1 / H * jaren1 + D2 / H * jaren2) : jaren1;
+  const kanJaren2 = H > 0 ? (D1 / H * jaren1 + D2 / H * jaren2) : jaren2;
+  // Indicatieve aftrek-impact: resterende jaren worden gedeeld
+  const C_aftrek1 = D1 * r * t * (kanJaren1 / 30);
+  const C_aftrek2 = D2 * r * t * (kanJaren2 / 30);
+
+  const C_scenario = heeftBEWS ? {
+    draag1: D1, draag2: D2,
+    opbrengst1: V * E1 - D1, opbrengst2: V * E2 - D2,
+    ewr1: Math.max(0, V * E1 - D1), ewr2: Math.max(0, V * E2 - D2),
+    rente1: D1 * r, rente2: D2 * r,
+    aftrek1: C_aftrek1, aftrek2: C_aftrek2,
+    kanJaren1, kanJaren2,
+  } : null;
+
+  return { A, B, C: C_scenario, heeftBEWS, diff1, diff2, K, H, E1, E2, EV1, EV2, D1, D2, V,
+    eerlijk1, eerlijk2, schenkingAan1, schenkingAan2,
+    belasting1: geenSbTussenPartners ? 0 : berekenSB(schenkingAan1),
+    belasting2: geenSbTussenPartners ? 0 : berekenSB(schenkingAan2),
+    geenSbTussenPartners, ewrOud1, ewrOud2,
+    rechtvaardigingen, VRIJSTELLING_JAARLIJKS };
+}
+
+const thS = { padding: "9px 14px", textAlign: "left", fontWeight: 600, fontSize: 12, fontFamily: "sans-serif", borderBottom: "1px solid #D9D0BF" };
+const tdS = { padding: "10px 14px", fontSize: 13, fontFamily: "sans-serif", verticalAlign: "top" };
+
+// ═══════════════════════════════════════════════════════════════════
+// SCHENKBELASTING CHECK
+// ═══════════════════════════════════════════════════════════════════
+function SchenkbelastingCheck({ calc, n1, n2 }) {
+  const VRIJSTELLING = calc.VRIJSTELLING_JAARLIJKS;
+  const heeft1 = !calc.geenSbTussenPartners && calc.schenkingAan1 > 100;
+  const heeft2 = !calc.geenSbTussenPartners && calc.schenkingAan2 > 100;
+  const heeftRisico = heeft1 || heeft2;
+  const heeftRechtvaardiging = calc.rechtvaardigingen.length > 0;
+
+  return (
+    <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+      <SectionH sub="Risico-analyse conform art. 1 lid 1 sub f Successiewet 1956 & Besluit 30-1-2018">Schenkbelasting risico-check</SectionH>
+
+      {calc.geenSbTussenPartners ? (
+        <div style={{ padding: "16px 20px", background: C.greenLight, borderRadius: 12, border: `1.5px solid ${C.green}`, marginBottom: 16 }}>
+          <span style={{ fontWeight: 700, color: C.green, fontFamily: fam.sans }}>✓ Schenkbelasting niet van toepassing</span>
+          <p style={{ margin: "6px 0 0", fontSize: 12.5, color: C.green, fontFamily: fam.sans }}>
+            Schenkingen tussen echtgenoten en geregistreerde partners zijn vrijgesteld van schenkbelasting (art. 33 lid 5 Successiewet 1956). Een draagplichtovereenkomst leidt bij deze relatievorm niet tot schenkbelasting.
+          </p>
+        </div>
+      ) : (
+        <>
+          <InfoBox type="info">
+            <strong>Besluit Staatssecretaris van Financiën 30 januari 2018 (nr. 2018-3514):</strong> Een draagplichtovereenkomst die is gebaseerd op ongelijke inbreng van eigen vermogen of eigenwoningverleden wordt door de Belastingdienst <em>niet</em> als schenking aangemerkt. Afwijking zonder zakelijke grondslag kan wél schenkbelasting uitlokken (art. 1 lid 1 sub f SW 1956). De berekening hieronder is indicatief en beoordeelt het risico bij de huidige gegevens. De schenking crystalliseert eenmalig bij verkoop of overdracht van de woning — niet jaarlijks. Jaarlijkse vrijstelling 2025: € {VRIJSTELLING.toLocaleString("nl-NL")}.
+          </InfoBox>
+
+          <div className="scenario-table" style={{ overflowX: "auto", marginBottom: 20, WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: fam.sans }}>
+              <thead>
+                <tr style={{ background: C.navy }}>
+                  {["", n1, n2].map(h => (
+                    <th key={h} style={{ color: C.goldLight, padding: "9px 14px", textAlign: "left", fontSize: 11.5, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Eigendomsaandeel", pct(calc.E1*100), pct(calc.E2*100)],
+                  ["Eigen inbreng", euro(calc.EV1), euro(calc.EV2)],
+                  ["'Eerlijke' draagplicht *", euro(calc.eerlijk1), euro(calc.eerlijk2)],
+                  ["Werkelijke draagplicht (individueel)", euro(calc.D1), euro(calc.D2)],
+                  ["Afwijking (+ = méér, − = minder)", euro(calc.D1-calc.eerlijk1), euro(calc.D2-calc.eerlijk2)],
+                ].map(([l, v1, v2], i) => {
+                  const isAfw = l.startsWith("Afwijking");
+                  const afw1 = calc.D1-calc.eerlijk1, afw2 = calc.D2-calc.eerlijk2;
+                  return (
+                    <tr key={i} style={{ background: i%2===0 ? C.cream : C.white, borderBottom: isAfw ? `2px solid ${C.border}` : `1px solid ${C.grayMid}` }}>
+                      <td style={{ ...tdS, fontWeight: isAfw?700:400, color: isAfw?C.navy:C.textMid }}>{l}</td>
+                      <td style={{ ...tdS, fontWeight: isAfw?700:400, color: isAfw?(afw1<-100?C.green:afw1>100?C.red:C.gray):C.text }}>{v1}</td>
+                      <td style={{ ...tdS, fontWeight: isAfw?700:400, color: isAfw?(afw2<-100?C.green:afw2>100?C.red:C.gray):C.text }}>{v2}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div style={{ fontSize: 11, color: C.gray, marginTop: 6, fontFamily: fam.sans }}>
+              * "Eerlijke draagplicht" = max(0, verwervingskosten × eigendomsaandeel − eigen inbreng). Het deel hypotheek dat een partner draagt als lasten zuiver naar rato eigendom en inbreng worden verdeeld. Afwijking met zakelijke grondslag is op grond van Besluit 30-1-2018 géén schenking.
+            </div>
+          </div>
+
+          {heeftRisico ? (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, color: C.navy, fontSize: 14, marginBottom: 12, fontFamily: fam.sans }}>Mogelijke schenkingen gedetecteerd</div>
+              <div className="rg2">
+                {[
+                  { naam: n1, schenking: calc.schenkingAan1, belasting: calc.belasting1, van: n2, heeft: heeft1 },
+                  { naam: n2, schenking: calc.schenkingAan2, belasting: calc.belasting2, van: n1, heeft: heeft2 },
+                ].map((p, i) => (
+                  <div key={i} style={{ borderRadius: 12, border: `2px solid ${p.heeft ? C.red : C.border}`, overflow: "hidden" }}>
+                    <div style={{ background: p.heeft ? C.redLight : C.grayLight, padding: "10px 14px" }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: p.heeft ? C.red : C.gray, fontFamily: fam.sans }}>
+                        {p.heeft ? `⚠️ Schenking aan ${p.naam}` : `✓ ${p.naam} — geen risico`}
+                      </span>
+                    </div>
+                    {p.heeft && (
+                      <div style={{ padding: 14 }}>
+                        <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans, marginBottom: 10 }}>
+                          {p.van} draagt {euro(p.schenking)} méér dan zijn/haar eerlijk aandeel. Dit voordeel voor {p.naam} kan bij verkoop als eenmalige schenking worden aangemerkt (art. 1 lid 1 sub f SW 1956).
+                        </div>
+                        <div className="rg3" style={{ marginBottom: 10 }}>
+                          {[["Schenkingsbedrag", euro(p.schenking)], ["Vrijstelling 2025", euro(VRIJSTELLING)], ["Belastbaar", euro(Math.max(0, p.schenking-VRIJSTELLING))]].map(([l, v]) => (
+                            <div key={l} style={{ background: C.grayLight, borderRadius: 7, padding: "8px 10px" }}>
+                              <div style={{ fontSize: 10, color: C.gray, textTransform: "uppercase", fontFamily: fam.sans }}>{l}</div>
+                              <div style={{ fontWeight: 700, fontSize: 13, color: C.navy, fontFamily: fam.sans, marginTop: 2 }}>{v}</div>
+                            </div>
+                          ))}
+                        </div>
+                        {p.schenking > VRIJSTELLING && (
+                          <div style={{ padding: "10px 12px", background: C.redLight, borderRadius: 8, borderLeft: `3px solid ${C.red}` }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: C.red, fontFamily: fam.sans }}>
+                              Indicatieve schenkbelasting (eenmalig bij verkoop): {euro(p.belasting)}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#7f1d1d", marginTop: 3, fontFamily: fam.sans }}>
+                              Tarief: 10% over €{Math.min(p.schenking-VRIJSTELLING, 152368).toLocaleString("nl-NL")}
+                              {p.schenking-VRIJSTELLING > 152368 ? ` + 20% over €${(p.schenking-VRIJSTELLING-152368).toLocaleString("nl-NL")},-` : ""}
+                              {" "}(niet-familierelatie ongehuwd samenwoners)
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding: "16px 20px", background: C.greenLight, borderRadius: 12, border: `1.5px solid ${C.green}`, marginBottom: 16 }}>
+              <span style={{ fontWeight: 700, color: C.green, fontFamily: fam.sans }}>✓ Geen schenkbelasting-risico gedetecteerd</span>
+              <p style={{ margin: "6px 0 0", fontSize: 12.5, color: C.green, fontFamily: fam.sans }}>De werkelijke draagplicht is in lijn met eigendomsaandeel en eigen inbreng van beide partners.</p>
+            </div>
+          )}
+
+          <div style={{ background: "#FFFBEB", border: `1.5px solid ${C.gold}`, borderRadius: 12, padding: 18 }}>
+            <div style={{ fontWeight: 700, color: C.navy, fontSize: 13, marginBottom: 10, fontFamily: fam.sans }}>
+              {heeftRechtvaardiging
+                ? "✓ Zakelijke rechtvaardigingen aanwezig — Besluit 30-1-2018 van toepassing"
+                : heeftRisico ? "⚠️ Geen zakelijke rechtvaardiging vastgesteld"
+                : "Zakelijke rechtvaardiging — n.v.t."}
+            </div>
+            {heeftRechtvaardiging ? (
+              <>
+                <p style={{ margin: "0 0 10px", fontSize: 12.5, color: C.textMid, fontFamily: fam.sans }}>
+                  Op grond van het Besluit van 30 januari 2018 (nr. 2018-3514) worden onderstaande factoren niet als schenking aangemerkt. Leg ze expliciet vast in de overeenkomst en het dossier:
+                </p>
+                {calc.rechtvaardigingen.map((r, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                    <span style={{ color: C.green, fontWeight: 700 }}>✓</span>
+                    <span style={{ fontSize: 12.5, color: C.text, fontFamily: fam.sans }}>{r}</span>
+                  </div>
+                ))}
+                <div style={{ marginTop: 12, padding: "10px 14px", background: C.greenLight, borderRadius: 8 }}>
+                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600, fontFamily: fam.sans }}>Risiconiveau: Gemitigeerd — zakelijke rechtvaardiging gedekt door Besluit 30-1-2018. Leg dit vast in overeenkomst én dossier.</span>
+                </div>
+              </>
+            ) : heeftRisico ? (
+              <>
+                <p style={{ margin: "0 0 10px", fontSize: 12.5, color: C.textMid, fontFamily: fam.sans }}>Er is een draagplichtafwijking zonder duidelijke zakelijke grondslag. Overweeg:</p>
+                {[
+                  "Leg de reden voor de afwijkende draagplicht expliciet vast in de overeenkomst",
+                  "Bespreek met de notaris of de constructie schenkbelastingvrij kan worden ingericht",
+                  "Controleer of de situatie valt onder het Besluit van 30 januari 2018 (nr. 2018-3514)",
+                  "Pas de draagplicht aan zodat die overeenkomt met eigendom en inbreng",
+                ].map((t, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                    <span style={{ color: C.orange }}>→</span>
+                    <span style={{ fontSize: 12.5, color: C.text, fontFamily: fam.sans }}>{t}</span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <p style={{ margin: 0, fontSize: 12.5, color: C.textMid, fontFamily: fam.sans }}>Er is geen schenkbelasting-risico — een zakelijke rechtvaardiging is niet vereist.</p>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SCENARIO VERGELIJKING TAB
+// ═══════════════════════════════════════════════════════════════════
+function ScenarioVergelijkingTab({ form }) {
+  const K = (parseFloat(form?.aankoopprijs) || 0) + (parseFloat(form?.verwervingskosten) || 0);
+  const [verkoopprijs, setVerkoopprijs] = useState(String(Math.round(K * 1.15) || ""));
+  const [renteperc, setRenteperc] = useState("4.0");
+  const [belastingtarief, setBelastingtarief] = useState("36.97");
+  const [actieveKolom, setActieveKolom] = useState("opbrengst");
+
+  const n1 = form?.naam1 || "Aanvrager";
+  const n2 = form?.naam2 || "Partner";
+  const calc = bereken(form, verkoopprijs, renteperc, belastingtarief);
+  const heeftData = calc.H > 0 && K > 0;
+
+  const Vbase = parseFloat(verkoopprijs) || K * 1.15;
+  const scenarios_vp = [
+    { label: "−15% (daling)", V: Vbase * 0.85 },
+    { label: "Ingevoerde prijs", V: Vbase },
+    { label: "+15% (stijging)", V: Vbase * 1.15 },
+    { label: "+30% (stijging)", V: Vbase * 1.30 },
+  ];
+
+  const KOLOMMEN = [
+    { id: "opbrengst", label: "Netto opbrengst bij verkoop", hint: "Eigendomswaarde (verkoopprijs × eigendomsaandeel) minus resterende hypotheekschuld (draagplicht). Eigen inbreng zit in de lagere draagplicht verdisconteerd." },
+    { id: "ewr", label: "Nieuwe EWR (deze woning)", hint: "Eigenwoningreserve = verkoopprijs × eigendomsaandeel − draagplicht. Indicatief — bestaande EWR uit vorige woning en verkoopkosten niet meegerekend. Zie bijleenregeling (art. 3.119aa Wet IB 2001)." },
+    { id: "aftrek", label: "Jaarlijkse renteaftrek", hint: "Renteaftrek = draagplicht × rente × 36,97% (wettelijk maximum per 2023, art. 3.120 Wet IB 2001). Gebaseerd op initieel leningbedrag." },
+  ];
+
+  function getVal(scenario, partner, kolom) {
+    if (kolom === "opbrengst") return partner === 1 ? scenario.opbrengst1 : scenario.opbrengst2;
+    if (kolom === "ewr")       return partner === 1 ? scenario.ewr1       : scenario.ewr2;
+    if (kolom === "aftrek")    return partner === 1 ? scenario.aftrek1    : scenario.aftrek2;
+    return 0;
+  }
+
+  function diffTeken(v) {
+    if (Math.abs(v) < 50) return <span style={{ color: C.gray }}>≈ 0</span>;
+    return <span style={{ color: v > 0 ? C.green : C.red, fontWeight: 700 }}>{(v > 0 ? "+" : "") + euro(v)}</span>;
+  }
+
+  function TableRow({ vpObj }) {
+    const c = bereken(form, String(vpObj.V), renteperc, belastingtarief);
+    const d1 = getVal(c.B, 1, actieveKolom) - getVal(c.A, 1, actieveKolom);
+    const d2 = getVal(c.B, 2, actieveKolom) - getVal(c.A, 2, actieveKolom);
+    return (
+      <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+        <td style={tdS}>{vpObj.label}<br/><span style={{ fontSize: 11, color: C.gray }}>€ {Math.round(vpObj.V).toLocaleString("nl-NL")}</span></td>
+        <td style={{ ...tdS, color: C.textMid }}>{euro(getVal(c.A, 1, actieveKolom))}</td>
+        <td style={{ ...tdS, color: C.textMid }}>{euro(getVal(c.A, 2, actieveKolom))}</td>
+        <td style={{ ...tdS, fontWeight: 700, color: C.green }}>{euro(getVal(c.B, 1, actieveKolom))}</td>
+        <td style={{ ...tdS, fontWeight: 700, color: C.green }}>{euro(getVal(c.B, 2, actieveKolom))}</td>
+        {c.heeftBEWS && c.C && <td style={{ ...tdS, fontWeight: 700, color: "#7C3AED" }}>{euro(getVal(c.C, 1, actieveKolom))}</td>}
+        {c.heeftBEWS && c.C && <td style={{ ...tdS, fontWeight: 700, color: "#7C3AED" }}>{euro(getVal(c.C, 2, actieveKolom))}</td>}
+        <td style={tdS}>{diffTeken(d1)}</td>
+        <td style={tdS}>{diffTeken(d2)}</td>
+      </tr>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ background: C.navy, borderRadius: 16, padding: 24, marginBottom: 24, display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ fontSize: 32 }}>⚖️</div>
+        <div>
+          <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", fontFamily: fam.sans }}>Informed Consent</div>
+          <div style={{ color: C.white, fontSize: 19, fontWeight: 700, fontFamily: fam.serif }}>Scenario's & Schenkbelasting</div>
+          <div style={{ color: C.textLight, fontSize: 12.5, marginTop: 2, fontFamily: fam.sans }}>Wettelijke regeling (50/50) vs. individuele benadering — inclusief schenkbelasting-check</div>
+        </div>
+      </div>
+
+      {!heeftData && <InfoBox type="warn">Vul eerst aankoopprijs, leningdelen en eigen vermogen in via de Analyse-wizard.</InfoBox>}
+
+      {/* Parameters */}
+      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+        <SectionH sub="Parameters voor de vergelijkingsberekeningen">Berekeningsparameters</SectionH>
+        <div className="rg3">
+          <Field label="Verwachte verkoopprijs (€)" hint="Standaard: aankoopprijs + 15%">
+            <input style={inp} type="number" value={verkoopprijs} onChange={e => setVerkoopprijs(e.target.value)} placeholder={String(Math.round(K*1.15))} />
+          </Field>
+          <Field label="Hypotheekrente (%)" hint="Gemiddelde rente over de looptijd">
+            <input style={inp} type="number" step="0.1" value={renteperc} onChange={e => setRenteperc(e.target.value)} placeholder="4.0" />
+          </Field>
+          <Field label="Renteaftrekpercentage (%)" hint="Wettelijk max. 36,97% voor iedereen (art. 3.120 jo. 2.10a Wet IB 2001, v.a. 2023)">
+            <select style={sel} value={belastingtarief} onChange={e => setBelastingtarief(e.target.value)}>
+              <option value="36.97">36,97% — wettelijk maximum (schijf 1 tarief 2025)</option>
+              <option value="31.00">31,00% — lager tarief (bijv. pensioengerechtigden schijf 1)</option>
+            </select>
+          </Field>
+        </div>
+
+        <div className="rg2" style={{ marginTop: 16 }}>
+          {[{ naam: n1, D: calc.D1, E: calc.E1, EV: calc.EV1 }, { naam: n2, D: calc.D2, E: calc.E2, EV: calc.EV2 }].map((p, i) => (
+            <div key={i} style={{ background: C.grayLight, borderRadius: 10, padding: 14 }}>
+              <div style={{ fontWeight: 700, color: C.navy, fontSize: 13, marginBottom: 8, fontFamily: fam.sans }}>{p.naam}</div>
+              <div className="rg2">
+                {[["Eigendom", pct(p.E*100)], ["Eigen inbreng", euro(p.EV)], ["Draagplicht A (50/50)", euro(calc.H*0.5)], ["Draagplicht B (ind.)", euro(p.D)]].map(([l, v]) => (
+                  <div key={l} style={{ background: C.white, borderRadius: 7, padding: "8px 10px" }}>
+                    <div style={{ fontSize: 10.5, color: C.gray, fontFamily: fam.sans, textTransform: "uppercase", letterSpacing: "0.04em" }}>{l}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: C.navy, fontFamily: fam.sans, marginTop: 2 }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scenario vergelijkingstabel */}
+      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+        <SectionH sub="Vier verkoopprijzen × twee scenario's — toon dit aan cliënten (informed consent)">Scenario vergelijking</SectionH>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+          {KOLOMMEN.map(k => (
+            <button key={k.id} onClick={() => setActieveKolom(k.id)} style={{ padding: "7px 14px", borderRadius: 20, border: `1.5px solid ${actieveKolom===k.id ? C.navy : C.border}`, background: actieveKolom===k.id ? C.navy : C.white, color: actieveKolom===k.id ? C.white : C.navy, fontFamily: fam.sans, fontSize: 12.5, fontWeight: 600, cursor: "pointer" }}>
+              {k.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ fontSize: 12, color: C.gray, marginBottom: 14, fontFamily: fam.sans }}>{KOLOMMEN.find(k => k.id === actieveKolom)?.hint}</div>
+
+        <div className="scenario-table" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: fam.sans }}>
+            <thead>
+              <tr style={{ background: C.grayLight }}>
+                <th style={{ ...thS, width: "15%" }}>Verkoopprijs</th>
+                <th style={{ ...thS, color: C.textMid }} colSpan={2}>Scenario A — Wettelijk 50/50<div style={{ fontWeight: 400, fontSize: 11 }}>Zonder overeenkomst</div></th>
+                <th style={{ ...thS, color: C.green }} colSpan={2}>Scenario B — Individueel<div style={{ fontWeight: 400, fontSize: 11 }}>Zonder kan-bepaling</div></th>
+                {calc.heeftBEWS && <th style={{ ...thS, color: "#7C3AED" }} colSpan={2}>Scenario C — Individueel + kan-bepaling<div style={{ fontWeight: 400, fontSize: 11 }}>Overgangsrecht gezamenlijk</div></th>}
+                <th style={thS} colSpan={2}>Verschil B − A<div style={{ fontWeight: 400, fontSize: 11 }}>Effect overeenkomst</div></th>
+              </tr>
+              <tr style={{ background: "#F0F0EC", borderBottom: `2px solid ${C.border}` }}>
+                <th style={thS}></th>
+                <th style={{ ...thS, color: C.textMid }}>{n1}</th>
+                <th style={{ ...thS, color: C.textMid }}>{n2}</th>
+                <th style={{ ...thS, color: C.green }}>{n1}</th>
+                <th style={{ ...thS, color: C.green }}>{n2}</th>
+                {calc.heeftBEWS && <th style={{ ...thS, color: "#7C3AED", fontSize: 11 }}>{n1}</th>}
+                {calc.heeftBEWS && <th style={{ ...thS, color: "#7C3AED", fontSize: 11 }}>{n2}</th>}
+                <th style={{ ...thS, fontSize: 11 }}>{n1}</th>
+                <th style={{ ...thS, fontSize: 11 }}>{n2}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scenarios_vp.map((vp, i) => <TableRow key={i} vpObj={vp} />)}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ marginTop: 14, padding: "10px 14px", background: C.blueLight, borderRadius: 8, fontSize: 12, color: C.blue, fontFamily: fam.sans }}>
+          <strong>Toelichting:</strong> Scenario A = wettelijk 50/50 (zonder overeenkomst). Scenario B = individuele draagplicht zonder kan-bepaling. {calc.heeftBEWS ? "Scenario C = individueel mét kan-bepaling: overgangsrecht (BEWS) wordt naar rato schuldaandeel over beide partners verdeeld — onomkeerbaar. " : ""}Het verschil toont de financiële waarde van de overeenkomst per partner.
+        </div>
+        {calc.heeftBEWS && (
+          <div style={{ marginTop: 10, padding: "10px 14px", background: "#F5F3FF", border: `1px solid #7C3AED`, borderRadius: 8, fontSize: 12, color: "#5B21B6", fontFamily: fam.sans }}>
+            <strong>⚠️ Scenario C (kan-bepaling) — let op:</strong> De renteaftrekjaren van de partner MÉT BEWS gaan deels over op de partner ZONDER BEWS. Dit is definitief en onherroepelijk (art. 10bis.1 derde lid Wet IB 2001). Toon cliënten expliciet het verschil in jaarlijkse renteaftrek tussen Scenario B en C voor beide partners.
+          </div>
+        )}
+        <div style={{ marginTop: 10, padding: "10px 14px", background: C.grayLight, borderRadius: 8, fontSize: 11.5, color: C.gray, fontFamily: fam.sans }}>
+          <strong>Vereenvoudigingen:</strong> Berekeningen gaan uit van het initiële leningbedrag (geen tussentijdse aflossingen meegenomen). Bij annuïtaire/lineaire hypotheken neemt de resterende schuld af over de looptijd — de werkelijke netto-opbrengst bij verkoop zal dus hoger liggen. De EWR-kolom toont alleen de nieuwe EWR uit <em>deze</em> woning; een eventuele bestaande EWR uit een vorige woning{(calc.ewrOud1 > 0 || calc.ewrOud2 > 0) ? ` (${n1}: €\u00A0${Math.round(calc.ewrOud1).toLocaleString("nl-NL")}, ${n2}: €\u00A0${Math.round(calc.ewrOud2).toLocaleString("nl-NL")})` : ""} telt bij de totale EWR op en is hier niet weergegeven. Renteaftrek is berekend tegen het wettelijk maximumtarief van 36,97% (v.a. 2023, art. 3.120 Wet IB 2001).
+        </div>
+      </div>
+
+      {/* Renteaftrek vergelijking */}
+      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+        <SectionH sub="Jaarlijkse belastingbesparing per scenario">Renteaftrek vergelijking</SectionH>
+      <div style={{ padding: "10px 14px", background: C.blueLight, borderRadius: 8, marginBottom: 14, fontSize: 12, color: C.blue, fontFamily: fam.sans }}>
+        <strong>Fiscaal partnerschap vereist (art. 1.2 Wet IB 2001):</strong> Renteaftrek kan alleen tussen partners worden toegerekend als zij gedurende het gehele jaar fiscale partners zijn. Voor ongehuwd samenwoners geldt: zelfde woonadres in BRP én een notarieel samenlevingscontract (of een kind samen, of een pensioenregeling). Bij geen fiscaal partnerschap draagt iedere partner alleen zijn/haar eigen deel aan.
+      </div>
+        <div className="rg2">
+          {[{ naam: n1, A: calc.A.aftrek1, B: calc.B.aftrek1, rA: calc.A.rente1, rB: calc.B.rente1 },
+            { naam: n2, A: calc.A.aftrek2, B: calc.B.aftrek2, rA: calc.A.rente2, rB: calc.B.rente2 }].map((p, i) => {
+            const v = p.B - p.A;
+            const kl = Math.abs(v) < 50 ? C.gray : v > 0 ? C.green : C.red;
+            return (
+              <div key={i} style={{ background: C.grayLight, borderRadius: 12, padding: 18 }}>
+                <div style={{ fontWeight: 700, color: C.navy, fontSize: 14, marginBottom: 12, fontFamily: fam.sans }}>{p.naam}</div>
+                <div className="rg2">
+                  <div style={{ background: C.white, borderRadius: 8, padding: 12, border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 10.5, color: C.gray, fontFamily: fam.sans, textTransform: "uppercase", marginBottom: 6 }}>Scenario A (50/50)</div>
+                    <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans }}>Rente p/j: <strong>{euro(p.rA)}</strong></div>
+                    <div style={{ fontSize: 14, color: C.navy, fontWeight: 700, marginTop: 4, fontFamily: fam.sans }}>Aftrek: {euro(p.A)}</div>
+                  </div>
+                  <div style={{ background: C.white, borderRadius: 8, padding: 12, border: `1.5px solid ${C.green}` }}>
+                    <div style={{ fontSize: 10.5, color: C.green, fontFamily: fam.sans, textTransform: "uppercase", marginBottom: 6 }}>Scenario B (individueel)</div>
+                    <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans }}>Rente p/j: <strong>{euro(p.rB)}</strong></div>
+                    <div style={{ fontSize: 14, color: C.green, fontWeight: 700, marginTop: 4, fontFamily: fam.sans }}>Aftrek: {euro(p.B)}</div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12, padding: "10px 14px", background: Math.abs(v)<50?C.grayLight:v>0?C.greenLight:C.redLight, borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: kl, fontFamily: fam.sans, fontWeight: 600 }}>
+                    {Math.abs(v)<50 ? "Geen verschil" : v>0 ? `+${euro(v)} meer aftrek p/j` : `${euro(v)} minder aftrek p/j`}
+                  </span>
+                  <span style={{ fontSize: 11, color: C.gray, fontFamily: fam.sans }}>30 jr: {euro(v*30)}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <SchenkbelastingCheck calc={calc} n1={n1} n2={n2} />
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// CONSUMENTEN TAB — begrijpelijke uitleg voor huizenkopers
+// ═══════════════════════════════════════════════════════════════════
+function ConsumentenTab() {
+  const [openFaq, setOpenFaq] = useState(null);
+  const [checkList, setCheckList] = useState({});
+
+  const toggleCheck = (k) => setCheckList(c => ({ ...c, [k]: !c[k] }));
+
+  const situaties = [
+    { check: "een", label: "Jij en je partner brengen niet allebei hetzelfde bedrag in", sub: "bijv. jij hebt spaargeld, erfenis of overwaarde van een vorige woning" },
+    { check: "twee", label: "Jullie zijn niet getrouwd (of samenwonend zonder contract)", sub: "bij een scheiding gelden dan automatisch andere regels" },
+    { check: "drie", label: "Jij of je partner heeft eerder een eigen woning gehad", sub: "dan heb je een 'eigenwoningverleden' dat fiscale gevolgen heeft" },
+    { check: "vier", label: "Jullie kopen de woning niet 50/50", sub: "bijv. 60/40 of 70/30 eigendomsverdeling" },
+    { check: "vijf", label: "Jullie verwachten in de toekomst te erven of een schenking te krijgen", sub: "en willen dat geld beschermen als de relatie strandde" },
+    { check: "zes", label: "Jullie willen graag duidelijkheid — voor beide partners", sub: "ook al verwacht je nooit te gaan scheiden" },
+  ];
+
+  const aantalChecked = Object.values(checkList).filter(Boolean).length;
+
+  const faqItems = [
+    {
+      v: "Wat is een draagplichtovereenkomst precies?",
+      a: "Het is een schriftelijk contract tussen jou en je partner over wie welk deel van de hypotheek intern draagt. De bank houdt jullie allebei 100% aansprakelijk — maar onderling leggen jullie vast wie wat echt betaalt en wie aanspraak heeft op de winst bij verkoop."
+    },
+    {
+      v: "Wij vertrouwen elkaar volledig. Is het toch nodig?",
+      a: "Liefde en vertrouwen veranderen niet, maar situaties wel. 34% van de huwelijken eindigt in een scheiding. Maar ook zonder scheiding kan er veel veranderen: overlijden, arbeidsongeschiktheid, faillissement. De overeenkomst beschermt jullie allebei — het is geen wantrouwen, het is voorzorg. Net als een brandverzekering voor een huis dat je nooit verwacht te zien branden."
+    },
+    {
+      v: "Wij zijn getrouwd in gemeenschap van goederen. Hebben wij het nodig?",
+      a: "Nee — bij een huwelijk in gemeenschap van goederen zijn jullie schulden en bezittingen al van rechtswege 50/50 verdeeld. Een aparte draagplichtovereenkomst heeft hier geen juridisch effect. Wil je het toch individueel regelen? Dan zijn huwelijkse voorwaarden via een notaris nodig."
+    },
+    {
+      v: "Wat kost de overeenkomst?",
+      a: "Via jullie hypotheekadviseur kan een concept gratis worden opgesteld. Een definitieve, notarieel vastgelegde versie kost typisch €200–€600 bij een notaris (op uurbasis). Vergeleken met de bedragen die je kunt mislopen — tienduizenden euro's — is dat vrijwel niets."
+    },
+    {
+      v: "Wat gebeurt er als we gaan trouwen nadat we de overeenkomst hebben gemaakt?",
+      a: "Als jullie trouwen zónder huwelijkse voorwaarden en in gemeenschap van goederen, vervalt de draagplichtovereenkomst van rechtswege. Jullie adviseur kan jullie helpen om dit te voorkomen via huwelijkse voorwaarden — dat is een notariële akte die jullie individuele afspraken beschermt."
+    },
+    {
+      v: "Kunnen wij dit zelf regelen, zonder notaris?",
+      a: "Een onderhandse (niet-notariële) draagplichtovereenkomst is civielrechtelijk geldig, maar minder sterk bij geschillen. Voor optimale bescherming — vooral bij grotere bedragen of een erfenis — is een notariële vastlegging aanbevolen. Jullie hypotheekadviseur stelt het concept op; de notaris toetst en passeert het."
+    },
+  ];
+
+  // Concrete vergelijkingsscenario's
+  const scenario = {
+    naam1: "Sophie",
+    naam2: "Lars",
+    woning: 450000,
+    inbreng1: 80000, // Sophie brengt erfenis in
+    inbreng2: 0,
+    hypotheek: 370000,
+    verkoopprijs: 580000,
+    looptijd: 8,
+  };
+  const overwaarde = scenario.verkoopprijs - scenario.hypotheek;
+  // Correcte berekening op basis van draagplicht:
+  // Met overeenkomst = Sophie draagt minder hypotheek omdat zij meer eigen geld inbracht
+  // Draagplicht Sophie = aankoopprijs × eigendom% − inbreng = 225k − 80k = 145k
+  // Draagplicht Lars   = aankoopprijs × eigendom% − inbreng = 225k − 0   = 225k
+  const draagplicht_sophie = scenario.woning * 0.5 - scenario.inbreng1; // 145.000
+  const draagplicht_lars   = scenario.woning * 0.5 - scenario.inbreng2; // 225.000
+  const zonderSophie = overwaarde / 2;               // wettelijk 50/50
+  const zonderLars   = overwaarde / 2;
+  const metSophie = scenario.verkoopprijs * 0.5 - draagplicht_sophie; // 145.000
+  const metLars   = scenario.verkoopprijs * 0.5 - draagplicht_lars;   //  65.000
+
+  return (
+    <div style={{ fontFamily: fam.sans }}>
+
+      {/* ── HERO ── */}
+      <div style={{ background: `linear-gradient(135deg, ${C.navy} 0%, #1a3a5c 60%, #0d2b45 100%)`, borderRadius: 20, padding: "40px 36px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(184,134,11,0.12)" }} />
+        <div style={{ position: "absolute", bottom: -20, left: "30%", width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ display: "inline-block", background: "rgba(184,134,11,0.2)", border: "1px solid rgba(184,134,11,0.4)", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: C.goldLight, letterSpacing: "0.08em", marginBottom: 16 }}>
+            🏠 VOOR HUIZENKOPERS
+          </div>
+          <h1 style={{ margin: "0 0 14px", color: C.white, fontSize: 30, fontWeight: 800, lineHeight: 1.2, fontFamily: fam.serif }}>
+            Jullie kopen samen een huis.<br />
+            <span style={{ color: C.goldLight }}>Maar wie krijgt wat bij een scheiding?</span>
+          </h1>
+          <p style={{ margin: "0 0 24px", color: "#94A3B8", fontSize: 15, lineHeight: 1.7, maxWidth: 580 }}>
+            De meeste stellen denken er niet aan. Toch kan een simpele overeenkomst — de <strong style={{ color: C.white }}>draagplichtovereenkomst</strong> — je tienduizenden euro's schelen. In gewone taal: wie heeft recht op wat als jullie woning wordt verkocht?
+          </p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {[["34%", "van huwelijken eindigt in scheiding"], ["€60.000+", "kan verloren gaan zonder overeenkomst"], ["€300–600", "kost een notariële vastlegging"]].map(([getal, label]) => (
+              <div key={getal} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "14px 18px", minWidth: 120 }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: C.goldLight, lineHeight: 1 }}>{getal}</div>
+                <div style={{ fontSize: 11.5, color: "#94A3B8", marginTop: 4, lineHeight: 1.4 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── WAT IS HET? ── */}
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <div style={{ fontSize: 28 }}>🤔</div>
+          <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Wat is het eigenlijk?</h2>
+        </div>
+        <p style={{ margin: "0 0 16px", fontSize: 14, color: C.textMid, lineHeight: 1.8 }}>
+          Als jullie samen een hypotheek afsluiten, zijn jullie allebei voor het <em>volledige</em> bedrag aansprakelijk bij de bank. Maar dat zegt niets over hoe jullie het <em>onderling</em> verdeeld hebben. Dat is het verschil.
+        </p>
+        <div className="rg3" style={{ marginTop: 16 }}>
+          {[
+            { icon: "🏦", titel: "Wat de bank ziet", kleur: C.navy, bg: C.navyGlass, tekst: "Jullie zijn allebei 100% aansprakelijk. De bank kan ieder van jullie aanspreken voor de volledige hypotheek." },
+            { icon: "🤝", titel: "Wat jullie onderling afspreken", kleur: C.green, bg: C.greenLight, tekst: "De draagplichtovereenkomst legt vast wie intern welk deel draagt — en dus recht heeft op de opbrengst bij verkoop." },
+            { icon: "⚖️", titel: "Zonder overeenkomst", kleur: C.orange, bg: C.orangeLight, tekst: "Zegt de wet automatisch: 50/50. Ongeacht wie hoeveel eigen geld heeft ingebracht of had ingelegd." },
+          ].map((k, i) => (
+            <div key={i} style={{ background: k.bg, borderRadius: 12, padding: 16, borderLeft: `3px solid ${k.kleur}` }}>
+              <div style={{ fontSize: 24, marginBottom: 8 }}>{k.icon}</div>
+              <div style={{ fontWeight: 700, color: k.kleur, fontSize: 13, marginBottom: 6 }}>{k.titel}</div>
+              <div style={{ fontSize: 13, color: C.textMid, lineHeight: 1.65 }}>{k.tekst}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── CONCREET VOORBEELD ── */}
+      <div style={{ borderRadius: 16, marginBottom: 20, overflow: "hidden", boxShadow: "0 4px 20px rgba(11,31,58,.1)" }}>
+        <div style={{ background: C.navy, padding: "20px 28px", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontSize: 26 }}>💡</div>
+          <div>
+            <div style={{ color: C.goldLight, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em" }}>Concreet voorbeeld</div>
+            <h3 style={{ margin: 0, color: C.white, fontSize: 18, fontWeight: 700, fontFamily: fam.serif }}>Sophie & Lars — 8 jaar later</h3>
+          </div>
+        </div>
+        <div style={{ background: C.white, padding: "24px 28px" }}>
+          <div style={{ background: C.grayLight, borderRadius: 10, padding: "14px 18px", marginBottom: 20, fontSize: 13.5, color: C.textMid, lineHeight: 1.8 }}>
+            <strong style={{ color: C.navy }}>De situatie:</strong> Sophie en Lars kopen in 2024 een woning van <strong>€ 450.000</strong>. Sophie brengt een erfenis van <strong>€ 80.000</strong> in. Lars brengt niets in. Hypotheek: € 370.000. Acht jaar later gaan ze uit elkaar. De woning wordt verkocht voor <strong>€ 580.000</strong>.
+          </div>
+
+          <div className="rg2">
+            {/* Zonder */}
+            <div style={{ border: `2px solid ${C.red}`, borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ background: C.red, padding: "12px 18px" }}>
+                <div style={{ color: C.white, fontWeight: 800, fontSize: 14 }}>❌ Zonder overeenkomst</div>
+                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 2 }}>Wettelijke regeling: 50/50</div>
+              </div>
+              <div style={{ padding: "18px 18px" }}>
+                <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${C.grayMid}` }}>
+                  <div style={{ fontSize: 12, color: C.gray, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Verdeling opbrengst</div>
+                  {[["Verkoopprijs", `€ ${scenario.verkoopprijs.toLocaleString("nl-NL")},-`], ["Hypotheek aflossen", `− € ${scenario.hypotheek.toLocaleString("nl-NL")},-`], ["Overwaarde", `€ ${overwaarde.toLocaleString("nl-NL")},-`]].map(([l, v]) => (
+                    <div key={l} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.textMid, marginBottom: 4 }}>
+                      <span>{l}</span><span style={{ fontWeight: 600, color: C.text }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  {[["Sophie ontvangt", `€ ${zonderSophie.toLocaleString("nl-NL")},-`, C.red], ["Lars ontvangt", `€ ${zonderLars.toLocaleString("nl-NL")},-`, C.textMid]].map(([l, v, kl]) => (
+                    <div key={l} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 8, padding: "8px 10px", background: kl === C.red ? C.redLight : C.grayLight, borderRadius: 7 }}>
+                      <span style={{ color: C.text }}>{l}</span>
+                      <span style={{ fontWeight: 800, color: kl }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 14, padding: "10px 12px", background: C.redLight, borderRadius: 8, fontSize: 12.5, color: C.red, lineHeight: 1.5 }}>
+                  <strong>Sophie ontvangt € {(metSophie - zonderSophie).toLocaleString("nl-NL")} minder</strong> dan met een overeenkomst. Ze bracht € {scenario.inbreng1.toLocaleString("nl-NL")} eigen geld in, maar de wettelijke 50/50-verdeling houdt hier geen rekening mee. Lars profiteert daardoor mee van haar erfenis.
+                </div>
+              </div>
+            </div>
+
+            {/* Met */}
+            <div style={{ border: `2px solid ${C.green}`, borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ background: C.green, padding: "12px 18px" }}>
+                <div style={{ color: C.white, fontWeight: 800, fontSize: 14 }}>✅ Met draagplichtovereenkomst</div>
+                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 2 }}>Inbreng beschermd, eerlijk verdeeld</div>
+              </div>
+              <div style={{ padding: "18px 18px" }}>
+                <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${C.grayMid}` }}>
+                  <div style={{ fontSize: 12, color: C.gray, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Verdeling opbrengst</div>
+                  {[["Verkoopprijs", `€ ${scenario.verkoopprijs.toLocaleString("nl-NL")},-`], ["Hypotheek aflossen", `− € ${scenario.hypotheek.toLocaleString("nl-NL")},-`], ["Overwaarde", `€ ${overwaarde.toLocaleString("nl-NL")},-`]].map(([l, v]) => (
+                    <div key={l} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.textMid, marginBottom: 4 }}>
+                      <span>{l}</span><span style={{ fontWeight: 600, color: C.text }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  {[
+                    ["Sophie ontvangt", `€ ${metSophie.toLocaleString("nl-NL")},-`, C.green, `(haar 50% verkoopwaarde − draagplicht € ${draagplicht_sophie.toLocaleString("nl-NL")})`],
+                    ["Lars ontvangt", `€ ${metLars.toLocaleString("nl-NL")},-`, C.textMid, `(zijn 50% verkoopwaarde − draagplicht € ${draagplicht_lars.toLocaleString("nl-NL")})`],
+                  ].map(([l, v, kl, sub]) => (
+                    <div key={l} style={{ marginBottom: 8, padding: "8px 10px", background: kl === C.green ? C.greenLight : C.grayLight, borderRadius: 7 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                        <span style={{ color: C.text }}>{l}</span>
+                        <span style={{ fontWeight: 800, color: kl }}>{v}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: C.gray, marginTop: 2 }}>{sub}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 14, padding: "10px 12px", background: C.greenLight, borderRadius: 8, fontSize: 12.5, color: C.green, lineHeight: 1.5 }}>
+                  <strong>Sophie ontvangt € {(metSophie - zonderSophie).toLocaleString("nl-NL")} meer</strong> dan zonder overeenkomst. Haar draagplicht is lager (€ {draagplicht_sophie.toLocaleString("nl-NL")} i.p.v. € {(scenario.hypotheek / 2).toLocaleString("nl-NL")}) omdat zij € {scenario.inbreng1.toLocaleString("nl-NL")} eigen geld heeft ingebracht. Lars krijgt zijn eerlijke aandeel.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16, padding: "14px 18px", background: C.goldPale, border: `1px solid ${C.gold}`, borderRadius: 10, fontSize: 13.5, color: C.navy, textAlign: "center", fontWeight: 600 }}>
+            Het verschil voor Sophie: <span style={{ color: C.red, textDecoration: "line-through", marginRight: 8 }}>€ {zonderSophie.toLocaleString("nl-NL")}</span> → <span style={{ color: C.green }}>€ {metSophie.toLocaleString("nl-NL")}</span>  =  <span style={{ color: C.gold, fontSize: 16 }}>+€ {(metSophie - zonderSophie).toLocaleString("nl-NL")} dankzij de overeenkomst</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── CHECKLIST: HEB JIJ HET NODIG? ── */}
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <div style={{ fontSize: 28 }}>✔️</div>
+          <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Heb jij het nodig?</h2>
+        </div>
+        <p style={{ margin: "0 0 18px", fontSize: 13.5, color: C.textMid, lineHeight: 1.7 }}>Vink aan wat op jouw situatie van toepassing is:</p>
+        {situaties.map(s => (
+          <div key={s.check} onClick={() => toggleCheck(s.check)} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "12px 14px", marginBottom: 8, borderRadius: 10, cursor: "pointer", background: checkList[s.check] ? C.greenLight : C.grayLight, border: `1.5px solid ${checkList[s.check] ? C.green : "transparent"}`, transition: "all 0.15s" }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checkList[s.check] ? C.green : C.border}`, background: checkList[s.check] ? C.green : C.white, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+              {checkList[s.check] && <span style={{ color: C.white, fontSize: 13, fontWeight: 900 }}>✓</span>}
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13.5, color: C.navy }}>{s.label}</div>
+              <div style={{ fontSize: 12, color: C.gray, marginTop: 2 }}>{s.sub}</div>
+            </div>
+          </div>
+        ))}
+        {aantalChecked > 0 && (
+          <div style={{ marginTop: 16, padding: "16px 20px", background: aantalChecked >= 3 ? C.redLight : C.orangeLight, borderRadius: 12, border: `2px solid ${aantalChecked >= 3 ? C.red : C.orange}` }}>
+            <div style={{ fontWeight: 800, fontSize: 15, color: aantalChecked >= 3 ? C.red : C.orange, marginBottom: 6 }}>
+              {aantalChecked >= 3 ? "🚨 Jullie hebben een draagplichtovereenkomst echt nodig" : "⚠️ Een draagplichtovereenkomst is sterk aan te raden"}
+            </div>
+            <div style={{ fontSize: 13, color: C.textMid, lineHeight: 1.65 }}>
+              Je hebt {aantalChecked} punt{aantalChecked > 1 ? "en" : ""} aangevinkt. {aantalChecked >= 3 ? "Ga er zo snel mogelijk over in gesprek met je hypotheekadviseur — bij meerdere risicofactoren tegelijk kan de financiële schade bij een scheiding of overlijden aanzienlijk zijn." : "Bespreek dit met je hypotheekadviseur. Één overeenkomst geeft jullie allebei zekerheid voor de toekomst."}
+            </div>
+          </div>
+        )}
+        {aantalChecked === 0 && (
+          <div style={{ marginTop: 10, fontSize: 12.5, color: C.gray, textAlign: "center" }}>Klik op een situatie om te checken of die op jullie van toepassing is</div>
+        )}
+      </div>
+
+      {/* ── DE 3 MOMENTEN WAAROP HET KRITISCH IS ── */}
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+          <div style={{ fontSize: 28 }}>⏰</div>
+          <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>De drie momenten waarop het écht telt</h2>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {[
+            {
+              nr: "1", kleur: C.red, bg: C.redLight,
+              titel: "Bij een scheiding",
+              tekst: "Jullie gaan uit elkaar en de woning moet worden verkocht of overgenomen. Zonder overeenkomst: de opbrengst gaat 50/50, ongeacht wie hoeveel heeft ingelegd. Met overeenkomst: ieders aandeel is eerlijk vastgelegd.",
+              detail: "Geldt ook voor samenwoners die nooit officieel getrouwd waren."
+            },
+            {
+              nr: "2", kleur: "#7C3AED", bg: "#F5F3FF",
+              titel: "Bij overlijden van één van jullie",
+              tekst: "Als jouw partner overlijdt, is het cruciaal dat duidelijk is wie aanspraak heeft op de woning en de hypotheekschuld. Zonder vastlegging kan dit leiden tot vervelende discussies met de erfgenamen.",
+              detail: "Combineer de overeenkomst met een testament voor optimale bescherming."
+            },
+            {
+              nr: "3", kleur: C.orange, bg: C.orangeLight,
+              titel: "Bij een grote extra investering",
+              tekst: "Jij of je partner erft geld of krijgt een schenking en legt dat in de woning. Zonder overeenkomst: dat geld wordt bij een scheiding vaak als gezamenlijk beschouwd. Met overeenkomst: jij krijgt het terug.",
+              detail: "Verjaart na 5 jaar bij samenwoners als het niet is vastgelegd — handel snel."
+            },
+          ].map(m => (
+            <div key={m.nr} style={{ display: "flex", gap: 16, padding: "16px 18px", background: m.bg, borderRadius: 12, borderLeft: `4px solid ${m.kleur}` }}>
+              <div style={{ background: m.kleur, color: C.white, width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, flexShrink: 0, marginTop: 1 }}>{m.nr}</div>
+              <div>
+                <div style={{ fontWeight: 700, color: C.navy, fontSize: 14, marginBottom: 5 }}>{m.titel}</div>
+                <div style={{ fontSize: 13, color: C.textMid, lineHeight: 1.7, marginBottom: 6 }}>{m.tekst}</div>
+                <div style={{ fontSize: 12, color: m.kleur, fontWeight: 600 }}>💡 {m.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── VEELGESTELDE VRAGEN ── */}
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+          <div style={{ fontSize: 28 }}>❓</div>
+          <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Veelgestelde vragen</h2>
+        </div>
+        {faqItems.map((f, i) => {
+          const isOpen = openFaq === i;
+          return (
+            <div key={i} style={{ borderBottom: `1px solid ${C.grayMid}`, overflow: "hidden" }}>
+              <div onClick={() => setOpenFaq(isOpen ? null : i)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 4px", cursor: "pointer", userSelect: "none" }}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: C.navy, flex: 1, paddingRight: 16, lineHeight: 1.4 }}>{f.v}</span>
+                <span style={{ color: C.gold, fontSize: 20, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(45deg)" : "none" }}>+</span>
+              </div>
+              {isOpen && (
+                <div style={{ padding: "0 4px 16px", fontSize: 13.5, color: C.textMid, lineHeight: 1.8, borderTop: `1px solid ${C.grayLight}`, paddingTop: 12 }}>
+                  {f.a}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── CTA ── */}
+      <div style={{ background: `linear-gradient(135deg, ${C.navy}, #1E4A6E)`, borderRadius: 16, padding: "28px 32px", textAlign: "center" }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>🏠</div>
+        <h3 style={{ margin: "0 0 10px", color: C.white, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Klaar om het te regelen?</h3>
+        <p style={{ margin: "0 0 20px", color: "#94A3B8", fontSize: 14, lineHeight: 1.7, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+          Vraag je hypotheekadviseur om een draagplichtovereenkomst op te stellen. Het is één gesprek dat jullie toekomstige ik enorm kan helpen.
+        </p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 18px", fontSize: 13, color: C.white }}>⏱️ Regelen duurt 1 gesprek</div>
+          <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: 10, padding: "10px 18px", fontSize: 13, color: C.white }}>💰 Kost € 300–600 bij notaris</div>
+          <div style={{ background: "rgba(184,134,11,0.3)", border: "1px solid rgba(184,134,11,0.5)", borderRadius: 10, padding: "10px 18px", fontSize: 13, color: C.goldLight, fontWeight: 600 }}>🛡️ Beschermt tienduizenden euro's</div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+const STAP_LABELS = ["Partnergegevens", "Eigendom", "Eigenwoningverleden", "Kan-bepaling", "Eigen vermogen", "Leningdelen"];
+const TABS = ["Huizenkopers", "Analyse & Wizard", "Adviesrapport", "Documenten", "Dossier", "Scenario's", "Kennisbank"];
+const TAB_ICONS = ["🏠", "🔍", "📝", "📄", "✅", "⚖️", "📚"];
+
+function App() {
+  const [tab, setTab] = useState(0);
+  const [stap, setStap] = useState(0);
+  const [showResult, setShowResult] = useState(false);
+  const [advies, setAdvies] = useState(null);
+
+  const [form, setForm] = useState({
+    naam1: "Jan Janssen", naam2: "Loes Bakker", geb1: "1998-03-01", geb2: "2001-01-01", bsn1: "", bsn2: "",
+    adres: "Dorpstraat 1, 1000AA ONS DORP", aankoopprijs: "400000", verwervingskosten: "20000", geldverstrekker: "ABN AMRO",
+    context: "aankoop", relatievorm: "ongehuwd", trouwenPlannen: false,
+    eigendom1: "50", eigendom2: "50",
+    ewv1: false, ewv2: false,
+    ewr1: "", ewr2: "", bews1: "", bews2: "", jaren1: "", jaren2: "", afsstand1: "", afsstand2: "",
+    kanBepaling: false,
+    eigenVermogen1: "0", eigenVermogen2: "0",
+    waarderingsBasis: "nominaal", gewensteDocs: "draagplicht",
+    leningdelen: [{ bedrag: "", soort: "annuïtair", recht: "nieuw", draag1: "50", draag2: "50" }],
+    bijzonderheden: "",
+  });
+
+  const up = useCallback((k, v) => setForm(f => ({ ...f, [k]: v })), []);
+
+  const stapComponents = [
+    <Stap1 key={0} form={form} up={up} />,
+    <Stap2 key={1} form={form} up={up} />,
+    <Stap3 key={2} form={form} up={up} />,
+    <Stap4 key={3} form={form} up={up} />,
+    <Stap5 key={4} form={form} up={up} />,
+    <Stap6 key={5} form={form} up={up} />,
+  ];
+
+  const kanVerder = stap === 0 ? (form.naam1 && form.naam2 && form.adres && form.aankoopprijs) : true;
+
+  const finaliseer = () => {
+    setAdvies(berekenAdvies(form));
+    setShowResult(true);
+  };
+
+  const reset = () => { setStap(0); setShowResult(false); setAdvies(null); };
+
+  return (
+    <div style={{ fontFamily: fam.serif, background: C.cream, minHeight: "100vh" }}>
+      {/* ── GLOBAL STYLES: print, mobile, Google Sites ── */}
+      <style>{`
+        * { box-sizing: border-box; }
+        input, select, textarea, button { font-family: system-ui, sans-serif; }
+        /* ── RESPONSIVE GRIDS ── */
+        .rg3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        .rg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .rg4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+        .rg3ld { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 10px; }
+        @media (max-width: 640px) {
+          .rg3, .rg4, .rg3ld { grid-template-columns: 1fr !important; }
+          .rg2 { grid-template-columns: 1fr !important; }
+          .half-field { width: 100% !important; }
+          .tab-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+          .tab-scroll button { flex-shrink: 0; padding: 8px 12px !important; font-size: 12px !important; }
+          .scenario-table { overflow-x: auto; }
+          .header-wrap { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .header-title { font-size: 16px !important; }
+          .main-pad { padding: 16px !important; }
+          .card-pad { padding: 18px !important; }
+          .nav-wrap { margin-left: 0 !important; width: 100%; }
+          .hide-mobile { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .rg2 { grid-template-columns: 1fr !important; }
+        }
+        /* ── PRINT STYLES ── */
+        @media print {
+          .no-print { display: none !important; }
+          .print-break { page-break-before: always; }
+          * { box-shadow: none !important; }
+          body { background: white !important; }
+          .card { border: 1px solid #ccc !important; border-radius: 4px !important; }
+          input, select, textarea { border: 1px solid #999 !important; }
+          a { color: black !important; text-decoration: none !important; }
+        }
+        /* ── TOUCH TARGETS ── */
+        button { min-height: 36px; }
+        input, select { min-height: 38px; }
+        /* ── SCROLLBAR STYLING ── */
+        .tab-scroll::-webkit-scrollbar { height: 3px; }
+        .tab-scroll::-webkit-scrollbar-track { background: transparent; }
+        .tab-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+        /* ── FOCUS STYLES ── */
+        input:focus, select:focus, textarea:focus { outline: 2px solid #B8860B; outline-offset: 1px; }
+        button:focus-visible { outline: 2px solid #B8860B; outline-offset: 2px; }
+      `}</style>
+      {/* ── HEADER ── */}
+      <div style={{ background: C.navy, borderBottom: `3px solid ${C.gold}` }} className="no-print">
+        <div style={{ maxWidth: 980, margin: "0 auto", padding: "14px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }} className="header-wrap">
+            <div style={{ background: C.gold, width: 5, height: 36, borderRadius: 3, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ color: C.goldLight, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: fam.sans }}>Hypotheekadvies Tool</div>
+              <div style={{ color: C.white, fontSize: 18, fontWeight: 700, marginTop: 1, fontFamily: fam.serif, lineHeight: 1.2 }} className="header-title">Draagplichtovereenkomst Assistent</div>
+            </div>
+          </div>
+          {/* Tab nav — scrollable on mobile */}
+          <div className="tab-scroll" style={{ display: "flex", background: C.navyMid, borderRadius: 10, padding: 3, gap: 2 }}>
+            {TABS.map((t, i) => (
+              <button key={i} onClick={() => setTab(i)} style={{ padding: "7px 13px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: fam.sans, fontSize: 12, fontWeight: 600, background: tab === i ? C.gold : "transparent", color: tab === i ? C.navy : C.textLight, transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", flexShrink: 0 }}>
+                {TAB_ICONS[i]} <span className="hide-mobile">{t}</span>
+                <span style={{ display: "none" }} className="show-mobile">{t.split(" ")[0]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 980, margin: "0 auto", padding: "24px 20px" }} className="main-pad">
+
+        {/* ── TAB 0: ANALYSE WIZARD ── */}
+        {tab === 0 && <ConsumentenTab />}
+        {tab === 1 && (
+          !showResult ? (
+            <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(11,31,58,.1)", padding: 28 }} className="card-pad">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
+                <div style={{ fontSize: 12.5, color: C.gray, fontFamily: fam.sans }}>
+                  <strong style={{ color: C.navy }}>{STAP_LABELS[stap]}</strong> — stap {stap + 1} van {STAP_LABELS.length}
+                </div>
+                {stap > 0 && <button style={btnSm} onClick={reset} className="no-print">↺ Opnieuw beginnen</button>}
+              </div>
+              <StapBar stap={stap} totaal={STAP_LABELS.length} />
+              {stapComponents[stap]}
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 28, paddingTop: 20, borderTop: `1px solid ${C.border}` }} className="no-print">
+                {stap > 0
+                  ? <button style={btnSecondary} onClick={() => setStap(s => s - 1)}>← Vorige</button>
+                  : <div />}
+                {stap < stapComponents.length - 1
+                  ? <button style={kanVerder ? btnPrimary : { ...btnPrimary, opacity: 0.45, cursor: "not-allowed" }} disabled={!kanVerder} onClick={() => setStap(s => s + 1)}>Volgende →</button>
+                  : <button style={btnGold} onClick={finaliseer}>Analyseer & genereer advies →</button>}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 8 }}>
+                <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontFamily: fam.serif }}>Adviesresultaat</h2>
+                <div style={{ display: "flex", gap: 8 }} className="no-print">
+                  <button style={btnSm} onClick={() => window.print()} title="Afdrukken">🖨️ Afdrukken</button>
+                  <button style={btnSecondary} onClick={reset}>← Nieuwe analyse</button>
+                </div>
+              </div>
+              <ResultaatPanel form={form} advies={advies} setTab={setTab} />
+            </div>
+          )
+        )}
+
+        {tab === 2 && <AdviesrapportTab form={form} />}
+        {tab === 3 && <DocumentenTab form={form} />}
+        {tab === 4 && <DossierTab />}
+        {tab === 5 && <ScenarioVergelijkingTab form={form} />}
+        {tab === 6 && <KennisbankTab />}
+      </div>
+    </div>
+  );
+}
+
+    // Render de applicatie
+    const container = document.getElementById('root');
+    const reactRoot = ReactDOM.createRoot(container);
+    reactRoot.render(<App />);
+
+    // Verberg het laadscherm zodra React de DOM heeft bijgewerkt
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const loading = document.getElementById('loading');
+        if (loading) {
+          loading.classList.add('fade-out');
+          setTimeout(() => { loading.style.display = 'none'; }, 450);
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

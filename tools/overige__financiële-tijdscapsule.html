@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financiële Tijdcapsule</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #08090c;
+  --bg2:    #0f1118;
+  --bg3:    #171b26;
+  --border: rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.13);
+  --text:   #eceef5;
+  --text2:  #9aa0b8;
+  --text3:  #4a5070;
+  --gold:   #d4a843;
+  --gold2:  #f0c870;
+  --gold3:  rgba(212,168,67,0.12);
+  --teal:   #4ecdc4;
+  --pink:   #ff6b9d;
+  --r:      16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Jost', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Stars bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 70%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 50%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 15%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 15% 55%, rgba(212,168,67,0.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 75% 35%, rgba(78,205,196,0.2) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Intro screen ── */
+#intro {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.intro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gold3);
+  border: 1px solid rgba(212,168,67,0.3);
+  border-radius: 30px;
+  padding: 6px 18px;
+  font-size: 12px;
+  color: var(--gold2);
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s ease both;
+}
+
+.intro-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(42px, 8vw, 72px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+  margin-bottom: 16px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+.intro-title em {
+  color: var(--gold);
+  font-style: italic;
+}
+
+.intro-sub {
+  font-size: 16px;
+  color: var(--text2);
+  font-weight: 300;
+  max-width: 460px;
+  line-height: 1.8;
+  margin-bottom: 48px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.year-input-wrap {
+  animation: fadeUp 0.6s 0.3s ease both;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.year-label {
+  font-size: 12px;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.year-input {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px;
+  font-weight: 700;
+  text-align: center;
+  width: 240px;
+  padding: 16px;
+  outline: none;
+  letter-spacing: -1px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  -moz-appearance: textfield;
+}
+
+.year-input::-webkit-inner-spin-button,
+.year-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.year-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(212,168,67,0.1);
+}
+
+.go-btn {
+  background: var(--gold);
+  border: none;
+  border-radius: 14px;
+  color: #1a1000;
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 15px 40px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.go-btn:hover {
+  background: var(--gold2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212,168,67,0.3);
+}
+
+.go-btn:active { transform: translateY(0); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Result screen ── */
+#result {
+  display: none;
+  position: relative;
+  z-index: 1;
+  padding: 0 0 80px;
+}
+
+/* Hero banner */
+.result-hero {
+  background: linear-gradient(180deg, rgba(212,168,67,0.07) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 40px 40px;
+  text-align: center;
+}
+
+.hero-tag {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.hero-title em { color: var(--gold); font-style: italic; }
+
+.hero-sub {
+  font-size: 15px;
+  color: var(--text2);
+  font-weight: 300;
+}
+
+.hero-years {
+  display: inline-flex;
+  gap: 24px;
+  margin-top: 28px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 40px;
+  padding: 10px 28px;
+  align-items: center;
+}
+
+.hy-item { text-align: center; }
+.hy-year {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.hy-label {
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.hy-sep {
+  font-size: 24px;
+  color: var(--gold);
+  line-height: 1;
+  opacity: 0.6;
+}
+
+/* Back btn */
+.back-btn {
+  position: fixed;
+  top: 20px; left: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  color: var(--text2);
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  cursor: pointer;
+  z-index: 99;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.back-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Content */
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Section label */
+.section-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-top: 16px;
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+/* Compare card */
+.compare-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.compare-card:hover { border-color: var(--border2); }
+
+.cc-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cc-icon {
+  font-size: 22px;
+  width: 40px; height: 40px;
+  background: var(--bg3);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cc-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cc-sub {
+  font-size: 12px;
+  color: var(--text3);
+  font-weight: 300;
+  margin-top: 1px;
+}
+
+.cc-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+}
+
+.cc-col {
+  padding: 18px 22px;
+  border-right: 1px solid var(--border);
+}
+
+.cc-col:last-child { border-right: none; }
+
+.cc-col-label {
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.cc-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.cc-value.gold  { color: var(--gold); }
+.cc-value.teal  { color: var(--teal); }
+.cc-value.pink  { color: var(--pink); }
+.cc-value.muted { color: var(--text3); }
+
+.cc-note {
+  font-size: 12px;
+  color: var(--text3);
+  font-weight: 300;
+}
+
+.cc-delta {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.delta-up   { background: rgba(78,205,196,0.12); color: var(--teal); }
+.delta-down { background: rgba(255,107,157,0.12); color: var(--pink); }
+.delta-neu  { background: var(--bg3); color: var(--text3); }
+
+/* Fun fact card */
+.funfact {
+  background: linear-gradient(135deg, var(--bg2), var(--bg3));
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px 26px;
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.ff-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+
+.ff-text { flex: 1; }
+.ff-label {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.ff-body {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.5;
+  font-style: italic;
+}
+.ff-body strong {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--gold2);
+}
+
+/* Timeline bar */
+.koopkracht-bar {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px 26px;
+}
+
+.kb-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kb-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.kb-row:last-child { margin-bottom: 0; }
+
+.kb-label {
+  font-size: 12px;
+  color: var(--text3);
+  width: 56px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.kb-track {
+  flex: 1;
+  height: 10px;
+  background: var(--bg3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.kb-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  transition: width 1s ease;
+}
+
+.kb-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  width: 68px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Birthday msg */
+.bday-card {
+  background: linear-gradient(135deg, rgba(212,168,67,0.08), rgba(78,205,196,0.05));
+  border: 1px solid rgba(212,168,67,0.2);
+  border-radius: var(--r);
+  padding: 32px 36px;
+  text-align: center;
+}
+
+.bday-emoji { font-size: 40px; margin-bottom: 14px; display: block; }
+
+.bday-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold2);
+  margin-bottom: 10px;
+}
+
+.bday-body {
+  font-size: 14px;
+  color: var(--text2);
+  font-weight: 300;
+  line-height: 1.8;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Confetti */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  top: -20px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+  pointer-events: none;
+  z-index: 999;
+}
+
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .cc-body { grid-template-columns: 1fr; }
+  .cc-col { border-right: none; border-bottom: 1px solid var(--border); }
+  .cc-col:last-child { border-bottom: none; }
+  .content { padding: 32px 16px 0; }
+  .result-hero { padding: 40px 20px 32px; }
+  .hero-years { flex-direction: column; gap: 8px; }
+  .hy-sep { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── INTRO ── -->
+<div id="intro">
+  <div class="intro-badge">🎂 Financiële Tijdcapsule</div>
+  <h1 class="intro-title">Hoe zag <em>jouw</em><br>financiële wereld eruit?</h1>
+  <p class="intro-sub">Voer je geboortejaar in en ontdek hoe Nederland er financieel uitzag toen je ter wereld kwam — vergeleken met vandaag.</p>
+
+  <div class="year-input-wrap">
+    <div class="year-label">Geboortejaar</div>
+    <input type="number" class="year-input" id="yearInput" placeholder="1980" min="1950" max="2005"
+      onkeydown="if(event.key==='Enter') go()">
+    <button class="go-btn" onclick="go()">
+      <span>Ontdek mijn tijdcapsule</span> <span>→</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── RESULT ── -->
+<div id="result">
+  <button class="back-btn" onclick="goBack()">← Terug</button>
+
+  <div class="result-hero">
+    <div class="hero-tag">✦ Uw Financiële Tijdcapsule ✦</div>
+    <h2 class="hero-title" id="heroTitle">Welkom in <em>1982</em></h2>
+    <p class="hero-sub" id="heroSub">Nederland was financieel een heel andere wereld</p>
+    <div class="hero-years">
+      <div class="hy-item">
+        <div class="hy-year" id="heroBornYear">1982</div>
+        <div class="hy-label">Geboortejaar</div>
+      </div>
+      <div class="hy-sep">→</div>
+      <div class="hy-item">
+        <div class="hy-year">2026</div>
+        <div class="hy-label">Vandaag</div>
+      </div>
+      <div class="hy-sep">·</div>
+      <div class="hy-item">
+        <div class="hy-year" id="heroAge">44</div>
+        <div class="hy-label">Jaar oud</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ── HISTORISCHE DATA (Nederland) ─────────────────────────
+const DATA = {
+  // Gemiddelde huizenprijs NL (CBS / Kadaster)
+  huisprijs: {
+    1950:8000,1955:10000,1960:14000,1965:20000,1970:34000,
+    1975:70000,1976:85000,1977:98000,1978:112000,1979:125000,
+    1980:138000,1981:130000,1982:118000,1983:108000,1984:105000,
+    1985:107000,1986:111000,1987:116000,1988:123000,1989:134000,
+    1990:148000,1991:155000,1992:162000,1993:169000,1994:178000,
+    1995:188000,1996:203000,1997:225000,1998:256000,1999:296000,
+    2000:336000,2001:363000,2002:370000,2003:367000,2004:373000,
+    2005:383000,2006:400000,2007:418000,2008:413000,2009:379000,
+    2010:368000,2011:357000,2012:332000,2013:310000,2014:312000,
+    2015:333000,2016:364000,2017:402000,2018:447000,2019:483000,
+    2020:538000,2021:640000,2022:750000,2023:690000,2024:710000,2025:430000
+  },
+  // Hypotheekrente 10jr vast (indicatief, CBS / DNB)
+  rente: {
+    1950:4.0,1955:4.5,1960:5.0,1965:6.5,1970:9.0,
+    1975:10.5,1976:11.0,1977:11.5,1978:10.5,1979:11.5,
+    1980:12.5,1981:13.0,1982:12.0,1983:11.0,1984:10.5,
+    1985:9.5,1986:8.5,1987:8.0,1988:7.5,1989:9.0,
+    1990:10.0,1991:9.5,1992:9.0,1993:7.5,1994:7.5,
+    1995:7.0,1996:6.5,1997:6.0,1998:5.5,1999:5.5,
+    2000:6.0,2001:6.0,2002:5.5,2003:5.0,2004:4.8,
+    2005:4.5,2006:4.8,2007:5.2,2008:5.5,2009:5.0,
+    2010:4.5,2011:4.8,2012:4.5,2013:4.0,2014:3.5,
+    2015:3.0,2016:2.5,2017:2.5,2018:2.3,2019:2.0,
+    2020:1.5,2021:1.4,2022:2.5,2023:4.2,2024:4.0,2025:3.6
+  },
+  // Minimumloon per maand (bruto, SZW)
+  minimumloon: {
+    1970:357,1975:1020,1976:1088,1977:1122,1978:1156,1979:1190,
+    1980:1260,1981:1302,1982:1320,1983:1281,1984:1249,
+    1985:1249,1986:1249,1987:1235,1988:1211,1989:1211,
+    1990:1238,1991:1264,1992:1299,1993:1322,1994:1322,
+    1995:1338,1996:1350,1997:1374,1998:1406,1999:1407,
+    2000:1441,2001:1490,2002:1541,2003:1549,2004:1265,
+    2005:1265,2006:1285,2007:1301,2008:1335,2009:1382,
+    2010:1407,2011:1424,2012:1446,2013:1469,2014:1486,
+    2015:1507,2016:1524,2017:1552,2018:1578,2019:1636,
+    2020:1680,2021:1725,2022:1756,2023:1995,2024:2070,2025:2189
+  },
+  // Benzineprijs (liter euro 95, ANWB)
+  benzine: {
+    1970:0.22,1975:0.42,1976:0.46,1977:0.49,1978:0.51,1979:0.58,
+    1980:0.73,1981:0.84,1982:0.90,1983:0.89,1984:0.87,
+    1985:0.85,1986:0.70,1987:0.71,1988:0.69,1989:0.72,
+    1990:0.79,1991:0.80,1992:0.81,1993:0.82,1994:0.85,
+    1995:0.95,1996:0.98,1997:0.98,1998:0.93,1999:0.94,
+    2000:1.10,2001:1.05,2002:1.09,2003:1.08,2004:1.17,
+    2005:1.26,2006:1.28,2007:1.28,2008:1.46,2009:1.30,
+    2010:1.40,2011:1.58,2012:1.75,2013:1.73,2014:1.66,
+    2015:1.45,2016:1.38,2017:1.43,2018:1.56,2019:1.62,
+    2020:1.38,2021:1.59,2022:2.30,2023:1.96,2024:1.85,2025:1.80
+  },
+  // Inflatie cumulatief (CBS, base 2026=100)
+  koopkracht: {
+    1950:6,1955:7,1960:9,1965:11,1970:15,
+    1975:26,1976:28,1977:30,1978:32,1979:34,
+    1980:38,1981:42,1982:46,1983:48,1984:50,
+    1985:52,1986:52,1987:52,1988:52,1989:54,
+    1990:57,1991:59,1992:61,1993:63,1994:65,
+    1995:67,1996:68,1997:69,1998:70,1999:71,
+    2000:73,2001:76,2002:79,2003:81,2004:83,
+    2005:84,2006:86,2007:88,2008:92,2009:93,
+    2010:95,2011:98,2012:101,2013:103,2014:104,
+    2015:105,2016:105,2017:107,2018:110,2019:112,
+    2020:113,2021:116,2022:128,2023:138,2024:142,2025:145
+  },
+  // Spaarrente (gemiddeld, DNB)
+  spaarrente: {
+    1975:6.0,1976:6.5,1977:6.8,1978:6.5,1979:7.0,
+    1980:8.5,1981:9.0,1982:8.5,1983:7.5,1984:7.0,
+    1985:6.5,1986:5.8,1987:5.3,1988:5.0,1989:6.2,
+    1990:7.0,1991:7.5,1992:7.0,1993:5.5,1994:5.0,
+    1995:4.5,1996:3.8,1997:3.5,1998:3.2,1999:3.0,
+    2000:3.8,2001:4.0,2002:3.2,2003:2.2,2004:1.8,
+    2005:2.0,2006:2.5,2007:3.5,2008:4.2,2009:2.5,
+    2010:2.0,2011:2.2,2012:2.0,2013:1.5,2014:1.0,
+    2015:0.8,2016:0.5,2017:0.3,2018:0.2,2019:0.1,
+    2020:0.01,2021:0.01,2022:0.3,2023:1.5,2024:2.8,2025:2.5
+  },
+  // Fun facts per decennium
+  funfacts: {
+    1950:'De Wederopbouwwet van 1950 stimuleerde massale woningbouw. Huurwoningen kostten gemiddeld <strong>€ 15 per maand</strong>.',
+    1955:'In 1955 was de gemiddelde werkweek <strong>48 uur</strong>. Vakantiegeld bestond nog nauwelijks.',
+    1960:'De jaren \'60 brachten de welvaartsstaat. De AOW werd ingevoerd in 1957 — uw geboortejaar ligt vlak bij deze mijlpaal.',
+    1965:'In de jaren \'60 groeide de economie met gemiddeld <strong>5% per jaar</strong> — de hoogste groei ooit in Nederland.',
+    1970:'In 1970 beschikte slechts <strong>1 op de 3</strong> huishoudens over een auto. De eerste oliecrisis was in aantocht.',
+    1975:'De oliecrisis van \'73 had Nederland in zijn greep. De autoloze zondag van 1973 was een historisch moment.',
+    1976:'De hypotheekrenteaftrek was in uw geboortejaar vrijwel onbeperkt — de drijvende kracht achter de woningmarktboom.',
+    1977:'In 1977 was de gemiddelde nieuwbouwwoning <strong>110 m²</strong> groot — nu is dat gemiddeld 88 m².',
+    1978:'Creditcards bestonden amper in Nederland. Contant betalen was de norm voor vrijwel alle transacties.',
+    1979:'De tweede oliecrisis sloeg toe. De rente steeg naar recordhoogtes van boven de <strong>12%</strong>.',
+    1980:'De jaren \'80 startten met hoge inflatie en werkloosheid. Nederland kampte met de "Dutch disease".',
+    1981:'De no-nonsense politiek van kabinet-Lubbers zou in 1982 beginnen — bezuinigingen als antwoord op de crisis.',
+    1982:'Kabinet-Lubbers I trad aan en voerde het beroemde <strong>bezuinigingsbeleid</strong> in. Ambtenarensalarissen werden verlaagd.',
+    1983:'De werkloosheid piekte in 1983 op <strong>17%</strong> van de beroepsbevolking — een naoorlogs record.',
+    1984:'Het Akkoord van Wassenaar (1982) legde de basis voor loonmatiging die Nederland economisch zou transformeren.',
+    1985:'Nederland herstelde economisch. De koopkracht nam voorzichtig toe na jaren van bezuinigingen.',
+    1986:'De Bijlmerramp in \'92, de val van de Muur in \'89 — u groeide op in een periode van enorme verandering.',
+    1987:'Zwarte Maandag op 19 oktober 1987: de AEX verloor in één dag <strong>12%</strong> van zijn waarde.',
+    1988:'In 1988 organiseerde Nederland het EK Voetbal. Oranje werd Europees kampioen — een gouden jaar.',
+    1989:'De val van de Berlijnse Muur in november 1989 markeerde het begin van een nieuw Europa.',
+    1990:'De Golfoorlog dreef de olieprijzen tijdelijk omhoog. De rente piekte nog eenmaal boven de <strong>10%</strong>.',
+    1991:'De Maastrichtse criteria voor de euro werden onderhandeld. Nederland liep voorop in Europese integratie.',
+    1992:'Zwarte Woensdag: het EMS-stelsel brak. Het Britse pond verliet het wisselkoersmechanisme.',
+    1993:'De Europese interne markt trad in werking op 1 januari 1993. Grenzen voor goederen en diensten verdwenen.',
+    1994:'De Paarse coalitie (D66, VVD, PvdA) trad aan — voor het eerst zonder confessionele partijen.',
+    1995:'De Wet werk en bijstand en flexibilisering van de arbeidsmarkt veranderden Nederland structureel.',
+    1996:'De gulden was gekoppeld aan de D-mark. Nederland liep voorop bij de voorbereiding van de euro.',
+    1997:'Het Verdrag van Amsterdam werd getekend. Huizenprijzen begonnen aan een ongekende stijging.',
+    1998:'LTCM, het hedgefonds, implodeerde bijna en bedreigde het mondiale financiële systeem.',
+    1999:'De euro werd ingevoerd als girale munt op 1 januari 1999. De gulden bestond nog als muntgeld.',
+    2000:'De internetzeepbel bereikte zijn top. De AEX piekte op een historisch record van <strong>703 punten</strong>.',
+    2001:'De aanslagen van 11 september 2001 schokten de wereld en de financiële markten.',
+    2002:'De euro werd op 1 januari 2002 als betaalmunt ingevoerd. De gulden verdween na 344 jaar.',
+    2003:'De SARS-epidemie en de Irakoorlog drukten de wereldeconomie. De AEX stond op dieptepunt.',
+    2004:'De uitbreiding van de EU met 10 nieuwe landen op 1 mei 2004 veranderde Europa fundamenteel.',
+    2005:'Nederland stemde <strong>"Nee"</strong> tegen de Europese Grondwet in een referendum op 1 juni 2005.',
+    2006:'De huizenmarkt bleef maar stijgen. "Overwaarde" werd een normaal onderdeel van huishoudboekjes.',
+    2007:'Northern Rock in het VK was het eerste bankrun-signaal van de naderende financiële crisis.',
+    2008:'De val van Lehman Brothers op 15 september 2008 ontketende de grootste financiële crisis sinds \'29.',
+    2009:'ABN AMRO werd genationaliseerd. De Nederlandse overheid pompte miljarden in de bankensector.',
+    2010:'Griekenland vroeg zijn eerste reddingspakket aan. De eurocrisis begon.',
+    2011:'De huizenmarkt begon te dalen. Vele eigenaren belandden "onder water" met hun hypotheek.',
+    2012:'De hypotheekrenteaftrek werd voor het eerst structureel beperkt — een historische beleidswijziging.',
+    2013:'Nederland beleefde de diepste huizenmarktcrisis in decennia. Prijzen daalden met <strong>20%</strong> t.o.v. piek.',
+    2014:'De ECB introduceerde negatieve depositorente. Een ongekend experiment in de monetaire geschiedenis.',
+    2015:'Mario Draghi\'s "whatever it takes" (2012) werkte: de eurocrisis ebde weg. QE startte in 2015.',
+    2016:'Brexit-referendum op 23 juni: het VK stemde voor uittreden. De pond kelderde direct.',
+    2017:'Woningtekort werd het dominante thema. De kloof tussen huurder en koper groeide snel.',
+    2018:'Toeslagenaffaire speelde op de achtergrond. De gevolgen zouden Nederland jarenlang bezighouden.',
+    2019:'Pre-corona: de economie draaide op volle toeren. Werkloosheid daalde naar historisch laag niveau.',
+    2020:'COVID-19 veroorzaakte de snelste economische krimp ooit. Overheidssteun was ongekend groot.',
+    2021:'Inflatie keerde terug na decennia van rust. Aanvankelijk "tijdelijk" — bleek aanhoudend.',
+    2022:'Rusland viel Oekraïne binnen. Energieprijzen explodeerden. Inflatie piekte op <strong>17%</strong> in NL.',
+    2023:'De ECB verhoogde de rente 10x op rij. Hypotheekrente verdrievoudigde t.o.v. 2021.',
+    2004:'Huizenmarkt toonde herstel. Box 3-wetgeving na jaren van rechtszaken eindelijk hervormd.',
+    2005:'Arbeidsmarktkrapte bleef aanhouden. Minimumloon steeg sterk. Woningtekort circa 400.000 woningen.'
+  }
+};
+
+const NOW = 2026;
+const NOW_HUISPRIJS = 430000;
+const NOW_RENTE = 3.6;
+const NOW_MINIMUMLOON = 2189;
+const NOW_BENZINE = 1.80;
+const NOW_SPAARRENTE = 2.5;
+
+function getVal(dataset, year) {
+  if (dataset[year]) return dataset[year];
+  // Interpoleer
+  const years = Object.keys(dataset).map(Number).sort((a,b)=>a-b);
+  const before = years.filter(y=>y<=year).pop();
+  const after  = years.filter(y=>y>=year)[0];
+  if (!before) return dataset[after];
+  if (!after)  return dataset[before];
+  const t = (year - before) / (after - before);
+  return dataset[before] + t * (dataset[after] - dataset[before]);
+}
+
+function fmt(n, decimals=0) {
+  return '€\u00a0' + n.toLocaleString('nl-NL', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
+
+function fmtPct(n, decimals=1) {
+  return n.toFixed(decimals).replace('.', ',') + '%';
+}
+
+function delta(now, then, invert=false) {
+  const pct = ((now - then) / then) * 100;
+  const up = invert ? pct < 0 : pct > 0;
+  const sign = pct > 0 ? '+' : '';
+  const cls = up ? 'delta-up' : 'delta-down';
+  const arrow = pct > 0 ? '↑' : '↓';
+  return `<span class="cc-delta ${cls}">${arrow} ${sign}${Math.round(pct)}%</span>`;
+}
+
+function getFunFact(year) {
+  const years = Object.keys(DATA.funfacts).map(Number).sort((a,b)=>a-b);
+  let best = years[0];
+  for (const y of years) { if (y <= year) best = y; else break; }
+  return DATA.funfacts[best];
+}
+
+function spawnConfetti() {
+  const colors = ['#d4a843','#f0c870','#4ecdc4','#ff6b9d','#fff','#a8e6cf'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = (2 + Math.random() * 3) + 's';
+      el.style.animationDelay = Math.random() * 0.5 + 's';
+      el.style.transform = `rotate(${Math.random()*360}deg)`;
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 5000);
+    }, i * 40);
+  }
+}
+
+function go() {
+  const year = parseInt(document.getElementById('yearInput').value);
+  if (!year || year < 1950 || year > 2005) {
+    document.getElementById('yearInput').style.borderColor = 'var(--pink)';
+    setTimeout(() => document.getElementById('yearInput').style.borderColor = '', 1000);
+    return;
+  }
+
+  const age = NOW - year;
+
+  // Values
+  const hp   = Math.round(getVal(DATA.huisprijs, year));
+  const ren  = getVal(DATA.rente, year);
+  const ml   = Math.round(getVal(DATA.minimumloon, year));
+  const benz = getVal(DATA.benzine, year);
+  const kk   = getVal(DATA.koopkracht, year);
+  const spar = getVal(DATA.spaarrente, year);
+
+  // Koopkracht: wat was €1.000 toen waard nu
+  const koopkrachtFactor = 145 / kk;  // base 2026=145
+  const koopkracht1000 = Math.round(1000 * koopkrachtFactor);
+
+  // Maandlast hypotheek toen (annuïteit 30jr)
+  const maandRateToen = (ren/100/12);
+  const maandlastToen = hp * (maandRateToen * Math.pow(1+maandRateToen,360)) / (Math.pow(1+maandRateToen,360)-1);
+  const maandRateNu = (NOW_RENTE/100/12);
+  const maandlastNu = NOW_HUISPRIJS * (maandRateNu * Math.pow(1+maandRateNu,360)) / (Math.pow(1+maandRateNu,360)-1);
+
+  const funfact = getFunFact(year);
+
+  // Koopkracht bars — hoeveel van €1.000 nu overeind is gebleven per tijdperk
+  const kkBars = [];
+  for (const [yr, label] of [[year, year.toString()], [1990,'1990'],[2000,'2000'],[2010,'2010'],[NOW,'Nu']]) {
+    if (yr < year) continue;
+    const kkAtYr = getVal(DATA.koopkracht, yr);
+    const pct = Math.min(100, Math.round((kk / kkAtYr) * 100));
+    kkBars.push({ label, pct });
+  }
+
+  // HTML
+  document.getElementById('heroTitle').innerHTML = `Welkom in <em>${year}</em>`;
+  document.getElementById('heroSub').innerHTML = `${age} jaar geleden — Nederland was financieel een heel andere wereld`;
+  document.getElementById('heroBornYear').textContent = year;
+  document.getElementById('heroAge').textContent = age;
+
+  document.getElementById('content').innerHTML = `
+
+    <div class="funfact">
+      <div class="ff-icon">📰</div>
+      <div class="ff-text">
+        <div class="ff-label">✦ Tijdgeest ${year}</div>
+        <div class="ff-body">${funfact}</div>
+      </div>
+    </div>
+
+    <div class="section-label">🏠 Woningmarkt</div>
+
+    <div class="compare-card">
+      <div class="cc-header">
+        <div class="cc-icon">🏡</div>
+        <div>
+          <div class="cc-name">Gemiddelde huizenprijs</div>
+          <div class="cc-sub">Koopwoningen Nederland (CBS / Kadaster)</div>
+        </div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-col">
+          <div class="cc-col-label">In ${year}</div>
+          <div class="cc-value gold">${fmt(hp)}</div>
+          <div class="cc-note">Gemiddeld Nederland</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">In 2026</div>
+          <div class="cc-value teal">${fmt(NOW_HUISPRIJS)}</div>
+          <div class="cc-note">Gemiddeld Nederland</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">Verschil</div>
+          <div class="cc-value pink">${Math.round(NOW_HUISPRIJS/hp)}×</div>
+          <div class="cc-note">Zoveel duurder ${delta(NOW_HUISPRIJS, hp)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <div class="cc-header">
+        <div class="cc-icon">📊</div>
+        <div>
+          <div class="cc-name">Hypotheekrente (10 jaar vast)</div>
+          <div class="cc-sub">Indicatief gemiddelde NL markt</div>
+        </div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-col">
+          <div class="cc-col-label">In ${year}</div>
+          <div class="cc-value gold">${fmtPct(ren)}</div>
+          <div class="cc-note">10jr vast</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">In 2026</div>
+          <div class="cc-value teal">${fmtPct(NOW_RENTE)}</div>
+          <div class="cc-note">10jr vast</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">Maandlast toen vs nu</div>
+          <div class="cc-value pink">${fmt(Math.round(maandlastNu))}</div>
+          <div class="cc-note">Nu · Toen: ${fmt(Math.round(maandlastToen))}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">💶 Inkomen & leven</div>
+
+    <div class="compare-card">
+      <div class="cc-header">
+        <div class="cc-icon">💰</div>
+        <div>
+          <div class="cc-name">Wettelijk minimumloon</div>
+          <div class="cc-sub">Bruto per maand (SZW)</div>
+        </div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-col">
+          <div class="cc-col-label">In ${year}</div>
+          <div class="cc-value gold">${fmt(ml)}</div>
+          <div class="cc-note">Bruto / maand</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">In 2026</div>
+          <div class="cc-value teal">${fmt(NOW_MINIMUMLOON)}</div>
+          <div class="cc-note">Bruto / maand</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">Stijging</div>
+          <div class="cc-value pink">${Math.round(NOW_MINIMUMLOON/ml*10)/10}×</div>
+          <div class="cc-note">${delta(NOW_MINIMUMLOON, ml)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <div class="cc-header">
+        <div class="cc-icon">⛽</div>
+        <div>
+          <div class="cc-name">Benzineprijs (Euro 95)</div>
+          <div class="cc-sub">Prijs per liter aan de pomp (ANWB)</div>
+        </div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-col">
+          <div class="cc-col-label">In ${year}</div>
+          <div class="cc-value gold">€ ${benz.toFixed(2).replace('.',',')}</div>
+          <div class="cc-note">Per liter</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">In 2026</div>
+          <div class="cc-value teal">€ ${NOW_BENZINE.toFixed(2).replace('.',',')}</div>
+          <div class="cc-note">Per liter</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">Verschil</div>
+          <div class="cc-value pink">${Math.round(NOW_BENZINE/benz*10)/10}×</div>
+          <div class="cc-note">${delta(NOW_BENZINE, benz)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-card">
+      <div class="cc-header">
+        <div class="cc-icon">🏦</div>
+        <div>
+          <div class="cc-name">Spaarrente</div>
+          <div class="cc-sub">Gemiddeld rendement spaarrekening (DNB)</div>
+        </div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-col">
+          <div class="cc-col-label">In ${year}</div>
+          <div class="cc-value gold">${fmtPct(spar)}</div>
+          <div class="cc-note">Spaarrekening</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">In 2026</div>
+          <div class="cc-value teal">${fmtPct(NOW_SPAARRENTE)}</div>
+          <div class="cc-note">Spaarrekening</div>
+        </div>
+        <div class="cc-col">
+          <div class="cc-col-label">Reëel rendement nu</div>
+          <div class="cc-value ${NOW_SPAARRENTE - 3.2 > 0 ? 'teal' : 'pink'}">${(NOW_SPAARRENTE - 3.2).toFixed(1).replace('.',',')}%</div>
+          <div class="cc-note">Na ~3,2% inflatie (2026)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">📉 Koopkracht van €1.000 in ${year}</div>
+
+    <div class="koopkracht-bar">
+      <div class="kb-title">⏳ Hoeveel was €1.000 in ${year} waard door de jaren heen?</div>
+      ${kkBars.map(b => `
+        <div class="kb-row">
+          <div class="kb-label">${b.label}</div>
+          <div class="kb-track"><div class="kb-fill" style="width:${b.pct}%"></div></div>
+          <div class="kb-val">${fmt(Math.round(b.pct*10))}</div>
+        </div>`).join('')}
+      <div style="margin-top:14px;font-size:12.5px;color:var(--text3);font-weight:300;line-height:1.6;">
+        Door inflatie is <strong style="color:var(--text2)">€1.000 uit ${year}</strong> vandaag nog maar <strong style="color:var(--pink)">€${Math.round(1000/koopkrachtFactor)}</strong> waard in koopkracht.
+        Om hetzelfde te kopen als toen moet u nu <strong style="color:var(--gold2)">${fmt(koopkracht1000)}</strong> neerleggen.
+      </div>
+    </div>
+
+    <div class="bday-card">
+      <span class="bday-emoji">🎂</span>
+      <div class="bday-title">Gefeliciteerd met uw verjaardag!</div>
+      <div class="bday-body">
+        In ${age} jaar tijd is de Nederlandse woningmarkt <strong style="color:var(--gold2)">${Math.round(NOW_HUISPRIJS/hp)}×</strong> zo duur geworden,
+        is het minimumloon <strong style="color:var(--gold2)">${Math.round(NOW_MINIMUMLOON/ml*10)/10}×</strong> gestegen,
+        en heeft inflatie de koopkracht van een gulden met <strong style="color:var(--pink)">${Math.round((1-1/koopkrachtFactor)*100)}%</strong> uitgehold.
+        <br><br>
+        U leeft in een van de meest financieel veranderde periodes uit de Nederlandse geschiedenis. Dat verdient een toast. 🥂
+      </div>
+    </div>
+  `;
+
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  spawnConfetti();
+}
+
+function goBack() {
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('intro').style.display = 'flex';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

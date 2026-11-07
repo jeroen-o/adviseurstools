@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GHF-toetsing 2026 — Maximale hypotheek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#003057; --accent:#E5A138; --bg:#F4F7F9;
+  --text:#333333; --text2:#4A4A4A; --line:#dbe4ea;
+  --ok:#1e7d4f; --okbg:#e8f5ee; --err:#b3261e; --errbg:#fdecea;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 64px}
+header.top{background:var(--primary);color:#fff;padding:28px 0}
+header.top .wrap{padding-top:0;padding-bottom:0}
+h1{font-family:'DM Serif Display',serif;font-weight:400;font-size:42px;line-height:1.15}
+.sub{color:#c8d6e2;margin-top:6px;font-size:15px;max-width:820px}
+.sub b{color:var(--accent);font-weight:600}
+h2{font-size:20px;color:var(--primary);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:8px;height:22px;background:var(--accent);border-radius:2px;display:inline-block}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;margin-top:20px;box-shadow:0 1px 3px rgba(0,48,87,.06)}
+.grid{display:grid;gap:14px 18px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--primary)}
+label.f>input,label.f>select{margin-top:auto}
+label.f span.hint{font-weight:400;color:#7a8a96}
+input[type=text],input[type=date],input[type=number],select{
+  width:100%;margin-top:5px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;
+  font:inherit;font-size:15px;color:var(--text);background:#fff}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+input.eur{text-align:right}
+.pct{text-align:right}
+.switch{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:14px;font-weight:600;color:var(--primary);cursor:pointer}
+.switch input{width:auto;margin:0;accent-color:var(--primary)}
+.persoon{border:1px solid var(--line);border-radius:10px;padding:16px;background:#fbfdfe}
+.persoon h3{font-size:15px;color:var(--primary);margin-bottom:10px}
+table.delen{width:100%;border-collapse:collapse;font-size:14px}
+table.delen th{background:var(--primary);color:#fff;font-weight:600;padding:8px 8px;text-align:left;font-size:12.5px;white-space:nowrap}
+table.delen th:first-child{border-radius:8px 0 0 0}
+table.delen td{padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.delen input,table.delen select{margin-top:0;padding:7px 8px;font-size:14px}
+table.delen .num{width:76px}
+.btn{display:inline-block;border:none;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;padding:10px 18px;font-size:15px}
+.btn-add{background:#eef4f8;color:var(--primary);border:1px dashed var(--primary);margin-top:12px}
+.btn-add:hover{background:#e2ecf3}
+.btn-del{background:none;color:var(--err);border:none;font-size:18px;cursor:pointer;line-height:1;padding:4px 6px}
+.btn-print{background:var(--accent);color:var(--primary);font-size:16px;padding:12px 26px}
+.btn-print:hover{filter:brightness(1.05)}
+/* resultaten */
+.res-kop{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.badge{display:inline-block;padding:8px 18px;border-radius:999px;font-weight:800;font-size:15px}
+.badge.ok{background:var(--okbg);color:var(--ok)}
+.badge.err{background:var(--errbg);color:var(--err)}
+.maxbox{background:var(--primary);color:#fff;border-radius:12px;padding:20px 24px;margin-top:16px;
+  display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.maxbox .lbl{font-size:14px;color:#c8d6e2}
+.maxbox .val{font-family:'DM Serif Display',serif;font-size:40px;color:var(--accent)}
+.maxbox .basis{font-size:13px;color:#c8d6e2}
+table.res{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:14px}
+table.res th{text-align:left;color:var(--primary);font-size:13px;border-bottom:2px solid var(--primary);padding:7px 8px}
+table.res td{padding:7px 8px;border-bottom:1px solid var(--line)}
+table.res td.r,table.res th.r{text-align:right;font-variant-numeric:tabular-nums}
+tr.tekort td{background:var(--errbg)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:6px}
+.kv .item{background:#fbfdfe;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kv .item .k{font-size:12.5px;color:#7a8a96;font-weight:600}
+.kv .item .v{font-size:19px;font-weight:800;color:var(--primary);margin-top:2px;font-variant-numeric:tabular-nums}
+.kv .item .s{font-size:12.5px;color:var(--text2)}
+.note{font-size:13px;color:var(--text2);margin-top:14px;padding:12px 14px;background:#fbf6ec;border-left:4px solid var(--accent);border-radius:0 8px 8px 0}
+.note b{color:var(--primary)}
+.melding{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:14.5px;font-weight:600}
+.melding.ok{background:var(--okbg);color:var(--ok)}
+.melding.err{background:var(--errbg);color:var(--err)}
+@media(max-width:860px){.g4,.g3{grid-template-columns:1fr 1fr}h1{font-size:32px}.delen-scroll{overflow-x:auto}}
+@media(max-width:560px){.g4,.g3{grid-template-columns:1fr}}
+
+.f-switchwrap{display:flex;align-items:flex-end;gap:8px;align-self:end}
+.infowrap{position:relative;display:inline-flex;margin-bottom:2px}
+.info{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--primary);background:#fff;color:var(--primary);
+  font:700 12px/1 'Plus Jakarta Sans',sans-serif;font-style:italic;cursor:help;padding:0}
+.info:hover,.info:focus{background:var(--primary);color:#fff;outline:2px solid var(--accent);outline-offset:1px}
+.tip{display:none;position:absolute;bottom:26px;right:-6px;width:min(360px,82vw);z-index:50;
+  background:var(--primary);color:#eaf1f7;font-size:12.5px;font-weight:400;line-height:1.5;
+  padding:12px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,48,87,.35)}
+.tip b{color:var(--accent)}
+.tip::after{content:"";position:absolute;bottom:-7px;right:10px;border:7px solid transparent;border-bottom:0;border-top-color:var(--primary)}
+.infowrap:hover .tip,.infowrap:focus-within .tip{display:block}
+
+.btn-hand{position:absolute;top:2px;right:20px;background:var(--accent);color:var(--primary);font-size:14px;padding:9px 16px}
+.btn-hand:hover{filter:brightness(1.06)}
+@media(max-width:700px){.btn-hand{position:static;display:block;margin:0 0 12px auto}}
+.modal{position:fixed;inset:0;background:rgba(0,26,46,.55);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow-y:auto}
+.modal[hidden]{display:none}
+.modal-inner{background:#fff;border-radius:14px;max-width:820px;width:100%;padding:26px 30px;box-shadow:0 20px 60px rgba(0,0,0,.3);margin-bottom:4vh}
+.modal-kop{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--accent);padding-bottom:10px;margin-bottom:6px}
+.modal-x{border:none;background:none;font-size:20px;color:var(--primary);cursor:pointer;padding:4px 8px}
+.modal-x:hover{color:var(--err)}
+.modal-inner h3{color:var(--primary);font-size:17px;margin-top:18px}
+.modal-inner h4{color:var(--primary);font-size:14.5px;margin-top:14px}
+.modal-inner p,.modal-inner li{font-size:14px;line-height:1.6}
+.modal-inner ol,.modal-inner ul{padding-left:22px;margin-top:6px}
+.modal-inner li{margin-bottom:7px}
+.modal-let{background:#fbf6ec;border-left:4px solid var(--accent);padding:10px 12px;border-radius:0 8px 8px 0;margin-top:16px}
+
+.leeftijd{font-weight:600;font-size:11.5px;color:var(--primary);background:#eef4f8;border-radius:999px;padding:2px 8px;margin-left:4px}
+input.eur{font-variant-numeric:tabular-nums}
+
+/* ---------- mobiel ---------- */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:860px){
+  .wrap{padding:16px 14px 48px}
+  header.top{padding:20px 0}
+  h1{font-size:28px}
+  .sub{font-size:14px}
+  .card{padding:16px;border-radius:10px}
+  #personen{grid-template-columns:1fr!important}
+  .maxbox .val{font-size:30px}
+  table.res{font-size:13.5px}
+  table.res td,table.res th{padding:6px 5px}
+  .modal-inner{padding:18px 16px;border-radius:12px}
+  .modal-inner h3{font-size:15px}
+  .tip{right:auto;left:50%;transform:translateX(-50%);width:min(300px,88vw)}
+  .tip::after{right:auto;left:50%;margin-left:-7px}
+}
+@media(max-width:760px){
+  /* leningdelen: tabel wordt kaartweergave */
+  #delenTabel thead{display:none}
+  #delenTabel,#delenTabel tbody,#delenTabel tr,#delenTabel td{display:block;width:100%}
+  #delenTabel tr{border:1px solid var(--line);border-radius:10px;padding:10px 12px 12px;margin-bottom:12px;background:#fbfdfe;position:relative}
+  #delenTabel td{border:none;padding:5px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  #delenTabel td::before{content:attr(data-label);font-size:12.5px;font-weight:600;color:var(--primary);flex:0 0 auto}
+  #delenTabel td:first-child::before{content:"Aflossingsvorm"}
+  #delenTabel td input,#delenTabel td select{width:auto!important;flex:1 1 130px;max-width:180px;text-align:right}
+  #delenTabel td.act{position:absolute;top:6px;right:6px;padding:0;width:auto;justify-content:flex-end}
+  #delenTabel td.act::before{content:""}
+  .btn-add{width:100%;text-align:center}
+}
+@media(max-width:560px){
+  h1{font-size:24px}
+  .btn-print,.btn-hand{width:100%}
+  .maxbox{flex-direction:column;align-items:flex-start}
+  .res-kop{flex-direction:column;align-items:flex-start}
+}
+/* voorkom automatisch inzoomen op iOS */
+@media(max-width:860px){
+  input[type=text],input[type=date],input[type=number],select{font-size:16px}
+}
+
+.actiebalk{margin-top:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.actie-links{display:flex;gap:10px;flex-wrap:wrap}
+.btn-nieuw{background:#fff;color:var(--primary);border:1.5px solid var(--primary);font-size:14px}
+.btn-nieuw:hover{background:var(--primary);color:#fff}
+.btn-dossier{background:#eef4f8;color:var(--primary);border:1.5px solid var(--line);font-size:14px}
+.btn-dossier:hover{background:#dce8f0;border-color:var(--primary)}
+.dossier-hint{margin-top:10px;font-size:13.5px;font-weight:600;color:var(--ok);background:var(--okbg);
+  border-radius:8px;padding:9px 12px;display:none}
+.dossier-hint.zicht{display:block}
+.dossier-hint.fout{color:var(--err);background:var(--errbg)}
+@media(max-width:560px){
+  .actiebalk{flex-direction:column;align-items:stretch}
+  .actie-links{flex-direction:column}
+  .actie-links .btn,.btn-print{width:100%}
+}
+
+.opl{border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:14px 16px;margin-top:12px;background:#fbfdfe}
+.opl-kop{font-weight:800;color:var(--primary);margin-bottom:6px}
+.opl p{font-size:14.5px;margin-top:4px}
+.opl-res{color:var(--ok);font-weight:700}
+.btn-opl{background:var(--primary);color:#fff;margin-top:10px;font-size:14px}
+.btn-opl:hover{filter:brightness(1.15)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap" style="position:relative">
+  <button class="btn btn-hand" id="handBtn">Handleiding tool</button>
+  <h1>GHF-toetsing 2026</h1>
+  <p class="sub">Maximale hypotheek en maandlasttoets volgens de <b>Gedragscode Hypothecaire Financieringen / TRHK 2026</b>, op basis van de definitieve Nibud-financieringslastnormen 2026 — inclusief meerdere leningdelen, einde renteaftrek per deel, box 3-delen, AOW-scenario en energielabel-verruiming.</p>
+</div></header>
+
+<div class="wrap">
+
+<div class="card">
+  <h2>Personalia & toetsdatum</h2>
+  <div class="grid g4" style="margin-bottom:16px">
+    <label class="f">Toetsdatum<input type="date" id="toetsdatum" value="2026-08-01"></label>
+    <label class="f">Normrente (min. toetsrente)<input type="text" class="pct" id="normrente" value="5,000"></label>
+    <label class="f" style="align-self:end"><span class="switch" style="margin-top:0"><input type="checkbox" id="partnerAan" checked> Partner aanwezig</span></label>
+    <label class="f" style="align-self:end"><span class="switch" style="margin-top:0"><input type="checkbox" id="alleenstaand"> Verhoging alleenstaande (€ 17.000)</span></label>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 1fr" id="personen">
+    <div class="persoon">
+      <h3>Cliënt</h3>
+      <label class="f" style="margin-bottom:14px">Naam <span class="hint">(optioneel)</span><input type="text" id="c_naam" value="" placeholder="Naam cliënt"></label>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <label class="f">Geboortedatum <span class="leeftijd" id="c_leeftijd"></span><input type="date" id="c_geb" value="1967-01-10"></label>
+        <label class="f">AOW-datum<input type="date" id="c_aow" value="2034-04-10"></label>
+        <label class="f">Bruto jaarinkomen<input type="text" class="eur" id="c_ink" value="58.378"></label>
+        <label class="f">Inkomen vanaf AOW <span class="hint">(AOW + pensioen)</span><input type="text" class="eur" id="c_pens" value="20.402"></label>
+      </div>
+    </div>
+    <div class="persoon" id="partnerBlok">
+      <h3>Partner</h3>
+      <label class="f" style="margin-bottom:14px">Naam <span class="hint">(optioneel)</span><input type="text" id="p_naam" value="" placeholder="Naam partner"></label>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <label class="f">Geboortedatum <span class="leeftijd" id="p_leeftijd"></span><input type="date" id="p_geb" value="1970-03-22"></label>
+        <label class="f">AOW-datum<input type="date" id="p_aow" value="2037-06-22"></label>
+        <label class="f">Bruto jaarinkomen<input type="text" class="eur" id="p_ink" value="30.621"></label>
+        <label class="f">Inkomen vanaf AOW <span class="hint">(AOW + pensioen)</span><input type="text" class="eur" id="p_pens" value=""></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Woning</h2>
+  <div class="grid g4">
+    <label class="f">Marktwaarde (na verbouwing)<input type="text" class="eur" id="marktwaarde" value="725.000"></label>
+    <label class="f">Energielabel
+      <select id="label">
+        <option value="0">E, F of G (+ € 0)</option>
+        <option value="5000">C of D (+ € 5.000)</option>
+        <option value="10000" selected>A of B (+ € 10.000)</option>
+        <option value="20000">A+ of A++ (+ € 20.000)</option>
+        <option value="25000">A+++ (+ € 25.000)</option>
+        <option value="30000">A++++ (+ € 30.000)</option>
+        <option value="40000">A++++ met garantie (+ € 40.000)</option>
+        <option value="geen">Geen geldig label (+ € 0)</option>
+      </select></label>
+    <label class="f">Energiebesparende voorz. (EBV)<input type="text" class="eur" id="ebv" value=""></label>
+    <div class="f-switchwrap">
+      <label class="f"><span class="switch" style="margin-top:0"><input type="checkbox" id="verbouwing"> Verduurzaming uit de lijst</span></label>
+      <span class="infowrap">
+        <button type="button" class="info" aria-label="Uitleg: verduurzaming uit de lijst">i</button>
+        <span class="tip" role="tooltip"><b>Verduurzaming uit de lijst</b><br>
+        Wettelijke lijst met energiebesparende maatregelen uit de TRHK die aantoonbaar renderen: spouwmuur-, dak- en vloerisolatie, HR++-glas (incl. bijbehorende kozijnen/deuren), douche-wtw, (hybride) warmtepomp en zonnepanelen.<br><br>
+        Financier je zulke maatregelen mee bij een verbouwing, dan mag een <b>vast extra hypotheekbedrag buiten de toetsing</b> worden verstrekt, afhankelijk van het <i>huidige</i> energielabel:<br>
+        E/F/G € 20.000 · C/D € 15.000 · A/B € 10.000 · A+/A++ € 10.000 · A+++ of beter € 0 · label onbekend € 10.000.<br><br>
+        Dit bedrag <b>stapelt</b> met de verruiming voor het energielabel zelf. Voorwaarde: het geld wordt daadwerkelijk besteed aan maatregelen van de lijst, doorgaans via een bouwdepot — leg dit vast in het dossier.</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Leningdelen</h2>
+  <div class="delen-scroll">
+  <table class="delen" id="delenTabel">
+    <thead><tr>
+      <th>Aflossingsvorm</th><th>Bedrag</th><th>Aftrekbaar t/m mnd</th><th>Waarvan box 3</th>
+      <th>Rentevast (mnd)</th><th>Rente %</th><th>Duur (mnd)</th><th></th>
+    </tr></thead>
+    <tbody id="delenBody"></tbody>
+  </table>
+  </div>
+  <button class="btn btn-add" id="addDeel">+ Leningdeel toevoegen</button>
+</div>
+
+<div class="card" id="resultaat"></div>
+
+<div class="actiebalk">
+  <div class="actie-links">
+    <button class="btn btn-nieuw" id="nieuwBtn" type="button">Nieuwe berekening</button>
+    <button class="btn btn-dossier" id="opslaanBtn" type="button">Dossier opslaan</button>
+    <button class="btn btn-dossier" id="openBtn" type="button">Dossier openen</button>
+    <input type="file" id="dossierFile" accept=".json,application/json" hidden>
+  </div>
+  <button class="btn btn-print" id="printBtn" type="button">Toetsrapport afdrukken</button>
+</div>
+<p class="dossier-hint" id="dossierHint"></p>
+
+<p class="note"><b>Compliance / AFM-disclaimer:</b> deze berekening is een <b>indicatieve toetsing</b> op basis van de definitieve Nibud-financieringslastnormen 2026 en de systematiek van de GHF/TRHK. Het is géén hypotheekadvies en géén vervanging van gecertificeerde adviessoftware (zoals DIAS Advies) of het acceptatiebeleid van een geldverstrekker; maatwerk, explains, werkelijke fiscale situatie en verstrekkersnormen kunnen tot een andere uitkomst leiden. De "indicatieve extra lening" is een benadering van de kortlopende-leningsystematiek. De verhoging voor alleenstaanden (€ 17.000) mag volgens de TRHK alleen worden toegepast bij <b>aantoonbaar niet-kwetsbare huishoudens zonder persoonlijk onvermijdbare uitgaven</b> — leg die onderbouwing vast in het dossier. Aan deze uitkomsten kunnen geen rechten worden ontleend.</p>
+
+</div>
+
+<div class="modal" id="handleiding" hidden>
+ <div class="modal-inner">
+  <div class="modal-kop"><h2 style="margin:0">Handleiding & hypotheek maximaliseren</h2><button class="modal-x" id="handSluit" aria-label="Sluiten">✕</button></div>
+
+  <h3>Zo werkt de tool</h3>
+  <p>De toetsing rekent live mee terwijl je typt; er is geen rekenknop. Vul de onderdelen van boven naar beneden in:</p>
+  <ol>
+   <li><b>Personalia & toetsdatum</b> — bruto jaarinkomens van cliënt en (eventueel) partner. De AOW-datum wordt automatisch op 67 jaar gezet na invoer van de geboortedatum, maar is aanpasbaar. Vul bij "Inkomen vanaf AOW" het totale verwachte inkomen vanaf dat moment in (AOW + aanvullend pensioen): valt de AOW-datum binnen 10 jaar na de toetsdatum, dan toetst de tool ook dat scenario.</li>
+   <li><b>Woning</b> — marktwaarde ná verbouwing, energielabel (bepaalt de vaste verruiming), eventueel meegefinancierde energiebesparende voorzieningen (EBV, verhoogt het onderpandmaximum tot 106%) en het vinkje "Verduurzaming uit de lijst" (zie het ⓘ-icoontje).</li>
+   <li><b>Leningdelen</b> — per deel: aflossingsvorm, bedrag, tot en met welke maand de rente aftrekbaar is, welk bedrag in box 3 valt, rentevastperiode, rente en looptijd. De tool bepaalt hieruit per deel de toetsrente en de gewogen toetsrente van het geheel.</li>
+   <li><b>Resultaat</b> — per toetsmoment (aanvang, einde renteaftrek, aflossing van een deel, AOW-datum) zie je de toegestane en berekende maandlast met de ruimte of het tekort. Bij "NIET akkoord" verschijnt automatisch de <b>route naar akkoord</b> met doorgerekende opties die je met één klik kunt toepassen. Onderaan staat steeds de scenario-vergelijking "alles in box 3". Met <b>Toetsrapport afdrukken</b> maak je een leesbaar rapport met toelichting per toetsmoment.</li>
+  </ol>
+
+  <h3>Hypotheek maximaliseren — per situatie</h3>
+  <p>Alles hieronder blijft bínnen de TRHK/GHF-normen; het gaat om het slim benutten van regels, niet om oprekken.</p>
+
+  <h4>Altijd (elke aanvrager)</h4>
+  <ul>
+   <li><b>Rentevast 10 jaar of langer</b> — dan geldt de werkelijke rente in plaats van de normrente van 5%. Bij een rente onder de 5% levert dat direct meer leencapaciteit op. Een kort rentevast deel telt alleen tegen eigen rente als het binnen de rentevastperiode volledig wordt afgelost.</li>
+   <li><b>Renteaftrek benutten</b> — een box 1-deel mét aftrek geeft door de brutering altijd méér ruimte dan hetzelfde deel in box 3 of zonder aftrek. Houd delen dus in box 1 zolang dat fiscaal kan.</li>
+   <li><b>Energielabel correct invullen</b> — de verruiming is een vast bedrag búiten de toetsing: € 5.000 (C/D) tot € 40.000 (A++++ met garantie). Een vergeten of verkeerd label kost direct leencapaciteit.</li>
+   <li><b>Verduurzaming uit de lijst meefinancieren</b> — extra € 10.000 tot € 20.000 (afhankelijk van startlabel), stapelt met de label-verruiming, en EBV verhoogt bovendien het onderpandmaximum tot 106% van de marktwaarde.</li>
+   <li><b>Tweede inkomen volledig opgeven</b> — sinds 2023 telt het inkomen van de partner voor 100% mee in het toetsinkomen.</li>
+  </ul>
+
+  <h4>Alleenstaanden</h4>
+  <ul>
+   <li>Vink de <b>verhoging van € 17.000</b> aan: een vast extra bedrag buiten de toetsing. Voorwaarde: aantoonbaar niet-kwetsbaar, zonder persoonlijk onvermijdbare uitgaven — leg dit vast in het dossier.</li>
+  </ul>
+
+  <h4>AOW binnen 10 jaar (senioren)</h4>
+  <ul>
+   <li>Het pensioenscenario is meestal het <b>krapste toetsmoment</b>. De klassieke oplossing: zet een deel om in een <b>kortlopend annuïtair leningdeel dat vóór de AOW-datum volledig is afgelost</b> — precies wat de "route naar akkoord" automatisch uitrekent. Je benut zo de ruime maandlasten vóór pensionering zonder het AOW-moment te belasten.</li>
+   <li><b>Volledig pensioeninkomen aantonen</b> — vul AOW plus álle aanvullende pensioenen in; elk euro pensioeninkomen verhoogt de toegestane maandlast op het AOW-moment direct.</li>
+   <li>Ligt de AOW-datum <b>meer dan 10 jaar</b> na de toetsdatum, dan valt het pensioenscenario buiten de toets — een latere AOW-datum (controleer de werkelijke datum via de SVB) kan dus het verschil maken.</li>
+  </ul>
+
+  <h4>Einde renteaftrek binnen 10 jaar (30-jaarstermijn / bijleenregeling)</h4>
+  <ul>
+   <li>Vanaf dat moment telt de last van het deel <b>gebruteerd</b> mee (± factor 1,25–1,35). Los het deel vóór dat moment af, of houd er bewust maandruimte voor over. De tool toont dit moment apart in de resultatentabel.</li>
+  </ul>
+
+  <h4>Leningconstructie fijnslijpen</h4>
+  <ul>
+   <li><b>Lagere rente = meer ruimte</b> — de toetsrente is het naar bedrag × looptijd gewogen gemiddelde; het duurste deel drukt dus het zwaarst op het geheel.</li>
+   <li><b>Kolomgrens-effect</b> — de woonquote verspringt per rentekolom van 0,5%. Rond een kolomgrens kan een klein renteverschil de uitkomst zichtbaar veranderen. Nibud dempt dit bewust (afronding op 0,1%); bouw hier géén advies op dat alleen van een kolomsprong afhangt.</li>
+   <li><b>Aflossingsvrij geeft géén toetsvoordeel</b> — elk deel wordt als 30-jaars annuïteit getoetst. Het verlaagt wel de werkelijke maandlast (let op: maximaal 50% van de marktwaarde bij nieuwe hypotheken).</li>
+   <li><b>Alles in box 3 is vrijwel altijd ongunstiger</b> — zie de scenario-vergelijking onder het resultaat.</li>
+  </ul>
+
+  <p class="modal-let"><b>Let op:</b> maximaliseren betekent lenen tot de norm — beoordeel altijd of dat past bij de klantwens en betaalbaarheid. Explains en maatwerk boven de tabellen zijn aan de geldverstrekker en vallen buiten deze tool.</p>
+ </div>
+</div>
+
+<script>
+const NIBUD2026={"n":{"s":30000,"r":[[155,165,175,184,193,201,209,216,222,227,232,237],[162,173,183,193,202,212,220,227,234,241,246,251],[167,179,190,201,211,221,230,238,246,253,259,264],[171,183,195,206,216,226,236,246,254,261,268,274],[173,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[175,185,196,206,216,226,236,246,255,264,273,281],[176,186,196,206,216,226,236,246,255,264,273,281],[176,186,196,206,216,226,236,246,255,264,273,281],[177,187,197,207,216,226,236,246,255,264,273,281],[177,187,197,207,217,226,236,246,255,264,273,281],[178,188,198,207,217,227,236,246,255,264,273,281],[178,189,199,209,218,227,237,246,255,264,273,281],[179,189,199,210,219,228,237,246,255,264,273,281],[180,190,200,210,220,229,238,247,255,264,273,281],[181,191,201,211,221,230,239,247,256,264,273,281],[182,192,202,212,222,231,240,248,257,265,273,281],[183,194,204,214,223,232,241,250,258,267,274,282],[185,195,205,215,225,234,243,251,260,268,276,283],[186,197,207,217,227,236,245,253,262,270,278,285],[188,199,209,219,229,238,247,256,264,272,280,287],[190,200,211,221,231,241,250,258,266,274,282,289],[191,202,213,223,233,243,252,260,269,276,284,292],[193,204,215,225,235,245,254,263,271,279,286,293],[194,205,216,226,237,246,256,264,273,281,288,295],[195,206,217,228,238,248,257,266,275,282,290,297],[196,208,219,229,240,249,259,268,276,284,292,299],[197,209,220,231,241,251,261,270,278,286,294,301],[198,209,221,232,242,252,262,271,279,287,295,302],[199,210,222,232,243,253,263,272,281,289,296,303],[200,211,222,233,243,254,264,273,281,290,297,304],[201,212,223,234,244,254,264,273,282,290,298,305],[201,212,223,234,244,254,264,274,282,291,299,306],[202,213,224,234,245,255,265,274,283,291,299,306],[202,213,224,235,245,255,265,274,283,292,299,307],[202,214,225,235,246,256,265,274,284,292,300,307],[203,214,225,236,246,256,266,275,284,292,300,308],[204,215,225,236,246,256,266,275,284,293,301,308],[205,215,226,237,247,257,266,276,284,293,301,308],[205,216,226,237,247,257,267,276,285,293,301,309],[205,216,227,237,248,258,267,276,285,293,302,309],[206,217,227,238,248,258,268,277,286,294,302,310],[207,217,228,238,248,258,268,277,286,294,302,310],[208,218,228,239,249,259,269,278,286,295,302,310],[208,219,229,239,250,259,269,278,287,295,303,310],[209,219,230,240,250,260,269,279,287,295,303,310],[210,220,230,240,250,260,270,279,288,296,304,311],[210,221,231,241,251,261,270,279,288,296,304,311],[211,221,232,242,251,261,271,280,288,296,304,312],[211,222,232,242,252,261,271,280,289,297,305,312],[212,222,233,243,253,262,271,280,289,297,305,312],[212,223,234,244,253,263,271,281,289,298,305,313],[213,224,234,244,254,263,272,281,290,298,306,313],[213,224,235,245,255,264,273,281,290,298,306,313],[213,225,235,245,255,265,273,282,291,299,306,314],[214,225,236,246,256,265,274,282,291,299,307,314],[214,225,237,247,256,266,275,283,291,300,307,315],[215,226,237,247,257,267,275,284,292,300,308,315],[215,226,237,248,258,267,276,284,292,300,308,315],[216,227,237,248,258,267,277,285,293,300,308,315],[216,227,238,248,259,268,277,285,293,301,308,316],[217,228,238,249,259,268,277,286,294,301,309,316],[217,228,239,249,259,269,278,287,294,302,309,317],[218,229,239,250,259,269,278,287,295,302,309,317],[218,229,240,250,260,269,279,287,295,303,310,317],[218,229,240,250,260,270,279,288,296,303,310,317],[219,230,241,251,261,270,280,288,296,304,311,318],[219,230,241,251,261,271,280,289,297,304,311,318],[220,231,241,252,262,271,280,289,297,305,312,319],[220,231,242,252,262,272,281,289,298,305,313,319],[220,232,242,253,263,272,281,290,298,306,313,320],[221,232,243,253,263,273,282,290,299,306,314,320],[221,232,243,254,264,273,282,291,299,307,314,321],[222,233,244,254,264,274,283,291,299,308,315,321],[222,233,244,255,265,274,283,292,300,308,315,322]]},"a":{"s":29000,"r":[[185,189,194,197,201,204,207,209,211,213,215,217],[192,198,203,208,211,215,218,221,223,225,227,229],[199,206,212,217,221,225,228,231,234,237,239,241],[205,212,218,224,230,234,238,241,244,247,249,252],[209,217,223,229,235,240,245,248,252,255,257,260],[212,220,228,234,240,245,251,255,259,262,265,267],[216,224,231,239,245,251,256,261,265,269,272,275],[218,227,235,243,249,256,261,266,271,275,279,282],[219,229,238,246,253,260,266,271,275,280,284,288],[220,231,240,249,257,263,270,275,280,284,289,292],[221,232,242,251,259,266,273,279,284,289,293,297],[222,233,243,252,261,269,276,282,288,293,297,301],[223,234,244,253,263,271,279,285,291,296,301,305],[224,235,245,255,264,273,281,288,294,300,305,309],[225,236,246,256,266,274,283,290,297,303,308,313],[227,237,248,258,267,276,284,292,299,306,311,316],[228,239,249,259,268,277,286,294,301,308,314,319],[229,240,250,260,269,279,287,295,303,309,316,322],[231,241,252,261,271,280,289,297,304,311,318,324],[231,243,253,263,273,282,290,299,306,313,320,326],[233,244,255,265,275,283,292,300,308,315,322,328],[234,246,256,267,276,286,294,302,310,317,324,330],[236,248,258,268,279,288,297,305,313,320,327,333],[239,250,262,272,281,291,300,308,316,323,330,337],[242,254,265,275,285,294,304,312,320,327,335,341],[245,257,268,279,289,298,307,316,324,332,339,345],[248,260,272,283,293,303,311,320,329,336,343,350],[250,264,276,286,297,307,316,324,332,340,347,355],[252,266,279,290,300,311,320,328,337,344,352,359],[253,268,281,294,304,314,324,333,341,348,355,363],[254,270,284,296,308,318,328,337,345,353,360,366],[255,271,286,299,311,321,331,341,349,357,364,371],[256,272,287,301,314,325,335,344,353,361,368,375],[257,273,289,304,316,328,338,348,357,365,372,379],[258,274,290,305,319,330,341,351,360,368,376,383],[258,276,291,307,321,333,344,354,363,372,379,386],[259,276,292,308,323,336,346,356,366,375,383,390],[259,276,294,309,324,338,349,360,368,378,386,393],[260,277,294,310,325,340,352,362,371,380,389,397],[260,277,295,311,326,341,354,364,375,383,392,400],[261,278,295,312,327,342,356,367,377,386,394,403],[262,279,296,313,328,343,357,369,379,389,397,405],[262,279,296,313,329,344,358,371,382,391,399,407],[263,280,297,314,330,345,359,373,384,394,403,410],[264,280,297,314,331,346,360,373,384,395,405,413],[265,281,297,314,331,347,361,373,384,395,406,416],[265,282,298,314,331,348,361,373,384,395,406,417],[266,283,299,315,332,348,361,373,384,395,406,417],[267,283,300,316,332,348,361,373,384,395,406,417],[268,284,300,316,333,348,361,373,384,395,406,417],[269,285,301,317,333,348,361,373,384,395,406,417],[271,285,301,317,333,348,361,373,384,395,406,417],[272,286,302,318,334,348,361,373,384,395,406,417],[272,288,302,319,334,348,361,373,384,395,406,417],[273,288,303,319,334,348,361,373,384,395,406,417],[274,289,304,319,334,348,361,373,384,395,406,417],[275,290,304,319,334,348,361,373,384,395,406,417],[276,291,305,319,334,348,361,373,384,395,406,417],[277,291,306,320,334,348,361,373,384,395,406,417],[277,292,306,320,334,348,361,373,384,395,406,417],[277,292,306,320,334,348,361,373,384,395,406,417],[277,292,306,321,334,348,361,373,384,395,406,417],[278,292,307,321,334,348,361,373,384,395,406,417],[278,293,307,321,334,348,361,373,384,395,406,417],[278,293,307,321,335,348,361,373,384,395,406,417],[278,293,307,321,335,348,361,373,384,395,406,417],[279,293,308,321,335,348,361,373,384,395,406,417],[279,294,308,322,335,348,361,373,384,395,406,417],[279,294,308,322,335,348,361,373,384,395,406,417],[280,294,308,322,336,348,361,373,384,395,406,417],[280,294,309,322,336,349,361,373,384,395,406,417],[280,295,309,323,336,349,361,373,384,395,406,417],[281,295,309,323,336,349,361,373,384,395,406,417],[281,295,309,323,336,349,361,373,384,395,406,417],[281,296,309,323,337,349,362,373,384,395,406,417],[282,296,310,323,337,350,362,374,385,395,406,417],[282,296,310,324,337,350,362,374,385,395,406,417],[282,296,310,324,337,350,362,374,385,395,406,417],[283,297,311,324,337,350,363,374,385,396,406,417],[283,297,311,325,338,351,363,374,385,396,406,417],[283,297,311,325,338,351,363,375,385,396,406,417],[284,298,312,325,338,351,363,375,386,396,406,417]]},"b3n":{"s":30000,"r":[[140,142,145,147,149,151,152,154,156,157,158,160],[145,148,150,152,154,156,158,160,161,163,164,166],[150,153,155,157,160,162,163,165,167,168,170,171],[153,156,158,161,163,165,167,168,170,172,173,175],[156,158,161,163,165,167,169,171,173,174,176,177],[157,160,162,165,167,169,171,173,175,176,178,179],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,162,164,167,169,171,173,175,176,178,179,181],[159,162,165,167,169,171,173,175,177,178,180,181],[160,163,165,168,170,172,174,176,178,179,181,182],[161,163,166,168,171,173,175,177,178,180,182,183],[161,164,167,169,171,174,175,177,179,181,182,184],[162,165,167,170,172,174,176,178,180,181,183,184],[163,165,168,170,173,175,177,179,180,182,184,185],[163,166,169,171,173,175,177,179,181,183,184,186],[164,167,169,172,174,176,178,180,182,183,185,186],[164,167,170,172,175,177,179,181,183,184,186,187],[165,168,171,173,175,178,180,182,183,185,187,188],[166,169,171,174,176,179,181,182,184,186,187,189],[167,170,172,175,177,179,182,183,185,187,188,190],[167,170,173,176,178,180,182,184,186,188,190,191],[168,171,174,177,179,181,184,185,187,189,191,192],[169,173,176,178,181,183,185,187,189,190,192,193],[170,173,177,180,182,184,186,188,190,192,193,195],[172,175,178,181,184,186,188,190,192,194,195,197],[173,176,179,182,185,187,190,192,193,195,197,198],[175,178,181,184,187,189,191,193,195,197,199,200],[177,180,183,185,188,191,193,195,197,199,200,202],[178,181,184,187,190,193,195,197,199,201,202,204],[180,183,186,188,191,194,196,198,200,202,204,206],[181,184,187,190,192,195,198,200,202,204,205,207],[182,186,188,191,194,197,199,201,203,205,207,209],[183,187,190,193,195,198,200,203,205,207,208,210],[185,188,191,194,196,199,202,204,206,208,210,211],[185,189,192,195,198,200,203,205,207,209,211,213],[186,190,193,196,199,201,204,206,209,210,212,214],[187,191,194,197,200,202,205,207,210,212,213,215],[188,191,195,198,201,203,206,208,210,213,214,216],[189,192,196,199,202,204,206,209,211,213,215,217],[190,193,197,200,202,205,207,209,212,214,216,218],[191,194,197,200,203,206,208,210,213,215,217,219],[191,195,198,201,204,206,209,211,213,216,218,219],[192,195,198,202,205,207,210,212,214,217,219,220],[193,196,199,203,205,208,210,213,215,217,219,221],[193,197,200,203,206,209,211,213,216,218,220,222],[194,197,201,204,207,209,212,214,216,218,221,223],[195,198,201,204,207,210,213,215,217,219,221,223],[195,199,202,205,208,211,213,216,218,220,222,224],[196,199,203,206,208,211,214,216,218,220,222,225],[196,200,203,206,209,212,215,217,219,221,223,225],[197,200,204,207,210,213,215,218,220,222,224,225],[197,201,204,207,210,213,216,218,220,223,224,226],[198,202,205,208,211,214,216,219,221,223,225,227],[198,202,205,209,212,214,217,220,222,224,226,227],[199,202,206,209,212,215,218,220,222,224,226,228],[199,203,207,210,213,215,218,221,223,225,227,229],[200,203,207,210,213,216,218,221,224,226,228,229],[201,204,207,211,214,217,219,222,224,226,228,230],[201,205,208,211,214,217,220,222,225,227,229,231],[201,205,208,212,215,218,220,223,225,227,229,231],[202,206,209,212,215,218,221,223,226,228,230,232],[202,206,209,212,216,219,221,224,226,228,230,232],[203,207,210,213,216,219,222,224,226,229,231,233],[203,207,210,213,217,220,222,225,227,229,231,233],[203,207,211,214,217,220,223,225,227,230,232,234],[204,208,211,214,217,220,223,226,228,230,232,234],[204,208,212,215,218,221,224,226,228,230,233,235],[204,208,212,215,218,221,224,226,229,231,233,235],[205,208,212,215,218,222,224,227,229,231,233,235],[205,209,213,216,219,222,225,227,229,232,234,236],[205,209,213,216,219,222,225,228,230,232,234,236],[206,209,213,217,220,222,225,228,230,232,234,237],[206,210,214,217,220,223,226,228,231,233,235,237],[207,210,214,217,220,223,226,229,231,233,235,237],[207,211,214,218,221,223,226,229,231,234,236,238],[207,211,214,218,221,224,227,229,232,234,236,238],[208,211,215,218,222,224,227,230,232,234,236,238],[208,212,215,219,222,225,227,230,233,235,237,239],[208,212,215,219,222,225,228,231,233,235,237,239],[209,212,216,219,223,226,228,231,233,236,238,240]]},"b3a":{"s":29000,"r":[[179,182,185,188,190,193,195,197,199,201,202,204],[186,189,192,195,198,200,202,204,206,208,210,211],[192,195,198,201,204,206,208,211,213,215,216,218],[197,200,203,206,209,212,214,216,218,220,222,224],[200,203,207,210,212,215,217,220,222,224,226,228],[202,205,209,212,214,217,220,222,224,226,228,230],[203,207,210,213,216,219,221,223,226,228,230,231],[205,208,211,214,217,220,222,225,227,229,231,233],[206,209,212,216,218,221,224,226,228,230,232,234],[207,210,214,217,220,222,225,227,229,231,233,235],[208,211,214,217,220,223,226,228,230,232,234,236],[208,212,215,218,221,224,226,229,231,233,235,237],[209,213,216,219,222,225,227,230,232,234,236,238],[211,214,218,221,224,226,229,231,234,236,238,240],[212,216,219,222,225,228,231,233,235,237,239,241],[214,217,221,224,227,230,232,235,237,239,241,243],[215,219,222,225,228,231,234,236,238,241,243,244],[216,220,223,227,230,232,235,238,240,242,244,246],[217,221,225,228,231,234,236,239,241,243,245,247],[219,222,226,229,232,235,238,240,242,245,247,249],[220,224,228,231,234,237,240,242,245,247,249,251],[221,225,229,233,236,239,241,244,246,248,251,253],[222,227,231,234,237,240,243,246,248,250,252,254],[224,228,232,236,239,242,245,248,250,252,254,256],[226,230,234,238,241,244,247,249,252,254,256,258],[227,231,235,239,242,245,248,251,253,255,258,260],[228,232,236,240,244,247,249,252,255,257,259,261],[229,233,237,241,245,248,251,254,256,258,261,263],[231,235,238,242,246,249,252,255,257,260,262,264],[232,236,240,243,247,250,253,256,259,261,263,265],[232,237,240,244,248,251,254,257,259,262,264,266],[233,237,241,244,248,251,254,257,260,262,264,267],[233,237,241,245,248,252,255,258,260,263,265,267],[234,238,242,245,249,252,255,258,261,263,265,268],[234,238,242,246,249,252,256,259,262,264,266,268],[235,239,243,247,250,253,257,259,262,265,267,269],[235,240,243,247,251,254,257,260,263,265,268,270],[236,240,244,248,251,255,258,261,264,266,269,271],[237,241,245,249,252,256,259,262,265,267,270,272],[238,242,246,250,253,257,260,262,266,268,271,273],[239,243,247,251,254,258,260,263,266,269,272,274],[239,243,247,252,255,258,261,264,267,270,272,275],[240,244,248,252,256,259,262,265,268,271,273,276],[241,246,249,253,257,261,264,266,269,271,274,277],[243,247,251,255,259,262,265,268,271,273,276,278],[244,249,253,256,260,263,267,270,272,275,277,280],[245,250,254,258,261,265,268,271,274,276,279,282],[246,251,256,259,263,266,270,273,275,278,280,283],[248,253,257,261,264,268,271,274,277,280,282,284],[249,254,258,262,266,269,273,276,279,281,283,286],[251,255,260,264,267,271,274,277,280,283,285,287],[252,256,261,265,269,272,275,279,282,284,287,289],[253,258,262,266,270,273,277,280,283,286,288,290],[254,259,263,267,271,275,278,281,284,287,289,292],[255,260,264,268,272,276,279,282,285,288,291,293],[256,261,265,269,273,277,280,283,287,289,292,294],[257,262,266,270,274,278,281,284,287,290,293,295],[258,263,267,271,275,279,282,285,288,291,294,296],[258,264,268,272,276,280,283,286,289,292,295,297],[259,264,269,273,276,280,284,287,290,292,295,298],[260,264,269,273,277,281,284,287,290,293,296,299],[260,265,269,274,277,281,285,288,291,294,297,299],[261,265,270,274,278,282,285,289,291,294,297,299],[261,265,270,275,278,282,286,289,292,294,297,300],[261,266,270,275,279,282,286,289,292,295,297,300],[262,266,271,275,279,283,286,290,293,295,298,301],[262,267,271,276,280,283,287,290,293,296,298,301],[262,267,271,276,280,283,287,290,293,296,299,301],[263,267,272,276,280,284,287,291,294,297,299,302],[263,268,272,276,280,284,287,291,294,297,299,302],[263,268,272,277,281,285,288,291,294,297,300,302],[264,268,273,277,281,285,288,292,295,298,300,303],[264,269,273,277,281,285,289,292,295,298,301,303],[264,269,273,277,282,285,289,292,295,298,301,303],[265,269,274,278,282,286,289,292,296,298,301,304],[265,270,274,278,282,286,290,293,296,299,302,304],[265,270,274,278,283,286,290,293,296,299,302,304],[266,270,275,279,283,286,290,293,297,299,302,305],[266,271,275,279,283,287,290,294,297,300,302,305],[266,271,275,279,283,287,291,294,297,300,303,305],[266,271,276,280,283,287,291,294,297,300,303,306],[267,271,276,280,284,288,291,294,298,301,303,306]]}};
+</script>
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const fmt0=n=>{const v=Math.round(n)||0;return "€ "+v.toLocaleString("nl-NL");};
+const fmtP=n=>n.toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
+const fmtP3=n=>n.toLocaleString("nl-NL",{minimumFractionDigits:3,maximumFractionDigits:3})+"%";
+function parseEur(s){s=(s||"").replace(/[€\s.]/g,"").replace(",",".");const v=parseFloat(s);return isNaN(v)?0:v;}
+function parsePct(s){const v=parseFloat((s||"").replace(",","."));return isNaN(v)?0:v;}
+function fmtEurInput(el){const v=parseEur(el.value);el.value=v?"€ "+Math.round(v).toLocaleString("nl-NL"):"";}
+function annF(rPct,n){const r=rPct/100/12;if(n<=0)return 0;if(r===0)return 1/n;return r/(1-Math.pow(1+r,-n));}
+function renteKolom(r){const g=[1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5];for(let i=0;i<g.length;i++){if(r<=g[i]+1e-9)return i;}return 11;}
+const KOLOM_LBL=["≤ 1,500%","1,501–2,000%","2,001–2,500%","2,501–3,000%","3,001–3,500%","3,501–4,000%","4,001–4,500%","4,501–5,000%","5,001–5,500%","5,501–6,000%","6,001–6,500%","≥ 6,501%"];
+function quote(tab,inkomen,kol){const T=NIBUD2026[tab];let idx=Math.floor((inkomen-T.s)/1000);idx=Math.max(0,Math.min(idx,T.r.length-1));return T.r[idx][kol]/10;}
+function maandenTussen(d1,d2){if(!d1||!d2)return null;const a=new Date(d1),b=new Date(d2);
+  return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+1;}
+const momentLbl=m=>m===1?"Bij aanvang":"Na "+(m-1)+" maanden";
+
+function leeftijdOp(gebStr,peil){
+  if(!gebStr)return null;const g=new Date(gebStr);if(isNaN(g))return null;
+  const p=peil||new Date();let l=p.getFullYear()-g.getFullYear();
+  const m=p.getMonth()-g.getMonth();
+  if(m<0||(m===0&&p.getDate()<g.getDate()))l--;
+  return l>=0&&l<130?l:null;}
+function toonLeeftijden(){
+  [["c_geb","c_leeftijd"],["p_geb","p_leeftijd"]].forEach(([g,t])=>{
+    const el=$(t);if(!el)return;
+    const l=leeftijdOp($(g).value);
+    el.textContent=l===null?"":l+" jaar";
+    el.title=l===null?"":"Leeftijd op "+new Date().toLocaleDateString("nl-NL");
+  });}
+
+/* ---------- leningdelen UI ---------- */
+const VORMEN=["Annuïtair","Lineair","Aflossingsvrij"];
+function deelRij(d){
+  d=d||{vorm:"Annuïtair",bedrag:"",aftm:"360",box3:"",rv:"120",rente:"",duur:"360"};
+  const tr=document.createElement("tr");
+  tr.innerHTML=
+   '<td data-label="Aflossingsvorm"><select class="d-vorm">'+VORMEN.map(v=>'<option'+(v===d.vorm?" selected":"")+'>'+v+'</option>').join("")+'</select></td>'+
+   '<td data-label="Bedrag"><input type="text" inputmode="decimal" class="eur d-bedrag num" style="width:104px" value="'+d.bedrag+'"></td>'+
+   '<td data-label="Aftrekbaar t/m (mnd)"><input type="text" inputmode="numeric" class="d-aftm num pct" value="'+d.aftm+'"></td>'+
+   '<td data-label="Waarvan box 3"><input type="text" inputmode="decimal" class="eur d-box3 num" style="width:96px" value="'+d.box3+'"></td>'+
+   '<td data-label="Rentevast (mnd)"><input type="text" inputmode="numeric" class="d-rv num pct" value="'+d.rv+'"></td>'+
+   '<td data-label="Rente %"><input type="text" inputmode="decimal" class="d-rente num pct" value="'+d.rente+'"></td>'+
+   '<td data-label="Duur (mnd)"><input type="text" inputmode="numeric" class="d-duur num pct" value="'+d.duur+'"></td>'+
+   '<td class="act"><button class="btn-del" title="Verwijderen">✕</button></td>';
+  tr.querySelector(".btn-del").addEventListener("click",()=>{tr.remove();bereken();});
+  $("delenBody").appendChild(tr);
+  return tr;
+}
+function leesDelen(){
+  const delen=[],trs=[];
+  document.querySelectorAll("#delenBody tr").forEach(tr=>{
+    const d={vorm:tr.querySelector(".d-vorm").value,
+      bedrag:parseEur(tr.querySelector(".d-bedrag").value),
+      aftm:Math.round(parsePct(tr.querySelector(".d-aftm").value))||0,
+      box3:parseEur(tr.querySelector(".d-box3").value),
+      rv:Math.round(parsePct(tr.querySelector(".d-rv").value))||0,
+      rente:parsePct(tr.querySelector(".d-rente").value),
+      duur:Math.round(parsePct(tr.querySelector(".d-duur").value))||360};
+    if(d.bedrag>0){delen.push(d);trs.push(tr);}
+  });
+  return {delen,trs};
+}
+
+/* ---------- invoer verzamelen ---------- */
+function leesInput(){
+  const {delen,trs}=leesDelen();
+  const partner=$("partnerAan").checked, td=$("toetsdatum").value;
+  const pers=[{ink:parseEur($("c_ink").value),pens:parseEur($("c_pens").value),aowM:maandenTussen(td,$("c_aow").value)}];
+  if(partner)pers.push({ink:parseEur($("p_ink").value),pens:parseEur($("p_pens").value),aowM:maandenTussen(td,$("p_aow").value)});
+  const labelVal=$("label").value, extraLabel=labelVal==="geen"?0:parseFloat(labelVal);
+  const extraVerbouwing=$("verbouwing").checked?({"0":20000,"5000":15000,"10000":10000,"20000":10000,"25000":0,"30000":0,"40000":0,"geen":10000})[labelVal]:0;
+  return {delen,trs,pers,
+    normrente:parsePct($("normrente").value)||5,
+    extraBedrag:extraLabel+extraVerbouwing,
+    mw:parseEur($("marktwaarde").value), ebv:parseEur($("ebv").value),
+    verhAlleen:$("alleenstaand").checked?17000:0};
+}
+
+/* ---------- kernberekening (herbruikbaar met alternatieve delen) ---------- */
+function berekenCore(inp){
+  const delen=inp.delen.map(d=>({...d}));
+  const pers=inp.pers;
+  const hoofdsom=delen.reduce((s,d)=>s+d.bedrag,0);
+  if(!hoofdsom||!pers.some(p=>p.ink>0))return null;
+
+  let sw=0,st=0;
+  delen.forEach(d=>{
+    const n=Math.min(d.duur,360);
+    d.toetsrente=(d.rv>=120||d.duur<=d.rv)?d.rente:Math.max(d.rente,inp.normrente);
+    d.last=d.bedrag*annF(d.toetsrente,n);
+    sw+=d.bedrag*n; st+=d.bedrag*d.toetsrente*n;
+  });
+  const toetsrente=st/sw, kol=renteKolom(toetsrente);
+  // verruimingen buiten de toetsing (TRHK): energielabel + evt. verhoging alleenstaande (vast bedrag,
+  // omgerekend naar maandlast via de annuïteitenfactor bij de gewogen toetsrente)
+  const extraMaandlast=(inp.extraBedrag+(inp.verhAlleen||0))*annF(toetsrente,360);
+  const norminkomen=pers.reduce((s,p)=>s+p.ink,0);
+
+  const mSet=new Set([1]);
+  const HORIZON=121; // GHF/TRHK: wijzigingen binnen 10 jaar (120 mnd) toetsen
+  delen.forEach(d=>{const e=Math.min(d.duur,360);
+    if(d.aftm>=1&&d.aftm<e)mSet.add(d.aftm+1);
+    if(e<360)mSet.add(e+1);});
+  // TRHK: pensioenscenario alleen toetsen als AOW binnen 10 jaar (120 mnd) valt
+  pers.forEach(p=>{if(p.aowM!==null&&p.aowM>=1&&p.aowM<=120)mSet.add(p.aowM+1);});
+  const momenten=[...mSet].filter(m=>m>=1&&m<=HORIZON).sort((a,b)=>a-b);
+
+  const rows=momenten.map(m=>{
+    let ink=0,alleAOW=true;
+    pers.forEach(p=>{
+      const alAOW=p.aowM!==null&&p.aowM<1;                       // al AOW op toetsdatum
+      const wordtAOW=p.aowM!==null&&p.aowM>=1&&p.aowM<=120;      // AOW binnen 10 jaar
+      const isAOW=alAOW||(wordtAOW&&m>p.aowM);
+      ink+=(wordtAOW&&m>p.aowM)?p.pens:p.ink;
+      if(!isAOW&&p.ink>0)alleAOW=false;
+    });
+    const tab=alleAOW?"a":"n",tab3=alleAOW?"b3a":"b3n";
+    const q1=quote(tab,ink,kol),q3=quote(tab3,ink,kol),brut=q3>0?q1/q3:1;
+    let last=0;
+    delen.forEach(d=>{
+      if(m>Math.min(d.duur,360))return;
+      const fB3=d.bedrag>0?Math.min(d.box3,d.bedrag)/d.bedrag:0;
+      const lB1=d.last*(1-fB3),lB3=d.last*fB3;
+      last+=(m>d.aftm?lB1*brut:lB1)+lB3*brut;
+    });
+    const maxM=(ink*q1/100)/12+extraMaandlast;
+    return {m,ink,q1,q3,brut,last,maxM,ruimte:maxM-last,rate:last/hoofdsom};
+  });
+
+  let baseMax=Infinity,bindIdx=0;
+  rows.forEach((r,i)=>{if(r.rate>0){const c=r.maxM/r.rate;if(c<baseMax){baseMax=c;bindIdx=i;}}});
+  if(!isFinite(baseMax))baseMax=0;
+  let extraLening=0,extraDuur=0;
+  const bindM=rows[bindIdx].m;
+  if(bindM>1){
+    extraDuur=bindM-1;
+    let rest=Infinity;
+    rows.forEach(r=>{if(r.m<bindM)rest=Math.min(rest,r.maxM-baseMax*r.rate);});
+    if(isFinite(rest)&&rest>0)extraLening=rest/annF(toetsrente,extraDuur);
+  }
+  const maxInkomen=baseMax;                 // verhoging alleenstaande zit al in de maandruimte
+  const maxInkomenIncl=baseMax+extraLening;
+  const maxOnderpand=inp.mw>0?Math.min(inp.mw+inp.ebv,inp.mw*1.06):0;
+  const maxHyp=Math.min(maxInkomenIncl,maxOnderpand||Infinity);
+  const alleRuimteOk=rows.every(r=>r.ruimte>=-0.5);
+  const akkoord=alleRuimteOk&&(!maxOnderpand||hoofdsom<=maxOnderpand+0.5);
+  return {delen,hoofdsom,toetsrente,kol,normrente:inp.normrente,norminkomen,
+    extraBedrag:inp.extraBedrag,extraMaandlast,rows,bindIdx,baseMax,extraLening,extraDuur,
+    verhAlleen:inp.verhAlleen,maxInkomen,maxInkomenIncl,mw:inp.mw,ebv:inp.ebv,maxOnderpand,maxHyp,
+    akkoord,alleRuimteOk,tekortRow:rows.find(r=>r.ruimte<-0.5)};
+}
+
+/* ---------- oplosser: reken zelf uit wanneer het wél akkoord is ---------- */
+function pasOm(delen,i,X,duurN){
+  const kopie=delen.map(d=>({...d}));
+  const d=kopie[i];
+  if(X>=d.bedrag-0.5){
+    d.vorm="Annuïtair";d.duur=duurN;d.rv=Math.min(d.rv,duurN)||duurN;d.aftm=Math.min(d.aftm,duurN);d._omgezet=true;
+  }else{
+    d.bedrag=Math.round(d.bedrag-X);
+    kopie.push({vorm:"Annuïtair",bedrag:Math.round(X),aftm:Math.min(d.aftm,duurN),box3:0,
+      rv:duurN,rente:d.rente,duur:duurN,_omgezet:true,_nieuw:true,_bron:i});
+  }
+  return kopie;
+}
+function zoekOmzetting(inp,M0){
+  if(!M0||M0.akkoord)return null;
+  if(M0.hoofdsom>M0.maxOnderpand+0.5&&M0.maxOnderpand>0)return null; // onderpand-probleem: omzetten helpt niet
+  let delen=inp.delen.map(d=>({...d}));
+  const stappen=[];
+  for(let iter=0;iter<4;iter++){
+    const Mi=berekenCore({...inp,delen});
+    if(!Mi)return null;
+    if(Mi.akkoord)return {delen,stappen,M:Mi};
+    const ti=Mi.rows.find(r=>r.ruimte<-0.5);
+    if(!ti||ti.m<=1)return null; // tekort al bij aanvang → omzetten lost niets op
+    const duurN=ti.m-1;
+    const kand=delen.map((d,i)=>({d,i}))
+      .filter(o=>Math.min(o.d.duur,360)>=ti.m&&!o.d._omgezet&&o.d.box3<o.d.bedrag)
+      .sort((a,b)=>{
+        const av=a.d.vorm==="Aflossingsvrij"?1:0,bv=b.d.vorm==="Aflossingsvrij"?1:0;
+        return av-bv||b.d.bedrag-a.d.bedrag;});
+    if(!kand.length)return null;
+    const c=kand[0];
+    const test=X=>{const M=berekenCore({...inp,delen:pasOm(delen,c.i,X,duurN)});return M&&M.akkoord&&M.rows.every(r=>r.ruimte>=0);};
+    if(test(c.d.bedrag)){
+      let lo=0,hi=c.d.bedrag;
+      for(let k=0;k<45;k++){const mid=(lo+hi)/2;if(test(mid))hi=mid;else lo=mid;}
+      let X=Math.min(c.d.bedrag,Math.ceil(hi/100)*100);
+      while(!test(X)&&X<c.d.bedrag)X=Math.min(c.d.bedrag,X+100);
+      stappen.push({van:c.i,X,duurN,rente:c.d.rente,heel:X>=c.d.bedrag-0.5,vorm:c.d.vorm,bedragVan:c.d.bedrag});
+      delen=pasOm(delen,c.i,X,duurN);
+    }else{
+      stappen.push({van:c.i,X:c.d.bedrag,duurN,rente:c.d.rente,heel:true,vorm:c.d.vorm,bedragVan:c.d.bedrag});
+      delen=pasOm(delen,c.i,c.d.bedrag,duurN);
+    }
+  }
+  const Mf=berekenCore({...inp,delen});
+  return Mf&&Mf.akkoord?{delen,stappen,M:Mf}:null;
+}
+let OPLOSSING=null,VERLAGING=null;
+
+function applyOmzetting(){
+  if(!OPLOSSING)return;
+  const {trs}=leesDelen();
+  OPLOSSING.stappen.forEach(s=>{
+    const tr=trs[s.van];if(!tr)return;
+    if(s.heel){
+      tr.querySelector(".d-vorm").value="Annuïtair";
+      tr.querySelector(".d-duur").value=s.duurN;
+      tr.querySelector(".d-rv").value=Math.min(parsePct(tr.querySelector(".d-rv").value)||s.duurN,s.duurN);
+      const a=Math.round(parsePct(tr.querySelector(".d-aftm").value));
+      tr.querySelector(".d-aftm").value=Math.min(a||s.duurN,s.duurN);
+    }else{
+      const oud=parseEur(tr.querySelector(".d-bedrag").value);
+      tr.querySelector(".d-bedrag").value="€ "+Math.round(oud-s.X).toLocaleString("nl-NL");
+      const a=Math.round(parsePct(tr.querySelector(".d-aftm").value));
+      deelRij({vorm:"Annuïtair",bedrag:"€ "+Math.round(s.X).toLocaleString("nl-NL"),
+        aftm:Math.min(a||s.duurN,s.duurN),box3:"",rv:s.duurN,
+        rente:s.rente.toLocaleString("nl-NL",{minimumFractionDigits:2}),duur:s.duurN});
+    }
+  });
+  bereken();
+  if($("resultaat").scrollIntoView)$("resultaat").scrollIntoView({behavior:"smooth"});
+}
+function applyVerlaging(){
+  if(!VERLAGING)return;
+  const {trs}=leesDelen();
+  const f=VERLAGING.factor;
+  trs.forEach(tr=>{
+    const b=parseEur(tr.querySelector(".d-bedrag").value);
+    tr.querySelector(".d-bedrag").value="€ "+Math.floor(b*f).toLocaleString("nl-NL");
+    const b3=parseEur(tr.querySelector(".d-box3").value);
+    if(b3)tr.querySelector(".d-box3").value="€ "+Math.floor(b3*f).toLocaleString("nl-NL");
+  });
+  bereken();
+  if($("resultaat").scrollIntoView)$("resultaat").scrollIntoView({behavior:"smooth"});
+}
+
+/* ---------- rendering ---------- */
+function routeNaarAkkoord(inp,M){
+  OPLOSSING=zoekOmzetting(inp,M);
+  VERLAGING=null;
+  let html='<h2 style="margin-top:24px">Route naar akkoord</h2>';
+  const opties=[];
+
+  if(OPLOSSING){
+    const beschr=OPLOSSING.stappen.map(s=>{
+      const nr=s.van+1;
+      return s.heel
+        ? 'Kort de looptijd van leningdeel '+nr+' ('+s.vorm.toLowerCase()+' '+fmt0(s.bedragVan)+') in tot <b>'+s.duurN+' maanden</b> (annuïtair, rente '+fmtP3(s.rente)+') — het deel is dan volledig afgelost vóór het tekortmoment.'
+        : 'Zet <b>'+fmt0(s.X)+'</b> van leningdeel '+nr+' ('+s.vorm.toLowerCase()+' '+fmt0(s.bedragVan)+') om in een apart <b>annuïtair leningdeel met een looptijd van '+s.duurN+' maanden</b> (rente '+fmtP3(s.rente)+'). Dit deel is volledig afgelost vóór het tekortmoment.';
+    }).join('<br>');
+    const Mo=OPLOSSING.M;
+    const krap=Mo.rows.reduce((a,r)=>r.ruimte<a.ruimte?r:a,Mo.rows[0]);
+    opties.push('<div class="opl"><div class="opl-kop">Optie 1 · Extra aflossing (kortlopend leningdeel) — hoofdsom blijft '+fmt0(M.hoofdsom)+'</div>'+
+      '<p>'+beschr+'</p>'+
+      '<p class="opl-res">Nieuwe toetsrente '+fmtP3(Mo.toetsrente)+' · maandlast bij aanvang '+fmt0(Mo.rows[0].last)+' · kleinste ruimte '+fmt0(krap.ruimte)+' ('+momentLbl(krap.m).toLowerCase()+') → <b>AKKOORD</b></p>'+
+      '<button class="btn btn-opl" id="btnOmzet">✓ Pas deze constructie toe</button></div>');
+  }
+
+  if(M.baseMax<M.hoofdsom-0.5){
+    const naar=Math.floor(Math.min(M.baseMax,M.maxOnderpand||Infinity));
+    VERLAGING={factor:naar/M.hoofdsom,naar};
+    opties.push('<div class="opl"><div class="opl-kop">Optie '+(opties.length+1)+' · Verlaag de hoofdsom</div>'+
+      '<p>Verlaag de hoofdsom naar <b>'+fmt0(naar)+'</b> (−'+fmt0(M.hoofdsom-naar)+') bij gelijkblijvende leningconstructie en verhoudingen. Op het krapste toetsmoment ('+momentLbl(M.rows[M.bindIdx].m).toLowerCase()+') is de ruimte dan € 0.</p>'+
+      '<button class="btn btn-opl" id="btnVerlaag">✓ Pas verlaging toe</button></div>');
+  }
+
+  if(!opties.length){
+    if(M.maxOnderpand&&M.hoofdsom>M.maxOnderpand+0.5)
+      opties.push('<div class="opl"><p>De hoofdsom overschrijdt het maximum op onderpand ('+fmt0(M.maxOnderpand)+'). Verlaag de hoofdsom of verhoog de marktwaarde/EBV.</p></div>');
+    else if(M.rows[0]&&M.rows[0].ruimte<-0.5)
+      opties.push('<div class="opl"><p>Er is al <b>bij aanvang</b> een tekort van '+fmt0(M.rows[0].ruimte)+'. Een kortlopend leningdeel lost dit niet op; alleen een lagere hoofdsom, een lagere rente of hoger toetsinkomen helpt.</p></div>');
+    else
+      opties.push('<div class="opl"><p>Geen automatische route gevonden; pas de constructie handmatig aan.</p></div>');
+  }
+  return html+opties.join("");
+}
+
+function box3Vergelijk(inp,M){
+  // zelfde constructie, maar elk deel volledig in box 3 (geen renteaftrek)
+  const delen3=inp.delen.map(d=>({...d,box3:d.bedrag}));
+  const M3=berekenCore({...inp,delen:delen3});
+  if(!M3)return"";
+  const dMax=M3.maxInkomenIncl-M.maxInkomenIncl;
+  const t3=M3.rows.find(r=>r.ruimte<-0.5);
+  return '<div class="note" style="margin-top:14px"><b>Scenario-vergelijking — zelfde constructie geheel in box 3:</b> '+
+    'maximaal op basis van inkomen '+fmt0(M3.maxInkomenIncl)+' ('+(dMax<-0.5?fmt0(dMax)+' lager':dMax>0.5?fmt0(dMax)+' hoger':'gelijk')+
+    ') · maandlast bij aanvang '+fmt0(M3.rows[0].last)+' (gebruteerd) · '+
+    (M3.akkoord?'hoofdsom akkoord':'NIET akkoord'+(t3?' ('+momentLbl(t3.m).toLowerCase()+' tekort '+fmt0(t3.ruimte)+')':''))+
+    '. Door de brutering (woonquote box 1 / box 3) is een box 3-deel in de toets gelijk aan een box 1-deel zonder aftrek; zolang er renteaftrek is, geeft box 1 dus nooit minder ruimte. Ook een aflossingsvrij box 3-deel wordt volgens de GHF als 30-jaars annuïteit getoetst.</div>';
+}
+function bereken(){
+  toonLeeftijden();
+  const inp=leesInput();
+  const M=berekenCore(inp);
+  const el=$("resultaat");
+  if(!M){el.innerHTML='<h2>Resultaat</h2><p style="color:#7a8a96">Vul minimaal één inkomen en één leningdeel in om de toetsing te zien.</p>';return;}
+  M.trs=inp.trs;
+  const r0=M.rows[0];
+  const basis=M.maxHyp===M.maxOnderpand&&M.maxOnderpand<M.maxInkomenIncl?"op basis van marktwaarde":
+    (M.extraLening>1&&M.maxInkomenIncl>M.maxInkomen+1?"op basis van inkomen en extra aflossing(en)":"op basis van inkomen");
+
+  let melding;
+  if(M.akkoord)melding='<div class="melding ok">✔ De hoofdsom van '+fmt0(M.hoofdsom)+' is akkoord.</div>';
+  else if(M.tekortRow)melding='<div class="melding err">✘ De hoofdsom van '+fmt0(M.hoofdsom)+' is NIET akkoord. '+momentLbl(M.tekortRow.m)+' ontstaat een tekort van '+fmt0(M.tekortRow.ruimte)+' ten opzichte van de toegestane maandlast.</div>';
+  else melding='<div class="melding err">✘ De hoofdsom van '+fmt0(M.hoofdsom)+' is NIET akkoord: hoger dan het maximum op onderpand ('+fmt0(M.maxOnderpand)+').</div>';
+
+  el.innerHTML=
+   '<div class="res-kop"><h2 style="margin:0">Resultaat toetsing</h2>'+
+   '<span class="badge '+(M.akkoord?'ok':'err')+'">'+(M.akkoord?'AKKOORD':'NIET AKKOORD')+'</span></div>'+
+   '<div class="kv">'+
+    '<div class="item"><div class="k">Norm-/toetsinkomen</div><div class="v">'+fmt0(M.norminkomen)+'</div><div class="s">woonquote box 1: '+fmtP(r0.q1)+' · box 3: '+fmtP(r0.q3)+'</div></div>'+
+    '<div class="item"><div class="k">Gewogen toetsrente</div><div class="v">'+fmtP3(M.toetsrente)+'</div><div class="s">kolom '+KOLOM_LBL[M.kol]+' · normrente '+fmtP3(M.normrente)+'</div></div>'+
+    '<div class="item"><div class="k">Maximaal te verwonen per jaar</div><div class="v">'+fmt0(r0.maxM*12)+'</div><div class="s">'+([M.extraBedrag>0?'energielabel '+fmt0(M.extraBedrag):null,M.verhAlleen>0?'alleenstaande '+fmt0(M.verhAlleen):null].filter(Boolean).map(t=>'incl. verruiming '+t).join(' · ')||'zonder verruimingen')+'</div></div>'+
+    '<div class="item"><div class="k">Berekende maandlast (aanvang)</div><div class="v">'+fmt0(r0.last)+'</div><div class="s">GHF-last: annuïtair over duur (max 360 mnd)</div></div>'+
+   '</div>'+
+   '<div class="tbl-scroll"><table class="res"><thead><tr><th>Toetsmoment</th><th class="r">Toetsinkomen</th><th class="r">Woonquote</th><th class="r">Max. maandlast</th><th class="r">Berekende maandlast</th><th class="r">Ruimte</th></tr></thead><tbody>'+
+   M.rows.map(r=>'<tr'+(r.ruimte<-0.5?' class="tekort"':'')+'><td>'+momentLbl(r.m)+'</td><td class="r">'+fmt0(r.ink)+'</td><td class="r">'+fmtP(r.q1)+'</td><td class="r">'+fmt0(r.maxM)+'</td><td class="r">'+fmt0(r.last)+'</td><td class="r" style="color:'+(r.ruimte<-0.5?'var(--err)':'var(--ok)')+';font-weight:700">'+fmt0(r.ruimte)+'</td></tr>').join("")+
+   '</tbody></table></div>'+
+   '<div class="tbl-scroll"><table class="res"><tbody>'+
+    '<tr><td>Maximaal op basis van inkomen</td><td class="r" style="font-weight:700">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie'+(M.verhAlleen?' · incl. verhoging alleenstaande ('+fmt0(M.verhAlleen)+' in de maandruimte)':'')+'</td></tr>'+
+    (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r" style="font-weight:700">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden, rente '+fmtP3(M.toetsrente)+' → samen '+fmt0(M.maxInkomenIncl)+'</td></tr>':'')+
+    '<tr><td>Maximaal op basis van marktwaarde</td><td class="r" style="font-weight:700">'+(M.maxOnderpand?fmt0(M.maxOnderpand):'—')+'</td><td>'+(M.mw?(M.ebv>0?'100% + EBV (max 106%) van ':'100% van ')+fmt0(M.mw):'geen marktwaarde ingevuld')+'</td></tr>'+
+    '<tr style="background:#f2f7fa"><td style="font-weight:800;color:var(--primary)">Maximale hypotheek</td><td class="r" style="font-weight:800;color:var(--primary);font-size:17px">'+fmt0(M.maxHyp)+'</td><td>'+basis+'</td></tr>'+
+   '</tbody></table></div>'+
+   melding+
+   box3Vergelijk(inp,M)+
+   (M.akkoord?'':routeNaarAkkoord(inp,M));
+
+  const b1=$("btnOmzet");if(b1)b1.addEventListener("click",applyOmzetting);
+  const b2=$("btnVerlaag");if(b2)b2.addEventListener("click",applyVerlaging);
+}
+
+/* ---------- print: rapport in leesbare tekst ---------- */
+function labelNaam(){const o=$("label");return o.options[o.selectedIndex].text.replace(/\s*\(.*\)$/,"");}
+function dNL(v){if(!v)return"—";const d=new Date(v);return isNaN(d)?"—":d.toLocaleDateString("nl-NL");}
+function print_(){
+  const inp=leesInput();const M=berekenCore(inp);
+  if(!M){alert("Vul eerst de toetsing in.");return;}
+  const r0=M.rows[0];
+  const persNaam=["Cliënt","Partner"];
+  const persData=[["c_geb","c_aow","c_ink","c_pens"],["p_geb","p_aow","p_ink","p_pens"]].slice(0,inp.pers.length);
+
+  /* --- personalia --- */
+  let personalia='<table class="res"><thead><tr><th>Personalia</th>'+inp.pers.map((p,i)=>'<th class="r">'+persNaam[i]+'</th>').join("")+'</tr></thead><tbody>'+
+    '<tr><td>Naam</td>'+["c_naam","p_naam"].slice(0,inp.pers.length).map(k=>'<td class="r">'+($(k).value.trim()||'—')+'</td>').join("")+'</tr>'+
+    '<tr><td>Geboortedatum</td>'+persData.map(k=>'<td class="r">'+dNL($(k[0]).value)+'</td>').join("")+'</tr>'+
+    '<tr><td>Leeftijd vandaag</td>'+persData.map(k=>{const l=leeftijdOp($(k[0]).value);return '<td class="r">'+(l===null?'—':l+' jaar')+'</td>';}).join("")+'</tr>'+
+    '<tr><td>Bruto jaarinkomen</td>'+inp.pers.map(p=>'<td class="r">'+fmt0(p.ink)+'</td>').join("")+'</tr>'+
+    '<tr><td>AOW-datum</td>'+persData.map(k=>'<td class="r">'+dNL($(k[1]).value)+'</td>').join("")+'</tr>'+
+    '<tr><td>Inkomen vanaf AOW</td>'+inp.pers.map(p=>'<td class="r">'+(p.pens?fmt0(p.pens):'—')+'</td>').join("")+'</tr>'+
+    '</tbody></table>';
+
+  /* --- woning & lening --- */
+  const woning='<table class="res"><tbody>'+
+    '<tr><td style="width:40%">Marktwaarde (na verbouwing)</td><td class="r">'+(M.mw?fmt0(M.mw):'—')+'</td></tr>'+
+    '<tr><td>Energielabel</td><td class="r">'+labelNaam()+'</td></tr>'+
+    (M.ebv>0?'<tr><td>Energiebesparende voorzieningen</td><td class="r">'+fmt0(M.ebv)+'</td></tr>':'')+
+    '<tr><td>Toetsdatum</td><td class="r">'+dNL($("toetsdatum").value)+'</td></tr>'+
+    '<tr><td>Gevraagde hoofdsom</td><td class="r"><b>'+fmt0(M.hoofdsom)+'</b></td></tr></tbody></table>';
+
+  const delenHtml='<table class="res"><thead><tr><th>Aflossingsvorm</th><th class="r">Bedrag</th><th class="r">Aftrekbaar t/m</th><th class="r">Box 3</th><th class="r">Rentevast</th><th class="r">Rente</th><th class="r">Duur</th><th class="r">Toetsrente deel</th></tr></thead><tbody>'+
+    M.delen.map(d=>'<tr><td>'+d.vorm+'</td><td class="r">'+fmt0(d.bedrag)+'</td><td class="r">'+d.aftm+' mnd</td><td class="r">'+(d.box3?fmt0(d.box3):'—')+'</td><td class="r">'+d.rv+' mnd</td><td class="r">'+fmtP3(d.rente)+'</td><td class="r">'+d.duur+' mnd</td><td class="r">'+fmtP3(d.toetsrente)+'</td></tr>').join("")+'</tbody></table>';
+
+  /* --- resultaten --- */
+  const basis=M.maxHyp===M.maxOnderpand&&M.maxOnderpand<M.maxInkomenIncl?"op basis van marktwaarde":
+    (M.extraLening>1&&M.maxInkomenIncl>M.maxInkomen+1?"op basis van inkomen en extra aflossing(en)":"op basis van inkomen");
+  const verr=[M.extraBedrag>0?'energielabel ('+fmt0(M.extraBedrag)+')':null,M.verhAlleen>0?'alleenstaande ('+fmt0(M.verhAlleen)+')':null].filter(Boolean).join(' en ');
+  let resultaten='<table class="res"><tbody>'+
+    '<tr><td style="width:40%">Norm-/toetsinkomen</td><td class="r">'+fmt0(M.norminkomen)+'</td><td>woonquote box 1: '+fmtP(r0.q1)+' · box 3: '+fmtP(r0.q3)+'</td></tr>'+
+    '<tr><td>Maximaal te verwonen per jaar</td><td class="r">'+fmt0(r0.maxM*12)+'</td><td>'+(verr?'incl. verruiming '+verr:'zonder verruimingen')+'</td></tr>'+
+    '<tr><td>Toetsrente</td><td class="r">'+fmtP3(M.toetsrente)+'</td><td>normrente '+fmtP3(M.normrente)+'</td></tr>'+
+    M.rows.map(r=>'<tr'+(r.ruimte<-0.5?' class="tekort"':'')+'><td>Maximale maandlast '+momentLbl(r.m).toLowerCase()+'</td><td class="r">'+fmt0(r.maxM)+'</td><td>berekende maandlast '+fmt0(r.last)+', ruimte '+fmt0(r.ruimte)+'</td></tr>').join("")+
+    '<tr><td>Maximaal op basis van inkomen</td><td class="r">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie</td></tr>'+
+    (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden → samen '+fmt0(M.maxInkomenIncl)+'</td></tr>':'')+
+    '<tr><td>Maximaal op basis van marktwaarde</td><td class="r">'+(M.maxOnderpand?fmt0(M.maxOnderpand):'—')+'</td><td>'+(M.mw?(M.ebv>0?'100% + EBV (max 106%) van ':'100% van ')+fmt0(M.mw):'')+'</td></tr>'+
+    '<tr class="tot"><td><b>Maximale hypotheek</b></td><td class="r"><b>'+fmt0(M.maxHyp)+'</b></td><td>'+basis+'</td></tr></tbody></table>';
+
+  /* --- conclusie --- */
+  let conclusie;
+  if(M.akkoord)conclusie='<div class="melding ok">De hoofdsom van '+fmt0(M.hoofdsom)+' is akkoord: op elk toetsmoment blijft de berekende maandlast binnen de toegestane maandlast'+(M.maxOnderpand?' en de hoofdsom blijft binnen het maximum op onderpand':'')+'.</div>';
+  else if(M.tekortRow)conclusie='<div class="melding err">De hoofdsom van '+fmt0(M.hoofdsom)+' is NIET akkoord. '+momentLbl(M.tekortRow.m)+' ontstaat een tekort van '+fmt0(Math.abs(M.tekortRow.ruimte))+' per maand ten opzichte van de toegestane maandlast.</div>';
+  else conclusie='<div class="melding err">De hoofdsom van '+fmt0(M.hoofdsom)+' is NIET akkoord: de hoofdsom overschrijdt het maximum op onderpand van '+fmt0(M.maxOnderpand)+'.</div>';
+
+  /* --- leesbare toelichting op deze uitkomst --- */
+  const redenen=m=>{
+    const r=[];
+    M.delen.forEach((d,i)=>{
+      if(d.aftm+1===m)r.push("de renteaftrek van leningdeel "+(i+1)+" ("+d.vorm.toLowerCase()+" "+fmt0(d.bedrag)+") eindigt; de last van dit deel telt vanaf dan gebruteerd mee");
+      if(Math.min(d.duur,360)+1===m)r.push("leningdeel "+(i+1)+" is dan volledig afgelost en telt niet meer mee");
+    });
+    inp.pers.forEach((p,i)=>{if(p.aowM!==null&&p.aowM+1===m)r.push((i===0?"de cliënt":"de partner")+" bereikt de AOW-leeftijd; vanaf dan wordt getoetst op het inkomen vanaf AOW");});
+    return r;
+  };
+  let uitleg='<h2>Toelichting op deze uitkomst</h2>';
+  uitleg+='<p>Het toetsinkomen bedraagt '+fmt0(M.norminkomen)+' ('+inp.pers.map((p,i)=>persNaam[i].toLowerCase()+' '+fmt0(p.ink)).join(' en ')+'; het tweede inkomen telt sinds 2023 volledig mee). Bij dit inkomen en de gewogen toetsrente van '+fmtP3(M.toetsrente)+' (rentekolom '+KOLOM_LBL[M.kol]+') hoort volgens de Nibud-tabellen 2026 een woonquote van '+fmtP(r0.q1)+' voor aftrekbare leningdelen en '+fmtP(r0.q3)+' voor niet-aftrekbare (box 3-)delen. De toetsrente is het naar bedrag en looptijd gewogen gemiddelde van de leningdelen; voor delen met een rentevastperiode korter dan 10 jaar die niet binnen die periode volledig worden afgelost, geldt ten minste de normrente van '+fmtP3(M.normrente)+'.</p>';
+  uitleg+='<p>Daarmee mag per jaar maximaal '+fmt0(r0.maxM*12)+' aan woonlasten worden besteed'+(verr?', inclusief de verruiming voor '+verr+' — een vast bedrag buiten de toetsing, omgerekend naar maandruimte via de annuïteitenfactor bij de toetsrente':'')+'. De berekende maandlast van de gevraagde lening is volgens de GHF-systematiek de last van een annuïtair aflossingsschema over de looptijd (maximaal 30 jaar), ongeacht de werkelijke aflossingsvorm — ook voor aflossingsvrije delen.</p>';
+  M.rows.forEach(r=>{
+    const red=r.m>1?redenen(r.m):[];
+    uitleg+='<p><b>'+momentLbl(r.m)+':</b> '+(red.length?red.join('; ')+'. ':'')+
+      'Het toetsinkomen bedraagt dan '+fmt0(r.ink)+' met een woonquote van '+fmtP(r.q1)+'. De toegestane maandlast is '+fmt0(r.maxM)+' tegenover een berekende maandlast van '+fmt0(r.last)+'; dat geeft een '+(r.ruimte<-0.5?'<b>tekort van '+fmt0(Math.abs(r.ruimte))+'</b>':'ruimte van '+fmt0(r.ruimte))+' per maand.</p>';
+  });
+  if(!M.akkoord&&M.tekortRow){
+    const O=zoekOmzetting(inp,M);
+    if(O&&O.stappen.length){
+      const st=O.stappen[0];
+      uitleg+='<p><b>Route naar akkoord:</b> door '+(st.heel?'de looptijd van leningdeel '+(st.van+1)+' in te korten tot '+st.duurN+' maanden':fmt0(st.X)+' van leningdeel '+(st.van+1)+' om te zetten in een apart annuïtair leningdeel van '+st.duurN+' maanden')+' is dit deel volledig afgelost vóór het tekortmoment. De toetsing is dan wél akkoord bij een gelijkblijvende hoofdsom van '+fmt0(M.hoofdsom)+'.</p>';
+    }else if(M.baseMax<M.hoofdsom){
+      uitleg+='<p><b>Route naar akkoord:</b> verlaag de hoofdsom tot '+fmt0(Math.floor(Math.min(M.baseMax,M.maxOnderpand||Infinity)))+' bij gelijkblijvende leningconstructie.</p>';
+    }
+  }
+
+  /* --- algemene toelichting (leesbare tekst) --- */
+  const algemeen='<h2>Algemene toelichting — Gedragscode Hypothecaire Financieringen (normen 2026)</h2>'+
+   '<p>De Gedragscode Hypothecaire Financieringen geldt voor de hypotheek op de woning die u zelf bewoont of gaat bewonen en moet ervoor zorgen dat de woonlasten verantwoord zijn ten opzichte van uw financiële situatie. Daarvoor worden de financieringslastpercentages (woonquotes) gebruikt die het Nibud jaarlijks vaststelt en die in de Tijdelijke regeling hypothecair krediet zijn vastgelegd. Voor 2026 zijn de percentages voor het eerst afgerond op 0,1 procent.</p>'+
+   '<p>Staat de rente 10 jaar of langer vast, of wordt het leningdeel binnen de rentevastperiode volledig afgelost, dan wordt met de werkelijke rente getoetst; in andere gevallen geldt ten minste de wettelijke normrente die de AFM per kwartaal vaststelt. De lasten worden altijd bepaald alsof de lening in maximaal 30 jaar annuïtair wordt afgelost, ook als (een deel van) de lening aflossingsvrij is of de werkelijke lasten lager uitvallen.</p>'+
+   '<p>Leningdelen waarvan de rente niet (meer) aftrekbaar is — box 3-delen en delen waarvan de renteaftrekperiode is verstreken — tellen zwaarder mee: hun last wordt gebruteerd met de verhouding tussen de box 1- en box 3-woonquote. Valt de AOW-datum van een aanvrager binnen 10 jaar na de toetsdatum, dan wordt ook getoetst of de lasten vanaf dat moment passen bij het inkomen vanaf AOW; wijzigingen ná die 10-jaarshorizon worden niet getoetst.</p>'+
+   '<p>Op onderpand mag maximaal 100% van de marktwaarde (na verbouwing) worden gefinancierd. Worden energiebesparende voorzieningen meegefinancierd, dan mag dit oplopen tot 106% van de marktwaarde. Voor energiezuinige woningen geldt daarnaast een vast extra hypotheekbedrag per labelcluster (voor 2026: € 5.000 bij label C/D tot € 40.000 bij A++++ met garantie) en voor verduurzamende maatregelen uit de wettelijke lijst een extra bedrag afhankelijk van het startlabel. Voor aantoonbaar niet-kwetsbare alleenstaanden mag de maximale hypotheek met € 17.000 worden verhoogd; leg die onderbouwing vast in het dossier. Voor nieuwe hypotheken mag een aflossingsvrij deel niet groter zijn dan 50% van de marktwaarde en is rente alleen aftrekbaar bij ten minste annuïtaire aflossing binnen 30 jaar.</p>';
+
+  const namen=[$("c_naam").value.trim(),inp.pers.length>1?$("p_naam").value.trim():""].filter(Boolean).join(", ");
+  const dNu=new Date().toLocaleDateString("nl-NL",{day:"2-digit",month:"2-digit",year:"numeric"});
+  const bestandsnaam=("maximale hypotheek"+(namen?" - "+namen:"")+" - "+dNu).replace(/[\\/:*?"<>|]/g,"-");
+  const w=window.open("","_blank");
+  w.document.write('<!DOCTYPE html><html lang="nl"><head><meta charset="utf-8"><title>'+bestandsnaam+'</title><style>'+
+   'body{font-family:Arial,Helvetica,sans-serif;color:#333;font-size:13px;margin:34px;line-height:1.5;max-width:820px}'+
+   'h1{color:#003057;font-size:20px;border-bottom:3px solid #E5A138;padding-bottom:6px}'+
+   'h2{color:#003057;font-size:14.5px;margin-top:20px;margin-bottom:4px}'+
+   'p{margin:7px 0}'+
+   'table.res{width:100%;border-collapse:collapse;margin-top:6px}'+
+   'table.res th{text-align:left;border-bottom:2px solid #003057;padding:5px 6px;color:#003057;font-size:12px}'+
+   'table.res td{padding:5px 6px;border-bottom:1px solid #dbe4ea;vertical-align:top}td.r,th.r{text-align:right;white-space:nowrap}'+
+   'tr.tekort td{background:#fdecea}tr.tot td{background:#f2f7fa;border-top:2px solid #003057}'+
+   '.melding{margin-top:12px;padding:9px 12px;border-radius:6px;font-weight:bold}'+
+   '.melding.ok{background:#e8f5ee;color:#1e7d4f}.melding.err{background:#fdecea;color:#b3261e}'+
+   '.aanvragers{font-size:13.5px;margin:2px 0 10px}'+
+   '.foot{margin-top:24px;font-size:10.5px;color:#7a8a96;border-top:1px solid #dbe4ea;padding-top:8px}'+
+   '@media print{body{margin:12mm}}'+
+   '</style></head><body>'+
+   '<h1>Toetsing volgens de normen van de Gedragscode Hypothecaire Financieringen — 2026</h1>'+
+   (namen?'<p class="aanvragers"><b>Aanvrager(s):</b> '+namen+'</p>':'')+'<h2>Personalia</h2>'+personalia+
+   '<h2>Woning en lening</h2>'+woning+
+   '<h2>Leningconstructie</h2>'+delenHtml+
+   '<h2>Resultaten</h2>'+resultaten+conclusie+
+   uitleg+algemeen+
+   '<div class="foot">Indicatieve toetsing op basis van de definitieve Nibud-financieringslastnormen 2026 (TRHK/GHF-systematiek). Dit rapport is geen hypotheekadvies en geen vervanging van gecertificeerde adviessoftware of het acceptatiebeleid van een geldverstrekker; aan deze uitkomsten kunnen geen rechten worden ontleend. Toetsdatum '+dNL($("toetsdatum").value)+' · gegenereerd op '+new Date().toLocaleDateString("nl-NL")+'.</div>'+
+   '</body></html>');
+  w.document.close();setTimeout(()=>w.print(),400);
+}
+
+/* ---------- init ---------- */
+[{vorm:"Annuïtair",bedrag:"12.000",aftm:"140",box3:"",rv:"120",rente:"4,08",duur:"360"},
+ {vorm:"Aflossingsvrij",bedrag:"116.849",aftm:"40",box3:"",rv:"120",rente:"4,50",duur:"360"},
+ {vorm:"Aflossingsvrij",bedrag:"33.151",aftm:"140",box3:"",rv:"120",rente:"4,08",duur:"360"},
+ {vorm:"Annuïtair",bedrag:"73.000",aftm:"140",box3:"",rv:"120",rente:"4,08",duur:"360"}
+].forEach(deelRij);
+
+$("addDeel").addEventListener("click",()=>{deelRij();bereken();});
+$("handBtn").addEventListener("click",()=>{$("handleiding").hidden=false;document.body.style.overflow="hidden";});
+function sluitHand(){$("handleiding").hidden=true;document.body.style.overflow="";}
+$("handSluit").addEventListener("click",sluitHand);
+$("handleiding").addEventListener("click",e=>{if(e.target.id==="handleiding")sluitHand();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("handleiding").hidden)sluitHand();});
+$("printBtn").addEventListener("click",print_);
+
+/* ---------- dossier: nieuw / opslaan / openen ---------- */
+const VELDEN=["toetsdatum","normrente","c_naam","c_geb","c_aow","c_ink","c_pens",
+  "p_naam","p_geb","p_aow","p_ink","p_pens","marktwaarde","label","ebv"];
+const VINKJES=["partnerAan","alleenstaand","verbouwing"];
+
+function toonHint(tekst,fout){
+  const el=$("dossierHint");
+  el.textContent=tekst;
+  el.className="dossier-hint zicht"+(fout?" fout":"");
+  clearTimeout(toonHint._t);
+  toonHint._t=setTimeout(()=>{el.className="dossier-hint";},6000);
+}
+function dossierNaam(ext){
+  const n=[$("c_naam").value.trim(),$("partnerAan").checked?$("p_naam").value.trim():""].filter(Boolean).join(", ");
+  const d=new Date().toLocaleDateString("nl-NL",{day:"2-digit",month:"2-digit",year:"numeric"});
+  return ("maximale hypotheek"+(n?" - "+n:"")+" - "+d+ext).replace(/[\\/:*?"<>|]/g,"-");
+}
+function nieuweBerekening(){
+  if(!confirm("Nieuwe berekening starten? Niet-opgeslagen gegevens gaan verloren."))return;
+  VELDEN.forEach(id=>{const el=$(id);if(!el)return;
+    if(el.tagName==="SELECT")el.selectedIndex=0;else el.value="";});
+  $("toetsdatum").value=new Date().toISOString().slice(0,10);
+  $("normrente").value="5,000";
+  $("partnerAan").checked=true;
+  $("alleenstaand").checked=false;
+  $("verbouwing").checked=false;
+  $("delenBody").innerHTML="";
+  deelRij();
+  syncAlleen();toonLeeftijden();bereken();
+  window.scrollTo({top:0,behavior:"smooth"});
+  toonHint("Nieuwe berekening gestart — alle velden zijn leeg.");
+}
+function dossierOpslaan(){
+  const data={versie:1,soort:"ghf-toetsing-2026",opgeslagen:new Date().toISOString(),velden:{},vinkjes:{},delen:[]};
+  VELDEN.forEach(id=>{const el=$(id);if(el)data.velden[id]=el.value;});
+  VINKJES.forEach(id=>{const el=$(id);if(el)data.vinkjes[id]=el.checked;});
+  document.querySelectorAll("#delenBody tr").forEach(tr=>data.delen.push({
+    vorm:tr.querySelector(".d-vorm").value, bedrag:tr.querySelector(".d-bedrag").value,
+    aftm:tr.querySelector(".d-aftm").value, box3:tr.querySelector(".d-box3").value,
+    rv:tr.querySelector(".d-rv").value, rente:tr.querySelector(".d-rente").value,
+    duur:tr.querySelector(".d-duur").value}));
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=dossierNaam(".json");
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+  toonHint("Dossier opgeslagen als "+a.download);
+}
+function dossierLaden(tekst){
+  let data;
+  try{data=JSON.parse(tekst);}catch(e){toonHint("Dit bestand kon niet worden gelezen (geen geldig dossier).",true);return;}
+  if(!data||data.soort!=="ghf-toetsing-2026"||!data.velden){
+    toonHint("Dit is geen dossier van deze tool.",true);return;}
+  VELDEN.forEach(id=>{const el=$(id);
+    if(el&&Object.prototype.hasOwnProperty.call(data.velden,id))el.value=data.velden[id];});
+  VINKJES.forEach(id=>{const el=$(id);
+    if(el&&data.vinkjes&&Object.prototype.hasOwnProperty.call(data.vinkjes,id))el.checked=!!data.vinkjes[id];});
+  $("delenBody").innerHTML="";
+  (Array.isArray(data.delen)&&data.delen.length?data.delen:[null]).forEach(d=>deelRij(d||undefined));
+  document.querySelectorAll("input.eur").forEach(fmtEurInput);
+  syncAlleen();toonLeeftijden();bereken();
+  const wanneer=data.opgeslagen?new Date(data.opgeslagen).toLocaleDateString("nl-NL"):"";
+  toonHint("Dossier geopend"+(wanneer?" (opgeslagen op "+wanneer+")":"")+".");
+}
+$("nieuwBtn").addEventListener("click",nieuweBerekening);
+$("opslaanBtn").addEventListener("click",dossierOpslaan);
+$("openBtn").addEventListener("click",()=>$("dossierFile").click());
+$("dossierFile").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>dossierLaden(r.result);
+  r.onerror=()=>toonHint("Het bestand kon niet worden gelezen.",true);
+  r.readAsText(f);
+  e.target.value="";
+});
+
+function syncAlleen(){const p=$("partnerAan").checked;$("partnerBlok").style.display=p?"":"none";
+  const a=$("alleenstaand");a.disabled=p;if(p)a.checked=false;
+  a.closest("label").style.opacity=p?"0.45":"1";}
+$("partnerAan").addEventListener("change",()=>{syncAlleen();bereken();});
+syncAlleen();
+$("c_geb").addEventListener("change",()=>{const d=new Date($("c_geb").value);if(!isNaN(d)){d.setFullYear(d.getFullYear()+67);$("c_aow").value=d.toISOString().slice(0,10);}bereken();});
+$("p_geb").addEventListener("change",()=>{const d=new Date($("p_geb").value);if(!isNaN(d)){d.setFullYear(d.getFullYear()+67);$("p_aow").value=d.toISOString().slice(0,10);}bereken();});
+document.body.addEventListener("input",e=>{if(e.target.classList&&e.target.classList.contains("eur")&&!e.target.matches(":focus"))fmtEurInput(e.target);bereken();});
+document.body.addEventListener("blur",e=>{if(e.target.classList&&e.target.classList.contains("eur"))fmtEurInput(e.target);},true);
+document.body.addEventListener("change",bereken);
+document.querySelectorAll("input.eur").forEach(fmtEurInput);
+toonLeeftijden();
+bereken();
+
+</script>
+
+</body>
+</html>

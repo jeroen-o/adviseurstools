@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rentemiddeling Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #0D1E3A;
+    --navy2:  #152d52;
+    --blue:   #1A5276;
+    --accent: #E8961B;
+    --accent2:#F5B942;
+    --green:  #1B8C5A;
+    --light:  #F3F6FA;
+    --white:  #FFFFFF;
+    --border: #D6E0EF;
+    --text:   #0D1E3A;
+    --muted:  #5A718A;
+    --card-shadow: 0 4px 24px rgba(13,30,58,0.10);
+  }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--light);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, #1e3a5f 100%);
+    color: var(--white);
+    padding: 40px 48px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 360px; height: 360px;
+    border-radius: 50%;
+    background: rgba(232,150,27,0.10);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    right: 60px; top: 40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(232,150,27,0.07);
+    pointer-events: none;
+  }
+  .header-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    background: rgba(232,150,27,0.15);
+    border: 1px solid rgba(232,150,27,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 14px;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  header p {
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.72);
+    max-width: 540px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 36px 24px 60px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ── CARD BASE ── */
+  .card {
+    background: var(--white);
+    border-radius: 18px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--navy);
+    color: var(--white);
+    padding: 18px 28px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .card-body { padding: 28px; }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 24px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* ── FORM FIELDS ── */
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--navy);
+    margin-bottom: 6px;
+  }
+  .field-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .prefix-wrap {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--white);
+    transition: border-color 0.2s;
+    flex: 1;
+  }
+  .prefix-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(232,150,27,0.12);
+  }
+  .prefix {
+    background: var(--light);
+    border-right: 1.5px solid var(--border);
+    padding: 0 12px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .prefix-wrap input {
+    border: none;
+    outline: none;
+    padding: 0 14px;
+    height: 42px;
+    font-size: 15px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    color: var(--text);
+    background: transparent;
+    width: 100%;
+    -moz-appearance: textfield;
+  }
+  .prefix-wrap input::-webkit-outer-spin-button,
+  .prefix-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  select {
+    width: 100%;
+    height: 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 0 14px;
+    font-size: 15px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--white);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235A718A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.2s;
+  }
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(232,150,27,0.12);
+  }
+
+  .hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+  /* hidden when not needed */
+  .hidden { display: none !important; }
+
+  /* ── RESULTS PANEL ── */
+  .results-panel { position: sticky; top: 24px; }
+
+  .result-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: background 0.2s;
+  }
+  .result-item:last-child { border-bottom: none; }
+  .result-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    flex: 1;
+    line-height: 1.4;
+  }
+  .result-value {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--navy);
+    white-space: nowrap;
+    transition: all 0.3s;
+    text-align: right;
+  }
+  .result-value.highlight { color: var(--accent); }
+  .result-value.big {
+    font-size: 22px;
+    color: var(--green);
+  }
+  .result-value.warning { color: #C0392B; }
+
+  /* HERO results at top */
+  .hero-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .hero-card {
+    background: var(--navy);
+    border-radius: 12px;
+    padding: 16px;
+    color: white;
+    text-align: center;
+  }
+  .hero-card.accent { background: linear-gradient(135deg, var(--accent) 0%, #d4870f 100%); }
+  .hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 6px;
+  }
+  .hero-value {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: rgba(27,140,90,0.07);
+    border: 1px solid rgba(27,140,90,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--green);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .info-box.warn {
+    background: rgba(192,57,43,0.06);
+    border-color: rgba(192,57,43,0.2);
+    color: #C0392B;
+  }
+  .info-box svg { flex-shrink: 0; margin-top: 1px; }
+
+  /* ── NO VERGOEDING BANNER ── */
+  #noVergoeding {
+    background: rgba(27,140,90,0.08);
+    border: 1.5px solid rgba(27,140,90,0.25);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 13.5px;
+    color: var(--green);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  /* ── CHART AREA ── */
+  .chart-wrap {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .chart-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .bar-label { width: 90px; color: var(--muted); text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--light); border-radius: 6px; height: 20px; overflow: hidden; }
+  .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    min-width: 0;
+  }
+  .bar-fill.b1 { background: linear-gradient(90deg, #1A5276, #2471A3); }
+  .bar-fill.b2 { background: linear-gradient(90deg, var(--accent), #d4870f); }
+  .bar-fill.b3 { background: linear-gradient(90deg, #1B8C5A, #27AE60); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .results-panel { position: static; }
+    header { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">Hypotheek Tool</div>
+  <h1>Rentemiddeling<br><em style="font-style:italic;font-weight:400;font-size:0.7em;color:rgba(255,255,255,0.6)">Calculator</em></h1>
+  <p>Bereken of rentemiddeling voordelig is voor uw situatie en wat de kosten zijn.</p>
+</header>
+
+<main>
+  <!-- LEFT: INPUTS -->
+  <div>
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>Uw leninggegevens</div>
+      <div class="card-body">
+
+        <div class="section-label">Leningtype & huidige situatie</div>
+
+        <div class="field">
+          <label>Soort lening</label>
+          <select id="loanType" onchange="onLoanTypeChange()">
+            <option value="aflossingsvrij" selected>Aflossingsvrij</option>
+            <option value="annuiteit">Annuïteit</option>
+            <option value="lineair">Lineair</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Actuele hypotheekschuld</label>
+          <div class="prefix-wrap">
+            <span class="prefix">€</span>
+            <input type="number" id="schuld" value="200000" min="0" step="1000" oninput="calculate()">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Oorspronkelijke hoofdsom (deelsom)</label>
+          <div class="prefix-wrap">
+            <span class="prefix">€</span>
+            <input type="number" id="hoofdsom" value="400000" min="0" step="1000" oninput="calculate()">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Huidige rente</label>
+          <div class="prefix-wrap">
+            <span class="prefix">%</span>
+            <input type="number" id="rHuidig" value="5" min="0" max="20" step="0.01" oninput="calculate()">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Maanden overgebleven rentevastperiode</label>
+          <div class="prefix-wrap">
+            <span class="prefix">mnd</span>
+            <input type="number" id="nResterend" value="30" min="1" max="360" step="1" oninput="calculate()">
+          </div>
+        </div>
+
+        <!-- Only shown for annuïteit / lineair -->
+        <div class="field hidden" id="fieldLooptijd">
+          <label>Resterende totale looptijd (maanden)</label>
+          <div class="prefix-wrap">
+            <span class="prefix">mnd</span>
+            <input type="number" id="mLooptijd" value="240" min="1" max="480" step="1" oninput="calculate()">
+          </div>
+          <div class="hint">Totale looptijd minus verstreken maanden, voor de aflossingsberekening.</div>
+        </div>
+
+        <div class="section-label">Vergelijkings- & marktrente</div>
+
+        <div class="field">
+          <label>Vergelijkingsrente</label>
+          <div class="prefix-wrap">
+            <span class="prefix">%</span>
+            <input type="number" id="rVergl" value="4" min="0" max="20" step="0.01" oninput="calculate()">
+          </div>
+          <div class="hint">De actuele rente van de bank voor de resterende rentevastperiode.</div>
+        </div>
+
+        <div class="field">
+          <label>Nieuwe rentevaste periode</label>
+          <select id="nieuwePeriode" onchange="calculate()">
+            <option value="1">1 jaar</option>
+            <option value="2">2 jaar</option>
+            <option value="3">3 jaar</option>
+            <option value="5">5 jaar</option>
+            <option value="7">7 jaar</option>
+            <option value="10" selected>10 jaar</option>
+            <option value="12">12 jaar</option>
+            <option value="15">15 jaar</option>
+            <option value="20">20 jaar</option>
+            <option value="25">25 jaar</option>
+            <option value="30">30 jaar</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Marktrente nieuwe rentevaste periode</label>
+          <div class="prefix-wrap">
+            <span class="prefix">%</span>
+            <input type="number" id="rMarktrente" value="4.5" min="0" max="20" step="0.01" oninput="calculate()">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- end left -->
+
+  <!-- RIGHT: RESULTS -->
+  <div class="results-panel">
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>Berekening rentemiddeling</div>
+      <div class="card-body">
+
+        <!-- No-vergoeding notice (hidden by default) -->
+        <div id="noVergoeding" class="hidden">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;margin-right:6px;vertical-align:-2px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+          Uw huidige rente is lager dan of gelijk aan de vergelijkingsrente. Er is geen vergoeding voor vervroegde aflossing.
+        </div>
+
+        <!-- Hero cards: opslag + nieuwe rente -->
+        <div class="hero-results">
+          <div class="hero-card">
+            <div class="hero-label">Renteopslag</div>
+            <div class="hero-value" id="heroOpslag">—</div>
+          </div>
+          <div class="hero-card accent">
+            <div class="hero-label">Nieuwe rente</div>
+            <div class="hero-value" id="heroNieuweRente">—</div>
+          </div>
+        </div>
+
+        <!-- Detailed results -->
+        <div class="result-item">
+          <div class="result-label">Nieuwe maandtermijn</div>
+          <div class="result-value big" id="resTermijn">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Vergoeding vervroegde aflossing</div>
+          <div class="result-value" id="resVergoeding">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Kosten rentemiddeling<br><span style="font-size:11px;color:var(--muted);font-weight:400">Financieringskosten boven vergoeding</span></div>
+          <div class="result-value" id="resKosten">—</div>
+        </div>
+        <div class="result-item">
+          <div class="result-label">Totale opslagkosten rentemiddeling</div>
+          <div class="result-value highlight" id="resTotaal">—</div>
+        </div>
+
+        <!-- Mini bar chart -->
+        <div class="chart-wrap">
+          <div class="chart-title">Kosten verdeling</div>
+          <div class="bar-row">
+            <div class="bar-label">Vergoeding</div>
+            <div class="bar-track"><div class="bar-fill b1" id="barVergoeding" style="width:0%"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Kosten</div>
+            <div class="bar-track"><div class="bar-fill b2" id="barKosten" style="width:0%"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Totaal</div>
+            <div class="bar-track"><div class="bar-fill b3" id="barTotaal" style="width:100%"><span id="barTotaalLabel"></span></div></div>
+          </div>
+        </div>
+
+        <!-- Info note -->
+        <div style="margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:12px">
+          ⚠️ Deze berekening geeft een indicatie. De exacte berekening van uw geldverstrekker kan afwijken. Raadpleeg een hypotheekadviseur voor persoonlijk advies.
+        </div>
+
+      </div>
+    </div>
+  </div><!-- end right -->
+
+</main>
+
+<script>
+// ── HELPERS ──────────────────────────────────────────────────
+function pvaf(r, n) {
+  // Present Value Annuity Factor
+  if (n <= 0) return 0;
+  if (Math.abs(r) < 1e-12) return n;
+  return (1 - Math.pow(1 + r, -n)) / r;
+}
+
+function fmt(v, decimals = 2) {
+  return v.toLocaleString('nl-NL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+function fmtEur(v) {
+  return '€\u00A0' + fmt(v, 2);
+}
+function fmtPct(v, dec = 2) {
+  return fmt(v, dec) + '\u00A0%';
+}
+
+// ── LOAN TYPE CHANGE ─────────────────────────────────────────
+function onLoanTypeChange() {
+  const lt = document.getElementById('loanType').value;
+  const fieldLooptijd = document.getElementById('fieldLooptijd');
+  if (lt === 'annuiteit' || lt === 'lineair') {
+    fieldLooptijd.classList.remove('hidden');
+  } else {
+    fieldLooptijd.classList.add('hidden');
+  }
+  calculate();
+}
+
+// ── MAIN CALCULATION ─────────────────────────────────────────
+function calculate() {
+  const loanType   = document.getElementById('loanType').value;
+  const schuld     = parseFloat(document.getElementById('schuld').value)     || 0;
+  const rHuidig    = parseFloat(document.getElementById('rHuidig').value)    / 100 || 0;
+  const nResterend = parseInt(document.getElementById('nResterend').value)   || 0;
+  const rVergl     = parseFloat(document.getElementById('rVergl').value)     / 100 || 0;
+  const nieuwePeriode = parseInt(document.getElementById('nieuwePeriode').value) || 10;
+  const rMarktrente   = parseFloat(document.getElementById('rMarktrente').value) / 100 || 0;
+  const mLooptijd  = parseInt(document.getElementById('mLooptijd').value)    || 240;
+
+  const noVergEl = document.getElementById('noVergoeding');
+
+  // Validate: if rHuidig <= rVergl → no penalty
+  if (schuld <= 0 || nResterend <= 0) {
+    setAllDash(); return;
+  }
+
+  // ── VERGOEDING ────────────────────────────────────────────
+  let vergoeding = 0;
+
+  if (rHuidig <= rVergl) {
+    noVergEl.classList.remove('hidden');
+    vergoeding = 0;
+  } else {
+    noVergEl.classList.add('hidden');
+
+    const rHuidigM = rHuidig / 12;
+    const rVerglM  = rVergl  / 12;
+
+    if (loanType === 'aflossingsvrij') {
+      // Simple: constant balance
+      const diffMonth = schuld * (rHuidigM - rVerglM);
+      vergoeding = diffMonth * pvaf(rVerglM, nResterend);
+
+    } else if (loanType === 'annuiteit') {
+      // Amortizing annuity: compute monthly interest difference, discount at rVergl
+      const m = Math.max(mLooptijd, nResterend);
+      const P = rHuidigM > 0
+        ? schuld * rHuidigM / (1 - Math.pow(1 + rHuidigM, -m))
+        : schuld / m;
+
+      for (let k = 1; k <= nResterend; k++) {
+        // Balance at START of month k = B_{k-1}
+        let B_prev;
+        if (rHuidigM > 0) {
+          B_prev = schuld * Math.pow(1 + rHuidigM, k - 1)
+                 - P * (Math.pow(1 + rHuidigM, k - 1) - 1) / rHuidigM;
+        } else {
+          B_prev = schuld - (k - 1) * (schuld / m);
+        }
+        if (B_prev < 0) B_prev = 0;
+        const diff = B_prev * (rHuidigM - rVerglM);
+        vergoeding += diff * Math.pow(1 + rVerglM, -k);
+      }
+
+    } else { // lineair
+      const m = Math.max(mLooptijd, nResterend);
+      const maandAflos = schuld / m;
+      for (let k = 1; k <= nResterend; k++) {
+        const B_prev = Math.max(schuld - (k - 1) * maandAflos, 0);
+        const diff   = B_prev * (rHuidigM - rVerglM);
+        vergoeding  += diff * Math.pow(1 + rVerglM, -k);
+      }
+    }
+  }
+
+  // ── RENTEOPSLAG ───────────────────────────────────────────
+  const nieuwePeriodeM = nieuwePeriode * 12;
+  const rMrkM = rMarktrente / 12;
+  const pvafNew = pvaf(rMrkM, nieuwePeriodeM);
+
+  let opslagPct = 0;
+  let monthlyOpslag = 0;
+
+  if (pvafNew > 0 && vergoeding > 0) {
+    monthlyOpslag = vergoeding / pvafNew;             // € per maand (exact)
+    opslagPct = monthlyOpslag * 12 / schuld;          // decimaal (exact)
+  }
+
+  // Round opslag to 2 decimal percent places for display (and new rate display)
+  const opslagPctDisplay = Math.round(opslagPct * 10000) / 100; // bijv. 0.30
+  const opslagPctRounded = opslagPctDisplay / 100;               // 0.003
+
+  // ── NIEUWE RENTE (display: rounded opslag) ────────────────
+  const nieuweRentePct = (rMarktrente + opslagPctRounded) * 100; // percentage
+
+  // ── NIEUWE MAANDTERMIJN (based on rounded new rate) ───────
+  const nieuweRente = rMarktrente + opslagPctRounded;
+  const nieuweRenteM = nieuweRente / 12;
+  let maandtermijn = 0;
+
+  if (loanType === 'aflossingsvrij') {
+    maandtermijn = schuld * nieuweRenteM;
+  } else if (loanType === 'annuiteit') {
+    const m = Math.max(mLooptijd, 1);
+    maandtermijn = nieuweRenteM > 0
+      ? schuld * nieuweRenteM / (1 - Math.pow(1 + nieuweRenteM, -m))
+      : schuld / m;
+  } else {
+    const m = Math.max(mLooptijd, 1);
+    maandtermijn = schuld / m + schuld * nieuweRenteM;
+  }
+
+  // ── TOTALE OPSLAGKOSTEN (exact monthly opslag × months) ───
+  const totaalOpslag = monthlyOpslag * nieuwePeriodeM;
+  const kosten = totaalOpslag - vergoeding;
+
+  // ── RENDER ────────────────────────────────────────────────
+  document.getElementById('heroOpslag').textContent
+    = opslagPctDisplay.toFixed(2).replace('.', ',') + ' %';
+  document.getElementById('heroNieuweRente').textContent
+    = nieuweRentePct.toFixed(2).replace('.', ',') + ' %';
+
+  document.getElementById('resTermijn').textContent
+    = '€ ' + fmt(Math.round(maandtermijn));
+  document.getElementById('resVergoeding').textContent
+    = fmtEur(vergoeding);
+  document.getElementById('resKosten').textContent
+    = fmtEur(Math.max(kosten, 0));
+  document.getElementById('resTotaal').textContent
+    = fmtEur(totaalOpslag);
+
+  // Bar chart
+  const maxBar = totaalOpslag > 0 ? totaalOpslag : 1;
+  const pV = Math.min(100, vergoeding / maxBar * 100);
+  const pK = Math.min(100, Math.max(0, kosten) / maxBar * 100);
+  document.getElementById('barVergoeding').style.width = pV + '%';
+  document.getElementById('barKosten').style.width = pK + '%';
+  document.getElementById('barTotaal').style.width = '100%';
+  document.getElementById('barTotaalLabel').textContent = fmtEur(totaalOpslag);
+}
+
+function setAllDash() {
+  ['heroOpslag','heroNieuweRente','resTermijn','resVergoeding','resKosten','resTotaal']
+    .forEach(id => { document.getElementById(id).textContent = '—'; });
+}
+
+// Initial calculation on load
+calculate();
+</script>
+</body>
+</html>

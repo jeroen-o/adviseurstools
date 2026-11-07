@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toetsrente Verbeteraar</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#003057;--blue-mid:#004478;--blue-lite:#e8f0f7;--amber:#E5A138;--amber2:#f0b455;--amber-bg:#fdf4e7;--amber-bdr:#f0c980;--bg:#F4F7F9;--white:#fff;--text:#333;--sub:#4A4A4A;--muted:#8A96A3;--border:#D6E2EC;--green:#1a7a4a;--green-bg:#e8f5ee;--red-bg:#fdf0f0;--red-bdr:#f5c6c6;--red-text:#9b3333;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;font-size:15px;line-height:1.5;}
+.topbar{height:5px;background:linear-gradient(90deg,var(--blue) 0%,var(--blue-mid) 60%,var(--amber) 100%);}
+.page-header{background:var(--blue);padding:28px 40px 32px;position:relative;overflow:hidden;}
+.page-header::before{content:'';position:absolute;right:-100px;top:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(229,161,56,.12) 0%,transparent 65%);pointer-events:none;}
+.page-header::after{content:'';position:absolute;left:50%;bottom:-2px;width:80px;height:4px;background:var(--amber);border-radius:2px 2px 0 0;transform:translateX(-50%);}
+.header-inner{max-width:1080px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;}
+.header-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--amber);opacity:.8;margin-bottom:10px;}
+.header-eyebrow::before{content:'';display:inline-block;width:20px;height:2px;background:var(--amber);border-radius:1px;}
+.page-title{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.1;margin-bottom:8px;}
+.page-desc{font-size:14px;color:rgba(255,255,255,.5);max-width:460px;line-height:1.6;}
+.header-badge{flex-shrink:0;background:rgba(229,161,56,.12);border:1px solid rgba(229,161,56,.3);border-radius:6px;padding:8px 16px;text-align:center;}
+.hb-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amber);opacity:.7;display:block;margin-bottom:2px;}
+.hb-val{font-size:14px;font-weight:700;color:var(--amber);}
+main{flex:1;max-width:1080px;margin:0 auto;width:100%;padding:32px 24px 60px;display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start;}
+.card{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,48,87,.06);}
+.card-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ch-left{display:flex;align-items:center;gap:10px;}
+.ch-icon{width:30px;height:30px;background:var(--blue-lite);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ch-icon svg{color:var(--blue);}
+.ch-title{font-size:14px;font-weight:700;color:var(--blue);}
+.ch-tag{font-size:11px;font-weight:600;color:var(--muted);}
+.card-body{padding:22px 22px 20px;}
+.fsec{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blue);opacity:.5;margin-bottom:13px;padding-bottom:7px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+.fsec::before{content:'';display:inline-block;width:3px;height:12px;background:var(--amber);border-radius:2px;flex-shrink:0;}
+.fg{margin-bottom:13px;}
+label{display:block;font-size:12px;font-weight:600;color:var(--sub);margin-bottom:5px;}
+.iw{position:relative;}
+.pfx,.sfx{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.pfx{left:12px;}.sfx{right:12px;}
+input[type=number],input[type=text],select{width:100%;height:44px;border:1.5px solid var(--border);border-radius:7px;background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:600;color:var(--blue);padding:0 14px;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;-moz-appearance:textfield;appearance:none;}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+.has-pfx input{padding-left:28px;}.has-sfx input{padding-right:40px;}
+input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(229,161,56,.15);background:var(--white);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238A96A3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-color:var(--bg);padding-right:32px;cursor:pointer;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hdiv{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.toets-block{background:var(--amber-bg);border:1.5px solid var(--amber-bdr);border-radius:8px;padding:14px;margin-bottom:13px;}
+.toets-block label{color:#7a4e0a;}
+.toets-block input{background:var(--white);border-color:var(--amber-bdr);}
+.toets-block input:focus{border-color:var(--amber);}
+.toets-hint{font-size:11.5px;color:#9a6820;margin-top:5px;line-height:1.4;}
+.btn-calc{width:100%;height:50px;background:var(--blue);color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:8px;cursor:pointer;letter-spacing:.3px;transition:background .15s,box-shadow .15s,transform .1s;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:9px;position:relative;overflow:hidden;}
+.btn-calc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--amber);transform:scaleX(0);transition:transform .2s;transform-origin:left;}
+.btn-calc:hover{background:var(--blue-mid);box-shadow:0 6px 20px rgba(0,48,87,.3);}
+.btn-calc:hover::after{transform:scaleX(1);}
+.btn-calc:active{transform:scale(.98);}
+
+/* RESULT */
+.res-empty{min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--border);font-size:13.5px;font-weight:500;text-align:center;}
+.res-empty svg{opacity:.35;}
+.res-hero{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-mid) 100%);padding:22px 26px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;}
+.rh-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(229,161,56,.75);margin-bottom:5px;}
+.rh-value{font-size:46px;font-weight:800;color:#fff;letter-spacing:-2px;line-height:1;}
+.rh-value .pct{font-size:22px;font-weight:500;letter-spacing:0;margin-left:1px;}
+.rh-saving{font-size:12px;font-weight:500;color:rgba(255,255,255,.5);margin-top:7px;}
+.rh-saving.pos{color:rgba(229,161,56,.85);}
+.rh-badge{background:rgba(229,161,56,.12);border:1px solid rgba(229,161,56,.35);border-radius:8px;padding:10px 16px;text-align:center;white-space:nowrap;}
+.rb-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(229,161,56,.6);display:block;margin-bottom:4px;}
+.rb-val{font-size:13px;font-weight:700;color:var(--amber);}
+.target-strip{background:var(--amber-bg);border-bottom:1px solid var(--amber-bdr);padding:10px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.ts-text{font-size:12px;font-weight:500;color:var(--sub);}
+.ts-text strong{font-weight:700;color:var(--blue);}
+.ts-val{font-size:16px;font-weight:800;color:#7a4e0a;letter-spacing:-.3px;}
+.deel-sec{padding:16px 22px;border-bottom:1px solid var(--border);}
+.deel-top{display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:12px;margin-bottom:11px;}
+.deel-badge{width:28px;height:28px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-top:1px;}
+.db1{background:var(--blue-lite);color:var(--blue);}.db2{background:#f0f4f7;color:var(--muted);}
+.dl-name{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.3px;text-transform:uppercase;margin-bottom:2px;}
+.dl-meta{font-size:12px;color:var(--muted);line-height:1.4;}
+.dl-amt{text-align:right;}
+.dl-eur{font-size:21px;font-weight:800;color:var(--blue);display:block;letter-spacing:-.5px;}
+.dl-pct{font-size:11.5px;font-weight:500;color:var(--muted);}
+.bar-track{height:6px;background:var(--bg);border-radius:99px;overflow:hidden;border:1px solid var(--border);}
+.bar-fill{height:100%;border-radius:99px;transition:width .65s cubic-bezier(.4,0,.2,1);}
+.bf1{background:linear-gradient(90deg,var(--blue),var(--blue-mid));}
+.bf2{background:linear-gradient(90deg,#aabfce,#c8d8e4);}
+.info-row{padding:12px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.ir-lbl{font-size:13px;font-weight:500;color:var(--sub);}
+.ir-val{text-align:right;}
+.ir-main{font-size:16px;font-weight:800;color:var(--blue);display:block;letter-spacing:-.3px;}
+.kl-chip{display:inline-block;font-size:10.5px;font-weight:700;background:var(--blue-lite);border:1px solid #c0d5e8;color:var(--blue);padding:2px 8px;border-radius:5px;margin-top:3px;}
+.tot-check{display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+.chk-dot{width:18px;height:18px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;}
+.tot-eur{font-size:16px;font-weight:800;color:var(--green);letter-spacing:-.3px;}
+.sum-block{margin:16px 22px;padding:13px 16px;background:var(--green-bg);border:1px solid rgba(26,122,74,.2);border-radius:8px;font-size:12.5px;font-weight:500;color:var(--green);line-height:1.7;}
+.sum-block strong{font-weight:700;}
+
+/* MAANDLASTEN CARD */
+.ml-card{grid-column:1/-1;}
+.ml-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.ml-col{border:1.5px solid var(--border);border-radius:8px;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+.ml-col:hover{box-shadow:0 6px 20px rgba(0,48,87,.1);transform:translateY(-2px);}
+.ml-col-head{padding:14px 18px 12px;display:flex;align-items:center;gap:10px;}
+.ml-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mi-ann{background:var(--blue-lite);}.mi-lin{background:#eef5e8;}.mi-vrij{background:var(--amber-bg);}
+.ml-col-head svg{width:15px;height:15px;}
+.mi-ann svg{color:var(--blue);}.mi-lin svg{color:#3a7a1a;}.mi-vrij svg{color:#9a6820;}
+.ml-type{font-size:13px;font-weight:700;color:var(--blue);}
+.ml-descr{font-size:11px;color:var(--muted);margin-top:1px;}
+.ml-body{padding:0 18px 16px;}
+.ml-main-row{background:var(--bg);border-radius:7px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:baseline;justify-content:space-between;gap:8px;border:1px solid var(--border);}
+.ml-main-lbl{font-size:11px;font-weight:600;color:var(--muted);}
+.ml-main-val{font-size:22px;font-weight:800;color:var(--blue);letter-spacing:-.5px;}
+.ml-main-val .ml-eur{font-size:14px;font-weight:600;margin-right:2px;}
+.ml-breakdown{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.ml-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;}
+.ml-row-lbl{color:var(--muted);font-weight:500;display:flex;align-items:center;gap:5px;}
+.ml-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-1{background:var(--blue);}.dot-2{background:#a0bdd0;}
+.ml-row-val{font-weight:700;color:var(--sub);}
+.ml-note{font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.4;font-style:italic;}
+.ml-range-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px;}
+.ml-range-lbl{color:var(--muted);font-weight:500;}
+.ml-range-vals{font-weight:700;color:var(--sub);}
+
+/* DETAIL BUTTON */
+.btn-detail{width:100%;height:38px;background:transparent;border:1.5px solid var(--border);border-radius:7px;color:var(--blue);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;transition:background .15s,border-color .15s,color .15s;}
+.btn-detail:hover{background:var(--blue-lite);border-color:var(--blue);}
+.btn-detail svg{flex-shrink:0;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,20,50,.55);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:auto;}
+.modal{background:var(--white);border-radius:14px;width:100%;max-width:900px;max-height:calc(100vh - 48px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,20,50,.3);transform:translateY(20px);transition:transform .25s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-head{background:var(--blue);padding:20px 26px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-head-left{display:flex;align-items:center;gap:12px;}
+.modal-head-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mhi-ann{background:rgba(232,240,247,.15);}.mhi-lin{background:rgba(238,245,232,.15);}.mhi-vrij{background:rgba(253,244,231,.15);}
+.modal-head svg{color:#fff;}
+.modal-title{font-size:16px;font-weight:800;color:#fff;}
+.modal-subtitle{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px;}
+.btn-close{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0;}
+.btn-close:hover{background:rgba(255,255,255,.2);}
+
+.modal-body{overflow-y:auto;flex:1;}
+
+/* Modal summary strip */
+.modal-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border);}
+.ms-item{padding:16px 20px;border-right:1px solid var(--border);}
+.ms-item:last-child{border-right:none;}
+.ms-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.ms-val{font-size:18px;font-weight:800;color:var(--blue);letter-spacing:-.5px;}
+.ms-val.amber{color:var(--amber);}
+.ms-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Chart */
+.chart-wrap{padding:20px 24px 4px;}
+.chart-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.chart-svg{width:100%;height:180px;display:block;}
+
+/* Table */
+.tbl-wrap{padding:0 24px 24px;overflow-x:auto;}
+.ml-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.ml-table th{text-align:left;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap;}
+.ml-table td{padding:7px 10px;border-bottom:1px solid var(--border);font-weight:600;color:var(--sub);white-space:nowrap;}
+.ml-table tr:last-child td{border-bottom:none;}
+.ml-table tr:hover td{background:var(--bg);}
+.ml-table .td-jaar{font-weight:800;color:var(--blue);}
+.ml-table .td-rest{color:var(--blue);}
+.ml-table .td-rente{color:#9a6820;}
+.ml-table .td-afl{color:var(--green);}
+
+/* BANDS CARD */
+.bands-card{grid-column:1/-1;}
+.bands-outer{overflow-x:auto;padding-bottom:6px;}
+.bands-inner{display:grid;grid-template-columns:repeat(15,1fr);gap:6px;min-width:900px;}
+.band{border:1.5px solid var(--border);border-radius:8px;padding:11px 6px 10px;text-align:center;cursor:default;transition:all .2s ease;background:var(--white);position:relative;}
+.band .b-range{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;line-height:1.3;}
+.band .b-num{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--border);margin-top:4px;}
+.band.is-target{background:var(--blue);border-color:var(--amber);box-shadow:0 6px 20px rgba(0,48,87,.3);transform:translateY(-4px);z-index:2;}
+.band.is-target .b-range{color:var(--amber);font-size:10.5px;}
+.band.is-target .b-num{color:rgba(229,161,56,.5);}
+.band.is-target::before{content:'▲ optimaal';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--amber);white-space:nowrap;}
+.band.is-base{background:var(--red-bg);border-color:var(--red-bdr);}
+.band.is-base .b-range{color:var(--red-text);}
+.band.is-base .b-num{color:#d4a0a0;}
+.band.is-base::before{content:'▼ zonder';position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--red-text);white-space:nowrap;opacity:.7;}
+.bands-legend{display:flex;gap:20px;margin-top:16px;flex-wrap:wrap;}
+.bl-item{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--sub);}
+.bl-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.bl-blue{background:var(--blue);}.bl-red{background:var(--red-bg);border:1px solid var(--red-bdr);}
+
+footer{background:var(--blue);padding:16px 40px;display:flex;justify-content:space-between;align-items:center;}
+.f-left{font-size:13px;font-weight:700;color:rgba(255,255,255,.4);}
+.f-right{font-size:11px;color:rgba(255,255,255,.2);}
+.fade-in{animation:fi .35s ease both;}
+@keyframes fi{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@media(max-width:820px){
+  main{grid-template-columns:1fr;padding:20px 16px 48px;}
+  .ml-card,.bands-card{grid-column:1;}
+  .ml-grid{grid-template-columns:1fr;}
+  .modal-stats{grid-template-columns:repeat(2,1fr);}
+  .page-header{padding:22px 20px 26px;}
+  .page-title{font-size:24px;}
+  .header-inner{flex-direction:column;align-items:flex-start;gap:16px;}
+}
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+<div class="page-header">
+  <div class="header-inner">
+    <div>
+      <div class="header-eyebrow">Hypotheekadvies instrument</div>
+      <h1 class="page-title">Toetsrente Verbeteraar</h1>
+      <p class="page-desc">Bereken de optimale leningdeelsplitsing voor de laagst mogelijke gewogen toetsrente — maximale hypotheek per risicoklasse</p>
+    </div>
+    <div class="header-badge"><span class="hb-label">Norm</span><span class="hb-val">GHF 2026</span></div>
+  </div>
+</div>
+
+<main>
+  <!-- INPUT -->
+  <div class="card">
+    <div class="card-head">
+      <div class="ch-left">
+        <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <span class="ch-title">Hypotheekgegevens</span>
+      </div>
+      <span class="ch-tag">Invoer</span>
+    </div>
+    <div class="card-body">
+      <div class="fg">
+        <label>Totale leensom</label>
+        <div class="iw has-pfx"><span class="pfx">€</span><input type="text" id="leensom" value="400.000" inputmode="numeric" autocomplete="off" style="padding-left:28px;"></div>
+      </div>
+      <div class="hdiv"></div>
+      <div class="fsec">Leningdeel 1 — rentevaste periode ≥ 10 jaar</div>
+      <div class="fg">
+        <label>Contractrente leningdeel 1</label>
+        <div class="iw has-sfx"><input type="number" id="rente1" value="3.905" min="0.01" max="15" step="0.001"><span class="sfx">%</span></div>
+      </div>
+      <div class="fg">
+        <label>Rentevaste periode</label>
+        <select id="rvp"><option value="10" selected>10 jaar</option><option value="12">12 jaar</option><option value="15">15 jaar</option><option value="20">20 jaar</option><option value="25">25 jaar</option><option value="30">30 jaar</option></select>
+      </div>
+      <div class="fg">
+        <label>Restant looptijd</label>
+        <div class="row2">
+          <div class="iw has-sfx"><input type="number" id="jaren" value="30" min="1" max="40"><span class="sfx">jaren</span></div>
+          <div class="iw has-sfx"><input type="number" id="maanden" value="0" min="0" max="11"><span class="sfx">mnd</span></div>
+        </div>
+      </div>
+      <div class="hdiv"></div>
+      <div class="fsec">Leningdeel 2 — variabele / korte rente</div>
+      <div class="toets-block">
+        <label>Wettelijke toetsrente leningdeel 2</label>
+        <div class="iw has-sfx"><input type="number" id="toetsrente" value="5.000" min="0.5" max="15" step="0.001"><span class="sfx">%</span></div>
+        <div class="toets-hint">GHF 2026 standaard: 5,000%. Aanpasbaar per geldverstrekker.</div>
+      </div>
+      <button class="btn-calc" onclick="bereken()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Bereken beste verdeling
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="card">
+    <div class="card-head">
+      <div class="ch-left">
+        <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <span class="ch-title">Optimale splitsing</span>
+      </div>
+      <span class="ch-tag" id="resTag">—</span>
+    </div>
+    <div class="res-empty" id="emptyState">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      <span>Vul de gegevens in en klik op<br><strong>Bereken beste verdeling</strong></span>
+    </div>
+    <div id="resContent" style="display:none;">
+      <div class="res-hero">
+        <div><div class="rh-label">Gewogen toetsrente</div><div class="rh-value" id="rhVal">—<span class="pct">%</span></div><div class="rh-saving" id="rhSaving"></div></div>
+        <div class="rh-badge"><span class="rb-lbl">Risicoklasse</span><span class="rb-val" id="rhKlasse">—</span></div>
+      </div>
+      <div class="target-strip">
+        <span class="ts-text">Streefdrempel: <strong>laagst mogelijke grens ≥ contractrente</strong></span>
+        <span class="ts-val" id="tsVal">—</span>
+      </div>
+      <div class="deel-sec">
+        <div class="deel-top">
+          <div class="deel-badge db1">LD1</div>
+          <div><div class="dl-name">Leningdeel 1</div><div class="dl-meta" id="d1meta">—</div></div>
+          <div class="dl-amt"><span class="dl-eur" id="d1eur">—</span><span class="dl-pct" id="d1pct">—</span></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill bf1" id="bar1" style="width:0%"></div></div>
+      </div>
+      <div class="deel-sec">
+        <div class="deel-top">
+          <div class="deel-badge db2">LD2</div>
+          <div><div class="dl-name">Leningdeel 2</div><div class="dl-meta" id="d2meta">—</div></div>
+          <div class="dl-amt"><span class="dl-eur" id="d2eur">—</span><span class="dl-pct" id="d2pct">—</span></div>
+        </div>
+        <div class="bar-track"><div class="bar-fill bf2" id="bar2" style="width:0%"></div></div>
+      </div>
+      <div class="info-row">
+        <span class="ir-lbl">Gewogen toetsrente</span>
+        <div class="ir-val"><span class="ir-main" id="gwMain">—</span><span class="kl-chip" id="gwChip">—</span></div>
+      </div>
+      <div class="info-row" style="border-bottom:none;">
+        <span class="ir-lbl">Totale leensom</span>
+        <div class="tot-check"><div class="chk-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a7a4a" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><span class="tot-eur" id="totEur">—</span></div>
+      </div>
+      <div class="sum-block" id="sumBlock"></div>
+    </div>
+  </div>
+
+  <!-- MAANDLASTEN -->
+  <div class="card ml-card" id="mlCard" style="display:none;">
+    <div class="card-head">
+      <div class="ch-left">
+        <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <span class="ch-title">Indicatieve maandlasten</span>
+      </div>
+      <span class="ch-tag">Op basis van contractrente LD1 + toetsrente LD2</span>
+    </div>
+    <div class="card-body">
+      <div class="ml-grid">
+        <!-- Annuïtair -->
+        <div class="ml-col">
+          <div class="ml-col-head">
+            <div class="ml-icon mi-ann"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 8"/></svg></div>
+            <div><div class="ml-type">Annuïtair</div><div class="ml-descr">Vaste maandlast, stijgende aflossing</div></div>
+          </div>
+          <div class="ml-body">
+            <div class="ml-main-row"><span class="ml-main-lbl">Maandlast totaal</span><span class="ml-main-val"><span class="ml-eur">€</span><span id="ann-total">—</span></span></div>
+            <div class="ml-breakdown">
+              <div class="ml-row"><span class="ml-row-lbl"><span class="ml-dot dot-1"></span>LD1</span><span class="ml-row-val" id="ann-ld1">—</span></div>
+              <div class="ml-row"><span class="ml-row-lbl"><span class="ml-dot dot-2"></span>LD2</span><span class="ml-row-val" id="ann-ld2">—</span></div>
+            </div>
+            <div class="ml-note">Rente + aflossing samen constant. Rentecomponent daalt maandelijks.</div>
+            <button class="btn-detail" onclick="openModal('ann')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3v18h18"/><polyline points="7 17 12 12 17 7"/></svg>
+              Bekijk maandlasten & restschuld
+            </button>
+          </div>
+        </div>
+        <!-- Lineair -->
+        <div class="ml-col">
+          <div class="ml-col-head">
+            <div class="ml-icon mi-lin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><line x1="7" y1="14" x2="17" y2="8"/></svg></div>
+            <div><div class="ml-type">Lineair</div><div class="ml-descr">Vaste aflossing, dalende rente</div></div>
+          </div>
+          <div class="ml-body">
+            <div class="ml-main-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+              <div class="ml-range-row"><span class="ml-range-lbl">1e maand</span><strong id="lin-first">—</strong></div>
+              <div class="ml-range-row" style="margin-bottom:0;"><span class="ml-range-lbl">Laatste maand</span><strong id="lin-last">—</strong></div>
+            </div>
+            <div class="ml-breakdown">
+              <div class="ml-row"><span class="ml-row-lbl"><span class="ml-dot dot-1"></span>LD1 eerste maand</span><span class="ml-row-val" id="lin-ld1-first">—</span></div>
+              <div class="ml-row"><span class="ml-row-lbl"><span class="ml-dot dot-2"></span>LD2 eerste maand</span><span class="ml-row-val" id="lin-ld2-first">—</span></div>
+            </div>
+            <div class="ml-note">Vaste maandelijkse aflossing; rentelasten dalen elk jaar.</div>
+            <button class="btn-detail" onclick="openModal('lin')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3v18h18"/><polyline points="7 17 12 12 17 7"/></svg>
+              Bekijk maandlasten & restschuld
+            </button>
+          </div>
+        </div>
+        <!-- Aflossingsvrij -->
+        <div class="ml-col">
+          <div class="ml-col-head">
+            <div class="ml-icon mi-vrij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><line x1="7" y1="12" x2="17" y2="12"/></svg></div>
+            <div><div class="ml-type">Aflossingsvrij</div><div class="ml-descr">Alleen rente, geen aflossing</div></div>
+          </div>
+          <div class="ml-body">
+            <div class="ml-main-row"><span class="ml-main-lbl">Maandlast totaal</span><span class="ml-main-val"><span class="ml-eur">€</span><span id="vrij-total">—</span></span></div>
+            <div class="ml-breakdown">
+              <div class="ml-row"><span class="ml-row-lbl"><span class="ml-dot dot-1"></span>LD1</span><span class="ml-row-val" id="vrij-ld1">—</span></div>
+              <div class="ml-row"><span class="ml-row-lbl"><span class="ml-dot dot-2"></span>LD2</span><span class="ml-row-val" id="vrij-ld2">—</span></div>
+            </div>
+            <div class="ml-note">Schuld wordt niet afgelost. Volledige hoofdsom resteert aan einde looptijd.</div>
+            <button class="btn-detail" onclick="openModal('vrij')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 3v18h18"/><polyline points="7 17 12 12 17 7"/></svg>
+              Bekijk maandlasten & restschuld
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANDS -->
+  <div class="card bands-card">
+    <div class="card-head">
+      <div class="ch-left">
+        <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6M3 15h6M15 9h6M15 15h6"/></svg></div>
+        <span class="ch-title">Risicoklasse overzicht</span>
+      </div>
+      <span class="ch-tag">Drempelwaarden t/m 8%</span>
+    </div>
+    <div class="card-body" style="padding-top:28px;">
+      <div class="bands-outer"><div class="bands-inner" id="bandsRow"></div></div>
+      <div class="bands-legend">
+        <div class="bl-item"><div class="bl-dot bl-blue"></div>Optimale klasse (target)</div>
+        <div class="bl-item"><div class="bl-dot bl-red"></div>Klasse zonder optimalisatie</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span class="f-left">Toetsrente Verbeteraar</span>
+  <span class="f-right">Op basis van GHF-normen 2026 · Niet bindend</span>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head" id="modalHead">
+      <div class="modal-head-left">
+        <div class="modal-head-icon" id="modalIcon"></div>
+        <div><div class="modal-title" id="modalTitle">—</div><div class="modal-subtitle" id="modalSubtitle">—</div></div>
+      </div>
+      <button class="btn-close" onclick="closeModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-stats" id="modalStats"></div>
+      <div class="chart-wrap">
+        <div class="chart-title">Restschuld en maandlast over de looptijd</div>
+        <svg class="chart-svg" id="chartSvg" viewBox="0 0 820 180" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="tbl-wrap">
+        <table class="ml-table"><thead id="tblHead"></thead><tbody id="tblBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DREMPELS=[{label:'≤ 1,500%',start:0,end:1.500},{label:'1,501–2,000%',start:1.501,end:2.000},{label:'2,001–2,500%',start:2.001,end:2.500},{label:'2,501–3,000%',start:2.501,end:3.000},{label:'3,001–3,500%',start:3.001,end:3.500},{label:'3,501–4,000%',start:3.501,end:4.000},{label:'4,001–4,500%',start:4.001,end:4.500},{label:'4,501–5,000%',start:4.501,end:5.000},{label:'5,001–5,500%',start:5.001,end:5.500},{label:'5,501–6,000%',start:5.501,end:6.000},{label:'6,001–6,500%',start:6.001,end:6.500},{label:'6,501–7,000%',start:6.501,end:7.000},{label:'7,001–7,500%',start:7.001,end:7.500},{label:'7,501–8,000%',start:7.501,end:8.000},{label:'≥ 8,001%',start:8.001,end:Infinity}];
+const TARGETS=[1.501,2.001,2.501,3.001,3.501,4.001,4.501,5.001,5.501,6.001,6.501,7.001,7.501,8.001];
+
+(function(){const row=document.getElementById('bandsRow');DREMPELS.forEach((d,i)=>{const el=document.createElement('div');el.className='band';el.id='band'+i;el.innerHTML=`<div class="b-range">${d.label}</div><div class="b-num">Band ${i+1}</div>`;row.appendChild(el);});})();
+
+// Leensom formattering
+const leensomInput=document.getElementById('leensom');
+function formatLeensom(v){const n=parseInt(v.replace(/\./g,'').replace(/[^0-9]/g,''));return isNaN(n)?'':n.toLocaleString('nl-NL');}
+leensomInput.addEventListener('input',function(){const pos=this.selectionStart;this.value=formatLeensom(this.value);});
+leensomInput.addEventListener('blur',function(){this.value=formatLeensom(this.value);});
+function getLeensom(){return parseInt(leensomInput.value.replace(/\./g,'').replace(/[^0-9]/g,''))||0;}
+
+function getBandIdx(r){return DREMPELS.findIndex(d=>r>=d.start&&r<=d.end);}
+function getTarget(r1){return TARGETS.find(t=>t>=r1)??null;}
+function afFactor(rJaar,nMnd){const r=rJaar/100/12;if(r<1e-8)return 1/nMnd;return r/(1-Math.pow(1+r,-nMnd));}
+function fmt(n){return '€\u202F'+Math.round(n).toLocaleString('nl-NL');}
+function fmtM(n){return Math.round(n).toLocaleString('nl-NL');}
+function fmtP(n,d=3){return n.toFixed(d).replace('.',',')+'%';}
+
+// State
+let STATE={};
+
+// Bereken jaarlijkse amortisatie
+function calcSchedule(type, d1, d2, r1pct, r2pct, nMnd){
+  const r1=r1pct/100/12, r2=r2pct/100/12;
+  const nJaar=Math.ceil(nMnd/12);
+  let rest1=d1, rest2=d2;
+  const rows=[];
+
+  // Annuïteit factoren
+  const af1=r1<1e-8?1/nMnd:r1/(1-Math.pow(1+r1,-nMnd));
+  const af2=r2<1e-8?1/nMnd:r2/(1-Math.pow(1+r2,-nMnd));
+  const ann1=d1*af1, ann2=d2*af2;
+  const afl1lin=d1/nMnd, afl2lin=d2/nMnd;
+
+  for(let j=1;j<=nJaar;j++){
+    const mStart=(j-1)*12+1, mEnd=Math.min(j*12,nMnd);
+    let totRente=0,totAfl=0,maand1=0;
+    let rest1start=rest1, rest2start=rest2;
+
+    for(let m=mStart;m<=mEnd;m++){
+      let rente1=rest1*r1, rente2=rest2*r2;
+      let afl_1=0, afl_2=0, maand=0;
+
+      if(type==='ann'){
+        afl_1=ann1-rente1; afl_2=ann2-rente2;
+        maand=ann1+ann2;
+      } else if(type==='lin'){
+        afl_1=afl1lin; afl_2=afl2lin;
+        maand=afl_1+rente1+afl_2+rente2;
+      } else { // vrij
+        afl_1=0; afl_2=0;
+        maand=rente1+rente2;
+      }
+      rest1=Math.max(0,rest1-afl_1);
+      rest2=Math.max(0,rest2-afl_2);
+      totRente+=rente1+rente2;
+      totAfl+=afl_1+afl_2;
+      if(m===mStart) maand1=maand;
+    }
+    rows.push({jaar:j, maand1, totRente, totAfl, restschuld:rest1+rest2});
+  }
+  return rows;
+}
+
+function openModal(type){
+  const {deel1,deel2,r1,r2,jaren,mnd,nMnd}=STATE;
+  const rows=calcSchedule(type,deel1,deel2,r1,r2,nMnd);
+  const totaal=deel1+deel2;
+
+  // Header
+  const titles={ann:'Annuïtair',lin:'Lineair',vrij:'Aflossingsvrij'};
+  const descrs={ann:'Vaste maandlast gedurende de gehele looptijd',lin:'Dalende maandlast door vaste aflossing',vrij:'Alleen rentebetalingen — schuld blijft gelijk'};
+  const iconHtml={
+    ann:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 8"/></svg>',
+    lin:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><line x1="7" y1="14" x2="17" y2="8"/></svg>',
+    vrij:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><line x1="7" y1="12" x2="17" y2="12"/></svg>'
+  };
+  const iconBg={ann:'rgba(232,240,247,.2)',lin:'rgba(238,245,232,.2)',vrij:'rgba(253,244,231,.2)'};
+
+  document.getElementById('modalTitle').textContent=titles[type];
+  document.getElementById('modalSubtitle').textContent=descrs[type];
+  document.getElementById('modalIcon').style.background=iconBg[type];
+  document.getElementById('modalIcon').innerHTML=iconHtml[type];
+
+  // Stats
+  const totRente=rows.reduce((s,r)=>s+r.totRente,0);
+  const totAfl=rows.reduce((s,r)=>s+r.totAfl,0);
+  const eersteM=rows[0]?.maand1??0;
+  const laatsteM=rows[rows.length-1]?.maand1??0;
+  document.getElementById('modalStats').innerHTML=`
+    <div class="ms-item"><div class="ms-lbl">Eerste maand</div><div class="ms-val">${fmt(eersteM)}</div><div class="ms-sub">Maandlast</div></div>
+    <div class="ms-item"><div class="ms-lbl">Laatste maand</div><div class="ms-val">${fmt(laatsteM)}</div><div class="ms-sub">Maandlast</div></div>
+    <div class="ms-item"><div class="ms-lbl">Totaal rente</div><div class="ms-val amber">${fmt(totRente)}</div><div class="ms-sub">Over gehele looptijd</div></div>
+    <div class="ms-item"><div class="ms-lbl">Restschuld einde</div><div class="ms-val">${fmt(rows[rows.length-1]?.restschuld??totaal)}</div><div class="ms-sub">Na ${jaren} jaar</div></div>`;
+
+  // Chart
+  buildChart(rows, totaal, type);
+
+  // Tabel
+  document.getElementById('tblHead').innerHTML=`<tr>
+    <th>Jaar</th><th>Maandlast</th><th>Rente (jaar)</th><th>Aflossing (jaar)</th><th>Restschuld</th></tr>`;
+  const tbody=document.getElementById('tblBody');
+  tbody.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="td-jaar">Jaar ${r.jaar}</td>
+      <td>${fmt(r.maand1)}</td>
+      <td class="td-rente">${fmt(r.totRente)}</td>
+      <td class="td-afl">${fmt(r.totAfl)}</td>
+      <td class="td-rest">${fmt(r.restschuld)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function buildChart(rows, totaal, type){
+  const W=820, H=180, padL=50, padR=10, padT=16, padB=32;
+  const cW=W-padL-padR, cH=H-padT-padB;
+  const n=rows.length;
+
+  const maxRest=totaal;
+  const maanden=rows.map(r=>r.maand1);
+  const maxMaand=Math.max(...maanden)*1.1;
+
+  function xPos(i){return padL+i/(n-1||1)*cW;}
+  function yRest(v){return padT+cH*(1-v/maxRest);}
+  function yMaand(v){return padT+cH*(1-v/maxMaand);}
+
+  // Grid lines
+  let svg=`<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+cH}" stroke="#D6E2EC" stroke-width="1"/>`;
+  svg+=`<line x1="${padL}" y1="${padT+cH}" x2="${W-padR}" y2="${padT+cH}" stroke="#D6E2EC" stroke-width="1"/>`;
+  for(let i=0;i<=4;i++){
+    const y=padT+cH*i/4;
+    svg+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#D6E2EC" stroke-width="0.5" stroke-dasharray="3,3"/>`;
+    svg+=`<text x="${padL-4}" y="${y+4}" font-size="9" fill="#8A96A3" text-anchor="end" font-family="Plus Jakarta Sans,sans-serif">${fmt(maxRest*(1-i/4)).replace('€\u202F','')}</text>`;
+  }
+
+  // Year labels
+  const step=Math.ceil(n/10);
+  rows.forEach((r,i)=>{if(i%step===0||i===n-1){svg+=`<text x="${xPos(i)}" y="${H-4}" font-size="9" fill="#8A96A3" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif">j${r.jaar}</text>`;}});
+
+  // Restschuld area
+  let areaPath=`M ${xPos(0)} ${padT+cH}`;
+  rows.forEach((r,i)=>{areaPath+=` L ${xPos(i)} ${yRest(r.restschuld)}`;});
+  areaPath+=` L ${xPos(n-1)} ${padT+cH} Z`;
+  svg+=`<path d="${areaPath}" fill="rgba(0,48,87,.08)"/>`;
+
+  // Restschuld line
+  let linePath=`M ${xPos(0)} ${yRest(rows[0].restschuld)}`;
+  rows.forEach((r,i)=>{if(i>0)linePath+=` L ${xPos(i)} ${yRest(r.restschuld)}`;});
+  svg+=`<path d="${linePath}" fill="none" stroke="#003057" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  // Maandlast line (secondary axis, scaled)
+  const mlColor=type==='ann'?'#E5A138':type==='lin'?'#3a7a1a':'#9a6820';
+  let mlPath=`M ${xPos(0)} ${yMaand(rows[0].maand1)}`;
+  rows.forEach((r,i)=>{if(i>0)mlPath+=` L ${xPos(i)} ${yMaand(r.maand1)}`;});
+  svg+=`<path d="${mlPath}" fill="none" stroke="${mlColor}" stroke-width="2" stroke-dasharray="5,3" stroke-linecap="round"/>`;
+
+  // Legend
+  svg+=`<rect x="${padL+4}" y="${padT+4}" width="12" height="3" rx="1.5" fill="#003057"/>`;
+  svg+=`<text x="${padL+20}" y="${padT+9}" font-size="9" fill="#4A4A4A" font-family="Plus Jakarta Sans,sans-serif" font-weight="600">Restschuld</text>`;
+  svg+=`<line x1="${padL+90}" y1="${padT+5}" x2="${padL+102}" y2="${padT+5}" stroke="${mlColor}" stroke-width="2" stroke-dasharray="4,2"/>`;
+  svg+=`<text x="${padL+108}" y="${padT+9}" font-size="9" fill="#4A4A4A" font-family="Plus Jakarta Sans,sans-serif" font-weight="600">Maandlast</text>`;
+
+  document.getElementById('chartSvg').innerHTML=svg;
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('modalOverlay')&&e.type!=='click')return;
+  if(e&&e.currentTarget===document.getElementById('modalOverlay')&&e.target!==e.currentTarget)return;
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(e.key==='Enter')bereken();});
+
+function bereken(){
+  const leensom=getLeensom();
+  const r1=parseFloat(document.getElementById('rente1').value)||0;
+  const rvp=parseInt(document.getElementById('rvp').value)||10;
+  const jaren=parseInt(document.getElementById('jaren').value)||0;
+  const mndExtra=parseInt(document.getElementById('maanden').value)||0;
+  const r2=parseFloat(document.getElementById('toetsrente').value)||5.0;
+  const nMnd=jaren*12+mndExtra;
+  if(!leensom||!r1||!nMnd){alert('Vul alle velden correct in.');return;}
+
+  const target=getTarget(r1);
+  if(!target){alert('Contractrente > 8,001%. Geen verdere optimalisatie.');return;}
+
+  let deel1,deel2,gewogen;
+  if(r1>=r2){deel1=leensom;deel2=0;gewogen=r1;}
+  else{
+    const raw=leensom*(target-r2)/(r1-r2);
+    deel1=Math.max(0,Math.min(leensom,Math.round(raw)));
+    deel2=leensom-deel1;
+    gewogen=(deel1*r1+deel2*r2)/leensom;
+  }
+
+  STATE={deel1,deel2,r1,r2,jaren,mnd:mndExtra,nMnd,leensom,rvp};
+
+  const targetBandIdx=getBandIdx(target);
+  const baseBandIdx=getBandIdx(r1);
+  const klasse=DREMPELS[targetBandIdx]?.label??'—';
+  const voordeel=r2-gewogen;
+  const p1=(deel1/leensom*100).toFixed(1).replace('.',',');
+  const p2=(deel2/leensom*100).toFixed(1).replace('.',',');
+
+  document.getElementById('emptyState').style.display='none';
+  const rc=document.getElementById('resContent');
+  rc.style.display='block';rc.classList.remove('fade-in');void rc.offsetWidth;rc.classList.add('fade-in');
+
+  document.getElementById('resTag').textContent=klasse;
+  document.getElementById('rhVal').innerHTML=fmtP(gewogen,3).replace('%','')+'<span class="pct">%</span>';
+  document.getElementById('rhKlasse').textContent=klasse;
+  const sav=document.getElementById('rhSaving');
+  sav.textContent=voordeel>0.001?`▼ ${fmtP(voordeel,3)} lager dan toetsrente LD2 (${fmtP(r2,3)})`:'Geen voordeel — contractrente ≥ toetsrente LD2';
+  sav.className='rh-saving'+(voordeel>0.001?' pos':'');
+  document.getElementById('tsVal').textContent=fmtP(target,3);
+  document.getElementById('d1meta').textContent=`${rvp} jaar vast · ${jaren} jaar · toets ${fmtP(r1,3)}`;
+  document.getElementById('d1eur').textContent=fmt(deel1);
+  document.getElementById('d1pct').textContent=`${p1}% van leensom`;
+  document.getElementById('d2meta').textContent=`< 10 jaar vast · ${jaren} jaar · toets ${fmtP(r2,3)}`;
+  document.getElementById('d2eur').textContent=fmt(deel2);
+  document.getElementById('d2pct').textContent=`${p2}% van leensom`;
+  setTimeout(()=>{document.getElementById('bar1').style.width=(deel1/leensom*100).toFixed(1)+'%';document.getElementById('bar2').style.width=(deel2/leensom*100).toFixed(1)+'%';},60);
+  document.getElementById('gwMain').textContent=fmtP(gewogen,3);
+  document.getElementById('gwChip').textContent=klasse;
+  document.getElementById('totEur').textContent=fmt(leensom);
+  document.getElementById('sumBlock').innerHTML=`<strong>✓ Deel 1</strong> van ${fmt(deel1)} op ${fmtP(r1,3)}, deel 2 van ${fmt(deel2)} op ${fmtP(r2,3)}. Gewogen toetsrente: <strong>${fmtP(gewogen,3)}</strong> → klasse <strong>${klasse}</strong>.`;
+
+  // Maandlasten
+  const af1=afFactor(r1,nMnd),af2=afFactor(r2,nMnd);
+  const ann1=deel1*af1,ann2=deel2*af2;
+  document.getElementById('ann-total').textContent=fmtM(ann1+ann2);
+  document.getElementById('ann-ld1').textContent='€ '+fmtM(ann1);
+  document.getElementById('ann-ld2').textContent=deel2>0?'€ '+fmtM(ann2):'€ 0';
+
+  const afl1=deel1/nMnd,afl2=deel2/nMnd;
+  const lin1f=afl1+deel1*r1/100/12,lin2f=afl2+deel2*r2/100/12;
+  const lin1l=afl1+afl1*r1/100/12,lin2l=afl2+afl2*r2/100/12;
+  document.getElementById('lin-first').textContent='€ '+fmtM(lin1f+lin2f);
+  document.getElementById('lin-last').textContent='€ '+fmtM(lin1l+lin2l);
+  document.getElementById('lin-ld1-first').textContent='€ '+fmtM(lin1f);
+  document.getElementById('lin-ld2-first').textContent=deel2>0?'€ '+fmtM(lin2f):'€ 0';
+
+  const vrij1=deel1*r1/100/12,vrij2=deel2*r2/100/12;
+  document.getElementById('vrij-total').textContent=fmtM(vrij1+vrij2);
+  document.getElementById('vrij-ld1').textContent='€ '+fmtM(vrij1);
+  document.getElementById('vrij-ld2').textContent=deel2>0?'€ '+fmtM(vrij2):'€ 0';
+
+  document.getElementById('mlCard').style.display='block';
+  document.getElementById('mlCard').classList.add('fade-in');
+
+  DREMPELS.forEach((_,i)=>{
+    const el=document.getElementById('band'+i);
+    el.classList.remove('is-target','is-base');
+    if(i===targetBandIdx)el.classList.add('is-target');
+    else if(i===baseBandIdx&&baseBandIdx!==targetBandIdx)el.classList.add('is-base');
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Persoonlijke Lening & DK Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#003057;--gold:#E5A138;--gold-lt:#FEF8EE;--bg:#F4F7F9;--border:#D1DCE5;--muted:#6B7280;--green:#1A8A50;--grlt:#E8F7EF;--red:#C0392B;--redlt:#FDECEA;--orange:#D97706;--orglt:#FEF3C7;--shadow:0 2px 16px rgba(0,48,87,.08);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1D2632;font-size:15px;line-height:1.6;}
+.hdr{background:var(--navy);padding:18px 28px;display:flex;align-items:center;gap:14px;}
+.hdr-ico{font-size:26px;}.hdr h1{font-family:'DM Serif Display',serif;font-size:20px;color:#fff;}.hdr p{font-size:12px;color:rgba(255,255,255,.65);}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10.5px;font-weight:700;padding:3px 11px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px;display:flex;flex-direction:column;gap:18px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+.ch{background:var(--navy);color:#fff;padding:12px 20px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;}
+.cb{padding:20px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.sep{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;padding-bottom:4px;border-bottom:1px solid var(--border);margin-bottom:2px;}
+.fl{display:flex;flex-direction:column;gap:4px;}
+label{font-size:12px;font-weight:600;color:var(--navy);}
+.hint{font-size:10.5px;color:var(--muted);}
+.iw{position:relative;}
+.px{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:var(--muted);pointer-events:none;}
+.sx{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:var(--muted);pointer-events:none;}
+input,select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;color:#1D2632;background:#fff;-moz-appearance:textfield;outline:none;transition:border .15s;}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input{padding-left:24px;}.iw input.sr{padding-left:10px;padding-right:38px;}
+.btn{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;}
+.btn:hover{background:#004580;}
+.hidden{display:none;}
+.vg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.vc{border-radius:10px;overflow:hidden;border:1.5px solid var(--border);}
+.vc.best{border-color:var(--green);box-shadow:0 3px 14px rgba(26,138,80,.1);}
+.vc-head{padding:10px 14px;font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px;}
+.vc-head.pl{background:var(--navy);}
+.vc-head.dk{background:#6B21A8;}
+.vc-body{padding:13px 14px;background:#fff;}
+.vc-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px solid #EEF2F6;}
+.vc-row:last-child{border-bottom:none;font-weight:700;color:var(--navy);}
+.vc-row .g{color:var(--green);}
+.vc-row .r{color:var(--red);}
+.best-badge{background:var(--grlt);color:var(--green);font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:4px;}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;}
+.mb{border-radius:9px;padding:13px 15px;}
+.mb.n{background:#EFF4F9;border:1.5px solid #C5D8E8;}
+.mb.g{background:var(--grlt);border:1.5px solid #A7DFC2;}
+.mb.r{background:var(--redlt);border:1.5px solid #F5B7B1;}
+.mb.o{background:var(--orglt);border:1.5px solid #FCD34D;}
+.mb-l{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+.mb-v{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy);line-height:1.1;}
+.mb-s{font-size:11px;color:var(--muted);}
+.canvas-wrap{position:relative;height:200px;}
+canvas{width:100%!important;}
+.uitleg{background:var(--gold-lt);border-left:3px solid var(--gold);padding:12px 15px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.7;}
+.uitleg strong{color:#B87A00;}
+/* DK: effect op hypotheek */
+.hyp-effect{background:#EFF4F9;border-radius:9px;padding:14px 16px;margin-top:14px;}
+.hyp-effect h3{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+@media(max-width:600px){.g2,.g3,.vg,.metrics{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-ico">💳</div>
+  <div><h1>Persoonlijke Lening & DK Calculator</h1><p>Maandlast · totale kosten · PL vs. DK · effect op maximale hypotheek</p></div>
+  <div class="badge">Krediet 2026</div>
+</div>
+<div class="wrap">
+
+  <div class="card">
+    <div class="ch">📝 Kredietgegevens</div>
+    <div class="cb">
+      <div class="g2" style="margin-bottom:14px;">
+        <div class="sep" style="grid-column:1/-1;">Leningbedrag & rente</div>
+        <div class="fl">
+          <label>Leningbedrag</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="bedrag" value="15000" step="500" oninput="live()"></div>
+        </div>
+        <div class="fl">
+          <label>Doel van de lening</label>
+          <select id="doel" onchange="setDefaults()">
+            <option value="auto">Auto / motorvoertuig</option>
+            <option value="verbouwing" selected>Verbouwing / woning</option>
+            <option value="vakantie">Vakantie / vrij besteedbaar</option>
+            <option value="studie">Studie</option>
+            <option value="overig">Overig</option>
+          </select>
+        </div>
+
+        <div class="sep" style="grid-column:1/-1;margin-top:4px;">Persoonlijke Lening (PL)</div>
+        <div class="fl">
+          <label>Rente PL per jaar</label>
+          <div class="iw"><span class="sx">%</span><input type="number" id="rentePL" value="6.5" step="0.1" class="sr" oninput="live()"></div>
+          <span class="hint">Markt 2026: 5-9% afhankelijk van aanbieder & looptijd</span>
+        </div>
+        <div class="fl">
+          <label>Looptijd PL</label>
+          <select id="looptijdPL" onchange="live()">
+            <option value="12">1 jaar</option>
+            <option value="24">2 jaar</option>
+            <option value="36">3 jaar</option>
+            <option value="48">4 jaar</option>
+            <option value="60" selected>5 jaar</option>
+            <option value="72">6 jaar</option>
+            <option value="84">7 jaar</option>
+            <option value="96">8 jaar</option>
+            <option value="120">10 jaar</option>
+          </select>
+        </div>
+
+        <div class="sep" style="grid-column:1/-1;margin-top:4px;">Doorlopend Krediet (DK)</div>
+        <div class="fl">
+          <label>Rente DK per jaar</label>
+          <div class="iw"><span class="sx">%</span><input type="number" id="renteDK" value="8.5" step="0.1" class="sr" oninput="live()"></div>
+          <span class="hint">DK heeft doorgaans hogere rente maar flexibele aflossing</span>
+        </div>
+        <div class="fl">
+          <label>Minimale maandtermijn DK</label>
+          <div class="iw"><span class="sx">%</span><input type="number" id="minTermijnPct" value="2" step="0.5" class="sr"></div>
+          <span class="hint">% van kredietlimiet per maand (standaard 1-2%)</span>
+        </div>
+
+        <div class="sep" style="grid-column:1/-1;margin-top:4px;">Hypotheek impact</div>
+        <div class="fl">
+          <label>Hypotheekrente (voor vergelijking)</label>
+          <div class="iw"><span class="sx">%</span><input type="number" id="hypRente" value="3.80" step="0.01" class="sr"></div>
+        </div>
+        <div class="fl">
+          <label>Bruto jaarinkomen</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="inkomen" value="65000" step="1000"></div>
+        </div>
+      </div>
+      <button class="btn" onclick="bereken()">💳 Bereken en vergelijk</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="liveCard">
+    <div class="ch">⚡ Live indicatie</div>
+    <div class="cb"><div class="metrics" id="liveMetrics"></div></div>
+  </div>
+
+  <div class="card hidden" id="resCard">
+    <div class="ch">💡 PL vs. DK — vergelijking</div>
+    <div class="cb">
+      <div class="vg" id="vg"></div>
+      <div class="hyp-effect" id="hypEffect"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">📚 PL vs. DK — wanneer wat?</div>
+    <div class="cb">
+      <div class="uitleg">
+        <strong>Persoonlijke Lening (PL):</strong> Vaste looptijd, vaste maandlast, vaste rente. U weet precies wanneer de schuld is afgelost. Goedkoper dan DK omdat de rente lager is en u gedisciplineerd aflost. Kies dit als u een duidelijk einddoel heeft (auto, verbouwing).<br><br>
+        <strong>Doorlopend Krediet (DK):</strong> Flexibel: u leent naar behoefte, tot de kredietlimiet. U kunt aflossen én weer opnemen. Rente is variabel en doorgaans hoger. Risico: schuld loopt door als u de minimumtermijn betaalt. In de praktijk duurt aflossen veel langer dan bij een PL.<br><br>
+        <strong>Effect op hypotheek:</strong> Zowel PL als DK worden meegenomen in de NIBUD-toets. Het uitstaande saldo vermindert uw maximale hypotheek met ca. 2% per jaar van het openstaande saldo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const N=id=>parseFloat(document.getElementById(id).value)||0;
+const fmt=n=>' € '+Math.round(n).toLocaleString('nl-NL')+',-';
+const fmtPct=(n,d=1)=>n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
+
+function setDefaults(){
+  const d=document.getElementById('doel').value;
+  const rentes={auto:6.9,verbouwing:6.5,vakantie:8.5,studie:5.5,overig:7.5};
+  document.getElementById('rentePL').value=rentes[d]||6.5;
+  live();
+}
+
+function annPL(s,r,n){const rm=r/12;if(rm===0)return s/n;return s*rm*Math.pow(1+rm,n)/(Math.pow(1+rm,n)-1);}
+
+function live(){
+  const s=N('bedrag'),rPL=N('rentePL')/100,lt=parseInt(document.getElementById('looptijdPL').value)||60;
+  if(!s||!rPL){return;}
+  const ml=annPL(s,rPL,lt);
+  const totaal=ml*lt;
+  const rente=totaal-s;
+  document.getElementById('liveCard').classList.remove('hidden');
+  document.getElementById('liveMetrics').innerHTML=`
+    <div class="mb n"><div class="mb-l">Maandlast PL</div><div class="mb-v">${fmt(ml)}</div><div class="mb-s">${lt} maanden</div></div>
+    <div class="mb r"><div class="mb-l">Totale rentekosten</div><div class="mb-v">${fmt(rente)}</div><div class="mb-s">Effectief ${fmtPct(rente/s*100)}</div></div>
+    <div class="mb n"><div class="mb-l">Totaal terug te betalen</div><div class="mb-v">${fmt(totaal)}</div><div class="mb-s">Incl. rente</div></div>
+    <div class="mb o"><div class="mb-l">Effect op max. hypotheek</div><div class="mb-v">${fmt(-(s*0.02/annPL(1,N('hypRente')/100,360)))}</div><div class="mb-s">Verlaging leenruimte</div></div>`;
+}
+
+let grafObj=null;
+function bereken(){
+  const s=N('bedrag'),rPL=N('rentePL')/100,rDK=N('renteDK')/100;
+  const lt=parseInt(document.getElementById('looptijdPL').value)||60;
+  const minPct=N('minTermijnPct')/100;
+  const rHyp=N('hypRente')/100,ink=N('inkomen');
+
+  const mlPL=annPL(s,rPL,lt);
+  const totaalPL=mlPL*lt;
+  const rentePL=totaalPL-s;
+
+  // DK: minimumtermijn simulatie
+  const minMndDK=Math.max(s*minPct, s*rDK/12+1);
+  let salDK=s,totaalDK=0,maandenDK=0;
+  while(salDK>0.01&&maandenDK<600){
+    const renteM=salDK*rDK/12;
+    const betaling=Math.max(minMndDK,renteM+1);
+    salDK-=Math.max(0,betaling-renteM);
+    totaalDK+=Math.min(betaling,salDK+betaling);
+    maandenDK++;
+    if(maandenDK>=600)break;
+  }
+  totaalDK=maandenDK*minMndDK; // simplifeer
+  const renteDKTot=totaalDK-s;
+
+  // Hypotheek impact (NIBUD: 2% van schuld per jaar telt als last)
+  const hypVerliesPL=s*0.02;
+  const annFactor=rHyp>0?rHyp/12*Math.pow(1+rHyp/12,360)/(Math.pow(1+rHyp/12,360)-1):1/360;
+  const hypVerlagingPL=hypVerliesPL/12/annFactor;
+
+  const isBestPL=rentePL<renteDKTot;
+  document.getElementById('vg').innerHTML=`
+    <div class="vc ${isBestPL?'best':''}">
+      <div class="vc-head pl">💰 Persoonlijke Lening${isBestPL?'<span class="best-badge">Goedkoopst</span>':''}</div>
+      <div class="vc-body">
+        <div class="vc-row"><span>Rente</span><span>${fmtPct(rPL*100)}</span></div>
+        <div class="vc-row"><span>Maandlast</span><span>${fmt(mlPL)}</span></div>
+        <div class="vc-row"><span>Looptijd</span><span>${lt} maanden</span></div>
+        <div class="vc-row"><span>Totale rentekosten</span><span class="r">${fmt(rentePL)}</span></div>
+        <div class="vc-row"><span>Totaal terug</span><span>${fmt(totaalPL)}</span></div>
+        <div class="vc-row"><span>Hypotheek verlaging</span><span class="r">−${fmt(hypVerlagingPL)}</span></div>
+        <div class="vc-row"><span>Voordeel</span><span>Vaste looptijd, lagere rente</span></div>
+      </div>
+    </div>
+    <div class="vc ${!isBestPL?'best':''}">
+      <div class="vc-head dk">🔄 Doorlopend Krediet${!isBestPL?'<span class="best-badge">Flexibel</span>':''}</div>
+      <div class="vc-body">
+        <div class="vc-row"><span>Rente</span><span>${fmtPct(rDK*100)}</span></div>
+        <div class="vc-row"><span>Minimale maandtermijn</span><span>${fmt(s*minPct)}</span></div>
+        <div class="vc-row"><span>Looptijd bij minimumbet.</span><span>~${Math.round(maandenDK)} maanden</span></div>
+        <div class="vc-row"><span>Totale rentekosten</span><span class="r">${fmt(renteDKTot)}</span></div>
+        <div class="vc-row"><span>Totaal terug</span><span>${fmt(totaalDK)}</span></div>
+        <div class="vc-row"><span>Hypotheek verlaging</span><span class="r">−${fmt(hypVerlagingPL)}</span></div>
+        <div class="vc-row"><span>Voordeel</span><span>Flexibel opneembaar</span></div>
+      </div>
+    </div>`;
+
+  document.getElementById('hypEffect').innerHTML=`
+    <h3>🏠 Effect op maximale hypotheek (inkomen ${fmt(ink)}, rente ${fmtPct(rHyp*100)})</h3>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:13px;">
+      <div><strong>NIBUD-impact:</strong> ${fmt(s)} schuld → jaarlijks ${fmt(s*0.02)} extra last</div>
+      <div><strong>Verlaging max. hypotheek:</strong> ${fmt(hypVerlagingPL)}</div>
+      <div><strong>Tip:</strong> Los eerst af, dan hypotheek aanvragen</div>
+    </div>`;
+
+  document.getElementById('resCard').classList.remove('hidden');
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+live();
+</script>
+</body>
+</html>

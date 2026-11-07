@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypotheek Hulpbrief</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #F4F7F9;
+  color: #333333;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.header {
+  background: #003057;
+  color: white;
+  padding: 32px 36px;
+  border-radius: 14px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(229,161,56,0.15);
+}
+.header h1 { color: white; font-size: 28px; margin-bottom: 6px; line-height: 1.3; }
+.header p  { color: rgba(255,255,255,0.82); font-size: 15px; max-width: 600px; }
+.badge {
+  display: inline-block;
+  background: #E5A138;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Modus toggle */
+.modus-toggle {
+  display: flex;
+  background: #E0E6ED;
+  border-radius: 12px;
+  padding: 5px;
+  gap: 4px;
+  margin-bottom: 26px;
+}
+.modus-btn {
+  flex: 1;
+  padding: 13px 18px;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.22s;
+  color: #4A4A4A;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.modus-btn.actief {
+  background: #003057;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0,48,87,0.22);
+}
+.modus-btn.actief.adviseur-btn { background: #1a5276; }
+
+/* Adviseur banner */
+.adviseur-banner {
+  display: none;
+  background: linear-gradient(135deg, #1a5276 0%, #003057 100%);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 22px;
+  color: white;
+  font-size: 14px;
+  align-items: flex-start;
+  gap: 14px;
+}
+.adviseur-banner.zichtbaar { display: flex; }
+.adviseur-banner .av-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+.adviseur-banner strong { font-size: 15px; display: block; margin-bottom: 4px; }
+
+/* Cards */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-bottom: 22px;
+  box-shadow: 0 2px 10px rgba(0,48,87,0.07);
+  border: 1px solid #E0E6ED;
+}
+.card h2 {
+  font-size: 18px;
+  color: #003057;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #F4F7F9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.card h2 .icon {
+  background: #E5A138;
+  color: white;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.card.adviseur-kaart { border: 2px solid #1a5276; }
+.card.adviseur-kaart h2 .icon { background: #1a5276; }
+.card.adviseur-kaart h2 { color: #1a5276; }
+.verborgen { display: none !important; }
+
+/* Formulier */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #003057;
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #E0E6ED;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #F4F7F9;
+  color: #333333;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #003057;
+  outline: none;
+  background: white;
+}
+
+/* Info boxen */
+.info-box {
+  background: linear-gradient(135deg,#f0f6ff 0%,#e8f0f8 100%);
+  border-left: 4px solid #003057;
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #003057;
+}
+.info-box strong { display: block; margin-bottom: 4px; }
+
+/* Machtiging chip */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  background: #1a5276;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.3px;
+}
+
+/* Vragen */
+.vragen-toggle {
+  background: none;
+  border: 1.5px solid #E0E6ED;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  color: #003057;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+  transition: all 0.2s;
+  font-family: inherit;
+  font-weight: 600;
+}
+.vragen-toggle:hover { background: #F4F7F9; border-color: #003057; }
+.vragen-toggle .arrow { transition: transform 0.2s; }
+.vragen-toggle.open .arrow { transform: rotate(180deg); }
+.vragen-content { display: none; margin-top: 10px; }
+.vragen-content.open { display: block; }
+.counter-badge {
+  background: #E5A138;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
+.vraag-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #333333;
+  line-height: 1.5;
+  border-bottom: 1px solid #F4F7F9;
+}
+.vraag-item:last-child { border-bottom: none; }
+.vraag-nr {
+  background: #003057;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Voortgang */
+.progress-bar { height: 6px; background: #E0E6ED; border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg,#003057,#E5A138); border-radius: 3px; transition: width 0.4s ease; }
+.progress-label { font-size: 13px; color: #4A4A4A; margin-bottom: 20px; }
+
+/* Knoppen */
+.btn-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.btn-cta { background: #E5A138; color: white; font-size: 17px; font-weight: 700; }
+.btn-cta:hover { background: #d4922e; transform: translateY(-1px); }
+.btn-outline { background: white; color: #003057; border: 2px solid #003057; }
+.btn-outline:hover { background: #003057; color: white; }
+
+/* Disclaimer */
+.disclaimer {
+  font-size: 13px;
+  color: #4A4A4A;
+  background: #F4F7F9;
+  border-left: 3px solid #E5A138;
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 16px;
+  line-height: 1.5;
+}
+
+/* Preview overlay */
+.brief-preview {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+.brief-preview-inner {
+  background: white;
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.brief-preview-header {
+  background: #003057;
+  color: white;
+  padding: 18px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.brief-preview-header.adv-mode { background: #1a5276; }
+.brief-preview-header h3 { color: white; font-size: 16px; }
+.brief-preview-actions { display: flex; gap: 10px; }
+.brief-preview-content { padding: 32px; max-height: 70vh; overflow-y: auto; }
+.brief-preview-content p { margin-bottom: 9px; }
+.brief-preview-content br { display: block; margin-bottom: 6px; }
+.btn-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: inherit;
+}
+.btn-close:hover { background: rgba(255,255,255,0.35); }
+/* ── Sectie-header rij ── */
+.sectie-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sectie-header-row .vragen-toggle { flex: 1; }
+.btn-sectie-sel {
+  background: white;
+  border: 1.5px solid #E0E6ED;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.18s;
+  flex-shrink: 0;
+  font-family: inherit;
+  color: #003057;
+  line-height: 1;
+}
+.btn-sectie-sel:hover { background: #F4F7F9; border-color: #003057; }
+.btn-selecteer {
+  background: white;
+  border: 1.5px solid #003057;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #003057;
+  transition: all 0.18s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-selecteer:hover { background: #003057; color: white; }
+.vraag-item-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid #F4F7F9;
+  cursor: pointer;
+  transition: background 0.12s;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  user-select: none;
+}
+.vraag-item-label:last-child { border-bottom: none; }
+.vraag-item-label:hover { background: #f5f8fd; }
+.vraag-item-label.uitgevinkt { opacity: 0.38; }
+.vraag-item-label.uitgevinkt .vraag-nr-label { background: #aaa; }
+.vraag-cb { margin-top: 4px; width: 16px; height: 16px; accent-color: #003057; cursor: pointer; flex-shrink: 0; }
+.vraag-nr-label {
+  background: #003057; color: white; font-size: 11px; font-weight: 700;
+  min-width: 26px; height: 26px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px; transition: background 0.15s;
+}
+.vraag-tekst { font-size: 14px; color: #333333; line-height: 1.5; }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <span class="badge">📄 Gratis tool</span>
+    <h1>Hypotheek Hulpbrief</h1>
+    <p>Genereer een inhoudelijke brief met 54 feitenvragen aan de geldverstrekker — voor consumenten én adviseurs die namens hun klant schrijven.</p>
+  </div>
+
+  <!-- MODUS TOGGLE -->
+  <div class="modus-toggle">
+    <button class="modus-btn actief" id="btnConsument">👤 Consument — ik schrijf zelf</button>
+    <button class="modus-btn adviseur-btn" id="btnAdviseur">🧑‍💼 Adviseur — ik schrijf namens mijn klant</button>
+  </div>
+
+  <!-- ADVISEUR BANNER -->
+  <div class="adviseur-banner" id="adviseurBanner">
+    <span class="av-icon">🧑‍💼</span>
+    <div>
+      <strong>Adviseursmodus actief</strong>
+      De brief wordt namens de klant door de adviseur ondertekend. De geldverstrekker wordt verzocht zijn schriftelijke antwoord <u>uitsluitend aan het adres en e-mail van de adviseur</u> te richten. Vul hieronder eerst uw kantoorgegevens in, daarna de klantgegevens.
+    </div>
+  </div>
+
+  <!-- VOORTGANG -->
+  <div class="card">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">Vul de gegevens in om te beginnen</div>
+  </div>
+
+  <!-- ADVISEUR GEGEVENS -->
+  <div class="card adviseur-kaart verborgen" id="kaartAdviseur">
+    <h2><span class="icon">🧑‍💼</span> Uw kantoorgegevens <span class="chip">ADVISEUR</span></h2>
+    <div class="info-box" style="border-color:#1a5276;background:linear-gradient(135deg,#eef4fb 0%,#e4eff9 100%);color:#1a5276;">
+      <strong>📬 Antwoord terugsturen naar u</strong>
+      De brief vermeldt expliciet dat de geldverstrekker zijn schriftelijke reactie aan <em>u als adviseur</em> moet sturen. Vul uw e-mailadres verplicht in.
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="adv_naam">Naam adviseur *</label>
+        <input type="text" id="adv_naam" placeholder="bijv. M. Jansen">
+      </div>
+      <div class="form-group">
+        <label for="adv_kantoor">Advieskantoor *</label>
+        <input type="text" id="adv_kantoor" placeholder="bijv. Jansen Hypotheekadvies B.V.">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="adv_adres">Kantooradres *</label>
+      <input type="text" id="adv_adres" placeholder="bijv. Hoofdstraat 45">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="adv_postcode">Postcode + woonplaats *</label>
+        <input type="text" id="adv_postcode" placeholder="bijv. 3512 JE Utrecht">
+      </div>
+      <div class="form-group">
+        <label for="adv_telefoon">Telefoonnummer kantoor</label>
+        <input type="text" id="adv_telefoon" placeholder="bijv. 030-1234567">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="adv_email">E-mail kantoor * <span style="color:#E5A138;font-weight:600;">(antwoord terugsturen hiernaartoe)</span></label>
+        <input type="email" id="adv_email" placeholder="bijv. info@jansenhypotheek.nl">
+      </div>
+      <div class="form-group">
+        <label for="adv_afm">AFM-vergunningnummer</label>
+        <input type="text" id="adv_afm" placeholder="bijv. 12345678">
+      </div>
+    </div>
+  </div>
+
+  <!-- KLANT GEGEVENS -->
+  <div class="card" id="kaartKlant">
+    <h2><span class="icon" id="klantIcon">👤</span> <span id="klantTitel">Uw persoonlijke gegevens</span></h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="naam" id="lblNaam">Uw volledige naam *</label>
+        <input type="text" id="naam" placeholder="bijv. Jan de Vries">
+      </div>
+      <div class="form-group">
+        <label for="hypotheeknr">Hypotheeknummer</label>
+        <input type="text" id="hypotheeknr" placeholder="bijv. H-2024-12345">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="adres" id="lblAdres">Woonadres *</label>
+      <input type="text" id="adres" placeholder="bijv. Dorpsstraat 12">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="postcode" id="lblPostcode">Postcode + woonplaats *</label>
+        <input type="text" id="postcode" placeholder="bijv. 1234 AB Amsterdam">
+      </div>
+      <div class="form-group">
+        <label for="telefoon">Telefoonnummer</label>
+        <input type="text" id="telefoon" placeholder="bijv. 06-12345678">
+      </div>
+    </div>
+    <div class="form-group" id="emailGroepKlant">
+      <label for="email">E-mailadres</label>
+      <input type="email" id="email" placeholder="bijv. jan@email.nl">
+    </div>
+    <div class="form-group verborgen" id="machtigingGroep">
+      <label for="machtiging_datum">Datum machtiging / volmacht (optioneel)</label>
+      <input type="text" id="machtiging_datum" placeholder="bijv. 15 maart 2026">
+    </div>
+  </div>
+
+  <!-- GELDVERSTREKKER -->
+  <div class="card">
+    <h2><span class="icon">🏦</span> Gegevens geldverstrekker</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="geldverstrekker">Naam geldverstrekker *</label>
+        <input type="text" id="geldverstrekker" placeholder="bijv. ABN AMRO Bank N.V.">
+      </div>
+      <div class="form-group">
+        <label for="gv_afdeling">Afdeling / t.a.v.</label>
+        <input type="text" id="gv_afdeling" placeholder="bijv. Afdeling Hypotheken">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="gv_adres">Adres geldverstrekker</label>
+      <input type="text" id="gv_adres" placeholder="bijv. Foppingadreef 22">
+    </div>
+    <div class="form-group">
+      <label for="gv_stad">Postcode + plaats geldverstrekker</label>
+      <input type="text" id="gv_stad" placeholder="bijv. 1102 BS Amsterdam">
+    </div>
+  </div>
+
+  <!-- HYPOTHEEKSITUATIE -->
+  <div class="card">
+    <h2><span class="icon">🏠</span> Hypotheeksituatie</h2>
+    <div class="info-box">
+      <strong>💡 Optionele context</strong>
+      Hoe meer context, hoe persoonlijker en krachtiger de brief. Alles hieronder is optioneel.
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="woningwaarde">Geschatte woningwaarde</label>
+        <input type="text" id="woningwaarde" placeholder="bijv. € 350.000">
+      </div>
+      <div class="form-group">
+        <label for="hypotheekbedrag">Hypotheekbedrag (aflossingsvrij)</label>
+        <input type="text" id="hypotheekbedrag" placeholder="bijv. € 200.000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="afsluiting">Jaar van afsluiten</label>
+        <input type="text" id="afsluiting" placeholder="bijv. 1998">
+      </div>
+      <div class="form-group">
+        <label for="einddatum">Einddatum hypotheek</label>
+        <input type="text" id="einddatum" placeholder="bijv. 1 juli 2028">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="extra_context">Extra toelichting (optioneel)</label>
+      <textarea id="extra_context" rows="3" placeholder="bijv. Cliënt betaalt al 25 jaar trouw zijn maandlasten en wil weten wat er op de einddatum staat te gebeuren..."></textarea>
+    </div>
+  </div>
+
+  <!-- DE 54 VRAGEN -->
+  <div class="card">
+    <h2><span class="icon">📋</span> De 54 vragen — selecteer wat u wilt opnemen</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <p style="font-size:14px;color:#4A4A4A;margin:0;">Selecteer per vraag of deze in de brief komt. Standaard zijn alle vragen aangevinkt.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-selecteer" onclick="selecteerAlle(true)">✅ Alles aan</button>
+        <button class="btn-selecteer" onclick="selecteerAlle(false)">☐ Alles uit</button>
+      </div>
+    </div>
+    <div id="selTeller" style="font-size:13px;font-weight:600;color:#003057;margin-bottom:18px;padding:8px 14px;background:#f0f6ff;border-radius:8px;border-left:3px solid #003057;">
+      ✔ 54 van 54 vragen geselecteerd
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>I. Contractuele status en verlenging <span class="counter-badge" id="badge_I">8/8</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('I', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('I', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v1">
+          <input type="checkbox" class="vraag-cb" id="v1" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">1</span>
+          <span class="vraag-tekst">Wordt de hypotheekovereenkomst na de einddatum automatisch beëindigd, of loopt deze stilzwijgend door?</span>
+        </label>
+        <label class="vraag-item-label" for="v2">
+          <input type="checkbox" class="vraag-cb" id="v2" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">2</span>
+          <span class="vraag-tekst">Is er in het contract een bepaling opgenomen die u het recht geeft de volledige hoofdsom op de einddatum op te eisen, ongeacht het betalingsgedrag?</span>
+        </label>
+        <label class="vraag-item-label" for="v3">
+          <input type="checkbox" class="vraag-cb" id="v3" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">3</span>
+          <span class="vraag-tekst">Indien er geen automatische verlenging is: op welke termijn vóór de einddatum informeert u de klant hierover?</span>
+        </label>
+        <label class="vraag-item-label" for="v4">
+          <input type="checkbox" class="vraag-cb" id="v4" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">4</span>
+          <span class="vraag-tekst">Hanteert u een standaardoptie voor contractuele verlenging van de aflossingsvrije periode?</span>
+        </label>
+        <label class="vraag-item-label" for="v5">
+          <input type="checkbox" class="vraag-cb" id="v5" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">5</span>
+          <span class="vraag-tekst">Wordt een verlenging gezien als een 'nieuw product' (met nieuwe afsluitkosten) of als voortzetting van de bestaande voorwaarden?</span>
+        </label>
+        <label class="vraag-item-label" for="v6">
+          <input type="checkbox" class="vraag-cb" id="v6" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">6</span>
+          <span class="vraag-tekst">Welke contractbepaling geeft u het recht om verlenging te weigeren bij een klant die altijd aan zijn verplichtingen heeft voldaan?</span>
+        </label>
+        <label class="vraag-item-label" for="v7">
+          <input type="checkbox" class="vraag-cb" id="v7" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">7</span>
+          <span class="vraag-tekst">Wat is de maximale totale looptijd die u toestaat voor een aflossingsvrije lening (bijv. 40, 50 of 75 jaar)?</span>
+        </label>
+        <label class="vraag-item-label" for="v8">
+          <input type="checkbox" class="vraag-cb" id="v8" data-sectie="I" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">8</span>
+          <span class="vraag-tekst">Kunt u bevestigen dat een langjarige positieve betalingshistorie meeweegt in het besluit tot verlenging?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>II. Acceptatiebeleid en inkomenstoetsing <span class="counter-badge" id="badge_II">8/8</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('II', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('II', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v9">
+          <input type="checkbox" class="vraag-cb" id="v9" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">9</span>
+          <span class="vraag-tekst">Welke toetsingsnormen hanteert u op de einddatum: de dan geldende GHF-normen of uw eigen interne beheertoets?</span>
+        </label>
+        <label class="vraag-item-label" for="v10">
+          <input type="checkbox" class="vraag-cb" id="v10" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">10</span>
+          <span class="vraag-tekst">Is uw beheertoets gebaseerd op de werkelijke maandlasten of op een theoretische annuïtaire last?</span>
+        </label>
+        <label class="vraag-item-label" for="v11">
+          <input type="checkbox" class="vraag-cb" id="v11" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">11</span>
+          <span class="vraag-tekst">Op welke manier wijkt uw acceptatiebeleid voor bestaande klanten op de einddatum af van het beleid voor nieuwe klanten?</span>
+        </label>
+        <label class="vraag-item-label" for="v12">
+          <input type="checkbox" class="vraag-cb" id="v12" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">12</span>
+          <span class="vraag-tekst">Is een positieve inkomenstoets een harde voorwaarde voor verlenging, ook als de Loan-to-Value (LTV) zeer laag is?</span>
+        </label>
+        <label class="vraag-item-label" for="v13">
+          <input type="checkbox" class="vraag-cb" id="v13" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">13</span>
+          <span class="vraag-tekst">Hoe weegt u een pensioeninkomen mee dat nog niet is ingegaan maar wel vaststaat?</span>
+        </label>
+        <label class="vraag-item-label" for="v14">
+          <input type="checkbox" class="vraag-cb" id="v14" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">14</span>
+          <span class="vraag-tekst">Indien het inkomen op papier onvoldoende is maar de klant al tientallen jaren betaalt: welke coulanceregeling hanteert u?</span>
+        </label>
+        <label class="vraag-item-label" for="v15">
+          <input type="checkbox" class="vraag-cb" id="v15" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">15</span>
+          <span class="vraag-tekst">Verplicht u klanten bij een tekort op de inkomenstoets om over te stappen naar een aflosvorm (bijv. annuïtair)?</span>
+        </label>
+        <label class="vraag-item-label" for="v16">
+          <input type="checkbox" class="vraag-cb" id="v16" data-sectie="II" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">16</span>
+          <span class="vraag-tekst">Wat is de minimale inkomenseis om een aflossingsvrij deel van de huidige omvang te mogen behouden?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>III. Woningwaarde en executie <span class="counter-badge" id="badge_III">6/6</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('III', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('III', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v17">
+          <input type="checkbox" class="vraag-cb" id="v17" data-sectie="III" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">17</span>
+          <span class="vraag-tekst">Bij welk LTV-percentage beschouwt u een aflossingsvrije hypotheek als risicovol op de einddatum?</span>
+        </label>
+        <label class="vraag-item-label" for="v18">
+          <input type="checkbox" class="vraag-cb" id="v18" data-sectie="III" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">18</span>
+          <span class="vraag-tekst">Indien de woningwaarde de schuld ruimschoots dekt (overwaarde): op welke grond eist u dan alsnog aflossing?</span>
+        </label>
+        <label class="vraag-item-label" for="v19">
+          <input type="checkbox" class="vraag-cb" id="v19" data-sectie="III" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">19</span>
+          <span class="vraag-tekst">Is een nieuwe taxatie verplicht op de einddatum van de looptijd?</span>
+        </label>
+        <label class="vraag-item-label" for="v20">
+          <input type="checkbox" class="vraag-cb" id="v20" data-sectie="III" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">20</span>
+          <span class="vraag-tekst">Indien de klant niet kan herfinancieren en de hoofdsom niet kan aflossen: op welke termijn gaat u over tot opeising?</span>
+        </label>
+        <label class="vraag-item-label" for="v21">
+          <input type="checkbox" class="vraag-cb" id="v21" data-sectie="III" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">21</span>
+          <span class="vraag-tekst">Welke stappen onderneemt u om gedwongen verkoop te voorkomen bij klanten die wél rente betalen maar de hoofdsom niet kunnen aflossen?</span>
+        </label>
+        <label class="vraag-item-label" for="v22">
+          <input type="checkbox" class="vraag-cb" id="v22" data-sectie="III" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">22</span>
+          <span class="vraag-tekst">Accepteert u een vrijwillige verkooptermijn als de hypotheek niet verlengd kan worden?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>IV. Rente en voorwaarden bij voortzetting <span class="counter-badge" id="badge_IV">4/4</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('IV', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('IV', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v23">
+          <input type="checkbox" class="vraag-cb" id="v23" data-sectie="IV" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">23</span>
+          <span class="vraag-tekst">Welk rentetarief geldt bij verlenging: het tarief voor bestaande klanten of voor nieuwe klanten?</span>
+        </label>
+        <label class="vraag-item-label" for="v24">
+          <input type="checkbox" class="vraag-cb" id="v24" data-sectie="IV" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">24</span>
+          <span class="vraag-tekst">Wordt bij verlenging de risico-opslag opnieuw bepaald op basis van de actuele woningwaarde?</span>
+        </label>
+        <label class="vraag-item-label" for="v25">
+          <input type="checkbox" class="vraag-cb" id="v25" data-sectie="IV" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">25</span>
+          <span class="vraag-tekst">Kan de klant op de einddatum kiezen voor alle rentevastperiodes die u op dat moment aanbiedt?</span>
+        </label>
+        <label class="vraag-item-label" for="v26">
+          <input type="checkbox" class="vraag-cb" id="v26" data-sectie="IV" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">26</span>
+          <span class="vraag-tekst">Gelden er beperkingen voor het boetevrij aflossen op het moment dat de looptijd van 30 jaar verstrijkt?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>V. Wet- en regelgeving (AFM / DNB / ECB) <span class="counter-badge" id="badge_V">3/3</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('V', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('V', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v27">
+          <input type="checkbox" class="vraag-cb" id="v27" data-sectie="V" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">27</span>
+          <span class="vraag-tekst">Welke specifieke richtlijnen van AFM, DNB of ECB dwingen u om aflossingsvrije hypotheken op de einddatum kritisch te beoordelen?</span>
+        </label>
+        <label class="vraag-item-label" for="v28">
+          <input type="checkbox" class="vraag-cb" id="v28" data-sectie="V" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">28</span>
+          <span class="vraag-tekst">Is er sprake van een actieve ontmoedigingspolitiek om aflossingsvrije delen boven 50% LTV aan te houden?</span>
+        </label>
+        <label class="vraag-item-label" for="v29">
+          <input type="checkbox" class="vraag-cb" id="v29" data-sectie="V" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">29</span>
+          <span class="vraag-tekst">Hoe verhoudt uw beleid zich tot de zorgplicht wanneer strikte handhaving leidt tot gedwongen verkoop van een betalende klant?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>VI. Procesvragen (beleidsmatig) <span class="counter-badge" id="badge_VI">11/11</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('VI', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('VI', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v30">
+          <input type="checkbox" class="vraag-cb" id="v30" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">30</span>
+          <span class="vraag-tekst">Waar kunnen de officiële Productvoorwaarden worden gedownload, waarin de afhandeling van de einddatum beschreven staat?</span>
+        </label>
+        <label class="vraag-item-label" for="v31">
+          <input type="checkbox" class="vraag-cb" id="v31" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">31</span>
+          <span class="vraag-tekst">Is er een 'Protocol Einddatum Hypotheek' dat u hanteert? Zo ja, verzoek ik om een kopie.</span>
+        </label>
+        <label class="vraag-item-label" for="v32">
+          <input type="checkbox" class="vraag-cb" id="v32" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">32</span>
+          <span class="vraag-tekst">Welke afdeling binnen uw organisatie is verantwoordelijk voor de besluitvorming over contractverlengingen?</span>
+        </label>
+        <label class="vraag-item-label" for="v33">
+          <input type="checkbox" class="vraag-cb" id="v33" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">33</span>
+          <span class="vraag-tekst">Welke geschillencommissie of klachtenprocedure is van toepassing bij een meningsverschil op de einddatum?</span>
+        </label>
+        <label class="vraag-item-label" for="v34">
+          <input type="checkbox" class="vraag-cb" id="v34" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">34</span>
+          <span class="vraag-tekst">Waarom zou een onafhankelijk adviseur meer weten over uw interne acceptatiecriteria dan u als geldverstrekker zelf?</span>
+        </label>
+        <label class="vraag-item-label" for="v35">
+          <input type="checkbox" class="vraag-cb" id="v35" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">35</span>
+          <span class="vraag-tekst">Kunt u bevestigen dat een adviesgesprek geen invloed heeft op de acceptatiegrenzen van uw risicomanagement?</span>
+        </label>
+        <label class="vraag-item-label" for="v36">
+          <input type="checkbox" class="vraag-cb" id="v36" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">36</span>
+          <span class="vraag-tekst">Op welke wijze waarborgt u dat klanten niet onnodig op advieskosten worden gejaagd voor standaard verlengingsvragen?</span>
+        </label>
+        <label class="vraag-item-label" for="v37">
+          <input type="checkbox" class="vraag-cb" id="v37" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">37</span>
+          <span class="vraag-tekst">Wat is de gemiddelde beoordelingstijd voor een dossier dat de einddatum nadert?</span>
+        </label>
+        <label class="vraag-item-label" for="v38">
+          <input type="checkbox" class="vraag-cb" id="v38" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">38</span>
+          <span class="vraag-tekst">Welke informatie heeft u nodig om nu al een bindende uitspraak te doen over de verlengbaarheid?</span>
+        </label>
+        <label class="vraag-item-label" for="v39">
+          <input type="checkbox" class="vraag-cb" id="v39" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">39</span>
+          <span class="vraag-tekst">Biedt u de mogelijkheid om de einddatum van de hypotheek nu al contractueel te verschuiven?</span>
+        </label>
+        <label class="vraag-item-label" for="v40">
+          <input type="checkbox" class="vraag-cb" id="v40" data-sectie="VI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">40</span>
+          <span class="vraag-tekst">Is het vandaag gecommuniceerde beleid vastgelegd in een document dat als bijlage bij het dossier gevoegd kan worden?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>VII. Fiscale impact en toetsing <span class="counter-badge" id="badge_VII">3/3</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('VII', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('VII', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v41">
+          <input type="checkbox" class="vraag-cb" id="v41" data-sectie="VII" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">41</span>
+          <span class="vraag-tekst">Op welke wijze verdisconteert u het vervallen van de hypotheekrenteaftrek (na 30 jaar) in uw inkomenstoetsing op de einddatum?</span>
+        </label>
+        <label class="vraag-item-label" for="v42">
+          <input type="checkbox" class="vraag-cb" id="v42" data-sectie="VII" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">42</span>
+          <span class="vraag-tekst">Indien de netto lasten stijgen door het wegvallen van de aftrek maar de klant deze aantoonbaar kan dragen: hanteert u de bruto-inkomstennorm of de werkelijke bestedingsruimte?</span>
+        </label>
+        <label class="vraag-item-label" for="v43">
+          <input type="checkbox" class="vraag-cb" id="v43" data-sectie="VII" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">43</span>
+          <span class="vraag-tekst">Wordt een contractverlenging fiscaal gezien als voortzetting (overgangsrecht) of als nieuwe lening?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>VIII. Notariële en kadastrale zaken <span class="counter-badge" id="badge_VIII">3/3</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('VIII', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('VIII', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v44">
+          <input type="checkbox" class="vraag-cb" id="v44" data-sectie="VIII" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">44</span>
+          <span class="vraag-tekst">Is de hypothecaire inschrijving in het Kadaster beperkt tot 30 jaar, of voor onbepaalde tijd ingeschreven?</span>
+        </label>
+        <label class="vraag-item-label" for="v45">
+          <input type="checkbox" class="vraag-cb" id="v45" data-sectie="VIII" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">45</span>
+          <span class="vraag-tekst">Is bij contractverlenging een nieuwe hypotheekakte bij de notaris vereist?</span>
+        </label>
+        <label class="vraag-item-label" for="v46">
+          <input type="checkbox" class="vraag-cb" id="v46" data-sectie="VIII" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">46</span>
+          <span class="vraag-tekst">Wie draagt de kosten voor de notaris en het kadaster als een nieuwe akte nodig is?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>IX. NHG en garanties <span class="counter-badge" id="badge_IX">2/2</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('IX', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('IX', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v47">
+          <input type="checkbox" class="vraag-cb" id="v47" data-sectie="IX" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">47</span>
+          <span class="vraag-tekst">Indien er sprake is van NHG: wijkt uw interne verlengingsbeleid af van de officiële beheercriteria van het WEW?</span>
+        </label>
+        <label class="vraag-item-label" for="v48">
+          <input type="checkbox" class="vraag-cb" id="v48" data-sectie="IX" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">48</span>
+          <span class="vraag-tekst">Wat zijn de consequenties voor de NHG-dekking als de lening na 30 jaar wordt voortgezet zonder aflossingsschema?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>X. Continuïteit en nabestaanden <span class="counter-badge" id="badge_X">2/2</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('X', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('X', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v49">
+          <input type="checkbox" class="vraag-cb" id="v49" data-sectie="X" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">49</span>
+          <span class="vraag-tekst">Wat is het beleid als een van de leningnemers kort voor de einddatum overlijdt?</span>
+        </label>
+        <label class="vraag-item-label" for="v50">
+          <input type="checkbox" class="vraag-cb" id="v50" data-sectie="X" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">50</span>
+          <span class="vraag-tekst">Hanteert u een harde maximumleeftijd waarbij een aflossingsvrije hypotheek niet meer verlengd wordt?</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sectie-blok" style="margin-bottom:8px;">
+      <div class="sectie-header-row">
+        <button class="vragen-toggle" onclick="toggleSectie(this)">
+          <span>XI. Juridische afweging <span class="counter-badge" id="badge_XI">4/4</span></span>
+          <span class="arrow">▼</span>
+        </button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('XI', true)" title="Sectie aanzetten">✅</button>
+        <button class="btn-sectie-sel" onclick="selecteerSectie('XI', false)" title="Sectie uitzetten">☐</button>
+      </div>
+      <div class="vragen-content">
+        <label class="vraag-item-label" for="v51">
+          <input type="checkbox" class="vraag-cb" id="v51" data-sectie="XI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">51</span>
+          <span class="vraag-tekst">Hoe weegt u uw zorgplicht af tegen de GHF-richtlijnen die een herbeoordeling op inkomen voorschrijven?</span>
+        </label>
+        <label class="vraag-item-label" for="v52">
+          <input type="checkbox" class="vraag-cb" id="v52" data-sectie="XI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">52</span>
+          <span class="vraag-tekst">Kunt u het wetsartikel noemen dat u verbiedt een solvabele klant na de einddatum in de woning te laten blijven?</span>
+        </label>
+        <label class="vraag-item-label" for="v53">
+          <input type="checkbox" class="vraag-cb" id="v53" data-sectie="XI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">53</span>
+          <span class="vraag-tekst">Indien herfinanciering bij u niet mogelijk blijkt: verleent u actieve medewerking aan een overstap naar een andere geldverstrekker?</span>
+        </label>
+        <label class="vraag-item-label" for="v54">
+          <input type="checkbox" class="vraag-cb" id="v54" data-sectie="XI" checked onchange="updateTellers()">
+          <span class="vraag-nr-label">54</span>
+          <span class="vraag-tekst">Is uw antwoord op deze vragen bindend, of behoudt u zich het recht voor dit beleid eenzijdig te wijzigen?</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOELICHTING -->
+  <div class="card">
+    <h2><span class="icon">✏️</span> Toelichting</h2>
+    <div class="info-box">
+      <strong>📝 Vrij tekstvak — optioneel</strong>
+      Voeg hier een persoonlijke toelichting, aanvullende context of specifieke opmerkingen toe. Deze tekst verschijnt als apart blok onderaan de vragen in de brief.
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <textarea id="toelichting" rows="6" placeholder="bijv. Wij schrijven u mede naar aanleiding van recente berichtgeving over de risico's voor huishoudens met een aflossingsvrije hypotheek. Cliënt wenst aanvullend antwoord op de volgende specifieke punten die betrekking hebben op zijn individuele situatie..."></textarea>
+    </div>
+  </div>
+
+  <!-- ACTIEKNOPPEN -->
+  <div class="card">
+    <h2><span class="icon">🖨️</span> Brief genereren en printen</h2>
+    <p style="font-size:14px;color:#4A4A4A;margin-bottom:20px;">Vul de verplichte velden in en klik hieronder om de brief te bekijken en af te drukken als PDF.</p>
+    <div class="btn-row">
+      <button class="btn btn-cta" id="genBtn">✉️ Brief genereren & bekijken</button>
+      <button class="btn btn-outline" id="resetBtn">↺ Opnieuw beginnen</button>
+    </div>
+    <div class="disclaimer" id="disclaimerTekst">
+      <strong>📌 Let op:</strong> Deze brief vraagt om <em>feitelijke informatie</em> over productvoorwaarden en beleid. Het is geen klacht en geen adviesverzoek. Bewaar de correspondentie zorgvuldig in het dossier.
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- PREVIEW OVERLAY -->
+<div class="brief-preview" id="briefPreview">
+  <div class="brief-preview-inner">
+    <div class="brief-preview-header" id="previewHeader">
+      <h3 id="previewTitel">📄 Uw Hypotheek Hulpbrief — Voorbeeld</h3>
+      <div class="brief-preview-actions">
+        <button class="btn btn-cta" id="printBtn" style="padding:8px 20px;font-size:15px;">🖨️ Print / PDF</button>
+        <button class="btn-close" id="sluitBtn">✕</button>
+      </div>
+    </div>
+    <div class="brief-preview-content">
+      <div id="briefInhoud"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Vragen selectie helpers ──
+function updateTellers() {
+  const alle = document.querySelectorAll('.vraag-cb');
+  let totaal = 0;
+  alle.forEach(cb => {
+    const lbl = cb.closest('.vraag-item-label');
+    if (cb.checked) { totaal++; if (lbl) lbl.classList.remove('uitgevinkt'); }
+    else             { if (lbl) lbl.classList.add('uitgevinkt'); }
+  });
+  ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI'].forEach(sid => {
+    const sv = document.querySelectorAll(`.vraag-cb[data-sectie="${sid}"]`);
+    const sel = Array.from(sv).filter(c => c.checked).length;
+    const badge = document.getElementById(`badge_${sid}`);
+    if (badge) {
+      badge.textContent = `${sel}/${sv.length}`;
+      badge.style.background = (sel === sv.length) ? '#E5A138' : (sel === 0 ? '#ccc' : '#c0392b');
+    }
+  });
+  const teller = document.getElementById('selTeller');
+  if (teller) {
+    if (totaal === 54) {
+      teller.innerHTML = '✔ 54 van 54 vragen geselecteerd';
+      teller.style.cssText = 'font-size:13px;font-weight:600;color:#003057;margin-bottom:18px;padding:8px 14px;background:#f0f6ff;border-radius:8px;border-left:3px solid #003057;';
+    } else {
+      teller.innerHTML = `<span style="color:#c0392b;">⚠ ${totaal} van 54 vragen geselecteerd</span>`;
+      teller.style.cssText = 'font-size:13px;font-weight:600;margin-bottom:18px;padding:8px 14px;background:#fff5f5;border-radius:8px;border-left:3px solid #c0392b;';
+    }
+  }
+}
+
+function selecteerAlle(aan) {
+  document.querySelectorAll('.vraag-cb').forEach(cb => { cb.checked = aan; });
+  updateTellers();
+}
+
+function selecteerSectie(sid, aan) {
+  document.querySelectorAll(`.vraag-cb[data-sectie="${sid}"]`).forEach(cb => { cb.checked = aan; });
+  updateTellers();
+}
+
+// ── Staat ──
+let modus = 'consument';
+
+// ── Modus wisselen ──
+document.getElementById('btnConsument').addEventListener('click', function() {
+  modus = 'consument';
+  this.classList.add('actief');
+  document.getElementById('btnAdviseur').classList.remove('actief');
+  document.getElementById('adviseurBanner').classList.remove('zichtbaar');
+  document.getElementById('kaartAdviseur').classList.add('verborgen');
+  document.getElementById('machtigingGroep').classList.add('verborgen');
+  document.getElementById('klantTitel').textContent = 'Uw persoonlijke gegevens';
+  document.getElementById('lblNaam').textContent = 'Uw volledige naam *';
+  document.getElementById('lblAdres').textContent = 'Uw woonadres *';
+  document.getElementById('disclaimerTekst').innerHTML = '<strong>📌 Let op:</strong> Deze brief vraagt om <em>feitelijke informatie</em> over productvoorwaarden en beleid. Het is geen klacht en geen adviesverzoek. Bewaar uw correspondentie zorgvuldig.';
+  updateProgress();
+});
+
+document.getElementById('btnAdviseur').addEventListener('click', function() {
+  modus = 'adviseur';
+  this.classList.add('actief');
+  document.getElementById('btnConsument').classList.remove('actief');
+  document.getElementById('adviseurBanner').classList.add('zichtbaar');
+  document.getElementById('kaartAdviseur').classList.remove('verborgen');
+  document.getElementById('machtigingGroep').classList.remove('verborgen');
+  document.getElementById('klantTitel').textContent = 'Gegevens klant (cliënt)';
+  document.getElementById('lblNaam').textContent = 'Volledige naam klant *';
+  document.getElementById('lblAdres').textContent = 'Woonadres klant *';
+  document.getElementById('disclaimerTekst').innerHTML = '<strong>📌 Adviseursmodus:</strong> De brief wordt namens de klant door de adviseur ondertekend. De geldverstrekker wordt verzocht zijn antwoord uitsluitend aan het advieskantoor te sturen. Voeg een getekende volmacht bij als bijlage.';
+  updateProgress();
+});
+
+// ── Voortgang ──
+function updateProgress() {
+  const basis = ['naam','adres','postcode','geldverstrekker'];
+  const adv   = ['adv_naam','adv_kantoor','adv_adres','adv_postcode','adv_email'];
+  const velden = modus === 'adviseur' ? [...basis, ...adv] : basis;
+  const gevuld = velden.filter(id => document.getElementById(id).value.trim() !== '').length;
+  const pct = Math.round((gevuld / velden.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent =
+    pct === 0 ? 'Vul de gegevens in om te beginnen' :
+    pct < 100 ? `${pct}% ingevuld — bijna klaar!` :
+    '✅ Alle verplichte velden ingevuld — u kunt de brief genereren!';
+}
+
+['naam','adres','postcode','geldverstrekker','adv_naam','adv_kantoor','adv_adres','adv_postcode','adv_email']
+  .forEach(id => document.getElementById(id).addEventListener('input', updateProgress));
+
+// ── Helpers ──
+const vandaag = () => new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+
+// Lees geselecteerde vragen en bouw brief-HTML
+function bouwVragenHTML() {
+  const SECTIES = [
+    ['I',    'Contractuele status en verlenging'],
+    ['II',   'Acceptatiebeleid en inkomenstoetsing'],
+    ['III',  'Woningwaarde en executie'],
+    ['IV',   'Rente en voorwaarden bij voortzetting'],
+    ['V',    'Wet- en regelgeving (AFM / DNB / ECB)'],
+    ['VI',   'Procesvragen (beleidsmatig)'],
+    ['VII',  'Fiscale impact en toetsing'],
+    ['VIII', 'Notariële en kadastrale zaken'],
+    ['IX',   'NHG en garanties'],
+    ['X',    'Continuïteit en nabestaanden'],
+    ['XI',   'Juridische afweging'],
+  ];
+
+  let totaalTeller = 1;
+  let html = '';
+
+  SECTIES.forEach(([sid, stitel]) => {
+    const geselecteerdeVragen = [];
+    document.querySelectorAll(`.vraag-cb[data-sectie="${sid}"]`).forEach(cb => {
+      if (cb.checked) {
+        const nr = cb.closest('.vraag-item-label').querySelector('.vraag-nr-label').textContent;
+        const tekst = cb.closest('.vraag-item-label').querySelector('.vraag-tekst').textContent;
+        geselecteerdeVragen.push({ nr, tekst });
+      }
+    });
+
+    if (geselecteerdeVragen.length === 0) return; // sectie overslaan
+
+    html += `<div style="margin:18px 0 10px;">
+      <h3 style="font-size:11pt;font-weight:bold;color:#003057;border-left:3px solid #E5A138;padding-left:8px;margin-bottom:10px;">${sid}. ${stitel}</h3>`;
+
+    geselecteerdeVragen.forEach(({ tekst }) => {
+      html += `<div style="display:flex;gap:10px;margin-bottom:8px;font-size:10.5pt;line-height:1.5;">
+        <span style="font-weight:bold;color:#003057;min-width:28px;flex-shrink:0;">${totaalTeller}.</span>
+        <span>${tekst}</span>
+      </div>`;
+      totaalTeller++;
+    });
+
+    html += '</div>';
+  });
+
+  return { html, totaal: totaalTeller - 1 };
+}
+
+// ── Brief bouwen ──
+function genereerBrief() {
+  const g = id => document.getElementById(id).value.trim();
+  const { html: vragenHTML, totaal: aantalVragen } = bouwVragenHTML();
+  const toelichtingTekst = g('toelichting');
+  const toelichtingHTML = toelichtingTekst
+    ? `<div style="margin-top:22px;padding:14px 16px;background:#f8fafd;border-left:4px solid #003057;border-radius:0 8px 8px 0;">
+        <strong style="color:#003057;display:block;margin-bottom:8px;">Toelichting</strong>
+        <p style="white-space:pre-wrap;font-size:10.5pt;line-height:1.6;">${toelichtingTekst}</p>
+       </div>`
+    : '';
+  const naam=g('naam')||'[Naam klant]', adres=g('adres')||'[Adres]', pc=g('postcode')||'[Postcode]';
+  const tel=g('telefoon'), mail=g('email'), hnr=g('hypotheeknr'), mDat=g('machtiging_datum');
+  const gv=g('geldverstrekker')||'[Geldverstrekker]', gvAfd=g('gv_afdeling')||'Afdeling Hypotheken';
+  const gvA=g('gv_adres'), gvS=g('gv_stad');
+  const ww=g('woningwaarde'), hb=g('hypotheekbedrag'), afsl=g('afsluiting'), eind=g('einddatum'), extra=g('extra_context');
+  const aN=g('adv_naam'), aK=g('adv_kantoor'), aA=g('adv_adres'), aP=g('adv_postcode');
+  const aT=g('adv_telefoon'), aE=g('adv_email'), aAfm=g('adv_afm');
+  const isAdv = modus==='adviseur';
+
+  // Afzender
+  const afzender = isAdv
+    ? `<p><strong>${aK}</strong></p><p>T.a.v. ${aN}</p><p>${aA}</p><p>${aP}</p>${aT?`<p>Tel: ${aT}</p>`:''}<p>E-mail: <strong>${aE}</strong></p>${aAfm?`<p>AFM-vergunning: ${aAfm}</p>`:''}`
+    : `<p><strong>${naam}</strong></p><p>${adres}</p><p>${pc}</p>${tel?`<p>Tel: ${tel}</p>`:''}${mail?`<p>E-mail: ${mail}</p>`:''}`;
+
+  // Situatiezin
+  let sit = '';
+  if (ww||hb||afsl) {
+    sit = '<p>';
+    if (ww) sit += `De woning heeft een geschatte waarde van ${ww}. `;
+    if (hb) sit += `Het aflossingsvrije hypotheekbedrag bedraagt ${hb}. `;
+    if (afsl) sit += `De hypotheek is afgesloten in ${afsl}. `;
+    if (eind) sit += `De contractuele einddatum is ${eind}. `;
+    sit += '</p>';
+  }
+
+  // Intro
+  const intro = isAdv ? `
+    <p>Geachte heer/mevrouw,</p><br>
+    <p>Ondergetekende, <strong>${aN}</strong>, verbonden aan <strong>${aK}</strong>, treedt op als onafhankelijk hypotheekadviseur van de heer/mevrouw <strong>${naam}</strong>, wonende te ${adres}, ${pc}${hnr?`, hypotheeknummer <strong>${hnr}</strong>`:''}.</p>
+    ${mDat
+      ? `<p>Cliënt heeft ondergetekende schriftelijk gemachtigd namens hem/haar op te treden in alle correspondentie met u inzake voornoemde hypotheek (volmacht d.d. ${mDat}, bijgevoegd als bijlage).</p>`
+      : `<p>Cliënt heeft ondergetekende gemachtigd namens hem/haar op te treden in alle correspondentie met u inzake voornoemde hypotheek. De getekende volmacht is als bijlage bijgevoegd.</p>`}
+    ${sit}
+    <p>In het kader van de adviesrelatie en de op ons kantoor rustende zorgplicht, wensen wij namens cliënt een volledig schriftelijk beeld te verkrijgen van uw productvoorwaarden, het interne acceptatiebeleid en de handelwijze bij het einde van de looptijd van de aflossingsvrije hypotheek.</p>
+    ${extra?`<p>${extra}</p>`:''}
+    <div style="background:#fff8ed;border-left:4px solid #E5A138;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:10.5pt;">
+      <strong>⚠ Verzoek om terugkoppeling uitsluitend aan adviseur:</strong><br>
+      Wij verzoeken u uw schriftelijke antwoord <u>uitsluitend te richten aan ons kantoor</u>: <strong>${aK}</strong>, t.a.v. ${aN}, ${aP}${aE?`, e-mail: <strong>${aE}</strong>`:''}.
+      Correspondentie rechtstreeks aan cliënt dient u achterwege te laten, tenzij wij u hiervan schriftelijk in kennis stellen.
+    </div>
+    <p>Namens cliënt verzoeken wij u de onderstaande <strong>${aantalVragen} vragen</strong> puntsgewijs en schriftelijk te beantwoorden. Dit verzoek betreft uitsluitend feitelijke en juridische informatie over uw productvoorwaarden en intern beleid — geen persoonlijk financieel advies.</p>`
+  : `
+    <p>Geachte heer/mevrouw,</p><br>
+    <p>De recente berichtgeving in de media over de afloop van aflossingsvrije hypotheken heeft mij aan het denken gezet over mijn eigen situatie. Om me goed voor te bereiden op de toekomst, wil ik mijn positie graag helder in kaart brengen.</p>
+    ${sit}
+    <p>Al lange tijd ben ik een tevreden klant en voldoe altijd keurig aan mijn betalingsverplichtingen. Om te weten waar ik in de toekomst aan toe ben, ontvang ik graag meer duidelijkheid over hoe u als geldverstrekker precies omgaat met het naderende einde van de looptijd van een aflossingsvrije hypotheek.</p>
+    ${extra?`<p>${extra}</p>`:''}
+    <p>Voor de goede orde wil ik graag aangeven dat ik op dit moment nog niet op zoek ben naar persoonlijk financieel advies. U hoeft mij voor dit verzoek dan ook niet door te verwijzen naar een adviseur. Ik ben in deze fase puur op zoek naar een feitelijke uitleg van uw algemene productvoorwaarden en het geldende interne acceptatiebeleid, zodat ik de kaders goed begrijp.</p>
+    <p>Om een compleet beeld te krijgen, heb ik mijn vragen over dit onderwerp op een rij gezet. Ik zou het enorm waarderen als u de onderstaande ${aantalVragen} vragen schriftelijk en puntsgewijs voor mij wilt beantwoorden.</p>`;
+
+  // Afsluiting
+  const afsluiting = isAdv ? `
+    <p>Wij verzoeken u uw inhoudelijke schriftelijke reactie binnen <strong>10 werkdagen</strong> te richten aan:</p><br>
+    <p><strong>${aK}</strong><br>T.a.v. ${aN}<br>${aA}<br>${aP}${aE?`<br>E-mail: <strong>${aE}</strong>`:''}</p><br>
+    <p>Wij danken u bij voorbaat hartelijk voor uw medewerking en zien uw reactie met belangstelling tegemoet.</p><br>
+    <p>Met vriendelijke groet,</p><br><br>
+    <p><strong>${aN}</strong><br>${aK}<br>${aAfm?`AFM-vergunning: ${aAfm}<br>`:''}${aT?`Tel: ${aT}<br>`:''}${aE?`E-mail: ${aE}`:''}</p><br>
+    <p style="font-size:9.5pt;color:#666;border-top:1px solid #E0E6ED;padding-top:10px;margin-top:10px;">
+      <em>Handelend namens: ${naam}, ${adres}, ${pc}${hnr?` | Hypotheeknummer: ${hnr}`:''}</em>
+    </p>`
+  : `
+    <p>Alvast hartelijk dank voor uw tijd en de te nemen moeite. Het zou geweldig zijn als u binnen <strong>10 werkdagen</strong> antwoord kunt geven op deze brief. Dan weten wij ook weer verder waar we aan toe zijn. Dat geeft ons hopelijk de nodige financiële rust.</p><br>
+    <p>Met vriendelijke groet,</p><br><br>
+    <p><strong>${naam}</strong><br>${adres}<br>${pc}${tel?`<br>Tel: ${tel}`:''}${mail?`<br>E-mail: ${mail}`:''}${hnr?`<br>Hypotheeknummer: ${hnr}`:''}</p>`;
+
+  return `<div style="font-family:Arial,sans-serif;font-size:11pt;color:#333;line-height:1.7;">
+  <div style="margin-bottom:28px;">${afzender}</div>
+  <div style="margin-bottom:28px;"><p><strong>${gv}</strong></p><p>T.a.v. de Directie / ${gvAfd}</p>${gvA?`<p>${gvA}</p>`:''}${gvS?`<p>${gvS}</p>`:''}</div>
+  <p style="margin-bottom:10px;">${vandaag()}</p>
+  ${hnr?`<p style="margin-bottom:16px;">Hypotheeknummer: <strong>${hnr}</strong></p>`:'<br>'}
+  <p style="font-weight:bold;color:#003057;margin-bottom:20px;">Onderwerp: ${isAdv
+    ? `Formeel verzoek namens cliënt ${naam} — schriftelijke feitelijke informatie over productvoorwaarden en acceptatiebeleid bij einde looptijd hypotheek`
+    : 'Verzoek om informatie over de voorwaarden en het beleid bij einde looptijd aflossingsvrije hypotheek'}</p>
+  ${intro}<br>
+  ${vragenHTML}
+  ${toelichtingHTML}
+  <br>${afsluiting}
+</div>`;
+}
+
+// ── Sectie toggle ──
+function toggleSectie(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+// ── Genereer ──
+document.getElementById('genBtn').addEventListener('click', function() {
+  const naam = document.getElementById('naam').value.trim();
+  const gv   = document.getElementById('geldverstrekker').value.trim();
+  if (!naam) { alert('Vul de naam van de klant in.'); return; }
+  if (!gv)   { alert('Vul de naam van de geldverstrekker in.'); return; }
+  const aantalGeselecteerd = document.querySelectorAll('.vraag-cb:checked').length;
+  if (aantalGeselecteerd === 0) { alert('Selecteer minimaal één vraag om in de brief op te nemen.'); return; }
+  if (modus === 'adviseur') {
+    if (!document.getElementById('adv_naam').value.trim())  { alert('Vul uw naam als adviseur in.'); return; }
+    if (!document.getElementById('adv_email').value.trim()) { alert('Vul uw e-mailadres in — de geldverstrekker stuurt zijn antwoord hiernaartoe.'); return; }
+  }
+  document.getElementById('briefInhoud').innerHTML = genereerBrief();
+  const ph = document.getElementById('previewHeader');
+  if (modus === 'adviseur') {
+    ph.classList.add('adv-mode');
+    document.getElementById('previewTitel').textContent = '📄 Hypotheek Hulpbrief — Adviseursmodus';
+  } else {
+    ph.classList.remove('adv-mode');
+    document.getElementById('previewTitel').textContent = '📄 Uw Hypotheek Hulpbrief — Voorbeeld';
+  }
+  document.getElementById('briefPreview').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+});
+
+document.getElementById('sluitBtn').addEventListener('click', function() {
+  document.getElementById('briefPreview').style.display = 'none';
+  document.body.style.overflow = '';
+});
+
+document.getElementById('briefPreview').addEventListener('click', function(e) {
+  if (e.target === this) { this.style.display = 'none'; document.body.style.overflow = ''; }
+});
+
+document.getElementById('resetBtn').addEventListener('click', function() {
+  if (confirm('Wilt u alle velden wissen?')) {
+    document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+    updateProgress();
+  }
+});
+
+// ── Print ──
+document.getElementById('printBtn').addEventListener('click', function() {
+  const naam    = document.getElementById('naam').value.trim() || 'klant';
+  const advNaam = document.getElementById('adv_naam').value.trim();
+  const advKant = document.getElementById('adv_kantoor').value.trim();
+  const isAdv   = modus === 'adviseur';
+  const kleur   = isAdv ? '#1a5276' : '#003057';
+  const inhoud  = document.getElementById('briefInhoud').innerHTML;
+  const datumStr = new Date().toLocaleDateString('nl-NL', {day:'numeric',month:'long',year:'numeric'});
+  const datumKort= new Date().toLocaleDateString('nl-NL');
+
+  const kopSubRegel = (isAdv && advNaam)
+    ? `<div class="kop-sub">Opgesteld door: ${advNaam}${advKant ? '  —  ' + advKant : ''}</div>`
+    : '';
+  const kopMetaRegel = isAdv
+    ? `${datumStr}<br>Cliënt: <strong>${naam}</strong>`
+    : `${datumStr}<br>Betreft: aflossingsvrije hypotheek`;
+  const voetLinks = (isAdv && advNaam) ? `${advNaam} namens ${naam}` : naam;
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Hypotheek Hulpbrief — ${naam}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 22mm 22mm 26mm 22mm;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 11pt;
+      color: #333333;
+      line-height: 1.7;
+      background: white;
+    }
+
+    p { margin-bottom: 9px; }
+
+    strong { font-weight: bold; }
+    u { text-decoration: underline; }
+    em { font-style: italic; }
+
+    /* Koptekst */
+    .brief-kop {
+      border-bottom: 3px solid ${kleur};
+      padding-bottom: 12px;
+      margin-bottom: 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .kop-titel {
+      font-size: 15pt;
+      font-weight: bold;
+      color: ${kleur};
+      line-height: 1.2;
+    }
+    .kop-sub {
+      font-size: 8pt;
+      color: #555;
+      margin-top: 5px;
+    }
+    .kop-meta {
+      font-size: 8.5pt;
+      color: #555;
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    /* Sectiestijlen uit briefinhoud */
+    h3 {
+      font-size: 10.5pt;
+      font-weight: bold;
+      color: ${kleur};
+      border-left: 3px solid #E5A138;
+      padding-left: 8px;
+      margin-bottom: 8px;
+      margin-top: 2px;
+    }
+
+    /* Oranje kader adviseursmodus */
+    .adv-kader, div[style*="fff8ed"] {
+      background: #fff8ed !important;
+      border-left: 4px solid #E5A138 !important;
+      padding: 10px 14px !important;
+      border-radius: 0 6px 6px 0 !important;
+      margin: 14px 0 !important;
+      font-size: 10pt !important;
+      page-break-inside: avoid;
+    }
+
+    /* Voorkomen dat vragensecties halverwege splitsen */
+    div[style*="margin:18px"] {
+      page-break-inside: avoid;
+    }
+
+    /* Voettekst */
+    .brief-voet {
+      margin-top: 26px;
+      padding-top: 8px;
+      border-top: 1px solid #D0D8E4;
+      font-size: 8pt;
+      color: #888;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media print {
+      body { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="brief-kop">
+    <div>
+      <div class="kop-titel">Hypotheek Hulpbrief${isAdv ? ' — Namens Cliënt' : ''}</div>
+      ${kopSubRegel}
+    </div>
+    <div class="kop-meta">${kopMetaRegel}</div>
+  </div>
+
+  ${inhoud}
+
+  <div class="brief-voet">
+    <span>${voetLinks} — Hypotheek Hulpbrief</span>
+    <span>Gegenereerd op ${datumKort}</span>
+  </div>
+
+  <script>window.onload = function() { window.print(); };<\/script>
+</body>
+</html>`);
+  win.document.close();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schade-inschatting Assistent</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f2240;
+    --navy-mid: #1a3560;
+    --navy-light: #254880;
+    --accent: #e8a020;
+    --accent-light: #f5c55a;
+    --surface: #f7f5f0;
+    --surface-2: #edeae3;
+    --text: #1a1a2e;
+    --text-soft: #5a6070;
+    --text-muted: #9298a8;
+    --white: #ffffff;
+    --green: #2d8a5e;
+    --red: #c0392b;
+    --orange: #e67e22;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .header {
+    background: var(--navy);
+    padding: 22px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 3px solid var(--accent);
+    flex-shrink: 0;
+  }
+  .header-icon {
+    width: 54px; height: 54px;
+    background: var(--accent);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px; font-weight: 600;
+    color: var(--white); line-height: 1.2;
+  }
+  .header-text p { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 300; }
+  .header-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.55);
+    font-size: 10px; font-weight: 600;
+    padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .new-chat-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius-sm);
+    color: rgba(255,255,255,0.7);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    padding: 6px 14px; cursor: pointer;
+    transition: background 0.2s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .new-chat-btn:hover { background: rgba(255,255,255,0.15); }
+  .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .messages {
+    flex: 1; overflow-y: auto;
+    padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 14px;
+    scroll-behavior: smooth;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 10px; }
+  .msg { display: flex; gap: 10px; max-width: 720px; animation: msgIn 0.22s ease; }
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; }
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; margin-top: 2px;
+  }
+  .msg.assistant .msg-avatar { background: var(--navy); border: 2px solid var(--accent); }
+  .msg.user .msg-avatar { background: var(--surface-2); border: 2px solid var(--surface-2); }
+  .msg-bubble {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13.5px; line-height: 1.65;
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    max-width: 580px;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .msg.user .msg-bubble { background: var(--navy); color: rgba(255,255,255,0.9); border-color: transparent; }
+  .msg-bubble p { margin-bottom: 7px; }
+  .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg-bubble strong { font-weight: 600; }
+  .verdict-card {
+    margin-top: 10px; border-radius: var(--radius-sm);
+    padding: 10px 12px; font-size: 12.5px; border-left: 3px solid;
+  }
+  .verdict-card.green { background: rgba(45,138,94,0.08); border-color: var(--green); color: #1a5e3a; }
+  .verdict-card.orange { background: rgba(230,126,34,0.08); border-color: var(--orange); color: #7d4700; }
+  .verdict-card.red { background: rgba(192,57,43,0.08); border-color: var(--red); color: #7a1a12; }
+  .verdict-card .verdict-label { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .typing {
+    display: flex; align-items: center; gap: 5px;
+    padding: 12px 16px;
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid rgba(0,0,0,0.05);
+    width: fit-content;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .typing span {
+    width: 6px; height: 6px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+  .input-bar {
+    background: var(--white);
+    border-top: 1px solid var(--surface-2);
+    padding: 12px 20px;
+    display: flex; gap: 10px; align-items: flex-end;
+    flex-shrink: 0;
+  }
+  textarea {
+    flex: 1;
+    background: var(--surface);
+    border: 1.5px solid var(--surface-2);
+    border-radius: 11px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px; color: var(--text);
+    resize: none; outline: none;
+    min-height: 110px; max-height: 200px;
+    transition: border-color 0.2s; line-height: 1.5;
+  }
+  textarea::placeholder { color: var(--text-muted); }
+  textarea:focus { border-color: var(--navy-light); }
+  .send-btn {
+    width: 44px; height: 44px;
+    background: var(--navy); border: none;
+    border-radius: 11px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, transform 0.1s; flex-shrink: 0;
+  }
+  .send-btn:hover { background: var(--navy-light); }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn:disabled { background: var(--surface-2); cursor: not-allowed; }
+  .send-btn svg { fill: white; }
+  .send-btn:disabled svg { fill: var(--text-muted); }
+  .quick-prompts {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    padding: 0 20px 10px;
+  }
+  .qp-btn {
+    background: var(--white);
+    border: 1.5px solid var(--surface-2);
+    border-radius: 18px; padding: 5px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; color: var(--text-soft);
+    cursor: pointer; transition: all 0.2s; font-weight: 500;
+  }
+  .qp-btn:hover { border-color: var(--navy-light); color: var(--navy); background: rgba(37,72,128,0.05); }
+  .disclaimer { text-align: center; font-size: 10.5px; color: var(--text-muted); padding: 0 20px 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🛡️</div>
+  <div class="header-text">
+    <h1>Schade-inschatting Assistent</h1>
+
+  </div>
+  <button class="new-chat-btn" onclick="resetChat()">↺ Nieuw gesprek</button>
+</div>
+
+<div class="main">
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="msg assistant">
+        <div class="msg-avatar">🛡️</div>
+        <div class="msg-bubble">
+          <p><strong>Goedendag!</strong> Ik help je inschatten of jouw schade gedekt is en of het verstandig is om te melden.</p>
+          <p>Beschrijf wat er is gebeurd — <em>wanneer, wat, hoe het is ontstaan</em> en een <em>schatting van de schade</em>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-prompts" id="quickPrompts">
+      <button class="qp-btn" onclick="sendQuick('Inbraak thuis, laptop en sieraden gestolen, schade ±€1.200')">🖥️ Inbraak/diefstal</button>
+      <button class="qp-btn" onclick="sendQuick('Wasmachine lekt, vloer en ondervloer beschadigd')">💧 Waterschade</button>
+      <button class="qp-btn" onclick="sendQuick('Achteruit gereden tegen auto buurman, bumper ingedeukt')">🚗 Aanrijding</button>
+      <button class="qp-btn" onclick="sendQuick('Keukenbrand door frituurpan, schade aan keuken ±€4.000')">🔥 Brand</button>
+      <button class="qp-btn" onclick="sendQuick('Fiets gestolen terwijl op slot aan paal')">🚲 Fietsdiefstal</button>
+    </div>
+
+    <div class="disclaimer">⚠️ Oriënterende inschatting — geen officieel verzekeringsadvies. Raadpleeg altijd je polisvoorwaarden.</div>
+
+    <div class="input-bar">
+      <textarea id="userInput" placeholder="Beschrijf de schade..." rows="5"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYSTEM = `Je bent een deskundige Nederlandse schade-inschatting assistent gespecialiseerd in schadeverzekeringen. Je helpt particulieren begrijpen of hun schade vermoedelijk gedekt is.
+
+Geef ALTIJD een gestructureerd antwoord:
+1. Korte samenvatting van wat er is gebeurd
+2. Dekkingsinschatting: gebruik ✅ Waarschijnlijk gedekt / ⚠️ Twijfelachtig / ❌ Waarschijnlijk niet gedekt
+3. Eigen risico impact: is het financieel slim om te melden?
+4. Premie/no-claim risico: wat kan melden kosten op lange termijn?
+5. Concrete aanbeveling
+6. Eventuele vervolgvragen als je meer info nodig hebt
+
+Wees praktisch en eerlijk. Gebruik geen vakjargon. Sluit altijd af met een korte disclaimer.
+Antwoord altijd in het Nederlands.`;
+
+let conversation = [];
+let loading = false;
+
+
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function sendQuick(t) {
+  document.getElementById('userInput').value = t;
+  document.getElementById('quickPrompts').style.display = 'none';
+  sendMessage();
+}
+
+function addMsg(role, html) {
+  const c = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.innerHTML = `<div class="msg-avatar">${role === 'assistant' ? '🛡️' : '👤'}</div><div class="msg-bubble">${html}</div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+function showTyping() {
+  const c = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className = 'msg assistant'; d.id = 'typing';
+  d.innerHTML = `<div class="msg-avatar">🛡️</div><div class="typing"><span></span><span></span><span></span></div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+function removeTyping() { document.getElementById('typing')?.remove(); }
+
+function fmt(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/✅([^\n]+)/g, '<div class="verdict-card green"><div class="verdict-label">✅ Gedekt</div>$1</div>')
+    .replace(/⚠️([^\n]+)/g, '<div class="verdict-card orange"><div class="verdict-label">⚠️ Twijfelachtig</div>$1</div>')
+    .replace(/❌([^\n]+)/g, '<div class="verdict-card red"><div class="verdict-label">❌ Niet gedekt</div>$1</div>')
+    .split('\n\n').map(p => p.trim() ? `<p>${p.replace(/\n/g,'<br>')}</p>` : '').join('');
+}
+
+async function sendMessage() {
+  if (loading) return;
+  const inp = document.getElementById('userInput');
+  const text = inp.value.trim();
+  if (!text) return;
+
+  document.getElementById('quickPrompts').style.display = 'none';
+  inp.value = ''; inp.style.height = 'auto';
+
+  addMsg('user', `<p>${text.replace(/</g,'<').replace(/\n/g,'<br>')}</p>`);
+
+  const userMsg = text;
+  conversation.push({ role: 'user', content: userMsg });
+
+  loading = true;
+  document.getElementById('sendBtn').disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: conversation
+      })
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) {
+      addMsg('assistant', `<p>⚠️ Fout: ${data.error.message}</p>`);
+      conversation.pop();
+    } else {
+      const reply = data.content[0].text;
+      conversation.push({ role: 'assistant', content: reply });
+      conversation[conversation.length - 2].content = text;
+      addMsg('assistant', fmt(reply));
+    }
+  } catch(e) {
+    removeTyping();
+    addMsg('assistant', '<p>⚠️ Verbinding mislukt. Probeer opnieuw.</p>');
+    conversation.pop();
+  }
+
+  loading = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function resetChat() {
+  conversation = [];
+  document.getElementById('messages').innerHTML = `
+    <div class="msg assistant">
+      <div class="msg-avatar">🛡️</div>
+      <div class="msg-bubble">
+        <p><strong>Goedendag!</strong> Ik help je inschatten of jouw schade gedekt is en of het verstandig is om te melden.</p>
+        <p>Beschrijf wat er is gebeurd — <em>wanneer, wat, hoe het is ontstaan</em> en een <em>schatting van de schade</em>.</p>
+      </div>
+    </div>`;
+  document.getElementById('quickPrompts').style.display = 'flex';
+}
+</script>
+</body>
+</html>

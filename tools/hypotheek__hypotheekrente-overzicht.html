@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actuele Hypotheekrentes</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #F4F7F9;
+  color: #333;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ── Header ── */
+.header {
+  background: #003057;
+  color: white;
+  padding: 24px 28px;
+  border-radius: 12px 12px 0 0;
+}
+.header h1 { color: white; font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.header p  { color: rgba(255,255,255,0.72); font-size: 13px; }
+.header-meta {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 8px;
+}
+
+/* ── Card ── */
+.card {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  padding: 22px 24px;
+  border: 1px solid #E0E6ED;
+  border-top: none;
+  box-shadow: 0 2px 10px rgba(0,48,87,0.07);
+  margin-bottom: 20px;
+}
+.card-standalone {
+  border-radius: 12px;
+  border-top: 1px solid #E0E6ED;
+}
+
+/* ── Filters ── */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #003057;
+  margin-bottom: 5px;
+}
+.form-group select,
+.form-group input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #E0E6ED;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #F4F7F9;
+  color: #333;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.form-group select:focus,
+.form-group input:focus {
+  border-color: #003057;
+  outline: none;
+  background: white;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s;
+}
+.btn-primary  { background: #003057; color: white; }
+.btn-primary:hover  { background: #004a8a; }
+.btn-accent   { background: #E5A138; color: white; font-size: 16px; font-weight: 700; }
+.btn-accent:hover   { background: #d4922e; }
+.btn-ghost    { background: transparent; color: #003057; border: 1.5px solid #003057; }
+.btn-ghost:hover    { background: #003057; color: white; }
+.btn-danger   { background: #E74C3C; color: white; font-size: 13px; padding: 6px 12px; }
+.btn-danger:hover   { background: #c0392b; }
+.btn-sm       { padding: 6px 12px; font-size: 13px; }
+.btn-full     { width: 100%; justify-content: center; }
+
+/* ── Statistieken ── */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-box {
+  background: #F4F7F9;
+  border: 1px solid #E0E6ED;
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.stat-box .label { font-size: 11px; color: #4A4A4A; margin-bottom: 4px; }
+.stat-box .value { font-size: 22px; font-weight: 700; }
+.value-green { color: #27AE60; }
+.value-blue  { color: #003057; }
+.value-red   { color: #E74C3C; }
+
+/* ── Tabel ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 360px; }
+thead tr { background: #003057; }
+th {
+  padding: 10px 14px;
+  text-align: left;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+th.right, td.right { text-align: right; }
+tbody tr:nth-child(even) { background: #F4F7F9; }
+tbody tr:nth-child(odd)  { background: white; }
+tbody tr:hover { background: #EBF1F7; }
+td { padding: 10px 14px; font-size: 14px; border-bottom: 1px solid #E0E6ED; }
+.rente-val { font-size: 17px; font-weight: 700; color: #003057; }
+.rente-laag { color: #E5A138; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-right: 6px;
+  vertical-align: middle;
+  color: white;
+}
+.badge-1 { background: #E5A138; }
+.badge-2 { background: #8E99A4; }
+.badge-3 { background: #8E99A4; }
+
+/* ── Lege staat ── */
+.empty {
+  text-align: center;
+  padding: 52px 24px;
+  color: #4A4A4A;
+}
+.empty .icon { font-size: 54px; margin-bottom: 14px; }
+.empty h3 { color: #003057; font-size: 18px; margin-bottom: 8px; }
+.empty p  { font-size: 14px; max-width: 380px; margin: 0 auto; }
+
+/* ── Disclaimer ── */
+.disclaimer {
+  font-size: 12px;
+  color: #4A4A4A;
+  background: #F4F7F9;
+  border-left: 3px solid #E5A138;
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 18px;
+  line-height: 1.5;
+}
+
+/* ── Datum badge ── */
+.datum-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-top: 6px;
+}
+
+/* ── Beheer ── */
+.beheer-nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.beheer-header {
+  background: #003057;
+  color: white;
+  padding: 16px 22px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.beheer-header h2 { color: white; font-size: 18px; margin: 0; }
+
+.input-rente {
+  width: 90px;
+  padding: 6px 8px;
+  border: 1.5px solid #E0E6ED;
+  border-radius: 6px;
+  font-size: 15px;
+  text-align: center;
+  background: white;
+}
+.input-rente:focus { border-color: #003057; outline: none; }
+.naam-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid #E0E6ED;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+.naam-input:focus { border-color: #003057; outline: none; }
+
+/* ── Login ── */
+.login-wrap {
+  max-width: 380px;
+  margin: 60px auto;
+}
+.login-wrap .card-standalone { padding: 32px; }
+.login-wrap h2 { color: #003057; font-size: 20px; margin-bottom: 20px; text-align: center; }
+.error-msg { color: #E74C3C; font-size: 13px; margin-top: 8px; text-align: center; }
+
+/* ── Tabs ── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #E0E6ED;
+  margin-bottom: 22px;
+}
+.tab {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4A4A4A;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.tab.active { color: #003057; border-bottom-color: #E5A138; }
+.tab:hover:not(.active) { color: #003057; }
+
+/* ── Beheer tabel ── */
+.beheer-tabel { width: 100%; border-collapse: collapse; }
+.beheer-tabel th {
+  background: #003057; color: white;
+  padding: 8px 12px; font-size: 12px; font-weight: 600;
+  text-align: left; white-space: nowrap;
+}
+.beheer-tabel td { padding: 7px 10px; border-bottom: 1px solid #E0E6ED; vertical-align: middle; }
+.beheer-tabel tr:nth-child(even) td { background: #F4F7F9; }
+.beheer-tabel tr:nth-child(odd)  td { background: white; }
+
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: #27AE60; color: white;
+  padding: 12px 20px; border-radius: 8px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  z-index: 9999;
+  animation: fadeInUp 0.3s ease;
+}
+@keyframes fadeInUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+
+/* ── Vergelijker periode tabs ── */
+.periode-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.periode-btn {
+  padding: 6px 14px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid #E0E6ED; border-radius: 20px;
+  background: white; color: #4A4A4A; cursor: pointer;
+  transition: all 0.15s;
+}
+.periode-btn.active, .periode-btn:hover {
+  background: #003057; color: white; border-color: #003057;
+}
+
+@media (max-width: 600px) {
+  .stat-row { grid-template-columns: 1fr 1fr; }
+  .stat-row .stat-box:last-child { grid-column: 1 / -1; }
+  .filters { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════ CONSUMENTENVIEW ═══════════════════════════════ -->
+  <div id="view-consumer">
+
+    <div class="header">
+      <div class="header-meta">
+        <div>
+          <h1>🏠 Actuele Hypotheekrentes</h1>
+          <p>Bijgehouden door uw adviseur • Kies uw gewenste combinatie</p>
+        </div>
+        <div>
+          <span class="datum-badge" id="consumer-bijgewerkt">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- Filters -->
+      <div class="filters">
+        <div class="form-group">
+          <label>Rentevaste periode</label>
+          <select id="filter-periode">
+            <option value="">— Alle periodes —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>NHG</label>
+          <select id="filter-nhg">
+            <option value="">— Alle —</option>
+            <option value="Met NHG">Met NHG</option>
+            <option value="Zonder NHG">Zonder NHG</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Hypotheekvorm</label>
+          <select id="filter-vorm">
+            <option value="">— Alle —</option>
+            <option value="Annuïteit">Annuïteit</option>
+            <option value="Lineair">Lineair</option>
+            <option value="Aflossingsvrij">Aflossingsvrij</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Statistieken -->
+      <div class="stat-row" id="stat-row" style="display:none">
+        <div class="stat-box">
+          <div class="label">📉 Laagste rente</div>
+          <div class="value value-green" id="stat-laag">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">📊 Gemiddeld</div>
+          <div class="value value-blue" id="stat-gem">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">📈 Hoogste rente</div>
+          <div class="value value-red" id="stat-hoog">—</div>
+        </div>
+      </div>
+
+      <!-- Resultaten tabel -->
+      <div id="consumer-results">
+        <div class="empty">
+          <div class="icon">🔍</div>
+          <h3>Kies een filter om te beginnen</h3>
+          <p>Selecteer een rentevaste periode, NHG-voorkeur en hypotheekvorm om de actuele tarieven te bekijken.</p>
+        </div>
+      </div>
+
+      <div class="disclaimer" id="consumer-disclaimer" style="display:none">
+        <strong>⚠️ Disclaimer:</strong> Bovenstaande tarieven zijn indicatief en bijgehouden door onze adviseurs.
+        Rentes kunnen dagelijks wijzigen. Controleer altijd de actuele offerterende direct bij de geldverstrekker.
+        Aan dit overzicht kunnen geen rechten worden ontleend.
+      </div>
+    </div>
+
+    <!-- Beheer link -->
+    <div style="text-align:right; margin-top:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="showBeheer()">⚙️ Beheer</button>
+    </div>
+
+  </div><!-- /view-consumer -->
+
+
+  <!-- ═══════════════════════════════ LOGIN ═══════════════════════════════ -->
+  <div id="view-login" style="display:none">
+    <div class="login-wrap">
+      <div class="card card-standalone">
+        <h2>🔐 Beheerderstoegang</h2>
+        <div class="form-group">
+          <label for="login-pw">Wachtwoord</label>
+          <input type="password" id="login-pw" placeholder="Voer wachtwoord in" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn btn-accent btn-full" onclick="doLogin()">Inloggen →</button>
+        <p class="error-msg" id="login-error"></p>
+        <div style="margin-top:16px; text-align:center;">
+          <button class="btn btn-ghost btn-sm" onclick="showConsumer()">← Terug naar overzicht</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /view-login -->
+
+
+  <!-- ═══════════════════════════════ BEHEER ═══════════════════════════════ -->
+  <div id="view-beheer" style="display:none">
+
+    <div class="beheer-header">
+      <h2>⚙️ Rentebeheer</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" style="color:white;border-color:rgba(255,255,255,0.5);" onclick="showConsumer()">← Terug</button>
+        <button class="btn btn-danger btn-sm" onclick="uitloggen()">Uitloggen</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tab-bar">
+        <button class="tab active" onclick="switchTab('invoer', this)">📝 Tarieven invoeren</button>
+        <button class="tab" onclick="switchTab('overzicht', this)">📋 Overzicht & export</button>
+        <button class="tab" onclick="switchTab('instellingen', this)">⚙️ Instellingen</button>
+      </div>
+
+      <!-- ── TAB: INVOER ── -->
+      <div id="tab-invoer">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; align-items:flex-end;">
+          <div class="form-group" style="margin:0; flex:1; min-width:130px;">
+            <label>Periode</label>
+            <select id="invoer-periode">
+              <option>1 jaar vast</option><option>2 jaar vast</option><option>5 jaar vast</option>
+              <option selected>10 jaar vast</option><option>15 jaar vast</option>
+              <option>20 jaar vast</option><option>30 jaar vast</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0; flex:1; min-width:130px;">
+            <label>NHG</label>
+            <select id="invoer-nhg">
+              <option>Met NHG</option>
+              <option>Zonder NHG</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0; flex:1; min-width:130px;">
+            <label>Hypotheekvorm</label>
+            <select id="invoer-vorm">
+              <option>Annuïteit</option><option>Lineair</option><option>Aflossingsvrij</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="invoer-tabel-wrap">
+          <!-- dynamisch gevuld -->
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+          <button class="btn btn-accent" onclick="slaOpTarieven()">💾 Opslaan</button>
+          <button class="btn btn-ghost btn-sm" onclick="voegAanbiederToe()">+ Aanbieder toevoegen</button>
+        </div>
+      </div><!-- /tab-invoer -->
+
+      <!-- ── TAB: OVERZICHT ── -->
+      <div id="tab-overzicht" style="display:none">
+        <p style="color:#4A4A4A; font-size:14px; margin-bottom:16px;">
+          Alle opgeslagen tarieven — <strong id="overzicht-count">0</strong> records
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Geldverstrekker</th>
+                <th>Periode</th>
+                <th>NHG</th>
+                <th>Vorm</th>
+                <th class="right">Rente</th>
+                <th>Bijgewerkt</th>
+                <th>Actie</th>
+              </tr>
+            </thead>
+            <tbody id="overzicht-tbody"></tbody>
+          </table>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="exportJSON()">📥 Exporteer JSON</button>
+          <button class="btn btn-ghost btn-sm" onclick="importJSON()">📤 Importeer JSON</button>
+          <button class="btn btn-danger btn-sm" onclick="allesWissen()">🗑️ Alles wissen</button>
+        </div>
+        <input type="file" id="import-input" style="display:none" accept=".json" onchange="leesImport(event)">
+      </div><!-- /tab-overzicht -->
+
+      <!-- ── TAB: INSTELLINGEN ── -->
+      <div id="tab-instellingen" style="display:none">
+        <h3 style="color:#003057; font-size:16px; margin-bottom:16px;">Wachtwoord wijzigen</h3>
+        <div class="form-group" style="max-width:320px;">
+          <label>Huidig wachtwoord</label>
+          <input type="password" id="pw-huidig" placeholder="Huidig wachtwoord">
+        </div>
+        <div class="form-group" style="max-width:320px;">
+          <label>Nieuw wachtwoord</label>
+          <input type="password" id="pw-nieuw" placeholder="Nieuw wachtwoord">
+        </div>
+        <div class="form-group" style="max-width:320px;">
+          <label>Herhaal nieuw wachtwoord</label>
+          <input type="password" id="pw-herhaal" placeholder="Herhaal nieuw wachtwoord">
+        </div>
+        <button class="btn btn-primary" onclick="wijzigWachtwoord()">Wachtwoord wijzigen</button>
+        <p id="pw-msg" style="font-size:13px; margin-top:10px;"></p>
+
+        <hr style="margin: 24px 0; border-color:#E0E6ED;">
+        <h3 style="color:#003057; font-size:16px; margin-bottom:12px;">Disclaimer tekst</h3>
+        <div class="form-group">
+          <label>Disclaimertekst (zichtbaar voor consumenten)</label>
+          <textarea id="disclaimer-tekst" rows="4" style="width:100%; padding:10px; border:1.5px solid #E0E6ED; border-radius:8px; font-size:14px; resize:vertical;"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="slaDisclaimerOp()">Opslaan</button>
+
+        <hr style="margin: 24px 0; border-color:#E0E6ED;">
+        <h3 style="color:#003057; font-size:16px; margin-bottom:12px;">Standaard geldverstrekkers</h3>
+        <p style="font-size:13px; color:#4A4A4A; margin-bottom:12px;">
+          Deze lijst wordt gebruikt als startpunt bij invoer. Verander de namen in het invoerscherm.
+        </p>
+        <div id="standaard-lijst" style="font-size:13px; color:#4A4A4A; line-height:2;">
+        </div>
+      </div><!-- /tab-instellingen -->
+
+    </div><!-- /card -->
+  </div><!-- /view-beheer -->
+
+</div><!-- /container -->
+
+<!-- Toast -->
+<div id="toast" class="toast" style="display:none"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA & STORAGE
+// ═══════════════════════════════════════════════════════
+
+const STANDAARD_AANBIEDERS = [
+  'ABN AMRO', 'Rabobank', 'ING', 'ASR (WelThuis)', 'MUNT Hypotheken',
+  'Nationale Nederlanden', 'Centraal Beheer', 'Obvion', 'Florius', 'Aegon',
+  'Triodos Bank', 'NIBC', 'Argenta', 'Woonnu', 'Tulp Hypotheken',
+  'Attens', 'Lloyds Bank', 'Robuust Hypotheken', 'Vista Hypotheken', 'Venn Hypotheken',
+];
+
+function getData()    { return JSON.parse(localStorage.getItem('hrData') || '[]'); }
+function saveData(d)  { localStorage.setItem('hrData', JSON.stringify(d)); }
+function getPw()      { return localStorage.getItem('hrPw') || 'admin123'; }
+function savePw(p)    { localStorage.setItem('hrPw', p); }
+function getDisclaimer() {
+  return localStorage.getItem('hrDisclaimer') ||
+    '⚠️ Disclaimer: Bovenstaande tarieven zijn indicatief en bijgehouden door onze adviseurs. Rentes kunnen dagelijks wijzigen. Controleer altijd de actuele offerterende direct bij de geldverstrekker. Aan dit overzicht kunnen geen rechten worden ontleend.';
+}
+function saveDisclaimer(t) { localStorage.setItem('hrDisclaimer', t); }
+
+let loggedIn = false;
+let invoerRijen = [];   // { naam, rente }
+
+// ═══════════════════════════════════════════════════════
+//  VIEWS
+// ═══════════════════════════════════════════════════════
+
+function showConsumer()  { setView('consumer'); renderConsumer(); }
+function showBeheer()    { loggedIn ? setView('beheer') : setView('login'); }
+function setView(v)      {
+  ['consumer','login','beheer'].forEach(id =>
+    document.getElementById('view-'+id).style.display = v === id ? '' : 'none'
+  );
+  if (v === 'beheer') renderBeheer();
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════
+
+function doLogin() {
+  const pw = document.getElementById('login-pw').value;
+  if (pw === getPw()) {
+    loggedIn = true;
+    document.getElementById('login-pw').value = '';
+    document.getElementById('login-error').textContent = '';
+    setView('beheer');
+  } else {
+    document.getElementById('login-error').textContent = 'Onjuist wachtwoord. Probeer opnieuw.';
+  }
+}
+
+function uitloggen() { loggedIn = false; showConsumer(); }
+
+// ═══════════════════════════════════════════════════════
+//  CONSUMER VIEW
+// ═══════════════════════════════════════════════════════
+
+function renderConsumer() {
+  const data = getData();
+
+  // Bijgewerkt datum
+  if (data.length > 0) {
+    const dates = data.map(r => r.bijgewerkt).filter(Boolean).sort();
+    const latest = dates[dates.length - 1];
+    document.getElementById('consumer-bijgewerkt').textContent =
+      '📅 Bijgewerkt: ' + (latest ? new Date(latest).toLocaleDateString('nl-NL') : '—');
+  }
+
+  // Vul periode dropdown dynamisch
+  const periodes = [...new Set(data.map(r => r.periode))].sort((a,b) => {
+    const n = s => parseInt(s);
+    return n(a) - n(b);
+  });
+  const selPeriode = document.getElementById('filter-periode');
+  const curPer = selPeriode.value;
+  selPeriode.innerHTML = '<option value="">— Alle periodes —</option>';
+  periodes.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    if (p === curPer) o.selected = true;
+    selPeriode.appendChild(o);
+  });
+
+  filterConsumer();
+}
+
+function filterConsumer() {
+  const data     = getData();
+  const periode  = document.getElementById('filter-periode').value;
+  const nhg      = document.getElementById('filter-nhg').value;
+  const vorm     = document.getElementById('filter-vorm').value;
+
+  let filtered = data;
+  if (periode) filtered = filtered.filter(r => r.periode === periode);
+  if (nhg)     filtered = filtered.filter(r => r.nhg     === nhg);
+  if (vorm)    filtered = filtered.filter(r => r.vorm    === vorm);
+
+  filtered = filtered.filter(r => r.rente > 0)
+                     .sort((a,b) => a.rente - b.rente);
+
+  const wrap = document.getElementById('consumer-results');
+  const statRow = document.getElementById('stat-row');
+  const disclaimer = document.getElementById('consumer-disclaimer');
+
+  if (filtered.length === 0) {
+    statRow.style.display = 'none';
+    disclaimer.style.display = 'none';
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="icon">${data.length === 0 ? '📋' : '🔍'}</div>
+        <h3>${data.length === 0 ? 'Nog geen tarieven ingevoerd' : 'Geen resultaten gevonden'}</h3>
+        <p>${data.length === 0 ? 'De adviseur heeft nog geen tarieven ingevoerd.' : 'Pas uw filterinstellingen aan.'}</p>
+      </div>`;
+    return;
+  }
+
+  // Statistieken
+  const rentes = filtered.map(r => r.rente);
+  const laag = Math.min(...rentes);
+  const hoog = Math.max(...rentes);
+  const gem  = rentes.reduce((s,v) => s+v, 0) / rentes.length;
+  document.getElementById('stat-laag').textContent = fmt(laag) + '%';
+  document.getElementById('stat-gem').textContent  = fmt(gem)  + '%';
+  document.getElementById('stat-hoog').textContent = fmt(hoog) + '%';
+  statRow.style.display = '';
+
+  // Tabel
+  let html = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>#</th>
+      <th>Geldverstrekker</th>
+      <th class="right">Rente</th>
+      <th>Periode</th>
+      <th>NHG</th>
+      <th>Vorm</th>
+    </tr></thead><tbody>`;
+
+  filtered.forEach((r, i) => {
+    const isLaag = r.rente === laag;
+    let badge = '';
+    if (i === 0) badge = '<span class="badge badge-1">LAAGST</span>';
+    else if (i === 1) badge = '<span class="badge badge-2">2e</span>';
+    else if (i === 2) badge = '<span class="badge badge-3">3e</span>';
+
+    html += `<tr>
+      <td style="color:#4A4A4A; font-size:13px;">${i+1}</td>
+      <td style="font-weight:${i < 3 ? 600 : 400}">${badge}${esc(r.naam)}</td>
+      <td class="right"><span class="rente-val ${isLaag ? 'rente-laag' : ''}">${fmt(r.rente)}%</span></td>
+      <td style="font-size:13px; color:#4A4A4A;">${esc(r.periode)}</td>
+      <td style="font-size:13px; color:#4A4A4A;">${esc(r.nhg)}</td>
+      <td style="font-size:13px; color:#4A4A4A;">${esc(r.vorm)}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+
+  // Disclaimer
+  disclaimer.innerHTML = getDisclaimer();
+  disclaimer.style.display = '';
+}
+
+// ═══════════════════════════════════════════════════════
+//  BEHEER VIEW
+// ═══════════════════════════════════════════════════════
+
+function switchTab(tab, el) {
+  ['invoer','overzicht','instellingen'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+
+  if (tab === 'overzicht') renderOverzicht();
+  if (tab === 'instellingen') renderInstellingen();
+  if (tab === 'invoer') renderInvoerTabel();
+}
+
+function renderBeheer() {
+  renderInvoerTabel();
+}
+
+function renderInvoerTabel() {
+  const periode = document.getElementById('invoer-periode').value;
+  const nhg     = document.getElementById('invoer-nhg').value;
+  const vorm    = document.getElementById('invoer-vorm').value;
+  const data    = getData();
+
+  // Haal bestaande aanbieders op voor deze combo + standaard lijst
+  const bestaand = data.filter(r => r.periode===periode && r.nhg===nhg && r.vorm===vorm);
+  const namen = bestaand.map(r => r.naam);
+
+  // Voeg standaard aanbieders toe die nog niet bestaan
+  const allNamen = [...namen];
+  STANDAARD_AANBIEDERS.forEach(n => { if (!allNamen.includes(n)) allNamen.push(n); });
+
+  invoerRijen = allNamen.map(naam => {
+    const existing = bestaand.find(r => r.naam === naam);
+    return { naam, rente: existing ? existing.rente : '' };
+  });
+
+  renderInvoerRijen();
+}
+
+function renderInvoerRijen() {
+  let html = `<div class="table-wrap"><table class="beheer-tabel">
+    <thead><tr>
+      <th style="width:50%">Geldverstrekker</th>
+      <th style="width:130px; text-align:center;">Rente (%)</th>
+      <th>Actie</th>
+    </tr></thead><tbody>`;
+
+  invoerRijen.forEach((r, i) => {
+    html += `<tr>
+      <td><input class="naam-input" value="${esc(r.naam)}" oninput="invoerRijen[${i}].naam=this.value"></td>
+      <td style="text-align:center;">
+        <input class="input-rente" type="number" step="0.01" min="0" max="15"
+          value="${r.rente}" placeholder="3,77"
+          oninput="invoerRijen[${i}].rente=parseFloat(this.value)||0">
+      </td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="verwijderRij(${i})">✕</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('invoer-tabel-wrap').innerHTML = html;
+}
+
+function voegAanbiederToe() {
+  invoerRijen.push({ naam: 'Nieuwe aanbieder', rente: '' });
+  renderInvoerRijen();
+}
+
+function verwijderRij(i) {
+  invoerRijen.splice(i, 1);
+  renderInvoerRijen();
+}
+
+function slaOpTarieven() {
+  const periode = document.getElementById('invoer-periode').value;
+  const nhg     = document.getElementById('invoer-nhg').value;
+  const vorm    = document.getElementById('invoer-vorm').value;
+
+  let data = getData();
+  // Verwijder bestaande records voor deze combo
+  data = data.filter(r => !(r.periode===periode && r.nhg===nhg && r.vorm===vorm));
+
+  // Voeg nieuwe toe
+  const nu = new Date().toISOString();
+  invoerRijen.forEach(r => {
+    if (r.naam.trim() && r.rente > 0) {
+      data.push({ naam: r.naam.trim(), periode, nhg, vorm, rente: Number(r.rente), bijgewerkt: nu });
+    }
+  });
+
+  saveData(data);
+  toon('✅ Tarieven opgeslagen!');
+}
+
+// ── OVERZICHT ──
+
+function renderOverzicht() {
+  const data = getData().sort((a,b) => {
+    if (a.periode !== b.periode) return a.periode.localeCompare(b.periode);
+    if (a.nhg !== b.nhg) return a.nhg.localeCompare(b.nhg);
+    if (a.vorm !== b.vorm) return a.vorm.localeCompare(b.vorm);
+    return a.rente - b.rente;
+  });
+
+  document.getElementById('overzicht-count').textContent = data.length;
+
+  let html = '';
+  data.forEach((r, i) => {
+    const datum = r.bijgewerkt ? new Date(r.bijgewerkt).toLocaleDateString('nl-NL') : '—';
+    html += `<tr>
+      <td>${esc(r.naam)}</td>
+      <td>${esc(r.periode)}</td>
+      <td>${esc(r.nhg)}</td>
+      <td>${esc(r.vorm)}</td>
+      <td class="right" style="font-weight:700;">${fmt(r.rente)}%</td>
+      <td style="font-size:12px; color:#4A4A4A;">${datum}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="verwijderRecord(${i})">✕</button>
+      </td>
+    </tr>`;
+  });
+
+  document.getElementById('overzicht-tbody').innerHTML = html || '<tr><td colspan="7" style="text-align:center; color:#4A4A4A; padding:20px;">Geen tarieven opgeslagen</td></tr>';
+}
+
+function verwijderRecord(i) {
+  const data = getData();
+  data.splice(i, 1);
+  saveData(data);
+  renderOverzicht();
+  toon('🗑️ Record verwijderd');
+}
+
+function allesWissen() {
+  if (!confirm('Weet u zeker dat u ALLE tarieven wilt verwijderen?')) return;
+  saveData([]);
+  renderOverzicht();
+  toon('🗑️ Alle data gewist');
+}
+
+function exportJSON() {
+  const data = getData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'hypotheekrentes_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toon('📥 Export gedownload');
+}
+
+function importJSON() {
+  document.getElementById('import-input').click();
+}
+
+function leesImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (!Array.isArray(parsed)) throw new Error('Ongeldig formaat');
+      saveData(parsed);
+      renderOverzicht();
+      toon('✅ ' + parsed.length + ' records geïmporteerd');
+    } catch(err) {
+      alert('Fout bij importeren: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ── INSTELLINGEN ──
+
+function renderInstellingen() {
+  document.getElementById('disclaimer-tekst').value = getDisclaimer();
+  const standaard = document.getElementById('standaard-lijst');
+  standaard.innerHTML = STANDAARD_AANBIEDERS.map(n => `• ${n}<br>`).join('');
+}
+
+function wijzigWachtwoord() {
+  const huidig  = document.getElementById('pw-huidig').value;
+  const nieuw   = document.getElementById('pw-nieuw').value;
+  const herhaal = document.getElementById('pw-herhaal').value;
+  const msg = document.getElementById('pw-msg');
+
+  if (huidig !== getPw()) { msg.style.color='#E74C3C'; msg.textContent='Huidig wachtwoord klopt niet.'; return; }
+  if (nieuw.length < 4)   { msg.style.color='#E74C3C'; msg.textContent='Nieuw wachtwoord te kort (min. 4 tekens).'; return; }
+  if (nieuw !== herhaal)  { msg.style.color='#E74C3C'; msg.textContent='Wachtwoorden komen niet overeen.'; return; }
+
+  savePw(nieuw);
+  msg.style.color = '#27AE60';
+  msg.textContent = '✅ Wachtwoord succesvol gewijzigd!';
+  document.getElementById('pw-huidig').value = '';
+  document.getElementById('pw-nieuw').value  = '';
+  document.getElementById('pw-herhaal').value = '';
+}
+
+function slaDisclaimerOp() {
+  saveDisclaimer(document.getElementById('disclaimer-tekst').value);
+  toon('✅ Disclaimer opgeslagen');
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+
+function fmt(n) {
+  if (!n && n !== 0) return '—';
+  return Number(n).toFixed(2).replace('.', ',');
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
+}
+
+function toon(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = '';
+  clearTimeout(toon._timer);
+  toon._timer = setTimeout(() => { t.style.display = 'none'; }, 2800);
+}
+
+// ═══════════════════════════════════════════════════════
+//  EVENT LISTENERS
+// ═══════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Filters triggeren herrendering
+  ['filter-periode','filter-nhg','filter-vorm'].forEach(id => {
+    document.getElementById(id).addEventListener('change', filterConsumer);
+  });
+
+  // Invoer triggers herrendering invoertabel
+  ['invoer-periode','invoer-nhg','invoer-vorm'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderInvoerTabel);
+  });
+
+  showConsumer();
+});
+</script>
+</body>
+</html>
