@@ -254,12 +254,11 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
             <div class="f">
               <label class="fl">Fiscale behandeling</label>
               <select class="sel" id="tvSchijf" onchange="calcTv()">
-                <option value="middeling">Middeling over 3 jaar (37,48%)</option>
                 <option value="hoog" selected>Hoog tarief (49,5%)</option>
-                <option value="midden">Schijf 2 (37,48%)</option>
-                <option value="laag">Schijf 1 (35,82%)</option>
+                <option value="midden">Schijf 2 (37,56%)</option>
+                <option value="laag">Schijf 1 (35,75%)</option>
               </select>
-              <div class="help">Netto-berekening indicatief; middeling achteraf is meestal gunstiger.</div>
+              <div class="help">Netto-berekening indicatief (tarieven 2026). De middelingsregeling is per 2023 afgeschaft.</div>
             </div>
           </div>
         </div>
@@ -337,7 +336,7 @@ body{font-family:Arial,sans-serif;font-size:15px;color:var(--text);background:#f
               <option value="sms">SMS-lening (€17,50 vast)</option>
               <option value="bnpl" selected>BNPL (tijdig betaald, €0)</option>
               <option value="bnplBoete">BNPL (te laat, +€10)</option>
-              <option value="rood">Rood staan bank (14%/jr)</option>
+              <option value="rood">Rood staan bank (12%/jr, wettelijk max. 2026)</option>
               <option value="persoonlijk">Persoonlijke lening bank (8%/jr)</option>
             </select>
           </div>
@@ -468,8 +467,8 @@ function alertBlock(cls,icon,title,body){return `<div class="alert ${cls}"><div 
 function sw(n){document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===n));document.querySelectorAll('.mode-tab').forEach((t,i)=>t.classList.toggle('active',i===n));}
 
 // ===== SHARED: Netto berekening (IB 2026) =====
-const S1_2026=38441, S2_2026=76817, T1_2026=0.3582, T2_2026=0.3748, T3_2026=0.495;
-const AHK_MAX=3204, AHK_START=24813, AHK_AFB=0.06337;
+const S1_2026=38883, S2_2026=78426, T1_2026=0.3575, T2_2026=0.3756, T3_2026=0.495;
+const AHK_MAX=3115, AHK_START=29736, AHK_AFB=0.06398; // AHK 2026: € 0 vanaf € 78.426
 function calcNettoJr(jaarBruto, lhk){
   if(jaarBruto<=0) return {netto:0,ib:0,ahk:0,heffing:0};
   let ib=0;
@@ -489,7 +488,7 @@ function calcNettoJr(jaarBruto, lhk){
 // =========================================================
 // ===== TAB 0: WW-UITKERING 2026 =====
 // =========================================================
-const WW_MAX_DAGLOON=304.25;
+const WW_MAX_DAGLOON=309.91; // per 1-7-2026 (1-1-2026: € 304,25)
 const WW_WERKDAGEN=21.75;
 const WW_PCT_12=0.75;
 const WW_PCT_3=0.70;
@@ -564,7 +563,7 @@ function calcWw(){
       <table class="tbl">
         <tr><td>Bruto maandsalaris (incl. vakantietoeslag)</td><td class="ri">${fmt2(bruto)}</td></tr>
         <tr><td>Dagloon (bruto/mnd ÷ 21,75)</td><td class="ri">${fmt2(dagloonRaw)}</td></tr>
-        <tr><td>${capped?'<span class="tag r">GEMAXIMEERD</span> ':''}Toegepast dagloon ${capped?'(max 2026: € 304,25)':''}</td><td class="ri">${fmt2(dagloon)}</td></tr>
+        <tr><td>${capped?'<span class="tag r">GEMAXIMEERD</span> ':''}Toegepast dagloon ${capped?'(max per 1-7-2026: € 309,91)':''}</td><td class="ri">${fmt2(dagloon)}</td></tr>
         <tr><td><span class="tag o">MND 1-2</span> Bruto WW (75%)</td><td class="ri">${fmt2(ww12_bruto)}</td></tr>
         <tr><td><span class="tag">MND 3+</span> Bruto WW (70%)</td><td class="ri">${fmt2(ww3_bruto)}</td></tr>
         <tr><td>Netto WW mnd 1-2</td><td class="ri">${fmt2(ww12_netto)}</td></tr>
@@ -575,7 +574,7 @@ function calcWw(){
       </table>
     </div></div>`;
     
-    if(capped) out+=alertBlock('wa','⚠️','Dagloon gemaximeerd op € 304,25',`Bruto maandsalaris ${fmt(bruto)} levert een rekenkundig dagloon van ${fmt2(dagloonRaw)} op. UWV rekent met het wettelijk maximum. Inkomensterugval extra groot.`);
+    if(capped) out+=alertBlock('wa','⚠️','Dagloon gemaximeerd op € 309,91 (per 1-7-2026)',`Bruto maandsalaris ${fmt(bruto)} levert een rekenkundig dagloon van ${fmt2(dagloonRaw)} op. UWV rekent met het wettelijk maximum. Inkomensterugval extra groot.`);
     if(reden==='vso') out+=alertBlock('in','📋','VSO-route — let op fictieve opzegtermijn','Bij VSO moet aan 3 voorwaarden voldaan: initiatief werkgever, geen dringende reden, neutrale ontslagreden. Controleer fictieve opzegtermijn om WW-gat te voorkomen.');
     if(lft>=60) out+=alertBlock('in','👴','Oudere werkloze — IOW/IOAW check',`Bij leeftijd ${lft} mogelijk aansluitend IOW (geboren voor 1965) of IOAW. Controleer bij UWV.`);
     
@@ -643,12 +642,12 @@ function calcTv(){
   const gecapped=tvRaw>maxTv;
   
   // Netto berekening
-  const schijfMap={'middeling':0.3748,'hoog':0.495,'midden':0.3748,'laag':0.3582};
+  const schijfMap={'middeling':0.3756,'hoog':0.495,'midden':0.3756,'laag':0.3575};
   const schijfPct=schijfMap[schijf]||0.495;
   const netto=Math.round(tv*(1-schijfPct));
   
   // Voor middeling: indicatieve berekening als TV over 3 jaar verdeeld wordt
-  const middelingBesp=schijf==='middeling'?Math.round(tv*(0.495-0.3748)):0;
+  const middelingBesp=schijf==='middeling'?Math.round(tv*(0.495-0.3756)):0;
   
   let out='';
   
@@ -702,7 +701,7 @@ function calcTv(){
     if(type==='langdurig') out+=alertBlock('in','💼','Compensatieregeling UWV',`Bij ontslag na 2 jaar ziekte kan de werkgever compensatie aanvragen bij UWV. Let op: per 1 juli 2026 wordt deze regeling beperkt tot kleine werkgevers (<25 werknemers).`);
     if(type==='vso') out+=alertBlock('in','📋','VSO — geen wettelijk recht op TV','Bij VSO (wederzijds goedvinden) is TV niet verplicht, maar wordt meestal als uitgangspunt voor onderhandeling genomen. Er geldt géén maximum bij VSO — hogere vergoeding is onderhandelbaar.');
     if(schijf==='middeling' && tv>30000) out+=alertBlock('ok','💡','Middelingsverzoek benutten',`Door TV te middelen over 3 jaar kan ± ${fmt(middelingBesp)} belastingvoordeel worden behaald. Vraag middeling achteraf aan bij Belastingdienst.`);
-    out+=alertBlock('wa','⚠️','Belastingdruk transitievergoeding','TV wordt belast als loon in het jaar van ontvangst — kan naar hoogste schijf (49,5%) duwen. Overweeg: middelingsverzoek, stamrecht BV (afgeschaft 2014 maar bestaande lopen door), lijfrentestorting binnen jaarruimte.');
+    out+=alertBlock('wa','⚠️','Belastingdruk transitievergoeding','TV wordt belast als loon in het jaar van ontvangst — kan naar hoogste schijf (49,5%) duwen. Overweeg: spreiding van de uitbetaling over twee kalenderjaren (middelingsregeling afgeschaft per 2023), stamrecht BV (afgeschaft 2014 maar bestaande lopen door), lijfrentestorting binnen jaarruimte.');
   }
   
   document.getElementById('out_tv').innerHTML=out;
@@ -712,7 +711,7 @@ function calcTv(){
 // ===== TAB 2: TOESLAGENGRENS 2026 =====
 // =========================================================
 // Zorgtoeslag 2026
-const ZT_MND_ALLEEN=123, ZT_MND_PARTNER=238;
+const ZT_MND_ALLEEN=129, ZT_MND_PARTNER=246; // zorgtoeslag 2026 max per maand
 const ZT_GRENS_ALLEEN=40857, ZT_GRENS_PARTNER=51142;
 const ZT_START_AFBOUW_ALLEEN=26000, ZT_START_AFBOUW_PARTNER=35000;
 // Huurtoeslag 2026 (nieuwe regels)
@@ -822,7 +821,7 @@ function calcFl(){
     sms:{pct:0,vast:17.50,naam:'SMS-lening',desc:'Vaste kosten per transactie'},
     bnpl:{pct:0,vast:0,naam:'BNPL (tijdig)',desc:'€0 kosten bij tijdige betaling'},
     bnplBoete:{pct:0,vast:10,naam:'BNPL (te laat)',desc:'Aanmaningskosten +€10'},
-    rood:{pct:0.14/52*weken,vast:0,naam:'Rood staan bank',desc:'14% rente per jaar naar rato'},
+    rood:{pct:0.12/52*weken,vast:0,naam:'Rood staan bank',desc:'max. 12% rente per jaar (2026) naar rato'},
     persoonlijk:{pct:0.08/52*weken,vast:0,naam:'Persoonlijke lening',desc:'8% rente per jaar (referentie)'}
   };
   const k=opties[type]||opties.flash;
@@ -855,7 +854,7 @@ function calcFl(){
   
   out+=`<div class="section-title">EJP-meter in vergelijking</div>
   <div class="card"><div class="card-b">
-    <div class="muted" style="margin-bottom:6px;">Referentie: persoonlijke lening ~8% · rood staan ~14% · creditcard ~15% · flitskrediet ${fmtPct(ejp,1)}</div>
+    <div class="muted" style="margin-bottom:6px;">Referentie: persoonlijke lening ~8% · rood staan / creditcard tot 12% (wettelijk max. kredietvergoeding 2026) · flitskrediet ${fmtPct(ejp,1)}</div>
     <div class="ejp-bar"><div class="ejp-needle" style="left:${ejpPos}%;"></div></div>
     <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-top:4px;"><span>0%</span><span>100%</span><span>200%</span><span>300%</span><span>500%+</span></div>
   </div></div>`;
@@ -868,8 +867,8 @@ function calcFl(){
       <tr><td>Persoonlijke lening bank</td><td class="ri">${fmt(bedrag*(0.08/52*weken))}</td><td class="ri">8%</td><td class="ri"><span class="tag g">GOED</span></td></tr>
       <tr><td>Werkgeversvoorschot</td><td class="ri">€ 0-50</td><td class="ri"><5%</td><td class="ri"><span class="tag g">GOED</span></td></tr>
       <tr><td>Qredits (sociale kredietbank)</td><td class="ri">${fmt(bedrag*(0.10/52*weken))}</td><td class="ri">±10%</td><td class="ri"><span class="tag">OK</span></td></tr>
-      <tr><td>Rood staan bank</td><td class="ri">${fmt(bedrag*(0.14/52*weken))}</td><td class="ri">±14%</td><td class="ri"><span class="tag a">DUUR</span></td></tr>
-      <tr><td>Creditcard minimum</td><td class="ri">${fmt(bedrag*(0.15/52*weken))}</td><td class="ri">±15%</td><td class="ri"><span class="tag a">DUUR</span></td></tr>
+      <tr><td>Rood staan bank</td><td class="ri">${fmt(bedrag*(0.12/52*weken))}</td><td class="ri">≤12%</td><td class="ri"><span class="tag a">DUUR</span></td></tr>
+      <tr><td>Creditcard minimum</td><td class="ri">${fmt(bedrag*(0.12/52*weken))}</td><td class="ri">≤12%</td><td class="ri"><span class="tag a">DUUR</span></td></tr>
       <tr><td>BNPL (bij te laat betalen)</td><td class="ri">€ 10-30</td><td class="ri">Variabel</td><td class="ri"><span class="tag r">SLECHT</span></td></tr>
       <tr><td>Flitskrediet / SMS-lening</td><td class="ri">${fmt(bedrag*0.12)}</td><td class="ri">300-500%+</td><td class="ri"><span class="tag r">ZEER SLECHT</span></td></tr>
     </table>

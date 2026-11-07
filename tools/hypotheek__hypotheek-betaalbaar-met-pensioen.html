@@ -81,8 +81,8 @@ input:focus,select:focus{border-color:var(--navy);}
         <div class="sep" style="grid-column:1/-1;">Inkomen in pensioensituatie</div>
         <div class="fl">
           <label>AOW bruto per jaar (2026)</label>
-          <div class="iw"><span class="px">€</span><input type="number" id="aow" value="17000" step="100"></div>
-          <span class="hint">AOW 2026: alleenstaande ~€17.000 · gehuwd paar ~€23.500</span>
+          <div class="iw"><span class="px">€</span><input type="number" id="aow" value="21200" step="100"></div>
+          <span class="hint">AOW 2026 (incl. vakantiegeld): alleenstaand ~€21.200 · gehuwd/samenwonend ~€14.570 per persoon = ~€29.140 per paar. Bij partner: vul de AOW van beiden samen in.</span>
         </div>
         <div class="fl">
           <label>Aanvullend pensioen bruto/jaar</label>
@@ -125,6 +125,18 @@ input:focus,select:focus{border-color:var(--navy);}
           </select>
         </div>
         <div class="fl">
+          <label>Rentevaste periode</label>
+          <select id="rvp">
+            <option value="1">Variabel / 1 jaar</option>
+            <option value="5">5 jaar</option>
+            <option value="10" selected>10 jaar</option>
+            <option value="15">15 jaar</option>
+            <option value="20">20 jaar</option>
+            <option value="30">30 jaar</option>
+          </select>
+          <span class="hint">RVP &lt; 10 jaar: toetsrente AFM 5% (of hoger werkelijke rente)</span>
+        </div>
+        <div class="fl">
           <label>Aflosvorm</label>
           <select id="vorm">
             <option value="ann" selected>Annuïtair</option>
@@ -159,7 +171,8 @@ input:focus,select:focus{border-color:var(--navy);}
         <strong>Toetsing op pensioeninkomen:</strong> Banken toetsen op het inkomen dat u bij pensioenen <em>daadwerkelijk</em> ontvangt. AOW + aanvullend pensioen. Niet meer op arbeidsinkomen.<br><br>
         <strong>LTV-normen bij senioren:</strong> Sommige banken hanteren strengere LTV-maxima (max 60-80% van woningwaarde) voor 65-plussers. Dit in verband met het risico van overlijden voor einde looptijd.<br><br>
         <strong>Aflossingsvrij verlengen:</strong> Heeft u een aflossingsvrije hypotheek die afloopt? Banken zijn terughoudend bij verlenging als inkomen daalt. Maar bij voldoende eigen vermogen in de woning (lage LTV) zijn er opties.<br><br>
-        <strong>AOW 2026:</strong> Alleenstaand: ~€17.050/jaar bruto · Gehuwd/samenwonend: ~€23.500/jaar bruto (elk). AOW-leeftijd 2026: <strong>67 jaar</strong>.
+        <strong>Toetsing (Trhk 2026):</strong> Woonquote uit de AOW-tabel (Bijlage 1, tabel 2, hypotheekrente aftrekbaar) op basis van het gezamenlijke toetsinkomen. Toetsrente: bij een rentevaste periode korter dan 10 jaar de AFM-toetsrente van 5% (of de hogere werkelijke rente), bij 10 jaar of langer de werkelijke rente.<br><br>
+        <strong>AOW 2026:</strong> bruto per maand (per 1 juli 2026, excl. vakantiegeld) alleenstaand € 1.662,16 · gehuwd/samenwonend € 1.139,39 <em>per persoon</em>. Per jaar incl. vakantiegeld circa € 21.200 (alleenstaand) en circa € 14.570 per persoon, dus circa € 29.140 per paar. AOW-leeftijd: <strong>67 jaar</strong> (bereikt in 2026–2027); <strong>67 jaar en 3 maanden</strong> voor wie geboren is vanaf 1 januari 1961 (AOW in 2028–2031).
       </div>
     </div>
   </div>
@@ -169,15 +182,105 @@ input:focus,select:focus{border-color:var(--navy);}
 const N=id=>parseFloat(document.getElementById(id).value)||0;
 const fmt=n=>' € '+Math.round(n).toLocaleString('nl-NL')+',-';
 const fmtPct=(n,d=1)=>n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
-const AOW_2026={single:17050,samen:23500};
+// AOW 2026 per jaar incl. vakantiegeld (tarief per 1-7-2026): alleenstaand; gehuwd/samenwonend per paar (2 × p.p.)
+const AOW_2026={single:21200,samen:29140,samenPP:14570};
 
-// NIBUD AOW-tabel (vereenvoudigd): lagere FLP voor gepensioneerden
+// Trhk 2026, Bijlage 1, tabel 2: financieringslastpercentages bij AOW-leeftijd, hypotheekrente aftrekbaar
+// (bron: Wijzigingsregeling hypothecair krediet 2026, Stcrt. 2025, 36471 — identiek aan max-hyp-2027.html, normjaar 2026)
+// Rijen: toetsinkomen vanaf € 29.000 t/m € 110.000 in stappen van € 1.000; kolommen: toetsrente
+const FLP_AOW_2026_MIN=29000, FLP_AOW_2026_STAP=1000;
+const FLP_RENTE_GRENZEN=[1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5];
+const FLP_AOW_2026=[
+  [18.5,18.9,19.4,19.7,20.1,20.4,20.7,20.9,21.1,21.3,21.5,21.7],
+  [19.2,19.8,20.3,20.8,21.1,21.5,21.8,22.1,22.3,22.5,22.7,22.9],
+  [19.9,20.6,21.2,21.7,22.1,22.5,22.8,23.1,23.4,23.7,23.9,24.1],
+  [20.5,21.2,21.8,22.4,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2],
+  [20.9,21.7,22.3,22.9,23.5,24.0,24.5,24.8,25.2,25.5,25.7,26.0],
+  [21.2,22.0,22.8,23.4,24.0,24.5,25.1,25.5,25.9,26.2,26.5,26.7],
+  [21.6,22.4,23.1,23.9,24.5,25.1,25.6,26.1,26.5,26.9,27.2,27.5],
+  [21.8,22.7,23.5,24.3,24.9,25.6,26.1,26.6,27.1,27.5,27.9,28.2],
+  [21.9,22.9,23.8,24.6,25.3,26.0,26.6,27.1,27.5,28.0,28.4,28.8],
+  [22.0,23.1,24.0,24.9,25.7,26.3,27.0,27.5,28.0,28.4,28.9,29.2],
+  [22.1,23.2,24.2,25.1,25.9,26.6,27.3,27.9,28.4,28.9,29.3,29.7],
+  [22.2,23.3,24.3,25.2,26.1,26.9,27.6,28.2,28.8,29.3,29.7,30.1],
+  [22.3,23.4,24.4,25.3,26.3,27.1,27.9,28.5,29.1,29.6,30.1,30.5],
+  [22.4,23.5,24.5,25.5,26.4,27.3,28.1,28.8,29.4,30.0,30.5,30.9],
+  [22.5,23.6,24.6,25.6,26.6,27.4,28.3,29.0,29.7,30.3,30.8,31.3],
+  [22.7,23.7,24.8,25.8,26.7,27.6,28.4,29.2,29.9,30.6,31.1,31.6],
+  [22.8,23.9,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.8,31.4,31.9],
+  [22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,30.9,31.6,32.2],
+  [23.1,24.1,25.2,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8,32.4],
+  [23.1,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.3,32.0,32.6],
+  [23.3,24.4,25.5,26.5,27.5,28.3,29.2,30.0,30.8,31.5,32.2,32.8],
+  [23.4,24.6,25.6,26.7,27.6,28.6,29.4,30.2,31.0,31.7,32.4,33.0],
+  [23.6,24.8,25.8,26.8,27.9,28.8,29.7,30.5,31.3,32.0,32.7,33.3],
+  [23.9,25.0,26.2,27.2,28.1,29.1,30.0,30.8,31.6,32.3,33.0,33.7],
+  [24.2,25.4,26.5,27.5,28.5,29.4,30.4,31.2,32.0,32.7,33.5,34.1],
+  [24.5,25.7,26.8,27.9,28.9,29.8,30.7,31.6,32.4,33.2,33.9,34.5],
+  [24.8,26.0,27.2,28.3,29.3,30.3,31.1,32.0,32.9,33.6,34.3,35.0],
+  [25.0,26.4,27.6,28.6,29.7,30.7,31.6,32.4,33.2,34.0,34.7,35.5],
+  [25.2,26.6,27.9,29.0,30.0,31.1,32.0,32.8,33.7,34.4,35.2,35.9],
+  [25.3,26.8,28.1,29.4,30.4,31.4,32.4,33.3,34.1,34.8,35.5,36.3],
+  [25.4,27.0,28.4,29.6,30.8,31.8,32.8,33.7,34.5,35.3,36.0,36.6],
+  [25.5,27.1,28.6,29.9,31.1,32.1,33.1,34.1,34.9,35.7,36.4,37.1],
+  [25.6,27.2,28.7,30.1,31.4,32.5,33.5,34.4,35.3,36.1,36.8,37.5],
+  [25.7,27.3,28.9,30.4,31.6,32.8,33.8,34.8,35.7,36.5,37.2,37.9],
+  [25.8,27.4,29.0,30.5,31.9,33.0,34.1,35.1,36.0,36.8,37.6,38.3],
+  [25.8,27.6,29.1,30.7,32.1,33.3,34.4,35.4,36.3,37.2,37.9,38.6],
+  [25.9,27.6,29.2,30.8,32.3,33.6,34.6,35.6,36.6,37.5,38.3,39.0],
+  [25.9,27.6,29.4,30.9,32.4,33.8,34.9,36.0,36.8,37.8,38.6,39.3],
+  [26.0,27.7,29.4,31.0,32.5,34.0,35.2,36.2,37.1,38.0,38.9,39.7],
+  [26.0,27.7,29.5,31.1,32.6,34.1,35.4,36.4,37.5,38.3,39.2,40.0],
+  [26.1,27.8,29.5,31.2,32.7,34.2,35.6,36.7,37.7,38.6,39.4,40.3],
+  [26.2,27.9,29.6,31.3,32.8,34.3,35.7,36.9,37.9,38.9,39.7,40.5],
+  [26.2,27.9,29.6,31.3,32.9,34.4,35.8,37.1,38.2,39.1,39.9,40.7],
+  [26.3,28.0,29.7,31.4,33.0,34.5,35.9,37.3,38.4,39.4,40.3,41.0],
+  [26.4,28.0,29.7,31.4,33.1,34.6,36.0,37.3,38.4,39.5,40.5,41.3],
+  [26.5,28.1,29.7,31.4,33.1,34.7,36.1,37.3,38.4,39.5,40.6,41.6],
+  [26.5,28.2,29.8,31.4,33.1,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [26.6,28.3,29.9,31.5,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [26.7,28.3,30.0,31.6,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [26.8,28.4,30.0,31.6,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [26.9,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.1,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.2,28.6,30.2,31.8,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.2,28.8,30.2,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.3,28.8,30.3,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.4,28.9,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.5,29.0,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.6,29.1,30.5,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.7,29.1,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.7,29.2,30.6,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.8,29.2,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.8,29.3,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.9,29.3,30.8,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [28.0,29.4,30.8,32.2,33.6,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+  [28.0,29.4,30.9,32.2,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+  [28.0,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+  [28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+  [28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+  [28.1,29.6,30.9,32.3,33.7,34.9,36.2,37.3,38.4,39.5,40.6,41.7],
+  [28.2,29.6,31.0,32.3,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],
+  [28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],
+  [28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],
+  [28.3,29.7,31.1,32.4,33.7,35.0,36.3,37.4,38.5,39.6,40.6,41.7],
+  [28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.4,38.5,39.6,40.6,41.7],
+  [28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.5,38.5,39.6,40.6,41.7],
+  [28.4,29.8,31.2,32.5,33.8,35.1,36.3,37.5,38.6,39.6,40.6,41.7]
+];
+
+// Woonquote AOW-tabel 2026 (toetsinkomen afgerond op de tabelrij eronder; buiten het bereik: eerste/laatste rij)
 function getFLPPensioen(ink,r){
-  // Gepensioneerden: iets lagere FLP, standaard ~24-27% bij modaal pensioen
-  const tabel=[[20000,.22],[25000,.235],[30000,.245],[40000,.255],[50000,.265],[60000,.27],[75000,.275]];
-  let row=tabel[0];for(const rr of tabel){if(ink>=rr[0])row=rr;}
-  const rAdj=r<3?0.01:r<4?0:r<5?-0.01:-0.02;
-  return Math.max(0.18,row[1]+rAdj);
+  let col=FLP_RENTE_GRENZEN.findIndex(g=>r<=g); if(col<0) col=11;
+  let row=Math.floor((ink-FLP_AOW_2026_MIN)/FLP_AOW_2026_STAP);
+  row=Math.max(0,Math.min(FLP_AOW_2026.length-1,row));
+  return FLP_AOW_2026[row][col]/100;
 }
 function ann(s,r,n){const rm=r/12;if(rm===0)return s/n;return s*rm*Math.pow(1+rm,n)/(Math.pow(1+rm,n)-1);}
 function ml(s,r,n,vorm){if(vorm==='af')return s*r/12;if(vorm==='lin')return s/n+s*r/12;return ann(s,r,n);}
@@ -192,8 +295,9 @@ function bereken(){
   const totaalInk=aow+aanv+overig;
   const ltv=ww>0?hyp/ww*100:0;
 
-  // Toetsrente: bij RVP <10jr → 5%, anders werkelijk
-  const toets=lt<10?Math.max(5.0,rente*100)/100:rente;
+  // Toetsrente (Trhk/AFM): rentevaste periode < 10 jaar → AFM-toetsrente 5% (of hogere werkelijke rente), anders werkelijke rente
+  const rvp=parseInt(document.getElementById('rvp').value)||10;
+  const toets=rvp<10?Math.max(5.0,rente*100)/100:rente;
   const flp=getFLPPensioen(totaalInk,toets*100);
   const maxJaarLast=totaalInk*flp;
   const annF=ann(1,toets,lt*12);
@@ -211,7 +315,7 @@ function bereken(){
   if(kanHyp){
     vCls='ok';vIco='✅';
     vT=`Hypotheek haalbaar op pensioeninkomen`;
-    vS=`Op basis van pensioeninkomen ${fmt(totaalInk)}/jaar (FLP ${fmtPct(flp*100,0)}) kunt u maximaal ${fmt(maxEff)} lenen. De gewenste hypotheek van ${fmt(hyp)} past daarbinnen. LTV: ${fmtPct(ltv)}.`;
+    vS=`Op basis van pensioeninkomen ${fmt(totaalInk)}/jaar (woonquote ${fmtPct(flp*100,1)}) kunt u maximaal ${fmt(maxEff)} lenen. De gewenste hypotheek van ${fmt(hyp)} past daarbinnen. LTV: ${fmtPct(ltv)}.`;
   } else if(maxEff>hyp*0.7){
     vCls='warn';vIco='⚠️';
     vT=`Hypotheek deels haalbaar — zoek maatwerk`;
@@ -233,7 +337,7 @@ function bereken(){
   const scenL=[10,15,20,25,30];
   document.getElementById('scGrid').style.gridTemplateColumns=`repeat(${scenL.length},1fr)`;
   document.getElementById('scGrid').innerHTML=scenL.map(j=>{
-    const annJ=ann(1,rente,j*12);
+    const annJ=ann(1,toets,j*12);
     const maxJ=Math.min(maxJaarLast/12/annJ,ww*ltvMax/100);
     return `<div class="sc ${maxJ>=hyp?'ok':'nee'}">
       <div class="sc-lbl">${j} jaar</div>
@@ -244,11 +348,11 @@ function bereken(){
   }).join('');
 
   let html=`<thead><tr><th>Post</th><th>Bedrag/jaar</th><th>Toelichting</th></tr></thead><tbody>`;
-  html+=`<tr><td>AOW uitkering</td><td>${fmt(aow)}</td><td>Alleenstaand ${fmt(AOW_2026.single)} · gehuwd ${fmt(AOW_2026.samen)}</td></tr>`;
+  html+=`<tr><td>AOW uitkering</td><td>${fmt(aow)}</td><td>2026: alleenstaand ${fmt(AOW_2026.single)} · gehuwd ${fmt(AOW_2026.samenPP)} p.p. (${fmt(AOW_2026.samen)} per paar)</td></tr>`;
   html+=`<tr><td>Aanvullend pensioen</td><td>${fmt(aanv)}</td><td>Via werkgever/pensioenfonds</td></tr>`;
   if(overig>0)html+=`<tr><td>Overig inkomen</td><td>${fmt(overig)}</td><td>Lijfrente, huur etc.</td></tr>`;
   html+=`<tr class="tot"><td><strong>Totaal pensioeninkomen</strong></td><td><strong>${fmt(totaalInk)}</strong></td><td></td></tr>`;
-  html+=`<tr><td>FLP (NIBUD pensioen)</td><td>${fmtPct(flp*100,0)}</td><td>Toetsrente ${fmtPct(toets*100)}</td></tr>`;
+  html+=`<tr><td>Woonquote (Trhk 2026, AOW-tabel)</td><td>${fmtPct(flp*100,1)}</td><td>Toetsrente ${fmtPct(toets*100,2)} (RVP ${rvp} jaar${rvp<10?' → AFM-toetsrente':' → werkelijke rente'})</td></tr>`;
   html+=`<tr><td>Max. jaarlijkse hypotheeklast</td><td>${fmt(maxJaarLast)}</td><td>${fmt(maxJaarLast/12)}/mnd</td></tr>`;
   html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(maxHyp)}</td><td></td></tr>`;
   html+=`<tr><td>Max. hypotheek op LTV (${ltvMax}%)</td><td>${fmt(maxOpWoningWaarde)}</td><td>Woningwaarde ${fmt(ww)}</td></tr>`;

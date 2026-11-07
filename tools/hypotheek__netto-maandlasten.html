@@ -141,14 +141,14 @@ canvas{width:100%!important;}
           <div class="iw"><span class="px">€</span>
             <input type="number" id="woz" value="380000" step="5000" oninput="liveCalc()">
           </div>
-          <span class="sub">EWF 2026: 0,35% tot €1.310.000</span>
+          <span class="sub">EWF 2026: 0,35% tot €1.350.000</span>
         </div>
         <div class="fl">
           <label>Bruto jaarinkomen</label>
           <div class="iw"><span class="px">€</span>
             <input type="number" id="inkomen" value="75000" step="1000" oninput="liveCalc()">
           </div>
-          <span class="sub">Bepaalt belastingschijf (35,75% / 37,56%)</span>
+          <span class="sub">Bepaalt aftrektarief (35,75% tot €38.883, daarboven max. 37,56%)</span>
         </div>
         <div class="fl">
           <label>Hypotheek afgesloten</label>
@@ -197,10 +197,10 @@ canvas{width:100%!important;}
     <div class="ch">📚 Uitleg HRA & eigenwoningforfait 2026</div>
     <div class="cb">
       <div class="uitleg">
-        <strong>Hypotheekrenteaftrek (HRA) 2026:</strong> De betaalde hypotheekrente is aftrekbaar van uw belastbaar inkomen. Het maximumtarief is begrensd op <strong>35,75%</strong> (IB-schijf 1, 2026) — ook als u in de hogere schijf valt (37,56%). Na 1-1-2013 afgesloten hypotheken: alleen aftrekbaar bij annuïtair of lineair aflossen.<br><br>
-        <strong>Eigenwoningforfait (EWF) 2026:</strong> Als woningeigenaar rekent de Belastingdienst een fictief inkomen uit uw woning: <strong>0,35% van de WOZ-waarde</strong> (tot €1.310.000) per jaar. Over dit bedrag betaalt u inkomstenbelasting. Bij een WOZ van €380.000 is dat €1.330/jaar = €111/maand bijtelling.<br><br>
-        <strong>Wet Hillen (afbouw):</strong> Heeft u (bijna) geen hypotheekschuld meer en is EWF > HRA? Dan mocht u vroeger het verschil aftrekken. Deze regeling wordt sinds 2019 in 30 jaar afgebouwd. In 2026 (jaar 8) is nog <strong>73,3%</strong> van de Hillen-aftrek geldig.<br><br>
-        <strong>Netto formule:</strong> Bruto maandlast − (rente × 35,75%) + (EWF/12 × belastingtarief)
+        <strong>Hypotheekrenteaftrek (HRA) 2026:</strong> De betaalde hypotheekrente is aftrekbaar van uw belastbaar inkomen. U krijgt de aftrek tegen het tarief van uw schijf: <strong>35,75%</strong> bij een inkomen tot €38.883 (schijf 1, 2026) en <strong>37,56%</strong> daarboven. 37,56% is het maximale aftrektarief in 2026 — ook als u in de toptariefschijf (49,50%, vanaf €78.426) valt. Na 1-1-2013 afgesloten hypotheken: alleen aftrekbaar bij annuïtair of lineair aflossen.<br><br>
+        <strong>Eigenwoningforfait (EWF) 2026:</strong> Als woningeigenaar rekent de Belastingdienst een fictief inkomen uit uw woning: <strong>0,35% van de WOZ-waarde</strong> (tot €1.350.000; daarboven €4.725 + 2,35% over het meerdere) per jaar. Over dit bedrag betaalt u inkomstenbelasting. Bij een WOZ van €380.000 is dat €1.330/jaar = €111/maand bijtelling.<br><br>
+        <strong>Wet Hillen (afbouw):</strong> Heeft u (bijna) geen hypotheekschuld meer en is EWF > HRA? Dan mocht u vroeger het verschil aftrekken. Deze regeling wordt sinds 2019 afgebouwd (versneld vanaf 2025). In 2026 is nog <strong>71,867%</strong> van het verschil aftrekbaar.<br><br>
+        <strong>Netto formule:</strong> Bruto maandlast − (aftrekbare rente − EWF/12) × aftrektarief (35,75% of max. 37,56%). Is het EWF hoger dan de rente, dan wordt het verschil na Hillen-aftrek (28,133% resteert) belast tegen uw schijftarief.
       </div>
     </div>
   </div>
@@ -210,20 +210,21 @@ canvas{width:100%!important;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 // ── CONSTANTEN 2026 ─────────────────────────────────────────────────────
-const EWF_GRENS = 1310000;
+const EWF_GRENS = 1350000;
 const EWF_TARIEF_LAAG = 0.0035;
 const EWF_TARIEF_HOOG = 0.0235;
-const HRA_MAX = 0.3575;
-const IB1 = 0.3575; const IB1_GRENS = 38441;
-const IB2 = 0.3756;
-const HILLEN_2026 = 1 - (8/30); // 73.33%
+const HRA_MAX = 0.3756;                       // maximaal aftrektarief eigen woning 2026
+const IB1 = 0.3575; const IB1_GRENS = 38883; // schijf 1 (onder AOW-leeftijd)
+const IB2 = 0.3756; const IB2_GRENS = 78426; // schijf 2
+const IB3 = 0.495;                           // toptarief
+const HILLEN_2026 = 0.71867;                  // Wet Hillen 2026 (versnelde afbouw)
 
 // ── HELPERS ──────────────────────────────────────────────────────────────
 const N = id => parseFloat(document.getElementById(id).value)||0;
 function fmt(n,d=0){if(!n&&n!==0)return'—';const neg=n<0;return(neg?'−':'')+' € '+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+',-';}
 function fmtPct(n,d=2){return n.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d})+'%';}
 
-function getIBTarief(inkomen){return inkomen > 75518 ? IB2 : IB1;} // 2026 schijf 2 grens
+function getIBTarief(inkomen){return inkomen > IB2_GRENS ? IB3 : inkomen > IB1_GRENS ? IB2 : IB1;} // marginaal tarief 2026
 
 function berekenEWF(woz){
   if(woz<=0)return 0;
@@ -270,21 +271,25 @@ function berekenMaand(hyp,r,lt,woz,inkomen,vorm,afsluiting,t=0){
   // HRA
   const hraMogelijk = (afsluiting==='voor2013') || (vorm!=='af');
   const hraRente = hraMogelijk ? renteDeel : 0;
-  const hraVoordeel = hraRente * HRA_MAX;
+  // Saldo eigen woning negatief (rente > EWF): aftrek tegen max. 37,56% (tariefmaatregel).
+  // Saldo positief (EWF > rente): bijtelling na Hillen-aftrek tegen het eigen schijftarief.
+  const ewSaldoPositief = ewfMaand > hraRente;
+  const tarief = ewSaldoPositief ? ibTarief : Math.min(ibTarief, HRA_MAX);
+  const hraVoordeel = hraRente * tarief;
 
   // EWF bijtelling
-  const ewfBijtelling = ewfMaand * Math.min(ibTarief, HRA_MAX);
+  const ewfBijtelling = ewfMaand * tarief;
 
-  // Hillen: alleen als EWF > HRA en (bijna) geen schuld
+  // Hillen: als EWF > aftrekbare rente (ook bij geen aftrekbare eigenwoningschuld)
   let hillenAftrek = 0;
-  if(hraRente < ewfMaand && hraMogelijk){
+  if(ewSaldoPositief){
     const hillenBasis = (ewfMaand - hraRente);
-    hillenAftrek = hillenBasis * HILLEN_2026 * Math.min(ibTarief, HRA_MAX);
+    hillenAftrek = hillenBasis * HILLEN_2026 * tarief;
   }
 
   const netto = bruto - hraVoordeel + ewfBijtelling - hillenAftrek;
 
-  return {bruto, netto, renteDeel, aflossingDeel, hraVoordeel, ewfMaand, ewfBijtelling, hillenAftrek, saldo, ibTarief};
+  return {bruto, netto, renteDeel, aflossingDeel, hraVoordeel, ewfMaand, ewfBijtelling, hillenAftrek, saldo, ibTarief, tarief};
 }
 
 // ── LIVE ─────────────────────────────────────────────────────────────────
@@ -340,9 +345,9 @@ function bereken(){
     {lbl:'Bruto maandlast', val:m.bruto, cls:''},
     {lbl:'↳ Rentecomponent', val:m.renteDeel, cls:'', indent:true},
     {lbl:'↳ Aflossingscomponent', val:m.aflossingDeel, cls:'', indent:true},
-    {lbl:'Hypotheekrenteaftrek (35,75%)', val:-m.hraVoordeel, cls:'pos'},
+    {lbl:'Hypotheekrenteaftrek ('+fmtPct(m.tarief*100)+')', val:-m.hraVoordeel, cls:'pos'},
     {lbl:'Eigenwoningforfait bijtelling ('+fmtPct(berekenEWF(woz)/woz*100)+')', val:m.ewfBijtelling, cls:'neg'},
-    m.hillenAftrek>0 ? {lbl:'Hillen-aftrek (73,3% afbouw)', val:-m.hillenAftrek, cls:'pos'} : null,
+    m.hillenAftrek>0 ? {lbl:'Hillen-aftrek (71,867% in 2026)', val:-m.hillenAftrek, cls:'pos'} : null,
     {lbl:'Netto maandlast', val:m.netto, cls:'', bold:true},
   ].filter(Boolean);
 

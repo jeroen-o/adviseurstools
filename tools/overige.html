@@ -582,8 +582,8 @@ input[type=range]::-webkit-slider-thumb {
           <input type="range" id="nbInk" min="10000" max="300000" step="1000" value="60000" oninput="calcNb()">
           <div class="slab"><span>€ 10k</span><span>€ 300k</span></div>
         </div>
-        <div class="field"><div class="field-label">Leeftijd</div>
-          <input type="number" class="inp" id="nbLeeftijd" value="42" min="18" max="80" oninput="calcNb()">
+        <div class="field"><div class="field-label">Geboortedatum <span style="font-weight:400;color:var(--muted);">(bepaalt AOW-leeftijd)</span></div>
+          <input type="date" class="inp" id="nbGeb" value="1984-01-01" min="1930-01-01" max="2008-12-31" oninput="calcNb()">
         </div>
         <div class="field"><div class="field-label">Woonsituatie</div>
           <select class="sel" id="nbWoning" onchange="calcNb()">
@@ -594,7 +594,7 @@ input[type=range]::-webkit-slider-thumb {
         <div class="field"><div class="field-label">WOZ-waarde woning (€)</div>
           <input type="number" class="inp" id="nbWoz" value="400000" oninput="calcNb()">
         </div>
-        <div class="field"><div class="field-label">Hypotheekrenteaftrek per jaar (€)</div>
+        <div class="field"><div class="field-label">Aftrekbare hypotheekrente per jaar (€)</div>
           <input type="number" class="inp" id="nbHra" value="12000" oninput="calcNb()">
         </div>
         <div class="field"><div class="field-label">Lijfrente jaarruimteaftrek (€)</div>
@@ -682,7 +682,9 @@ function calcKp(){
   // LTV indicatie
   const ltv = woon === 'koop' && woz > 0 ? Math.round(hyp / woz * 100) : null;
 
-  const aowJaar = jaar + 67;  // indicatief
+  // AOW-datum uit geboortejaar (indicatief: geboortedatum op 1 juli verondersteld)
+  const aowD = aowDatumVan(new Date(jaar, 6, 1));
+  const aowJaar = (aowD ? aowD.getFullYear() : jaar + 67) + ' (AOW-leeftijd ' + aowLeeftijdTekst(new Date(jaar, 6, 1)) + ')';
 
   document.getElementById('kpResult').innerHTML = `
     <div class="result-hero">
@@ -812,11 +814,11 @@ const BEHOEFTE_ADVIES = {
   verbouw:  'Bouwdepot of verhoogde hypotheek, borg bankgarantie, verzekeringen tijdens verbouwing.',
   studie:   'Studiekosten inschatten (€ 15.000–25.000 per kind), maandelijkse inleg berekenen, DUO-voorwaarden.',
   noodfonds:'NIBUD: minimaal 6 maands netto-inkomen liquide beschikbaar. Huidige buffer vs. norm toetsen.',
-  beleggen: 'Risicoprofiel vaststellen, beleggingshorizon, box 3-vrijstelling 2026 (€ 57.000 pp), fondselectie.',
+  beleggen: 'Risicoprofiel vaststellen, beleggingshorizon, heffingsvrij vermogen box 3 2026 (€ 59.357 pp), fondselectie.',
   auto:     'Privé vs. lease vergelijken, financiering of eigen middelen, restwaarde risico.',
   vakantie: 'Doelsparen-berekening: gewenste bedrag, gewenst jaar, maandelijkse inleg.',
   scheiding:'Polissen splitsen, ORV aanpassen, BKR-check, budget herstructurering, woning afwikkeling.',
-  nalaten:  'Testament, schenkvrijstellingen 2026 (€ 6.633 jr, € 28.947 studie), box 3 optimalisatie.',
+  nalaten:  'Testament, schenkvrijstellingen 2026 (€ 6.908 per jaar, eenmalig verhoogd € 33.129 of € 69.009 voor dure studie), box 3 optimalisatie.',
 };
 
 function renderBehoeften(){
@@ -951,7 +953,7 @@ const LE_ADVIES = {
   baby:         ['ORV verhogen','Voogdij testament','Kinderverzekering','Studie spaarplan','Kraamzorg en kinderopvang'],
   trouwen:      ['Huwelijkse voorwaarden','Gezamenlijke polis AVP','ORV afsluiten','Testament','Pensioenpartnercontract'],
   scheiding:    ['Polissen splitsen','ORV aanpassen','Woonhuisverzekering','BKR-check','Budgetanalyse'],
-  huis_kopen:   ['Hypotheekadvies (CHF/GHF 2026)','NHG-check (max. € 450.000)','ORV','Woonhuisverzekering','Notaris/kosten koper'],
+  huis_kopen:   ['Hypotheekadvies (CHF/GHF 2026)','NHG-check (max. € 470.000 in 2026)','ORV','Woonhuisverzekering','Notaris/kosten koper'],
   huis_verkopen:['Overwaarde bepalen','Bijleenregeling','Restschuld afhandeling','Verhuiskosten','Dubbele lasten analyse'],
   pensioen:     ['AOW-datum & pensioeninkomen','Pensioenkloof berekenen','Jaarruimte jaarraad','Box 3 optimalisatie','Onttrekkingsstrategie'],
   nieuwe_baan:  ['Pensioenregeling vergelijken','Collectieve verzekeringen','Salaris onderhandelen','WW-rechten check'],
@@ -1057,19 +1059,53 @@ calcGp();
 // ═══════════════════════════════════════════════════════════
 // 6 — NETTO BESTEEDBAAR 2026
 //
-// GECORRIGEERDE BEREKENING t.o.v. origineel:
-// ✅ Box 1 tarief schijf 1: 35,82% (2026, was 35,75%)
-// ✅ Box 1 tarief schijf 2: 49,5%
-// ✅ Schijfgrens: € 38.441 (2026)
-// ✅ AHK 2026: max € 3.204 (afbouw 6,337% boven € 24.813)
-// ✅ Arbeidskorting 2026: max € 5.599, afbouw 6,51% boven € 43.071
-// ✅ EWF 2026: gestaffeld (zie tabel)
-// ✅ HRA-aftrekplafond: 35,75% (schijf 1-tarief na aftrekbeperking)
-// ✅ Wet Hillen 2026: 73,33% van positief EWF-saldo aftrekbaar
-// ✅ AOW-correctie: 55+ geboortekorting schijf 1 (17,9%)
+// Parameters 2026 (Belastingdienst, voorlopige aanslag / Fiscale info 2026):
+// - Box 1 (geboren vanaf 1946): 35,75% tot € 38.883 · 37,56% tot € 78.426 · 49,50% daarboven
+//   AOW-leeftijd: schijf 1 17,85% (geboren vóór 1946: schijfgrens € 41.123)
+// - Belastbaar inkomen = inkomen + eigenwoningforfait − hypotheekrente (+ Hillen-aftrek) − lijfrentepremie
+// - Wet Hillen 2026: 71,867% × (EWF − aftrekbare rente), alleen als EWF > rente (aftrek van het inkomen)
+// - Tariefmaatregel: hypotheekrenteaftrek tegen maximaal 37,56%
+// - AHK: max € 3.115, afbouw 6,398% boven € 29.736 (AOW: € 1.556 / 3,195%)
+// - Arbeidskorting: max € 5.685, afbouw 6,51% boven € 45.592 (AOW: max € 2.840)
+// - Ouderenkorting € 2.067 (afbouw 15% boven € 46.002), alleenstaande ouderenkorting € 540
+// - AOW-leeftijd uit geboortedatum: 67 jaar; geboren vanaf 1-1-1961: 67 jaar en 3 maanden
+//   (2032 en later nog niet vastgesteld → indicatief 67 jaar en 3 maanden)
 // ═══════════════════════════════════════════════════════════
 
-// EWF staffel 2026 (uit geheugen/project)
+// AOW-leeftijd (in maanden) op basis van geboortedatum
+function aowLeeftijdMnd(gebDatum){
+  const d = gebDatum instanceof Date ? gebDatum : new Date(gebDatum);
+  if(isNaN(d.getTime())) return 67*12;
+  // vóór 1 januari 1961 geboren: AOW-leeftijd 67 (bereikt t/m 2027)
+  if(d < new Date(1961, 0, 1)) return 67*12;
+  // AOW-leeftijd 2028–2031: 67 jaar en 3 maanden (2032+ nog niet vastgesteld: indicatief gelijk)
+  return 67*12 + 3;
+}
+function aowDatumVan(gebDatum){
+  const d = gebDatum instanceof Date ? new Date(gebDatum) : new Date(gebDatum);
+  if(isNaN(d.getTime())) return null;
+  const m = aowLeeftijdMnd(d);
+  return new Date(d.getFullYear() + Math.floor(m/12), d.getMonth() + (m%12), d.getDate());
+}
+function aowLeeftijdTekst(gebDatum){
+  const m = aowLeeftijdMnd(gebDatum);
+  return Math.floor(m/12) + ' jaar' + (m%12 ? ' en ' + (m%12) + ' maanden' : '');
+}
+function aowVastgesteld(gebDatum){
+  const d = gebDatum instanceof Date ? gebDatum : new Date(gebDatum);
+  return isNaN(d.getTime()) || d < new Date(1964, 9, 1);
+}
+// Deel van 2026 (in maanden/12) waarin de AOW-leeftijd al bereikt is
+function aowFractie2026(gebDatum){
+  const a = aowDatumVan(gebDatum);
+  if(!a) return 0;
+  if(a <= new Date(2026, 0, 1)) return 1;
+  if(a.getFullYear() > 2026) return 0;
+  // vanaf de maand ná het bereiken (AOW gaat in op de dag van bereiken; benadering per maand)
+  return (12 - a.getMonth() - (a.getDate() > 1 ? 1 : 0)) / 12;
+}
+
+// EWF staffel 2026 (Belastingdienst)
 function berekenEWF(woz){
   if(woz<=12500)    return 0;
   if(woz<=25000)    return Math.round(woz*0.001);
@@ -1079,100 +1115,133 @@ function berekenEWF(woz){
   return Math.round(4725 + (woz-1350000)*0.0235);
 }
 
+// Kern: box 1-berekening 2026 voor één situatie (aow = true/false)
+// (parameters lokaal: functie wordt ook vóór dit scriptdeel aangeroepen door het klantprofiel)
+function ib2026(o){
+  const P = {
+    GRENS1: 38883, GRENS1_VOOR1946: 41123, GRENS2: 78426,
+    T1: 0.3575, T1_AOW: 0.1785, T2: 0.3756, T3: 0.495,
+    MAX_AFTREK: 0.3756, HILLEN: 0.71867
+  };
+  const bruto = Math.max(0, o.bruto||0);
+  const ewf   = o.woning === 'koop' ? berekenEWF(o.woz||0) : 0;
+  const rente = o.woning === 'koop' ? Math.max(0, o.rente||0) : 0;
+  const jr    = Math.max(0, o.jr||0);
+  const aow   = !!o.aow;
+  const grens1 = o.voor1946 ? P.GRENS1_VOOR1946 : P.GRENS1;
+
+  // Inkomsten eigen woning (+ Hillen-aftrek)
+  const ewSaldo = ewf - rente;                                   // + = bijtelling, − = aftrek
+  const hillen  = ewSaldo > 0 ? Math.round(ewSaldo * P.HILLEN) : 0;
+  const ewInk   = ewSaldo - hillen;
+
+  const belastbaar = Math.max(0, bruto + ewInk - jr);
+
+  const s1 = Math.min(belastbaar, grens1);
+  const s2 = Math.max(0, Math.min(belastbaar, P.GRENS2) - grens1);
+  const s3 = Math.max(0, belastbaar - P.GRENS2);
+  const t1 = aow ? P.T1_AOW : P.T1;
+  const ib1 = Math.round(s1 * t1);
+  const ib2 = Math.round(s2 * P.T2);
+  const ib3 = Math.round(s3 * P.T3);
+
+  // Tariefmaatregel: negatieve inkomsten eigen woning max. tegen 37,56%
+  const tariefCorr = ewInk < 0 ? Math.round(Math.min(-ewInk, s3) * (P.T3 - P.MAX_AFTREK)) : 0;
+
+  // Algemene heffingskorting (afbouw o.b.v. belastbaar inkomen box 1)
+  const ahkMax = aow ? 1556 : 3115, ahkPct = aow ? 0.03195 : 0.06398;
+  const ahk = belastbaar >= P.GRENS2 ? 0 : Math.max(0, Math.round(ahkMax - Math.max(0, belastbaar - 29736) * ahkPct));
+
+  // Arbeidskorting (o.b.v. arbeidsinkomen)
+  let arbK;
+  const x = bruto;
+  if(!aow){
+    if(x <= 11965)       arbK = x * 0.08324;
+    else if(x <= 25845)  arbK = 996 + (x - 11965) * 0.31009;
+    else if(x <= 45592)  arbK = 5300 + (x - 25845) * 0.01950;
+    else if(x <= 132920) arbK = 5685 - (x - 45592) * 0.0651;
+    else arbK = 0;
+  } else {
+    if(x <= 11965)       arbK = x * 0.04156;
+    else if(x <= 25845)  arbK = 498 + (x - 11965) * 0.15483;
+    else if(x <= 45592)  arbK = 2647 + (x - 25845) * 0.00974;
+    else if(x <= 132920) arbK = 2840 - (x - 45592) * 0.0325;
+    else arbK = 0;
+  }
+  arbK = Math.max(0, Math.round(arbK));
+
+  // Ouderenkorting (verzamelinkomen ≈ belastbaar box 1) en alleenstaande ouderenkorting
+  const ouderK = aow ? Math.max(0, Math.round(2067 - Math.max(0, belastbaar - 46002) * 0.15)) : 0;
+  const aoK    = aow && !o.partner ? 540 : 0;
+
+  const brutoIB = ib1 + ib2 + ib3 + tariefCorr;
+  const kortingen = Math.min(brutoIB, ahk + arbK + ouderK + aoK);
+  const totIB = Math.max(0, brutoIB - kortingen);
+  return {bruto, ewf, rente, hillen, ewInk, jr, belastbaar, grens1, t1, s1, s2, s3, ib1, ib2, ib3,
+          tariefCorr, ahk, arbK, ouderK, aoK, kortingen, totIB, aow};
+}
+
+// Mengt een niet-AOW- en een AOW-berekening naar rato van de maanden in 2026
+function ib2026Jaar(o){
+  const f = o.aowFractie||0;
+  if(f <= 0) return ib2026({...o, aow:false});
+  if(f >= 1) return ib2026({...o, aow:true});
+  const a = ib2026({...o, aow:false}), b = ib2026({...o, aow:true});
+  const r = {...a, aow:'deels', fractie:f};
+  ['ib1','ib2','ib3','tariefCorr','ahk','arbK','ouderK','aoK','kortingen','totIB'].forEach(k=>{ r[k] = Math.round(a[k]*(1-f) + b[k]*f); });
+  r.t1 = a.t1*(1-f) + b.t1*f;
+  return r;
+}
+
 // Netto jaarberekening (gebruikt ook door klantprofiel)
 function berekenNettoJaar(bruto, lft=40, woning='huur', woz=0, hra=0, jr=0){
   lft = parseInt(lft)||40;
-  const aow = lft >= 67;
-
-  // BOX 1 BELASTING 2026
-  const GRENS1 = 38441;
-  const T1     = aow ? 0.1790 : 0.3582;  // AOW-gerechtigden betalen geen AOW-premie in schijf 1
-  const T2     = 0.495;
-
-  const ib1 = Math.round(Math.min(bruto, GRENS1) * T1);
-  const ib2 = Math.round(Math.max(0, bruto - GRENS1) * T2);
-
-  // HEFFINGSKORTINGEN 2026
-  // Algemene heffingskorting: max € 3.204, afbouw 6,337% boven € 24.813
-  const AHK_MAX   = 3204;
-  const AHK_GRENS = 24813;
-  const AHK_PCT   = 0.06337;
-  const ahk = Math.max(0, Math.round(AHK_MAX - Math.max(0, bruto - AHK_GRENS) * AHK_PCT));
-
-  // Arbeidskorting 2026: opbouw 8,425% t/m € 11.491 (max),
-  // daarna vast max € 5.599 t/m € 43.071, afbouw 6,51% daarboven
-  const ARB_MAX   = 5599;
-  const ARB_AFBOUW_GRENS = 43071;
-  const ARB_AFBOUW_PCT   = 0.0651;
-  let arbK;
-  if(bruto <= 11491)       arbK = Math.round(bruto * 0.08425);   // opbouwfase
-  else if(bruto <= 43071)  arbK = ARB_MAX;                       // plateau
-  else arbK = Math.max(0, Math.round(ARB_MAX - (bruto - ARB_AFBOUW_GRENS) * ARB_AFBOUW_PCT));
-
-  // EWF & HRA
-  const ewf    = woning === 'koop' ? berekenEWF(woz)  : 0;
-  const hraCap = Math.round(hra * 0.3575);  // HRA-aftrekplafond 35,75%
-
-  // Wet Hillen 2026: 73,33% van positief saldo (EWF > HRA) als aftrek
-  const hillenSaldo = Math.max(0, ewf - hra);
-  const hillenAftrek = woning === 'koop' ? Math.round(hillenSaldo * 0.7333) : 0;
-
-  // Jaarruimte aftrek (max tarief schijf 1)
-  const jrAftrek = Math.round(jr * T1);
-
-  // Totale belasting
-  const totIB = Math.max(0, ib1 + ib2 - ahk - arbK - hraCap - jrAftrek);
-
-  return bruto - totIB;
+  const r = ib2026Jaar({bruto, woning, woz, rente:hra, jr, aowFractie: lft >= 67 ? 1 : 0});
+  return bruto - r.totIB;
 }
 
 function calcNb(){
   const bruto   = parseInt(document.getElementById('nbInk').value)||60000;
-  const lft     = parseInt(document.getElementById('nbLeeftijd').value)||42;
+  const gebStr  = document.getElementById('nbGeb').value || '1984-01-01';
+  const gebDat  = new Date(gebStr);
   const woning  = document.getElementById('nbWoning').value;
-  const woz     = parseFloat(document.getElementById('nbWoz').value)||400000;
-  const hra     = parseFloat(document.getElementById('nbHra').value)||12000;
+  const woz     = parseFloat(document.getElementById('nbWoz').value)||0;
+  const hraIn   = document.getElementById('nbHra').value;
+  const hra     = hraIn === '' ? 12000 : (parseFloat(hraIn)||0);
   const jr      = parseFloat(document.getElementById('nbJr').value)||0;
+  const partner = document.getElementById('nbPartner').value === 'ja';
 
   document.getElementById('nbInkV').textContent = fmt(bruto);
 
-  const aow    = lft >= 67;
-  const GRENS1 = 38441;
-  const T1     = aow ? 0.1790 : 0.3582;
-  const T2     = 0.495;
+  const geldig  = !isNaN(gebDat.getTime());
+  const lft     = geldig ? (2026 - gebDat.getFullYear()) : 42;   // leeftijd in 2026
+  const aowDat  = geldig ? aowDatumVan(gebDat) : null;
+  const f       = geldig ? aowFractie2026(gebDat) : 0;
+  const voor1946 = geldig && gebDat < new Date(1946, 0, 1);
 
-  const ib1    = Math.round(Math.min(bruto, GRENS1) * T1);
-  const ib2    = Math.round(Math.max(0, bruto - GRENS1) * T2);
+  const o = {bruto, woning, woz, rente:hra, jr, partner, voor1946, aowFractie:f};
+  const r = ib2026Jaar(o);
+  const zonderRente = ib2026Jaar({...o, rente:0});
+  const hraVoordeel = woning === 'koop' ? Math.max(0, zonderRente.totIB - r.totIB) : 0;
 
-  const AHK_MAX = 3204; const AHK_GRENS = 24813; const AHK_PCT = 0.06337;
-  const ahk     = Math.max(0, Math.round(AHK_MAX - Math.max(0, bruto - AHK_GRENS) * AHK_PCT));
-
-  const ARB_MAX = 5599; const ARB_AFB_G = 43071; const ARB_AFB_P = 0.0651;
-  let arbK;
-  if(bruto <= 11491)      arbK = Math.round(bruto * 0.08425);
-  else if(bruto <= 43071) arbK = ARB_MAX;
-  else arbK = Math.max(0, Math.round(ARB_MAX - (bruto - ARB_AFB_G) * ARB_AFB_P));
-
-  const ewf       = woning === 'koop' ? berekenEWF(woz) : 0;
-  const hraCap    = Math.round(hra * 0.3575);
-  const hillenSaldo  = Math.max(0, ewf - hra);
-  const hillenAftrek = woning === 'koop' ? Math.round(hillenSaldo * 0.7333) : 0;
-  const jrAftrek  = Math.round(jr * T1);
-
-  const totIB     = Math.max(0, ib1 + ib2 - ahk - arbK - hraCap - hillenAftrek - jrAftrek);
+  const totIB     = r.totIB;
   const nettJr    = bruto - totIB;
   const nettMnd   = Math.round(nettJr / 12);
-  const effTarief = Math.round(totIB / bruto * 100);
+  const effTarief = bruto > 0 ? Math.round(totIB / bruto * 100) : 0;
+  const pct = v => (v*100).toFixed(2).replace('.',',') + '%';
+  const aowTxt = f >= 1 ? 'AOW-tarief schijf 1 (17,85%)' : f > 0 ? `AOW-leeftijd bereikt in 2026 (${Math.round(f*12)} mnd AOW-tarief)` : 'Volledig tarief schijf 1 (35,75%)';
+  const aowDatTxt = aowDat ? aowDat.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}) : '–';
+  const ewf = r.ewf;
 
   document.getElementById('nbResult').innerHTML = `
     <div class="result-hero">
       <div class="rh-eyebrow">Netto maandinkomen (indicatief)</div>
       <div class="rh-value">${fmt(nettMnd)}</div>
-      <div class="rh-caption">Netto/jaar: ${fmt(nettJr)} · Effectief tarief: ${effTarief}% · ${aow?'AOW-tarief schijf 1':'Volledig tarief schijf 1'}</div>
+      <div class="rh-caption">Netto/jaar: ${fmt(nettJr)} · Effectief tarief: ${effTarief}% · ${aowTxt}</div>
     </div>
     <div class="kpi-grid">
       <div class="kpi"><div class="kpi-label">IB-heffing</div><div class="kpi-value kv-red">${fmt(totIB)}</div></div>
-      <div class="kpi"><div class="kpi-label">HRA-voordeel</div><div class="kpi-value kv-green">${fmt(hraCap)}</div></div>
+      <div class="kpi"><div class="kpi-label">HRA-voordeel</div><div class="kpi-value kv-green">${fmt(hraVoordeel)}</div></div>
       <div class="kpi"><div class="kpi-label">Eff. tarief</div><div class="kpi-value kv-amber">${effTarief}%</div></div>
     </div>
     <div class="card">
@@ -1180,21 +1249,29 @@ function calcNb(){
       <div class="card-body">
         <table class="data-table">
           <tr><th>Post</th><th class="right">Bedrag</th></tr>
-          <tr><td>Box 1 schijf 1 (${aow?'17,90%':'35,82%'}) over ${fmt(Math.min(bruto,GRENS1))}</td><td class="right">${fmt(ib1)}</td></tr>
-          ${bruto>GRENS1?`<tr><td>Box 1 schijf 2 (49,5%) over ${fmt(bruto-GRENS1)}</td><td class="right">${fmt(ib2)}</td></tr>`:''}
-          <tr><td style="color:var(--green);">Algemene heffingskorting</td><td class="right td-green">−${fmt(ahk)}</td></tr>
-          <tr><td style="color:var(--green);">Arbeidskorting</td><td class="right td-green">−${fmt(arbK)}</td></tr>
-          ${hra>0?`<tr><td style="color:var(--green);">HRA voordeel (35,75% plafond)</td><td class="right td-green">−${fmt(hraCap)}</td></tr>`:''}
-          ${hillenAftrek>0?`<tr><td style="color:var(--green);">Wet Hillen 2026 (73,33%)</td><td class="right td-green">−${fmt(hillenAftrek)}</td></tr>`:''}
-          ${jrAftrek>0?`<tr><td style="color:var(--green);">Jaarruimte-aftrek</td><td class="right td-green">−${fmt(jrAftrek)}</td></tr>`:''}
+          <tr><td>Bruto inkomen uit werk</td><td class="right">${fmt(bruto)}</td></tr>
+          ${woning==='koop'?`<tr><td>+ Eigenwoningforfait (WOZ ${fmt(woz)})</td><td class="right">${fmt(ewf)}</td></tr>
+          <tr><td>− Aftrekbare hypotheekrente</td><td class="right">−${fmt(r.rente)}</td></tr>
+          ${r.hillen>0?`<tr><td style="color:var(--green);">− Wet Hillen-aftrek 2026 (71,867% × ${fmt(ewf - r.rente)})</td><td class="right td-green">−${fmt(r.hillen)}</td></tr>`:''}`:''}
+          ${jr>0?`<tr><td>− Lijfrentepremie (jaarruimte)</td><td class="right">−${fmt(jr)}</td></tr>`:''}
+          <tr><td><strong>Belastbaar inkomen box 1</strong></td><td class="right"><strong>${fmt(r.belastbaar)}</strong></td></tr>
+          <tr><td>Schijf 1 (${f>=1?'17,85%':f>0?'35,75% / 17,85%':'35,75%'}) over ${fmt(r.s1)}</td><td class="right">${fmt(r.ib1)}</td></tr>
+          ${r.s2>0?`<tr><td>Schijf 2 (37,56%) over ${fmt(r.s2)}</td><td class="right">${fmt(r.ib2)}</td></tr>`:''}
+          ${r.s3>0?`<tr><td>Schijf 3 (49,50%) over ${fmt(r.s3)}</td><td class="right">${fmt(r.ib3)}</td></tr>`:''}
+          ${r.tariefCorr>0?`<tr><td>Beperking renteaftrek tot 37,56% (tariefmaatregel)</td><td class="right">${fmt(r.tariefCorr)}</td></tr>`:''}
+          <tr><td style="color:var(--green);">Algemene heffingskorting</td><td class="right td-green">−${fmt(r.ahk)}</td></tr>
+          <tr><td style="color:var(--green);">Arbeidskorting</td><td class="right td-green">−${fmt(r.arbK)}</td></tr>
+          ${r.ouderK>0?`<tr><td style="color:var(--green);">Ouderenkorting</td><td class="right td-green">−${fmt(r.ouderK)}</td></tr>`:''}
+          ${r.aoK>0?`<tr><td style="color:var(--green);">Alleenstaande ouderenkorting</td><td class="right td-green">−${fmt(r.aoK)}</td></tr>`:''}
           <tr><td><strong>Totale inkomstenbelasting</strong></td><td class="right"><strong>${fmt(totIB)}</strong></td></tr>
           <tr><td style="font-weight:700;color:var(--navy);">Netto jaarinkomen</td><td class="right"><strong style="color:var(--green);">${fmt(nettJr)}</strong></td></tr>
         </table>
         ${ewf>0?`<div style="margin-top:10px;font-size:11.5px;color:var(--muted);padding:8px 10px;background:var(--gray);border-radius:var(--radius);">
-          EWF 2026 (WOZ ${fmt(woz)}): <strong>${fmt(ewf)}</strong>/jr · HRA: <strong>${fmt(hra)}</strong>/jr · 
-          ${hra>=ewf?'<span style="color:var(--green);">HRA > EWF → Wet Hillen niet van toepassing</span>':'<span style="color:var(--amber);">EWF > HRA → Hillen-aftrek: '+fmt(hillenAftrek)+'</span>'}
+          EWF 2026 (WOZ ${fmt(woz)}): <strong>${fmt(ewf)}</strong>/jr · Hypotheekrente: <strong>${fmt(r.rente)}</strong>/jr ·
+          ${r.rente>=ewf?'<span style="color:var(--green);">Rente ≥ EWF → Wet Hillen niet van toepassing</span>':'<span style="color:var(--amber);">EWF > rente → Hillen-aftrek: '+fmt(r.hillen)+' (van het inkomen)</span>'}
         </div>`:''}
-        ${al('neutral','ℹ️','Indicatieve berekening 2026','Gebaseerd op gepubliceerde belastingparameters 2026. Geen rekening gehouden met bijzondere situaties, middelingsregeling of box 2/3 vermogen.')}
+        <div style="margin-top:8px;font-size:11.5px;color:var(--muted);">Leeftijd in 2026: ${lft} jaar · AOW-leeftijd ${geldig?aowLeeftijdTekst(gebDat):'67 jaar'} → AOW-datum ${aowDatTxt}${geldig&&!aowVastgesteld(gebDat)?' (indicatief: AOW-leeftijd vanaf 2032 nog niet vastgesteld)':''}</div>
+        ${al('neutral','ℹ️','Indicatieve berekening 2026','Gebaseerd op belastingparameters 2026 (Belastingdienst). Heffingskortingen zijn niet hoger dan de verschuldigde belasting; premie/kortingsverdeling, middelingsregeling, box 2/3 en toeslagen zijn niet meegenomen.')}
       </div>
     </div>`;
 }

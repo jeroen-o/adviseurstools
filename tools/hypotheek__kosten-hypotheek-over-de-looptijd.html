@@ -204,7 +204,14 @@
           <select id="hvS">
             <option value="0">Geen aftrek</option>
             <option value="35.75" selected>Schijf 1 — 35,75%</option>
-            <option value="37.56">Schijf 2 — 37,56%</option>
+            <option value="37.56">Schijf 2 of hoger — 37,56% (max. 2026)</option>
+          </select>
+        </div>
+        <div class="hv-fl" style="grid-column:span 2">
+          <label for="hvAv">Renteaftrek aflossingsvrij</label>
+          <select id="hvAv">
+            <option value="0" selected>Lening aangegaan vanaf 2013 — geen aftrek</option>
+            <option value="1">Overgangsrecht (lening vóór 2013) — wel aftrek</option>
           </select>
         </div>
       </div>
@@ -279,10 +286,12 @@ function fk(v) {
 }
 
 /* ─── Berekening ─────────────────────────────────────────── */
-function calc(bedrag, rj, jr, apc) {
+function calc(bedrag, rj, jr, apc, avAftrek) {
   var n   = jr * 12;
   var r   = rj / 100 / 12;
   var aft = apc / 100;
+  /* Aflossingsvrij: sinds 1-1-2013 alleen renteaftrek bij overgangsrecht (bestaande eigenwoningschuld per 31-12-2012) */
+  var aftA = avAftrek ? aft : 0;
   var alin = bedrag / n;
   var ann  = (r === 0) ? bedrag / n
              : bedrag * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
@@ -291,7 +300,7 @@ function calc(bedrag, rj, jr, apc) {
   var rL=bedrag, rN=bedrag, cA=0, cL=0, cN=0;
 
   for(var m=0; m<n; m++){
-    var ra=bedrag*r,  na=ra*(1-aft);  cA+=na;
+    var ra=bedrag*r,  na=ra*(1-aftA); cA+=na;
     A.push({br:ra, nr:na, bm:ra,        rs:bedrag,       cr:cA});
 
     var rl=rL*r,      nl=rl*(1-aft);  cL+=nl; rL-=alin;
@@ -449,8 +458,9 @@ function render(){
   var rj     = parseFloat(document.getElementById('hvR').value) || 4.2;
   var jr     = parseInt(document.getElementById('hvL').value)   || 30;
   var apc    = parseFloat(document.getElementById('hvS').value) || 0;
+  var avAft  = document.getElementById('hvAv').value === '1';
 
-  var res = calc(bedrag, rj, jr, apc);
+  var res = calc(bedrag, rj, jr, apc, avAft);
   var A=res.A, L=res.L, N=res.N, ann=res.ann, n=res.n;
 
   var tbA=sum(A,'br'), tbL=sum(L,'br'), tbN=sum(N,'br');
@@ -480,9 +490,13 @@ function render(){
   /* Note */
   var besp = tnA - tnL;
   document.getElementById('hvNote').innerHTML =
-    '<strong>Fiscale toelichting:</strong> Hypotheekrente is aftrekbaar in box\u00a01 tot maximaal het tarief van schijf\u00a01 (35,75% in 2026). ' +
+    '<strong>Fiscale toelichting:</strong> Hypotheekrente is aftrekbaar in box\u00a01 tegen het tarief van uw schijf, maar maximaal 37,56% (2026; schijf\u00a01 35,75%). ' +
+    'Voor leningen die vanaf 1-1-2013 zijn aangegaan geldt renteaftrek alleen als de lening in maximaal 30 jaar ten minste annu\u00eftair (annu\u00efteit of lineair) wordt afgelost. ' +
+    (avAft
+      ? 'Voor het aflossingsvrije deel is <strong>overgangsrecht</strong> gekozen (eigenwoningschuld per 31-12-2012): de rente blijft aftrekbaar, zolang het overgangsrecht geldt (maximaal 30 jaar). '
+      : 'Het aflossingsvrije deel is daarom gerekend <strong>zonder renteaftrek</strong> (netto = bruto). Kies \u2018overgangsrecht\u2019 als de lening al v\u00f3\u00f3r 2013 bestond. ') +
     (apc > 0
-      ? 'Bij '+apc+'% aftrek betaalt u bij lineair <strong>'+f(besp)+'</strong> minder netto rente dan bij aflossingsvrij. '
+      ? 'Bij '+String(apc).replace('.',',')+'% aftrek betaalt u bij lineair <strong>'+f(besp)+'</strong> minder netto rente dan bij aflossingsvrij. '
       : 'Geen belastingaftrek geselecteerd. ') +
     'Let op: bij aflossingsvrij blijft de volledige hoofdsom van <strong>'+f(bedrag)+'</strong> openstaan aan het einde (ballonaflossing).';
 
@@ -528,6 +542,7 @@ function render(){
   document.getElementById(id).addEventListener('input', render);
 });
 document.getElementById('hvS').addEventListener('change', render);
+document.getElementById('hvAv').addEventListener('change', render);
 
 /* herteken bij resize */
 var rzTimer;
@@ -554,6 +569,8 @@ document.getElementById('hvPrint').addEventListener('click', function(){
     var lo = document.getElementById('hvL').value;
     var sel = document.getElementById('hvS');
     var schijf = sel.options[sel.selectedIndex].text;
+    var avSel = document.getElementById('hvAv');
+    schijf += ' \u00b7 aflossingsvrij: ' + avSel.options[avSel.selectedIndex].text;
 
     var pw = window.open('','_blank','width=960,height=840,scrollbars=yes');
     if(!pw){
