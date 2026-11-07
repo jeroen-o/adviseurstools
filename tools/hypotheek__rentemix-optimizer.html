@@ -475,6 +475,47 @@ footer{
   </div>
 </div>
 
+<!-- ====================== OVERIGE TOETSFACTOREN ====================== -->
+<div class="card">
+  <h2>Energielabel en verplichtingen <span style="font-weight:400;color:#888;font-size:13px;text-transform:none;letter-spacing:0">(voor de maximale hypotheek)</span></h2>
+  <div class="grid grid-3">
+    <div class="field">
+      <label for="energielabel">Energielabel woning (aankoop)</label>
+      <select id="energielabel" onchange="run()">
+        <option value="0" selected>E, F of G (€ 0)</option>
+        <option value="5000">C of D (+ € 5.000)</option>
+        <option value="10000">A of B (+ € 10.000)</option>
+        <option value="20000">A+ of A++ (+ € 20.000)</option>
+        <option value="25000">A+++ (+ € 25.000)</option>
+        <option value="30000">A++++ (+ € 30.000)</option>
+        <option value="40000">A++++ met energieprestatiegarantie ≥ 10 jaar (+ € 40.000)</option>
+        <option value="10000">Geen geldig energielabel (+ € 10.000)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="vDuo">Studieschuld <span class="hint">werkelijke DUO-termijn/mnd</span></label>
+      <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vDuo" value="0" min="0" step="10"></div>
+    </div>
+    <div class="field">
+      <label for="vKrediet">Consumptief krediet <span class="hint">kredietlimiet (2%/mnd)</span></label>
+      <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vKrediet" value="0" min="0" step="500"></div>
+    </div>
+    <div class="field">
+      <label for="vAlimentatie">Partneralimentatie <span class="hint">/mnd, niet gebruteerd</span></label>
+      <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vAlimentatie" value="0" min="0" step="50"></div>
+    </div>
+    <div class="field">
+      <label for="vErfpacht">Erfpachtcanon <span class="hint">/jaar, niet gebruteerd</span></label>
+      <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vErfpacht" value="0" min="0" step="100"></div>
+    </div>
+    <div class="field">
+      <label for="vOverig">Overige niet-aftrekbare lasten <span class="hint">/mnd, gebruteerd</span></label>
+      <div class="input-prefix"><span>€</span><input type="number" inputmode="numeric" id="vOverig" value="0" min="0" step="50"></div>
+    </div>
+  </div>
+  <p class="muted" style="margin:10px 0 0;font-size:11px">Trhk 2026: de bruto maandlast van verplichtingen gaat af van de toegestane financieringslast. Studieschuld en overige niet-aftrekbare lasten × bruteringsfactor bij de gewogen toetsrente (1,05–1,40); krediet 2% van de limiet per maand; partneralimentatie en erfpachtcanon zijn aftrekbaar en worden niet gebruteerd. Alleenstaandenbedrag € 17.000: automatisch bij één aanvrager en een toetsinkomen boven € 30.000 (niet-AOW-tabel) of € 29.000 (AOW-tabel).</p>
+</div>
+
 <!-- ====================== BESTAANDE LENINGDELEN ====================== -->
 <div class="card">
   <h2>Bestaande leningdelen <span style="font-weight:400;color:#888;font-size:13px;text-transform:none;letter-spacing:0">(optioneel — voor doorstromers met meeneem-hypotheek)</span></h2>
@@ -584,7 +625,7 @@ details[open] > summary .info-marker{transform:rotate(90deg)}
 
 <footer>
   <b>Bron:</b> Tijdelijke regeling hypothecair krediet (Trhk) bijlage 1 — Financieringslastpercentages 2026, AFM toetsrente (Q1 2026 default 5,000%, instelbaar in de tool).<br>
-  <b>Disclaimer:</b> Indicatief op basis van CHF 2026 normtabellen. Geldverstrekkers kunnen aanvullende eisen stellen (NHG, LTV, financiële verplichtingen, passendheid). Toets altijd aan eigen acceptatiekaders en Wft-eisen.
+  <b>Disclaimer:</b> Indicatief op basis van de financieringslasttabellen 2026 (Trhk, bijlage 1). Geldverstrekkers kunnen aanvullende eisen stellen (NHG, LTV, financiële verplichtingen, passendheid). Toets altijd aan eigen acceptatiekaders en Wft-eisen.
 </footer>
 
 </div>
@@ -734,41 +775,59 @@ function fmtDatumNL(d){
 function getWoonquota(inkomen, kolom_idx, tabel){
   const data = CHF_2026[tabel];
   if(!data) return 0;
+  // Rij van het naastlagere inkomen per € 1.000 (geen interpolatie); onder minimum laagste rij, boven maximum hoogste rij
   const incRounded = Math.floor(inkomen/1000)*1000;
   const incomes = Object.keys(data).map(Number).sort((a,b)=>a-b);
-  const minInc = incomes[0], maxInc = incomes[incomes.length-1];
-  let lookup = incRounded;
-  if(lookup < minInc) lookup = minInc;
-  if(lookup > maxInc) lookup = maxInc;
-  if(data[lookup]){
-    const next = lookup + 1000;
-    if(data[next] && inkomen > lookup && inkomen < next){
-      const frac = (inkomen - lookup) / 1000;
-      return data[lookup][kolom_idx] + (data[next][kolom_idx] - data[lookup][kolom_idx])*frac;
-    }
-    return data[lookup][kolom_idx];
-  }
-  return 0;
+  let lookup = incomes[0];
+  for(const k of incomes){ if(k <= incRounded) lookup = k; }
+  return data[lookup] ? data[lookup][kolom_idx] : 0;
 }
 
+// Bruteringsfactor studieschuld (Trhk 2026 art. 3a) op de toetsrente
+function bruteringsFactor(r){
+  r = round3(r);
+  const t = [[1.5,1.05],[2.0,1.05],[2.5,1.10],[3.0,1.15],[3.5,1.20],[4.0,1.20],[4.5,1.25],[5.0,1.30],[5.5,1.30],[6.0,1.35],[6.5,1.40]];
+  for(const [g,f] of t){ if(r <= g + 1e-9) return f; }
+  return 1.40;
+}
+function leesVerplichtingen(){
+  const v = id => { const el = document.getElementById(id); return el ? (parseFloat(el.value)||0) : 0; };
+  return {duo: v("vDuo"), krediet: v("vKrediet"), alim: v("vAlimentatie"), erfpacht: v("vErfpacht"), overig: v("vOverig"), label: v("energielabel")};
+}
+// Bruto maandlast verplichtingen (Trhk 2026, box 1)
+function verplichtingenMaand(rente){
+  const o = leesVerplichtingen(), f = bruteringsFactor(rente);
+  return {totaal: o.duo*f + o.krediet*0.02 + o.alim + o.erfpacht/12 + o.overig*f, factor: f};
+}
 function berekenMaxHypotheek(inkomen, leeftijdsfase, annuiteitRente, kolom){
   if(inkomen <= 0) return null;
   const wq = getWoonquota(inkomen, kolom.idx, leeftijdsfase);
   if(!wq) return null;
-  const maxMaandlast = inkomen * (wq/100) / 12;
+  const brutoMaandlast = inkomen * (wq/100) / 12;
+  const verpl = verplichtingenMaand(annuiteitRente);
+  const maxMaandlast = Math.max(0, brutoMaandlast - verpl.totaal);
   const r = (annuiteitRente/100)/12;
   const n = 360;
   const ann = (r === 0) ? 1/n : (r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1);
-  return {wq, maxMaandlast, maxHyp: maxMaandlast/ann};
+  // Alleenstaandenbedrag (art. 3 lid 8): één aanvrager én toetsinkomen > € 30.000 (niet-AOW) / € 29.000 (AOW-tabel)
+  const alleenstaand = (!aanvrager2Actief && inkomen > (leeftijdsfase === "welAOW" ? 29000 : 30000)) ? 17000 : 0;
+  const label = leesVerplichtingen().label;
+  const basis = maxMaandlast/ann;
+  return {wq, brutoMaandlast, verplMaand: verpl.totaal, factor: verpl.factor, maxMaandlast, basis, alleenstaand, label, maxHyp: basis + alleenstaand + label};
 }
 
 // Bepaalt op basis van aanvragers welke leeftijdsfase actueel is
+// Tabelkeuze (Trhk art. 3 lid 7): heeft één van beide de AOW-leeftijd bereikt, dan geldt de tabel
+// van de aanvrager met het hoogste toetsinkomen. lijst: [{inkomen, aow}]
+function faseVoor(lijst){
+  if(!lijst.length) return "nietAOW";
+  let hoogste = lijst[0];
+  for(const p of lijst){ if(p.inkomen > hoogste.inkomen) hoogste = p; }
+  return hoogste.aow ? "welAOW" : "nietAOW";
+}
 function bepaalLeeftijdsfase(){
-  // Beide aanvragers AOW bereikt → welAOW
-  // Anders nietAOW (jongste bepaalt)
-  const actief = aanvrager2Actief ? aanvragers : [aanvragers[0]];
-  const allenAow = actief.every(a => isAowBereikt(a));
-  return allenAow ? "welAOW" : "nietAOW";
+  const actief = aanvrager2Actief ? aanvragers.slice(0,2) : [aanvragers[0]];
+  return faseVoor(actief.map(a => { const st = pensioenStatus(a); return {inkomen: st.aow ? (st.pensioen||0) : st.inkomen, aow: st.aow}; }));
 }
 
 function totaalToetsinkomen(){
@@ -1225,7 +1284,7 @@ function run(){
     if(calc && pensioentoetsActief){
       // Toets 2 — inkomen vanaf AOW voor wie de pensioentoets geldt, met de AOW-tabel (welAOW) als alle aanvragers in die situatie zijn
       inkP = statussen.reduce((s,st) => s + ((st.aow || st.geldt) ? st.pensioen : st.inkomen), 0);
-      faseP = statussen.every(st => st.aow || st.geldt) ? 'welAOW' : 'nietAOW';
+      faseP = faseVoor(statussen.map(st => ({inkomen: (st.aow || st.geldt) ? st.pensioen : st.inkomen, aow: st.aow || st.geldt})));
       calcPensioen = berekenMaxHypotheek(inkP, faseP, target, targetCol);
       if(!calcPensioen) calcPensioen = {wq:0, maxMaandlast:0, maxHyp:0};
     }
@@ -1235,9 +1294,9 @@ function run(){
     if(ontbreekt){
       pensioenRegel = `<div class="banner err" style="margin:12px 0"><span class="icon">!</span><div><b>Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in.</b> Voor ten minste één aanvrager geldt de pensioentoets of is de AOW-leeftijd al bereikt, maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. Er wordt niet met het huidige inkomen gerekend.</div></div>`;
     } else if(pensioentoetsActief){
-      pensioenRegel = `<div style="background:var(--orange-light);border-left:3px solid var(--orange);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin:12px 0"><b style="color:var(--orange)">Pensioentoets (${drempelTxt}): van toepassing</b> — getoetst op ${fmtEur(inkP)} met de ${faseP==='welAOW'?'AOW-tabel (welAOW)':'niet-AOW-tabel (niet alle aanvragers in pensioensituatie)'}: max. ${fmtEur(calcPensioen.maxHyp)} (woonquota ${calcPensioen.wq.toFixed(1).replace('.',',')}%). Huidige situatie: max. ${fmtEur(calc.maxHyp)}. De laagste uitkomst telt${pensioenBepalend?' — het pensioeninkomen is bepalend':''}.</div>`;
+      pensioenRegel = `<div style="background:var(--orange-light);border-left:3px solid var(--orange);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin:12px 0"><b style="color:var(--orange)">Pensioentoets (${drempelTxt}): van toepassing</b> — getoetst op ${fmtEur(inkP)} met de ${faseP==='welAOW'?'AOW-tabel (welAOW)':'niet-AOW-tabel (hoogste toetsinkomen heeft nog geen AOW; Trhk art. 3 lid 7)'}: max. ${fmtEur(calcPensioen.maxHyp)} (woonquota ${calcPensioen.wq.toFixed(1).replace('.',',')}%). Huidige situatie: max. ${fmtEur(calc.maxHyp)}. De laagste uitkomst telt${pensioenBepalend?' — het pensioeninkomen is bepalend':''}.</div>`;
     } else {
-      const aowTxt = statussen.some(st => st.aow) ? ' AOW-leeftijd bereikt: getoetst op pensioeninkomen met de AOW-tabel.' : '';
+      const aowTxt = statussen.some(st => st.aow) ? ` AOW-leeftijd bereikt: getoetst op pensioeninkomen met de ${fase==='welAOW'?'AOW-tabel':'niet-AOW-tabel'} (tabel van de aanvrager met het hoogste toetsinkomen).` : '';
       pensioenRegel = `<div class="muted" style="margin:12px 0;font-size:12px">Pensioentoets (${drempelTxt}): niet van toepassing.${aowTxt}</div>`;
     }
     if(calc && pensioenBepalend) calc = calcPensioen;
@@ -1248,7 +1307,7 @@ function run(){
     if(calc){
       const tweetrapsBanner = pensioenRegel;
       const faseUsed = pensioenBepalend ? faseP : fase;
-      const faseLabel = faseUsed === 'welAOW' ? 'Vanaf AOW (welAOW-tabel)' : 'Tot AOW (nietAOW-tabel)';
+      const faseLabel = faseUsed === 'welAOW' ? 'AOW-tabel (welAOW)' : 'Niet-AOW-tabel (nietAOW)';
       maxHypotheekBlock = `
         ${tweetrapsBanner}
         <div style="margin-top:14px;padding:14px 16px;background:linear-gradient(135deg,#fff,var(--green-light));border:2px solid var(--green);border-radius:var(--radius-lg)">
@@ -1267,10 +1326,11 @@ function run(){
             <div>
               <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.4px;font-weight:700">Max. maandlast</div>
               <div style="font-size:24px;font-weight:700;color:var(--navy);letter-spacing:-0.3px">${fmtEur(calc.maxMaandlast)}</div>
-              <div style="font-size:11px;color:#666">getoetst op ${fmtPct(target)}</div>
+              <div style="font-size:11px;color:#666">na verplichtingen · getoetst op ${fmtPct(target)}</div>
             </div>
           </div>
-          <div class="muted" style="margin-top:10px;font-size:11px">CHF 2026 normtabel · annuïtair 360 mnd · 30-jaars annuïteitsfactor op gewogen toetsrente</div>
+          <div class="muted" style="margin-top:10px;font-size:11px">Opbouw: ${fmtEur(calc.brutoMaandlast)} bruto toegestane last${calc.verplMaand>0?` − ${fmtEur(calc.verplMaand)} verplichtingen (bruteringsfactor ${calc.factor.toFixed(2).replace('.',',')})`:''} → ${fmtEur(calc.basis)}${calc.alleenstaand>0?` + ${fmtEur(calc.alleenstaand)} alleenstaandenbedrag`:''}${calc.label>0?` + ${fmtEur(calc.label)} energielabel`:''}.</div>
+          <div class="muted" style="margin-top:4px;font-size:11px">Trhk 2026 financieringslasttabel (rij naastlagere € 1.000, kolom volgens grenzen) · annuïtair 360 mnd · 30-jaars annuïteitsfactor op gewogen toetsrente</div>
         </div>
       `;
     }
@@ -1344,6 +1404,7 @@ function syncHeroToetsrente(){
   }
 }
 document.getElementById("toetsrente").addEventListener("input", () => { syncHeroToetsrente(); run(); });
+["vDuo","vKrediet","vAlimentatie","vErfpacht","vOverig"].forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener("input", run); });
 syncHeroToetsrente();
 
 renderAanvragers();

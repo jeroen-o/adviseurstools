@@ -524,7 +524,7 @@ font-size: 14px;
 <div class="card-title"><span class="icon">🎯</span> Fiscale situatie</div>
 <div class="form-grid">
 <div class="form-group">
-<label>AOW-gerechtigde? <span class="hint">(67 jaar of ouder)</span></label>
+<label>AOW-gerechtigde aanvrager? <span class="hint">(AOW-leeftijd bereikt; partner volgt uit geboortedatum)</span></label>
 <div class="toggle-group">
 <button type="button" class="toggle-btn active" data-group="aow" data-val="nee" id="btn-aow-nee">Nee</button>
 <button type="button" class="toggle-btn" data-group="aow" data-val="ja" id="btn-aow-ja">Ja</button>
@@ -645,7 +645,7 @@ Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.
 <button type="button" class="toggle-btn" data-group="label" data-val="Aplusplusplus">A+++</button>
 <button type="button" class="toggle-btn" data-group="label" data-val="Aplusplusplusplus">A++++</button>
 <button type="button" class="toggle-btn" data-group="label" data-val="Aplusplusplusplus_garantie">A++++ garantie</button>
-<button type="button" class="toggle-btn" data-group="label" data-val="geen">Geen label</button>
+<button type="button" class="toggle-btn" data-group="label" data-val="geen">Geen geldig label</button>
 </div>
 </div>
 <div id="label-info" class="info-box">
@@ -721,28 +721,28 @@ Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.
 <div class="card-title"><span class="icon">💳</span> Overige financiële verplichtingen</div>
 <div class="form-grid">
 <div class="form-group">
-<label for="kredietMaandlast">Consumptief krediet <span class="hint">(totale maandlast)</span></label>
+<label for="kredietMaandlast">Consumptief krediet: kredietlimiet <span class="hint">(oorspronkelijke limiet/kredietsom; telt mee als 2% per maand)</span></label>
 <div class="input-prefix-group">
 <span class="prefix">€</span>
-<input type="number" id="kredietMaandlast" placeholder="0" min="0" step="50">
+<input type="number" id="kredietMaandlast" placeholder="0" min="0" step="500">
 </div>
 </div>
 <div class="form-group">
-<label for="alimentatieMaandlast">Alimentatie <span class="hint">(maandelijks)</span></label>
+<label for="alimentatieMaandlast">Partneralimentatie <span class="hint">(per maand; aftrekbaar, niet gebruteerd)</span></label>
 <div class="input-prefix-group">
 <span class="prefix">€</span>
 <input type="number" id="alimentatieMaandlast" placeholder="0" min="0" step="50">
 </div>
 </div>
 <div class="form-group">
-<label for="erfpachtJaar">Erfpachtcanon <span class="hint">(per jaar)</span></label>
+<label for="erfpachtJaar">Erfpachtcanon <span class="hint">(per jaar; aftrekbaar, niet gebruteerd)</span></label>
 <div class="input-prefix-group">
 <span class="prefix">€</span>
 <input type="number" id="erfpachtJaar" placeholder="0" min="0" step="100">
 </div>
 </div>
 <div class="form-group">
-<label for="overigeVerplichtingen">Overige verplichtingen <span class="hint">(maand)</span></label>
+<label for="overigeVerplichtingen">Overige niet-aftrekbare lasten <span class="hint">(per maand, bv. private lease, kinderalimentatie; gebruteerd)</span></label>
 <div class="input-prefix-group">
 <span class="prefix">€</span>
 <input type="number" id="overigeVerplichtingen" placeholder="0" min="0" step="50">
@@ -750,7 +750,7 @@ Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.
 </div>
 </div>
 <div class="info-box">
-<strong>Brutering (Trhk 2026):</strong> Verplichtingen waarvan de rente niet aftrekbaar is (consumptief krediet, private lease) dienen te worden gebruteerd bij een box 1-hypotheek. De tool past dit automatisch toe.
+<strong>Verplichtingen (Trhk 2026):</strong> De bruto maandlast gaat af van de toegestane financieringslast. Studieschuld: werkelijke DUO-termijn × bruteringsfactor (bij box 1). Consumptief krediet: 2% van de kredietlimiet per maand. Partneralimentatie en erfpachtcanon zijn aftrekbaar en worden niet gebruteerd. Overige niet-aftrekbare lasten worden bij box 1 met dezelfde factor gebruteerd.
 </div>
 </div>
 
@@ -943,31 +943,250 @@ const FL_AOW = {
 48000:[23.1,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.3,32.0,32.6],
 49000:[23.3,24.4,25.5,26.5,27.5,28.3,29.2,30.0,30.8,31.5,32.2,32.8],
 50000:[23.4,24.6,25.6,26.7,27.6,28.6,29.4,30.2,31.0,31.7,32.4,33.0],
+51000:[23.6,24.8,25.8,26.8,27.9,28.8,29.7,30.5,31.3,32.0,32.7,33.3],
+52000:[23.9,25.0,26.2,27.2,28.1,29.1,30.0,30.8,31.6,32.3,33.0,33.7],
+53000:[24.2,25.4,26.5,27.5,28.5,29.4,30.4,31.2,32.0,32.7,33.5,34.1],
+54000:[24.5,25.7,26.8,27.9,28.9,29.8,30.7,31.6,32.4,33.2,33.9,34.5],
 55000:[24.8,26.0,27.2,28.3,29.3,30.3,31.1,32.0,32.9,33.6,34.3,35.0],
+56000:[25.0,26.4,27.6,28.6,29.7,30.7,31.6,32.4,33.2,34.0,34.7,35.5],
+57000:[25.2,26.6,27.9,29.0,30.0,31.1,32.0,32.8,33.7,34.4,35.2,35.9],
+58000:[25.3,26.8,28.1,29.4,30.4,31.4,32.4,33.3,34.1,34.8,35.5,36.3],
+59000:[25.4,27.0,28.4,29.6,30.8,31.8,32.8,33.7,34.5,35.3,36.0,36.6],
 60000:[25.5,27.1,28.6,29.9,31.1,32.1,33.1,34.1,34.9,35.7,36.4,37.1],
+61000:[25.6,27.2,28.7,30.1,31.4,32.5,33.5,34.4,35.3,36.1,36.8,37.5],
+62000:[25.7,27.3,28.9,30.4,31.6,32.8,33.8,34.8,35.7,36.5,37.2,37.9],
+63000:[25.8,27.4,29.0,30.5,31.9,33.0,34.1,35.1,36.0,36.8,37.6,38.3],
+64000:[25.8,27.6,29.1,30.7,32.1,33.3,34.4,35.4,36.3,37.2,37.9,38.6],
 65000:[25.9,27.6,29.2,30.8,32.3,33.6,34.6,35.6,36.6,37.5,38.3,39.0],
+66000:[25.9,27.6,29.4,30.9,32.4,33.8,34.9,36.0,36.8,37.8,38.6,39.3],
+67000:[26.0,27.7,29.4,31.0,32.5,34.0,35.2,36.2,37.1,38.0,38.9,39.7],
+68000:[26.0,27.7,29.5,31.1,32.6,34.1,35.4,36.4,37.5,38.3,39.2,40.0],
+69000:[26.1,27.8,29.5,31.2,32.7,34.2,35.6,36.7,37.7,38.6,39.4,40.3],
 70000:[26.2,27.9,29.6,31.3,32.8,34.3,35.7,36.9,37.9,38.9,39.7,40.5],
+71000:[26.2,27.9,29.6,31.3,32.9,34.4,35.8,37.1,38.2,39.1,39.9,40.7],
+72000:[26.3,28.0,29.7,31.4,33.0,34.5,35.9,37.3,38.4,39.4,40.3,41.0],
+73000:[26.4,28.0,29.7,31.4,33.1,34.6,36.0,37.3,38.4,39.5,40.5,41.3],
+74000:[26.5,28.1,29.7,31.4,33.1,34.7,36.1,37.3,38.4,39.5,40.6,41.6],
 75000:[26.5,28.2,29.8,31.4,33.1,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+76000:[26.6,28.3,29.9,31.5,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+77000:[26.7,28.3,30.0,31.6,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+78000:[26.8,28.4,30.0,31.6,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+79000:[26.9,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
 80000:[27.1,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+81000:[27.2,28.6,30.2,31.8,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+82000:[27.2,28.8,30.2,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+83000:[27.3,28.8,30.3,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+84000:[27.4,28.9,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
 85000:[27.5,29.0,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+86000:[27.6,29.1,30.5,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+87000:[27.7,29.1,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+88000:[27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+89000:[27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
 90000:[27.7,29.2,30.6,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+91000:[27.8,29.2,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+92000:[27.8,29.3,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+93000:[27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+94000:[27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
 95000:[27.9,29.3,30.8,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+96000:[27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+97000:[27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+98000:[28.0,29.4,30.8,32.2,33.6,34.8,36.1,37.3,38.4,39.5,40.6,41.7],
+99000:[28.0,29.4,30.9,32.2,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
 100000:[28.0,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+101000:[28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+102000:[28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],
+103000:[28.1,29.6,30.9,32.3,33.7,34.9,36.2,37.3,38.4,39.5,40.6,41.7],
+104000:[28.2,29.6,31.0,32.3,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],
 105000:[28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],
+106000:[28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],
+107000:[28.3,29.7,31.1,32.4,33.7,35.0,36.3,37.4,38.5,39.6,40.6,41.7],
+108000:[28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.4,38.5,39.6,40.6,41.7],
+109000:[28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.5,38.5,39.6,40.6,41.7],
 110000:[28.4,29.8,31.2,32.5,33.8,35.1,36.3,37.5,38.6,39.6,40.6,41.7]
+};
+
+// Trhk 2026 Bijlage 1 tabel box 3 welAOW (niet-aftrekbaar, AOW-leeftijd bereikt)
+const FL_AOW_BOX3 = {
+29000:[17.9,18.2,18.5,18.8,19.0,19.3,19.5,19.7,19.9,20.1,20.2,20.4],
+30000:[18.6,18.9,19.2,19.5,19.8,20.0,20.2,20.4,20.6,20.8,21.0,21.1],
+31000:[19.2,19.5,19.8,20.1,20.4,20.6,20.8,21.1,21.3,21.5,21.6,21.8],
+32000:[19.7,20.0,20.3,20.6,20.9,21.2,21.4,21.6,21.8,22.0,22.2,22.4],
+33000:[20.0,20.3,20.7,21.0,21.2,21.5,21.7,22.0,22.2,22.4,22.6,22.8],
+34000:[20.2,20.5,20.9,21.2,21.4,21.7,22.0,22.2,22.4,22.6,22.8,23.0],
+35000:[20.3,20.7,21.0,21.3,21.6,21.9,22.1,22.3,22.6,22.8,23.0,23.1],
+36000:[20.5,20.8,21.1,21.4,21.7,22.0,22.2,22.5,22.7,22.9,23.1,23.3],
+37000:[20.6,20.9,21.2,21.6,21.8,22.1,22.4,22.6,22.8,23.0,23.2,23.4],
+38000:[20.7,21.0,21.4,21.7,22.0,22.2,22.5,22.7,22.9,23.1,23.3,23.5],
+39000:[20.8,21.1,21.4,21.7,22.0,22.3,22.6,22.8,23.0,23.2,23.4,23.6],
+40000:[20.8,21.2,21.5,21.8,22.1,22.4,22.6,22.9,23.1,23.3,23.5,23.7],
+41000:[20.9,21.3,21.6,21.9,22.2,22.5,22.7,23.0,23.2,23.4,23.6,23.8],
+42000:[21.1,21.4,21.8,22.1,22.4,22.6,22.9,23.1,23.4,23.6,23.8,24.0],
+43000:[21.2,21.6,21.9,22.2,22.5,22.8,23.1,23.3,23.5,23.7,23.9,24.1],
+44000:[21.4,21.7,22.1,22.4,22.7,23.0,23.2,23.5,23.7,23.9,24.1,24.3],
+45000:[21.5,21.9,22.2,22.5,22.8,23.1,23.4,23.6,23.8,24.1,24.3,24.4],
+46000:[21.6,22.0,22.3,22.7,23.0,23.2,23.5,23.8,24.0,24.2,24.4,24.6],
+47000:[21.7,22.1,22.5,22.8,23.1,23.4,23.6,23.9,24.1,24.3,24.5,24.7],
+48000:[21.9,22.2,22.6,22.9,23.2,23.5,23.8,24.0,24.2,24.5,24.7,24.9],
+49000:[22.0,22.4,22.8,23.1,23.4,23.7,24.0,24.2,24.5,24.7,24.9,25.1],
+50000:[22.1,22.5,22.9,23.3,23.6,23.9,24.1,24.4,24.6,24.8,25.1,25.3],
+51000:[22.2,22.7,23.1,23.4,23.7,24.0,24.3,24.6,24.8,25.0,25.2,25.4],
+52000:[22.4,22.8,23.2,23.6,23.9,24.2,24.5,24.8,25.0,25.2,25.4,25.6],
+53000:[22.6,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2,25.4,25.6,25.8],
+54000:[22.7,23.1,23.5,23.9,24.2,24.5,24.8,25.1,25.3,25.5,25.8,26.0],
+55000:[22.8,23.2,23.6,24.0,24.4,24.7,24.9,25.2,25.5,25.7,25.9,26.1],
+56000:[22.9,23.3,23.7,24.1,24.5,24.8,25.1,25.4,25.6,25.8,26.1,26.3],
+57000:[23.1,23.5,23.8,24.2,24.6,24.9,25.2,25.5,25.7,26.0,26.2,26.4],
+58000:[23.2,23.6,24.0,24.3,24.7,25.0,25.3,25.6,25.9,26.1,26.3,26.5],
+59000:[23.2,23.7,24.0,24.4,24.8,25.1,25.4,25.7,25.9,26.2,26.4,26.6],
+60000:[23.3,23.7,24.1,24.4,24.8,25.1,25.4,25.7,26.0,26.2,26.4,26.7],
+61000:[23.3,23.7,24.1,24.5,24.8,25.2,25.5,25.8,26.0,26.3,26.5,26.7],
+62000:[23.4,23.8,24.2,24.5,24.9,25.2,25.5,25.8,26.1,26.3,26.5,26.8],
+63000:[23.4,23.8,24.2,24.6,24.9,25.2,25.6,25.9,26.2,26.4,26.6,26.8],
+64000:[23.5,23.9,24.3,24.7,25.0,25.3,25.7,25.9,26.2,26.5,26.7,26.9],
+65000:[23.5,24.0,24.3,24.7,25.1,25.4,25.7,26.0,26.3,26.5,26.8,27.0],
+66000:[23.6,24.0,24.4,24.8,25.1,25.5,25.8,26.1,26.4,26.6,26.9,27.1],
+67000:[23.7,24.1,24.5,24.9,25.2,25.6,25.9,26.2,26.5,26.7,27.0,27.2],
+68000:[23.8,24.2,24.6,25.0,25.3,25.7,26.0,26.2,26.6,26.8,27.1,27.3],
+69000:[23.9,24.3,24.7,25.1,25.4,25.8,26.0,26.3,26.6,26.9,27.2,27.4],
+70000:[23.9,24.3,24.7,25.2,25.5,25.8,26.1,26.4,26.7,27.0,27.2,27.5],
+71000:[24.0,24.4,24.8,25.2,25.6,25.9,26.2,26.5,26.8,27.1,27.3,27.6],
+72000:[24.1,24.6,24.9,25.3,25.7,26.1,26.4,26.6,26.9,27.1,27.4,27.7],
+73000:[24.3,24.7,25.1,25.5,25.9,26.2,26.5,26.8,27.1,27.3,27.6,27.8],
+74000:[24.4,24.9,25.3,25.6,26.0,26.3,26.7,27.0,27.2,27.5,27.7,28.0],
+75000:[24.5,25.0,25.4,25.8,26.1,26.5,26.8,27.1,27.4,27.6,27.9,28.2],
+76000:[24.6,25.1,25.6,25.9,26.3,26.6,27.0,27.3,27.5,27.8,28.0,28.3],
+77000:[24.8,25.3,25.7,26.1,26.4,26.8,27.1,27.4,27.7,28.0,28.2,28.4],
+78000:[24.9,25.4,25.8,26.2,26.6,26.9,27.3,27.6,27.9,28.1,28.3,28.6],
+79000:[25.1,25.5,26.0,26.4,26.7,27.1,27.4,27.7,28.0,28.3,28.5,28.7],
+80000:[25.2,25.6,26.1,26.5,26.9,27.2,27.5,27.9,28.2,28.4,28.7,28.9],
+81000:[25.3,25.8,26.2,26.6,27.0,27.3,27.7,28.0,28.3,28.6,28.8,29.0],
+82000:[25.4,25.9,26.3,26.7,27.1,27.5,27.8,28.1,28.4,28.7,28.9,29.2],
+83000:[25.5,26.0,26.4,26.8,27.2,27.6,27.9,28.2,28.5,28.8,29.1,29.3],
+84000:[25.6,26.1,26.5,26.9,27.3,27.7,28.0,28.3,28.7,28.9,29.2,29.4],
+85000:[25.7,26.2,26.6,27.0,27.4,27.8,28.1,28.4,28.7,29.0,29.3,29.5],
+86000:[25.8,26.3,26.7,27.1,27.5,27.9,28.2,28.5,28.8,29.1,29.4,29.6],
+87000:[25.8,26.4,26.8,27.2,27.6,28.0,28.3,28.6,28.9,29.2,29.5,29.7],
+88000:[25.9,26.4,26.9,27.3,27.6,28.0,28.4,28.7,29.0,29.2,29.5,29.8],
+89000:[26.0,26.4,26.9,27.3,27.7,28.1,28.4,28.7,29.0,29.3,29.6,29.9],
+90000:[26.0,26.5,26.9,27.4,27.7,28.1,28.5,28.8,29.1,29.4,29.7,29.9],
+91000:[26.1,26.5,27.0,27.4,27.8,28.2,28.5,28.9,29.1,29.4,29.7,29.9],
+92000:[26.1,26.5,27.0,27.5,27.8,28.2,28.6,28.9,29.2,29.4,29.7,30.0],
+93000:[26.1,26.6,27.0,27.5,27.9,28.2,28.6,28.9,29.2,29.5,29.7,30.0],
+94000:[26.2,26.6,27.1,27.5,27.9,28.3,28.6,29.0,29.3,29.5,29.8,30.1],
+95000:[26.2,26.7,27.1,27.6,28.0,28.3,28.7,29.0,29.3,29.6,29.8,30.1],
+96000:[26.2,26.7,27.1,27.6,28.0,28.3,28.7,29.0,29.3,29.6,29.9,30.1],
+97000:[26.3,26.7,27.2,27.6,28.0,28.4,28.7,29.1,29.4,29.7,29.9,30.2],
+98000:[26.3,26.8,27.2,27.6,28.0,28.4,28.7,29.1,29.4,29.7,29.9,30.2],
+99000:[26.3,26.8,27.2,27.7,28.1,28.5,28.8,29.1,29.4,29.7,30.0,30.2],
+100000:[26.4,26.8,27.3,27.7,28.1,28.5,28.8,29.2,29.5,29.8,30.0,30.3],
+101000:[26.4,26.9,27.3,27.7,28.1,28.5,28.9,29.2,29.5,29.8,30.1,30.3],
+102000:[26.4,26.9,27.3,27.7,28.2,28.5,28.9,29.2,29.5,29.8,30.1,30.3],
+103000:[26.5,26.9,27.4,27.8,28.2,28.6,28.9,29.2,29.6,29.8,30.1,30.4],
+104000:[26.5,27.0,27.4,27.8,28.2,28.6,29.0,29.3,29.6,29.9,30.2,30.4],
+105000:[26.5,27.0,27.4,27.8,28.3,28.6,29.0,29.3,29.6,29.9,30.2,30.4],
+106000:[26.6,27.0,27.5,27.9,28.3,28.6,29.0,29.3,29.7,29.9,30.2,30.5],
+107000:[26.6,27.1,27.5,27.9,28.3,28.7,29.0,29.4,29.7,30.0,30.2,30.5],
+108000:[26.6,27.1,27.5,27.9,28.3,28.7,29.1,29.4,29.7,30.0,30.3,30.5],
+109000:[26.6,27.1,27.6,28.0,28.3,28.7,29.1,29.4,29.7,30.0,30.3,30.6],
+110000:[26.7,27.1,27.6,28.0,28.4,28.8,29.1,29.4,29.8,30.1,30.3,30.6]
 };
 
 const FL_NAOW_BOX3 = {
 30000:[14.0,14.2,14.5,14.7,14.9,15.1,15.2,15.4,15.6,15.7,15.8,16.0],
+31000:[14.5,14.8,15.0,15.2,15.4,15.6,15.8,16.0,16.1,16.3,16.4,16.6],
+32000:[15.0,15.3,15.5,15.7,16.0,16.2,16.3,16.5,16.7,16.8,17.0,17.1],
+33000:[15.3,15.6,15.8,16.1,16.3,16.5,16.7,16.8,17.0,17.2,17.3,17.5],
+34000:[15.6,15.8,16.1,16.3,16.5,16.7,16.9,17.1,17.3,17.4,17.6,17.7],
 35000:[15.7,16.0,16.2,16.5,16.7,16.9,17.1,17.3,17.5,17.6,17.8,17.9],
+36000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+37000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+38000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+39000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
 40000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+41000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+42000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+43000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+44000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+45000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+46000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+47000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+48000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+49000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
 50000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+51000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+52000:[15.9,16.1,16.4,16.6,16.9,17.1,17.3,17.4,17.6,17.8,17.9,18.1],
+53000:[15.9,16.2,16.4,16.7,16.9,17.1,17.3,17.5,17.6,17.8,17.9,18.1],
+54000:[15.9,16.2,16.5,16.7,16.9,17.1,17.3,17.5,17.7,17.8,18.0,18.1],
+55000:[16.0,16.3,16.5,16.8,17.0,17.2,17.4,17.6,17.8,17.9,18.1,18.2],
+56000:[16.1,16.3,16.6,16.8,17.1,17.3,17.5,17.7,17.8,18.0,18.2,18.3],
+57000:[16.1,16.4,16.7,16.9,17.1,17.4,17.5,17.7,17.9,18.1,18.2,18.4],
+58000:[16.2,16.5,16.7,17.0,17.2,17.4,17.6,17.8,18.0,18.1,18.3,18.4],
+59000:[16.3,16.5,16.8,17.0,17.3,17.5,17.7,17.9,18.0,18.2,18.4,18.5],
 60000:[16.3,16.6,16.9,17.1,17.3,17.5,17.7,17.9,18.1,18.3,18.4,18.6],
+61000:[16.4,16.7,16.9,17.2,17.4,17.6,17.8,18.0,18.2,18.3,18.5,18.6],
+62000:[16.4,16.7,17.0,17.2,17.5,17.7,17.9,18.1,18.3,18.4,18.6,18.7],
+63000:[16.5,16.8,17.1,17.3,17.5,17.8,18.0,18.2,18.3,18.5,18.7,18.8],
+64000:[16.6,16.9,17.1,17.4,17.6,17.9,18.1,18.2,18.4,18.6,18.7,18.9],
+65000:[16.7,17.0,17.2,17.5,17.7,17.9,18.2,18.3,18.5,18.7,18.8,19.0],
+66000:[16.7,17.0,17.3,17.6,17.8,18.0,18.2,18.4,18.6,18.8,19.0,19.1],
+67000:[16.8,17.1,17.4,17.7,17.9,18.1,18.4,18.5,18.7,18.9,19.1,19.2],
+68000:[16.9,17.3,17.6,17.8,18.1,18.3,18.5,18.7,18.9,19.0,19.2,19.3],
+69000:[17.0,17.3,17.7,18.0,18.2,18.4,18.6,18.8,19.0,19.2,19.3,19.5],
 70000:[17.2,17.5,17.8,18.1,18.4,18.6,18.8,19.0,19.2,19.4,19.5,19.7],
+71000:[17.3,17.6,17.9,18.2,18.5,18.7,19.0,19.2,19.3,19.5,19.7,19.8],
+72000:[17.5,17.8,18.1,18.4,18.7,18.9,19.1,19.3,19.5,19.7,19.9,20.0],
+73000:[17.7,18.0,18.3,18.5,18.8,19.1,19.3,19.5,19.7,19.9,20.0,20.2],
+74000:[17.8,18.1,18.4,18.7,19.0,19.3,19.5,19.7,19.9,20.1,20.2,20.4],
+75000:[18.0,18.3,18.6,18.8,19.1,19.4,19.6,19.8,20.0,20.2,20.4,20.6],
+76000:[18.1,18.4,18.7,19.0,19.2,19.5,19.8,20.0,20.2,20.4,20.5,20.7],
+77000:[18.2,18.6,18.8,19.1,19.4,19.7,19.9,20.1,20.3,20.5,20.7,20.9],
+78000:[18.3,18.7,19.0,19.3,19.5,19.8,20.0,20.3,20.5,20.7,20.8,21.0],
+79000:[18.5,18.8,19.1,19.4,19.6,19.9,20.2,20.4,20.6,20.8,21.0,21.1],
 80000:[18.5,18.9,19.2,19.5,19.8,20.0,20.3,20.5,20.7,20.9,21.1,21.3],
+81000:[18.6,19.0,19.3,19.6,19.9,20.1,20.4,20.6,20.9,21.0,21.2,21.4],
+82000:[18.7,19.1,19.4,19.7,20.0,20.2,20.5,20.7,21.0,21.2,21.3,21.5],
+83000:[18.8,19.1,19.5,19.8,20.1,20.3,20.6,20.8,21.0,21.3,21.4,21.6],
+84000:[18.9,19.2,19.6,19.9,20.2,20.4,20.6,20.9,21.1,21.3,21.5,21.7],
+85000:[19.0,19.3,19.7,20.0,20.2,20.5,20.7,20.9,21.2,21.4,21.6,21.8],
+86000:[19.1,19.4,19.7,20.0,20.3,20.6,20.8,21.0,21.3,21.5,21.7,21.9],
+87000:[19.1,19.5,19.8,20.1,20.4,20.6,20.9,21.1,21.3,21.6,21.8,21.9],
+88000:[19.2,19.5,19.8,20.2,20.5,20.7,21.0,21.2,21.4,21.7,21.9,22.0],
+89000:[19.3,19.6,19.9,20.3,20.5,20.8,21.0,21.3,21.5,21.7,21.9,22.1],
 90000:[19.3,19.7,20.0,20.3,20.6,20.9,21.1,21.3,21.6,21.8,22.0,22.2],
+91000:[19.4,19.7,20.1,20.4,20.7,20.9,21.2,21.4,21.6,21.8,22.1,22.3],
+92000:[19.5,19.8,20.1,20.4,20.7,21.0,21.3,21.5,21.7,21.9,22.1,22.3],
+93000:[19.5,19.9,20.2,20.5,20.8,21.1,21.3,21.6,21.8,22.0,22.2,22.4],
+94000:[19.6,19.9,20.3,20.6,20.8,21.1,21.4,21.6,21.8,22.0,22.2,22.5],
+95000:[19.6,20.0,20.3,20.6,20.9,21.2,21.5,21.7,21.9,22.1,22.3,22.5],
+96000:[19.7,20.0,20.4,20.7,21.0,21.3,21.5,21.8,22.0,22.2,22.4,22.5],
+97000:[19.7,20.1,20.4,20.7,21.0,21.3,21.6,21.8,22.0,22.3,22.4,22.6],
+98000:[19.8,20.2,20.5,20.8,21.1,21.4,21.6,21.9,22.1,22.3,22.5,22.7],
+99000:[19.8,20.2,20.5,20.9,21.2,21.4,21.7,22.0,22.2,22.4,22.6,22.7],
 100000:[19.9,20.2,20.6,20.9,21.2,21.5,21.8,22.0,22.2,22.4,22.6,22.8],
+101000:[19.9,20.3,20.7,21.0,21.3,21.5,21.8,22.1,22.3,22.5,22.7,22.9],
+102000:[20.0,20.3,20.7,21.0,21.3,21.6,21.8,22.1,22.4,22.6,22.8,22.9],
+103000:[20.1,20.4,20.7,21.1,21.4,21.7,21.9,22.2,22.4,22.6,22.8,23.0],
+104000:[20.1,20.5,20.8,21.1,21.4,21.7,22.0,22.2,22.5,22.7,22.9,23.1],
+105000:[20.1,20.5,20.8,21.2,21.5,21.8,22.0,22.3,22.5,22.7,22.9,23.1],
+106000:[20.2,20.6,20.9,21.2,21.5,21.8,22.1,22.3,22.6,22.8,23.0,23.2],
+107000:[20.2,20.6,20.9,21.2,21.6,21.9,22.1,22.4,22.6,22.8,23.0,23.2],
+108000:[20.3,20.7,21.0,21.3,21.6,21.9,22.2,22.4,22.6,22.9,23.1,23.3],
+109000:[20.3,20.7,21.0,21.3,21.7,22.0,22.2,22.5,22.7,22.9,23.1,23.3],
 110000:[20.3,20.7,21.1,21.4,21.7,22.0,22.3,22.5,22.7,23.0,23.2,23.4],
+111000:[20.4,20.8,21.1,21.4,21.7,22.0,22.3,22.6,22.8,23.0,23.2,23.4],
+112000:[20.4,20.8,21.2,21.5,21.8,22.1,22.4,22.6,22.8,23.0,23.3,23.5],
+113000:[20.4,20.8,21.2,21.5,21.8,22.1,22.4,22.6,22.9,23.1,23.3,23.5],
+114000:[20.5,20.8,21.2,21.5,21.8,22.2,22.4,22.7,22.9,23.1,23.3,23.5],
+115000:[20.5,20.9,21.3,21.6,21.9,22.2,22.5,22.7,22.9,23.2,23.4,23.6],
+116000:[20.5,20.9,21.3,21.6,21.9,22.2,22.5,22.8,23.0,23.2,23.4,23.6],
+117000:[20.6,20.9,21.3,21.7,22.0,22.2,22.5,22.8,23.0,23.2,23.4,23.7],
+118000:[20.6,21.0,21.4,21.7,22.0,22.3,22.6,22.8,23.1,23.3,23.5,23.7],
+119000:[20.7,21.0,21.4,21.7,22.0,22.3,22.6,22.9,23.1,23.3,23.5,23.7],
+120000:[20.7,21.1,21.4,21.8,22.1,22.3,22.6,22.9,23.1,23.4,23.6,23.8],
+121000:[20.7,21.1,21.4,21.8,22.1,22.4,22.7,22.9,23.2,23.4,23.6,23.8],
+122000:[20.8,21.1,21.5,21.8,22.2,22.4,22.7,23.0,23.2,23.4,23.6,23.8],
+123000:[20.8,21.2,21.5,21.9,22.2,22.5,22.7,23.0,23.3,23.5,23.7,23.9],
+124000:[20.8,21.2,21.5,21.9,22.2,22.5,22.8,23.1,23.3,23.5,23.7,23.9],
 125000:[20.9,21.2,21.6,21.9,22.3,22.6,22.8,23.1,23.3,23.6,23.8,24.0]
 };
 
@@ -993,8 +1212,10 @@ return nf(n, decimals) + '%';
 
 // Rente-index bepalen (0-11)
 function getRenteIndex(r) {
-const grenzen = [0.015, 0.02, 0.025, 0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06, 0.065];
-const idx = grenzen.findIndex(g => r <= g);
+// Kolomgrenzen Trhk 2026: ≤1,500% | 1,501–2,000% | … | ≥6,501%; rente eerst op 3 decimalen (in %) afronden
+const r3 = Math.round(r * 100 * 1000) / 1000;
+const grenzen = [1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5];
+const idx = grenzen.findIndex(g => r3 <= g + 1e-9);
 return idx === -1 ? 11 : idx;
 }
 
@@ -1004,22 +1225,18 @@ const idx = getRenteIndex(toetsrente);
 let table;
 if (tabel === 'naow') table = FL_NAOW;
 else if (tabel === 'aow') table = FL_AOW;
+else if (tabel === 'b3aow') table = FL_AOW_BOX3;
 else table = FL_NAOW_BOX3;
 
 const keys = Object.keys(table).map(Number).sort((a,b) => a-b);
 const minKey = keys[0];
 const maxKey = keys[keys.length - 1];
-const inkomenRounded = Math.max(minKey, Math.min(maxKey, Math.round(inkomen / 1000) * 1000));
+// Rij van het naastlagere inkomen per € 1.000 (geen afronding/interpolatie); onder minimum laagste rij, boven maximum hoogste rij
+const rij = Math.max(minKey, Math.min(maxKey, Math.floor(inkomen / 1000) * 1000));
+let gekozen = minKey;
+for (const k of keys) { if (k <= rij) gekozen = k; }
 
-// Zoek dichtstbijzijnde sleutel
-let closest = keys[0];
-let minDiff = Math.abs(inkomenRounded - keys[0]);
-for (const k of keys) {
-const d = Math.abs(inkomenRounded - k);
-if (d < minDiff) { minDiff = d; closest = k; }
-}
-
-return (table[closest][idx] || table[minKey][idx]) / 100;
+return table[gekozen][idx] / 100;
 }
 
 // Annuïteitsfactor
@@ -1078,7 +1295,7 @@ return { brutoMaand, nettoMaand, renteJaar, aftrekJaar, ewf, aftrekPct };
 
 // Bruteringsfactor studielening
 function getBruteringFactor(toetsrente) {
-const r = toetsrente * 100;
+const r = Math.round(toetsrente * 100 * 1000) / 1000;
 if (r <= 1.5) return 1.05;
 if (r <= 2.0) return 1.05;
 if (r <= 2.5) return 1.10;
@@ -1099,7 +1316,7 @@ const opslagen = {
 'EFG': 0, 'CD': 5000, 'AB': 10000,
 'Aplusplus': 20000, 'Aplusplusplus': 25000,
 'Aplusplusplusplus': 30000, 'Aplusplusplusplus_garantie': 40000,
-'geen': 0
+'geen': 10000 // Trhk 2026 / officiële bijlage 'overige parameters': geen geldig energielabel = € 10.000
 };
 return opslagen[label] || 0;
 }
@@ -1175,7 +1392,7 @@ state.geboortedatum1 = getVal('geboortedatum1', '');
 state.adviesDatum = getVal('adviesDatum', '');
 state.situatie = getToggle('situatie') || 'alleenstaand';
 state.inkomen1 = getVal('inkomen1');
-state.inkomen2 = getVal('inkomen2');
+state.inkomen2 = state.situatie === 'samen' ? getVal('inkomen2') : 0; // alleenstaand: partnergegevens tellen niet mee
 state.geboortedatum2 = getVal('geboortedatum2', '');
 state.pensioen1Leeg = (document.getElementById('pensioen1').value || '').trim() === '';
 state.pensioen2Leeg = (document.getElementById('pensioen2').value || '').trim() === '';
@@ -1254,10 +1471,10 @@ const minInkomenAOW = 29000;
 const pt = pensioentoetsStatus();
 const verplichtingenMaandVoor = (tab) => {
 const bf = (aftrek === 'box1') ? getBruteringFactor(toetsrente) : 1.0;
-return duoMaandlast * bf + kredietMaandlast * bf + alimentatieMaandlast + erfpachtJaar / 12 + overigeVerplichtingen * bf;
+return duoMaandlast * bf + kredietMaandlast * 0.02 + alimentatieMaandlast + erfpachtJaar / 12 + overigeVerplichtingen * bf;
 };
 const scenarioLTI = (ink, isAow) => {
-const tab = isAow ? 'aow' : (aftrek === 'box3' ? 'b3naow' : 'naow');
+const tab = isAow ? (aftrek === 'box3' ? 'b3aow' : 'aow') : (aftrek === 'box3' ? 'b3naow' : 'naow');
 const eff = Math.max(isAow ? minInkomenAOW : 30000, ink);
 const fl = getFL(tab, toetsrente, eff);
 const netto = Math.max(0, eff * fl / 12 - verplichtingenMaandVoor(tab));
@@ -1266,14 +1483,17 @@ return { ink, tab, eff, fl, isAow, maxNaVerpl: netto / annFactor(toetsrente, loo
 // AOW al bereikt (volgens geboortedatum) en inkomen vanaf AOW ingevuld: alleen dat inkomen toetsen (AOW-tabel)
 const ink1Nu = (pt.p1.aow && !state.pensioen1Leeg) ? state.pensioen1 : inkomen1;
 const ink2Nu = (pt.heeftP2 && pt.p2.aow && !state.pensioen2Leeg) ? state.pensioen2 : inkomen2;
-const scHuidig = scenarioLTI(ink1Nu + ink2Nu, aow === 'ja');
+// Tabelkeuze (Trhk art. 3 lid 7): heeft één van beide de AOW-leeftijd bereikt, dan volgt de tabel de persoon met het hoogste toetsinkomen.
+// AOW-status aanvrager: schakelaar 'AOW-gerechtigde' of geboortedatum; partner: geboortedatum.
+const aow1 = aow === 'ja' || pt.p1.aow, aow2 = pt.heeftP2 && pt.p2.aow;
+const tabelAow = (i1, a1, i2, a2) => (!pt.heeftP2 || i1 >= i2) ? a1 : a2;
+const scHuidig = scenarioLTI(ink1Nu + ink2Nu, tabelAow(ink1Nu, aow1, ink2Nu, aow2));
 let scPensioen = null;
 if (pt.geldt && !pt.ontbreekt) {
 const i1 = pt.p1.pt ? state.pensioen1 : ink1Nu;
 const i2 = pt.p2.pt ? state.pensioen2 : ink2Nu;
-// AOW-tabel als iedereen met inkomen in dit scenario AOW heeft of onder de pensioentoets valt
-const allenAow = (pt.p1.pt || pt.p1.aow || aow === 'ja') && (!pt.heeftP2 || pt.p2.pt || pt.p2.aow || aow === 'ja');
-scPensioen = scenarioLTI(i1 + i2, allenAow);
+// In dit scenario geldt wie onder de pensioentoets valt als AOW-gerechtigd
+scPensioen = scenarioLTI(i1 + i2, tabelAow(i1, pt.p1.pt || aow1, i2, pt.p2.pt || aow2));
 }
 const scBepalend = (scPensioen && scPensioen.maxNaVerpl < scHuidig.maxNaVerpl) ? scPensioen : scHuidig;
 const pensioentoetsBepalend = scBepalend === scPensioen;
@@ -1322,7 +1542,7 @@ const brutoBeschikbaarMaand = (effectiefInkomen * flPct) / 12;
 // Verplichtingen aftrekken (gebruteerd voor box1)
 const bruteringFactor = (aftrek === 'box1') ? getBruteringFactor(toetsrente) : 1.0;
 const duoGebruteerd = duoMaandlast * bruteringFactor;
-const kredietGebruteerd = kredietMaandlast * bruteringFactor;
+const kredietGebruteerd = kredietMaandlast * 0.02; // 2% van de kredietlimiet per maand (bruto last)
 const alimentatieGebruteerd = alimentatieMaandlast; // alimentatie is aftrekbaar
 const erfpachtMaand = erfpachtJaar / 12;
 const overigeGebruteerd = overigeVerplichtingen * bruteringFactor;
@@ -1392,7 +1612,7 @@ if (nhgCheck === 'ja') risicos.push({ type: 'ok', text: `NHG mogelijk: woningwaa
 
 return {
 toetsinkomen, toetsrente, tabelType, flPct,
-maxHypLTI_basis, alleenstaandeOpslag, labelOpslag, ebvOpslag,
+maxHypLTI_basis, alleenstaandeOpslag, labelOpslag, ebvOpslag, isAowTabel: scBepalend.isAow,
 ptTekst, pensioentoetsBepalend, scHuidig, scPensioen,
 totaalVerplichtingenMaand, brutoBeschikbaarMaand, nettoBeschikbaarMaand,
 maxHypLTI_naVerplichtingen, maxHypLTI_finaal, maxHypLTV,
@@ -1502,9 +1722,9 @@ ${r.nhgCheck === 'ja' ? `<span style="font-size:13px; color:#555; margin-left:12
 <div class="card-title"><span class="icon">🔢</span> Opbouw maximale hypotheek</div>
 <table class="breakdown-table">
 <tr><td colspan="2" style="font-size:12px;color:#555">${r.ptTekst}.</td></tr>
-<tr><td>Maximale hypotheek o.b.v. FL-tabel (${r.tabelType==='aow'?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'}${r.pensioentoetsBepalend?', pensioeninkomen':''})</td><td>${euro(r.maxHypLTI_basis)}</td></tr>
-${r.totaalVerplichtingenMaand > 0 ? `<tr class="minus"><td>− Verplichtingen (gebruteerd, factor ${nf(r.bruteringFactor, 2)})</td><td>−${euro((r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen))}</td></tr>` : ''}
-${r.alleenstaandeOpslag > 0 ? `<tr class="plus"><td>+ Alleenstaanden-opslag (Trhk art. 3a)</td><td>+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
+<tr><td>Maximale hypotheek o.b.v. FL-tabel (${r.isAowTabel?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'}${r.pensioentoetsBepalend?', pensioeninkomen':''})</td><td>${euro(r.maxHypLTI_basis)}</td></tr>
+${r.totaalVerplichtingenMaand > 0 ? `<tr class="minus"><td>− Verplichtingen (bruto ${euro(r.totaalVerplichtingenMaand)}/mnd; DUO en overige gebruteerd, factor ${nf(r.bruteringFactor, 2)})</td><td>−${euro((r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen))}</td></tr>` : ''}
+${r.alleenstaandeOpslag > 0 ? `<tr class="plus"><td>+ Alleenstaandenbedrag (Trhk art. 3 lid 8)</td><td>+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
 ${r.labelOpslag > 0 ? `<tr class="plus"><td>+ Energielabel-opslag (${state.label})</td><td>+${euro(r.labelOpslag)}</td></tr>` : ''}
 ${r.ebvOpslag > 0 ? `<tr class="plus"><td>+ EBV-opslag verduurzaming</td><td>+${euro(r.ebvOpslag)}</td></tr>` : ''}
 <tr class="total-row"><td>Maximale hypotheek LTI</td><td>${euro(r.maxHypLTI_finaal)}</td></tr>
@@ -1691,7 +1911,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <div class="kf-box">
 <div class="kf-label">FL-percentage</div>
 <div class="kf-value">${pct(r.flPct*100,1)}</div>
-<div class="kf-sub">${r.tabelType==='aow'?'AOW':'Niet-AOW'} · ${state.aftrek==='box3'?'Box 3':'Box 1'} · ${pct(r.toetsrente*100,2)} toetsrente</div>
+<div class="kf-sub">${r.isAowTabel?'AOW':'Niet-AOW'} · ${state.aftrek==='box3'?'Box 3':'Box 1'} · ${pct(r.toetsrente*100,2)} toetsrente</div>
 </div>
 <div class="kf-box">
 <div class="kf-label">LTV</div>
@@ -1713,9 +1933,9 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <table>
 <tr><th>Component</th><th style="text-align:right">Bedrag</th></tr>
 <tr><td colspan="2" style="font-size:12px;color:#555">${r.ptTekst}.</td></tr>
-<tr><td>Maximale hypotheek FL-tabel (${r.tabelType==='aow'?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'}, toetsinkomen ${euro(r.toetsinkomen)}, FL ${pct(r.flPct*100,1)})</td><td class="td-right">${euro(r.maxHypLTI_basis)}</td></tr>
-${r.totaalVerplichtingenMaand > 0 ? `<tr><td class="minus">− Effect verplichtingen (maandlast ${euro(r.totaalVerplichtingenMaand)}, gebruteerd factor ${nf(r.bruteringFactor,2)})</td><td class="td-right minus">−${euro(r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen)}</td></tr>` : ''}
-${r.alleenstaandeOpslag > 0 ? `<tr><td class="plus">+ Alleenstaanden-opslag (Trhk 2026 art. 3a, inkomen > ${euro(r.tabelType==='aow'?29000:30000)})</td><td class="td-right plus">+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
+<tr><td>Maximale hypotheek FL-tabel (${r.isAowTabel?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'}, toetsinkomen ${euro(r.toetsinkomen)}, FL ${pct(r.flPct*100,1)})</td><td class="td-right">${euro(r.maxHypLTI_basis)}</td></tr>
+${r.totaalVerplichtingenMaand > 0 ? `<tr><td class="minus">− Effect verplichtingen (bruto maandlast ${euro(r.totaalVerplichtingenMaand)}; DUO en overige gebruteerd, factor ${nf(r.bruteringFactor,2)}; krediet 2% van de limiet)</td><td class="td-right minus">−${euro(r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen)}</td></tr>` : ''}
+${r.alleenstaandeOpslag > 0 ? `<tr><td class="plus">+ Alleenstaandenbedrag (Trhk 2026 art. 3 lid 8, inkomen > ${euro(r.isAowTabel?29000:30000)})</td><td class="td-right plus">+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
 ${r.labelOpslag > 0 ? `<tr><td class="plus">+ Energielabel-opslag bij aankoop (label ${state.label})</td><td class="td-right plus">+${euro(r.labelOpslag)}</td></tr>` : ''}
 ${r.ebvOpslag > 0 ? `<tr><td class="plus">+ EBV-opslag verduurzaming (label ${state.label})</td><td class="td-right plus">+${euro(r.ebvOpslag)}</td></tr>` : ''}
 <tr class="total-row"><td>Maximale hypotheek LTI (na alle correcties)</td><td class="td-right">${euro(r.maxHypLTI_finaal)}</td></tr>
@@ -1806,7 +2026,7 @@ ${state.aoverzekering === 'nee' ? '<li style="color:#8a6d00">⚠️ Geen AO-verz
 <tr><td><strong>Woningwaarde</strong></td><td>${euro(state.woningWaarde)}</td><td><strong>Energielabel</strong></td><td>${state.label}</td></tr>
 <tr><td><strong>Geoffreerde rente</strong></td><td>${pct(state.rente*100,2)}</td><td><strong>RVP</strong></td><td>${state.rvp} jaar</td></tr>
 <tr><td><strong>Toetsrente</strong></td><td>${pct(r.toetsrente*100,2)}</td><td><strong>Looptijd</strong></td><td>${state.looptijd} jaar</td></tr>
-${r.totaalVerplichtingenMaand > 0 ? `<tr><td><strong>Verplichtingen</strong></td><td colspan="3">${euro(r.totaalVerplichtingenMaand)}/mnd (gebruteerd, factor ${nf(r.bruteringFactor,2)})</td></tr>` : ''}
+${r.totaalVerplichtingenMaand > 0 ? `<tr><td><strong>Verplichtingen</strong></td><td colspan="3">${euro(r.totaalVerplichtingenMaand)}/mnd (DUO en overige gebruteerd, factor ${nf(r.bruteringFactor,2)}; krediet 2% van de limiet)</td></tr>` : ''}
 </table>
 </div>
 
@@ -1878,7 +2098,7 @@ const infos = {
 'Aplusplusplus': '<strong>A+++:</strong> Extra leenruimte <strong>€25.000</strong> (verlaagd in 2026 vanwege verminderd zonnepaneel-rendement / afschaffing saldering 2027).',
 'Aplusplusplusplus': '<strong>A++++:</strong> Extra leenruimte <strong>€30.000</strong> (verlaagd in 2026 t.o.v. 2025).',
 'Aplusplusplusplus_garantie': '<strong>A++++ met garantie (EPG ≥10 jaar):</strong> Extra leenruimte <strong>€40.000</strong> (verlaagd in 2026).',
-'geen': '<strong>Geen geldig energielabel:</strong> Geen extra leenruimte bij aankoop. Wel max €10.000 EBV mogelijk bij verbouwing.'
+'geen': '<strong>Geen geldig energielabel:</strong> Extra leenruimte bij aankoop <strong>€ 10.000</strong>; voor verduurzaming (EBV) max. € 10.000 (Trhk 2026, officiële bijlage).'
 };
 infoBox.innerHTML = infos[label] || '';
 }
