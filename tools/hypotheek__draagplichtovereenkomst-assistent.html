@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Draagplichtovereenkomst Assistent — Hypotheekadvies Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <meta name="description" content="Professionele tool voor het opstellen en beoordelen van draagplichtovereenkomsten voor hypotheekadviseurs.">
 
   <!-- DNS prefetch voor snellere CDN-laadtijd -->
@@ -30,34 +31,34 @@
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: #F8F4EE; font-family: Georgia, "Times New Roman", serif; }
+    html, body { background: #f4f7f9; font-family: Montserrat,Arial,Helvetica,sans-serif; }
     #root { min-height: 100vh; }
 
     /* Loading screen */
     #loading {
       position: fixed; inset: 0;
-      background: #0B1F3A;
+      background: #003057;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       z-index: 9999; transition: opacity 0.4s ease;
     }
     #loading.fade-out { opacity: 0; pointer-events: none; }
     .loader-logo {
-      color: #D4A017; font-size: 42px; margin-bottom: 20px; letter-spacing: 2px;
+      color: #e5a138; font-size: 42px; margin-bottom: 20px; letter-spacing: 2px;
     }
     .loader-title {
       color: #fff; font-size: 18px; font-weight: 700;
-      font-family: Georgia, serif; margin-bottom: 6px;
+      font-family: Montserrat,Arial,Helvetica,sans-serif; margin-bottom: 6px;
     }
     .loader-sub {
-      color: #94A3B8; font-size: 13px; font-family: sans-serif; margin-bottom: 32px;
+      color: #b9c7d3; font-size: 13px; font-family: Montserrat,Arial,Helvetica,sans-serif; margin-bottom: 32px;
     }
     .loader-bar-wrap {
       width: 240px; height: 4px; background: rgba(255,255,255,0.1);
       border-radius: 2px; overflow: hidden;
     }
     .loader-bar {
-      height: 100%; width: 0%; background: #D4A017; border-radius: 2px;
+      height: 100%; width: 0%; background: #e5a138; border-radius: 2px;
       animation: loadbar 2.2s ease-in-out forwards;
     }
     @keyframes loadbar {
@@ -68,6 +69,16 @@
     }
   </style>
 <script>function pct50(v){var n=parseFloat(v);return isFinite(n)?n:50;}</script>
+<style id="huisstijl">
+:root{--navy:#003057;--navy2:#0b4a7d;--gold:#e5a138;--gold-dk:#b97c14;--gold-lt:#fdf5e7;--bg:#f4f7f9;--white:#fff;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;--green:#1a7f4b;--grlt:#e8f6ee;--red:#b42318;--redlt:#fdecea;--orange:#b45309;--orlt:#fef3c7;--shadow:0 2px 14px rgba(0,48,87,.08);}
+
+html,body{background:var(--bg);font-family:Montserrat,Arial,Helvetica,sans-serif;color:var(--text)}
+#loading{background:var(--navy)}
+.loader-logo{color:var(--gold)}
+.loader-title,.loader-sub{font-family:Montserrat,Arial,Helvetica,sans-serif}
+.loader-sub{color:rgba(255,255,255,.75)}
+.loader-bar{background:var(--gold)}
+</style>
 </head>
 <body>
 
@@ -89,19 +100,19 @@
 // DESIGN TOKENS
 // ═══════════════════════════════════════════════════════════════════
 const C = {
-  navy: "#0B1F3A", navyMid: "#132A4E", navyLight: "#1E3A5F", navyGlass: "rgba(11,31,58,0.06)",
-  gold: "#B8860B", goldLight: "#D4A017", goldPale: "#FFF8E7",
-  cream: "#F8F4EE", white: "#FFFFFF",
-  green: "#1A6B52", greenLight: "#EAF5F0",
-  red: "#B91C1C", redLight: "#FEF2F2",
-  orange: "#C05621", orangeLight: "#FFF7ED",
-  blue: "#1D4ED8", blueLight: "#EFF6FF",
-  gray: "#6B7280", grayLight: "#F3F4F6", grayMid: "#E5E7EB",
-  border: "#D9D0BF",
-  text: "#1E293B", textMid: "#475569", textLight: "#94A3B8",
+  navy: "#003057", navyMid: "#0b4a7d", navyLight: "#2a6496", navyGlass: "rgba(0,48,87,0.06)",
+  gold: "#e5a138", goldLight: "#e5a138", goldPale: "#fdf5e7",
+  cream: "#f4f7f9", white: "#FFFFFF",
+  green: "#1a7f4b", greenLight: "#e8f6ee",
+  red: "#b42318", redLight: "#fdecea",
+  orange: "#b45309", orangeLight: "#fef3c7",
+  blue: "#0b4a7d", blueLight: "#eef4fa",
+  gray: "#5f6b7a", grayLight: "#f4f7f9", grayMid: "#e3e9ef",
+  border: "#d1dce5",
+  text: "#1d2632", textMid: "#3d4a5a", textLight: "#5f6b7a",
 };
 
-const fam = { serif: "'Georgia', 'Times New Roman', serif", sans: "'system-ui', 'Segoe UI', sans-serif" };
+const fam = { serif: "Montserrat, Arial, Helvetica, sans-serif", sans: "Montserrat, Arial, Helvetica, sans-serif" };
 
 // ═══════════════════════════════════════════════════════════════════
 // ADVIESRAPPORT TEKSTEN (from project files 6.1–6.13)
@@ -305,7 +316,7 @@ const CHECKLIST = [
   },
   {
     sectie: "8. Verjaring & anti-verjaringsbeding",
-    kleur: "#7C3AED",
+    kleur: "#0b4a7d",
     items: [
       "Verjaringsrisico besproken: bij ongehuwde samenwoners verjaart een vordering na 5 jaar (art. 3:306 BW)",
       "Drie opties aangeboden: draagplichtovereenkomst, anti-verjaringsbeding via notaris, periodieke stuiting",
@@ -316,7 +327,7 @@ const CHECKLIST = [
   },
   {
     sectie: "9. Box 3 & bijleenregeling",
-    kleur: "#DC2626",
+    kleur: "#b42318",
     items: [
       "Bijleenregeling berekend per partner: max. aftrekbare EWS = verwervingskosten × eigendomsaandeel − EWR + bijleenstand",
       "Gecontroleerd of EWR volledig wordt ingebracht — zo niet: box 3-deel berekend en gecommuniceerd",
@@ -338,7 +349,7 @@ const CHECKLIST = [
   },
   {
     sectie: "11. Schenkbelasting & informed consent",
-    kleur: "#6D28D9",
+    kleur: "#0b4a7d",
     items: [
       "Scenario-vergelijking gemaakt: wettelijk (A), individueel zonder kan-bepaling (B), individueel met kan-bepaling (C indien BEWS aanwezig)",
       "Alle drie scenario's getoond aan cliënten — bewuste keuze gedocumenteerd (informed consent)",
@@ -1113,11 +1124,11 @@ function genereerDocument(docType, form) {
 // ═══════════════════════════════════════════════════════════════════
 // REUSABLE UI COMPONENTS
 // ═══════════════════════════════════════════════════════════════════
-const inp = { width: "100%", padding: "9px 11px", border: `1.5px solid ${C.border}`, borderRadius: 7, fontSize: 13.5, color: C.text, background: C.white, boxSizing: "border-box", fontFamily: fam.sans, outline: "none" };
+const inp = { width: "100%", padding: "8px 10px", border: `1.5px solid ${C.border}`, borderRadius: 7, fontSize: 15, color: C.text, background: C.white, boxSizing: "border-box", fontFamily: fam.sans, outline: "none" };
 const sel = { ...inp, cursor: "pointer", appearance: "auto" };
 const btnPrimary = { background: C.navy, color: C.white, border: "none", padding: "10px 22px", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontSize: 13.5, fontFamily: fam.sans };
 const btnSecondary = { background: "transparent", color: C.navy, border: `2px solid ${C.border}`, padding: "8px 20px", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 13.5, fontFamily: fam.sans };
-const btnGold = { background: C.gold, color: C.white, border: "none", padding: "10px 22px", borderRadius: 8, fontWeight: 800, cursor: "pointer", fontSize: 13.5, fontFamily: fam.sans };
+const btnGold = { background: C.gold, color: C.navy, border: "none", padding: "10px 22px", borderRadius: 8, fontWeight: 800, cursor: "pointer", fontSize: 13.5, fontFamily: fam.sans };
 const btnSm = { ...btnSecondary, padding: "5px 12px", fontSize: 12 };
 
 function Field({ label, hint, required, children }) {
@@ -1205,7 +1216,7 @@ function StapBar({ stap, totaal }) {
   return (
     <div style={{ display: "flex", gap: 5, marginBottom: 24 }}>
       {Array.from({ length: totaal }).map((_, i) => (
-        <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < stap ? C.gold : i === stap ? C.goldLight : C.border, transition: "background 0.3s" }} />
+        <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < stap ? C.gold : i === stap ? C.navy : C.border, transition: "background 0.3s" }} />
       ))}
     </div>
   );
@@ -1313,7 +1324,7 @@ function Stap1({ form, up }) {
               <div style={{ background: C.red, color: C.white, width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0, fontFamily: fam.sans }}>{nr}</div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: C.red, fontFamily: fam.sans }}>{titel}</div>
-                <div style={{ fontSize: 12, color: "#7f1d1d", fontFamily: fam.sans, marginTop: 2, lineHeight: 1.5 }}>{sub}</div>
+                <div style={{ fontSize: 12, color: "#b42318", fontFamily: fam.sans, marginTop: 2, lineHeight: 1.5 }}>{sub}</div>
               </div>
             </div>
           ))}
@@ -1411,7 +1422,7 @@ function Stap4({ form, up }) {
     <div>
       <SectionH sub="Kan-bepaling overgangsrecht (art. 10bis.1 lid 3 Wet IB 2001)">Stap 4 — Kan-bepaling overgangsrecht</SectionH>
       <InfoBox type="danger">⚠️ <strong>Let op: dit is een onomkeerbare, definitieve keuze.</strong> Als het overgangsrecht gezamenlijk wordt toegepast, is het definitief verdeeld. De renteaftrekjaren gaan mee over. Dit kan niet worden teruggedraaid.</InfoBox>
-      <div style={{ background: "#FFFBEB", border: `2px solid ${C.gold}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+      <div style={{ background: "#fef3c7", border: `2px solid ${C.gold}`, borderRadius: 12, padding: 20, marginBottom: 16 }}>
         <div style={{ fontWeight: 700, color: C.navy, fontSize: 14, marginBottom: 8, fontFamily: fam.sans }}>Wat is de kan-bepaling?</div>
         <p style={{ margin: 0, fontSize: 13, color: C.textMid, lineHeight: 1.7, fontFamily: fam.sans }}>
           Partners kunnen het overgangsrecht (BEWS) van één partner <em>gezamenlijk</em> toepassen naar rato van het schuldaandeel (art. 10bis.1 derde lid Wet IB 2001). <strong>Voorwaarden:</strong> (1) beiden zijn fiscale partners (art. 1.2 Wet IB 2001), (2) de woning is de eigen woning van beiden (gemeenschappelijk hoofdverblijf), (3) de aanspraak op BEWS bestaat bij ten minste één partner. Gevolg: het overgangsrecht wordt definitief en onomkeerbaar over beide schulddelen verdeeld, en de resterende renteaftrekjaren van de partner mét BEWS gaan deels over op de ander.
@@ -1469,7 +1480,7 @@ function Stap5({ form, up }) {
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 12, fontFamily: fam.sans }}>
             <span style={{ color: C.navy }}>€ {ev1.toLocaleString("nl-NL")}</span>
             <span style={{ color: C.textMid }}>Totaal: € {totaal.toLocaleString("nl-NL")}</span>
-            <span style={{ color: C.gold }}>€ {ev2.toLocaleString("nl-NL")}</span>
+            <span style={{ color: "#b97c14" }}>€ {ev2.toLocaleString("nl-NL")}</span>
           </div>
         </div>
       )}
@@ -1481,7 +1492,7 @@ function Stap5({ form, up }) {
       {(form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract") && totaal > 500 && (
         <div style={{ background: C.redLight, border: `1.5px solid ${C.red}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
           <div style={{ fontWeight: 700, color: C.red, fontSize: 13.5, marginBottom: 10, fontFamily: fam.sans }}>⏱️ Verjaringsrisico — actie vereist (art. 3:306 BW)</div>
-          <p style={{ margin: "0 0 10px", fontSize: 12.5, color: "#7f1d1d", lineHeight: 1.65, fontFamily: fam.sans }}>
+          <p style={{ margin: "0 0 10px", fontSize: 12.5, color: "#b42318", lineHeight: 1.65, fontFamily: fam.sans }}>
             Bij ongehuwde samenwoners verjaart een vergoedingsrecht na <strong>5 jaar</strong> (art. 3:306 BW), tenzij tijdig gestuit of een anti-verjaringsbeding is opgenomen. Bij gehuwden loopt de verjaring <em>niet</em> tijdens het huwelijk. Zonder actie verliest de inbrengende partner zijn/haar recht op terugbetaling.
           </p>
           <div style={{ fontWeight: 700, color: C.red, fontSize: 12, marginBottom: 8, fontFamily: fam.sans }}>Drie opties om verjaring te voorkomen:</div>
@@ -1535,7 +1546,7 @@ function Stap6({ form, up }) {
       <SectionH sub="Bedrag, soort, recht en draagplicht per leningdeel">Stap 6 — Leningdelen & Draagplicht</SectionH>
       <InfoBox type="info">Splits leningdelen zodanig dat de draagplicht per persoon overeenkomt met de gewenste fiscale en civiele situatie. Leningdelen met overgangsrecht worden uitsluitend toegewezen aan de rechthebbende partner (tenzij kan-bepaling van toepassing).</InfoBox>
       {form.leningdelen.map((ld, i) => (
-        <div key={i} style={{ background: i % 2 === 0 ? C.grayLight : "#FAFAF8", borderRadius: 12, padding: 16, marginBottom: 12, border: `1px solid ${C.border}` }}>
+        <div key={i} style={{ background: i % 2 === 0 ? C.grayLight : "#f8fafc", borderRadius: 12, padding: 16, marginBottom: 12, border: `1px solid ${C.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <span style={{ fontWeight: 700, color: C.navy, fontSize: 13.5, fontFamily: fam.sans }}>Leningdeel {i + 1}</span>
             {form.leningdelen.length > 1 && <button onClick={() => delLD(i)} style={{ ...btnSm, color: C.red, border: `1px solid ${C.red}` }}>✕ Verwijder</button>}
@@ -1609,7 +1620,7 @@ function Stap6({ form, up }) {
                   {c.box3Deel > 500 ? ` | 🚫 Box 3: € ${Math.round(c.box3Deel).toLocaleString("nl-NL")}` : " ✓ Binnen max. EWS (box 1)"}
                 </div>
                 {c.box3Deel > 500 && (
-                  <div style={{ fontSize: 11.5, color: "#7f1d1d", fontFamily: fam.sans, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 11.5, color: "#b42318", fontFamily: fam.sans, lineHeight: 1.6 }}>
                     <strong>€ {Math.round(c.box3Deel).toLocaleString("nl-NL")} valt in box 3</strong> — over dit deel is de rente niet aftrekbaar.
                     Indicatief verlies renteaftrek (4% rente, 37,56% maximaal aftrektarief 2026): <strong>€ {Math.round(c.box3Rente * 0.3756).toLocaleString("nl-NL")} per jaar</strong> minder aftrek.
                     Oorzaak: EWR van € {Math.round(c.ewr).toLocaleString("nl-NL")} is niet volledig ingebracht.
@@ -1626,7 +1637,7 @@ function Stap6({ form, up }) {
       </Field>
 
       {/* Onderscheid verplichte vs. extra aflossingen */}
-      <div style={{ background: "#FFFBEB", border: `1.5px solid ${C.gold}`, borderRadius: 12, padding: 16, marginTop: 4 }}>
+      <div style={{ background: "#fef3c7", border: `1.5px solid ${C.gold}`, borderRadius: 12, padding: 16, marginTop: 4 }}>
         <div style={{ fontWeight: 700, color: C.navy, fontSize: 13, marginBottom: 10, fontFamily: fam.sans }}>
           📋 Onderscheid verplichte vs. extra aflossingen — vergoedingsrecht
         </div>
@@ -1654,7 +1665,7 @@ function ResultaatPanel({ form, advies, setTab }) {
   // Gehuwd in gemeenschap: individuele benadering niet mogelijk
   if (advies.geblokkeerd) {
     return (
-      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(11,31,58,.1)", padding: 32 }}>
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(0,48,87,.1)", padding: 32 }}>
         <div style={{ display: "flex", gap: 16, alignItems: "flex-start", marginBottom: 20 }}>
           <div style={{ fontSize: 36 }}>⚖️</div>
           <div>
@@ -1676,7 +1687,7 @@ function ResultaatPanel({ form, advies, setTab }) {
   return (
     <div>
       {/* Hoofdkaart */}
-      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(11,31,58,.1)", padding: 28, marginBottom: 18 }}>
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(0,48,87,.1)", padding: 28, marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, color: C.gray, textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: fam.sans }}>Advies voor</div>
@@ -1690,7 +1701,7 @@ function ResultaatPanel({ form, advies, setTab }) {
 
       {/* Risicofactoren */}
       {advies.factoren.length > 0 && (
-        <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 18 }}>
+        <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 18 }}>
           <SectionH>Geïdentificeerde risicofactoren</SectionH>
           {advies.factoren.map((f, i) => (
             <div key={i} style={{ display: "flex", gap: 14, marginBottom: 14, padding: "12px 14px", background: f.kleur === "red" ? C.redLight : f.kleur === "orange" ? C.orangeLight : f.kleur === "blue" ? C.blueLight : C.greenLight, borderRadius: 10, borderLeft: `4px solid ${f.kleur === "red" ? C.red : f.kleur === "orange" ? C.orange : f.kleur === "blue" ? C.blue : C.green}` }}>
@@ -1705,14 +1716,14 @@ function ResultaatPanel({ form, advies, setTab }) {
       )}
 
       {/* Samenvatting leningdelen */}
-      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 18 }}>
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 18 }}>
         <SectionH>Leningdelen samenvatting</SectionH>
         <div className="scenario-table" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: fam.sans }}>
             <thead>
               <tr style={{ background: C.navy }}>
                 {["#", "Bedrag", "Soort", "Recht", form.naam1 || "Aanvrager", form.naam2 || "Partner"].map(h => (
-                  <th key={h} style={{ color: C.goldLight, padding: "9px 12px", textAlign: "left", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                  <th key={h} style={{ color: C.white, padding: "9px 12px", textAlign: "left", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1814,12 +1825,12 @@ function AdviesrapportTab({ form }) {
           const isAanbevolen = aanbevolen(t);
           const tekst = gevuld(t.tekst);
           return (
-            <div key={t.id} style={{ background: C.white, borderRadius: 12, boxShadow: "0 2px 12px rgba(11,31,58,.06)", border: `1.5px solid ${isAanbevolen ? C.gold : C.border}`, overflow: "hidden" }}>
+            <div key={t.id} style={{ background: C.white, borderRadius: 12, boxShadow: "0 2px 12px rgba(0,48,87,.06)", border: `1.5px solid ${isAanbevolen ? C.gold : C.border}`, overflow: "hidden" }}>
               <div onClick={() => setExpanded(isOpen ? null : t.id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", cursor: "pointer", userSelect: "none" }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 700, color: C.navy, fontSize: 13.5, fontFamily: fam.sans }}>{t.id} — {t.label}</span>
-                    {isAanbevolen && <span style={{ background: C.goldPale, color: C.gold, border: `1px solid ${C.gold}`, borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700, fontFamily: fam.sans }}>★ Aanbevolen</span>}
+                    {isAanbevolen && <span style={{ background: C.goldPale, color: "#b97c14", border: `1px solid ${C.gold}`, borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700, fontFamily: fam.sans }}>★ Aanbevolen</span>}
                   </div>
                   <div style={{ fontSize: 12, color: C.gray, marginTop: 3, fontFamily: fam.sans }}>{t.situatie}</div>
                 </div>
@@ -1864,7 +1875,7 @@ function DocumentenTab({ form }) {
     const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const w = window.open("", "_blank");
     if (!w) { alert("Het printvenster is geblokkeerd. Sta pop-ups toe of gebruik 'Kopieer'."); return; }
-    w.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>${esc(docTitel())} — concept</title><style>body{font-family:Georgia,"Times New Roman",serif;margin:2cm;color:#111}pre{white-space:pre-wrap;font-family:inherit;font-size:11pt;line-height:1.6}</style></head><body><pre>${esc(result)}</pre></body></html>`);
+    w.document.write(`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>${esc(docTitel())} — concept</title><style>body{font-family:Montserrat,Arial,Helvetica,sans-serif;margin:2cm;color:#111}pre{white-space:pre-wrap;font-family:Montserrat,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.6}</style></head><body><pre>${esc(result)}</pre></body></html>`);
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 250);
@@ -1902,7 +1913,7 @@ function DocumentenTab({ form }) {
         <InfoBox type="warn">Vul eerst de wizard in (tabblad Analyse) om de gegevens in het document te verwerken. U kunt ook direct een document opstellen met de standaardgegevens.</InfoBox>
       )}
 
-      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 18 }}>
+      <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 18 }}>
         <SectionH>Kies het op te stellen document</SectionH>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
           {types.map(t => (
@@ -1919,7 +1930,7 @@ function DocumentenTab({ form }) {
       </div>
 
       {result && (
-        <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24 }}>
+        <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
             <SectionH>{types.find(t => t.value === docType)?.label} — Concept</SectionH>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1934,7 +1945,7 @@ function DocumentenTab({ form }) {
           </div>
           <div style={{ marginTop: 14, padding: "12px 16px", background: C.redLight, borderRadius: 8, borderLeft: `4px solid ${C.red}` }}>
             <p style={{ margin: 0, fontSize: 12, color: C.red, fontWeight: 700, fontFamily: fam.sans }}>⚠️ Juridische disclaimer</p>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#7f1d1d", fontFamily: fam.sans }}>Dit concept is uitsluitend indicatief. De definitieve overeenkomst dient te worden opgesteld en/of getoetst door een notaris of juridisch adviseur. Het concept wijzigt geen rechten of verplichtingen.</p>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b42318", fontFamily: fam.sans }}>Dit concept is uitsluitend indicatief. De definitieve overeenkomst dient te worden opgesteld en/of getoetst door een notaris of juridisch adviseur. Het concept wijzigt geen rechten of verplichtingen.</p>
           </div>
         </div>
       )}
@@ -1981,7 +1992,7 @@ function DossierTab() {
         const items = sectie.items;
         const done = items.filter((_, i) => checked[`${sectie.sectie}-${i}`]).length;
         return (
-          <div key={si} style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 16 }}>
+          <div key={si} style={{ background: C.white, borderRadius: 16, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <h3 style={{ margin: 0, color: sectie.kleur, fontSize: 14, fontWeight: 700, fontFamily: fam.sans }}>{sectie.sectie}</h3>
               <span style={{ fontSize: 12, fontFamily: fam.sans, background: done === items.length ? C.greenLight : C.grayLight, color: done === items.length ? C.green : C.gray, padding: "3px 10px", borderRadius: 20, fontWeight: 600 }}>{done}/{items.length}</span>
@@ -2122,7 +2133,7 @@ Wanneer NIET individueel benaderen:
 Wil een koppel in gemeenschap tóch individueel regelen? Dan zijn huwelijkse voorwaarden nodig via een notariële akte. Hierin kan de draagplichtovereenkomst worden opgenomen of doorverwezen. Let op: huwelijkse voorwaarden vereisen een notarieel verleden akte en zijn niet via een onderhandse overeenkomst te regelen.`
     },
     {
-      icon: "📦", titel: "Box 3-deel in de hypotheek — bijleenregeling", kleur: "#DC2626",
+      icon: "📦", titel: "Box 3-deel in de hypotheek — bijleenregeling", kleur: "#b42318",
       inhoud: `Als een partner de eigenwoningreserve (EWR) niet volledig inbrengt bij aankoop van een nieuwe woning, ontstaat een box 3-deel in de hypotheek. Over dat deel is de rente NIET aftrekbaar.
 
 Berekening (bijleenregeling, art. 3.119aa Wet IB 2001):
@@ -2143,7 +2154,7 @@ Drie oplossingen:
 Let op: ook bij trouwen zonder huwelijkse voorwaarden kan een hertoetsmoment leiden tot box 3-verhuizing van hypotheekdelen.`
     },
     {
-      icon: "⏱️", titel: "Verjaring van vergoedingsrechten (art. 3:306 BW)", kleur: "#7C3AED",
+      icon: "⏱️", titel: "Verjaring van vergoedingsrechten (art. 3:306 BW)", kleur: "#0b4a7d",
       inhoud: `Bij ongehuwde samenwoners geldt de gewone verjaringstermijn van 5 jaar (art. 3:306 BW). Een vordering uit vergoedingsrecht verjaart 5 jaar na opeisbaarheid, tenzij tijdig gestuit.
 
 Bij gehuwden en geregistreerde partners: de verjaring loopt NIET tijdens het huwelijk/partnerschap (art. 3:321 lid 1 sub a BW). Dit is een fundamenteel verschil.
@@ -2252,7 +2263,7 @@ Het niet signaleren van de noodzaak tot een draagplichtovereenkomst kan leiden t
         {secties.map((s, i) => {
           const isOpen = open === i;
           return (
-            <div key={i} style={{ background: C.white, borderRadius: 14, boxShadow: "0 2px 14px rgba(11,31,58,.06)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
+            <div key={i} style={{ background: C.white, borderRadius: 14, boxShadow: "0 2px 14px rgba(0,48,87,.06)", border: `1px solid ${C.border}`, overflow: "hidden" }}>
               <div onClick={() => setOpen(isOpen ? -1 : i)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 20px", cursor: "pointer", userSelect: "none" }}>
                 <span style={{ fontSize: 22 }}>{s.icon}</span>
                 <span style={{ flex: 1, fontWeight: 700, color: s.kleur, fontSize: 14, fontFamily: fam.sans }}>{s.titel}</span>
@@ -2401,7 +2412,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
   const heeftRechtvaardiging = calc.rechtvaardigingen.length > 0;
 
   return (
-    <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+    <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 20 }}>
       <SectionH sub="Risico-analyse op basis van art. 1 lid 7, 1a, 24 en 33 Successiewet 1956 (2026)">Schenkbelasting risico-check</SectionH>
 
       <div style={{ padding: "12px 16px", background: C.grayLight, borderRadius: 10, marginBottom: 14, fontSize: 12.5, color: C.text, fontFamily: fam.sans, lineHeight: 1.55 }}>
@@ -2428,7 +2439,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
               <thead>
                 <tr style={{ background: C.navy }}>
                   {["", n1, n2].map(h => (
-                    <th key={h} style={{ color: C.goldLight, padding: "9px 14px", textAlign: "left", fontSize: 11.5, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>{h}</th>
+                    <th key={h} style={{ color: C.white, padding: "9px 14px", textAlign: "left", fontSize: 11.5, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -2489,7 +2500,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
                             <div style={{ fontSize: 12, fontWeight: 700, color: C.red, fontFamily: fam.sans }}>
                               Indicatieve schenkbelasting (eenmalig bij verkoop): {euro(p.belasting)}
                             </div>
-                            <div style={{ fontSize: 11, color: "#7f1d1d", marginTop: 3, fontFamily: fam.sans }}>
+                            <div style={{ fontSize: 11, color: "#b42318", marginTop: 3, fontFamily: fam.sans }}>
                               Tarief: {Math.round(calc.sbRel.t1*100)}% over €{Math.round(Math.min(p.schenking-VRIJSTELLING, 158669)).toLocaleString("nl-NL")}
                               {p.schenking-VRIJSTELLING > 158669 ? ` + ${Math.round(calc.sbRel.t2*100)}% over €${Math.round(p.schenking-VRIJSTELLING-158669).toLocaleString("nl-NL")},-` : ""}
                               {" "}(tariefgroep {calc.sbRel.groep}, art. 24 lid 1 SW 1956)
@@ -2509,7 +2520,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
             </div>
           )}
 
-          <div style={{ background: "#FFFBEB", border: `1.5px solid ${C.gold}`, borderRadius: 12, padding: 18 }}>
+          <div style={{ background: "#fef3c7", border: `1.5px solid ${C.gold}`, borderRadius: 12, padding: 18 }}>
             <div style={{ fontWeight: 700, color: C.navy, fontSize: 13, marginBottom: 10, fontFamily: fam.sans }}>
               {heeftRechtvaardiging
                 ? "✓ Mogelijke zakelijke rechtvaardigingen aanwezig — onderbouwen en vastleggen"
@@ -2613,8 +2624,8 @@ function ScenarioVergelijkingTab({ form }) {
         <td style={{ ...tdS, color: C.textMid }}>{euro(getVal(c.A, 2, actieveKolom))}</td>
         <td style={{ ...tdS, fontWeight: 700, color: C.green }}>{euro(getVal(c.B, 1, actieveKolom))}</td>
         <td style={{ ...tdS, fontWeight: 700, color: C.green }}>{euro(getVal(c.B, 2, actieveKolom))}</td>
-        {c.heeftBEWS && c.C && <td style={{ ...tdS, fontWeight: 700, color: "#7C3AED" }}>{euro(getVal(c.C, 1, actieveKolom))}</td>}
-        {c.heeftBEWS && c.C && <td style={{ ...tdS, fontWeight: 700, color: "#7C3AED" }}>{euro(getVal(c.C, 2, actieveKolom))}</td>}
+        {c.heeftBEWS && c.C && <td style={{ ...tdS, fontWeight: 700, color: "#0b4a7d" }}>{euro(getVal(c.C, 1, actieveKolom))}</td>}
+        {c.heeftBEWS && c.C && <td style={{ ...tdS, fontWeight: 700, color: "#0b4a7d" }}>{euro(getVal(c.C, 2, actieveKolom))}</td>}
         <td style={tdS}>{diffTeken(d1)}</td>
         <td style={tdS}>{diffTeken(d2)}</td>
       </tr>
@@ -2635,7 +2646,7 @@ function ScenarioVergelijkingTab({ form }) {
       {!heeftData && <InfoBox type="warn">Vul eerst aankoopprijs, leningdelen en eigen vermogen in via de Analyse-wizard.</InfoBox>}
 
       {/* Parameters */}
-      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 20 }}>
         <SectionH sub="Parameters voor de vergelijkingsberekeningen">Berekeningsparameters</SectionH>
         <div className="rg3">
           <Field label="Verwachte verkoopprijs (€)" hint="Standaard: aankoopprijs + 15%">
@@ -2671,7 +2682,7 @@ function ScenarioVergelijkingTab({ form }) {
       </div>
 
       {/* Scenario vergelijkingstabel */}
-      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 20 }}>
         <SectionH sub="Vier verkoopprijzen × twee scenario's — toon dit aan cliënten (informed consent)">Scenario vergelijking</SectionH>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
@@ -2690,17 +2701,17 @@ function ScenarioVergelijkingTab({ form }) {
                 <th style={{ ...thS, width: "15%" }}>Verkoopprijs</th>
                 <th style={{ ...thS, color: C.textMid }} colSpan={2}>Scenario A — Wettelijk 50/50<div style={{ fontWeight: 400, fontSize: 11 }}>Zonder overeenkomst</div></th>
                 <th style={{ ...thS, color: C.green }} colSpan={2}>Scenario B — Individueel<div style={{ fontWeight: 400, fontSize: 11 }}>Zonder kan-bepaling</div></th>
-                {calc.heeftBEWS && <th style={{ ...thS, color: "#7C3AED" }} colSpan={2}>Scenario C — Individueel + kan-bepaling<div style={{ fontWeight: 400, fontSize: 11 }}>Overgangsrecht gezamenlijk</div></th>}
+                {calc.heeftBEWS && <th style={{ ...thS, color: "#0b4a7d" }} colSpan={2}>Scenario C — Individueel + kan-bepaling<div style={{ fontWeight: 400, fontSize: 11 }}>Overgangsrecht gezamenlijk</div></th>}
                 <th style={thS} colSpan={2}>Verschil B − A<div style={{ fontWeight: 400, fontSize: 11 }}>Effect overeenkomst</div></th>
               </tr>
-              <tr style={{ background: "#F0F0EC", borderBottom: `2px solid ${C.border}` }}>
+              <tr style={{ background: "#eef2f6", borderBottom: `2px solid ${C.border}` }}>
                 <th style={thS}></th>
                 <th style={{ ...thS, color: C.textMid }}>{n1}</th>
                 <th style={{ ...thS, color: C.textMid }}>{n2}</th>
                 <th style={{ ...thS, color: C.green }}>{n1}</th>
                 <th style={{ ...thS, color: C.green }}>{n2}</th>
-                {calc.heeftBEWS && <th style={{ ...thS, color: "#7C3AED", fontSize: 11 }}>{n1}</th>}
-                {calc.heeftBEWS && <th style={{ ...thS, color: "#7C3AED", fontSize: 11 }}>{n2}</th>}
+                {calc.heeftBEWS && <th style={{ ...thS, color: "#0b4a7d", fontSize: 11 }}>{n1}</th>}
+                {calc.heeftBEWS && <th style={{ ...thS, color: "#0b4a7d", fontSize: 11 }}>{n2}</th>}
                 <th style={{ ...thS, fontSize: 11 }}>{n1}</th>
                 <th style={{ ...thS, fontSize: 11 }}>{n2}</th>
               </tr>
@@ -2714,7 +2725,7 @@ function ScenarioVergelijkingTab({ form }) {
           <strong>Toelichting:</strong> Scenario A = wettelijk 50/50 (zonder overeenkomst). Scenario B = individuele draagplicht zonder kan-bepaling. {calc.heeftBEWS ? "Scenario C = individueel mét kan-bepaling: overgangsrecht (BEWS) wordt naar rato schuldaandeel over beide partners verdeeld — onomkeerbaar. " : ""}Het verschil toont de financiële waarde van de overeenkomst per partner.
         </div>
         {calc.heeftBEWS && (
-          <div style={{ marginTop: 10, padding: "10px 14px", background: "#F5F3FF", border: `1px solid #7C3AED`, borderRadius: 8, fontSize: 12, color: "#5B21B6", fontFamily: fam.sans }}>
+          <div style={{ marginTop: 10, padding: "10px 14px", background: "#eef4fa", border: `1px solid #0b4a7d`, borderRadius: 8, fontSize: 12, color: "#003057", fontFamily: fam.sans }}>
             <strong>⚠️ Scenario C (kan-bepaling) — let op:</strong> De renteaftrekjaren van de partner MÉT BEWS gaan deels over op de partner ZONDER BEWS. Dit is definitief en onherroepelijk (art. 10bis.1 derde lid Wet IB 2001). Toon cliënten expliciet het verschil in jaarlijkse renteaftrek tussen Scenario B en C voor beide partners.
           </div>
         )}
@@ -2724,7 +2735,7 @@ function ScenarioVergelijkingTab({ form }) {
       </div>
 
       {/* Renteaftrek vergelijking */}
-      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
+      <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(0,48,87,.07)", padding: 24, marginBottom: 20 }}>
         <SectionH sub="Jaarlijkse belastingbesparing per scenario">Renteaftrek vergelijking</SectionH>
       <div style={{ padding: "10px 14px", background: C.blueLight, borderRadius: 8, marginBottom: 14, fontSize: 12, color: C.blue, fontFamily: fam.sans }}>
         <strong>Fiscaal partnerschap vereist (art. 1.2 Wet IB 2001):</strong> Renteaftrek kan alleen tussen partners worden toegerekend als zij gedurende het gehele jaar fiscale partners zijn. Voor ongehuwd samenwoners geldt: zelfde woonadres in BRP én een notarieel samenlevingscontract (of een kind samen, of een pensioenregeling). Bij geen fiscaal partnerschap draagt iedere partner alleen zijn/haar eigen deel aan.
@@ -2843,7 +2854,7 @@ function ConsumentenTab() {
     <div style={{ fontFamily: fam.sans }}>
 
       {/* ── HERO ── */}
-      <div style={{ background: `linear-gradient(135deg, ${C.navy} 0%, #1a3a5c 60%, #0d2b45 100%)`, borderRadius: 20, padding: "40px 36px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
+      <div style={{ background: `linear-gradient(135deg, ${C.navy} 0%, #0b4a7d 60%, #003057 100%)`, borderRadius: 20, padding: "40px 36px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(184,134,11,0.12)" }} />
         <div style={{ position: "absolute", bottom: -20, left: "30%", width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.04)" }} />
         <div style={{ position: "relative", zIndex: 1 }}>
@@ -2854,14 +2865,14 @@ function ConsumentenTab() {
             Jullie kopen samen een huis.<br />
             <span style={{ color: C.goldLight }}>Maar wie krijgt wat bij een scheiding?</span>
           </h1>
-          <p style={{ margin: "0 0 24px", color: "#94A3B8", fontSize: 15, lineHeight: 1.7, maxWidth: 580 }}>
+          <p style={{ margin: "0 0 24px", color: "#b9c7d3", fontSize: 15, lineHeight: 1.7, maxWidth: 580 }}>
             De meeste stellen denken er niet aan. Toch kan een simpele overeenkomst — de <strong style={{ color: C.white }}>draagplichtovereenkomst</strong> — je tienduizenden euro's schelen. In gewone taal: wie heeft recht op wat als jullie woning wordt verkocht?
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {[["34%", "van huwelijken eindigt in scheiding"], ["€60.000+", "kan verloren gaan zonder overeenkomst"], ["€300–600", "kost een notariële vastlegging"]].map(([getal, label]) => (
               <div key={getal} style={{ background: "rgba(255,255,255,0.08)", borderRadius: 12, padding: "14px 18px", minWidth: 120 }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.goldLight, lineHeight: 1 }}>{getal}</div>
-                <div style={{ fontSize: 11.5, color: "#94A3B8", marginTop: 4, lineHeight: 1.4 }}>{label}</div>
+                <div style={{ fontSize: 11.5, color: "#b9c7d3", marginTop: 4, lineHeight: 1.4 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -2869,7 +2880,7 @@ function ConsumentenTab() {
       </div>
 
       {/* ── WAT IS HET? ── */}
-      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(0,48,87,.07)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <div style={{ fontSize: 28 }}>🤔</div>
           <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Wat is het eigenlijk?</h2>
@@ -2893,7 +2904,7 @@ function ConsumentenTab() {
       </div>
 
       {/* ── CONCREET VOORBEELD ── */}
-      <div style={{ borderRadius: 16, marginBottom: 20, overflow: "hidden", boxShadow: "0 4px 20px rgba(11,31,58,.1)" }}>
+      <div style={{ borderRadius: 16, marginBottom: 20, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,48,87,.1)" }}>
         <div style={{ background: C.navy, padding: "20px 28px", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ fontSize: 26 }}>💡</div>
           <div>
@@ -2973,13 +2984,13 @@ function ConsumentenTab() {
           </div>
 
           <div style={{ marginTop: 16, padding: "14px 18px", background: C.goldPale, border: `1px solid ${C.gold}`, borderRadius: 10, fontSize: 13.5, color: C.navy, textAlign: "center", fontWeight: 600 }}>
-            Het verschil voor Sophie: <span style={{ color: C.red, textDecoration: "line-through", marginRight: 8 }}>€ {zonderSophie.toLocaleString("nl-NL")}</span> → <span style={{ color: C.green }}>€ {metSophie.toLocaleString("nl-NL")}</span>  =  <span style={{ color: C.gold, fontSize: 16 }}>+€ {(metSophie - zonderSophie).toLocaleString("nl-NL")} dankzij de overeenkomst</span>
+            Het verschil voor Sophie: <span style={{ color: C.red, textDecoration: "line-through", marginRight: 8 }}>€ {zonderSophie.toLocaleString("nl-NL")}</span> → <span style={{ color: C.green }}>€ {metSophie.toLocaleString("nl-NL")}</span>  =  <span style={{ color: "#b97c14", fontSize: 16 }}>+€ {(metSophie - zonderSophie).toLocaleString("nl-NL")} dankzij de overeenkomst</span>
           </div>
         </div>
       </div>
 
       {/* ── CHECKLIST: HEB JIJ HET NODIG? ── */}
-      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(0,48,87,.07)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
           <div style={{ fontSize: 28 }}>✔️</div>
           <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Heb jij het nodig?</h2>
@@ -3012,7 +3023,7 @@ function ConsumentenTab() {
       </div>
 
       {/* ── DE 3 MOMENTEN WAAROP HET KRITISCH IS ── */}
-      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(0,48,87,.07)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <div style={{ fontSize: 28 }}>⏰</div>
           <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>De drie momenten waarop het écht telt</h2>
@@ -3026,7 +3037,7 @@ function ConsumentenTab() {
               detail: "Geldt ook voor samenwoners die nooit officieel getrouwd waren."
             },
             {
-              nr: "2", kleur: "#7C3AED", bg: "#F5F3FF",
+              nr: "2", kleur: "#0b4a7d", bg: "#eef4fa",
               titel: "Bij overlijden van één van jullie",
               tekst: "Als jouw partner overlijdt, is het cruciaal dat duidelijk is wie aanspraak heeft op de woning en de hypotheekschuld. Zonder vastlegging kan dit leiden tot vervelende discussies met de erfgenamen.",
               detail: "Combineer de overeenkomst met een testament voor optimale bescherming."
@@ -3051,7 +3062,7 @@ function ConsumentenTab() {
       </div>
 
       {/* ── VEELGESTELDE VRAGEN ── */}
-      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(11,31,58,.07)" }}>
+      <div style={{ background: C.white, borderRadius: 16, padding: 28, marginBottom: 20, boxShadow: "0 4px 20px rgba(0,48,87,.07)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
           <div style={{ fontSize: 28 }}>❓</div>
           <h2 style={{ margin: 0, color: C.navy, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Veelgestelde vragen</h2>
@@ -3062,7 +3073,7 @@ function ConsumentenTab() {
             <div key={i} style={{ borderBottom: `1px solid ${C.grayMid}`, overflow: "hidden" }}>
               <div onClick={() => setOpenFaq(isOpen ? null : i)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 4px", cursor: "pointer", userSelect: "none" }}>
                 <span style={{ fontWeight: 600, fontSize: 14, color: C.navy, flex: 1, paddingRight: 16, lineHeight: 1.4 }}>{f.v}</span>
-                <span style={{ color: C.gold, fontSize: 20, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(45deg)" : "none" }}>+</span>
+                <span style={{ color: "#b97c14", fontSize: 20, flexShrink: 0, transition: "transform 0.2s", transform: isOpen ? "rotate(45deg)" : "none" }}>+</span>
               </div>
               {isOpen && (
                 <div style={{ padding: "0 4px 16px", fontSize: 13.5, color: C.textMid, lineHeight: 1.8, borderTop: `1px solid ${C.grayLight}`, paddingTop: 12 }}>
@@ -3075,10 +3086,10 @@ function ConsumentenTab() {
       </div>
 
       {/* ── CTA ── */}
-      <div style={{ background: `linear-gradient(135deg, ${C.navy}, #1E4A6E)`, borderRadius: 16, padding: "28px 32px", textAlign: "center" }}>
+      <div style={{ background: `linear-gradient(135deg, ${C.navy}, #0b4a7d)`, borderRadius: 16, padding: "28px 32px", textAlign: "center" }}>
         <div style={{ fontSize: 36, marginBottom: 12 }}>🏠</div>
         <h3 style={{ margin: "0 0 10px", color: C.white, fontSize: 20, fontWeight: 700, fontFamily: fam.serif }}>Klaar om het te regelen?</h3>
-        <p style={{ margin: "0 0 20px", color: "#94A3B8", fontSize: 14, lineHeight: 1.7, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+        <p style={{ margin: "0 0 20px", color: "#b9c7d3", fontSize: 14, lineHeight: 1.7, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
           Vraag je hypotheekadviseur om een draagplichtovereenkomst op te stellen. Het is één gesprek dat jullie toekomstige ik enorm kan helpen.
         </p>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
@@ -3140,7 +3151,7 @@ function App() {
       {/* ── GLOBAL STYLES: print, mobile, Google Sites ── */}
       <style>{`
         * { box-sizing: border-box; }
-        input, select, textarea, button { font-family: system-ui, sans-serif; }
+        input, select, textarea, button { font-family: Montserrat,Arial,Helvetica,sans-serif; }
         /* ── RESPONSIVE GRIDS ── */
         .rg3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
         .rg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -3175,29 +3186,32 @@ function App() {
         }
         /* ── TOUCH TARGETS ── */
         button { min-height: 36px; }
-        input, select { min-height: 38px; }
+        input, select { min-height: 40px; }
         /* ── SCROLLBAR STYLING ── */
         .tab-scroll::-webkit-scrollbar { height: 3px; }
         .tab-scroll::-webkit-scrollbar-track { background: transparent; }
-        .tab-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
+        .tab-scroll::-webkit-scrollbar-thumb { background: rgba(0,48,87,0.25); border-radius: 3px; }
         /* ── FOCUS STYLES ── */
-        input:focus, select:focus, textarea:focus { outline: 2px solid #B8860B; outline-offset: 1px; }
-        button:focus-visible { outline: 2px solid #B8860B; outline-offset: 2px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #003057 !important; box-shadow: 0 0 0 3px rgba(0,48,87,.12); }
+        button:focus-visible { outline: 2px solid #003057; outline-offset: 2px; }
       `}</style>
       {/* ── HEADER ── */}
-      <div style={{ background: C.navy, borderBottom: `3px solid ${C.gold}` }} className="no-print">
-        <div style={{ maxWidth: 980, margin: "0 auto", padding: "14px 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }} className="header-wrap">
-            <div style={{ background: C.gold, width: 5, height: 36, borderRadius: 3, flexShrink: 0 }} />
+      <div className="no-print">
+        <div style={{ background: C.navy }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }} className="header-wrap">
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ color: C.goldLight, fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: fam.sans }}>Hypotheekadvies Tool</div>
-              <div style={{ color: C.white, fontSize: 18, fontWeight: 700, marginTop: 1, fontFamily: fam.serif, lineHeight: 1.2 }} className="header-title">Draagplichtovereenkomst Assistent</div>
+              <div style={{ color: C.goldLight, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.09em", textTransform: "uppercase", fontFamily: fam.sans }}>Hypotheekadvies Tool</div>
+              <div style={{ color: C.white, fontSize: 20, fontWeight: 700, marginTop: 2, fontFamily: fam.serif, lineHeight: 1.25 }} className="header-title">Draagplichtovereenkomst Assistent</div>
             </div>
           </div>
+        </div>
+        </div>
+        <div style={{ background: C.white, borderBottom: `1px solid ${C.border}`, boxShadow: "0 2px 14px rgba(0,48,87,.08)" }}>
           {/* Tab nav — scrollable on mobile */}
-          <div className="tab-scroll" style={{ display: "flex", background: C.navyMid, borderRadius: 10, padding: 3, gap: 2 }}>
+          <div className="tab-scroll" style={{ display: "flex", maxWidth: 1180, margin: "0 auto", padding: "0 16px", gap: 2, overflowX: "auto" }}>
             {TABS.map((t, i) => (
-              <button key={i} onClick={() => setTab(i)} style={{ padding: "7px 13px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: fam.sans, fontSize: 12, fontWeight: 600, background: tab === i ? C.gold : "transparent", color: tab === i ? C.navy : C.textLight, transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <button key={i} onClick={() => setTab(i)} style={{ padding: "11px 13px 8px", borderRadius: 0, border: "none", borderBottom: `3px solid ${tab === i ? C.gold : "transparent"}`, cursor: "pointer", fontFamily: fam.sans, fontSize: 12.5, fontWeight: tab === i ? 700 : 600, background: "transparent", color: C.navy, opacity: tab === i ? 1 : 0.8, transition: "border-color 0.15s, opacity 0.15s", whiteSpace: "nowrap", flexShrink: 0 }}>
                 {TAB_ICONS[i]} <span className="hide-mobile">{t}</span>
                 <span style={{ display: "none" }} className="show-mobile">{t.split(" ")[0]}</span>
               </button>
@@ -3206,13 +3220,13 @@ function App() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 980, margin: "0 auto", padding: "24px 20px" }} className="main-pad">
+      <div style={{ maxWidth: 1180, margin: "0 auto", padding: "20px 16px 48px" }} className="main-pad">
 
         {/* ── TAB 0: ANALYSE WIZARD ── */}
         {tab === 0 && <ConsumentenTab />}
         {tab === 1 && (
           !showResult ? (
-            <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(11,31,58,.1)", padding: 28 }} className="card-pad">
+            <div style={{ background: C.white, borderRadius: 16, boxShadow: "0 6px 32px rgba(0,48,87,.1)", padding: 28 }} className="card-pad">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
                 <div style={{ fontSize: 12.5, color: C.gray, fontFamily: fam.sans }}>
                   <strong style={{ color: C.navy }}>{STAP_LABELS[stap]}</strong> — stap {stap + 1} van {STAP_LABELS.length}
