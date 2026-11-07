@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toetsinkomen bepalen</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#00408a;--gold:#e5a138;--gold-lt:#fef8ee;
+  --bg:#f4f7f9;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;
+  --green:#1a8a50;--grlt:#e8f7ef;--red:#c0392b;--redlt:#fdecea;--shadow:0 2px 16px rgba(0,48,87,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;}
+.hdr{background:var(--navy);padding:16px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.hdr-title{font-size:19px;font-weight:800;color:#fff;}
+.hdr-sub{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px;}
+.hdr-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10.5px;font-weight:800;padding:4px 11px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:16px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+.ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ch .num{background:var(--gold);color:var(--navy);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex:none;}
+.cb{padding:18px;}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0;}
+label{font-size:12px;font-weight:700;color:var(--navy);}
+.sub{font-size:11px;color:var(--muted);}
+.iw{position:relative;}
+.iw .px{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.iw .sx{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:600;color:var(--muted);pointer-events:none;}
+input,select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:14px;color:var(--text);background:#fff;outline:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input.eur{padding-left:26px;text-align:right;}
+.iw input.pct{padding-right:30px;text-align:right;}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;font-weight:600;color:var(--navy);}
+.chk input{width:auto;margin-top:3px;}
+.hidden{display:none!important;}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.tabs button{border:1.5px solid var(--border);background:#fff;color:var(--navy);padding:7px 14px;border-radius:18px;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+.src-card{border:1.5px solid var(--border);border-radius:10px;margin-top:12px;overflow:hidden;}
+.src-h{display:flex;gap:8px;align-items:center;background:#eef3f8;padding:8px 12px;flex-wrap:wrap;}
+.src-h select{flex:1;min-width:200px;font-weight:700;color:var(--navy);}
+.src-h .rm{border:none;background:none;color:var(--red);font-weight:800;font-size:18px;cursor:pointer;padding:0 6px;}
+.src-b{padding:12px;}
+.res{margin-top:10px;font-size:12.5px;background:#f8fafb;border-left:3px solid var(--navy);padding:8px 12px;border-radius:0 6px 6px 0;}
+.res b{color:var(--navy);}
+.add{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.btn{padding:10px 16px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy);}
+.btn.gold{background:var(--gold);color:var(--navy);}
+.uitleg{background:var(--gold-lt);border-left:3px solid var(--gold);padding:10px 14px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.65;}
+.uitleg b{color:var(--navy);}
+.warn{background:var(--redlt);border-left:3px solid var(--red);padding:7px 12px;border-radius:0 6px 6px 0;font-size:12.5px;margin-top:8px;}
+.note{background:#eef3f8;border-left:3px solid var(--navy2);padding:7px 12px;border-radius:0 6px 6px 0;font-size:12px;margin-top:8px;}
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px;}
+.hbox{border-radius:10px;padding:14px 16px;text-align:center;border:1.5px solid #c5d8e8;background:#eff4f9;}
+.hbox.ok{background:var(--grlt);border-color:#a7dfc2;}
+.hbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.hbv{font-size:26px;font-weight:800;color:var(--navy);line-height:1.2;margin-top:4px;}
+.hbs{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.rt{width:100%;border-collapse:collapse;font-size:13px;}
+.rt th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+.rt th.r,.rt td.r{text-align:right;white-space:nowrap;}
+.rt td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+.rt td small{display:block;font-size:11px;color:var(--muted);}
+.rt tr.tot td{font-weight:800;color:var(--navy);background:#f8fafb;border-top:2px solid var(--navy);}
+.disc{background:#fff;border:1.5px dashed var(--gold);border-radius:10px;padding:12px 16px;font-size:12px;}
+.disc b{color:var(--navy);}
+.srcl{font-size:11.5px;line-height:1.7;}
+.srcl li{margin-left:18px;margin-bottom:3px;}
+.srcl a{color:var(--navy2);word-break:break-word;}
+.pol{border:1.5px dashed var(--muted);border-radius:10px;padding:12px;margin-top:4px;}
+@media (max-width:640px){.hdr-badge{margin-left:0;}.hbv{font-size:22px;}.rt{font-size:12px;}.rt td,.rt th{padding:6px;}}
+@media print{.noprint{display:none!important;}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div>
+    <div class="hdr-title">Toetsinkomen bepalen</div>
+    <div class="hdr-sub">Per inkomensbron: welke informatiebron, welk bedrag telt mee en hoe lang – vóór en na de AOW-datum</div>
+  </div>
+  <div class="hdr-badge">Peildatum 2026</div>
+</div>
+<div class="wrap">
+
+<div class="disc"><b>Indicatief, geen advies.</b> De rekenregels volgen de Tijdelijke regeling hypothecair krediet (Trhk, art. 2), de Gedragscode Hypothecaire Financieringen (GHF) en de Voorwaarden en normen NHG 2026-1 (hoofdstuk C.7). <b>Geldverstrekkers hanteren daarnaast eigen acceptatiebeleid</b> (bijv. welke variabele looncomponenten, welke informatiebronnen en welke afslagen). Het toetsinkomen in de aanvraag stelt de geldverstrekker vast. Aan deze uitkomst kunnen geen rechten worden ontleend.</div>
+
+<div class="card">
+  <div class="ch"><span class="num">1</span> Aanvragers en peildatum</div>
+  <div class="cb">
+    <div class="grid">
+      <div class="fl"><label for="datum">Datum (bindend) aanbod</label><input type="date" id="datum"><span class="sub">Documenten worden getoetst op ouderdom op deze datum</span></div>
+      <div class="fl"><label for="rente">Hypotheekrente (voor inkomsten uit vermogen)</label><div class="iw"><input id="rente" class="pct" inputmode="decimal" value="4,0"><span class="sx">%</span></div></div>
+      <div class="fl"><label class="chk" style="margin-top:22px"><input type="checkbox" id="twee" checked> Er is een tweede aanvrager</label></div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="fl"><label for="geb1">Geboortedatum aanvrager 1</label><input type="date" id="geb1" value="1972-03-18"><span class="sub" id="aowt1"></span></div>
+      <div class="fl" id="geb2wrap"><label for="geb2">Geboortedatum aanvrager 2</label><input type="date" id="geb2" value="1964-11-02"><span class="sub" id="aowt2"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch"><span class="num">2</span> Inkomensbronnen</div>
+  <div class="cb">
+    <div class="tabs noprint" id="tabs"><button type="button" class="on" data-p="1">Aanvrager 1</button><button type="button" data-p="2" id="tab2">Aanvrager 2</button></div>
+    <div id="p1"></div>
+    <div id="p2" class="hidden"></div>
+    <div class="add noprint">
+      <select id="addType" style="max-width:360px"></select>
+      <button type="button" class="btn" id="addBtn">+ Inkomensbron toevoegen</button>
+    </div>
+  </div>
+</div>
+
+<div class="card noprint">
+  <div class="ch"><span class="num">3</span> Beleid geldverstrekker (optioneel)</div>
+  <div class="cb">
+    <label class="chk"><input type="checkbox" id="polOn"> Pas eigen afslagen van een geldverstrekker toe (standaard uit)</label>
+    <div class="sub" style="margin-top:4px">Deze afslagen volgen <b>niet</b> uit de Trhk, de GHF of de NHG-normen. Sommige geldverstrekkers hanteren ze in hun acceptatiebeleid. Gebruik ze alleen als het beleid van de gekozen geldverstrekker dat voorschrijft.</div>
+    <div class="grid pol hidden" id="polWrap">
+      <div class="fl"><label for="polVar">Variabele componenten tellen mee voor</label><div class="iw"><input id="polVar" class="pct" inputmode="decimal" value="100"><span class="sx">%</span></div><span class="sub">Overwerk, provisie, ORT, bonus (vast salaris blijft 100%)</span></div>
+      <div class="fl"><label for="polFlex">Afslag flexibel inkomen</label><div class="iw"><input id="polFlex" class="pct" inputmode="decimal" value="0"><span class="sx">%</span></div><span class="sub">Jaaropgaven, IBL, Perspectiefverklaring, Arbeidsmarktscan</span></div>
+      <div class="fl"><label for="polOnd">Afslag ondernemersinkomen</label><div class="iw"><input id="polOnd" class="pct" inputmode="decimal" value="0"><span class="sx">%</span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="results">
+  <div class="ch">Resultaat: toetsinkomen</div>
+  <div class="cb">
+    <div class="hero" id="hero"></div>
+    <div style="overflow-x:auto"><table class="rt" id="rt"></table></div>
+    <div id="msgs"></div>
+    <div class="btns noprint" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+      <button class="btn" type="button" id="printBtn">Afdrukken / PDF</button>
+      <button class="btn sec" type="button" id="voorbeeldBtn">Voorbeeld laden</button>
+      <button class="btn sec" type="button" id="leegBtn">Alles leegmaken</button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="bronnen">
+  <div class="ch">Rekenregels en bronnen</div>
+  <div class="cb srcl">
+    <ul>
+      <li><b>Grondslag (Trhk art. 2 lid 1).</b> De aanbieder houdt rekening met de huidige vaste en bestendige inkomsten van de consument. Reiskosten-, onkostenvergoedingen en pensioencompensatie tellen niet mee (NHG C.7.4).</li>
+      <li><b>Geen vaste inkomsten (Trhk art. 2 lid 2).</b> De aanbieder kan uitgaan van de gemiddelde inkomsten over de laatste drie kalenderjaren of 36 maanden. NHG C.7.6.2 (jaaropgaven): tel de bruto jaarinkomens op en deel door 3; het inkomen is maximaal het bruto jaarinkomen van het laatste kalenderjaar. Meer dan één kalenderjaar zonder inkomsten: niet bruikbaar.</li>
+      <li><b>Perspectief (Trhk art. 2 lid 3).</b> Bij minimaal twaalf maanden inkomsten mag het huidige inkomen worden gebruikt als een deskundige op basis van het arbeidsmarktperspectief onderbouwt dat het bestendig is (Arbeidsmarktscan; Perspectiefverklaring voor uitzendkrachten, NHG C.7.8 en C.7.9). Arbeidsmarktscan: laagste van actueel inkomen en verdiencapaciteit.</li>
+      <li><b>Werkgeversverklaring (NHG C.7.5).</b> Onbepaalde tijd of bepaalde tijd met intentieverklaring, proeftijd voorbij: bestendige delen optellen, voor de hele looptijd. Bepaalde tijd zonder intentieverklaring: meetellen tot het einde van de arbeidsovereenkomst. Inkomensstijging binnen 6 maanden zonder voorwaarden (werkgeversverklaring) mag mee bij onbepaalde tijd of intentieverklaring. Aandeelhouder van 5% of meer bij de werkgever: geen werkgeversverklaring. Werkgeversverklaring en salarisstrook maximaal 3 maanden oud.</li>
+      <li><b>Inkomensbepaling Loondienst (NHG C.7.7).</b> Het toetsinkomen komt uit de rekentool op toetsinkomenberekenen.nl op basis van het UWV-verzekeringsbericht (max. 3 maanden oud); geen werkgeversverklaring. Deze tool rekent de IBL niet zelf na, maar neemt de uitkomst over.</li>
+      <li><b>Ondernemer.</b> NHG C.7.10: Inkomensverklaring Ondernemer (IKV) van een geaccepteerde rekenexpert, max. 6 maanden oud, bij minimaal 12 maanden onderneming (ook DGA met 5% of meer). Zonder NHG: gemiddelde over de laatste drie kalenderjaren (Trhk art. 2 lid 2), met als maximum het laatste jaar (AFM-toetskader 2011; vgl. GHF 2011 art. 3 onder c). Alleen de laatste drie jaren tellen, verlies telt negatief mee; de exacte methode is beleid van de geldverstrekker.</li>
+      <li><b>Uitkering (NHG C.7.11).</b> Bedrag volgens de laatste specificatie, zolang de uitkering duurt; IVA, WAO en WAZ voor de hele looptijd (IVA eindigt bij de AOW-leeftijd). Alleen het zekere deel telt.</li>
+      <li><b>AOW, pensioen, lijfrente (NHG C.7.12; Trhk art. 2 lid 5).</b> Bereikt de consument binnen 10 jaar na het aangaan de AOW-leeftijd, dan wordt (ook) getoetst op het inkomen vanaf de AOW-leeftijd. Vanaf de AOW-leeftijd tellen arbeids- en ondernemingsinkomsten niet meer mee. Bij twee aanvragers waarvan één AOW-gerechtigd: de financieringslasttabel volgt de aanvrager met het hoogste toetsinkomen (Trhk art. 3 lid 7).</li>
+      <li><b>Alimentatie (NHG C.7.14).</b> Ontvangen partneralimentatie telt mee zolang het recht bestaat (uitspraak rechter of notariële overeenkomst); kinderalimentatie niet. Betaalde partneralimentatie gaat van het inkomen af.</li>
+      <li><b>Inkomsten uit vrij vermogen (GHF 2020, art. 4 lid 1).</b> Ten hoogste 3% van de waarde van het vermogen, of de hypotheekrente als die lager is; de vermogensbron mag niet worden aangetast.</li>
+      <li><b>Gezamenlijk toetsinkomen.</b> Bij twee aanvragers geldt één financieringslastpercentage op het gezamenlijke toetsinkomen (Trhk art. 3 lid 6).</li>
+    </ul>
+    <p style="margin-top:8px"><b>Let op:</b> de GHF 2020 bevat zelf geen gedetailleerde inkomensregels meer; zij verwijst voor de leencapaciteit naar de Trhk. De detailregels per informatiebron hierboven komen uit de NHG-normen; buiten NHG volgen geldverstrekkers deze vaak, maar niet altijd.</p>
+    <p style="margin-top:8px"><b>Bronnen</b></p>
+    <ul>
+      <li>Tijdelijke regeling hypothecair krediet, geldend vanaf 1-1-2026, art. 2 en 3: <a href="https://wetten.overheid.nl/BWBR0032503/2026-01-01" target="_blank" rel="noopener">wetten.overheid.nl/BWBR0032503/2026-01-01</a></li>
+      <li>Gedragscode Hypothecaire Financieringen 2020 (in werking 1-8-2020), art. 4: <a href="https://www.verzekeraars.nl/media/7585/gedragscode-hypothecaire-financieringen-2020.pdf" target="_blank" rel="noopener">verzekeraars.nl – GHF 2020</a> en toelichting: <a href="https://www.verzekeraars.nl/media/7586/toelichting-gedragscode-hypothecaire-financiering-2020.pdf" target="_blank" rel="noopener">toelichting GHF 2020</a></li>
+      <li>NHG, Voorwaarden en normen 2026-1, hoofdstuk C.7 (toetsinkomen): <a href="https://www.nhg.nl/media/gtaickpv/vn-nhg-2026.pdf" target="_blank" rel="noopener">nhg.nl – vn-nhg-2026.pdf</a></li>
+      <li>GHF 2011, art. 3 (historisch, ondernemer gemiddelde 3 jaar): <a href="https://zoek.officielebekendmakingen.nl/blg-105407.pdf" target="_blank" rel="noopener">blg-105407.pdf</a>; AFM, feedbackstatement toetskader hypothecaire kredietverlening (maximum laatste kalenderjaar): <a href="https://zoek.officielebekendmakingen.nl/blg-63230.pdf" target="_blank" rel="noopener">blg-63230.pdf</a></li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+function parseNL(s){if(s==null)return 0;s=String(s).replace(/[€\s]/g,'');if(s==='')return 0;var neg=/^[-−]/.test(s);s=s.replace(/^[-−]/,'');if(s.indexOf(',')>=0){s=s.replace(/\./g,'').replace(',','.');}else if(/^\d+\.\d{1,2}$/.test(s)){}else{s=s.replace(/\./g,'');}var v=parseFloat(s);if(!isFinite(v))v=0;return neg?-v:v;}
+function grp(i){return i.replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function nl(v,d){d=d||0;var neg=v<0;v=Math.abs(v);var f=v.toFixed(d).split('.');return (neg?'− ':'')+grp(f[0])+(d?','+f[1]:'');}
+function eur(v,d){if(d==null)d=0;var neg=v<-0.004;return (neg?'− ':'')+'€ '+nl(Math.abs(v),d);}
+function fmtInput(el){if(!el.value.trim())return;var v=parseNL(el.value);var c=Math.round(Math.abs(v)*100)%100;el.value=(v<0?'-':'')+nl(Math.abs(v),c?2:0);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function aowDatumUit(geb){var m=geb.getFullYear()<=1960?0:3;var d=new Date(geb.getFullYear()+67,geb.getMonth()+m,1);d.setDate(Math.min(geb.getDate(),new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d;}
+var MND=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+function dS(d){return d.getDate()+' '+MND[d.getMonth()]+' '+d.getFullYear();}
+function pDate(v){if(!v)return null;var d=new Date(v+'T00:00:00');return isNaN(d)?null:d;}
+function monthsBetween(a,b){return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+(b.getDate()>=a.getDate()?0:-1);}
+
+/* ---------- bronnen-definitie ---------- */
+var TYPES={
+  wgv:{t:'Loondienst – werkgeversverklaring',cat:'arbeid'},
+  jo:{t:'Loondienst / flex – jaaropgaven laatste 3 kalenderjaren',cat:'arbeid',flex:1},
+  ibl:{t:'Loondienst – Inkomensbepaling Loondienst (IBL)',cat:'arbeid',flex:1},
+  ams:{t:'Loondienst bepaalde tijd – Arbeidsmarktscan',cat:'arbeid',flex:1},
+  pv:{t:'Uitzendwerk – Perspectiefverklaring',cat:'arbeid',flex:1},
+  ond:{t:'Ondernemer / DGA (≥ 5%)',cat:'ond'},
+  uitk:{t:'Uitkering (toekenningsbesluit)',cat:'uitk'},
+  pens:{t:'AOW, pensioen of lijfrente',cat:'pens'},
+  alim:{t:'Partneralimentatie (ontvangen of betaald)',cat:'alim'},
+  verm:{t:'Inkomsten uit vrij beschikbaar vermogen',cat:'verm'}
+};
+var seq=0, SRC={1:[],2:[]}, active=1;
+
+function eurF(id,lbl,v,sub){return '<div class="fl"><label for="'+id+'">'+lbl+'</label><div class="iw"><span class="px">€</span><input class="eur" inputmode="decimal" id="'+id+'" value="'+(v==null?'':v)+'"></div>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</div>';}
+function selF(id,lbl,opts,v,sub){return '<div class="fl"><label for="'+id+'">'+lbl+'</label><select id="'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===v?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</div>';}
+function chkF(id,lbl,on){return '<div class="fl"><label class="chk"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'> '+lbl+'</label></div>';}
+function dateF(id,lbl,v,sub){return '<div class="fl"><label for="'+id+'">'+lbl+'</label><input type="date" id="'+id+'" value="'+(v||'')+'">'+(sub?'<span class="sub">'+sub+'</span>':'')+'</div>';}
+
+function body(type,k,d){
+  d=d||{};
+  var h='<div class="grid">';
+  if(type==='wgv'){
+    h+=selF(k+'c','Soort arbeidsovereenkomst',[['ot','Onbepaalde tijd'],['bti','Bepaalde tijd mét intentieverklaring'],['bt','Bepaalde tijd zónder intentieverklaring']],d.c||'ot');
+    h+=chkF(k+'pt','Proeftijd voorbij (of geen proeftijd)',d.pt!==false);
+    h+=chkF(k+'ah','Aandeelhouder ≥ 5% bij de werkgever',!!d.ah);
+    h+=dateF(k+'ed','Einddatum contract (bij bepaalde tijd)',d.ed||'');
+    h+='</div><div class="grid" style="margin-top:10px">';
+    h+=eurF(k+'sal','Bruto jaarsalaris (excl. vakantiegeld)',d.sal);
+    h+=eurF(k+'vg','Vakantietoeslag per jaar',d.vg);
+    h+=eurF(k+'ej','Vaste eindejaarsuitkering / 13e maand',d.ej,'Alleen als onvoorwaardelijk');
+    h+='</div><div class="sub" style="margin:10px 0 4px">Variabele componenten tellen alleen mee als de werkgever ze in de werkgeversverklaring als <b>structureel</b> vermeldt:</div><div class="grid">';
+    h+=eurF(k+'ort','Onregelmatigheidstoeslag per jaar',d.ort)+chkF(k+'orts','ORT structureel',d.orts);
+    h+=eurF(k+'ow','Overwerk per jaar',d.ow)+chkF(k+'ows','Overwerk structureel',d.ows);
+    h+=eurF(k+'pr','Provisie / bonus per jaar',d.pr)+chkF(k+'prs','Provisie / bonus structureel',d.prs);
+    h+=eurF(k+'ov','Overige vaste toeslagen per jaar',d.ov,'Bijv. vaste ploegentoeslag, structureel flexibel budget');
+    h+='</div><div class="grid" style="margin-top:10px">';
+    h+=eurF(k+'vh','Toegezegde loonsverhoging per jaar',d.vh,'Alleen onvoorwaardelijk en binnen 6 maanden na het bindend aanbod');
+    h+=dateF(k+'wgvd','Datum werkgeversverklaring',d.wgvd||'');
+  }else if(type==='jo'){
+    var y=new Date().getFullYear();
+    h+=eurF(k+'j1','Jaaropgave '+(y-3),d.j1)+eurF(k+'j2','Jaaropgave '+(y-2),d.j2)+eurF(k+'j3','Jaaropgave '+(y-1)+' (laatste jaar)',d.j3,'Bruto loon voor de loonbelasting; loonvervangende uitkeringen mogen mee');
+    h+=chkF(k+'lw','Er is een werkgeversverklaring waaruit een lopend dienstverband blijkt',d.lw!==false);
+  }else if(type==='ibl'){
+    h+=eurF(k+'ibl','Toetsinkomen volgens de IBL-rekentool',d.ibl,'Uitkomst van toetsinkomenberekenen.nl (UWV-verzekeringsbericht)');
+    h+=dateF(k+'uwvd','Datum UWV-verzekeringsbericht',d.uwvd||'');
+  }else if(type==='ams'){
+    h+=eurF(k+'act','Actueel inkomen (werkgeversverklaring)',d.act)+eurF(k+'vc','Verdiencapaciteit volgens Arbeidsmarktscan',d.vc);
+    h+=chkF(k+'m12','Minimaal 12 maanden inkomsten in de laatste 14 maanden',d.m12!==false);
+    h+=chkF(k+'uitz','Het betreft uitzendwerk',!!d.uitz);
+  }else if(type==='pv'){
+    h+=eurF(k+'pv','Inkomen op de werkgeversverklaring bij de Perspectiefverklaring',d.pv);
+    h+=dateF(k+'pvd','Datum Perspectiefverklaring',d.pvd||'','Maximaal 6 maanden oud op datum bindend aanbod');
+  }else if(type==='ond'){
+    h+=selF(k+'m','Methode',[['ikv','Inkomensverklaring Ondernemer (IKV) – verplicht bij NHG'],['gem','Gemiddelde laatste 3 jaar, maximaal het laatste jaar']],d.m||'gem');
+    h+='</div><div class="grid" style="margin-top:10px" id="'+k+'ikvw">'+eurF(k+'ikv','Toetsinkomen volgens IKV',d.ikv)+dateF(k+'ikvd','Datum IKV',d.ikvd||'','Maximaal 6 maanden oud');
+    var y2=new Date().getFullYear();
+    h+='</div><div class="grid" style="margin-top:10px" id="'+k+'gemw">'+eurF(k+'w1','Inkomen uit onderneming '+(y2-3),d.w1)+eurF(k+'w2','Inkomen uit onderneming '+(y2-2),d.w2)+eurF(k+'w3','Inkomen uit onderneming '+(y2-1)+' (laatste jaar)',d.w3,'Verlies als negatief bedrag invullen (bijv. -5.000)');
+    h+=chkF(k+'m12','Onderneming bestaat minimaal 12 maanden',d.m12!==false);
+  }else if(type==='uitk'){
+    h+=selF(k+'s','Soort uitkering',[['iva','IVA (volledig en duurzaam arbeidsongeschikt)'],['wao','WAO of WAZ'],['wga','WGA'],['ww','WW'],['wajong','Wajong'],['anw','Anw'],['ov','Overige uitkering']],d.s||'iva');
+    h+=eurF(k+'b','Bruto uitkering per jaar (incl. vakantietoeslag)',d.b,'Volgens de meest recente specificatie');
+    h+=dateF(k+'e','Einddatum uitkering (indien tijdelijk)',d.e||'');
+    h+=eurF(k+'z','Waarvan zeker (bij herkeuring e.d.)',d.z,'Leeg = volledig zeker');
+  }else if(type==='pens'){
+    h+=eurF(k+'aow','AOW bruto per jaar',d.aow,'Volgens AOW-specificatie of verwachte AOW');
+    h+=eurF(k+'pen','Ouderdomspensioen bruto per jaar',d.pen,'Volgens pensioenopgave (max. 3 maanden oud)');
+    h+=eurF(k+'lij','Lijfrente bruto per jaar',d.lij,'Alleen met fiscale lijfrenteclausule');
+    h+=dateF(k+'pd','Ingangsdatum pensioen (als afwijkend van AOW-datum)',d.pd||'');
+  }else if(type==='alim'){
+    h+=selF(k+'r','Richting',[['ontv','Ontvangen (telt mee)'],['bet','Betaald (gaat van het inkomen af)']],d.r||'ontv');
+    h+=eurF(k+'b','Partneralimentatie per jaar',d.b,'Kinderalimentatie telt niet mee');
+    h+=dateF(k+'e','Einddatum recht/plicht',d.e||'');
+    h+=chkF(k+'vast','Vastgelegd bij uitspraak rechter of notariële overeenkomst',d.vast!==false);
+  }else if(type==='verm'){
+    h+=eurF(k+'v','Vrij beschikbaar vermogen',d.v,'Spaargeld, effecten; niet verpand aan een andere partij');
+    h+=eurF(k+'rend','Redelijkerwijs te verwachten rendement per jaar (optioneel)',d.rend,'Leeg = maximum volgens GHF');
+  }
+  h+='</div><div class="res" id="'+k+'res"></div>';
+  return h;
+}
+
+function addSource(p,type,d){
+  var k='s'+(++seq)+'_';
+  SRC[p].push({k:k,type:type});
+  var div=document.createElement('div');
+  div.className='src-card'; div.id=k+'card';
+  var opts=Object.keys(TYPES).map(function(t){return '<option value="'+t+'"'+(t===type?' selected':'')+'>'+TYPES[t].t+'</option>';}).join('');
+  div.innerHTML='<div class="src-h"><select id="'+k+'type" aria-label="Soort inkomensbron">'+opts+'</select><button type="button" class="rm noprint" title="Verwijderen" id="'+k+'rm">×</button></div><div class="src-b" id="'+k+'body">'+body(type,k,d)+'</div>';
+  $('p'+p).appendChild(div);
+  $(k+'type').addEventListener('change',function(){var s=find(k);s.type=this.value;$(k+'body').innerHTML=body(s.type,k,{});initEur($(k+'body'));calc();});
+  $(k+'rm').addEventListener('click',function(){SRC[p]=SRC[p].filter(function(s){return s.k!==k;});div.remove();calc();});
+  initEur(div);
+}
+function find(k){return SRC[1].concat(SRC[2]).filter(function(s){return s.k===k;})[0];}
+function initEur(root){root.querySelectorAll('input.eur').forEach(fmtInput);}
+function v(id){var e=$(id);return e?parseNL(e.value):0;}
+function has(id){var e=$(id);return !!(e&&e.value.trim()!=='');}
+function c(id){var e=$(id);return !!(e&&e.checked);}
+
+var POL={on:false,var:100,flex:0,ond:0};
+
+/* evalueer één bron → {voor, na, tot:Date|null, txt, warn[], note[]} ; voor = vóór AOW, na = vanaf AOW */
+function evalSrc(s,ctx){
+  var k=s.k, r={voor:0,na:0,tot:null,txt:'',warn:[],note:[]};
+  var aanb=ctx.aanbod;
+  function ouderdom(id,maxM,lbl){var d=pDate($(id)&&$(id).value);if(!d)return;var lim=new Date(d.getFullYear(),d.getMonth()+maxM,d.getDate());if(aanb>lim)r.warn.push(lbl+' is op de datum van het aanbod ouder dan '+maxM+' maanden (maximaal toegestaan: '+maxM+' maanden).');}
+  var flexF=POL.on?(1-POL.flex/100):1;
+  if(s.type==='wgv'){
+    var ct=$(k+'c').value, pt=c(k+'pt');
+    var vast=v(k+'sal')+v(k+'vg')+v(k+'ej')+v(k+'ov');
+    var varSum=0, varTxt=[];
+    [['ort','orts','ORT'],['ow','ows','overwerk'],['pr','prs','provisie/bonus']].forEach(function(a){var b=v(k+a[0]);if(b>0){if(c(k+a[1])){varSum+=b;varTxt.push(a[2]+' '+eur(b));}else r.note.push(a[2]+' ('+eur(b)+') telt niet mee: niet als structureel vermeld.');}});
+    var varF=POL.on?POL.var/100:1;
+    var tot=vast+varSum*varF;
+    var vh=v(k+'vh');
+    if(vh>0){ if(ct==='ot'||ct==='bti'){ if(pt){tot+=vh;varTxt.push('loonsverhoging '+eur(vh));} else r.warn.push('Loonsverhoging telt niet mee: proeftijd is niet voorbij.'); } else r.warn.push('Toegezegde loonsverhoging telt alleen mee bij onbepaalde tijd of een intentieverklaring.'); }
+    if(c(k+'ah')){r.warn.push('Aandeelhouder van 5% of meer bij de werkgever: een werkgeversverklaring is niet toegestaan; bepaal het inkomen als ondernemer (IKV).');tot=0;}
+    if(!pt){r.warn.push('Proeftijd nog niet voorbij: de werkgeversverklaring is niet bruikbaar. Gebruik jaaropgaven of IBL.');tot=0;}
+    r.voor=tot;
+    if(ct==='bt'){
+      var ed=pDate($(k+'ed').value);
+      r.tot=ed;
+      r.warn.push('Bepaalde tijd zonder intentieverklaring: het inkomen telt alleen mee tot het einde van de arbeidsovereenkomst'+(ed?(' ('+dS(ed)+')'):'')+'. Voor een toetsinkomen over de hele looptijd: jaaropgaven (gemiddelde 3 jaar), IBL, Arbeidsmarktscan of Perspectiefverklaring.');
+    }
+    r.txt='Vast: '+eur(vast)+(varTxt.length?' + '+varTxt.join(' + '):'')+(POL.on&&varSum&&POL.var!==100?' (variabel × '+nl(POL.var,0)+'%, beleid geldverstrekker)':'');
+    ouderdom(k+'wgvd',3,'De werkgeversverklaring');
+  }else if(s.type==='jo'){
+    var j=[v(k+'j1'),v(k+'j2'),v(k+'j3')];
+    var gem=(j[0]+j[1]+j[2])/3, last=j[2], zero=j.filter(function(x){return x<=0;}).length;
+    var t=Math.min(gem,last);
+    r.txt='Gemiddelde ('+eur(j[0])+' + '+eur(j[1])+' + '+eur(j[2])+') / 3 = '+eur(gem)+'; maximum laatste jaar '+eur(last)+' → '+eur(t);
+    if(zero>1){r.warn.push('Meer dan één kalenderjaar zonder inkomsten: jaaropgaven zijn niet bruikbaar.');t=0;}
+    if(!c(k+'lw')){r.warn.push('Een werkgeversverklaring waaruit een lopend dienstverband blijkt is vereist.');}
+    r.voor=Math.max(0,t)*flexF;
+    if(POL.on&&POL.flex) r.txt+=' − '+nl(POL.flex,0)+'% afslag (beleid geldverstrekker)';
+  }else if(s.type==='ibl'){
+    r.voor=v(k+'ibl')*flexF; r.txt='Uitkomst IBL-rekentool'+(POL.on&&POL.flex?' − '+nl(POL.flex,0)+'% afslag (beleid geldverstrekker)':'');
+    ouderdom(k+'uwvd',3,'Het UWV-verzekeringsbericht');
+    r.note.push('De IBL-uitkomst is het maximale inkomen; niet combineren met een werkgeversverklaring voor hetzelfde dienstverband.');
+  }else if(s.type==='ams'){
+    var a=v(k+'act'),vc=v(k+'vc'); var t2=Math.min(a,vc);
+    r.txt='Laagste van actueel inkomen '+eur(a)+' en verdiencapaciteit '+eur(vc)+' = '+eur(t2);
+    if(c(k+'uitz')){r.warn.push('Uitzendkrachten kunnen de Arbeidsmarktscan niet gebruiken: kies de Perspectiefverklaring.');t2=0;}
+    if(!c(k+'m12')){r.warn.push('Vereist: minimaal 12 maanden inkomsten in de laatste 14 maanden.');t2=0;}
+    r.voor=t2*flexF;
+  }else if(s.type==='pv'){
+    r.voor=v(k+'pv')*flexF; r.txt='Inkomen op de werkgeversverklaring bij de Perspectiefverklaring, voor de hele looptijd';
+    ouderdom(k+'pvd',6,'De Perspectiefverklaring');
+  }else if(s.type==='ond'){
+    var m=$(k+'m').value;
+    $(k+'ikvw').classList.toggle('hidden',m!=='ikv'); $(k+'gemw').classList.toggle('hidden',m!=='gem');
+    var ondF=POL.on?(1-POL.ond/100):1;
+    if(m==='ikv'){r.voor=v(k+'ikv')*ondF;r.txt='Toetsinkomen volgens IKV';ouderdom(k+'ikvd',6,'De IKV');}
+    else{
+      var w=[v(k+'w1'),v(k+'w2'),v(k+'w3')]; var g=(w[0]+w[1]+w[2])/3; var t3=Math.max(0,Math.min(g,w[2]));
+      r.voor=t3*ondF;
+      r.txt='Gemiddelde ('+w.map(function(x){return eur(x);}).join(' + ')+') / 3 = '+eur(g)+'; maximum laatste jaar '+eur(w[2])+' → '+eur(t3);
+      if(g<0) r.warn.push('Het gemiddelde is negatief: er telt geen ondernemersinkomen mee.');
+      r.note.push('Bij een lening met NHG is een Inkomensverklaring Ondernemer (IKV) verplicht. De middelingsmethode is beleid van de geldverstrekker.');
+    }
+    if(POL.on&&POL.ond) r.txt+=' − '+nl(POL.ond,0)+'% afslag (beleid geldverstrekker)';
+    if(!c(k+'m12')) r.warn.push('De onderneming bestaat korter dan 12 maanden: IKV/middeling is dan niet zonder meer mogelijk (prognose door een deskundige).');
+  }else if(s.type==='uitk'){
+    var st=$(k+'s').value, b=v(k+'b'); var z=has(k+'z')?Math.min(b,v(k+'z')):b;
+    var e=pDate($(k+'e').value);
+    r.voor=z;
+    if(st==='iva'||st==='wao'){r.txt='Telt mee voor de hele looptijd (tot de AOW-leeftijd)';}
+    else{r.tot=e;r.txt='Telt mee zolang de uitkering duurt'+(e?(' (tot '+dS(e)+')'):'');if(!e)r.warn.push('Geef de einddatum van de uitkering op (toekenningsbesluit).');}
+    if(z<b) r.txt+='; alleen het zekere deel '+eur(z);
+    if(st==='wajong') r.note.push('Wajong telt mee als 75% (geen arbeidsvermogen) of 70% (wel arbeidsvermogen) van het wettelijk minimumloon (NHG C.7.11.2). Vul dat bedrag in.');
+    if(st==='anw') r.note.push('De Anw eindigt uiterlijk bij de AOW-leeftijd en kan vervallen bij een nieuwe relatie.');
+  }else if(s.type==='pens'){
+    var aow=v(k+'aow'),pen=v(k+'pen'),lij=v(k+'lij');
+    r.na=aow+pen+lij; r.txt='AOW '+eur(aow)+' + pensioen '+eur(pen)+' + lijfrente '+eur(lij)+' vanaf de AOW-datum';
+    if(ctx.alAow){r.voor=r.na;}
+    var pd=pDate($(k+'pd').value);
+    if(pd&&ctx.aow&&pd>ctx.aow) r.warn.push('Het pensioen gaat later in dan de AOW-datum. Beoordeel of het tijdelijk lagere inkomen kan worden opgevangen (NHG C.7.12.1).');
+  }else if(s.type==='alim'){
+    var dir=$(k+'r').value, bb=v(k+'b'), ee=pDate($(k+'e').value), sign=dir==='ontv'?1:-1;
+    if(dir==='ontv'&&!c(k+'vast')){r.warn.push('Ontvangen partneralimentatie telt alleen mee als het recht blijkt uit een uitspraak van de rechter of een notariële overeenkomst.');bb=0;}
+    r.voor=sign*bb; r.tot=ee;
+    var naAow=!ee||!ctx.aow||ee>ctx.aow; r.na=naAow?sign*bb:0;
+    r.txt=(dir==='ontv'?'Ontvangen, telt mee zolang het recht bestaat':'Betaald, in mindering op het inkomen')+(ee?(' (tot '+dS(ee)+')'):'');
+  }else if(s.type==='verm'){
+    var vm=v(k+'v'), pctMax=Math.min(3,ctx.rente||3);
+    var max=vm*pctMax/100; var rd=has(k+'rend')?Math.min(max,v(k+'rend')):max;
+    r.voor=rd; r.na=rd;
+    r.txt='Maximaal '+nl(pctMax,2)+'% van '+eur(vm)+' = '+eur(max)+(rd<max?'; verwacht rendement '+eur(rd):'');
+  }
+  /* arbeid/ondernemer/uitkering stoppen bij AOW */
+  if(['arbeid','ond','uitk'].indexOf(TYPES[s.type].cat)>=0){ r.na=0; if(ctx.alAow){ r.voor=0; r.warn.push('Deze aanvrager heeft de AOW-leeftijd bereikt: arbeids-, ondernemings- en uitkeringsinkomsten tellen niet meer mee.'); } }
+  if(r.tot&&r.tot<aanb){r.warn.push('De einddatum ligt vóór de datum van het aanbod.');}
+  return r;
+}
+
+function calc(){
+  POL.on=c('polOn'); $('polWrap').classList.toggle('hidden',!POL.on);
+  POL.var=v('polVar'); POL.flex=v('polFlex'); POL.ond=v('polOnd');
+  var two=c('twee');
+  $('geb2wrap').classList.toggle('hidden',!two); $('tab2').classList.toggle('hidden',!two);
+  if(!two&&active===2){setTab(1);}
+  var aanb=pDate($('datum').value)||new Date();
+  var rente=v('rente');
+  var rows='', tot={voor:0,na:0}, per={}, msgs=[], anyAow10=false;
+  [1,2].forEach(function(p){
+    if(p===2&&!two) return;
+    var geb=pDate($('geb'+p).value), aow=geb?aowDatumUit(geb):null;
+    var alAow=!!(aow&&aow<=aanb);
+    var binnen10=!!(aow&&!alAow&&monthsBetween(aanb,aow)<120);
+    if(binnen10||alAow) anyAow10=true;
+    $('aowt'+p).textContent=aow?('AOW-datum: '+dS(aow)+(alAow?' (bereikt)':binnen10?' – binnen 10 jaar: ook toetsen op inkomen vanaf AOW':'')+(geb.getFullYear()>=1965?' (indicatief)':'')):'';
+    var ctx={aanbod:aanb,aow:aow,alAow:alAow,rente:rente};
+    var sum={voor:0,na:0};
+    rows+='<tr><td colspan="4" style="background:#eef3f8;font-weight:800;color:var(--navy)">Aanvrager '+p+(aow?' <span style="font-weight:500;color:var(--muted)">– AOW-datum '+dS(aow)+'</span>':'')+'</td></tr>';
+    SRC[p].forEach(function(s){
+      var r=evalSrc(s,ctx);
+      sum.voor+=r.voor; sum.na+=r.na;
+      var res=$(s.k+'res');
+      if(res){res.innerHTML='<b>Telt mee: '+eur(r.voor)+' per jaar'+(r.na||TYPES[s.type].cat==='pens'?' · vanaf AOW: '+eur(r.na):'')+'</b><br>'+esc(r.txt)+r.warn.map(function(w){return '<div class="warn">'+esc(w)+'</div>';}).join('')+r.note.map(function(w){return '<div class="note">'+esc(w)+'</div>';}).join('');}
+      rows+='<tr><td>'+esc(TYPES[s.type].t)+'<small>'+esc(r.txt)+'</small>'+(r.tot?'<small><b>Telt mee tot '+dS(r.tot)+'</b></small>':'')+'</td><td class="r">'+eur(r.voor)+'</td><td class="r">'+eur(r.na)+'</td><td>'+(r.warn.length?'<span style="color:var(--red);font-weight:700">'+r.warn.length+' aandachtspunt'+(r.warn.length>1?'en':'')+'</span>':'<span style="color:var(--green);font-weight:700">ok</span>')+'</td></tr>';
+    });
+    if(!SRC[p].length) rows+='<tr><td colspan="4" class="sub">Nog geen inkomensbronnen.</td></tr>';
+    sum.voor=Math.max(0,sum.voor); sum.na=Math.max(0,sum.na);
+    rows+='<tr class="tot"><td>Toetsinkomen aanvrager '+p+'</td><td class="r">'+eur(sum.voor)+'</td><td class="r">'+eur(sum.na)+'</td><td></td></tr>';
+    per[p]={sum:sum,aow:aow,alAow:alAow,binnen10:binnen10};
+    tot.voor+=sum.voor; tot.na+=sum.na;
+  });
+  $('rt').innerHTML='<thead><tr><th>Inkomensbron</th><th class="r">Vóór AOW (p/j)</th><th class="r">Vanaf AOW (p/j)</th><th>Controle</th></tr></thead><tbody>'+rows+
+    (two?'<tr class="tot"><td>Gezamenlijk toetsinkomen</td><td class="r">'+eur(tot.voor)+'</td><td class="r">'+eur(tot.na)+'</td><td></td></tr>':'')+'</tbody>';
+  /* hero */
+  var h='<div class="hbox ok"><div class="hbl">Toetsinkomen'+(two?' gezamenlijk':'')+'</div><div class="hbv">'+eur(tot.voor)+'</div><div class="hbs">per jaar, huidige situatie</div></div>';
+  h+='<div class="hbox"><div class="hbl">Vanaf AOW</div><div class="hbv">'+eur(tot.na)+'</div><div class="hbs">'+(anyAow10?'toetsing nodig: AOW binnen 10 jaar':'AOW later dan 10 jaar: indicatief')+'</div></div>';
+  if(two) h+='<div class="hbox"><div class="hbl">Verdeling</div><div class="hbv" style="font-size:18px">'+eur(per[1].sum.voor)+' / '+eur(per[2].sum.voor)+'</div><div class="hbs">aanvrager 1 / aanvrager 2</div></div>';
+  $('hero').innerHTML=h;
+  /* meldingen */
+  if(two&&per[1]&&per[2]){
+    var oneAow=(per[1].alAow?1:0)+(per[2].alAow?1:0);
+    if(oneAow===1){var hi=per[1].sum.voor>=per[2].sum.voor?1:2;msgs.push('Eén aanvrager heeft de AOW-leeftijd bereikt: de financieringslasttabel volgt de aanvrager met het hoogste toetsinkomen (aanvrager '+hi+', '+(per[hi].alAow?'AOW-tabel':'niet-AOW-tabel')+'), Trhk art. 3 lid 7.');}
+  }
+  if(anyAow10) msgs.push('Een aanvrager bereikt binnen 10 jaar de AOW-leeftijd (of heeft die bereikt): toets ook op het inkomen vanaf de AOW-leeftijd (Trhk art. 2 lid 5; NHG C.7.4.2).');
+  if(POL.on) msgs.push('Let op: er zijn afslagen volgens beleid van een geldverstrekker toegepast. Deze volgen niet uit de Trhk, GHF of NHG-normen.');
+  if(!two&&per[1]&&tot.voor>(per[1].alAow?29000:30000)) msgs.push('Eén aanvrager met toetsinkomen boven € 30.000 (niet-AOW) of € 29.000 (AOW): bij de maximale hypotheek mag € 17.000 buiten de financieringslast blijven (Trhk art. 3 lid 8; alleen bij één aanvrager).');
+  $('msgs').innerHTML=msgs.map(function(t){return '<div class="note">'+esc(t)+'</div>';}).join('');
+}
+
+function setTab(p){active=p;document.querySelectorAll('#tabs button').forEach(function(b){b.classList.toggle('on',+b.dataset.p===p);});$('p1').classList.toggle('hidden',p!==1);$('p2').classList.toggle('hidden',p!==2);}
+function clearAll(){SRC={1:[],2:[]};$('p1').innerHTML='';$('p2').innerHTML='';}
+function voorbeeld(){
+  clearAll();
+  addSource(1,'wgv',{c:'ot',sal:'52.000',vg:'4.160',ej:'4.333',ort:'2.400',orts:true,ow:'1.800',ows:false,pr:'0',ov:'0'});
+  addSource(1,'pens',{aow:'14.570',pen:'21.500'});
+  addSource(2,'ond',{m:'gem',w1:'38.000',w2:'45.000',w3:'41.000'});
+  addSource(2,'pens',{aow:'14.570',pen:'6.200'});
+  addSource(2,'verm',{v:'40.000'});
+  setTab(1); calc();
+}
+
+/* print */
+function doPrint(){
+  var styles='';for(var i=0;i<document.styleSheets.length;i++){try{var rs=document.styleSheets[i].cssRules;for(var j=0;j<rs.length;j++)styles+=rs[j].cssText+'\n';}catch(e){}}
+  var html='<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Toetsinkomen</title><style>'+styles+' body{background:#fff}.noprint{display:none!important}.hbox,.ch,.rt th{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>'+
+    document.querySelector('.hdr').outerHTML+'<div class="wrap">'+document.querySelector('.disc').outerHTML+$('results').outerHTML+$('bronnen').outerHTML+'</div><script>window.addEventListener("load",function(){setTimeout(function(){window.print();},500);});<\/script></body></html>';
+  var w=null;try{w=window.open('','_blank');}catch(e){w=null;}
+  if(w&&w.document){w.document.open();w.document.write(html);w.document.close();return;}
+  try{var blob=new Blob([html],{type:'text/html;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(url);a.remove();},10000);}catch(e){window.print();}
+}
+
+/* init */
+var t=new Date(); $('datum').value=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+$('addType').innerHTML=Object.keys(TYPES).map(function(k){return '<option value="'+k+'">'+TYPES[k].t+'</option>';}).join('');
+$('addBtn').addEventListener('click',function(){addSource(active,$('addType').value,{});calc();});
+document.querySelectorAll('#tabs button').forEach(function(b){b.addEventListener('click',function(){setTab(+b.dataset.p);});});
+document.addEventListener('input',function(e){if(e.target.matches('input,select'))calc();});
+document.addEventListener('change',function(e){if(e.target.matches('input,select'))calc();});
+document.addEventListener('focusout',function(e){if(e.target.matches('input.eur'))fmtInput(e.target);});
+$('printBtn').addEventListener('click',doPrint);
+$('voorbeeldBtn').addEventListener('click',voorbeeld);
+$('leegBtn').addEventListener('click',function(){clearAll();calc();});
+voorbeeld();
+})();
+</script>
+</body>
+</html>

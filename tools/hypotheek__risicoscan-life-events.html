@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risicoscan life events</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#00408a;--gold:#e5a138;--gold-lt:#fef8ee;
+  --bg:#f4f7f9;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;
+  --green:#1a8a50;--grlt:#e8f7ef;--red:#c0392b;--redlt:#fdecea;--shadow:0 2px 16px rgba(0,48,87,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Montserrat',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;}
+.hdr{background:var(--navy);padding:16px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.hdr-title{font-size:19px;font-weight:800;color:#fff;}
+.hdr-sub{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px;}
+.hdr-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10.5px;font-weight:800;padding:4px 11px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:16px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;}
+.ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ch .num{background:var(--gold);color:var(--navy);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex:none;}
+.cb{padding:18px;}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0;}
+label{font-size:12px;font-weight:700;color:var(--navy);}
+.sub{font-size:11px;color:var(--muted);}
+.iw{position:relative;}
+.iw .px{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--muted);pointer-events:none;}
+.iw .sx{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:600;color:var(--muted);pointer-events:none;}
+input,select{width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:14px;color:var(--text);background:#fff;outline:none;}
+input:focus,select:focus{border-color:var(--navy);}
+.iw input.eur{padding-left:26px;text-align:right;}
+.iw input.pct{padding-right:44px;text-align:right;}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;font-weight:600;color:var(--navy);}
+.chk input{width:auto;margin-top:3px;}
+.hidden{display:none!important;}
+.sep{font-size:10.5px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;padding-bottom:4px;border-bottom:1px solid var(--border);margin:14px 0 10px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.pcol{border:1.5px solid var(--border);border-radius:10px;padding:12px;}
+.pcol h3{font-size:13.5px;color:var(--navy);margin-bottom:8px;}
+.pcol .grid{grid-template-columns:1fr 1fr;}
+.sec2{font-size:10.5px;font-weight:800;color:var(--navy2);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px;}
+details.par{border:1.5px dashed var(--border);border-radius:10px;padding:10px 12px;}
+details.par summary{cursor:pointer;font-weight:700;color:var(--navy);font-size:13px;}
+.badge2{display:inline-block;font-size:10px;font-weight:800;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:1px;}
+.b-sec{background:#fff1d6;color:#8a5a00;}
+.b-pri{background:#e1f2e8;color:#14683b;}
+.rt{width:100%;border-collapse:collapse;font-size:13px;}
+.rt th{background:var(--navy);color:#fff;padding:8px 10px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+.rt th:first-child{text-align:left;}
+.rt td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;vertical-align:top;}
+.rt td:first-child{text-align:left;white-space:normal;}
+.rt td small{display:block;font-size:11px;color:var(--muted);white-space:normal;}
+.neg{color:var(--red);font-weight:700;}
+.pos{color:var(--green);font-weight:700;}
+.scn{margin-top:14px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+.scn h4{background:#eef3f8;color:var(--navy);padding:9px 12px;font-size:13.5px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.scn h4 span{font-weight:600;font-size:12px;}
+.scn .expl{padding:8px 12px;font-size:12px;color:var(--muted);}
+.mb{display:inline-block;height:8px;border-radius:4px;background:var(--green);vertical-align:middle;}
+.mb.r{background:var(--red);}
+.warn{background:var(--redlt);border-left:3px solid var(--red);padding:7px 12px;border-radius:0 6px 6px 0;font-size:12.5px;margin-top:8px;}
+.note{background:#eef3f8;border-left:3px solid var(--navy2);padding:7px 12px;border-radius:0 6px 6px 0;font-size:12px;margin-top:8px;}
+.disc{background:#fff;border:1.5px dashed var(--gold);border-radius:10px;padding:12px 16px;font-size:12px;}
+.disc b{color:var(--navy);}
+.srcl{font-size:11.5px;line-height:1.7;}
+.srcl li{margin-left:18px;margin-bottom:3px;}
+.srcl a{color:var(--navy2);word-break:break-word;}
+.btn{padding:10px 16px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy);}
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px;}
+.hbox{border-radius:10px;padding:12px 14px;text-align:center;border:1.5px solid #c5d8e8;background:#eff4f9;}
+.hbox.bad{background:var(--redlt);border-color:#f3b6ae;}
+.hbox.ok{background:var(--grlt);border-color:#a7dfc2;}
+.hbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.hbv{font-size:24px;font-weight:800;color:var(--navy);line-height:1.2;margin-top:4px;}
+.hbs{font-size:11.5px;color:var(--muted);margin-top:2px;}
+@media (max-width:700px){.two{grid-template-columns:1fr;}.hdr-badge{margin-left:0;}.rt{font-size:12px;}.rt td,.rt th{padding:6px;}.pcol .grid{grid-template-columns:1fr;}}
+@media print{.noprint{display:none!important;}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div>
+    <div class="hdr-title">Risicoscan life events</div>
+    <div class="hdr-sub">Besteedbaar inkomen nu en na arbeidsongeschiktheid, werkloosheid, overlijden, einde relatie en AOW – tekort per maand en vanaf wanneer</div>
+  </div>
+  <div class="hdr-badge">Peildatum 1-7-2026</div>
+</div>
+<div class="wrap">
+
+<div class="disc"><b>Indicatief, geen advies.</b> De uitkeringen en de netto-berekening zijn vereenvoudigd (zie rekenregels). Bij arbeidsongeschiktheid en werkloosheid verandert alleen het inkomen uit arbeid of onderneming; andere inkomens blijven gelijk. Tijdelijke overbruggingslasten blijven buiten beschouwing. Bedragen gemarkeerd met <span class="badge2 b-sec">secundair</span> komen uit niet-officiële bronnen en zijn aan te passen onder 'Parameters'.</div>
+
+<div class="card">
+  <div class="ch"><span class="num">1</span> Huishouden en inkomens</div>
+  <div class="cb">
+    <label class="chk"><input type="checkbox" id="partner" checked> Met partner (twee personen)</label>
+    <div class="two" style="margin-top:12px">
+      <div class="pcol" id="colA"></div>
+      <div class="pcol" id="colB"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch"><span class="num">2</span> Lasten en toetsnorm</div>
+  <div class="cb">
+    <div class="grid">
+      <div class="fl"><label for="hypNu">Netto hypotheeklasten per maand – nu</label><div class="iw"><span class="px">€</span><input id="hypNu" class="eur" inputmode="decimal" value="1.450"></div></div>
+      <div class="fl"><label for="hypAow">Netto hypotheeklasten per maand – na AOW</label><div class="iw"><span class="px">€</span><input id="hypAow" class="eur" inputmode="decimal" value="1.300"></div><span class="sub">Vanaf de eerste AOW-datum in het huishouden</span></div>
+      <div class="fl"><label for="schuld">Hypotheekschuld</label><div class="iw"><span class="px">€</span><input id="schuld" class="eur" inputmode="decimal" value="380.000"></div><span class="sub">Voor het effect van een ORV-uitkering</span></div>
+      <div class="fl"><label for="woonOv">Energie, onderhoud en eigenaarslasten per maand</label><div class="iw"><span class="px">€</span><input id="woonOv" class="eur" inputmode="decimal" value="700"></div></div>
+      <div class="fl"><label for="vast">Overige vaste lasten per maand</label><div class="iw"><span class="px">€</span><input id="vast" class="eur" inputmode="decimal" value="1.100"></div><span class="sub">Verzekeringen, kredieten, abonnementen, vervoer</span></div>
+    </div>
+    <div class="sep">Waartegen toetsen we?</div>
+    <div class="grid">
+      <div class="fl"><label for="normMode">Norm voor 'tekort'</label><select id="normMode"><option value="huidig" selected>Huidig besteedbaar inkomen behouden</option><option value="eigen">Eigen minimumbedrag (leefgeld)</option></select></div>
+      <div class="fl" id="normEigenWrap"><label for="normEigen">Minimaal benodigd besteedbaar per maand</label><div class="iw"><span class="px">€</span><input id="normEigen" class="eur" inputmode="decimal" value="1.800"></div><span class="sub">Bijv. leefgeld volgens een referentiebudget</span></div>
+    </div>
+    <div class="sep">Arbeidsongeschiktheid</div>
+    <div class="grid">
+      <div class="fl"><label for="aoPct">Arbeidsongeschiktheidspercentage</label><div class="iw"><input id="aoPct" class="pct" inputmode="decimal" value="60"><span class="sx">%</span></div><span class="sub">80% of meer: gerekend als volledig en duurzaam (IVA)</span></div>
+      <div class="fl"><label class="chk" style="margin-top:22px"><input type="checkbox" id="rvc" checked> Benut de restverdiencapaciteit (werkt naar vermogen)</label></div>
+    </div>
+    <details class="par noprint" style="margin-top:14px">
+      <summary>Parameters (aanpasbaar)</summary>
+      <div class="grid" style="margin-top:10px">
+        <div class="fl"><label for="pDag">Maximumdagloon per 1-7-2026 <span class="badge2 b-sec">secundair</span></label><div class="iw"><span class="px">€</span><input id="pDag" class="eur" inputmode="decimal" value="309,91"></div></div>
+        <div class="fl"><label for="pDagen">Uitkeringsdagen per jaar</label><input id="pDagen" inputmode="decimal" value="261"><span class="sub">Jaarloon / 261 = dagloon (indicatief)</span></div>
+        <div class="fl"><label for="pWml">Minimumloon per maand (1-7-2026) <span class="badge2 b-sec">secundair</span></label><div class="iw"><span class="px">€</span><input id="pWml" class="eur" inputmode="decimal" value="2.337"></div><span class="sub">Grondslag WGA-vervolguitkering</span></div>
+        <div class="fl"><label for="pAowG">AOW gehuwd/samenwonend p.p. per maand <span class="badge2 b-sec">secundair</span></label><div class="iw"><span class="px">€</span><input id="pAowG" class="eur" inputmode="decimal" value="1.214,24"></div><span class="sub">€ 1.139,39 + vakantiegeld € 74,85 (1-7-2026)</span></div>
+        <div class="fl"><label for="pAowA">AOW alleenstaand per maand <span class="badge2 b-sec">secundair</span></label><div class="iw"><span class="px">€</span><input id="pAowA" class="eur" inputmode="decimal" value="1.766,94"></div><span class="sub">€ 1.662,16 + vakantiegeld € 104,78 (1-7-2026)</span></div>
+        <div class="fl"><label for="pAnw">Anw-maximum bruto per maand <span class="badge2 b-pri">Stcrt.</span></label><div class="iw"><span class="px">€</span><input id="pAnw" class="eur" inputmode="decimal" value="1.646,72"></div><span class="sub">Per 1-1-2026, excl. vakantiebijslag</span></div>
+      </div>
+    </details>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px" class="noprint">
+      <button class="btn" type="button" id="printBtn">Afdrukken / PDF</button>
+      <button class="btn sec" type="button" id="resetBtn">Standaardwaarden</button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="results">
+  <div class="ch">Resultaat: tekort per scenario</div>
+  <div class="cb">
+    <div class="hero" id="hero"></div>
+    <div style="overflow-x:auto"><table class="rt" id="sumT"></table></div>
+    <div id="scens"></div>
+    <div id="msgs"></div>
+  </div>
+</div>
+
+<div class="card" id="bronnen">
+  <div class="ch">Rekenregels en bronnen</div>
+  <div class="cb srcl">
+    <ul>
+      <li><b>Netto inkomen</b> per persoon met box 1 2026: 35,75% / 37,56% / 49,50% (grenzen € 38.883 en € 78.426); AOW-leeftijd eerste schijf 17,85%. Algemene heffingskorting (max € 3.115, AOW € 1.556; afbouw vanaf € 29.736), arbeidskorting alleen over arbeidsinkomen (max € 5.685, AOW € 2.840), ouderenkorting € 2.067 (afbouw vanaf € 46.002) en alleenstaande ouderenkorting € 540. Geen pensioenpremie, Zvw-bijdrage ondernemer, toeslagen of hypotheekrenteaftrek in het inkomen (die zit in de netto hypotheeklasten).</li>
+      <li><b>Arbeidsongeschiktheid, loondienst.</b> Jaar 1 en 2: loondoorbetaling volgens invoer. Daarna WIA op het WIA-jaarloon, gemaximeerd op maximumdagloon × 261. Vanaf 80%: IVA 75%. 35–80% (WGA): loongerelateerd eerst 2 maanden 75%, daarna 70% van (WIA-loon − verdiensten), duur als de WW-duur (3 tot 24 maanden). Daarna: werkt de persoon naar vermogen, dan loonaanvulling 70% van (WIA-loon − restverdiencapaciteit); anders vervolguitkering 28% / 35% / 42% / 50,75% van het minimumloon (klasse 35–45 / 45–55 / 55–65 / 65–80%). Onder 35%: geen WIA, wel inkomen uit restcapaciteit. Restverdiencapaciteit hier benaderd als (100% − AO%) × loon. Een AO-verzekering keert naar rato van het AO-percentage uit na de wachttijd, tot de AOW-datum (controleer de polis). Geen AO-scenario na de AOW-leeftijd.</li>
+      <li><b>Ondernemer en DGA.</b> Geen loondoorbetaling, WIA of WW (tenzij vrijwillig verzekerd: niet meegenomen). Bij AO alleen inkomen uit restcapaciteit plus de AO-verzekering. Bij werkloosheid/stoppen: inkomen uit onderneming € 0.</li>
+      <li><b>Werkloosheid (loondienst).</b> 75% van het dagloon in maand 1–2, daarna 70%; dagloon maximaal het maximumdagloon. Duur indicatief: per jaar arbeidsverleden 1 maand voor de eerste 10 jaar en voor jaren t/m 2015, daarna 0,5 maand per jaar; minimaal 3, maximaal 24 maanden. Daarna geen uitkering (bijstand en IOAW niet meegenomen).</li>
+      <li><b>Overlijden partner.</b> Inkomen van de nabestaande blijft; plus Anw (alleen bij recht, eigen invoer; eindigt op de AOW-datum, inkomen kan erop gekort worden) en nabestaandenpensioen. De ORV-uitkering lost de hypotheek af: netto hypotheeklasten × (1 − ORV / schuld). Na de AOW-datum: AOW voor alleenstaanden.</li>
+      <li><b>Einde relatie.</b> Ieder met eigen inkomen; wie in de woning blijft, draagt alle lasten. Partneralimentatie, pensioenverevening en verdeling van overwaarde of restschuld zijn niet meegenomen. Na de AOW-datum: AOW voor alleenstaanden.</li>
+      <li><b>AOW.</b> AOW-leeftijd 67 jaar (geboren t/m 1960), anders 67 jaar en 3 maanden (na 2031 nog niet vastgesteld: indicatief). AOW gehuwd zolang er een partner is, alleenstaand zonder partner. Netto hypotheeklasten 'na AOW' gelden vanaf de eerste AOW-datum.</li>
+    </ul>
+    <p style="margin-top:8px"><b>Bronnen</b></p>
+    <ul>
+      <li>UWV, hoogte WIA (IVA 75%; WGA loongerelateerd 75%/70%; loonaanvulling 70%): <a href="https://www.uwv.nl/nl/wia/hoogte-wia" target="_blank" rel="noopener">uwv.nl/nl/wia/hoogte-wia</a>; vervolguitkering-percentages: <a href="https://www.uwv.nl/nl/wia/wga/vervolguitkering" target="_blank" rel="noopener">uwv.nl/nl/wia/wga/vervolguitkering</a>; duur loongerelateerd: <a href="https://www.uwv.nl/nl/wia/wga/loongerelateerde-uitkering" target="_blank" rel="noopener">uwv.nl – loongerelateerde uitkering</a></li>
+      <li>UWV, hoogte en duur WW: <a href="https://www.uwv.nl/particulieren/rekenhulpen/hoe-hoog-is-mijn-ww-uitkering/index.aspx" target="_blank" rel="noopener">uwv.nl – hoe hoog is mijn WW</a>; <a href="https://www.uwv.nl/particulieren/rekenhulpen/hoe-lang-duurt-mijn-ww-uitkering/index.aspx" target="_blank" rel="noopener">hoe lang duurt mijn WW</a></li>
+      <li>Maximumdagloon € 309,91 per 1-7-2026 <span class="badge2 b-sec">secundair</span>: <a href="https://www.salarisvanmorgen.nl/?p=81606" target="_blank" rel="noopener">salarisvanmorgen.nl</a>; <a href="https://www.intropersoneel.nl/blog/maximum-dagloon-2026-en-wat-betekent-dat-voor-uw-uitkering/" target="_blank" rel="noopener">intropersoneel.nl</a></li>
+      <li>Minimumloon: referentiemaandloon 1-7-2026 € 2.337 <span class="badge2 b-sec">secundair</span>: <a href="https://www.taxlive.nl/nl/documenten/nieuws/minimumloon-per-1-juli-2026/" target="_blank" rel="noopener">taxlive.nl</a> (1-1-2026: € 2.294,40, Stcrt. 2025, 43553)</li>
+      <li>AOW-bedragen 1-7-2026 <span class="badge2 b-sec">secundair</span> (svb.nl was niet bereikbaar): <a href="https://www.raisin.com/nl-nl/nieuws/aow-per-1-juli-2026/" target="_blank" rel="noopener">raisin.com – AOW per 1 juli 2026</a></li>
+      <li>Anw-nabestaandenuitkering € 1.646,72 bruto per maand per 1-1-2026: Staatscourant 2025, 43553 <a href="https://zoek.officielebekendmakingen.nl/stcrt-2025-43553.pdf" target="_blank" rel="noopener">zoek.officielebekendmakingen.nl/stcrt-2025-43553.pdf</a>; voorwaarden en verrekening: <a href="https://www.svb.nl/nl/anw" target="_blank" rel="noopener">svb.nl/anw</a></li>
+      <li>Belastingtarieven en heffingskortingen 2026: <a href="https://www.belastingdienst.nl/wps/wcm/connect/fisin/fisin2026/heffingskortingen" target="_blank" rel="noopener">Belastingdienst, Fiscale informatie 2026</a>; AOW-leeftijd: <a href="https://www.rijksoverheid.nl/onderwerpen/algemene-ouderdomswet-aow/aow-leeftijd" target="_blank" rel="noopener">rijksoverheid.nl</a></li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+function parseNL(s){if(s==null)return 0;s=String(s).replace(/[€\s]/g,'');if(s==='')return 0;var neg=/^[-−]/.test(s);s=s.replace(/^[-−]/,'');if(s.indexOf(',')>=0){s=s.replace(/\./g,'').replace(',','.');}else if(/^\d+\.\d{1,2}$/.test(s)){}else{s=s.replace(/\./g,'');}var v=parseFloat(s);if(!isFinite(v))v=0;return neg?-v:v;}
+function grp(i){return i.replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function nl(v,d){d=d||0;var neg=v<0;v=Math.abs(v);var f=v.toFixed(d).split('.');return (neg?'− ':'')+grp(f[0])+(d?','+f[1]:'');}
+function eur(v,d){if(d==null)d=0;var neg=v<-0.004;return (neg?'− ':'')+'€ '+nl(Math.abs(v),d);}
+function fmtInput(el){if(!el.value.trim())return;var v=parseNL(el.value);var c=Math.round(Math.abs(v)*100)%100;el.value=(v<0?'-':'')+nl(Math.abs(v),c?2:0);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function aowDatumUit(geb){var m=geb.getFullYear()<=1960?0:3;var d=new Date(geb.getFullYear()+67,geb.getMonth()+m,1);d.setDate(Math.min(geb.getDate(),new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d;}
+var MND=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+function mS(d){return MND[d.getMonth()]+' '+d.getFullYear();}
+function v(id){var e=$(id);return e?parseNL(e.value):0;}
+function c(id){var e=$(id);return !!(e&&e.checked);}
+
+/* ---------- invoer per persoon ---------- */
+var PDEF={
+  A:{naam:'Aanvrager',geb:'1975-04-20',type:'loon',arb:'62.000',ovr:'0',pen:'18.500',np:'9.000',orv:'150.000',aov:'0',wacht:'24',ld1:'100',ld2:'70',jr:'26',jr15:'15',anwR:false,anw:'0'},
+  B:{naam:'Partner',geb:'1978-10-02',type:'ond',arb:'38.000',ovr:'0',pen:'4.000',np:'0',orv:'100.000',aov:'24.000',wacht:'1',ld1:'100',ld2:'70',jr:'20',jr15:'10',anwR:false,anw:'0'}
+};
+function col(p){
+  var d=PDEF[p], k='p'+p+'_';
+  function e(id,l,val,sub){return '<div class="fl"><label for="'+k+id+'">'+l+'</label><div class="iw"><span class="px">€</span><input class="eur" inputmode="decimal" id="'+k+id+'" value="'+val+'"></div>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</div>';}
+  function n(id,l,val,sx,sub){return '<div class="fl"><label for="'+k+id+'">'+l+'</label><div class="iw"><input class="pct" inputmode="decimal" id="'+k+id+'" value="'+val+'"><span class="sx">'+sx+'</span></div>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</div>';}
+  return '<h3><input id="'+k+'naam" value="'+d.naam+'" aria-label="Naam" style="font-weight:800;color:var(--navy)"></h3>'+
+  '<div class="grid">'+
+   '<div class="fl"><label for="'+k+'geb">Geboortedatum</label><input type="date" id="'+k+'geb" value="'+d.geb+'"><span class="sub" id="'+k+'aowt"></span></div>'+
+   '<div class="fl"><label for="'+k+'type">Soort inkomen</label><select id="'+k+'type"><option value="loon"'+(d.type==='loon'?' selected':'')+'>Loondienst</option><option value="ond"'+(d.type==='ond'?' selected':'')+'>Zelfstandig ondernemer</option><option value="dga"'+(d.type==='dga'?' selected':'')+'>DGA</option></select></div>'+
+   e('arb','Bruto inkomen uit arbeid / winst per jaar',d.arb,'Incl. vakantiegeld; ondernemer: winst')+
+   e('ovr','Overig inkomen per jaar (blijft)',d.ovr,'Bijv. bestaande uitkering, tot AOW')+
+  '</div><div class="sec2">Pensioen en overlijden</div><div class="grid">'+
+   e('pen','Ouderdomspensioen per jaar (vanaf AOW)',d.pen)+
+   e('np','Nabestaandenpensioen voor de partner per jaar',d.np,'Uitkering als déze persoon overlijdt')+
+   e('orv','ORV-dekking op dit leven',d.orv)+
+   '<div class="fl"><label class="chk"><input type="checkbox" id="'+k+'anwR"'+(d.anwR?' checked':'')+'> Recht op Anw als de partner overlijdt</label><span class="sub">Geboren vóór 1950, kind jonger dan 18 of ten minste 45% arbeidsongeschikt (svb.nl)</span></div>'+
+   e('anw','Verwachte Anw bruto per maand',d.anw,'Na verrekening met eigen inkomen (max. € 1.646,72)')+
+  '</div><div class="sec2">Arbeidsongeschiktheid en werkloosheid</div><div class="grid">'+
+   n('ld1','Loondoorbetaling ziekte jaar 1',d.ld1,'%')+
+   n('ld2','Loondoorbetaling ziekte jaar 2',d.ld2,'%')+
+   e('aov','AO-verzekering: uitkering per jaar bij 100% AO',d.aov,'AOV, WIA-excedent of -hiaat')+
+   n('wacht','Wachttijd AO-verzekering',d.wacht,'mnd')+
+   n('jr','Arbeidsverleden',d.jr,'jaar','Voor WW- en WGA-duur')+
+   n('jr15','waarvan jaren t/m 2015',d.jr15,'jaar')+
+  '</div>';
+}
+function P(p){
+  var k='p'+p+'_', g=$(k+'geb').value?new Date($(k+'geb').value+'T00:00:00'):null;
+  if(g&&isNaN(g)) g=null;
+  return {id:p,naam:($(k+'naam').value||p).trim(),geb:g,aow:g?aowDatumUit(g):null,type:$(k+'type').value,
+    arb:v(k+'arb'),ovr:v(k+'ovr'),pen:v(k+'pen'),np:v(k+'np'),orv:v(k+'orv'),anwR:c(k+'anwR'),anw:v(k+'anw'),
+    aov:v(k+'aov'),wacht:v(k+'wacht'),ld1:v(k+'ld1'),ld2:v(k+'ld2'),jr:v(k+'jr'),jr15:v(k+'jr15')};
+}
+
+/* ---------- belasting 2026 (indicatief) ---------- */
+function ak(a,t){if(a<=0)return 0;if(a<=11965)return a*t[0]/100;if(a<=25845)return t[1]+(a-11965)*t[2]/100;if(a<=45592)return t[3]+(a-25845)*t[4]/100;if(a<=132920)return Math.max(0,t[5]-(a-45592)*t[6]/100);return 0;}
+function netto(arb,ovr,aow,alleen){
+  var inc=Math.max(0,arb+ovr);
+  var t1=aow?17.85:35.75;
+  var bel=Math.min(inc,38883)*t1/100+Math.max(0,Math.min(inc,78426)-38883)*37.56/100+Math.max(0,inc-78426)*49.5/100;
+  var ahk=aow?Math.max(0,1556-0.03195*Math.max(0,inc-29736)):Math.max(0,3115-0.06398*Math.max(0,inc-29736));
+  var akv=aow?ak(arb,[4.156,498,15.483,2647,0.974,2840,3.25]):ak(arb,[8.324,996,31.009,5300,1.95,5685,6.51]);
+  var ok=0; if(aow){ok=inc<=46002?2067:Math.max(0,2067-0.15*(inc-46002)); if(alleen) ok+=540;}
+  var kort=Math.min(bel,ahk+akv+ok);
+  return inc-bel+kort;
+}
+
+/* ---------- WW/WGA-duur ---------- */
+function duurMnd(jr,jr15){jr=Math.max(0,Math.floor(jr));var pre=Math.min(Math.max(0,Math.floor(jr15)),jr),post=jr-pre,m=pre;for(var i=0;i<post;i++){m+=(pre+i<10)?1:0.5;}m=Math.floor(m);return Math.min(24,Math.max(3,m));}
+
+/* ---------- scenario-motor ---------- */
+var PAR={};
+function addM(d,n){return new Date(d.getFullYear(),d.getMonth()+n,1);}
+function isAow(p,D){return !!(p.aow&&D>=new Date(p.aow.getFullYear(),p.aow.getMonth(),1));}
+
+/* inkomen van persoon p op datum D in de basissituatie: {arb, ovr, lbl} */
+function baseInc(p,D,alleen){
+  if(isAow(p,D)) return {arb:0,ovr:(alleen?PAR.aowA:PAR.aowG)*12+p.pen,aow:true,lbl:'AOW'+(alleen?' alleenstaand':'')+(p.pen?' + pensioen':'')};
+  return {arb:p.arb,ovr:p.ovr,aow:false,lbl:'werk'};
+}
+function aoInc(p,m,D){
+  if(isAow(p,D)) return null;
+  var ao=Math.max(0,Math.min(100,PAR.ao)), rv=PAR.rvc;
+  var wia=Math.min(p.arb,PAR.dag*PAR.dagen);
+  var work=rv?p.arb*(1-ao/100):0;
+  var aovU=(p.aov>0&&m>=p.wacht)?p.aov*ao/100:0;
+  var r={arb:0,ovr:p.ovr+aovU,lbl:''};
+  var aovTxt=aovU?' + AO-verzekering':'';
+  if(p.type!=='loon'){ r.arb=work; r.lbl=(work?'inkomen uit restcapaciteit':'geen inkomen uit onderneming')+aovTxt; return r; }
+  if(m<12){ r.arb=p.arb*p.ld1/100; r.lbl='loondoorbetaling jaar 1 ('+nl(p.ld1,0)+'%)'+aovTxt; return r; }
+  if(m<24){ r.arb=p.arb*p.ld2/100; r.lbl='loondoorbetaling jaar 2 ('+nl(p.ld2,0)+'%)'+aovTxt; return r; }
+  var k=m-24;
+  if(ao<35){ r.arb=work; r.lbl='geen WIA (< 35%), inkomen uit restcapaciteit'+aovTxt; return r; }
+  if(ao>=80){ r.ovr+=0.75*wia; r.lbl='IVA 75%'+aovTxt; return r; }
+  var L=duurMnd(p.jr,p.jr15);
+  r.arb=work;
+  if(k<2){ r.ovr+=0.75*Math.max(0,wia-work); r.lbl='WGA loongerelateerd 75%'+aovTxt; return r; }
+  if(k<L){ r.ovr+=0.70*Math.max(0,wia-work); r.lbl='WGA loongerelateerd 70% (tot maand '+L+')'+aovTxt; return r; }
+  if(rv){ var rvcap=p.arb*(1-ao/100); r.ovr+=0.70*Math.max(0,wia-rvcap); r.lbl='WGA loonaanvulling 70% + werk'+aovTxt; return r; }
+  var pct=ao<45?28:ao<55?35:ao<65?42:50.75;
+  r.ovr+=pct/100*Math.min(PAR.wml*12,wia); r.lbl='WGA vervolguitkering '+nl(pct,2).replace(',00','')+'% minimumloon'+aovTxt; return r;
+}
+function wwInc(p,m,D){
+  if(isAow(p,D)) return null;
+  if(p.type!=='loon') return {arb:0,ovr:p.ovr,lbl:(p.type==='dga'?'DGA':'ondernemer')+': geen WW, geen inkomen uit onderneming'};
+  var L=duurMnd(p.jr,p.jr15), dagJ=Math.min(p.arb,PAR.dag*PAR.dagen);
+  if(m<2) return {arb:0,ovr:p.ovr+0.75*dagJ,lbl:'WW 75%'};
+  if(m<L) return {arb:0,ovr:p.ovr+0.70*dagJ,lbl:'WW 70% (tot maand '+L+')'};
+  return {arb:0,ovr:p.ovr,lbl:'WW beëindigd, geen uitkering'};
+}
+
+/* lasten op datum D voor aanwezige personen */
+function lasten(pers,D,hypF){
+  var anyAow=pers.some(function(p){return isAow(p,D);});
+  return (anyAow?PAR.hypAow:PAR.hypNu)*hypF+PAR.woonOv+PAR.vast;
+}
+
+/* simuleer: fn(m,D) → {pers:[{p,inc}], hypF} ; geeft fasen terug */
+function simulate(H,fn){
+  var S=PAR.start, phases=[], cur=null, series=[];
+  for(var m=0;m<H;m++){
+    var D=addM(S,m), st=fn(m,D);
+    var net=0, lbls=[];
+    st.items.forEach(function(it){ net+=netto(it.inc.arb,it.inc.ovr,it.aow,st.alleen); lbls.push(it.naam+': '+it.inc.lbl); });
+    net/=12;
+    var last=lasten(st.pers,D,st.hypF);
+    var bst=net-last, tk=Math.max(0,PAR.norm-bst);
+    series.push({D:D,net:net,last:last,bst:bst,tk:tk});
+    var key=Math.round(net)+'|'+Math.round(last)+'|'+lbls.join(';');
+    if(!cur||cur.key!==key){ cur={key:key,from:D,to:D,m0:m,n:1,net:net,last:last,bst:bst,tk:tk,lbl:lbls.join(' · ')}; phases.push(cur); }
+    else { cur.to=D; cur.n++; }
+  }
+  return {phases:phases,series:series};
+}
+function summarize(sim){
+  var first=null,maxT=0,maxD=null,cum=0,minB=Infinity;
+  sim.series.forEach(function(s){ if(s.tk>0.5&&!first) first=s.D; if(s.tk>maxT){maxT=s.tk;maxD=s.D;} cum+=s.tk; if(s.bst<minB) minB=s.bst; });
+  return {first:first,maxT:maxT,maxD:maxD,cum:cum,minB:minB};
+}
+
+function readPar(){
+  PAR.dag=v('pDag'); PAR.dagen=v('pDagen')||261; PAR.wml=v('pWml'); PAR.aowG=v('pAowG'); PAR.aowA=v('pAowA'); PAR.anwMax=v('pAnw');
+  PAR.hypNu=v('hypNu'); PAR.hypAow=$('hypAow').value.trim()===''?PAR.hypNu:v('hypAow'); PAR.schuld=v('schuld'); PAR.woonOv=v('woonOv'); PAR.vast=v('vast');
+  PAR.ao=v('aoPct'); PAR.rvc=c('rvc');
+  var t=new Date(); PAR.start=new Date(t.getFullYear(),t.getMonth()+1,1);
+}
+
+function calc(){
+  readPar();
+  var two=c('partner'); $('colB').classList.toggle('hidden',!two);
+  $('normEigenWrap').classList.toggle('hidden',$('normMode').value!=='eigen');
+  var A=P('A'), B=two?P('B'):null, all=two?[A,B]:[A];
+  all.forEach(function(p){var t=$('p'+p.id+'_aowt'); t.textContent=p.aow?('AOW-datum: '+p.aow.getDate()+' '+mS(p.aow)+(p.geb.getFullYear()>=1965?' (indicatief)':'')):'';});
+  var msgs=[];
+  all.forEach(function(p){ if(p.anw>PAR.anwMax+0.5) msgs.push(p.naam+': de ingevulde Anw is hoger dan het maximum van '+eur(PAR.anwMax,2)+' per maand.'); if(p.anwR&&p.anw===0) msgs.push(p.naam+': recht op Anw aangevinkt, maar geen bedrag ingevuld. De SVB verrekent inkomen uit arbeid; vul het verwachte bedrag in (maximaal '+eur(PAR.anwMax,2)+').'); });
+  /* horizon */
+  var lastAow=all.reduce(function(a,p){return p.aow&&(!a||p.aow>a)?p.aow:a;},null);
+  var H=lastAow?Math.max(36,Math.min(600,(lastAow.getFullYear()-PAR.start.getFullYear())*12+(lastAow.getMonth()-PAR.start.getMonth())+13)):120;
+  /* basis */
+  PAR.norm=0;
+  function baseItems(D,pers,alleen){return pers.map(function(p){var b=baseInc(p,D,alleen);return {naam:p.naam,inc:b,aow:b.aow};});}
+  var baseSim=simulate(H,function(m,D){return {pers:all,items:baseItems(D,all,!two),alleen:!two,hypF:1};});
+  var bNu=baseSim.series[0].bst;
+  PAR.norm=$('normMode').value==='eigen'?v('normEigen'):bNu;
+  baseSim=simulate(H,function(m,D){return {pers:all,items:baseItems(D,all,!two),alleen:!two,hypF:1};});
+  var scen=[];
+  scen.push({t:'AOW (huishouden zonder life event)',d:'Inkomen vanaf de AOW-datum van '+(two?'beide partners':'de aanvrager')+'.',sim:baseSim});
+  all.forEach(function(X){
+    var other=all.filter(function(p){return p!==X;});
+    if(X.aow&&X.aow<=PAR.start){ msgs.push(X.naam+' heeft de AOW-leeftijd bereikt: geen scenario arbeidsongeschiktheid of werkloosheid.'); }
+    else{
+      scen.push({t:'Arbeidsongeschiktheid '+X.naam+' ('+nl(PAR.ao,0)+'%)',d:'Vanaf '+mS(PAR.start)+'. '+(X.type==='loon'?'Loondienst: loondoorbetaling, daarna WIA.':'Geen WIA (ondernemer/DGA).')+(X.aov?' Met AO-verzekering na '+nl(X.wacht,0)+' maanden wachttijd.':''),
+        sim:simulate(H,function(m,D){var items=other.map(function(p){var b=baseInc(p,D,false);return {naam:p.naam,inc:b,aow:b.aow};});var ai=aoInc(X,m,D);var xi=ai?{naam:X.naam,inc:ai,aow:false}:{naam:X.naam,inc:baseInc(X,D,!two),aow:true};items.unshift(xi);return {pers:all,items:items,alleen:!two,hypF:1};})});
+      scen.push({t:'Werkloosheid '+X.naam,d:X.type==='loon'?('WW-duur indicatief '+duurMnd(X.jr,X.jr15)+' maanden.'):('Als '+(X.type==='dga'?'DGA':'ondernemer')+' geen recht op WW: inkomen uit onderneming € 0.'),
+        sim:simulate(H,function(m,D){var items=other.map(function(p){var b=baseInc(p,D,false);return {naam:p.naam,inc:b,aow:b.aow};});var wi=wwInc(X,m,D);var xi=wi?{naam:X.naam,inc:wi,aow:false}:{naam:X.naam,inc:baseInc(X,D,!two),aow:true};items.unshift(xi);return {pers:all,items:items,alleen:!two,hypF:1};})});
+    }
+  });
+  if(two){
+    [[A,B],[B,A]].forEach(function(pr){
+      var X=pr[0],Y=pr[1];
+      var hypF=PAR.schuld>0?Math.max(0,1-X.orv/PAR.schuld):1;
+      scen.push({t:'Overlijden '+X.naam,d:'ORV '+eur(X.orv)+' lost af: netto hypotheeklasten × '+nl(hypF*100,0)+'%. '+Y.naam+' houdt eigen inkomen'+(Y.anwR&&Y.anw?' + Anw '+eur(Y.anw)+' p/m (tot AOW)':'')+(X.np?' + nabestaandenpensioen '+eur(X.np)+' p/j':'')+'.',
+        sim:simulate(H,function(m,D){var b=baseInc(Y,D,true);var inc={arb:b.arb,ovr:b.ovr+X.np,lbl:b.lbl};if(!b.aow&&Y.anwR&&Y.anw>0){inc.ovr+=Math.min(Y.anw,PAR.anwMax)*12;inc.lbl+=' + Anw';}if(X.np)inc.lbl+=' + nabestaandenpensioen';return {pers:[Y],items:[{naam:Y.naam,inc:inc,aow:b.aow}],alleen:true,hypF:hypF};})});
+    });
+    [A,B].forEach(function(Y){
+      scen.push({t:'Einde relatie – '+Y.naam+' blijft in de woning',d:Y.naam+' alleen, met eigen inkomen en alle woonlasten. Geen alimentatie of verdeling meegenomen.',
+        sim:simulate(H,function(m,D){var b=baseInc(Y,D,true);return {pers:[Y],items:[{naam:Y.naam,inc:b,aow:b.aow}],alleen:true,hypF:1};})});
+    });
+  }
+  /* uitvoer */
+  var sumRows='', det='', worst=null;
+  scen.forEach(function(s,i){
+    var z=summarize(s.sim); s.z=z;
+    if(!worst||z.maxT>worst.z.maxT) worst=s;
+    sumRows+='<tr><td><b>'+esc(s.t)+'</b></td><td>'+eur(z.minB)+'</td><td class="'+(z.maxT>0.5?'neg':'pos')+'">'+(z.maxT>0.5?eur(z.maxT):'geen')+'</td><td>'+(z.first?mS(z.first):'–')+'</td><td>'+(z.maxT>0.5?mS(z.maxD):'–')+'</td><td>'+(z.cum>0.5?eur(z.cum):'–')+'</td></tr>';
+    var rows='';
+    s.sim.phases.forEach(function(ph){
+      var w=PAR.norm>0?Math.max(2,Math.min(100,ph.bst/PAR.norm*100)):0;
+      rows+='<tr><td>'+mS(ph.from)+(ph.n>1?' – '+mS(ph.to):'')+'<small>'+(ph.n>=12?nl(ph.n/12,1).replace(',0','')+' jaar':ph.n+' mnd')+(ph.to.getTime()===s.sim.series[s.sim.series.length-1].D.getTime()?' (en verder)':'')+'</small><small>'+esc(ph.lbl)+'</small></td>'+
+        '<td>'+eur(ph.net)+'</td><td>'+eur(ph.last)+'</td><td>'+eur(ph.bst)+'<br><span class="mb'+(ph.tk>0.5?' r':'')+'" style="width:'+Math.round(w*0.8)+'px"></span></td><td class="'+(ph.tk>0.5?'neg':'pos')+'">'+(ph.tk>0.5?eur(ph.tk):'–')+'</td></tr>';
+    });
+    det+='<div class="scn"><h4>'+esc(s.t)+'<span>'+(z.maxT>0.5?'tekort tot '+eur(z.maxT)+' p/m, vanaf '+mS(z.first):'geen tekort')+'</span></h4><div class="expl">'+esc(s.d)+'</div>'+
+      '<div style="overflow-x:auto"><table class="rt"><thead><tr><th>Periode en inkomen</th><th>Netto inkomen p/m</th><th>Lasten p/m</th><th>Besteedbaar p/m</th><th>Tekort p/m</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  });
+  $('sumT').innerHTML='<thead><tr><th>Scenario</th><th>Laagste besteedbaar p/m</th><th>Grootste tekort p/m</th><th>Eerste tekort</th><th>Grootste tekort in</th><th>Cumulatief tekort</th></tr></thead><tbody>'+sumRows+'</tbody>';
+  $('scens').innerHTML=det;
+  $('hero').innerHTML='<div class="hbox ok"><div class="hbl">Besteedbaar nu</div><div class="hbv">'+eur(bNu)+'</div><div class="hbs">netto inkomen '+eur(baseSim.series[0].net)+' − lasten '+eur(baseSim.series[0].last)+'</div></div>'+
+    '<div class="hbox"><div class="hbl">Toetsnorm</div><div class="hbv">'+eur(PAR.norm)+'</div><div class="hbs">'+($('normMode').value==='eigen'?'eigen minimumbedrag':'huidig besteedbaar inkomen')+'</div></div>'+
+    '<div class="hbox '+(worst&&worst.z.maxT>0.5?'bad':'ok')+'"><div class="hbl">Grootste risico</div><div class="hbv" style="font-size:17px">'+(worst&&worst.z.maxT>0.5?esc(worst.t):'Geen tekort')+'</div><div class="hbs">'+(worst&&worst.z.maxT>0.5?'tekort '+eur(worst.z.maxT)+' p/m in '+mS(worst.z.maxD):'in geen enkel scenario')+'</div></div>';
+  msgs.push('Netto inkomens zijn indicatief berekend (box 1 en heffingskortingen 2026, zonder pensioenpremie en toeslagen). Vergelijk het besteedbaar inkomen nu met de werkelijke situatie.');
+  $('msgs').innerHTML=msgs.map(function(t){return '<div class="note">'+esc(t)+'</div>';}).join('');
+}
+
+/* print */
+function doPrint(){
+  var styles='';for(var i=0;i<document.styleSheets.length;i++){try{var rs=document.styleSheets[i].cssRules;for(var j=0;j<rs.length;j++)styles+=rs[j].cssText+'\n';}catch(e){}}
+  var html='<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Risicoscan life events</title><style>'+styles+' body{background:#fff}.noprint{display:none!important}.scn{page-break-inside:avoid}.hbox,.ch,.rt th,.mb{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>'+
+    document.querySelector('.hdr').outerHTML+'<div class="wrap">'+document.querySelector('.disc').outerHTML+$('results').outerHTML+$('bronnen').outerHTML+'</div><script>window.addEventListener("load",function(){setTimeout(function(){window.print();},500);});<\/script></body></html>';
+  var w=null;try{w=window.open('','_blank');}catch(e){w=null;}
+  if(w&&w.document){w.document.open();w.document.write(html);w.document.close();return;}
+  try{var blob=new Blob([html],{type:'text/html;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(url);a.remove();},10000);}catch(e){window.print();}
+}
+
+/* init */
+function build(){$('colA').innerHTML=col('A');$('colB').innerHTML=col('B');document.querySelectorAll('input.eur').forEach(fmtInput);}
+build();
+var DEF={};document.querySelectorAll('input,select').forEach(function(el){if(el.id)DEF[el.id]=el.type==='checkbox'?el.checked:el.value;});
+document.addEventListener('input',function(e){if(e.target.matches('input,select'))calc();});
+document.addEventListener('change',function(e){if(e.target.matches('input,select'))calc();});
+document.addEventListener('focusout',function(e){if(e.target.matches('input.eur'))fmtInput(e.target);});
+$('printBtn').addEventListener('click',doPrint);
+$('resetBtn').addEventListener('click',function(){Object.keys(DEF).forEach(function(id){var el=$(id);if(!el)return;if(el.type==='checkbox')el.checked=DEF[id];else el.value=DEF[id];});calc();});
+calc();
+})();
+</script>
+</body>
+</html>
