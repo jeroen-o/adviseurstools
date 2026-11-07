@@ -432,10 +432,10 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
         <div class="field">
           <label>NHG gewenst</label>
           <select id="nhg">
-            <option value="1">Ja — grens € 470.000 (2026)</option>
+            <option value="1" id="nhgOptJa">Ja — grens € 470.000 (2026)</option>
             <option value="0" selected>Nee — boven NHG-grens</option>
           </select>
-          <span class="hint">Bij NHG: lagere rente, borgtochtprovisie 0,4% (met energiebesparende voorzieningen grens € 498.200)</span>
+          <span class="hint">Bij NHG: lagere rente, borgtochtprovisie 0,4% (met energiebesparende voorzieningen grens <span id="nhgEbvTxt">€ 498.200</span>)</span>
         </div>
         <div class="field">
           <label>WOZ-waarde / koopprijs woning</label>
@@ -549,6 +549,8 @@ const BRUT_STUDIE = [[1.5,1.05],[2.0,1.05],[2.5,1.10],[3.0,1.15],[3.5,1.20],[4.0
 const DUO_SCHATTING_RENTE = 2.5, DUO_SCHATTING_JAAR = 35;
 const NHG_GRENS_2026 = 470000;          // NHG-kostengrens 2026
 const NHG_GRENS_ENERGIE_2026 = 498200;  // met energiebesparende voorzieningen
+// NHG-kostengrens per normjaar (g) en met energiebesparende voorzieningen (ebv); borgtochtprovisie 0,4% in beide jaren
+const NHG_JAAR = {"2026":{g:NHG_GRENS_2026,ebv:NHG_GRENS_ENERGIE_2026},"2027":{g:500000,ebv:530000}};
 
 // Energielabel extra bedragen 2026
 const LABEL_EXTRA = {
@@ -729,7 +731,7 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const maxVoorEnergielabel = maxOpInkomen + labelExtra + alleenstaandExtra;
   // NHG grens
   const nhg = document.getElementById('nhg').value==='1';
-  const nhgGrens = NHG_GRENS_2026;
+  const nhgGrens = NHG_JAAR[jaar].g, nhgGrensEnergie = NHG_JAAR[jaar].ebv;
   const maxOpWoning = woningWaarde * 1.00; // max 100% van woningwaarde
   const maxFinal = Math.min(maxVoorEnergielabel, maxOpWoning);
   const maxNhgGegeven = nhg ? Math.min(maxFinal, nhgGrens) : maxFinal;
@@ -737,7 +739,7 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const verduurzOn = (document.getElementById('verduurzaming')||{}).value==='1';
   const verduurzExtra = verduurzOn ? (VERDUURZ_EXTRA[label]||0) : 0;
   let maxMetVerduurz = Math.min(maxVoorEnergielabel + verduurzExtra, maxOpWoning + verduurzExtra);
-  if(nhg) maxMetVerduurz = Math.min(maxMetVerduurz, NHG_GRENS_ENERGIE_2026);
+  if(nhg) maxMetVerduurz = Math.min(maxMetVerduurz, nhgGrensEnergie);
   // Maandlast bij werkelijke rente
   const maandlastAnn = berekenAnnuiteit(rente, looptijdJaar) * maxNhgGegeven;
   const maandlastRente = maxNhgGegeven * rente/100/12;
@@ -749,7 +751,7 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
     beschikbaarJaar, beschikbaarMnd, annFactor, maxOpInkomen, labelExtra,
     alleenstaandExtra, maxVoorEnergielabel, maxOpWoning, maxFinal: maxNhgGegeven,
     maandlastAnn, maandlastRente, ink1:i1, ink2:i2, hoogste, laagste,
-    nhg, nhgGrens, woningWaarde, label,
+    nhg, nhgGrens, nhgGrensEnergie, woningWaarde, label,
     pensioenRegel, pensioenBepalend: bindend===sPens, aowTabel: bindend.aowTbl
   };
 }
@@ -760,7 +762,7 @@ function renderOpbouw(r, gridId, compact=false){
     <div class="ob-box navy">
       <div class="ob-lbl">Maximale hypotheek</div>
       <div class="ob-val">${fmt(Math.floor(r.maxFinal))}</div>
-      <div class="ob-sub">${r.nhg&&r.maxFinal<=r.nhgGrens?'✓ Binnen NHG-grens':r.nhg?'⚠ Boven NHG (€ 470.000)':''}</div>
+      <div class="ob-sub">${r.nhg&&r.maxFinal<=r.nhgGrens?'✓ Binnen NHG-grens':r.nhg?'⚠ Boven NHG ('+fmt(r.nhgGrens).trim()+')':''}</div>
     </div>
     <div class="ob-box gold">
       <div class="ob-lbl">Toetsinkomen</div>
@@ -835,9 +837,9 @@ function bereken(){
     ${r.alleenstaandExtra>0?`<tr><td>4c. Alleenstaandetoeslag</td><td class="pos">+${fmt(r.alleenstaandExtra)}</td><td style="text-align:right">Trhk ${r.jaar} art. 3 lid 8 (één aanvrager, toetsinkomen &gt; ${fmt(r.alleenstaandGrens)})</td></tr>`:''}
     ${r.aantalAanvragers===1&&r.alleenstaandExtra===0?`<tr><td>4c. Alleenstaandenbedrag</td><td>—</td><td style="text-align:right">Niet van toepassing: toetsinkomen niet hoger dan ${fmt(r.alleenstaandGrens)}</td></tr>`:''}
     <tr><td>5. Max. op woningwaarde (100%)</td><td>${fmt(r.maxOpWoning)}</td><td style="text-align:right">${r.maxFinal<r.maxVoorEnergielabel?'⚠ Beperkende factor':'—'}</td></tr>
-    ${r.nhg&&r.maxFinal<r.maxVoorEnergielabel?`<tr><td>5b. NHG-grens</td><td>${fmt(r.nhgGrens)}</td><td style="text-align:right">Maximumgrens NHG 2026</td></tr>`:''}
+    ${r.nhg&&r.maxFinal<r.maxVoorEnergielabel?`<tr><td>5b. NHG-grens</td><td>${fmt(r.nhgGrens)}</td><td style="text-align:right">Maximumgrens NHG ${r.jaar}</td></tr>`:''}
     <tr class="totaal"><td><strong>= Maximale hypotheek</strong></td><td><strong>${fmt(Math.floor(r.maxFinal))}</strong></td><td style="text-align:right">Maandlast: ${fmt(r.maandlastAnn,2)}/mnd</td></tr>
-    ${r.verduurzOn?`<tr><td>6. Met energiebesparende voorzieningen (label ${LABEL_NAAM[r.label]})</td><td>${fmt(Math.floor(r.maxMetVerduurz))}</td><td style="text-align:right">${r.verduurzExtra>0?'+'+fmt(r.verduurzExtra)+' alleen voor verduurzaming'+(r.nhg?' · NHG max. '+fmt(NHG_GRENS_ENERGIE_2026):''):'Geen extra bedrag voor dit label'}</td></tr>`:''}
+    ${r.verduurzOn?`<tr><td>6. Met energiebesparende voorzieningen (label ${LABEL_NAAM[r.label]})</td><td>${fmt(Math.floor(r.maxMetVerduurz))}</td><td style="text-align:right">${r.verduurzExtra>0?'+'+fmt(r.verduurzExtra)+' alleen voor verduurzaming'+(r.nhg?' · NHG max. '+fmt(r.nhgGrensEnergie):''):'Geen extra bedrag voor dit label'}</td></tr>`:''}
   </tbody>`;
 
   // ── RVP OPTIMALISATIE ──
@@ -934,6 +936,8 @@ function gopts(title,xLabel,yLabel){
 function updNormJaar(){
   const j = normJaar(), A = ALLEEN[j];
   document.querySelectorAll('.njT').forEach(e=>e.textContent=j);
+  document.getElementById('nhgOptJa').textContent = `Ja — grens ${fmt(NHG_JAAR[j].g).trim()} (${j})`;
+  document.getElementById('nhgEbvTxt').textContent = fmt(NHG_JAAR[j].ebv).trim();
   document.getElementById('alleenTxt').textContent = `${fmt(A.bedrag).trim()} automatisch bij één aanvrager en toetsinkomen > ${fmt(A.grens).trim()}`+(A.grensAOW!==A.grens?` (AOW-tabel: > ${fmt(A.grensAOW).trim()})`:' (ook AOW-tabel)')+` — Trhk ${j}`;
   document.getElementById('normjaarHint').textContent = `Bron: ${bronJaar(j)} · standaard op datum: t/m 31-12-2026 normjaar 2026, vanaf 1-1-2027 normjaar 2027`;
 }

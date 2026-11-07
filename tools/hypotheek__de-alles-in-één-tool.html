@@ -190,7 +190,7 @@ input.error { border-color: var(--red); }
 <!-- ===== HEADER ===== -->
 
 <div class="app-header">
-<div class="header-badge">Trhk <span class="njT">2026</span> · AFM Leidraad · NHG 2026</div>
+<div class="header-badge">Trhk <span class="njT">2026</span> · AFM Leidraad · NHG <span class="njT">2026</span></div>
 <h1>🏠 Hypotheek Advies Tool <span class="njT">2026</span></h1>
 <p>Maximale hypotheek · Maandlasten · Scenarioanalyse · Adviesrapport</p>
 </div>
@@ -456,7 +456,7 @@ Vul woningwaarde en hypotheekbedrag in om de LTV te berekenen.
 </div>
 </div>
 <div class="info-box" style="margin-top:12px">
-<strong>NHG-grens 2026:</strong> Uniforme grens voor alle woningtypen. Controleer de actuele kostengrens op nhg.nl.
+<strong>NHG-grens <span class="njT">2026</span>:</strong> <span id="nhgInfoTxt">€ 470.000 (met energiebesparende voorzieningen € 498.200)</span>; borgtochtprovisie 0,4%. Uniforme grens voor alle woningtypen. Controleer de actuele kostengrens op nhg.nl.
 </div>
 </div>
 
@@ -1476,6 +1476,9 @@ return opslagen[label] || 0;
 // NHG-kostengrens 2026 (NHG Voorwaarden & Normen 2026): € 470.000; met energiebesparende voorzieningen € 498.200
 const NHG_GRENS_2026 = 470000;
 const NHG_GRENS_2026_EBV = 498200;
+// NHG-kostengrens per normjaar (volgt de datum advies): 2027 € 500.000, met energiebesparende voorzieningen € 530.000; borgtochtprovisie 0,4% in beide jaren
+const NHG_JAAR = { '2026': { g: NHG_GRENS_2026, ebv: NHG_GRENS_2026_EBV }, '2027': { g: 500000, ebv: 530000 } };
+function nhgGrensVoor(j, metEbv) { const N = NHG_JAAR[j] || NHG_JAAR['2026']; return metEbv ? N.ebv : N.g; }
 
 // ============================================================
 // STATE
@@ -1728,7 +1731,7 @@ const maxHypLTI_toets = Math.floor(maxHypLTI_finaal);
 const benutting = maxHyp > 0 ? (gewenstToets / maxHypLTI_toets) * 100 : 0;
 
 // NHG check
-const nhgGrens = (ebv === 'ja') ? NHG_GRENS_2026_EBV : NHG_GRENS_2026;
+const nhgGrens = nhgGrensVoor(normJaar(), ebv === 'ja');
 const nhgMogelijk = woningWaarde <= nhgGrens && gewenstToets <= nhgGrens;
 const nhgCheck = nhg === 'ja' ? (nhgMogelijk ? 'ja' : 'nee') : 'niet_gewenst';
 
@@ -1766,7 +1769,7 @@ if (state.pensioen10j === 'ja') risicos.push({ type: 'warn', text: `Pensioen bin
 if (stijgingMaandlast > 200) risicos.push({ type: 'warn', text: `Renteschok +2%: maandlast stijgt met ${euro(stijgingMaandlast)}/mnd bij herziening` });
 if (state.aoverzekering === 'nee') risicos.push({ type: 'warn', text: `Geen AO-verzekering: adviseer doorrekening arbeidsongeschiktheidsscenario` });
 if (ltv < 101 && benutting <= 100) risicos.push({ type: 'ok', text: `LTV ${pct(ltv,1)} — binnen toegestane norm van 100%` });
-if (nhgCheck === 'ja') risicos.push({ type: 'ok', text: `NHG mogelijk: woningwaarde en hypotheekbedrag binnen NHG-grens 2026` });
+if (nhgCheck === 'ja') risicos.push({ type: 'ok', text: `NHG mogelijk: woningwaarde en hypotheekbedrag binnen NHG-grens ${normJaar()} (${euro(nhgGrens)})` });
 
 return {
 toetsinkomen, toetsrente, tabelType, flPct, alimJaar,
@@ -1872,7 +1875,7 @@ Toetsinkomen ${euro(r.toetsinkomen)}${r.alimJaar > 0 ? ` (na aftrek ${euro(r.ali
 <!-- NHG -->
 <div style="margin-bottom:16px">
 ${nhgBadge}
-${r.nhgCheck === 'ja' ? `<span style="font-size:13px; color:#5f6b7a; margin-left:12px">Woningwaarde ${euro(state.woningWaarde)} ≤ NHG-grens ${euro(state.ebv === 'ja' ? NHG_GRENS_2026_EBV : NHG_GRENS_2026)}</span>` : ''}
+${r.nhgCheck === 'ja' ? `<span style="font-size:13px; color:#5f6b7a; margin-left:12px">Woningwaarde ${euro(state.woningWaarde)} ≤ NHG-grens ${r.normjaar} ${euro(nhgGrensVoor(r.normjaar, state.ebv === 'ja'))}</span>` : ''}
 </div>
 
 <!-- OPBOUW BEREKENING -->
@@ -2027,7 +2030,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 
 <div class="rapport-footer">
 <span>Hypotheekadviesrapport — ${klant} — ${datum}</span>
-<span>Trhk ${r.normjaar} · AFM Leidraad · NHG 2026 · Vertrouwelijk</span>
+<span>Trhk ${r.normjaar} · AFM Leidraad · NHG ${r.normjaar} · Vertrouwelijk</span>
 </div>
 
 <!-- ===== PAGINA 1: SAMENVATTING ===== -->
@@ -2079,7 +2082,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <div class="kf-box">
 <div class="kf-label">NHG</div>
 <div class="kf-value" style="font-size:12pt">${r.nhgCheck === 'ja' ? '✅ Mogelijk' : r.nhgCheck === 'niet_gewenst' ? '— Niet gewenst' : '❌ Niet mogelijk'}</div>
-<div class="kf-sub">Grens 2026: ${euro(state.ebv === 'ja' ? NHG_GRENS_2026_EBV : NHG_GRENS_2026)}${state.ebv === 'ja' ? ' (met energiebesparende voorzieningen)' : ''}</div>
+<div class="kf-sub">Grens ${r.normjaar}: ${euro(nhgGrensVoor(r.normjaar, state.ebv === 'ja'))}${state.ebv === 'ja' ? ' (met energiebesparende voorzieningen)' : ''}</div>
 </div>
 </div>
 </div>
@@ -2219,6 +2222,7 @@ const v = document.getElementById('adviesDatum').value;
 const d = v ? new Date(v + 'T00:00:00') : new Date();
 const j = normJaarVoor(isNaN(d) ? new Date() : d);
 document.querySelectorAll('.njT').forEach(e => e.textContent = j);
+document.getElementById('nhgInfoTxt').textContent = euro(nhgGrensVoor(j, false)) + ' (met energiebesparende voorzieningen ' + euro(nhgGrensVoor(j, true)) + ')';
 document.getElementById('normjaarInfo').innerHTML = 'Normjaar financieringslastnormen: <strong class="njT">' + j + '</strong> — ' + bronNormJaar(j) + '. Volgt de datum advies: vóór 1-1-2027 normjaar 2026, vanaf 1-1-2027 normjaar 2027.';
 };
 ['input', 'change'].forEach(ev => document.getElementById('adviesDatum').addEventListener(ev, updNormJaarInfo));
