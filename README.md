@@ -37,3 +37,4 @@ Kop met kruimelpad, gerelateerde tools onder elke tool, sitefooter en de homepag
 1. `python3 scripts/maak-overzicht.py` (tegels op categoriepagina's)
 2. `python3 scripts/opmaak-site.py` (kop, footer, gerelateerde tools, homepage)
 3. `python3 scripts/maak-zoekindex.py` (zoeker)
+4. `python3 scripts/maak-seo.py` (meta-tags, canonical, Open Graph, JSON-LD, sitemap.xml, robots.txt, llms.txt)

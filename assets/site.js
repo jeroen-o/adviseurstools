@@ -94,6 +94,7 @@
     if(t) location.href=t.href; else { var m=box.querySelector('.zmail'); if(m) m.focus(); }
   });});
   document.addEventListener('click',function(e){if(!form.contains(e.target)){box.hidden=true;inp.setAttribute('aria-expanded','false');}});
+  try{var qp=new URLSearchParams(location.search).get('q'); if(qp){inp.value=qp; laad(toon);}}catch(e){}
   document.querySelectorAll('.chip[data-q]').forEach(function(c){c.addEventListener('click',function(){
     inp.value=c.getAttribute('data-q'); inp.focus(); laad(toon);});});
   document.addEventListener('keydown',function(e){if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault();inp.focus();}});
