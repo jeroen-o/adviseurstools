@@ -448,6 +448,19 @@
           <option value="5">Korter dan 10 jaar (hoogste van rente en toetsrente)</option>
         </select>
       </div>
+      <div class="input-group">
+        <label for="energielabel">Energielabel woning (aankoop) <span class="tooltip" data-tip="Vast bedrag bovenop de maximale hypotheek, buiten de maandlasttoets (Trhk art. 4). Geldt op elk toetsmoment, ook in de pensioenfase. Alleen een geregistreerd, definitief label telt.">i</span></label>
+        <select id="energielabel" class="full-input">
+          <option value="0" selected>E, F of G (€ 0)</option>
+          <option value="5000">C of D (+ € 5.000)</option>
+          <option value="10000">A of B (+ € 10.000)</option>
+          <option value="20000">A+ of A++ (+ € 20.000)</option>
+          <option value="25000">A+++ (+ € 25.000)</option>
+          <option value="30000">A++++ (+ € 30.000)</option>
+          <option value="40000">A++++ met energieprestatiegarantie (+ € 40.000)</option>
+          <option value="10000g">Geen geldig energielabel (+ € 10.000)</option>
+        </select>
+      </div>
 
       <div class="reductions-card">
         <div class="reductions-header">
@@ -508,7 +521,7 @@
 
       <div class="chart-section" id="momentsSection">
         <h2 class="section-title">Max hypotheek per pensioenfase</h2>
-        <p class="section-subtitle">30jr annuïtair, rente <span id="momentsRente">4,00%</span>, inclusief verplichtingen en alleenstaandenbedrag. Eerste/tweede persoon op leeftijd (oudste eerst).</p>
+        <p class="section-subtitle">30jr annuïtair, rente <span id="momentsRente">4,00%</span>, inclusief verplichtingen, alleenstaandenbedrag en energielabelbedrag (buiten de maandlasttoets). Eerste/tweede persoon op leeftijd (oudste eerst).</p>
         <div class="table-wrapper">
           <table class="results">
             <thead>
@@ -683,6 +696,7 @@
           <li><strong>Hypotheekrente en rentevaste periode</strong> — bepalen de rentekolom en de annuïteit (default 4,00%, rentevast ≥ 10 jaar).</li>
           <li><strong>Verlagingen</strong> — DUO-termijn, kredietlimiet, erfpacht, overige niet-aftrekbare lasten. Betaalde partneralimentatie verlaagt het toetsinkomen.</li>
           <li><strong>Alleenstaandenbedrag</strong> — € 17.000, automatisch bij één aanvrager boven de inkomensgrens.</li>
+          <li><strong>Energielabelbedrag</strong> — vast bedrag (C/D € 5.000 t/m A++++ met garantie € 40.000; geen geldig label € 10.000) bovenop de maximale hypotheek, buiten de maandlasttoets, op elk toetsmoment.</li>
         </ul>
       </section>
 
@@ -838,7 +852,7 @@ function tabelIsAOW(inc1, aow1, inc2, aow2, heeft2) {
   if (!heeft2) return !!aow1;
   return (inc1 >= inc2) ? !!aow1 : !!aow2;
 }
-// Eén toetsmoment: max hypotheek (30 jr annuïtair) na verplichtingen, plus alleenstaandenbedrag
+// Eén toetsmoment: max hypotheek (30 jr annuïtair) na verplichtingen, plus alleenstaandenbedrag en energielabelbedrag (beide buiten de maandlasttoets)
 function toetsMax(inc1, aow1, inc2, aow2, heeft2, box3, rate) {
   rate = (rate === undefined) ? TK.refRate : rate;
   inc2 = heeft2 ? (inc2 || 0) : 0;
@@ -851,7 +865,8 @@ function toetsMax(inc1, aow1, inc2, aow2, heeft2, box3, rate) {
   const verl = verlagingenVoor(type, rate);
   const netto = Math.max(0, bruto - verl);
   const verh = gez > 0 ? alleenstaandenBedrag(gez, isAow) : 0;
-  return { type, isAow, reken, gez, flp, bruto, verl, netto, verh, loan: maxLoan(netto, rate, 30) + verh };
+  const label = gez > 0 ? (TK.labelExtra || 0) : 0;
+  return { type, isAow, reken, gez, flp, bruto, verl, netto, verh, label, loan: maxLoan(netto, rate, 30) + verh + label };
 }
 function maxMonthly(income, type, rate) { return getFLP(income, type, rate) / 100 * income / 12; }
 function maxLoan(m, r, t) { const ri = r/100/12, n = t*12; if (ri === 0) return m*n; return m * (1 - Math.pow(1+ri, -n)) / ri; }
@@ -955,7 +970,9 @@ function getInputs() {
   const refRate = refRvp < 10 ? Math.max(refRente, toetsRate) : refRente;
 
   const isSolo = !a2;
-  TK = { refRate, d: { studieMnd, kredietMnd, alimMnd, erfMnd: erfJaar / 12, overigMnd }, isSolo };
+  // Energielabelbedrag (Trhk art. 4): vast bedrag buiten de maandlasttoets, op elk toetsmoment
+  const labelExtra = parseInt(document.getElementById('energielabel').value, 10) || 0;
+  TK = { refRate, d: { studieMnd, kredietMnd, alimMnd, erfMnd: erfJaar / 12, overigMnd }, isSolo, labelExtra };
   // Bruto maandlast verplichtingen bij de niet-AOW-tabel box 1 (ter weergave)
   const verlagingenMnd = verlagingenVoor('werkend', refRate);
   // Alleenstaandenbedrag huidige situatie (ter weergave; per toetsmoment opnieuw bepaald)
@@ -976,6 +993,7 @@ function getInputs() {
     verlagingenDetail: { studieMnd, kredietLimiet, kredietMnd, alimMnd, erfMnd: erfJaar / 12, overigMnd },
     verhoging,
     verhogingActief,
+    labelExtra,
   };
 }
 
@@ -1005,7 +1023,7 @@ function calcScenario(label, sublabel, inc1, aow1, inc2, aow2, heeft2, refRate) 
     flp_b1: b1.flp, flp_b3: b3.flp,
     bruto_maandlast_b1: b1.bruto, bruto_maandlast_b3: b3.bruto,
     netto_maandlast_b1: b1.netto, netto_maandlast_b3: b3.netto,
-    verlagingenMnd: b1.verl, verlagingenMnd_b3: b3.verl, verhoging: b1.verh,
+    verlagingenMnd: b1.verl, verlagingenMnd_b3: b3.verl, verhoging: b1.verh, labelExtra: b1.label,
     max_b1: b1.loan,
     max_b3: b3.loan,
   };
@@ -1038,7 +1056,9 @@ function calc3Scenarios(applicants, refRate, verlagingenMnd, verhoging) {
 
   // SCENARIO 2: Eerste persoon AOW (oudste pensioen, jongste nog salaris of solo pensioen)
   let s2 = null;
-  if (oudste.yearsToAOW > 0) {
+  // Gelijke AOW-datum (bijv. zelfde geboortedatum): geen tussenfase "eerste persoon AOW" — direct beide AOW (scenario 3)
+  const tegelijkAOW = !!jongste && Math.abs(jongste.yearsToAOW - oudste.yearsToAOW) < 1 / 24;
+  if (oudste.yearsToAOW > 0 && !tegelijkAOW) {
     const inc1_s2 = oudste.pension;
     const inc2_s2 = isSolo ? 0 : jongste.salary;
     const gez_s2 = inc1_s2 + inc2_s2;
@@ -1055,7 +1075,7 @@ function calc3Scenarios(applicants, refRate, verlagingenMnd, verhoging) {
     const inc2_s3 = jongste.pension;
     const gez_s3 = inc1_s3 + inc2_s3;
     const s3Sub = `Beide gepensioneerd · totaal € ${gez_s3.toLocaleString('nl-NL')} · over ${formatYearsMonths(jongste.yearsToAOW)}`;
-    s3 = calcScenario('Tweede persoon AOW', s3Sub, inc1_s3, true, inc2_s3, true, true, refRate);
+    s3 = calcScenario(tegelijkAOW ? 'Beide AOW (tegelijk)' : 'Tweede persoon AOW', s3Sub, inc1_s3, true, inc2_s3, true, true, refRate);
   }
 
   return { oudste, jongste, s1, s2, s3, isSolo };
@@ -1073,10 +1093,11 @@ function renderScenarios(applicants, refRate, verlagingenMnd, verhoging) {
       : `${s.flpType === 'aow' ? 'AOW-tabel' : 'niet-AOW-tabel'} · FLP @ € ${Math.round(s.gezamenlijk).toLocaleString('nl-NL')}: b1 ${s.flp_b1.toFixed(1).replace('.', ',')}% · b3 ${s.flp_b3.toFixed(1).replace('.', ',')}%`;
     // Adjustments-regel (alleen tonen als er verlagingen of verhoging actief is)
     let adjustments = '';
-    if (s.verlagingenMnd > 0 || s.verhoging > 0) {
+    if (s.verlagingenMnd > 0 || s.verhoging > 0 || s.labelExtra > 0) {
       const parts = [];
       if (s.verlagingenMnd > 0) parts.push(`<span class="adj-down">−${formatEuro(s.verlagingenMnd)}/mnd verlagingen</span>`);
       if (s.verhoging > 0) parts.push(`<span class="adj-up">+${formatEuro(s.verhoging)} alleenstaandenbedrag</span>`);
+      if (s.labelExtra > 0) parts.push(`<span class="adj-up">+${formatEuro(s.labelExtra)} energielabel (buiten maandlasttoets)</span>`);
       adjustments = `<div class="scenario-adjustments">${parts.join(' · ')}</div>`;
     }
     return `
@@ -1274,10 +1295,10 @@ function partActualPayment(part, yearsFromStart) {
 function checkParts(testParts, income, group, globalToets) {
   // group: 'werkend' of 'aow'. Per deel: box1 → group; box3 → 'box3_'+group
   // FLP-lookup gebruikt toetsrente (= werkelijke rente bij vast ≥10, anders max)
-  // Alleenstaandenbedrag (€ 17.000) blijft buiten de toets: lasten naar rato verlaagd.
+  // Alleenstaandenbedrag (€ 17.000) en energielabelbedrag blijven buiten de toets: lasten naar rato verlaagd.
   // Verplichtingen (bruto maandlast) gebruiken een deel van de ruimte (box 1-tabel als er een box 1-deel is).
   const totaal = testParts.reduce((s, p) => s + p.amount, 0);
-  const verh = alleenstaandenBedrag(income, group === 'aow');
+  const verh = alleenstaandenBedrag(income, group === 'aow') + (income > 0 ? (TK.labelExtra || 0) : 0); // + energielabelbedrag, ook buiten de toets
   const schaal = totaal > 0 ? Math.max(0, totaal - verh) / totaal : 1;
   let fraction = 0, payment = 0;
   for (const p of testParts) {
@@ -1488,7 +1509,7 @@ function calcTweetrapVariants(yToFirstAOW, refRate, oudsteApp, jongsteApp, toets
       varianten.push({
         label: `Deel A box ${dealA_box} · Deel B box ${dealB_box}`,
         dealA_box, dealB_box,
-        dA, dB, total: dA + dB + verh, verh,
+        dA, dB, total: dA + dB + verh + (TK.labelExtra || 0), verh,
         mw, mB: mB_ann,
         dB_scenario,
         flpA, // werkend-FLP
@@ -1628,7 +1649,7 @@ function calculate() {
       if (gezS > 0) {
         const flpS = getFLP(rekenS, 'werkend', refRate);
         const ms = flpS / 100 * gezS / 12;
-        loanSalary = maxLoan(ms, refRate, 30);
+        loanSalary = maxLoan(ms, refRate, 30) + (TK.labelExtra || 0);
       }
     }
 
@@ -2062,7 +2083,7 @@ function renderTable(results, currentAge, pensionAge, refRate, inp) {
       : `<span class="badge badge-work">${r.status}</span>`;
     const flpB3 = getFLP(r.testIncome, r.isPens ? 'box3_aow' : 'box3_werkend', refRate);
     const mB3 = flpB3 / 100 * r.testIncome / 12;
-    const loanB3 = maxLoan(mB3, refRate, 30);
+    const loanB3 = maxLoan(mB3, refRate, 30) + (TK.labelExtra || 0); // + energielabelbedrag (buiten de maandlasttoets)
     const extra = r.tweetrap - r.loan;
     const hasExtra = extra > 1000;
     html += `<tr class="${rowClass}">
@@ -2224,6 +2245,7 @@ document.getElementById('removePartnerBtn').addEventListener('click', () => {
   document.getElementById(id).addEventListener('input', calculate);
 });
 document.getElementById('refRvp').addEventListener('change', calculate);
+document.getElementById('energielabel').addEventListener('change', calculate);
 document.getElementById('pensioenDrempel').addEventListener('change', () => { refreshApplicantUI(); calculate(); });
 
 // Verlagingen-velden

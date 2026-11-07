@@ -608,7 +608,7 @@ function berekenCore(inp){
   const alleRuimteOk=rows.every(r=>r.ruimte>=-0.5);
   const akkoord=alleRuimteOk&&(!maxOnderpand||hoofdsom<=maxOnderpand+0.5);
   return {delen,hoofdsom,toetsrente,kol,normrente:inp.normrente,norminkomen,alimJaar,
-    extraBedrag:inp.extraBedrag,extraMaandlast,rows,bindIdx,baseMax,extraLening,extraDuur,
+    extraBedrag:inp.extraBedrag,extraMaandlast,annT,rows,bindIdx,baseMax,extraLening,extraDuur,
     verhAlleen:rows[0].alleen,verplNom,verplLast0:rows[0].vL,alleenAan:inp.alleenAan,maxInkomen,maxInkomenIncl,mw:inp.mw,ebv:inp.ebv,maxOnderpand,maxHyp,
     akkoord,alleRuimteOk,tekortRow:rows.find(r=>r.ruimte<-0.5),drempel:inp.drempel,
     ptRows:rows.filter(r=>r.pt),onvolledig:rows.some(r=>r.onvolledig)};
@@ -735,7 +735,7 @@ function routeNaarAkkoord(inp,M){
     if(M.maxOnderpand&&M.hoofdsom>M.maxOnderpand+0.5)
       opties.push('<div class="opl"><p>De hoofdsom overschrijdt het maximum op onderpand ('+fmt0(M.maxOnderpand)+'). Verlaag de hoofdsom of verhoog de marktwaarde/EBV.</p></div>');
     else if(M.rows[0]&&M.rows[0].ruimte<-0.5)
-      opties.push('<div class="opl"><p>Er is al <b>bij aanvang</b> een tekort van '+fmt0(M.rows[0].ruimte)+'. Een kortlopend leningdeel lost dit niet op; alleen een lagere hoofdsom, een lagere rente of hoger toetsinkomen helpt.</p></div>');
+      opties.push('<div class="opl"><p>Er is al <b>bij aanvang</b> een tekort van '+fmt0(Math.abs(M.rows[0].ruimte))+'. Een kortlopend leningdeel lost dit niet op; alleen een lagere hoofdsom, een lagere rente of hoger toetsinkomen helpt.</p></div>');
     else
       opties.push('<div class="opl"><p>Geen automatische route gevonden; pas de constructie handmatig aan.</p></div>');
   }
@@ -750,9 +750,9 @@ function box3Vergelijk(inp,M){
   const dMax=M3.maxInkomenIncl-M.maxInkomenIncl;
   const t3=M3.rows.find(r=>r.ruimte<-0.5);
   return '<div class="note" style="margin-top:14px"><b>Scenario-vergelijking — zelfde constructie geheel in box 3:</b> '+
-    'maximaal op basis van inkomen '+fmt0(M3.maxInkomenIncl)+' ('+(dMax<-0.5?fmt0(dMax)+' lager':dMax>0.5?fmt0(dMax)+' hoger':'gelijk')+
+    'maximaal op basis van inkomen '+fmt0(M3.maxInkomenIncl)+' ('+(dMax<-0.5?fmt0(Math.abs(dMax))+' lager':dMax>0.5?fmt0(dMax)+' hoger':'gelijk')+
     ') · maandlast bij aanvang '+fmt0(M3.rows[0].last)+' (gebruteerd) · '+
-    (M3.akkoord?'hoofdsom akkoord':'NIET akkoord'+(t3?' ('+momentLbl(t3.m).toLowerCase()+' tekort '+fmt0(t3.ruimte)+')':''))+
+    (M3.akkoord?'hoofdsom akkoord':'NIET akkoord'+(t3?' ('+momentLbl(t3.m).toLowerCase()+' tekort '+fmt0(Math.abs(t3.ruimte))+')':''))+
     '. Door de brutering (woonquote box 1 / box 3) is een box 3-deel in de toets gelijk aan een box 1-deel zonder aftrek; zolang er renteaftrek is, geeft box 1 dus nooit minder ruimte. Ook een aflossingsvrij box 3-deel wordt volgens de GHF als 30-jaars annuïteit getoetst.</div>';
 }
 function bereken(){
@@ -773,7 +773,7 @@ function bereken(){
 
   let melding;
   if(M.akkoord)melding='<div class="melding ok">✔ De hoofdsom van '+fmt0(M.hoofdsom)+' is akkoord.</div>';
-  else if(M.tekortRow)melding='<div class="melding err">✘ De hoofdsom van '+fmt0(M.hoofdsom)+' is NIET akkoord. '+momentLbl(M.tekortRow.m)+' ontstaat een tekort van '+fmt0(M.tekortRow.ruimte)+' ten opzichte van de toegestane maandlast.</div>';
+  else if(M.tekortRow)melding='<div class="melding err">✘ De hoofdsom van '+fmt0(M.hoofdsom)+' is NIET akkoord. '+momentLbl(M.tekortRow.m)+' ontstaat een tekort van '+fmt0(Math.abs(M.tekortRow.ruimte))+' ten opzichte van de toegestane maandlast.</div>';
   else melding='<div class="melding err">✘ De hoofdsom van '+fmt0(M.hoofdsom)+' is NIET akkoord: hoger dan het maximum op onderpand ('+fmt0(M.maxOnderpand)+').</div>';
 
   el.innerHTML=
@@ -782,12 +782,13 @@ function bereken(){
    '<div class="kv">'+
     '<div class="item"><div class="k">Norm-/toetsinkomen</div><div class="v">'+fmt0(M.norminkomen)+'</div><div class="s">woonquote box 1: '+fmtP(r0.q1)+' · box 3: '+fmtP(r0.q3)+'</div></div>'+
     '<div class="item"><div class="k">Gewogen toetsrente</div><div class="v">'+fmtP3(M.toetsrente)+'</div><div class="s">kolom '+KOLOM_LBL[M.kol]+' · normrente '+fmtP3(M.normrente)+'</div></div>'+
-    '<div class="item"><div class="k">Maximaal te verwonen per jaar</div><div class="v">'+fmt0(r0.maxM*12)+'</div><div class="s">'+([M.extraBedrag>0?'energielabel '+fmt0(M.extraBedrag):null,M.verhAlleen>0?'alleenstaande '+fmt0(M.verhAlleen):null].filter(Boolean).map(t=>'incl. verruiming '+t).join(' · ')||'zonder verruimingen')+(M.verplNom>0?' · na '+fmt0(M.verplLast0)+' p/m verplichtingen':'')+'</div></div>'+
+    '<div class="item"><div class="k">Maximaal te verwonen per jaar</div><div class="v">'+fmt0((r0.maxM-M.extraMaandlast-r0.alleen*M.annT)*12)+'</div><div class="s">'+([M.extraBedrag>0?'energielabel '+fmt0(M.extraBedrag):null,M.verhAlleen>0?'alleenstaande '+fmt0(M.verhAlleen):null].filter(Boolean).map(t=>'+ '+t).join(' · ')+(M.extraBedrag>0||M.verhAlleen>0?' buiten de toetsing (niet in dit bedrag)':'')||'zonder verruimingen')+(M.verplNom>0?' · na '+fmt0(M.verplLast0)+' p/m verplichtingen':'')+'</div></div>'+
     '<div class="item"><div class="k">Berekende maandlast (aanvang)</div><div class="v">'+fmt0(r0.last)+'</div><div class="s">GHF-last: annuïtair over duur (max 360 mnd)</div></div>'+
    '</div>'+
    '<div class="tbl-scroll"><table class="res"><thead><tr><th>Toetsmoment</th><th class="r">Toetsinkomen</th><th class="r">Woonquote</th><th class="r">Max. maandlast</th><th class="r">Berekende maandlast</th><th class="r">Ruimte</th></tr></thead><tbody>'+
    M.rows.map(r=>'<tr'+(r.ruimte<-0.5?' class="tekort"':'')+'><td>'+momentLbl(r.m)+(r.aowTab?' <span style="color:#5f6b7a;font-size:12px">(AOW-tabel)</span>':'')+(r.pt?' <span style="color:#5f6b7a;font-size:12px">(pensioentoets)</span>':'')+(r.onvolledig?' <span style="color:var(--err);font-size:12px">(inkomen vanaf AOW ontbreekt)</span>':'')+'</td><td class="r">'+fmt0(r.ink)+'</td><td class="r">'+fmtP(r.q1)+'</td><td class="r">'+fmt0(r.maxM)+'</td><td class="r">'+fmt0(r.last)+'</td><td class="r" style="color:'+(r.ruimte<-0.5?'var(--err)':'var(--ok)')+';font-weight:700">'+fmt0(r.ruimte)+'</td></tr>').join("")+
    '</tbody></table></div>'+
+   (M.extraMaandlast>0.5||r0.alleen>0?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Max. maandlast in de tabel is inclusief de omgerekende verruiming buiten de toetsing: '+[M.extraBedrag>0?'energielabel '+fmt0(M.extraBedrag)+' = '+fmt0(M.extraMaandlast)+' p/m':null,r0.alleen>0?'alleenstaandenbedrag '+fmt0(r0.alleen)+' = '+fmt0(r0.alleen*M.annT)+' p/m':null].filter(Boolean).join(' · ')+' (annuïteit bij de gewogen toetsrente, 360 mnd). Zonder verruiming: '+fmt0(r0.maxM-M.extraMaandlast-r0.alleen*M.annT)+' p/m bij aanvang.</p>':'')+
    (M.verplNom>0?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Max. maandlast is na aftrek van de financiële verplichtingen: '+fmt0(M.verplLast0)+' bruto per maand bij aanvang (studieschuld × bruteringsfactor '+BRUT_STUDIE[M.kol].toLocaleString("nl-NL",{minimumFractionDigits:2})+' zolang er renteaftrek is, krediet 2% van de limiet, erfpachtcanon nominaal).</p>':'')+
    (M.alimJaar>0?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Betaalde partneralimentatie ('+fmt0(M.alimJaar)+' per jaar) is van het toetsinkomen van de aanvrager afgetrokken (NHG V&amp;N 2026 C.7.14.2), op elk toetsmoment (ook na AOW-leeftijd; geen einddatum bekend).</p>':'')+
    (M.rows.some(r=>r.aowTab)&&inp.pers.length>1?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Tabelkeuze (Trhk art. 3 lid 7): heeft één van beiden de AOW-leeftijd bereikt, dan geldt de tabel van de aanvrager met het hoogste toetsinkomen.</p>':'')+

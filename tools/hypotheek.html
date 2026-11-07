@@ -208,12 +208,14 @@ button,.btn{border-radius:8px;font-family:inherit}
         <div class="card-hdr">Inkomen & situatie</div>
         <div class="card-body">
           <div class="field"><label>Bruto jaarinkomen 1 <span class="fv" id="mhInk1V">€ 65.000</span></label>
-            <input type="range" id="mhInk1" min="20000" max="300000" step="1000" value="65000" oninput="calcMh()">
+            <input type="range" id="mhInk1" min="20000" max="300000" step="1000" value="65000" oninput="mhSync(1,'r')">
             <div class="slab"><span>€20k</span><span>€160k</span><span>€300k</span></div>
+            <input type="number" class="fi" id="mhInk1N" value="65000" min="0" step="1" placeholder="Exact bedrag, bijv. 41726" oninput="mhSync(1,'n')" style="margin-top:6px;">
           </div>
           <div class="field"><label>Bruto jaarinkomen 2 <span class="fv" id="mhInk2V">€ 0</span></label>
-            <input type="range" id="mhInk2" min="0" max="200000" step="1000" value="0" oninput="calcMh()">
+            <input type="range" id="mhInk2" min="0" max="200000" step="1000" value="0" oninput="mhSync(2,'r')">
             <div class="slab"><span>€0</span><span>€100k</span><span>€200k</span></div>
+            <input type="number" class="fi" id="mhInk2N" value="0" min="0" step="1" placeholder="Exact bedrag, bijv. 38433" oninput="mhSync(2,'n')" style="margin-top:6px;">
           </div>
           <div class="field"><label>Rentevaste periode</label>
             <select class="fi" id="mhRvp" onchange="mhRvpWissel()">
@@ -598,9 +600,16 @@ function mhRvpWissel(){
 }
 function mhDatum(id){const v=document.getElementById(id).value;return v?new Date(v+'T00:00:00'):null;}
 function mhGetal(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;}
+// Schuif en getalveld inkomen synchroon houden; het getalveld is leidend (exacte invoer, bijv. € 41.726)
+function mhSync(nr,bron){
+  const r=document.getElementById('mhInk'+nr),n=document.getElementById('mhInk'+nr+'N');
+  if(bron==='r')n.value=r.value;else{const v=parseFloat(n.value);if(isFinite(v))r.value=v;}
+  calcMh();
+}
 function calcMh(){
-  const ink1=parseInt(document.getElementById('mhInk1').value)||0;
-  const ink2=parseInt(document.getElementById('mhInk2').value)||0;
+  const ink1N=parseFloat((document.getElementById('mhInk1N')||{}).value),ink2N=parseFloat((document.getElementById('mhInk2N')||{}).value);
+  const ink1=isFinite(ink1N)?Math.max(0,Math.round(ink1N)):(parseInt(document.getElementById('mhInk1').value)||0);
+  const ink2=isFinite(ink2N)?Math.max(0,Math.round(ink2N)):(parseInt(document.getElementById('mhInk2').value)||0);
   const rvpJaar=parseInt(document.getElementById('mhRvp').value)||10;
   const werkRente=parseFloat(document.getElementById('mhRente').value)||0;
   const labelToeslag=parseInt(document.getElementById('mhLabel').value)||0;
