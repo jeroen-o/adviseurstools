@@ -13,7 +13,7 @@ VANDAAG = datetime.date.today().isoformat()
 BEVEILIGD = ('project-jeroen/', 'platformen/')
 CATS = {'hypotheek': 'Hypotheek', 'krediet': 'Krediet', 'assurantie': 'Assurantie',
         'vermogen-pensioen': 'Vermogen & pensioen', 'overige': 'Overige tools', 'platformen': 'Platformen'}
-HOME_OMS = ('Gratis rekentools voor hypotheekadviseurs en consumenten: maximale hypotheek volgens de leennormen 2026, '
+HOME_OMS = ('Gratis rekentools voor hypotheekadviseurs en consumenten: maximale hypotheek volgens de leennormen 2026 en 2027, '
             'maandlasten, boeterente, pensioen en AOW, scheiding, overdrachtsbelasting, box 3, krediet en verzekeringen.')
 E = html.escape
 
@@ -66,14 +66,14 @@ for f in sorted(glob.glob(os.path.join(ROOT, '**', 'index.html'), recursive=True
     is_home, is_cat = pad == '', pad.rstrip('/') in CATS
     url = BASE + urllib.parse.quote(pad, safe='/')
     if is_home:
-        ttl = f'{SITE} — rekentools voor hypotheek, krediet en pensioen (normen 2026)'
+        ttl = f'{SITE} — rekentools voor hypotheek, krediet en pensioen (normen 2026 en 2027)'
         desc = HOME_OMS
     elif is_cat:
         ttl = f'{CATS[pad.rstrip("/")]} rekentools — {SITE}'
-        desc = f'{oms}. Gratis rekentools volgens de normen 2026.' if oms else HOME_OMS
+        desc = f'{oms}. Gratis rekentools volgens de normen 2026 en 2027.' if oms else HOME_OMS
     else:
         ttl = f'{titel} — gratis rekentool | {SITE}'
-        desc = (oms.rstrip('.') + '. ' if oms else '') + f'Gratis rekentool van {SITE}, normen 2026. Indicatief, geen financieel advies.'
+        desc = (oms.rstrip('.') + '. ' if oms else '') + f'Gratis rekentool van {SITE}, normen 2026 en 2027. Indicatief, geen financieel advies.'
     desc = desc[:300]
     graph = [ORG]
     if is_home:
@@ -153,7 +153,7 @@ with open(os.path.join(ROOT, 'robots.txt'), 'w', encoding='utf-8') as out:
 volg = ['Hypotheek', 'Krediet', 'Assurantie', 'Vermogen & pensioen', 'Overige tools']
 with open(os.path.join(ROOT, 'llms.txt'), 'w', encoding='utf-8') as out:
     out.write(f'# {SITE}\n\n> {HOME_OMS} Alle berekeningen draaien in de browser; uitkomsten zijn indicatief en geen financieel advies.\n\n'
-              'Belangrijk:\n- Normen: Tijdelijke regeling hypothecair krediet 2026 (Nibud-financieringslasttabellen), NHG Voorwaarden en normen 2026, fiscale waarden 2026; waar bekend 2027.\n'
+              'Belangrijk:\n- Normen: Tijdelijke regeling hypothecair krediet 2026 (Nibud-financieringslasttabellen), Trhk 2027 (Stcrt. 2026, 38415) met normjaarkeuze 2026/2027, NHG Voorwaarden en normen 2026 en NHG-kostengrens 2027, fiscale waarden 2026.\n'
               '- Doelgroep: hypotheekadviseurs, financieel planners en consumenten in Nederland.\n'
               f'- Contact en tool-aanvragen: jeroen@oversteegen.nl\n\n')
     for cat in volg:
