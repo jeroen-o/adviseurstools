@@ -453,6 +453,19 @@ footer{
   <h2>Aanvragers</h2>
   <p class="muted" style="margin:0 0 14px">Toetsinkomen en geboortedatum van de aanvrager(s). De AOW-datum wordt automatisch berekend (SVB statutaire tabel 2026) en is overschrijfbaar.</p>
 
+  <div class="grid grid-3" style="margin-bottom:12px">
+    <div class="field">
+      <label for="pensioenDrempel">Pensioentoets vanaf leeftijd</label>
+      <select id="pensioenDrempel" onchange="renderAanvragers();run()">
+        <option value="0">Niet toetsen</option>
+        <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+        <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+      </select>
+    </div>
+    <div class="field" style="grid-column:span 2;align-self:end">
+      <div class="muted" style="font-size:11px">Vanaf deze leeftijd (en zolang de AOW-leeftijd nog niet is bereikt) wordt ook getoetst op het inkomen vanaf AOW (AOW + pensioen) met de AOW-tabel; de laagste maximale hypotheek telt. Na de AOW-datum wordt alleen op het pensioeninkomen getoetst.</div>
+    </div>
+  </div>
   <div id="aanvragers"></div>
 
   <div class="row-flex" style="margin-top:10px">
@@ -640,7 +653,7 @@ function sumProdRenteBestaand(){
 // ===================== AANVRAGERS & AOW =====================
 // State voor aanvragers
 let aanvragers = [
-  {inkomen: 50000, geboortedatum: "1985-06-15", aowDatumOverride: ""},
+  {inkomen: 50000, geboortedatum: "1985-06-15", aowDatumOverride: "", pensioen: ""},
   // 2e aanvrager wordt toegevoegd via toggleAanvrager2()
 ];
 let aanvrager2Actief = false;
@@ -687,6 +700,29 @@ function jarenTotAow(a){
 function isAowBereikt(a){
   const j = jarenTotAow(a);
   return j !== null && j <= 0;
+}
+// ===================== PENSIOENTOETS (drempel 57/52) =====================
+function leeftijdVandaag(gebStr){
+  const gb = new Date(gebStr);
+  if(!gebStr || isNaN(gb.getTime())) return null;
+  const nu = new Date();
+  let l = nu.getFullYear() - gb.getFullYear();
+  if(nu.getMonth() < gb.getMonth() || (nu.getMonth() === gb.getMonth() && nu.getDate() < gb.getDate())) l--;
+  return l;
+}
+function getPensioenDrempel(){
+  const el = document.getElementById("pensioenDrempel");
+  return el ? (parseInt(el.value,10) || 0) : 57;
+}
+// Per aanvrager: AOW bereikt? pensioentoets van toepassing (leeftijd >= drempel en AOW nog niet bereikt)?
+function pensioenStatus(a){
+  const aow = isAowBereikt(a);
+  const lft = leeftijdVandaag(a.geboortedatum);
+  const drempel = getPensioenDrempel();
+  const geldt = !aow && drempel > 0 && lft !== null && lft >= drempel;
+  const pRaw = (a.pensioen === undefined || a.pensioen === null) ? "" : String(a.pensioen).trim();
+  const p = parseFloat(pRaw);
+  return {aow, geldt, lft, drempel, inkomen: parseFloat(a.inkomen)||0, pensioen: (pRaw !== "" && isFinite(p)) ? p : null};
 }
 
 function fmtDatumNL(d){
@@ -762,7 +798,7 @@ function renderAanvragers(){
 
   const aantal = aanvrager2Actief ? 2 : 1;
   for(let i = 0; i < aantal; i++){
-    const a = aanvragers[i] || (aanvragers[i] = {inkomen: 30000, geboortedatum: "", aowDatumOverride: ""});
+    const a = aanvragers[i] || (aanvragers[i] = {inkomen: 30000, geboortedatum: "", aowDatumOverride: "", pensioen: ""});
     const aow = aowDatumEffectief(a);
     const jaren = jarenTotAow(a);
     const aowStr = fmtDatumNL(aow);
@@ -794,8 +830,12 @@ function renderAanvragers(){
           <label>AOW-datum <span class="hint">auto · overschrijfbaar</span></label>
           <input type="date" data-i="${i}" data-k="aowDatumOverride" value="${a.aowDatumOverride||''}" placeholder="${aow?aow.toISOString().slice(0,10):''}">
         </div>
+        <div class="field">
+          <label>Inkomen vanaf AOW <span class="hint">AOW + pensioen, bruto/jaar</span></label>
+          <div class="input-prefix" style="position:relative"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#888;font-size:14px;pointer-events:none">€</span><input type="number" inputmode="numeric" data-i="${i}" data-k="pensioen" value="${a.pensioen||''}" min="0" step="500" style="padding-left:26px"></div>
+        </div>
       </div>
-      <div class="muted" style="margin-top:8px;font-size:11px">Statutaire AOW-leeftijd: <b>${lftStr}</b> · ingang: <b>${aowStr}</b>${aowSub?' ('+aowSub+')':''}</div>
+      <div class="muted" style="margin-top:8px;font-size:11px">Statutaire AOW-leeftijd: <b>${lftStr}</b> · ingang: <b>${aowStr}</b>${aowSub?' ('+aowSub+')':''}${(()=>{const st=pensioenStatus(a);if(st.lft===null)return '';return ' · leeftijd: <b>'+st.lft+' jr</b> · pensioentoets: <b>'+(st.aow?'AOW bereikt (alleen pensioeninkomen)':(st.geldt?'van toepassing':'niet van toepassing'))+'</b>';})()}</div>
     `;
     wrap.appendChild(div);
   }
@@ -805,7 +845,7 @@ function renderAanvragers(){
     inp.addEventListener("input", () => {
       const i = +inp.dataset.i;
       const k = inp.dataset.k;
-      if(!aanvragers[i]) aanvragers[i] = {inkomen:0, geboortedatum:"", aowDatumOverride:""};
+      if(!aanvragers[i]) aanvragers[i] = {inkomen:0, geboortedatum:"", aowDatumOverride:"", pensioen:""};
       aanvragers[i][k] = inp.value;
       // Bij wijziging geboortedatum of override: re-render om AOW-info te updaten
       if(k === "geboortedatum" || k === "aowDatumOverride") renderAanvragers();
@@ -836,7 +876,7 @@ function updateInkomenSamenvatting(){
 function toggleAanvrager2(){
   aanvrager2Actief = !aanvrager2Actief;
   if(aanvrager2Actief && !aanvragers[1]){
-    aanvragers[1] = {inkomen: 30000, geboortedatum: "1987-03-20", aowDatumOverride: ""};
+    aanvragers[1] = {inkomen: 30000, geboortedatum: "1987-03-20", aowDatumOverride: "", pensioen: ""};
   }
   renderAanvragers();
   run();
@@ -1172,13 +1212,43 @@ function run(){
 
   let maxHypotheekBlock = '';
   if(totInkomen > 0){
-    const calc = berekenMaxHypotheek(totInkomen, fase, target, targetCol);
+    // Pensioentoets: per aanvrager status bepalen (drempel 57/52 i.p.v. "AOW binnen 10 jaar")
+    const actieveAanvragers = aanvrager2Actief ? aanvragers.slice(0,2) : [aanvragers[0]];
+    const statussen = actieveAanvragers.map(pensioenStatus);
+    const drempel = getPensioenDrempel();
+    const ontbreekt = statussen.some(st => (st.aow || st.geldt) && st.pensioen === null);
+    const pensioentoetsActief = statussen.some(st => st.geldt);
+    // Toets 1 — huidige situatie: AOW-gerechtigden op pensioeninkomen, overigen op huidig inkomen
+    const ink1 = statussen.reduce((s,st) => s + (st.aow ? (st.pensioen||0) : st.inkomen), 0);
+    let calc = ontbreekt ? null : berekenMaxHypotheek(ink1, fase, target, targetCol);
+    let calcPensioen = null, inkP = 0, faseP = null;
+    if(calc && pensioentoetsActief){
+      // Toets 2 — inkomen vanaf AOW voor wie de pensioentoets geldt, met de AOW-tabel (welAOW) als alle aanvragers in die situatie zijn
+      inkP = statussen.reduce((s,st) => s + ((st.aow || st.geldt) ? st.pensioen : st.inkomen), 0);
+      faseP = statussen.every(st => st.aow || st.geldt) ? 'welAOW' : 'nietAOW';
+      calcPensioen = berekenMaxHypotheek(inkP, faseP, target, targetCol);
+      if(!calcPensioen) calcPensioen = {wq:0, maxMaandlast:0, maxHyp:0};
+    }
+    const pensioenBepalend = calcPensioen && calcPensioen.maxHyp < calc.maxHyp;
+    const drempelTxt = drempel > 0 ? `vanaf ${drempel} jaar` : 'niet toetsen';
+    let pensioenRegel = '';
+    if(ontbreekt){
+      pensioenRegel = `<div class="banner err" style="margin:12px 0"><span class="icon">!</span><div><b>Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in.</b> Voor ten minste één aanvrager geldt de pensioentoets of is de AOW-leeftijd al bereikt, maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. Er wordt niet met het huidige inkomen gerekend.</div></div>`;
+    } else if(pensioentoetsActief){
+      pensioenRegel = `<div style="background:var(--orange-light);border-left:3px solid var(--orange);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin:12px 0"><b style="color:var(--orange)">Pensioentoets (${drempelTxt}): van toepassing</b> — getoetst op ${fmtEur(inkP)} met de ${faseP==='welAOW'?'AOW-tabel (welAOW)':'niet-AOW-tabel (niet alle aanvragers in pensioensituatie)'}: max. ${fmtEur(calcPensioen.maxHyp)} (woonquota ${calcPensioen.wq.toFixed(1).replace('.',',')}%). Huidige situatie: max. ${fmtEur(calc.maxHyp)}. De laagste uitkomst telt${pensioenBepalend?' — het pensioeninkomen is bepalend':''}.</div>`;
+    } else {
+      const aowTxt = statussen.some(st => st.aow) ? ' AOW-leeftijd bereikt: getoetst op pensioeninkomen met de AOW-tabel.' : '';
+      pensioenRegel = `<div class="muted" style="margin:12px 0;font-size:12px">Pensioentoets (${drempelTxt}): niet van toepassing.${aowTxt}</div>`;
+    }
+    if(calc && pensioenBepalend) calc = calcPensioen;
+    const toetsInkomenGetoond = (calc && pensioenBepalend) ? inkP : ink1;
+    if(!calc){
+      maxHypotheekBlock = pensioenRegel || `<div class="muted" style="margin-top:14px">Geen maximale hypotheek te bepalen.</div>`;
+    }
     if(calc){
-      const tweetraps = jrTotAow !== null && jrTotAow > 0 && jrTotAow < 10;
-      const tweetrapsBanner = tweetraps
-        ? `<div style="background:var(--orange-light);border-left:3px solid var(--orange);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin:12px 0"><b style="color:var(--orange)">⚙ Tweetraps­toetsing verplicht</b> — jongste aanvrager bereikt AOW binnen ${jrTotAow.toFixed(1).replace('.',',')} jaar (${fmtDatumNL(aowDatumJongste)}). Conform NHG C.7.4.2 moet ook de post-AOW situatie worden getoetst met het verwachte pensioeninkomen (welAOW-tabel). Deze tool toont nu de pre-AOW max op basis van het huidige toetsinkomen.</div>`
-        : '';
-      const faseLabel = fase === 'welAOW' ? 'Vanaf AOW (welAOW-tabel)' : 'Tot AOW (nietAOW-tabel)';
+      const tweetrapsBanner = pensioenRegel;
+      const faseUsed = pensioenBepalend ? faseP : fase;
+      const faseLabel = faseUsed === 'welAOW' ? 'Vanaf AOW (welAOW-tabel)' : 'Tot AOW (nietAOW-tabel)';
       maxHypotheekBlock = `
         ${tweetrapsBanner}
         <div style="margin-top:14px;padding:14px 16px;background:linear-gradient(135deg,#fff,var(--green-light));border:2px solid var(--green);border-radius:var(--radius-lg)">
@@ -1187,7 +1257,7 @@ function run(){
             <div>
               <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.4px;font-weight:700">Max. hypotheek</div>
               <div style="font-size:24px;font-weight:700;color:var(--green);letter-spacing:-0.3px">${fmtEur(calc.maxHyp)}</div>
-              <div style="font-size:11px;color:#666">obv toetsinkomen ${fmtEur(totInkomen)}</div>
+              <div style="font-size:11px;color:#666">obv toetsinkomen ${fmtEur(toetsInkomenGetoond)}${pensioenBepalend?' (inkomen vanaf AOW)':''}</div>
             </div>
             <div>
               <div style="font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.4px;font-weight:700">Woonquota</div>

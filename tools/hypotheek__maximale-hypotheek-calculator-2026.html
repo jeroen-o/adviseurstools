@@ -190,6 +190,39 @@ canvas{width:100%!important;}
           <span class="hint">ZZP: gemiddelde afgelopen 3 jaar telt mee</span>
         </div>
 
+        <div class="sdiv s3" style="margin-top:4px;">Leeftijd &amp; pensioentoets</div>
+        <div class="field">
+          <label>Geboortedatum (u)</label>
+          <input type="date" id="geb1" oninput="liveUpdate()">
+          <span class="hint" id="geb1Hint">AOW: geboren t/m 1960 67 jr; vanaf 1961 67 jr + 3 mnd (later indicatief)</span>
+        </div>
+        <div class="field">
+          <label>Inkomen vanaf AOW (u) — AOW + pensioen</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="pens1" value="" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Pensioentoets vanaf leeftijd</label>
+          <select id="pensioenDrempel" onchange="liveUpdate()">
+            <option value="0">Niet toetsen</option>
+            <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+            <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+          </select>
+          <span class="hint">Vanaf deze leeftijd ook toetsen op inkomen vanaf AOW (AOW-tabel); laagste uitkomst telt</span>
+        </div>
+        <div class="field">
+          <label>Geboortedatum (partner)</label>
+          <input type="date" id="geb2" oninput="liveUpdate()">
+          <span class="hint" id="geb2Hint">Alleen bij partnerinkomen</span>
+        </div>
+        <div class="field">
+          <label>Inkomen vanaf AOW (partner)</label>
+          <div class="iw"><span class="pre">€</span>
+            <input type="number" id="pens2" value="" min="0" step="1000" oninput="liveUpdate()">
+          </div>
+        </div>
+
         <div class="sdiv s3" style="margin-top:4px;">Rente & rentevaste periode</div>
 
         <div class="field">
@@ -383,6 +416,8 @@ canvas{width:100%!important;}
 // 12 rentekolommen: ≤1,500% · ≤2,000% · … · ≤6,500% · >6,500%.
 // Toetsinkomen tussen twee rijen: rij van het naastlagere inkomen (conservatief).
 const FLP_2026 = {"s":30000,"r":[[15.5,16.5,17.5,18.4,19.3,20.1,20.9,21.6,22.2,22.7,23.2,23.7],[16.2,17.3,18.3,19.3,20.2,21.2,22.0,22.7,23.4,24.1,24.6,25.1],[16.7,17.9,19.0,20.1,21.1,22.1,23.0,23.8,24.6,25.3,25.9,26.4],[17.1,18.3,19.5,20.6,21.6,22.6,23.6,24.6,25.4,26.1,26.8,27.4],[17.3,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.5,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.7,18.7,19.7,20.7,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.7,18.7,19.7,20.7,21.7,22.6,23.6,24.6,25.5,26.4,27.3,28.1],[17.8,18.8,19.8,20.7,21.7,22.7,23.6,24.6,25.5,26.4,27.3,28.1],[17.8,18.9,19.9,20.9,21.8,22.7,23.7,24.6,25.5,26.4,27.3,28.1],[17.9,18.9,19.9,21.0,21.9,22.8,23.7,24.6,25.5,26.4,27.3,28.1],[18.0,19.0,20.0,21.0,22.0,22.9,23.8,24.7,25.5,26.4,27.3,28.1],[18.1,19.1,20.1,21.1,22.1,23.0,23.9,24.7,25.6,26.4,27.3,28.1],[18.2,19.2,20.2,21.2,22.2,23.1,24.0,24.8,25.7,26.5,27.3,28.1],[18.3,19.4,20.4,21.4,22.3,23.2,24.1,25.0,25.8,26.7,27.4,28.2],[18.5,19.5,20.5,21.5,22.5,23.4,24.3,25.1,26.0,26.8,27.6,28.3],[18.6,19.7,20.7,21.7,22.7,23.6,24.5,25.3,26.2,27.0,27.8,28.5],[18.8,19.9,20.9,21.9,22.9,23.8,24.7,25.6,26.4,27.2,28.0,28.7],[19.0,20.0,21.1,22.1,23.1,24.1,25.0,25.8,26.6,27.4,28.2,28.9],[19.1,20.2,21.3,22.3,23.3,24.3,25.2,26.0,26.9,27.6,28.4,29.2],[19.3,20.4,21.5,22.5,23.5,24.5,25.4,26.3,27.1,27.9,28.6,29.3],[19.4,20.5,21.6,22.6,23.7,24.6,25.6,26.4,27.3,28.1,28.8,29.5],[19.5,20.6,21.7,22.8,23.8,24.8,25.7,26.6,27.5,28.2,29.0,29.7],[19.6,20.8,21.9,22.9,24.0,24.9,25.9,26.8,27.6,28.4,29.2,29.9],[19.7,20.9,22.0,23.1,24.1,25.1,26.1,27.0,27.8,28.6,29.4,30.1],[19.8,20.9,22.1,23.2,24.2,25.2,26.2,27.1,27.9,28.7,29.5,30.2],[19.9,21.0,22.2,23.2,24.3,25.3,26.3,27.2,28.1,28.9,29.6,30.3],[20.0,21.1,22.2,23.3,24.3,25.4,26.4,27.3,28.1,29.0,29.7,30.4],[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.3,28.2,29.0,29.8,30.5],[20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.4,28.2,29.1,29.9,30.6],[20.2,21.3,22.4,23.4,24.5,25.5,26.5,27.4,28.3,29.1,29.9,30.6],[20.2,21.3,22.4,23.5,24.5,25.5,26.5,27.4,28.3,29.2,29.9,30.7],[20.2,21.4,22.5,23.5,24.6,25.6,26.5,27.4,28.4,29.2,30.0,30.7],[20.3,21.4,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.2,30.0,30.8],[20.4,21.5,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.3,30.1,30.8],[20.5,21.5,22.6,23.7,24.7,25.7,26.6,27.6,28.4,29.3,30.1,30.8],[20.5,21.6,22.6,23.7,24.7,25.7,26.7,27.6,28.5,29.3,30.1,30.9],[20.5,21.6,22.7,23.7,24.8,25.8,26.7,27.6,28.5,29.3,30.2,30.9],[20.6,21.7,22.7,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[20.7,21.7,22.8,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],[20.8,21.8,22.8,23.9,24.9,25.9,26.9,27.8,28.6,29.5,30.2,31.0],[20.8,21.9,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.3,31.0],[20.9,21.9,23.0,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0],[21.0,22.0,23.0,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.4,31.1],[21.0,22.1,23.1,24.1,25.1,26.1,27.0,27.9,28.8,29.6,30.4,31.1],[21.1,22.1,23.2,24.2,25.1,26.1,27.1,28.0,28.8,29.6,30.4,31.2],[21.1,22.2,23.2,24.2,25.2,26.1,27.1,28.0,28.9,29.7,30.5,31.2],[21.2,22.2,23.3,24.3,25.3,26.2,27.1,28.0,28.9,29.7,30.5,31.2],[21.2,22.3,23.4,24.4,25.3,26.3,27.1,28.1,28.9,29.8,30.5,31.3],[21.3,22.4,23.4,24.4,25.4,26.3,27.2,28.1,29.0,29.8,30.6,31.3],[21.3,22.4,23.5,24.5,25.5,26.4,27.3,28.1,29.0,29.8,30.6,31.3],[21.3,22.5,23.5,24.5,25.5,26.5,27.3,28.2,29.1,29.9,30.6,31.4],[21.4,22.5,23.6,24.6,25.6,26.5,27.4,28.2,29.1,29.9,30.7,31.4],[21.4,22.5,23.7,24.7,25.6,26.6,27.5,28.3,29.1,30.0,30.7,31.5],[21.5,22.6,23.7,24.7,25.7,26.7,27.5,28.4,29.2,30.0,30.8,31.5],[21.5,22.6,23.7,24.8,25.8,26.7,27.6,28.4,29.2,30.0,30.8,31.5],[21.6,22.7,23.7,24.8,25.8,26.7,27.7,28.5,29.3,30.0,30.8,31.5],[21.6,22.7,23.8,24.8,25.9,26.8,27.7,28.5,29.3,30.1,30.8,31.6],[21.7,22.8,23.8,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.9,31.6],[21.7,22.8,23.9,24.9,25.9,26.9,27.8,28.7,29.4,30.2,30.9,31.7],[21.8,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.2,30.9,31.7],[21.8,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0,31.7],[21.8,22.9,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.3,31.0,31.7],[21.9,23.0,24.1,25.1,26.1,27.0,28.0,28.8,29.6,30.4,31.1,31.8],[21.9,23.0,24.1,25.1,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8],[22.0,23.1,24.1,25.2,26.2,27.1,28.0,28.9,29.7,30.5,31.2,31.9],[22.0,23.1,24.2,25.2,26.2,27.2,28.1,28.9,29.8,30.5,31.3,31.9],[22.0,23.2,24.2,25.3,26.3,27.2,28.1,29.0,29.8,30.6,31.3,32.0],[22.1,23.2,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.4,32.0],[22.1,23.2,24.3,25.4,26.4,27.3,28.2,29.1,29.9,30.7,31.4,32.1],[22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],[22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]]};
+// Tabel 2: AOW-leeftijd bereikt, hypotheekrente aftrekbaar (Trhk 2026) — voor de pensioentoets
+const FLP_2026_AOW = {"s":29000,"r":[[18.5,18.9,19.4,19.7,20.1,20.4,20.7,20.9,21.1,21.3,21.5,21.7],[19.2,19.8,20.3,20.8,21.1,21.5,21.8,22.1,22.3,22.5,22.7,22.9],[19.9,20.6,21.2,21.7,22.1,22.5,22.8,23.1,23.4,23.7,23.9,24.1],[20.5,21.2,21.8,22.4,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2],[20.9,21.7,22.3,22.9,23.5,24.0,24.5,24.8,25.2,25.5,25.7,26.0],[21.2,22.0,22.8,23.4,24.0,24.5,25.1,25.5,25.9,26.2,26.5,26.7],[21.6,22.4,23.1,23.9,24.5,25.1,25.6,26.1,26.5,26.9,27.2,27.5],[21.8,22.7,23.5,24.3,24.9,25.6,26.1,26.6,27.1,27.5,27.9,28.2],[21.9,22.9,23.8,24.6,25.3,26.0,26.6,27.1,27.5,28.0,28.4,28.8],[22.0,23.1,24.0,24.9,25.7,26.3,27.0,27.5,28.0,28.4,28.9,29.2],[22.1,23.2,24.2,25.1,25.9,26.6,27.3,27.9,28.4,28.9,29.3,29.7],[22.2,23.3,24.3,25.2,26.1,26.9,27.6,28.2,28.8,29.3,29.7,30.1],[22.3,23.4,24.4,25.3,26.3,27.1,27.9,28.5,29.1,29.6,30.1,30.5],[22.4,23.5,24.5,25.5,26.4,27.3,28.1,28.8,29.4,30.0,30.5,30.9],[22.5,23.6,24.6,25.6,26.6,27.4,28.3,29.0,29.7,30.3,30.8,31.3],[22.7,23.7,24.8,25.8,26.7,27.6,28.4,29.2,29.9,30.6,31.1,31.6],[22.8,23.9,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.8,31.4,31.9],[22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,30.9,31.6,32.2],[23.1,24.1,25.2,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8,32.4],[23.1,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.3,32.0,32.6],[23.3,24.4,25.5,26.5,27.5,28.3,29.2,30.0,30.8,31.5,32.2,32.8],[23.4,24.6,25.6,26.7,27.6,28.6,29.4,30.2,31.0,31.7,32.4,33.0],[23.6,24.8,25.8,26.8,27.9,28.8,29.7,30.5,31.3,32.0,32.7,33.3],[23.9,25.0,26.2,27.2,28.1,29.1,30.0,30.8,31.6,32.3,33.0,33.7],[24.2,25.4,26.5,27.5,28.5,29.4,30.4,31.2,32.0,32.7,33.5,34.1],[24.5,25.7,26.8,27.9,28.9,29.8,30.7,31.6,32.4,33.2,33.9,34.5],[24.8,26.0,27.2,28.3,29.3,30.3,31.1,32.0,32.9,33.6,34.3,35.0],[25.0,26.4,27.6,28.6,29.7,30.7,31.6,32.4,33.2,34.0,34.7,35.5],[25.2,26.6,27.9,29.0,30.0,31.1,32.0,32.8,33.7,34.4,35.2,35.9],[25.3,26.8,28.1,29.4,30.4,31.4,32.4,33.3,34.1,34.8,35.5,36.3],[25.4,27.0,28.4,29.6,30.8,31.8,32.8,33.7,34.5,35.3,36.0,36.6],[25.5,27.1,28.6,29.9,31.1,32.1,33.1,34.1,34.9,35.7,36.4,37.1],[25.6,27.2,28.7,30.1,31.4,32.5,33.5,34.4,35.3,36.1,36.8,37.5],[25.7,27.3,28.9,30.4,31.6,32.8,33.8,34.8,35.7,36.5,37.2,37.9],[25.8,27.4,29.0,30.5,31.9,33.0,34.1,35.1,36.0,36.8,37.6,38.3],[25.8,27.6,29.1,30.7,32.1,33.3,34.4,35.4,36.3,37.2,37.9,38.6],[25.9,27.6,29.2,30.8,32.3,33.6,34.6,35.6,36.6,37.5,38.3,39.0],[25.9,27.6,29.4,30.9,32.4,33.8,34.9,36.0,36.8,37.8,38.6,39.3],[26.0,27.7,29.4,31.0,32.5,34.0,35.2,36.2,37.1,38.0,38.9,39.7],[26.0,27.7,29.5,31.1,32.6,34.1,35.4,36.4,37.5,38.3,39.2,40.0],[26.1,27.8,29.5,31.2,32.7,34.2,35.6,36.7,37.7,38.6,39.4,40.3],[26.2,27.9,29.6,31.3,32.8,34.3,35.7,36.9,37.9,38.9,39.7,40.5],[26.2,27.9,29.6,31.3,32.9,34.4,35.8,37.1,38.2,39.1,39.9,40.7],[26.3,28.0,29.7,31.4,33.0,34.5,35.9,37.3,38.4,39.4,40.3,41.0],[26.4,28.0,29.7,31.4,33.1,34.6,36.0,37.3,38.4,39.5,40.5,41.3],[26.5,28.1,29.7,31.4,33.1,34.7,36.1,37.3,38.4,39.5,40.6,41.6],[26.5,28.2,29.8,31.4,33.1,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.6,28.3,29.9,31.5,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.7,28.3,30.0,31.6,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.8,28.4,30.0,31.6,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[26.9,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.1,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.2,28.6,30.2,31.8,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.2,28.8,30.2,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.3,28.8,30.3,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.4,28.9,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.5,29.0,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.6,29.1,30.5,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.1,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.7,29.2,30.6,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.2,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.3,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.9,29.3,30.8,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[28.0,29.4,30.8,32.2,33.6,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[28.0,29.4,30.9,32.2,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.0,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[28.1,29.6,30.9,32.3,33.7,34.9,36.2,37.3,38.4,39.5,40.6,41.7],[28.2,29.6,31.0,32.3,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[28.3,29.7,31.1,32.4,33.7,35.0,36.3,37.4,38.5,39.6,40.6,41.7],[28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.4,38.5,39.6,40.6,41.7],[28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.5,38.5,39.6,40.6,41.7],[28.4,29.8,31.2,32.5,33.8,35.1,36.3,37.5,38.6,39.6,40.6,41.7]]};
 const FLP_RG = [1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0,6.5,Infinity];
 // Bruteringsfactor studieschuld (Trhk 2026, art. 3a) naar toetsrente
 const BRUT_STUDIE = [[1.5,1.05],[2.0,1.05],[2.5,1.10],[3.0,1.15],[3.5,1.20],[4.0,1.20],[4.5,1.25],[5.0,1.30],[5.5,1.30],[6.0,1.35],[6.5,1.40],[Infinity,1.40]];
@@ -426,6 +461,7 @@ function liveUpdate(){
   const res = berekenMax(N('ink1'), N('ink2'), r, rvp, N('looptijd')||30, energielabel, N('studieschuld'), N('studieTermijn'), N('andereLening'), parseInt(document.getElementById('alleenstaand').value||0), N('woningWaarde'));
   const lc = document.getElementById('liveCard');
   if(res){ lc.style.display='block'; renderOpbouw(res, 'liveGrid', true); }
+  else if(ptMelding){ lc.style.display='block'; document.getElementById('liveGrid').innerHTML = `<div class="ob-box red" style="grid-column:1/-1;"><div class="ob-lbl">Pensioentoets</div><div class="ob-sub" style="font-size:13px;">${ptMelding}</div></div>`; }
   const ink1h = document.getElementById('ink1Hint');
   const i1 = N('ink1');
   ink1h.textContent = i1>0 ? `${fmt(i1/12,2)}/mnd bruto` : '';
@@ -437,13 +473,26 @@ function berekenAnnuiteit(rPct, looptijdJaar){
   return r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
 }
 
-function getFLP(inkomen, rente){
-  let i = Math.floor((inkomen - FLP_2026.s)/1000);
-  i = Math.max(0, Math.min(FLP_2026.r.length-1, i));
+function getFLP(inkomen, rente, tbl){
+  tbl = tbl || FLP_2026;
+  let i = Math.floor((inkomen - tbl.s)/1000);
+  i = Math.max(0, Math.min(tbl.r.length-1, i));
   let k = FLP_RG.findIndex(g => rente <= g + 1e-9);
   if(k<0) k = FLP_RG.length-1;
-  return FLP_2026.r[i][k]/100;
+  return tbl.r[i][k]/100;
 }
+// ── PENSIOENTOETS (drempel 57/52) ──────────────────────────────────────────
+function leeftijdOp(geb,d){ let l=d.getFullYear()-geb.getFullYear(); if(d.getMonth()<geb.getMonth()||(d.getMonth()===geb.getMonth()&&d.getDate()<geb.getDate())) l--; return l; }
+function aowDatumVan(geb){ return new Date(geb.getFullYear()+67, geb.getMonth()+(geb.getFullYear()<=1960?0:3), geb.getDate()); }
+function leesPersoonPT(nr, drempel){
+  const gv=document.getElementById('geb'+nr).value; const geb=gv?new Date(gv+'T00:00:00'):null; const nu=new Date();
+  const lft=geb?leeftijdOp(geb,nu):null; const aowD=geb?aowDatumVan(geb):null; const aow=!!(aowD&&nu>=aowD);
+  const pv=document.getElementById('pens'+nr).value.trim(); const pens=(pv!==''&&isFinite(parseFloat(pv)))?parseFloat(pv):null;
+  const geldt=!aow&&drempel>0&&lft!==null&&lft>=drempel;
+  const h=document.getElementById('geb'+nr+'Hint'); if(h&&geb) h.textContent=`Leeftijd ${lft} jr · AOW-datum ${aowD.toLocaleDateString('nl-NL')}${aow?' (bereikt)':''}${geldt?' · pensioentoets van toepassing':''}`;
+  return {lft,aow,geldt,pens};
+}
+let ptMelding = '';
 function getBruteringStudie(toetsrente){
   for(const [g,f] of BRUT_STUDIE){ if(toetsrente <= g + 1e-9) return f; }
   return 1.40;
@@ -457,13 +506,39 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const inkomensTypeFactor = parseFloat(document.getElementById('inkomensType').value||1);
   const i1 = ink1 * inkomensTypeFactor;
   const i2 = Math.max(0, ink2 * inkomensTypeFactor);
+  // Pensioentoets (drempel 57/52): per persoon status; partner alleen bij partnerinkomen
+  const drempel = parseInt(document.getElementById('pensioenDrempel').value,10) || 0;
+  const pp = [Object.assign({ink:i1}, leesPersoonPT(1,drempel))];
+  if(i2>0) pp.push(Object.assign({ink:i2}, leesPersoonPT(2,drempel)));
+  const drempelTxt = drempel>0 ? `vanaf ${drempel} jaar` : 'niet toetsen';
+  if(pp.some(p=>(p.geldt||p.aow)&&p.pens===null)){
+    ptMelding = `Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW (AOW + pensioen) in. Er wordt niet met het huidige inkomen gerekend.`;
+    return null;
+  }
+  ptMelding = '';
+  // Scenario: inkomens per persoon; tabel volgt de aanvrager met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
+  function scen(pensSit){
+    const inks = pp.map(p=>pensSit(p)?p.pens:p.ink);
+    const idx = inks.indexOf(Math.max(...inks));
+    const aowTbl = pensSit(pp[idx]);
+    const ti = inks.reduce((x,y)=>x+y,0);
+    const f = getFLP(ti, toetsRente, aowTbl?FLP_2026_AOW:FLP_2026);
+    return {inks, toetsInkomen:ti, aowTbl, flp:f, jaarLast:ti*f};
+  }
+  const sNu = scen(p=>p.aow);               // huidige situatie (na AOW: alleen pensioeninkomen)
+  const ptGeldt = pp.some(p=>p.geldt);
+  const sPens = ptGeldt ? scen(p=>p.aow||p.geldt) : null;
+  const bindend = (sPens && sPens.jaarLast < sNu.jaarLast) ? sPens : sNu; // laagste uitkomst telt
   // Tweeverdieners: beide inkomens 100% (gezamenlijk toetsinkomen, Trhk 2026)
-  const hoogste = Math.max(i1, i2);
-  const laagste = Math.min(i1, i2);
-  const toetsInkomen = hoogste + laagste;
+  const hoogste = Math.max(...bindend.inks);
+  const laagste = bindend.inks.length>1 ? Math.min(...bindend.inks) : 0;
+  const toetsInkomen = bindend.toetsInkomen;
   // FLP
-  const flp = getFLP(toetsInkomen, toetsRente);
+  const flp = bindend.flp;
   const maxJaarLast = toetsInkomen * flp;
+  const pensioenRegel = ptGeldt
+    ? `Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(sPens.toetsInkomen)} met de ${sPens.aowTbl?'AOW-tabel (tabel 2)':'niet-AOW-tabel'}${bindend===sPens?' — pensioeninkomen is bepalend':' — huidig inkomen is bepalend'}`
+    : (pp.some(p=>p.aow) ? `Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(sNu.toetsInkomen)} met de AOW-tabel` : `Pensioentoets (${drempelTxt}): niet van toepassing${pp.every(p=>p.lft===null)?' (geen geboortedatum ingevuld)':''}`);
   // Aftrek verplichtingen
   // Studieschuld (Trhk 2026 art. 3a): werkelijke maandtermijn × bruteringsfactor (toetsrente).
   // Alleen saldo bekend → indicatieve termijn (annuïteit 35 jr tegen 2,5%).
@@ -478,7 +553,7 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const beschikbaarJaar = Math.max(0, maxJaarLast - studieLastJaar - andereLastJaar);
   const beschikbaarMnd = beschikbaarJaar / 12;
   // Alleenstaandenbedrag € 17.000 alleen zonder partnerinkomen en bij toetsinkomen > € 30.000 (art. 3 lid 8)
-  if(i2 > 0 || toetsInkomen <= 30000) alleenstaandExtra = 0;
+  if(i2 > 0 || toetsInkomen <= (bindend.aowTbl ? 29000 : 30000)) alleenstaandExtra = 0;
   // Max hypotheek op inkomen
   const annFactor = berekenAnnuiteit(toetsRente, looptijdJaar);
   const maxOpInkomen = beschikbaarMnd / annFactor;
@@ -501,7 +576,8 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
     beschikbaarJaar, beschikbaarMnd, annFactor, maxOpInkomen, labelExtra,
     alleenstaandExtra, maxVoorEnergielabel, maxOpWoning, maxFinal: maxNhgGegeven,
     maandlastAnn, maandlastRente, ink1:i1, ink2:i2, hoogste, laagste,
-    nhg, nhgGrens, woningWaarde, label
+    nhg, nhgGrens, woningWaarde, label,
+    pensioenRegel, pensioenBepalend: bindend===sPens, aowTabel: bindend.aowTbl
   };
 }
 
@@ -542,7 +618,7 @@ function bereken(){
 
   if(ink1<=0){alert('Vul een inkomen in.'); return;}
   const r = berekenMax(ink1, ink2, rente, rvp, looptijd, energielabel, studieschuld, studieTermijn, andereLening, alleenstaandExtra, woningWaarde);
-  if(!r) return;
+  if(!r){ if(ptMelding){ document.getElementById('hoofdRes').innerHTML = `<div class="hoofd-res"><div class="hr-main"><div class="hr-label">Maximale hypotheek 2026</div><div class="hr-bedrag">—</div><div class="hr-sub">${ptMelding}</div></div></div>`; document.getElementById('opbouwGrid').innerHTML=''; document.getElementById('stapTbl').innerHTML=''; document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'}); } return; }
 
   // ── HOOFD RESULTAAT ──
   document.getElementById('hoofdRes').innerHTML = `
@@ -550,7 +626,8 @@ function bereken(){
       <div class="hr-main">
         <div class="hr-label">Maximale hypotheek 2026</div>
         <div class="hr-bedrag">${fmt(Math.round(r.maxFinal/1000)*1000)}</div>
-        <div class="hr-sub">NIBUD-norm · FLP ${fmtPct(r.flp*100)} · toetsrente ${fmtPct(r.toetsRente,2)}</div>
+        <div class="hr-sub">NIBUD-norm · FLP ${fmtPct(r.flp*100)}${r.aowTabel?' (AOW-tabel)':''} · toetsrente ${fmtPct(r.toetsRente,2)}</div>
+        <div class="hr-sub">${r.pensioenRegel}</div>
       </div>
       <div class="hr-sub-vals">
         <div class="hr-sub-val"><div class="hr-sub-lbl">Maandlast</div><div class="hr-sub-num">${fmt(r.maandlastAnn,2)}/mnd</div></div>
@@ -568,7 +645,8 @@ function bereken(){
   </tr></thead><tbody>
     <tr><td>1. Inkomen 1 (u)</td><td>${fmt(r.hoogste)}</td><td style="text-align:right">100% wordt meegenomen</td></tr>
     ${ink2>0?`<tr><td>1b. Inkomen 2 (partner, 100%)</td><td class="pos">+${fmt(ink2Meegenomen)}</td><td style="text-align:right">100% van ${fmt(r.laagste)}</td></tr>`:''}
-    <tr class="totaal"><td>= Toetsinkomen</td><td>${fmt(r.toetsInkomen)}</td><td style="text-align:right">Basis voor NIBUD-norm</td></tr>
+    <tr class="totaal"><td>= Toetsinkomen</td><td>${fmt(r.toetsInkomen)}</td><td style="text-align:right">Basis voor NIBUD-norm${r.pensioenBepalend?' (inkomen vanaf AOW)':''}</td></tr>
+    <tr><td>Pensioentoets</td><td>${r.pensioenBepalend?'bepalend':'—'}</td><td style="text-align:right">${r.pensioenRegel}</td></tr>
     <tr><td>2. FLP (financieringslast%)</td><td>${fmtPct(r.flp*100)}</td><td style="text-align:right">Bij toetsrente ${fmtPct(r.toetsRente,2)}</td></tr>
     <tr><td>= Max. bruto jaarlijkse hypotheeklast</td><td>${fmt(r.maxJaarLast)}</td><td style="text-align:right">${fmt(r.toetsInkomen)} × ${fmtPct(r.flp*100)}</td></tr>
     ${r.studieLastJaar>0?`<tr><td>3a. Aftrek studieschuld</td><td class="neg">−${fmt(r.studieLastJaar)}</td><td style="text-align:right">${fmt(r.studieTermijnMnd,2)}/mnd${r.studieGeschat?' (geschat)':''} × factor ${r.studieFactor.toFixed(2).replace('.',',')} = ${fmt(r.studieLastMnd,2)}/mnd</td></tr>`:''}

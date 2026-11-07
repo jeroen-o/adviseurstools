@@ -337,6 +337,15 @@
       <div class="totals-summary" id="totalsSummary"></div>
 
       <div class="input-group">
+        <label for="pensioenDrempel">Pensioentoets vanaf leeftijd <span class="tooltip" data-tip="Vanaf deze leeftijd (zolang de AOW-leeftijd nog niet is bereikt) wordt ook getoetst op het inkomen vanaf AOW (AOW + pensioen) met de AOW-tabel; de laagste uitkomst is bindend.">i</span></label>
+        <select id="pensioenDrempel" class="full-input">
+          <option value="0">Niet toetsen</option>
+          <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+          <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+        </select>
+      </div>
+
+      <div class="input-group">
         <label>Toetsrente bij vast <10jr <span class="value-display" id="toetsRateDisplay">5,00%</span> <span class="tooltip" data-tip="GHF-toetsrente: bij rentevastperiode korter dan 10 jaar wordt de hoogste van werkelijke rente en deze toetsrente gebruikt.">i</span></label>
         <input type="range" id="toetsRate" min="3" max="7" value="5" step="0.1">
       </div>
@@ -377,6 +386,7 @@
     </aside>
 
     <section class="results-panel">
+      <div id="pensioenToetsInfo" style="margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px;background:#fff8ec;border:1px solid #f3d9a8;"></div>
       <div id="scenariosGrid" class="scenarios-grid"></div>
 
       <div class="methodology-note">
@@ -476,7 +486,7 @@
 
       <div class="chart-section">
         <h2 class="section-title">Pensioenklif: max box 1-hypotheek per leeftijd</h2>
-        <p class="section-subtitle">Bij wisseling van toetsinkomen (10 jaar vóór pensioen) zakt de leencapaciteit naar het pensioen-niveau.</p>
+        <p class="section-subtitle">Vanaf de pensioentoets-leeftijd (instelbaar: 57 of 52 jaar) wordt ook op het pensioeninkomen getoetst en zakt de leencapaciteit naar het pensioen-niveau.</p>
         <div class="chart-container">
           <svg id="chart" class="chart-svg" viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="chart-legend">
@@ -603,9 +613,9 @@
         <h3>5. Pensioenklif-grafiek & tabel</h3>
         <p>Voor elke afsluitleeftijd (oudste-leeftijd-as) berekent de tool drie toetsen en kiest de <strong>bindende</strong> (= laagste) toets:</p>
         <ul>
-          <li><strong>Werkend-toets</strong> — actief zolang >10 jaar van de 1e AOW.</li>
-          <li><strong>1e AOW-toets</strong> — actief vanaf 10 jaar vóór de 1e AOW (pensioen oudste + salaris jongste). AOW-FLP, omdat minstens één persoon AOW-gerechtigd is.</li>
-          <li><strong>2e AOW-toets</strong> — actief vanaf 10 jaar vóór de 2e AOW (beide pensioen). AOW-FLP.</li>
+          <li><strong>Werkend-toets</strong> — actief zolang nog niemand de AOW-leeftijd heeft bereikt.</li>
+          <li><strong>1e AOW-toets</strong> — actief zodra de oudste de pensioentoets-leeftijd (standaard 57 jaar; instelbaar 52 jaar of niet toetsen) bereikt, of de AOW-leeftijd al heeft bereikt (pensioen oudste + salaris jongste). AOW-FLP.</li>
+          <li><strong>2e AOW-toets</strong> — actief zodra ook de jongste de pensioentoets-leeftijd bereikt (beide pensioen). AOW-FLP.</li>
         </ul>
         <p>Bij overlap (de 2e AOW-toets is al actief vóór de 1e AOW is gepasseerd) wint de strengste — meestal de 2e AOW-toets bij klein leeftijdsverschil.</p>
       </section>
@@ -769,18 +779,28 @@ function formatYearsMonths(years) {
 // ============ State: aanvrager(s) ============
 let hasPartner = false;
 
+function getPensioenDrempel() {
+  const el = document.getElementById('pensioenDrempel');
+  return el ? (parseInt(el.value, 10) || 0) : 57;
+}
+
 function readApplicant(id) {
   const birthEl = document.getElementById('birthDate' + id);
   if (!birthEl) return null;
   const birthDate = birthEl.value;
   const salary = parseEuro(document.getElementById('salary' + id).value);
-  const pension = parseEuro(document.getElementById('pension' + id).value);
+  const pensionRaw = String(document.getElementById('pension' + id).value || '').trim();
+  const pension = parseEuro(pensionRaw);
+  const pensionMissing = pensionRaw === '';
   const aowYears = parseInt(document.getElementById('aowYears' + id).value) || 67;
   const aowMonths = parseInt(document.getElementById('aowMonths' + id).value) || 0;
   const age = ageInYears(birthDate);
   const aowAge = aowYears + aowMonths / 12;
   const yearsToAOW = aowAge - age;
-  return { id, birthDate, salary, pension, aowYears, aowMonths, age, aowAge, yearsToAOW };
+  const drempel = getPensioenDrempel();
+  const aowReached = yearsToAOW <= 0;
+  const pensioentoetsGeldt = !aowReached && drempel > 0 && age >= drempel;
+  return { id, birthDate, salary, pension, pensionMissing, aowYears, aowMonths, age, aowAge, yearsToAOW, aowReached, pensioentoetsGeldt };
 }
 
 function getInputs() {
@@ -977,7 +997,7 @@ function renderTweetrapMix(inp, refRate) {
   const jongste = sorted[1] || null;
   const yToFirstAOW = oudste.aowAge - oudste.age;
 
-  if (yToFirstAOW <= 0 || yToFirstAOW >= 10) {
+  if (yToFirstAOW <= 0 || !oudste.pensioentoetsGeldt || oudste.pensionMissing) {
     section.style.display = 'none';
     return;
   }
@@ -1150,7 +1170,7 @@ function checkParts(testParts, income, group, globalToets) {
 
 function calcOptimalTweetrap(inp) {
   const yrs = Math.max(0, inp.pensionAge - inp.age);
-  if (yrs <= 0 || yrs >= 10 || inp.salary <= inp.pension) return null;
+  if (yrs <= 0 || !inp.primary.pensioentoetsGeldt || inp.salary <= inp.pension) return null;
   // Deel B: max box 1 over 30jr op pensioeninkomen
   const maxMpens = maxMonthly(inp.pension, 'aow', 4); // standaard rente 4%
   const dealB = maxLoan(maxMpens, 4, 30);
@@ -1264,7 +1284,7 @@ function setTweetrapPreset() {
   const inp = getInputs();
   const opt = calcOptimalTweetrap(inp);
   if (!opt) {
-    alert('Tweetrap-preset werkt alleen bij leeftijd binnen 10 jaar voor pensioen en salaris > pensioen.');
+    alert('Tweetrap-preset werkt alleen als de pensioentoets van toepassing is (leeftijd vanaf de gekozen drempel, vóór AOW) en salaris > pensioen.');
     return;
   }
   parts = [
@@ -1283,7 +1303,7 @@ function setTweetrapPreset() {
 //     getoetst als 30-jr annuïtair fictie). Lineair geeft hogere toets-last (eerste jaar
 //     aflossing+rente) dus minder max — niet meegenomen als optimum.
 function calcTweetrapVariants(yToFirstAOW, refRate, oudsteApp, jongsteApp, toetsen) {
-  if (yToFirstAOW <= 0 || yToFirstAOW >= 10) return null;
+  if (yToFirstAOW <= 0) return null;
   // Werkende-inkomen (rekeninkomen + gezamenlijk)
   const inc1w = oudsteApp.salary;
   const inc2w = jongsteApp ? jongsteApp.salary : 0;
@@ -1409,19 +1429,23 @@ function calculate() {
   const verlagingenMnd = inp.verlagingenMnd || 0;
   const verhoging = inp.verhoging || 0;
   const results = [];
+  const drempel = getPensioenDrempel();
   for (let a = startAge; a <= endAge; a++) {
     // Per persoon bepalen op leeftijd a: gepensioneerd of werkend?
     const oudsteAOW = a >= oudsteApp.aowAge;
     const jongsteAOW = jongsteApp ? (a - ageDiff) >= jongsteApp.aowAge : false;
     const yToFirstAOW = oudsteApp.aowAge - a; // negatief = al gepasseerd
     const yToSecondAOW = jongsteApp ? (jongsteApp.aowAge - (a - ageDiff)) : Infinity;
+    // Pensioentoets per persoon: vanaf drempelleeftijd (57/52) en vóór AOW
+    const oudstePT = !oudsteAOW && drempel > 0 && a >= drempel;
+    const jongstePT = jongsteApp ? (!jongsteAOW && drempel > 0 && (a - ageDiff) >= drempel) : false;
 
     // Bereken alle relevante toetsen voor deze leeftijd
     // monthly = bruto maandlast (FLP × inkomen / 12); netto = monthly − verlagingen; loan = maxLoan(netto) + verhoging
     const toetsen = [];
 
-    // Toets W: werkend (alleen relevant als geen enkele persoon AOW en >10jr van 1e AOW)
-    if (!oudsteAOW && !jongsteAOW && yToFirstAOW > 10) {
+    // Toets W: werkend (zolang niemand AOW heeft; bij pensioentoets telt de laagste van W en P)
+    if (!oudsteAOW && !jongsteAOW) {
       const inc1 = oudsteApp.salary;
       const inc2 = jongsteApp ? jongsteApp.salary : 0;
       const reken = calcRekeninkomen(inc1, inc2);
@@ -1432,8 +1456,8 @@ function calculate() {
       toetsen.push({ income: gez, reken, type: 'werkend', flp, monthly: bruto, netto, loan: maxLoan(netto, refRate, 30) + verhoging, status: 'Werkend', isPens: false });
     }
 
-    // Toets P1: 1e AOW-toets (binnen 10jr van 1e AOW, of oudste reeds AOW)
-    if (yToFirstAOW <= 10) {
+    // Toets P1: 1e AOW-toets (oudste vanaf drempelleeftijd, of oudste reeds AOW)
+    if (oudsteAOW || oudstePT) {
       const inc1 = oudsteApp.pension;
       const inc2 = jongsteApp ? (jongsteAOW ? jongsteApp.pension : jongsteApp.salary) : 0;
       const reken = calcRekeninkomen(inc1, inc2);
@@ -1448,8 +1472,8 @@ function calculate() {
       toetsen.push({ income: gez, reken, type: 'aow', flp, monthly: bruto, netto, loan: maxLoan(netto, refRate, 30) + verhoging, status, isPens: true });
     }
 
-    // Toets P2: 2e AOW-toets (alleen relevant bij 2 personen en binnen 10jr van 2e AOW)
-    if (jongsteApp && yToSecondAOW <= 10) {
+    // Toets P2: 2e AOW-toets (bij 2 personen: jongste vanaf drempelleeftijd of reeds AOW)
+    if (jongsteApp && (jongsteAOW || jongstePT)) {
       const inc1 = oudsteApp.pension;
       const inc2 = jongsteApp.pension;
       const reken = calcRekeninkomen(inc1, inc2);
@@ -1461,6 +1485,17 @@ function calculate() {
       toetsen.push({ income: gez, reken, type: 'aow', flp, monthly: bruto, netto, loan: maxLoan(netto, refRate, 30) + verhoging, status, isPens: true });
     }
 
+    // Vangnet (bijv. jongste wel AOW, oudste niet): huidige inkomensmix
+    if (toetsen.length === 0) {
+      const inc1 = oudsteAOW ? oudsteApp.pension : oudsteApp.salary;
+      const inc2 = jongsteApp ? (jongsteAOW ? jongsteApp.pension : jongsteApp.salary) : 0;
+      const reken = calcRekeninkomen(inc1, inc2);
+      const gez = inc1 + inc2;
+      const flp = getFLP(reken, 'werkend', refRate);
+      const bruto = flp / 100 * gez / 12;
+      const netto = Math.max(0, bruto - verlagingenMnd);
+      toetsen.push({ income: gez, reken, type: 'werkend', flp, monthly: bruto, netto, loan: maxLoan(netto, refRate, 30) + verhoging, status: 'Gemengd', isPens: false });
+    }
     // Bindende toets = laagste max hypotheek
     toetsen.sort((x, y) => x.loan - y.loan);
     const binding = toetsen[0];
@@ -1482,7 +1517,7 @@ function calculate() {
     // Tweetrap-mix: probeer 4 box-combinaties en kies de hoogste totaal
     let tweetrap = binding.loan;
     let tweetrapVariants = null;
-    if (yToFirstAOW > 0 && yToFirstAOW < 10 && !oudsteAOW) {
+    if (yToFirstAOW > 0 && oudstePT && !oudsteApp.pensionMissing) {
       tweetrapVariants = calcTweetrapVariants(yToFirstAOW, refRate, oudsteApp, jongsteApp, toetsen);
       if (tweetrapVariants && tweetrapVariants.length > 0) {
         tweetrap = tweetrapVariants[0].total; // hoogste variant
@@ -1503,9 +1538,32 @@ function calculate() {
     });
   }
 
+  renderPensioenToetsInfo(inp, results, oudsteApp, drempel);
   renderChart(results, inp);
   renderTable(results, inp.age, inp.pensionAge, refRate, inp);
   renderMomentsTable(inp.applicants);
+}
+
+// Toon welke drempel is gebruikt en of de pensioentoets nu van toepassing is
+function renderPensioenToetsInfo(inp, results, oudsteApp, drempel) {
+  const el = document.getElementById('pensioenToetsInfo');
+  if (!el) return;
+  const drempelTxt = drempel > 0 ? `vanaf ${drempel} jaar` : 'niet toetsen';
+  const nuRow = results.find(r => r.age === inp.age) || null;
+  const geldt = inp.applicants.filter(a => a.pensioentoetsGeldt);
+  const aow = inp.applicants.filter(a => a.aowReached);
+  const ontbreekt = inp.applicants.some(a => (a.pensioentoetsGeldt || a.aowReached) && a.pensionMissing);
+  let html;
+  if (ontbreekt) {
+    html = `<strong style="color:#b91c1c;">Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in.</strong> Het pensioeninkomen (AOW + pensioen) ontbreekt voor een aanvrager voor wie de toets geldt; er wordt niet met het huidige inkomen gerekend.`;
+  } else if (geldt.length > 0 || aow.length > 0) {
+    const ink = nuRow ? formatEuro(nuRow.testIncome) : '—';
+    html = `<strong>Pensioentoets (${drempelTxt}): van toepassing</strong>${aow.length > 0 && geldt.length === 0 ? ' (AOW-leeftijd bereikt)' : ''} — ` +
+      (nuRow ? `bindende toets nu: ${nuRow.status}, getoetst op ${ink} met ${nuRow.isPens ? 'de AOW-tabel' : 'de niet-AOW-tabel'} → max box 1 ${formatEuro(nuRow.loan)}.` : 'zie tabel.');
+  } else {
+    html = `<strong>Pensioentoets (${drempelTxt}): niet van toepassing</strong> — getoetst op het huidige inkomen${nuRow ? ` (${formatEuro(nuRow.testIncome)}) → max box 1 ${formatEuro(nuRow.loan)}` : ''}.`;
+  }
+  el.innerHTML = html;
 }
 
 function updateBar(suffix, res, income, group, hidden) {
@@ -1687,12 +1745,15 @@ function renderChart(results, inp) {
 
   // KLIF-ZONE 2 (jongste): lichter rood, getekend EERST zodat 1e zone er overheen valt
   if (aow2OnOudste !== null) {
-    const xCS2 = Math.max(PAD.left, xScale(Math.max(minAge, aow2OnOudste - 10)));
+    const drempel2 = getPensioenDrempel();
+    const start2 = drempel2 > 0 ? (drempel2 + ageDiff) : aow2OnOudste;
+    const xCS2 = Math.max(PAD.left, xScale(Math.max(minAge, start2)));
     const xCE2 = Math.min(W - PAD.right, xScale(aow2OnOudste));
     if (xCE2 > xCS2) html += `<rect x="${xCS2}" y="${PAD.top}" width="${xCE2 - xCS2}" height="${ch}" fill="#3b82f6" opacity="0.06"/>`;
   }
   // KLIF-ZONE 1 (oudste): donker rood
-  const cliffStart = pensionAge - 10;
+  const drempelC = getPensioenDrempel();
+  const cliffStart = drempelC > 0 ? drempelC : pensionAge;
   const xCS = Math.max(PAD.left, xScale(Math.max(minAge, cliffStart)));
   const xCE = Math.min(W - PAD.right, xScale(pensionAge));
   if (xCE > xCS) html += `<rect x="${xCS}" y="${PAD.top}" width="${xCE - xCS}" height="${ch}" fill="#ef4444" opacity="0.08"/>`;
@@ -1979,7 +2040,7 @@ function refreshApplicantUI() {
       const isOverride = (aowAuto.years !== a.aowYears) || (aowAuto.months !== a.aowMonths);
       aowInfoEl.innerHTML = `Leeftijd: <strong>${formatYearsMonths(a.age)}</strong> · AOW: <strong>${formatAOW(a.aowYears, a.aowMonths)}</strong>` +
         (isOverride ? ' <span style="color:var(--warning);">⚠ handmatig</span>' : '') +
-        `<div class="age-line">AOW over ${formatYearsMonths(a.yearsToAOW)}${a.yearsToAOW < 10 && a.yearsToAOW > 0 ? ' · in pensioenklif-zone' : ''}</div>`;
+        `<div class="age-line">AOW over ${formatYearsMonths(a.yearsToAOW)}${a.pensioentoetsGeldt ? ' · pensioentoets van toepassing (vanaf ' + getPensioenDrempel() + ' jaar)' : ''}</div>`;
     }
   });
   // Totalen-summary
@@ -2043,6 +2104,7 @@ document.getElementById('removePartnerBtn').addEventListener('click', () => {
 ['toetsRate'].forEach(id => {
   document.getElementById(id).addEventListener('input', calculate);
 });
+document.getElementById('pensioenDrempel').addEventListener('change', () => { refreshApplicantUI(); calculate(); });
 
 // Verlagingen-velden
 ['studieschuldMnd', 'lopendeLenMnd', 'alimentatieMnd', 'erfpachtJaar'].forEach(id => {

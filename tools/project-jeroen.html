@@ -1669,7 +1669,16 @@ hr{border:none;border-top:1px solid var(--border-light);margin:14px 0}
             <label>Tabel</label>
             <div style="padding:8px 12px;background:var(--gray-light);border-radius:var(--radius);font-size:13px;font-weight:700;color:var(--navy)" id="toets-tabel">Niet-AOW</div>
           </div>
+          <div class="field">
+            <label for="pensioen-drempel">Pensioentoets vanaf leeftijd</label>
+            <select id="pensioen-drempel" onchange="recalcToets(); if($('panel-toets')&&$('panel-toets').classList.contains('active')) berekenPensioenScenario();">
+              <option value="0">Niet toetsen</option>
+              <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+              <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+            </select>
+          </div>
         </div>
+        <div id="toets-pensioen-info" class="info-box fs-11 mt-8" style="display:none"></div>
 
         <div class="section-title">Opslagen</div>
         <div class="toggle-wrap mt-8">
@@ -3521,7 +3530,7 @@ function berekenPensioenScenario() {
   function getPensioenMaand(gbdStr, pDatumStr) {
     if(!gbdStr) return null;
     var gbd = new Date(gbdStr);
-    var aow = new Date(gbd.getFullYear()+67, gbd.getMonth(), gbd.getDate());
+    var aow = aowDatumVan(gbd);
     if(pDatumStr) {
       var pD = new Date(pDatumStr);
       if(pD < aow) return pD;
@@ -3547,6 +3556,7 @@ function berekenPensioenScenario() {
   if(tijdlijn) tijdlijn.style.display = '';
   if(geenData) geenData.style.display = 'none';
 
+
   // Maanden tot vroegste pensioen
   var maandenTot = Math.max(0, Math.round(
     (refDatum.getFullYear() - now.getFullYear()) * 12 +
@@ -3558,7 +3568,7 @@ function berekenPensioenScenario() {
   function aanvragerKaart(naam, gbd, inkNu, inkAow, pDat) {
     if(!gbd) return '';
     var gebD = new Date(gbd);
-    var aowD = new Date(gebD.getFullYear()+67, gebD.getMonth(), gebD.getDate());
+    var aowD = aowDatumVan(gebD);
     var mndTot = Math.max(0, Math.round((pDat-now)/1000/60/60/24/30.44));
     var jTot = Math.round(mndTot/12*10)/10;
     var isAl = pDat <= now;
@@ -3607,7 +3617,7 @@ function berekenPensioenScenario() {
       '<div style="padding:10px;background:var(--navy);border-radius:var(--radius);text-align:center">' +
         '<div style="font-size:9px;color:rgba(255,255,255,.6);text-transform:uppercase;margin-bottom:4px">Resterende schuld</div>' +
         '<div style="font-size:18px;font-weight:900;color:#fff;font-family:Lexend,sans-serif">'+fe(Math.round(saldoOpPensioen))+'</div>' +
-        (jarenTot>0?'<div style="font-size:10px;color:rgba(255,255,255,.5)">na '+jTot+' jaar</div>':'<div style="font-size:10px;color:#6ee7b7">bij pensionering</div>') +
+        (jarenTot>0?'<div style="font-size:10px;color:rgba(255,255,255,.5)">na '+String(jarenTot).replace('.',',')+' jaar</div>':'<div style="font-size:10px;color:#6ee7b7">bij pensionering</div>') +
       '</div>' +
       '<div style="padding:10px;background:var(--navy-xlight);border-radius:var(--radius);text-align:center;border:1px solid var(--border)">' +
         '<div style="font-size:9px;color:var(--navy);text-transform:uppercase;font-weight:700;margin-bottom:4px">LTV op pensioen</div>' +
@@ -3682,6 +3692,7 @@ function berekenPensioenScenario() {
     var passOp= saldoOpPensioen <= maxHyp;
 
     chfEl.innerHTML =
+      '<div class="info-box fs-11" style="margin-bottom:10px">'+(G.pensioentoets?G.pensioentoets.tekst:'')+' Onderstaande toets op de restschuld bij pensionering is aanvullend (draagbaarheid).</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">' +
         '<div style="padding:10px;background:var(--navy-xlight);border-radius:var(--radius)">' +
           '<div style="font-size:9px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:3px">Toetsinkomen pensioen</div>' +
@@ -4658,6 +4669,50 @@ function recalcWoonlast() {
   set('res-woonlast', fe(Math.round(G.lastBruto+premies)));
 }
 
+// ── PENSIOENTOETS (drempel 57/52) ──
+// Pensioentoets geldt per aanvrager als leeftijd vandaag >= drempel en AOW-leeftijd nog niet bereikt.
+// Dan wordt (ook) getoetst op het inkomen vanaf AOW (AOW + pensioen) met de AOW-tabel; de laagste uitkomst telt.
+function pensioenDrempel() {
+  var el=$('pensioen-drempel');
+  return el ? (parseInt(el.value,10)||0) : 57;
+}
+function leeftijdVandaag(gbdStr) {
+  if(!gbdStr) return null;
+  var b=new Date(gbdStr), t=new Date();
+  if(isNaN(b.getTime())) return null;
+  var l=t.getFullYear()-b.getFullYear();
+  if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate())) l--;
+  return l;
+}
+function bepaalPensioentoets() {
+  var drempel=pensioenDrempel(), t=new Date();
+  var personen=[];
+  [1,2].forEach(function(nr){
+    var ink = nr===1 ? G.a1Inkomen : G.a2Inkomen;
+    var gbd = v('a'+nr+'-gbd');
+    if(nr===2 && !(ink>0) && !gbd) return;
+    var lft = leeftijdVandaag(gbd);
+    var aowD = gbd ? aowDatumVan(new Date(gbd)) : null;
+    var aow = !!(aowD && t>=aowD);
+    var inkAow = $n('a'+nr+'-inkomen-aow');
+    var geldt = !aow && drempel>0 && lft!==null && lft>=drempel;
+    personen.push({nr:nr, ink:ink||0, inkAow:inkAow>0?inkAow:null, lft:lft, aow:aow, geldt:geldt});
+  });
+  var actief = personen.some(function(p){ return p.geldt || (p.aow && p.inkAow!==null); });
+  var ontbreekt = personen.some(function(p){ return p.geldt && p.inkAow===null; });
+  // Inkomen in de pensioensituatie (AOW bereikt zonder apart AOW-inkomen: het ingevulde inkomen is dan al het pensioeninkomen)
+  var inkPens=0, hoogste=null;
+  personen.forEach(function(p){
+    var pens = (p.geldt||p.aow);
+    var x = pens ? (p.inkAow!==null ? p.inkAow : (p.aow ? p.ink : 0)) : p.ink;
+    inkPens += x;
+    if(!hoogste || x>hoogste.x) hoogste={x:x, pens:pens};
+  });
+  return {drempel:drempel, personen:personen, actief:actief, ontbreekt:ontbreekt, inkPens:inkPens,
+          // tabel volgt de aanvrager met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
+          aowTabel: !!(hoogste && hoogste.pens)};
+}
+
 // ── GHF TOETS ──
 function recalcToets() {
   var ink=G.toetsinkomen||G.a1Inkomen;
@@ -4681,6 +4736,43 @@ function recalcToets() {
   var vT=G.verpl1.duo+G.verpl1.krediet+G.verpl1.overig+G.verpl2.duo+G.verpl2.krediet+G.verpl2.overig;
   var beschikbaar=Math.max(0,maxMnd-vT);
   var maxHypNa=r===0?beschikbaar*n:beschikbaar*(1-Math.pow(1+r,-n))/r+energieOpslag+nkOpslag;
+
+  // Pensioentoets (drempel 57/52): ook toetsen op inkomen vanaf AOW met de AOW-tabel; laagste uitkomst telt
+  var PT=bepaalPensioentoets();
+  var ptEl=$('toets-pensioen-info');
+  var ptTxt='Pensioentoets ('+(PT.drempel>0?'vanaf '+PT.drempel+' jaar':'niet toetsen')+'): ';
+  var ptBepalend=false, ptOntbreekt=false;
+  if(PT.ontbreekt){
+    ptOntbreekt=true;
+    ptTxt+='van toepassing — vul inkomen vanaf AOW (AOW + pensioen) in bij de aanvrager(s). Er wordt niet met het huidige inkomen gerekend.';
+  } else if(PT.actief){
+    var inkP=Math.max(0,PT.inkPens-((G.a2Inkomen>0?G.a1Inkomen+G.a2Inkomen:G.a1Inkomen)-ink));
+    var tblP=PT.aowTabel?CHF_WELAOW:CHF_NIET_AOW;
+    var pctP=chfWoonquota(tblP,inkP,tr);
+    var maxMndP=(inkP*pctP)/12;
+    var nkP=($('niet-kwetsbaar')&&$('niet-kwetsbaar').checked&&!(G.a2Inkomen>0)&&inkP>(PT.aowTabel?29000:30000))?17000:0;
+    var beschikbaarP=Math.max(0,maxMndP-vT);
+    var maxHypNaP=(r===0?beschikbaarP*n:beschikbaarP*(1-Math.pow(1+r,-n))/r)+energieOpslag+nkP;
+    ptTxt+='van toepassing — getoetst op '+fe(inkP)+'/jr met de '+(PT.aowTabel?'AOW-tabel':'niet-AOW-tabel')+' (woonquota '+fmtPct(pctP)+'): max '+fe(Math.round(maxHypNaP))+' t.o.v. '+fe(Math.round(maxHypNa))+' op huidig inkomen. ';
+    if(maxHypNaP<maxHypNa){
+      ptBepalend=true; ptTxt+='Het pensioeninkomen is bepalend.';
+      ink=inkP; pct=pctP; maxMnd=maxMndP; beschikbaar=beschikbaarP; maxHypNa=maxHypNaP; isAOW=PT.aowTabel; nkOpslag=nkP;
+    } else ptTxt+='Het huidige inkomen is bepalend.';
+  } else {
+    ptTxt+='niet van toepassing.';
+  }
+  if(ptEl){ ptEl.style.display=''; ptEl.className='info-box fs-11 mt-8 '+(ptOntbreekt?'info-red':(PT.actief?'info-gold':'')); ptEl.textContent=ptTxt; }
+  G.pensioentoets={drempel:PT.drempel, actief:PT.actief, ontbreekt:ptOntbreekt, bepalend:ptBepalend, tekst:ptTxt};
+  if(ptOntbreekt){
+    G.maxHyp=0;
+    set('maxhyp-bedrag','€ —');
+    set('maxhyp-maand','€ —');
+    set('maxhyp-sub','vul inkomen vanaf AOW in (pensioentoets)');
+    set('maxhyp-maand-sub','');
+    var mv0=$('maxhyp-vergelijk'); if(mv0) mv0.style.display='none';
+    updateGHFstatus('warn','Pensioentoets van toepassing — vul inkomen vanaf AOW (AOW + pensioen) in');
+    return;
+  }
   G.maxHyp=maxHypNa;
 
   set('maxhyp-bedrag', fe(Math.round(maxHypNa)));
@@ -4690,7 +4782,7 @@ function recalcToets() {
   set('toets-inkomen-display', fe(ink)+'/jr');
   set('toets-rente-display', (tr*100).toFixed(2).replace('.',',')+'% '+(tr===0.05?'(minimum)':'(werkelijk)'));
   set('toets-woonquota', fmtPct(pct));
-  set('toets-tabel', isAOW?'AOW-leeftijd tabel':'Niet-AOW tabel');
+  set('toets-tabel', (isAOW?'AOW-leeftijd tabel':'Niet-AOW tabel')+(ptBepalend?' (pensioentoets)':''));
 
   var eoEl=$('energie-opslag-info');
   if(eoEl){ if(energieOpslag>0){eoEl.style.display='';eoEl.textContent='\u2713 Energieopslag CHF: +'+fe(energieOpslag)+' (label '+v('f-energielabel')+')';}else eoEl.style.display='none'; }
@@ -4738,7 +4830,7 @@ function updateGHFstatus(status, msg) {
   var icons={ok:'\u2705',error:'\u274c',warn:'\u26a0\ufe0f'};
   var cls={ok:'ghf-ok',error:'ghf-fail',warn:'ghf-warn'};
   var msgs={ok:'Financieringstoets geslaagd \u2014 hypotheek past binnen CHF-norm 2026',
-             error:msg||'Financieringstoets niet geslaagd',warn:'Vul inkomen en leningdelen in voor de financieringstoets'};
+             error:msg||'Financieringstoets niet geslaagd',warn:msg||'Vul inkomen en leningdelen in voor de financieringstoets'};
   card.className='ghf-status '+(cls[status]||'ghf-warn');
   card.innerHTML='<span class="ghf-icon">'+(icons[status]||'\u26a0\ufe0f')+'</span><div><div style="font-weight:700;font-size:14px">'+(msgs[status||'warn'])+'</div><div class="fs-12" style="color:var(--text-mid);margin-top:3px">CHF-normen 2026 \u2014 Gedragscode Hypothecaire Financieringen</div></div>';
   updateStickyBar();

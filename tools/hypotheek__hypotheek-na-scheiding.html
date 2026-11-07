@@ -111,6 +111,40 @@ input:focus,select:focus{border-color:var(--navy);}
           <div class="iw"><span class="px">€</span><input type="number" id="inkomen" value="55000" step="1000"></div>
         </div>
         <div class="fl">
+          <label>Geboortedatum achterblijver</label>
+          <input type="date" id="geboortedatum" value="">
+          <span class="hint" id="aowHint">Voor de pensioentoets en AOW-datum (geboren t/m 1960: 67 jaar; vanaf 1961: 67 jaar en 3 maanden, later indicatief)</span>
+        </div>
+        <div class="fl">
+          <label>Inkomen vanaf AOW (AOW + pensioen)</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="pensioenInkomen" value="" step="1000"></div>
+          <span class="hint">Bruto per jaar; nodig als de pensioentoets geldt of de AOW-leeftijd is bereikt</span>
+        </div>
+        <div class="fl">
+          <label>Pensioentoets vanaf leeftijd</label>
+          <select id="pensioenDrempel">
+            <option value="0">Niet toetsen</option>
+            <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+            <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+          </select>
+        </div>
+        <div class="fl">
+          <label>Toetsnorm</label>
+          <select id="toetsNorm">
+            <option value="acceptatie" selected>Acceptatie — leennormen Trhk 2026</option>
+            <option value="beheer">Beheer — NHG-beheercriteria 2026 (Bijlage 5)</option>
+          </select>
+          <span class="hint">Beheer: voor ongewijzigde overname van een bestaande (NHG-)lening bij scheiding, als de geldverstrekker dat toestaat</span>
+        </div>
+        <div class="fl">
+          <label>Inkomenssituatie (alleen bij beheer, vóór AOW)</label>
+          <select id="inkomenssituatie">
+            <option value="werk" selected>Met werk (tabel 5b)</option>
+            <option value="geenwerk">Zonder werk, bijv. uitkering (tabel 5d)</option>
+          </select>
+          <span class="hint">Na AOW-leeftijd en in de pensioentoets: tabel 5f (AOW)</span>
+        </div>
+        <div class="fl">
           <label>Partneralimentatie (bruto/mnd)</label>
           <div class="iw"><span class="px">€</span><input type="number" id="alimentatie" value="0" step="50"></div>
           <span class="hint">Telt mee als inkomen voor NIBUD-toets</span>
@@ -268,13 +302,23 @@ const FL2026=[
   [124000,22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],
   [125000,22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]
 ];
-function getFLP(ink,r){
+// Trhk 2026 bijlage 1 tabel 2 (AOW-leeftijd bereikt, rente aftrekbaar) — pensioentoets acceptatie
+const FL2026_AOW=[[29000,18.5,18.9,19.4,19.7,20.1,20.4,20.7,20.9,21.1,21.3,21.5,21.7],[30000,19.2,19.8,20.3,20.8,21.1,21.5,21.8,22.1,22.3,22.5,22.7,22.9],[31000,19.9,20.6,21.2,21.7,22.1,22.5,22.8,23.1,23.4,23.7,23.9,24.1],[32000,20.5,21.2,21.8,22.4,23.0,23.4,23.8,24.1,24.4,24.7,24.9,25.2],[33000,20.9,21.7,22.3,22.9,23.5,24.0,24.5,24.8,25.2,25.5,25.7,26.0],[34000,21.2,22.0,22.8,23.4,24.0,24.5,25.1,25.5,25.9,26.2,26.5,26.7],[35000,21.6,22.4,23.1,23.9,24.5,25.1,25.6,26.1,26.5,26.9,27.2,27.5],[36000,21.8,22.7,23.5,24.3,24.9,25.6,26.1,26.6,27.1,27.5,27.9,28.2],[37000,21.9,22.9,23.8,24.6,25.3,26.0,26.6,27.1,27.5,28.0,28.4,28.8],[38000,22.0,23.1,24.0,24.9,25.7,26.3,27.0,27.5,28.0,28.4,28.9,29.2],[39000,22.1,23.2,24.2,25.1,25.9,26.6,27.3,27.9,28.4,28.9,29.3,29.7],[40000,22.2,23.3,24.3,25.2,26.1,26.9,27.6,28.2,28.8,29.3,29.7,30.1],[41000,22.3,23.4,24.4,25.3,26.3,27.1,27.9,28.5,29.1,29.6,30.1,30.5],[42000,22.4,23.5,24.5,25.5,26.4,27.3,28.1,28.8,29.4,30.0,30.5,30.9],[43000,22.5,23.6,24.6,25.6,26.6,27.4,28.3,29.0,29.7,30.3,30.8,31.3],[44000,22.7,23.7,24.8,25.8,26.7,27.6,28.4,29.2,29.9,30.6,31.1,31.6],[45000,22.8,23.9,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.8,31.4,31.9],[46000,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,30.9,31.6,32.2],[47000,23.1,24.1,25.2,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8,32.4],[48000,23.1,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.3,32.0,32.6],[49000,23.3,24.4,25.5,26.5,27.5,28.3,29.2,30.0,30.8,31.5,32.2,32.8],[50000,23.4,24.6,25.6,26.7,27.6,28.6,29.4,30.2,31.0,31.7,32.4,33.0],[51000,23.6,24.8,25.8,26.8,27.9,28.8,29.7,30.5,31.3,32.0,32.7,33.3],[52000,23.9,25.0,26.2,27.2,28.1,29.1,30.0,30.8,31.6,32.3,33.0,33.7],[53000,24.2,25.4,26.5,27.5,28.5,29.4,30.4,31.2,32.0,32.7,33.5,34.1],[54000,24.5,25.7,26.8,27.9,28.9,29.8,30.7,31.6,32.4,33.2,33.9,34.5],[55000,24.8,26.0,27.2,28.3,29.3,30.3,31.1,32.0,32.9,33.6,34.3,35.0],[56000,25.0,26.4,27.6,28.6,29.7,30.7,31.6,32.4,33.2,34.0,34.7,35.5],[57000,25.2,26.6,27.9,29.0,30.0,31.1,32.0,32.8,33.7,34.4,35.2,35.9],[58000,25.3,26.8,28.1,29.4,30.4,31.4,32.4,33.3,34.1,34.8,35.5,36.3],[59000,25.4,27.0,28.4,29.6,30.8,31.8,32.8,33.7,34.5,35.3,36.0,36.6],[60000,25.5,27.1,28.6,29.9,31.1,32.1,33.1,34.1,34.9,35.7,36.4,37.1],[61000,25.6,27.2,28.7,30.1,31.4,32.5,33.5,34.4,35.3,36.1,36.8,37.5],[62000,25.7,27.3,28.9,30.4,31.6,32.8,33.8,34.8,35.7,36.5,37.2,37.9],[63000,25.8,27.4,29.0,30.5,31.9,33.0,34.1,35.1,36.0,36.8,37.6,38.3],[64000,25.8,27.6,29.1,30.7,32.1,33.3,34.4,35.4,36.3,37.2,37.9,38.6],[65000,25.9,27.6,29.2,30.8,32.3,33.6,34.6,35.6,36.6,37.5,38.3,39.0],[66000,25.9,27.6,29.4,30.9,32.4,33.8,34.9,36.0,36.8,37.8,38.6,39.3],[67000,26.0,27.7,29.4,31.0,32.5,34.0,35.2,36.2,37.1,38.0,38.9,39.7],[68000,26.0,27.7,29.5,31.1,32.6,34.1,35.4,36.4,37.5,38.3,39.2,40.0],[69000,26.1,27.8,29.5,31.2,32.7,34.2,35.6,36.7,37.7,38.6,39.4,40.3],[70000,26.2,27.9,29.6,31.3,32.8,34.3,35.7,36.9,37.9,38.9,39.7,40.5],[71000,26.2,27.9,29.6,31.3,32.9,34.4,35.8,37.1,38.2,39.1,39.9,40.7],[72000,26.3,28.0,29.7,31.4,33.0,34.5,35.9,37.3,38.4,39.4,40.3,41.0],[73000,26.4,28.0,29.7,31.4,33.1,34.6,36.0,37.3,38.4,39.5,40.5,41.3],[74000,26.5,28.1,29.7,31.4,33.1,34.7,36.1,37.3,38.4,39.5,40.6,41.6],[75000,26.5,28.2,29.8,31.4,33.1,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[76000,26.6,28.3,29.9,31.5,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[77000,26.7,28.3,30.0,31.6,33.2,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[78000,26.8,28.4,30.0,31.6,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[79000,26.9,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[80000,27.1,28.5,30.1,31.7,33.3,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[81000,27.2,28.6,30.2,31.8,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[82000,27.2,28.8,30.2,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[83000,27.3,28.8,30.3,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[84000,27.4,28.9,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[85000,27.5,29.0,30.4,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[86000,27.6,29.1,30.5,31.9,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[87000,27.7,29.1,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[88000,27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[89000,27.7,29.2,30.6,32.0,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[90000,27.7,29.2,30.6,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[91000,27.8,29.2,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[92000,27.8,29.3,30.7,32.1,33.4,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[93000,27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[94000,27.8,29.3,30.7,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[95000,27.9,29.3,30.8,32.1,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[96000,27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[97000,27.9,29.4,30.8,32.2,33.5,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[98000,28.0,29.4,30.8,32.2,33.6,34.8,36.1,37.3,38.4,39.5,40.6,41.7],[99000,28.0,29.4,30.9,32.2,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[100000,28.0,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[101000,28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[102000,28.1,29.5,30.9,32.3,33.6,34.9,36.1,37.3,38.4,39.5,40.6,41.7],[103000,28.1,29.6,30.9,32.3,33.7,34.9,36.2,37.3,38.4,39.5,40.6,41.7],[104000,28.2,29.6,31.0,32.3,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[105000,28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[106000,28.2,29.6,31.0,32.4,33.7,35.0,36.2,37.4,38.5,39.5,40.6,41.7],[107000,28.3,29.7,31.1,32.4,33.7,35.0,36.3,37.4,38.5,39.6,40.6,41.7],[108000,28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.4,38.5,39.6,40.6,41.7],[109000,28.3,29.7,31.1,32.5,33.8,35.1,36.3,37.5,38.5,39.6,40.6,41.7],[110000,28.4,29.8,31.2,32.5,33.8,35.1,36.3,37.5,38.6,39.6,40.6,41.7]];
+// NHG Voorwaarden & Normen 2026, Bijlage 5 (beheercriteria), alleenstaande: 5b met werk, 5d zonder werk, 5f AOW
+const NHG_BEHEER_5B=[[0,25.8,27.5,29.2,30.8,32.5,33.3,33.8,34.4,34.8,35.3,35.6,35.9],[28000,25.8,27.5,29.2,30.8,32.5,33.3,33.8,34.4,34.8,35.3,35.6,35.9],[29000,25.8,27.5,29.2,30.8,32.5,33.9,34.6,35.1,35.6,36.1,36.5,36.8],[30000,25.8,27.5,29.2,30.8,32.5,34.0,35.2,35.8,36.3,36.8,37.2,37.7],[31000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,36.5,37.1,37.5,38.0,38.4],[32000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,37.7,38.2,38.7,39.1],[33000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.3,38.9,39.4,39.8],[34000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.5,40.0,40.4],[35000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.5,41.0],[36000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,41.5],[37000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,41.9],[38000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[39000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[40000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[41000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[42000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[43000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[44000,25.8,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[45000,25.9,27.5,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[46000,26.1,27.6,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[47000,26.2,27.7,29.2,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[48000,26.3,27.8,29.3,30.8,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[49000,26.4,27.9,29.3,30.9,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[50000,26.5,28.0,29.5,30.9,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[51000,26.6,28.1,29.6,31.0,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[52000,26.7,28.2,29.7,31.1,32.5,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[53000,26.7,28.2,29.8,31.2,32.6,34.0,35.5,37.0,38.4,39.7,40.9,42.0],[54000,26.8,28.3,29.8,31.3,32.7,34.1,35.5,37.0,38.4,39.7,40.9,42.0],[55000,26.9,28.4,29.9,31.4,32.8,34.2,35.5,37.0,38.4,39.7,40.9,42.0],[56000,26.9,28.5,30.0,31.4,32.8,34.2,35.6,37.0,38.4,39.7,40.9,42.0],[57000,27.0,28.5,30.0,31.5,32.9,34.3,35.7,37.0,38.4,39.7,40.9,42.0],[58000,27.1,28.6,30.1,31.5,33.0,34.4,35.7,37.0,38.4,39.7,40.9,42.0],[59000,27.1,28.7,30.2,31.6,33.0,34.5,35.7,37.0,38.4,39.7,40.9,42.0],[60000,27.2,28.7,30.2,31.7,33.1,34.5,35.7,37.1,38.4,39.7,40.9,42.0],[61000,27.3,28.8,30.3,31.8,33.2,34.5,35.8,37.2,38.4,39.7,40.9,42.0],[62000,27.3,28.9,30.4,31.9,33.3,34.6,35.9,37.3,38.4,39.7,40.9,42.0],[63000,27.4,28.9,30.5,31.9,33.3,34.7,36.0,37.3,38.4,39.7,40.9,42.0],[64000,27.4,29.0,30.5,32.0,33.4,34.8,36.1,37.3,38.5,39.7,40.9,42.0],[65000,27.4,29.0,30.6,32.1,33.5,34.9,36.2,37.4,38.6,39.8,40.9,42.0],[66000,27.4,29.0,30.6,32.1,33.6,34.9,36.3,37.5,38.7,39.8,40.9,42.0],[67000,27.5,29.1,30.7,32.2,33.6,35.0,36.3,37.6,38.8,39.9,40.9,42.1],[68000,27.6,29.1,30.7,32.3,33.7,35.1,36.4,37.7,38.9,40.0,41.0,42.1],[69000,27.6,29.2,30.8,32.4,33.8,35.2,36.5,37.8,39.0,40.1,41.1,42.1],[70000,27.7,29.3,30.8,32.4,33.9,35.3,36.6,37.9,39.1,40.2,41.3,42.2],[71000,27.8,29.3,30.9,32.4,33.9,35.4,36.7,38.0,39.2,40.3,41.4,42.3],[72000,27.8,29.4,30.9,32.4,34.0,35.4,36.8,38.0,39.3,40.4,41.5,42.4],[73000,27.9,29.4,31.0,32.5,34.0,35.4,36.9,38.2,39.4,40.5,41.6,42.5],[74000,27.9,29.5,31.0,32.5,34.0,35.5,36.9,38.2,39.4,40.6,41.6,42.6],[75000,27.9,29.5,31.1,32.6,34.0,35.5,36.9,38.2,39.4,40.6,41.7,42.7],[76000,27.9,29.5,31.1,32.6,34.1,35.5,36.9,38.2,39.4,40.6,41.7,42.7],[77000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[78000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[79000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[80000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[81000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[82000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[83000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[84000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8],[85000,28.0,29.6,31.1,32.7,34.1,35.5,37.0,38.3,39.4,40.7,41.7,42.8]];
+const NHG_BEHEER_5D=[[0,12.1,12.8,13.4,13.9,14.5,15.0,15.5,15.9,16.4,16.8,17.1,17.5],[20000,12.1,12.8,13.4,13.9,14.5,15.0,15.5,15.9,16.4,16.8,17.1,17.5],[21000,13.9,14.6,15.2,15.9,16.5,17.1,17.7,18.2,18.8,19.2,19.7,20.1],[22000,15.5,16.3,17.0,17.7,18.4,19.1,19.7,20.3,20.8,21.4,21.9,22.3],[23000,16.8,17.6,18.5,19.3,20.0,20.7,21.4,22.0,22.6,23.2,23.7,24.2],[24000,17.9,18.9,19.8,20.7,21.5,22.3,23.0,23.7,24.3,24.9,25.5,26.0],[25000,18.8,19.9,20.9,21.9,22.8,23.7,24.4,25.2,25.8,26.5,27.1,27.6],[26000,19.4,20.5,21.6,22.7,23.7,24.5,25.4,26.1,26.9,27.5,28.1,28.7],[27000,19.8,21.0,22.1,23.2,24.2,25.1,26.0,26.8,27.6,28.3,28.9,29.5],[28000,20.3,21.6,22.7,23.9,25.0,26.0,26.9,27.8,28.6,29.4,30.0,30.6],[29000,20.3,21.7,22.7,24.2,25.7,26.8,27.8,28.7,29.6,30.3,31.0,31.7],[30000,20.3,21.7,23.1,24.5,25.7,26.9,27.9,28.9,29.8,30.7,31.5,32.2],[31000,20.3,21.7,23.2,24.5,25.7,26.9,27.9,28.9,29.8,30.7,31.5,32.2],[32000,20.5,21.9,23.3,24.8,26.1,27.4,28.5,29.4,30.3,31.2,31.9,32.7],[33000,20.5,21.9,23.3,24.8,26.2,27.4,28.6,29.7,30.7,31.6,32.4,33.2],[34000,20.5,21.9,23.4,24.8,26.3,27.5,28.8,29.9,31.0,31.9,32.8,33.6],[35000,20.6,22.0,23.4,24.8,26.3,27.6,28.9,30.1,31.2,32.2,33.1,34.0],[36000,20.7,22.1,23.5,24.9,26.3,27.6,28.9,30.2,31.4,32.5,33.4,34.3],[37000,20.8,22.2,23.6,25.0,26.3,27.6,29.0,30.3,31.5,32.6,33.7,34.6],[38000,20.8,22.2,23.6,25.1,26.3,27.6,29.0,30.3,31.5,32.7,33.8,34.7],[39000,20.9,22.2,23.6,25.1,26.3,27.6,29.0,30.3,31.5,32.7,33.8,34.7],[40000,20.9,22.3,23.7,25.1,26.3,27.7,29.0,30.3,31.5,32.7,33.8,34.8],[41000,21.0,22.4,23.8,25.1,26.4,27.7,29.0,30.3,31.5,32.7,33.8,34.8],[42000,21.1,22.5,23.9,25.1,26.5,27.8,29.1,30.3,31.5,32.7,33.8,34.9],[43000,21.4,22.6,23.9,25.2,26.6,27.9,29.2,30.4,31.6,32.8,33.8,34.9],[44000,21.6,22.8,24.0,25.4,26.7,28.0,29.3,30.5,31.7,32.8,33.9,34.9],[45000,21.8,23.0,24.2,25.4,26.7,28.0,29.3,30.5,31.7,32.9,33.9,35.0],[46000,21.9,23.2,24.4,25.6,26.8,28.1,29.3,30.5,31.7,32.9,33.9,35.0],[47000,22.1,23.3,24.6,25.8,26.9,28.1,29.3,30.5,31.7,32.9,33.9,35.0],[48000,22.1,23.5,24.7,25.9,27.1,28.2,29.4,30.5,31.7,32.9,33.9,35.0],[49000,22.3,23.5,24.8,26.1,27.3,28.4,29.5,30.6,31.7,32.9,33.9,35.0],[50000,22.5,23.8,25.0,26.3,27.5,28.7,29.7,30.8,31.9,33.0,34.1,35.1],[51000,22.5,23.8,25.0,26.3,27.5,28.7,29.7,30.8,31.9,33.0,34.1,35.1],[52000,22.7,24.0,25.3,26.5,27.8,28.9,30.0,31.1,32.1,33.2,34.2,35.3],[53000,23.1,24.4,25.6,26.9,28.1,29.3,30.4,31.5,32.5,33.5,34.6,35.6],[54000,23.4,24.7,26.0,27.2,28.5,29.6,30.8,31.9,32.9,33.9,34.9,35.9],[55000,23.6,25.0,26.3,27.6,28.8,30.0,31.1,32.2,33.3,34.2,35.2,36.2],[56000,23.9,25.3,26.6,27.9,29.2,30.4,31.5,32.6,33.6,34.6,35.5,36.5],[57000,24.2,25.6,26.9,28.2,29.5,30.7,31.8,32.9,34.0,35.0,35.9,36.8],[58000,24.4,25.8,27.2,28.5,29.8,31.0,32.2,33.3,34.3,35.3,36.2,37.2],[59000,24.7,26.1,27.4,28.8,30.1,31.3,32.5,33.6,34.7,35.7,36.6,37.5]];
+const NHG_BEHEER_5F=[[0,22.5,23.1,23.5,23.9,24.3,24.7,25.1,25.4,25.6,25.8,26.1,26.2],[21000,22.5,23.1,23.5,23.9,24.3,24.7,25.1,25.4,25.6,25.8,26.1,26.2],[22000,23.8,24.5,25.0,25.5,25.9,26.3,26.7,27.0,27.3,27.6,27.9,28.1],[23000,24.6,25.4,26.1,26.6,27.1,27.5,27.9,28.2,28.6,28.9,29.2,29.4],[24000,25.4,26.2,26.9,27.6,28.1,28.6,29.0,29.4,29.7,30.1,30.4,30.6],[25000,25.8,26.8,27.6,28.3,28.9,29.5,30.0,30.4,30.8,31.1,31.4,31.7],[26000,26.2,27.2,28.2,29.0,29.6,30.3,30.8,31.3,31.7,32.1,32.4,32.7],[27000,26.6,27.6,28.6,29.5,30.3,31.0,31.5,32.1,32.6,33.0,33.3,33.7],[28000,26.9,28.0,29.1,30.0,30.8,31.6,32.2,32.8,33.3,33.8,34.2,34.5],[29000,27.1,28.3,29.3,30.3,31.2,32.0,32.7,33.4,33.9,34.4,34.8,35.2],[30000,27.3,28.5,29.6,30.7,31.6,32.4,33.2,33.9,34.5,35.0,35.5,35.9],[31000,27.5,28.8,29.9,31.0,32.0,32.9,33.7,34.4,35.1,35.7,36.2,36.6],[32000,27.6,28.9,30.2,31.3,32.3,33.3,34.1,34.9,35.6,36.2,36.7,37.2],[33000,27.7,29.1,30.4,31.5,32.6,33.6,34.5,35.3,36.0,36.7,37.3,37.8],[34000,27.8,29.2,30.5,31.7,32.8,33.9,34.8,35.6,36.4,37.0,37.7,38.2],[35000,27.9,29.2,30.5,31.8,33.0,34.0,35.0,35.9,36.7,37.4,38.0,38.6],[36000,28.0,29.3,30.6,31.8,33.0,34.1,35.1,36.0,36.9,37.6,38.3,38.8],[37000,28.1,29.4,30.7,31.9,33.1,34.2,35.3,36.2,37.1,37.8,38.5,39.2],[38000,28.4,29.7,30.9,32.1,33.3,34.5,35.6,36.5,37.4,38.2,38.9,39.6],[39000,28.4,30.0,31.2,32.4,33.6,34.7,35.8,36.9,37.7,38.6,39.3,40.0],[40000,28.5,30.0,31.5,32.8,33.9,35.0,36.1,37.2,38.1,38.9,39.7,40.4],[41000,28.8,30.3,31.7,33.0,34.4,35.5,36.5,37.6,38.6,39.4,40.2,41.0],[42000,28.9,30.6,32.0,33.4,34.6,35.9,36.9,38.0,39.0,39.9,40.7,41.5],[43000,29.0,30.7,32.3,33.7,35.0,36.1,37.4,38.4,39.4,40.3,41.2,41.9],[44000,29.1,30.8,32.6,34.0,35.3,36.5,37.6,38.8,39.8,40.7,41.6,42.4],[45000,29.2,31.0,32.7,34.3,35.6,36.9,38.0,39.0,40.1,41.1,42.0,42.8],[46000,29.3,31.1,32.8,34.5,35.9,37.2,38.3,39.4,40.3,41.4,42.4,43.2],[47000,29.3,31.2,32.9,34.6,36.2,37.5,38.7,39.8,40.7,41.7,42.7,43.6],[48000,29.3,31.2,33.0,34.7,36.4,37.8,39.0,40.1,41.1,42.0,42.9,43.9],[49000,29.3,31.2,33.1,34.9,36.5,38.0,39.3,40.5,41.5,42.4,43.3,44.1],[50000,29.3,31.2,33.1,34.9,36.6,38.2,39.6,40.7,41.8,42.7,43.6,44.4],[51000,29.3,31.2,33.1,35.0,36.7,38.3,39.8,41.0,42.1,43.1,43.9,44.8],[52000,29.3,31.2,33.1,35.0,36.8,38.4,39.9,41.2,42.4,43.4,44.3,45.1],[53000,29.3,31.2,33.1,35.0,36.8,38.4,40.0,41.4,42.6,43.6,44.6,45.4],[54000,29.3,31.2,33.1,35.0,36.8,38.5,40.1,41.6,42.8,43.9,44.8,45.7],[55000,29.3,31.2,33.1,35.0,36.8,38.5,40.1,41.6,43.0,44.1,45.1,46.0],[56000,29.3,31.2,33.1,35.0,36.8,38.5,40.1,41.7,43.1,44.3,45.3,46.2],[57000,29.3,31.2,33.1,35.0,36.8,38.6,40.2,41.7,43.1,44.4,45.5,46.4],[58000,29.3,31.2,33.1,35.0,36.8,38.6,40.2,41.7,43.2,44.5,45.7,46.6],[59000,29.4,31.2,33.1,35.0,36.8,38.6,40.3,41.8,43.3,44.5,45.8,46.8],[60000,29.4,31.2,33.1,35.0,36.8,38.6,40.3,41.8,43.3,44.6,45.8,47.0]];
+function getFLP(ink,r,tbl){
+  tbl=tbl||FL2026;
   const g=[1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5];
   let k=11;for(let j=0;j<g.length;j++){if(r<=g[j]+1e-9){k=j;break;}}
-  let row=FL2026[0];
-  for(const rr of FL2026){if(ink>=rr[0])row=rr;else break;}
+  let row=tbl[0];
+  for(const rr of tbl){if(ink>=rr[0])row=rr;else break;}
   return row[k+1]/100;
 }
+// Leeftijd en AOW-datum (geboren t/m 31-12-1960: 67 jaar; vanaf 1-1-1961: 67 jaar en 3 maanden — na 30-9-1964 indicatief)
+function leeftijdOp(geb,d){let l=d.getFullYear()-geb.getFullYear();if(d.getMonth()<geb.getMonth()||(d.getMonth()===geb.getMonth()&&d.getDate()<geb.getDate()))l--;return l;}
+function aowDatum(geb){const extra=geb.getFullYear()<=1960?0:3;return new Date(geb.getFullYear()+67,geb.getMonth()+extra,geb.getDate());}
 // Brutering studieschuld Trhk 2026 (art. 3a): werkelijke maandtermijn × factor o.b.v. toetsrente
 const BRUT_STUDIE=[[1.5,1.05],[2.0,1.05],[2.5,1.10],[3.0,1.15],[3.5,1.20],[4.0,1.20],[4.5,1.25],[5.0,1.30],[5.5,1.30],[6.0,1.35],[6.5,1.40]];
 function factorStudie(r){for(const[m,f]of BRUT_STUDIE){if(r<=m+1e-9)return f;}return 1.40;}
@@ -300,17 +344,53 @@ function bereken(){
   const ml=maandlast(hs,r,lt,vorm);
   const mlMet=maandlast(hypMet,r,lt,vorm);
 
-  // NIBUD toets
-  const totaalInk=inkomen+alimentatie;
-  const flp=getFLP(totaalInk,N('hyprente'));
   // Verplichtingen per maand: krediet 2% van de limiet, studieschuld werkelijke termijn × factor, overige lasten volledig
   const kredietLast=kredietLimiet*0.02;
   const duoFactor=factorStudie(N('hyprente'));
   const duoLast=duoTermijn*duoFactor;
   const verplMaand=kredietLast+duoLast+verp;
-  const maxMaandLast=Math.max(0,totaalInk*flp/12-verplMaand);
-  // Trhk: maximale hypotheek o.b.v. annuïtaire last over 30 jaar
-  const maxHyp=maxMaandLast/ann(1,r,360);
+
+  // Toetsnorm (acceptatie Trhk / beheer NHG) en pensioentoets (drempel 57/52)
+  const norm=document.getElementById('toetsNorm').value;
+  const werk=document.getElementById('inkomenssituatie').value==='werk';
+  const drempel=parseInt(document.getElementById('pensioenDrempel').value,10)||0;
+  const gebVal=document.getElementById('geboortedatum').value;
+  const geb=gebVal?new Date(gebVal+'T00:00:00'):null;
+  const vandaag=new Date();
+  const leeftijd=geb?leeftijdOp(geb,vandaag):null;
+  const aowD=geb?aowDatum(geb):null;
+  const aowBereikt=!!(aowD&&vandaag>=aowD);
+  const pensioentoetsGeldt=!aowBereikt&&drempel>0&&leeftijd!==null&&leeftijd>=drempel;
+  const pensRaw=document.getElementById('pensioenInkomen').value.trim();
+  const pensioenInk=pensRaw!==''&&isFinite(parseFloat(pensRaw))?parseFloat(pensRaw):null;
+  document.getElementById('aowHint').textContent=geb?`Leeftijd ${leeftijd} jaar · AOW-datum ${aowD.toLocaleDateString('nl-NL')}${aowBereikt?' (bereikt)':''}`:'Voor de pensioentoets en AOW-datum (geboren t/m 1960: 67 jaar; vanaf 1961: 67 jaar en 3 maanden, later indicatief)';
+  const TBL_AOW = norm==='beheer'?NHG_BEHEER_5F:FL2026_AOW;
+  const TBL_NU  = aowBereikt?TBL_AOW:(norm==='beheer'?(werk?NHG_BEHEER_5B:NHG_BEHEER_5D):FL2026);
+  const tblNaam = t=>t===FL2026?'Trhk tabel 1 (niet-AOW)':t===FL2026_AOW?'Trhk tabel 2 (AOW)':t===NHG_BEHEER_5B?'NHG beheer 5b (met werk)':t===NHG_BEHEER_5D?'NHG beheer 5d (zonder werk)':'NHG beheer 5f (AOW)';
+  function toets(ink,tbl){const f=getFLP(ink,N('hyprente'),tbl);const mm=Math.max(0,ink*f/12-verplMaand);return {ink,tbl,flp:f,maxHyp:mm/ann(1,r,360)};}
+  const drempelTxt=drempel>0?`vanaf ${drempel} jaar`:'niet toetsen';
+  const pensioenNodig=aowBereikt||pensioentoetsGeldt;
+  if(pensioenNodig&&pensioenInk===null){
+    document.getElementById('verdictDiv').innerHTML=`<div class="verdict warn"><div class="v-ico">⚠️</div><div><div class="v-titel">Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in</div><div class="v-sub">${aowBereikt?'De AOW-leeftijd is bereikt':'De achterblijver is '+leeftijd+' jaar'}; daarom moet (ook) worden getoetst op het inkomen vanaf AOW (AOW + pensioen). Er wordt niet met het huidige inkomen gerekend.</div></div></div>`;
+    document.getElementById('hoofd').innerHTML='';
+    document.getElementById('tbl').innerHTML='';
+    document.getElementById('resCard').classList.remove('hidden');
+    document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+  // Toets 1: huidige situatie (na AOW: alleen pensioeninkomen)
+  const tNu=toets((aowBereikt?pensioenInk:inkomen)+alimentatie,TBL_NU);
+  // Toets 2: pensioentoets — inkomen vanaf AOW met de AOW-tabel; laagste uitkomst telt
+  const tPens=pensioentoetsGeldt?toets(pensioenInk+alimentatie,TBL_AOW):null;
+  const bindend=(tPens&&tPens.maxHyp<tNu.maxHyp)?tPens:tNu;
+  const totaalInk=bindend.ink;
+  const flp=bindend.flp;
+  // Maximale hypotheek o.b.v. annuïtaire last over 30 jaar (laagste van beide toetsen)
+  const maxHyp=bindend.maxHyp;
+  let pensRegel;
+  if(pensioentoetsGeldt) pensRegel=`Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(tPens.ink)} met ${tblNaam(TBL_AOW)}: max. ${fmt(tPens.maxHyp)} (huidig inkomen: ${fmt(tNu.maxHyp)})${bindend===tPens?' — pensioeninkomen is bepalend':''}`;
+  else if(aowBereikt) pensRegel=`Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(tNu.ink)} met ${tblNaam(TBL_AOW)}`;
+  else pensRegel=`Pensioentoets (${drempelTxt}): niet van toepassing${geb?'':' (geen geboortedatum ingevuld)'}`;
   const kanOvernemen=maxHyp>=hs;
   const kanMetUitkoop=maxHyp>=hypMet;
 
@@ -319,16 +399,16 @@ function bereken(){
 
   // Verdict
   let vCls,vIco,vTitel,vSub;
-  if(kanMetUitkoop){vCls='ok';vIco='✅';vTitel='Doorgang mogelijk — hypotheek + uitkoop past binnen draagkracht';vSub=`Op basis van de leennormen 2026 (Trhk) kunt u maximaal ${fmt(maxHyp)} lenen. De gecombineerde hypotheek van ${fmt(hypMet)} past binnen uw draagkracht.`;}
+  if(kanMetUitkoop){vCls='ok';vIco='✅';vTitel='Doorgang mogelijk — hypotheek + uitkoop past binnen draagkracht';vSub=`Op basis van ${norm==='beheer'?'de NHG-beheercriteria 2026':'de leennormen 2026 (Trhk)'} kunt u maximaal ${fmt(maxHyp)} lenen. De gecombineerde hypotheek van ${fmt(hypMet)} past binnen uw draagkracht.`;}
   else if(kanOvernemen){vCls='warn';vIco='⚠️';vTitel='Hypotheek overnemen lukt, uitkoop meefinancieren niet';vSub=`U kunt de bestaande hypotheek (${fmt(hs)}) overnemen, maar heeft niet genoeg draagkracht om ook de uitkoop van ${fmt(uitkoopBedrag)} mee te financieren. Oplossing: uitkoop uit eigen middelen of via familie.`;}
   else{vCls='nee';vIco='❌';vTitel='Hypotheek alleen niet haalbaar bij huidig inkomen';vSub=`Maximale hypotheek op uw inkomen: ${fmt(maxHyp)}. De bestaande schuld van ${fmt(hs)} overstijgt uw draagkracht. Overleg met uw bank — bij NHG zijn soms uitzonderingen mogelijk. Overweeg ook verkoop van de woning.`;}
 
-  document.getElementById('verdictDiv').innerHTML=`<div class="verdict ${vCls}"><div class="v-ico">${vIco}</div><div><div class="v-titel">${vTitel}</div><div class="v-sub">${vSub}</div></div></div>`;
+  document.getElementById('verdictDiv').innerHTML=`<div class="verdict ${vCls}"><div class="v-ico">${vIco}</div><div><div class="v-titel">${vTitel}</div><div class="v-sub">${vSub}<br><small>${pensRegel}.</small></div></div></div>`;
 
   document.getElementById('hoofd').innerHTML=`
     <div class="hb n"><div class="hbl">Overwaarde</div><div class="hbv">${fmt(overwaarde)}</div><div class="hbs">WOZ − hypotheek</div></div>
     <div class="hb ${uitkoopBedrag>0?'o':'g'}"><div class="hbl">Uitkoop partner</div><div class="hbv">${fmt(uitkoopBedrag)}</div><div class="hbs">${fmtPct(aandeelVertrekkende*100)} × overwaarde</div></div>
-    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,1)} bij ${fmtPct(N('hyprente'),2)} · 30 jr annuïtair</div></div>
+    <div class="hb n"><div class="hbl">Max. hypotheek NIBUD</div><div class="hbv">${fmt(maxHyp)}</div><div class="hbs">FLP ${fmtPct(flp*100,1)} bij ${fmtPct(N('hyprente'),2)} · 30 jr annuïtair · ${norm==='beheer'?'beheer (NHG)':'acceptatie (Trhk)'}</div></div>
     <div class="hb ${kanOvernemen?'g':'r'}"><div class="hbl">Maandlast na overname</div><div class="hbv">${fmt(ml)}</div><div class="hbs">${kanOvernemen?'✓ Draagbaar':'✗ Te hoog'}</div></div>`;
 
   let html=`<thead><tr><th>Post</th><th>Bedrag</th><th>Toelichting</th></tr></thead><tbody>`;
@@ -342,6 +422,9 @@ function bereken(){
   html+=`<tr><td>Over te nemen hypotheek</td><td>${fmt(hs)}</td><td>Ontslag OHA bank vereist</td></tr>`;
   html+=`<tr><td>Uitkoop meefinancieren?</td><td>${fmt(uitkoopBedrag)}</td><td>${kanMetUitkoop?'✓ Mogelijk':'✗ Buiten draagkracht'}</td></tr>`;
   html+=`<tr class="tot"><td>Nieuwe maandlast (alleen overname)</td><td>${fmt(ml)}</td><td>${fmtPct(N('hyprente'),2)}, ${Math.round(lt/12)} jaar</td></tr>`;
+  html+=`<tr class="cat"><td colspan="3">Toetsing</td></tr>`;
+  html+=`<tr><td>Toetsnorm</td><td>${norm==='beheer'?'Beheer':'Acceptatie'}</td><td>${tblNaam(bindend.tbl)} · toetsinkomen ${fmt(totaalInk)}</td></tr>`;
+  html+=`<tr><td>Pensioentoets</td><td>${pensioentoetsGeldt?'van toepassing':(aowBereikt?'AOW bereikt':'n.v.t.')}</td><td>${pensRegel}</td></tr>`;
   if(nhg)html+=`<tr><td>NHG toepasbaar?</td><td>${nhgOk?'✓ Ja':'✗ Boven € 470.000'}</td><td>Borgtochtprovisie 0,4% (2026)</td></tr>`;
   if(verplMaand>0)html+=`<tr><td>Verplichtingen in de toets</td><td>${fmt(verplMaand)}/mnd</td><td>${kredietLimiet>0?'krediet 2% × '+fmt(kredietLimiet)+' = '+fmt(kredietLast)+'; ':''}${duoTermijn>0?'DUO '+fmt(duoTermijn)+' × '+duoFactor.toFixed(2).replace('.',',')+' = '+fmt(duoLast)+'; ':''}${verp>0?'overig '+fmt(verp):''}</td></tr>`;
   document.getElementById('tbl').innerHTML=html+'</tbody>';
