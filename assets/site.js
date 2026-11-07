@@ -32,8 +32,9 @@
   form.innerHTML='<label for="zoekveld" class="sr">Zoek een tool of pagina</label>'+
     '<input id="zoekveld" type="search" placeholder="Wat zoek je, wat wil je berekenen?" aria-autocomplete="list" aria-controls="zoekres" aria-expanded="false">'+
     '<div id="zoekres" class="zoekres" role="listbox" hidden></div>';
-  var menu=bar.querySelector('.menu-btn');
-  bar.insertBefore(form, menu||bar.querySelector('nav'));
+  var plek=document.getElementById('zoekplek');
+  if(plek){ plek.appendChild(form); }
+  else { var menu=bar.querySelector('.menu-btn'); bar.insertBefore(form, menu||bar.querySelector('nav')); }
   var inp=form.querySelector('input'), box=form.querySelector('.zoekres'), idx=null, sel=-1, hits=[];
   var SYN={lenen:'maximale hypotheek leencapaciteit',hypotheek:'maximale hypotheek',maandlast:'netto maandlasten',maandlasten:'netto maandlasten',
     scheiding:'echtscheiding na scheiding oha',pensioen:'aow pensioenklif pensioencijfer',boete:'boeterente',
@@ -93,6 +94,8 @@
     if(t) location.href=t.href; else { var m=box.querySelector('.zmail'); if(m) m.focus(); }
   });});
   document.addEventListener('click',function(e){if(!form.contains(e.target)){box.hidden=true;inp.setAttribute('aria-expanded','false');}});
+  document.querySelectorAll('.chip[data-q]').forEach(function(c){c.addEventListener('click',function(){
+    inp.value=c.getAttribute('data-q'); inp.focus(); laad(toon);});});
   document.addEventListener('keydown',function(e){if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault();inp.focus();}});
 })();
 // Filter in het tooloverzicht

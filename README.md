@@ -31,3 +31,9 @@ In de kop van elke pagina staat een zoekveld ("Wat zoek je, wat wil je berekenen
 De categoriepagina's (hypotheek, krediet, assurantie, vermogen-pensioen, overige, platformen) tonen tegels in plaats van lijsten, doorlopend genummerd, met filterveld. Op de homepage lopen de nummers ook door.
 - Titels, omschrijvingen en thema's staan in `scripts/maak-overzicht.py` (CURATED, UITGELICHT, THEMAS).
 - Na wijzigingen: `python3 scripts/maak-overzicht.py` en daarna `python3 scripts/maak-zoekindex.py`.
+
+## Site-opmaak
+Kop met kruimelpad, gerelateerde tools onder elke tool, sitefooter en de homepage worden gemaakt door `scripts/opmaak-site.py`. Volgorde na wijzigingen:
+1. `python3 scripts/maak-overzicht.py` (tegels op categoriepagina's)
+2. `python3 scripts/opmaak-site.py` (kop, footer, gerelateerde tools, homepage)
+3. `python3 scripts/maak-zoekindex.py` (zoeker)
