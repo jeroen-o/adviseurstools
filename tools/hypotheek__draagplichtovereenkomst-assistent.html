@@ -67,6 +67,7 @@
       100% { width: 100%; }
     }
   </style>
+<script>function pct50(v){var n=parseFloat(v);return isFinite(n)?n:50;}</script>
 </head>
 <body>
 
@@ -342,12 +343,74 @@ const CHECKLIST = [
       "Scenario-vergelijking gemaakt: wettelijk (A), individueel zonder kan-bepaling (B), individueel met kan-bepaling (C indien BEWS aanwezig)",
       "Alle drie scenario's getoond aan cliënten — bewuste keuze gedocumenteerd (informed consent)",
       "Schenkbelasting-risico beoordeeld: afwijkt draagplicht van eerlijke verdeling zonder zakelijke rechtvaardiging?",
-      "Zakelijke rechtvaardiging vastgelegd: BEWS-toewijzing, ongelijke inbreng, eigenwoningverleden (Besluit 30-1-2018)",
+      "Zakelijke rechtvaardiging vastgelegd: BEWS-toewijzing, ongelijke inbreng, eigenwoningverleden (onderbouwd in dossier)",
       "Indien schenkbelasting-risico aanwezig zonder rechtvaardiging: notaris expliciet geïnformeerd",
       "Cliënten schriftelijk akkoord gegaan met gekozen draagplicht na inzage scenario-berekeningen",
       "Partijverklaring in overeenkomst: beide partners begrijpen de inhoud en handelen vrij",
     ]
   },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// SCHENKBELASTING 2026 — PER RELATIE TUSSEN PARTIJEN
+// Bronnen (geraadpleegd nov. 2026):
+// - Successiewet 1956 (geldend 1-1-2026), wetten.overheid.nl/BWBR0002226:
+//   art. 1 lid 7 (begrip schenking), art. 1a (partner: ongehuwden), art. 24 lid 1 (tarieven),
+//   art. 33 onderdeel 5° (ouder→kind € 6.908) en 7° (alle andere gevallen € 2.769).
+// - Belastingdienst: "Tarieven schenkbelasting 2026", "Tot welk bedrag is een schenking belastingvrij in 2026?",
+//   "Wie zijn partners voor de schenkbelasting?".
+// Er bestaat GEEN aparte schenkvrijstelling voor schenkingen tussen partners/echtgenoten:
+// partners vallen onder "alle andere gevallen" (€ 2.769) en tariefgroep I (10% / 20%).
+// ═══════════════════════════════════════════════════════════════════
+const SB2026 = { VRIJ_OVERIG: 2769, GRENS: 158669 };
+const SB_RELATIES = {
+  gemeenschap: {
+    label: "Gehuwd / geregistreerd partner — woning en schuld in gemeenschap van goederen",
+    kort: "gehuwd/geregistreerd partner in gemeenschap van goederen",
+    geenSchenking: true, vrij: 0, t1: 0, t2: 0, groep: "n.v.t.",
+    toelichting: "Woning en hypotheekschuld vallen in de gemeenschap; ieder van de echtgenoten/partners is voor de helft gerechtigd en de gemeenschapsschuld komt intern voor gelijke delen voor rekening van beiden (art. 1:94 en 1:100 BW). Een afwijkende interne draagplicht leidt dan niet tot een vermogensverschuiving tussen partijen, zodat er naar verwachting geen schenking is. Let op: dit is een afleiding uit het huwelijksvermogensrecht; een expliciete bevestiging van de Belastingdienst voor deze situatie is niet gevonden. Valt de woning (deels) buiten de gemeenschap, kies dan 'huwelijkse/partnerschapsvoorwaarden'.",
+  },
+  voorwaarden: {
+    label: "Gehuwd / geregistreerd partner — huwelijkse of partnerschapsvoorwaarden (woning/schuld buiten gemeenschap)",
+    kort: "gehuwd/geregistreerd partner met voorwaarden",
+    geenSchenking: false, vrij: 2769, t1: 0.10, t2: 0.20, groep: "I (partner)",
+    toelichting: "Echtgenoten en geregistreerde partners zijn partner voor de schenkbelasting en vallen in tariefgroep I: 10% tot € 158.669 en 20% daarboven (art. 24 lid 1 SW 1956). Er is géén aparte vrijstelling voor schenkingen tussen partners; de jaarlijkse vrijstelling is die voor 'alle andere gevallen': € 2.769 (2026, art. 33 onderdeel 7° SW 1956).",
+  },
+  partner_contract: {
+    label: "Samenwonend als partner (notarieel samenlevingscontract, of ≥ 5 jaar zelfde adres)",
+    kort: "samenwonend als partner voor de schenkbelasting",
+    geenSchenking: false, vrij: 2769, t1: 0.10, t2: 0.20, groep: "I (partner)",
+    toelichting: "Ongehuwd samenwonenden gelden alleen als partner als zij gedurende twee jaar vóór de schenking voldoen aan alle voorwaarden van art. 1a SW 1956: beiden meerderjarig, ingeschreven op hetzelfde woonadres (BRP), een notarieel samenlevingscontract met wederzijdse zorgverplichting, geen bloedverwanten in de rechte lijn en niet met een ander aan deze voorwaarden voldoen. Zonder notarieel contract: partner na ten minste vijf jaar onafgebroken inschrijving op hetzelfde adres (art. 1a lid 3). Dan tariefgroep I: 10% tot € 158.669, 20% daarboven; vrijstelling € 2.769 (2026). Wordt (nog) niet aan de voorwaarden voldaan op het moment van de schenking, kies dan 'zonder partnerstatus'.",
+  },
+  geen_partner: {
+    label: "Samenwonend zonder partnerstatus (geen/te kort samenlevingscontract, < 5 jaar zelfde adres)",
+    kort: "samenwonend zonder partnerstatus",
+    geenSchenking: false, vrij: 2769, t1: 0.30, t2: 0.40, groep: "II (overige verkrijgers)",
+    toelichting: "Samenwoners die niet aan de partnervoorwaarden van art. 1a SW 1956 voldoen, vallen in tariefgroep II: 30% tot € 158.669 en 40% daarboven (art. 24 lid 1 SW 1956). Jaarlijkse vrijstelling 'alle andere gevallen': € 2.769 (2026, art. 33 onderdeel 7°).",
+  },
+};
+function sbRelatieAfgeleid(relatievorm) {
+  if (relatievorm === "gehuwd_gemeen") return "gemeenschap";
+  if (relatievorm === "gehuwd_koude" || relatievorm === "gehuwd_beperkt" || relatievorm === "geregistreerd") return "voorwaarden";
+  if (relatievorm === "samenwoners_contract") return "partner_contract";
+  return "geen_partner";
+}
+function sbRelatieVan(form) {
+  return SB_RELATIES[form?.sbRelatie] ? form.sbRelatie : sbRelatieAfgeleid(form?.relatievorm);
+}
+// Indicatieve schenkbelasting over één verkrijging (vrijstelling eenmaal per kalenderjaar per schenker)
+function berekenSBRelatie(bedrag, key) {
+  const r = SB_RELATIES[key] || SB_RELATIES.geen_partner;
+  if (r.geenSchenking || bedrag <= r.vrij) return 0;
+  const b = bedrag - r.vrij;
+  return b <= SB2026.GRENS ? b * r.t1 : SB2026.GRENS * r.t1 + (b - SB2026.GRENS) * r.t2;
+}
+const SB_BRONNEN = [
+  ["Successiewet 1956 (geldend 1-1-2026): art. 1 lid 7, 1a, 24, 33", "https://wetten.overheid.nl/BWBR0002226/2026-01-01"],
+  ["Belastingdienst — Tarieven schenkbelasting 2026", "https://www.belastingdienst.nl/wps/wcm/connect/nl/schenken/content/tarieven-schenkbelasting"],
+  ["Belastingdienst — Tot welk bedrag is een schenking belastingvrij in 2026?", "https://www.belastingdienst.nl/wps/wcm/connect/nl/schenken/content/tot-welk-bedrag-belastingvrij-schenken"],
+  ["Belastingdienst — Wie zijn partners voor de schenkbelasting?", "https://www.belastingdienst.nl/wps/wcm/connect/nl/schenken/content/partners-voor-de-schenkbelasting"],
+  ["Besluit 30-1-2018, nr. 2018-1511 (Stcrt. 2018, 5946) — eigenwoningregeling IB, géén schenkbelasting", "https://zoek.officielebekendmakingen.nl/stcrt-2018-5946.html"],
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -416,8 +479,8 @@ function berekenAdvies(form) {
     [["1", form.naam1 || "Aanvrager"], ["2", form.naam2 || "Partner"]].forEach(([p, naam]) => {
       const ewr = parseFloat(form[`ewr${p}`] || 0);
       const bijleen = parseFloat(form[`afsstand${p}`] || 0);
-      const eigendomPct = (parseFloat(p === "1" ? form.eigendom1 : form.eigendom2) || 50) / 100;
-      const draagplicht = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0) * (parseFloat(p === "1" ? l.draag1 : l.draag2) || 50) / 100, 0);
+      const eigendomPct = (pct50(p === "1" ? form.eigendom1 : form.eigendom2)) / 100;
+      const draagplicht = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0) * (pct50(p === "1" ? l.draag1 : l.draag2)) / 100, 0);
       const maxEWS = Math.max(0, K_b3 * eigendomPct - ewr + bijleen);
       const box3Deel = Math.max(0, draagplicht - maxEWS);
       if (box3Deel > 1000) {
@@ -427,8 +490,8 @@ function berekenAdvies(form) {
   }
 
   // ── EIGENDOMSVERDELING ──
-  const e1 = parseFloat(form.eigendom1) || 50;
-  const e2 = parseFloat(form.eigendom2) || 50;
+  const e1 = pct50(form.eigendom1);
+  const e2 = pct50(form.eigendom2);
   if (Math.abs(e1 - e2) > 2) {
     factoren.push({ score: 2, kleur: "orange", label: "Ongelijke eigendomsverdeling", uitleg: `Eigendomsverdeling ${e1}/${e2} wijkt af van 50/50. Draagplicht dient hierop te worden afgestemd.` });
   }
@@ -450,14 +513,23 @@ function berekenAdvies(form) {
   // ── SCHENKBELASTING ──
   const H_sb = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0), 0);
   if (K_b3 > 0 && H_sb > 0) {
-    const e1_sb = (parseFloat(form.eigendom1) || 50) / 100;
+    const e1_sb = (pct50(form.eigendom1)) / 100;
     const eerlijk1 = Math.max(0, K_b3 * e1_sb - ev1);
     const eerlijk2 = Math.max(0, K_b3 * (1 - e1_sb) - ev2);
-    const D1_sb = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0) * (parseFloat(l.draag1) || 50) / 100, 0);
+    const D1_sb = form.leningdelen.reduce((s, l) => s + (parseFloat(l.bedrag) || 0) * (isNaN(parseFloat(l.draag1)) ? 50 : parseFloat(l.draag1)) / 100, 0);
     const afwijking = Math.max(Math.abs(D1_sb - eerlijk1), Math.abs(H_sb - D1_sb - eerlijk2));
-    if (afwijking > 6908) { // jaarlijkse schenkvrijstelling ouder-kind 2026
+    const sbKey = sbRelatieVan(form);
+    const sbRel = SB_RELATIES[sbKey];
+    if (sbRel.geenSchenking) {
+      if (afwijking > 100) {
+        factoren.push({ score: 0, kleur: "blue", label: "Schenkbelasting: naar verwachting geen schenking (gemeenschap van goederen)", uitleg: `De draagplicht wijkt € ${Math.round(afwijking).toLocaleString("nl-NL")},- af van de 'eerlijke' verdeling, maar bij woning én schuld in de gemeenschap ontstaat naar verwachting geen vermogensverschuiving tussen partijen (afgeleid uit art. 1:94/1:100 BW — niet expliciet door de Belastingdienst bevestigd). Controleer of woning en schuld werkelijk in de gemeenschap vallen.` });
+      }
+    } else if (afwijking > sbRel.vrij) { // jaarlijkse vrijstelling 'alle andere gevallen' 2026: € 2.769
       const heeftRechtvaardiging = (form.ewv1 || form.ewv2) || Math.abs(ev1 - ev2) > 500;
-      factoren.push({ score: heeftRechtvaardiging ? 1 : 3, kleur: heeftRechtvaardiging ? "orange" : "red", label: heeftRechtvaardiging ? "Schenkbelasting-risico (gemitigeerd)" : "⚠️ Mogelijk schenkbelasting-risico", uitleg: `De draagplicht wijkt € ${Math.round(afwijking).toLocaleString("nl-NL")},- af van de 'eerlijke' verdeling. ${heeftRechtvaardiging ? "Zakelijke rechtvaardiging aanwezig (EWV/ongelijke inbreng) — gedekt door Besluit 30-1-2018. Leg expliciet vast." : "Zonder zakelijke rechtvaardiging: risico op kwalificatie als schenking (art. 1 lid 1 sub f SW 1956). Bespreek met notaris. Zie tab Scenario's."}` });
+      const zwaar = sbKey === "geen_partner";
+      const sbInd = berekenSBRelatie(afwijking, sbKey);
+      const tariefTxt = `${Math.round(sbRel.t1 * 100)}% tot € 158.669 / ${Math.round(sbRel.t2 * 100)}% daarboven`;
+      factoren.push({ score: heeftRechtvaardiging ? (zwaar ? 2 : 1) : (zwaar ? 4 : 3), kleur: heeftRechtvaardiging ? "orange" : "red", label: heeftRechtvaardiging ? `Schenkbelasting-risico (zakelijke grondslag aanwezig) — ${sbRel.kort}` : `⚠️ Mogelijk schenkbelasting-risico — ${sbRel.kort}`, uitleg: `De draagplicht wijkt € ${Math.round(afwijking).toLocaleString("nl-NL")},- af van de 'eerlijke' verdeling. Relatie: ${sbRel.kort} → tariefgroep ${sbRel.groep} (${tariefTxt}), vrijstelling € 2.769 (2026). Indicatieve schenkbelasting als de volle afwijking een schenking is: € ${Math.round(sbInd).toLocaleString("nl-NL")},-. ${heeftRechtvaardiging ? "Er is een mogelijke zakelijke grondslag (eigenwoningverleden/ongelijke inbreng). Leg die expliciet vast; er is geen besluit dat dit generiek goedkeurt." : "Zonder zakelijke rechtvaardiging: risico op kwalificatie als schenking (art. 1 lid 7 SW 1956 jo. art. 7:186 lid 2 BW). Bespreek met notaris. Zie tab Scenario's."}${sbKey === "partner_contract" ? " Toets of op het moment van de schenking aan alle voorwaarden van art. 1a SW 1956 is voldaan; anders geldt tariefgroep II (30%/40%)." : ""}` });
     }
   }
 
@@ -724,7 +796,7 @@ Een vergoedingsrecht als bedoeld onder b en c wordt opeisbaar bij verkoop of ver
   if (afwijking) {
     afwijkTekst = `3. De totale draagplicht van ${n1} (${dPct(pD1)}) en ${n2} (${dPct(100 - pD1)}) wijkt af van de eigendomsverhouding (${dPct(e1)} / ${dPct(e2)}). Partijen zijn erop gewezen dat:
    a. een Partij alleen rente kan aftrekken voor zover zij draagplichtig is én de schuld is aangegaan voor de verwerving van haar eigen aandeel in de Woning (art. 3.119a Wet IB 2001); draagplicht boven het eigen aandeel kan tot een box 3-schuld zonder renteaftrek leiden;
-   b. een afwijking zonder zakelijke rechtvaardiging kan leiden tot een schenking (art. 1 lid 1 Successiewet 1956) en daarmee tot schenkbelasting;
+   b. een afwijking zonder zakelijke rechtvaardiging kan leiden tot een schenking (art. 1 lid 7 Successiewet 1956) en daarmee tot schenkbelasting;
    c. de zakelijke rechtvaardiging voor de afwijking is: ${[(Math.abs(ev1 - ev2) > 500) ? "ongelijke inbreng van eigen middelen" : null, (form.ewv1 || form.ewv2) ? "het eigenwoningverleden van Partijen" : null, heeftOud ? "toerekening van het overgangsrecht aan de rechthebbende Partij" : null].filter(Boolean).join(", ") || "[TOELICHTING IN TE VULLEN — bespreek met de notaris]"}.`;
   } else {
     afwijkTekst = `3. De totale draagplicht van ieder van Partijen sluit aan bij de eigendomsverhouding. Partijen zijn erop gewezen dat een latere afwijking van de eigendomsverhouding gevolgen kan hebben voor de renteaftrek en kan worden aangemerkt als schenking.`;
@@ -881,7 +953,7 @@ ${basis === "proportioneel" ? "3" : "2"}. Over een vergoedingsrecht is geen rent
 
 2. Bij een huwelijk of partnerschap in gemeenschap van goederen kunnen de Woning en de vergoedingsrechten in de gemeenschap vallen. Partijen laten zich daarom vooraf door een notaris adviseren over het vastleggen van deze vergoedingsrechten in huwelijkse of partnerschapsvoorwaarden.`);
 
-  art.add("Fiscale aspecten", `1. Het afzien van een vergoedingsrecht, of het niet vastleggen daarvan, kan worden aangemerkt als een schenking aan de andere Partij (art. 1 lid 1 Successiewet 1956), waarover schenkbelasting verschuldigd kan zijn.
+  art.add("Fiscale aspecten", `1. Het afzien van een vergoedingsrecht, of het niet vastleggen daarvan, kan worden aangemerkt als een schenking aan de andere Partij (art. 1 lid 7 Successiewet 1956), waarover schenkbelasting verschuldigd kan zijn.
 
 2. Een vergoedingsrecht is voor de crediteur een bezitting en voor de debiteur een schuld in box 3, tenzij de wet anders bepaalt. Partijen laten zich hierover zo nodig door een fiscalist adviseren.`);
 
@@ -1211,13 +1283,18 @@ function Stap1({ form, up }) {
         </Field>
       </div>
       <Field label="Relatievorm" required>
-        <select style={sel} value={form.relatievorm} onChange={e => up("relatievorm", e.target.value)}>
+        <select style={sel} value={form.relatievorm} onChange={e => { up("relatievorm", e.target.value); up("sbRelatie", ""); }}>
           <option value="ongehuwd">Ongehuwd samenwonend (geen samenlevingscontract)</option>
           <option value="samenwoners_contract">Ongehuwd samenwonend (met samenlevingscontract)</option>
           <option value="gehuwd_koude">Gehuwd op huwelijkse voorwaarden — koude uitsluiting</option>
           <option value="gehuwd_beperkt">Gehuwd — beperkte gemeenschap van goederen (wet 2018)</option>
           <option value="gehuwd_gemeen">Gehuwd — algehele gemeenschap van goederen</option>
           <option value="geregistreerd">Geregistreerd partnerschap</option>
+        </select>
+      </Field>
+      <Field label="Relatie tussen partijen (schenkbelasting)" hint={SB_RELATIES[sbRelatieVan(form)].toelichting}>
+        <select style={sel} value={sbRelatieVan(form)} onChange={e => up("sbRelatie", e.target.value)}>
+          {Object.entries(SB_RELATIES).map(([k, r]) => <option key={k} value={k}>{r.label}</option>)}
         </select>
       </Field>
       {(form.relatievorm === "ongehuwd" || form.relatievorm === "samenwoners_contract") && (
@@ -1250,7 +1327,7 @@ function Stap1({ form, up }) {
 }
 
 function Stap2({ form, up }) {
-  const e1 = parseFloat(form.eigendom1) || 50;
+  const e1 = pct50(form.eigendom1);
   const e2 = 100 - e1;
   return (
     <div>
@@ -1505,11 +1582,11 @@ function Stap6({ form, up }) {
       {(() => {
         const K = (parseFloat(form.aankoopprijs)||0) + (parseFloat(form.verwervingskosten)||0);
         const checks = [["1", form.naam1||"Aanvrager"], ["2", form.naam2||"Partner"]].map(([p, naam]) => {
-          const eigendomPct = (parseFloat(p==="1" ? form.eigendom1 : form.eigendom2)||50)/100;
+          const eigendomPct = (pct50(p==="1" ? form.eigendom1 : form.eigendom2))/100;
           const ewr = parseFloat(form[`ewr${p}`]||0);
           const bijleenstand = parseFloat(form[`afsstand${p}`]||0);
           const maxEWS = Math.max(0, K * eigendomPct - ewr + bijleenstand);
-          const draagplicht = form.leningdelen.reduce((s,l) => s + (parseFloat(l.bedrag)||0)*(parseFloat(p==="1"?l.draag1:l.draag2)||50)/100, 0);
+          const draagplicht = form.leningdelen.reduce((s,l) => s + (parseFloat(l.bedrag)||0)*(pct50(p==="1"?l.draag1:l.draag2))/100, 0);
           const overschrijding = draagplicht - maxEWS;
           const box3Deel = Math.max(0, overschrijding);
           const box3Rente = box3Deel * 0.04; // indicatief 4% rente
@@ -2211,7 +2288,7 @@ function pct(n) {
 function bereken(form, verkoopprijs, renteperc, belastingtarief) {
   const K  = (parseFloat(form?.aankoopprijs) || 0) + (parseFloat(form?.verwervingskosten) || 0);
   const H  = (form?.leningdelen || []).reduce((s, l) => s + (parseFloat(l.bedrag) || 0), 0);
-  const E1 = (parseFloat(form?.eigendom1) || 50) / 100;
+  const E1 = (pct50(form?.eigendom1)) / 100;
   const E2 = 1 - E1;
   const EV1 = parseFloat(form?.eigenVermogen1) || 0;
   const EV2 = parseFloat(form?.eigenVermogen2) || 0;
@@ -2220,7 +2297,7 @@ function bereken(form, verkoopprijs, renteperc, belastingtarief) {
   const t   = parseFloat(belastingtarief) / 100;
 
   const D1 = (form?.leningdelen || []).reduce((s, l) =>
-    s + (parseFloat(l.bedrag) || 0) * (parseFloat(l.draag1) || 50) / 100, 0) || H * 0.5;
+    s + (parseFloat(l.bedrag) || 0) * (isNaN(parseFloat(l.draag1)) ? 50 : parseFloat(l.draag1)) / 100, 0); // 0% draagplicht is een geldige invoer
   const D2 = H - D1;
 
   const A = {
@@ -2251,25 +2328,22 @@ function bereken(form, verkoopprijs, renteperc, belastingtarief) {
   const schenkingAan1 = eerlijk1 > D1 ? eerlijk1 - D1 : 0;
   const schenkingAan2 = eerlijk2 > D2 ? eerlijk2 - D2 : 0;
 
-  const VRIJSTELLING_JAARLIJKS = 6908; // 2026
-  const SCHIJF1_GRENS = 158669; // tariefgrens schenkbelasting 2026
-  function berekenSB(bedrag) {
-    if (bedrag <= VRIJSTELLING_JAARLIJKS) return 0;
-    const b = bedrag - VRIJSTELLING_JAARLIJKS;
-    return b <= SCHIJF1_GRENS ? b * 0.10 : SCHIJF1_GRENS * 0.10 + (b - SCHIJF1_GRENS) * 0.20;
-  }
-
-  // Geen schenkbelasting tussen gehuwden/geregistreerd partnerschap (art. 33 lid 5 SW 1956)
-  const geenSbTussenPartners = ["gehuwd_gemeen", "gehuwd_koude", "gehuwd_beperkt", "geregistreerd"]
-    .includes(form?.relatievorm);
+  // Schenkbelasting 2026 afhankelijk van de relatie tussen partijen (zie SB_RELATIES).
+  // Let op: er is GEEN vrijstelling voor schenkingen tussen echtgenoten/partners in de Successiewet;
+  // alleen bij woning + schuld in gemeenschap van goederen ontstaat naar verwachting geen schenking.
+  const sbKey = sbRelatieVan(form);
+  const sbRel = SB_RELATIES[sbKey];
+  const VRIJSTELLING_JAARLIJKS = sbRel.vrij; // 2026: € 2.769 (art. 33 onderdeel 7° SW 1956)
+  const geenSbTussenPartners = !!sbRel.geenSchenking;
 
   const rechtvaardigingen = [];
-  // Besluit Staatssecretaris van Financiën 30 januari 2018 (nr. 2018-3514):
-  // draagplicht gebaseerd op EWV/BEWS/eigen inbreng wordt NIET als schenking aangemerkt.
+  // Mogelijke zakelijke grondslagen voor afwijkende draagplicht (feitelijk te onderbouwen).
+  // NB: het besluit van 30-1-2018 (nr. 2018-1511, Stcrt. 2018, 5946) betreft alleen de eigenwoningreserve/-schuld
+  // in de inkomstenbelasting en zegt niets over schenkbelasting.
   if ((form?.ewv1 || form?.ewv2) && (parseFloat(form?.bews1) > 0 || parseFloat(form?.bews2) > 0))
-    rechtvaardigingen.push("BEWS-toewijzing o.b.v. overgangsrecht (art. 10bis.1 Wet IB 2001) — gedekt door Besluit 30-1-2018");
+    rechtvaardigingen.push("BEWS-toewijzing o.b.v. overgangsrecht (art. 10bis.1 Wet IB 2001) — zakelijke grondslag (onderbouwen)");
   if (Math.abs(EV1 - EV2) > 500)
-    rechtvaardigingen.push(`Ongelijke inbreng eigen vermogen (€\u00A0${Math.round(Math.abs(EV1-EV2)).toLocaleString("nl-NL")} verschil) — gedekt door Besluit 30-1-2018`);
+    rechtvaardigingen.push(`Ongelijke inbreng eigen vermogen (€\u00A0${Math.round(Math.abs(EV1-EV2)).toLocaleString("nl-NL")} verschil) — zakelijke grondslag (onderbouwen)`);
   if (Math.abs(E1 - 0.5) > 0.01)
     rechtvaardigingen.push(`Ongelijke eigendomsverdeling (${Math.round(E1*100)}/${Math.round(E2*100)}) — zakelijke grondslag`);
   if ((form?.ewv1 || false) !== (form?.ewv2 || false))
@@ -2307,9 +2381,9 @@ function bereken(form, verkoopprijs, renteperc, belastingtarief) {
 
   return { A, B, C: C_scenario, heeftBEWS, diff1, diff2, K, H, E1, E2, EV1, EV2, D1, D2, V,
     eerlijk1, eerlijk2, schenkingAan1, schenkingAan2,
-    belasting1: geenSbTussenPartners ? 0 : berekenSB(schenkingAan1),
-    belasting2: geenSbTussenPartners ? 0 : berekenSB(schenkingAan2),
-    geenSbTussenPartners, ewrOud1, ewrOud2,
+    belasting1: berekenSBRelatie(schenkingAan1, sbKey),
+    belasting2: berekenSBRelatie(schenkingAan2, sbKey),
+    geenSbTussenPartners, sbKey, sbRel, ewrOud1, ewrOud2,
     rechtvaardigingen, VRIJSTELLING_JAARLIJKS };
 }
 
@@ -2328,19 +2402,25 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
 
   return (
     <div style={{ background: C.white, borderRadius: 14, boxShadow: "0 4px 20px rgba(11,31,58,.07)", padding: 24, marginBottom: 20 }}>
-      <SectionH sub="Risico-analyse conform art. 1 lid 1 sub f Successiewet 1956 & Besluit 30-1-2018">Schenkbelasting risico-check</SectionH>
+      <SectionH sub="Risico-analyse op basis van art. 1 lid 7, 1a, 24 en 33 Successiewet 1956 (2026)">Schenkbelasting risico-check</SectionH>
+
+      <div style={{ padding: "12px 16px", background: C.grayLight, borderRadius: 10, marginBottom: 14, fontSize: 12.5, color: C.text, fontFamily: fam.sans, lineHeight: 1.55 }}>
+        <strong>Relatie tussen partijen:</strong> {calc.sbRel.label}<br />
+        {calc.geenSbTussenPartners ? "Tariefgroep: n.v.t." : <>Tariefgroep {calc.sbRel.groep}: {Math.round(calc.sbRel.t1*100)}% tot € 158.669, {Math.round(calc.sbRel.t2*100)}% daarboven · jaarlijkse vrijstelling 2026: € {VRIJSTELLING.toLocaleString("nl-NL")}</>}
+        <div style={{ marginTop: 6, color: C.textMid }}>{calc.sbRel.toelichting}</div>
+      </div>
 
       {calc.geenSbTussenPartners ? (
         <div style={{ padding: "16px 20px", background: C.greenLight, borderRadius: 12, border: `1.5px solid ${C.green}`, marginBottom: 16 }}>
-          <span style={{ fontWeight: 700, color: C.green, fontFamily: fam.sans }}>✓ Schenkbelasting niet van toepassing</span>
+          <span style={{ fontWeight: 700, color: C.green, fontFamily: fam.sans }}>✓ Naar verwachting geen schenking (gemeenschap van goederen)</span>
           <p style={{ margin: "6px 0 0", fontSize: 12.5, color: C.green, fontFamily: fam.sans }}>
-            Schenkingen tussen echtgenoten en geregistreerde partners zijn vrijgesteld van schenkbelasting (art. 33 lid 5 Successiewet 1956). Een draagplichtovereenkomst leidt bij deze relatievorm niet tot schenkbelasting.
+            Let op: er bestaat géén algemene vrijstelling van schenkbelasting tussen echtgenoten of geregistreerde partners. Dat hier geen schenkbelasting wordt berekend, volgt uit het feit dat woning en schuld in de gemeenschap vallen (afleiding uit art. 1:94/1:100 BW, niet expliciet door de Belastingdienst bevestigd). Bij huwelijkse of partnerschapsvoorwaarden geldt tariefgroep I met een vrijstelling van € 2.769.
           </p>
         </div>
       ) : (
         <>
           <InfoBox type="info">
-            <strong>Besluit Staatssecretaris van Financiën 30 januari 2018 (nr. 2018-3514):</strong> Een draagplichtovereenkomst die is gebaseerd op ongelijke inbreng van eigen vermogen of eigenwoningverleden wordt door de Belastingdienst <em>niet</em> als schenking aangemerkt. Afwijking zonder zakelijke grondslag kan wél schenkbelasting uitlokken (art. 1 lid 1 sub f SW 1956). De berekening hieronder is indicatief en beoordeelt het risico bij de huidige gegevens. De schenking crystalliseert eenmalig bij verkoop of overdracht van de woning — niet jaarlijks. Jaarlijkse vrijstelling 2026: € {VRIJSTELLING.toLocaleString("nl-NL")}.
+            <strong>Zakelijke grondslag:</strong> Een afwijkende draagplicht die aansluit bij ongelijke inbreng van eigen vermogen of eigenwoningverleden heeft een zakelijke grondslag en is dan in beginsel geen gift (art. 1 lid 7 SW 1956 jo. art. 7:186 lid 2 BW vereist bevoordeling uit vrijgevigheid). Dit is geen formele goedkeuring: het vaak aangehaalde besluit van 30 januari 2018 (nr. 2018-1511) gaat alleen over de eigenwoningreserve en -schuld in de inkomstenbelasting en zegt niets over schenkbelasting. Afwijking zonder zakelijke grondslag kan wél schenkbelasting uitlokken. De berekening hieronder is indicatief; de tool gaat ervan uit dat de bevoordeling eenmalig bij verkoop of overdracht van de woning ontstaat (dit tijdstip is een vereenvoudiging, niet bevestigd door een bron). Jaarlijkse vrijstelling 2026: € {VRIJSTELLING.toLocaleString("nl-NL")} (per kalenderjaar, schenkingen in hetzelfde jaar tellen op).
           </InfoBox>
 
           <div className="scenario-table" style={{ overflowX: "auto", marginBottom: 20, WebkitOverflowScrolling: "touch" }}>
@@ -2373,7 +2453,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
               </tbody>
             </table>
             <div style={{ fontSize: 11, color: C.gray, marginTop: 6, fontFamily: fam.sans }}>
-              * "Eerlijke draagplicht" = max(0, verwervingskosten × eigendomsaandeel − eigen inbreng). Het deel hypotheek dat een partner draagt als lasten zuiver naar rato eigendom en inbreng worden verdeeld. Afwijking met zakelijke grondslag is op grond van Besluit 30-1-2018 géén schenking.
+              * "Eerlijke draagplicht" = max(0, verwervingskosten × eigendomsaandeel − eigen inbreng). Het deel hypotheek dat een partner draagt als lasten zuiver naar rato eigendom en inbreng worden verdeeld. Afwijking met een aantoonbare zakelijke grondslag is in beginsel geen gift (geen vrijgevigheid); hiervoor bestaat geen formeel besluit.
             </div>
           </div>
 
@@ -2394,7 +2474,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
                     {p.heeft && (
                       <div style={{ padding: 14 }}>
                         <div style={{ fontSize: 12, color: C.textMid, fontFamily: fam.sans, marginBottom: 10 }}>
-                          {p.van} draagt {euro(p.schenking)} méér dan zijn/haar eerlijk aandeel. Dit voordeel voor {p.naam} kan bij verkoop als eenmalige schenking worden aangemerkt (art. 1 lid 1 sub f SW 1956).
+                          {p.van} draagt {euro(p.schenking)} méér dan zijn/haar eerlijk aandeel. Dit voordeel voor {p.naam} kan bij verkoop als eenmalige schenking worden aangemerkt (art. 1 lid 7 SW 1956 jo. art. 7:186 lid 2 BW).
                         </div>
                         <div className="rg3" style={{ marginBottom: 10 }}>
                           {[["Schenkingsbedrag", euro(p.schenking)], ["Vrijstelling 2026", euro(VRIJSTELLING)], ["Belastbaar", euro(Math.max(0, p.schenking-VRIJSTELLING))]].map(([l, v]) => (
@@ -2410,9 +2490,9 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
                               Indicatieve schenkbelasting (eenmalig bij verkoop): {euro(p.belasting)}
                             </div>
                             <div style={{ fontSize: 11, color: "#7f1d1d", marginTop: 3, fontFamily: fam.sans }}>
-                              Tarief: 10% over €{Math.min(p.schenking-VRIJSTELLING, 158669).toLocaleString("nl-NL")}
-                              {p.schenking-VRIJSTELLING > 158669 ? ` + 20% over €${(p.schenking-VRIJSTELLING-158669).toLocaleString("nl-NL")},-` : ""}
-                              {" "}(niet-familierelatie ongehuwd samenwoners)
+                              Tarief: {Math.round(calc.sbRel.t1*100)}% over €{Math.round(Math.min(p.schenking-VRIJSTELLING, 158669)).toLocaleString("nl-NL")}
+                              {p.schenking-VRIJSTELLING > 158669 ? ` + ${Math.round(calc.sbRel.t2*100)}% over €${Math.round(p.schenking-VRIJSTELLING-158669).toLocaleString("nl-NL")},-` : ""}
+                              {" "}(tariefgroep {calc.sbRel.groep}, art. 24 lid 1 SW 1956)
                             </div>
                           </div>
                         )}
@@ -2432,14 +2512,14 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
           <div style={{ background: "#FFFBEB", border: `1.5px solid ${C.gold}`, borderRadius: 12, padding: 18 }}>
             <div style={{ fontWeight: 700, color: C.navy, fontSize: 13, marginBottom: 10, fontFamily: fam.sans }}>
               {heeftRechtvaardiging
-                ? "✓ Zakelijke rechtvaardigingen aanwezig — Besluit 30-1-2018 van toepassing"
+                ? "✓ Mogelijke zakelijke rechtvaardigingen aanwezig — onderbouwen en vastleggen"
                 : heeftRisico ? "⚠️ Geen zakelijke rechtvaardiging vastgesteld"
                 : "Zakelijke rechtvaardiging — n.v.t."}
             </div>
             {heeftRechtvaardiging ? (
               <>
                 <p style={{ margin: "0 0 10px", fontSize: 12.5, color: C.textMid, fontFamily: fam.sans }}>
-                  Op grond van het Besluit van 30 januari 2018 (nr. 2018-3514) worden onderstaande factoren niet als schenking aangemerkt. Leg ze expliciet vast in de overeenkomst en het dossier:
+                  Onderstaande factoren kunnen een zakelijke grondslag voor de afwijkende draagplicht vormen. Er is geen besluit dat dit generiek goedkeurt; leg ze daarom expliciet en onderbouwd vast in de overeenkomst en het dossier:
                 </p>
                 {calc.rechtvaardigingen.map((r, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
@@ -2448,7 +2528,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
                   </div>
                 ))}
                 <div style={{ marginTop: 12, padding: "10px 14px", background: C.greenLight, borderRadius: 8 }}>
-                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600, fontFamily: fam.sans }}>Risiconiveau: Gemitigeerd — zakelijke rechtvaardiging gedekt door Besluit 30-1-2018. Leg dit vast in overeenkomst én dossier.</span>
+                  <span style={{ fontSize: 12, color: C.green, fontWeight: 600, fontFamily: fam.sans }}>Risiconiveau: Gemitigeerd (niet uitgesloten) — mits de zakelijke grondslag aantoonbaar is. Leg dit vast in overeenkomst én dossier.</span>
                 </div>
               </>
             ) : heeftRisico ? (
@@ -2457,7 +2537,7 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
                 {[
                   "Leg de reden voor de afwijkende draagplicht expliciet vast in de overeenkomst",
                   "Bespreek met de notaris of de constructie schenkbelastingvrij kan worden ingericht",
-                  "Controleer of de situatie valt onder het Besluit van 30 januari 2018 (nr. 2018-3514)",
+                  "Controleer of de relatievorm (partnerstatus art. 1a SW 1956) correct is gekozen — dit bepaalt tariefgroep I of II",
                   "Pas de draagplicht aan zodat die overeenkomt met eigendom en inbreng",
                 ].map((t, i) => (
                   <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
@@ -2472,6 +2552,11 @@ function SchenkbelastingCheck({ calc, n1, n2 }) {
           </div>
         </>
       )}
+      <div style={{ marginTop: 14, fontSize: 11, color: C.gray, fontFamily: fam.sans, lineHeight: 1.6 }}>
+        <strong>Bronnen (geraadpleegd november 2026):</strong>
+        {SB_BRONNEN.map(([t, u]) => (<div key={u}>· <a href={u} target="_blank" rel="noopener noreferrer" style={{ color: C.gray }}>{t}</a></div>))}
+        <div>Niet bevestigd door een bron: (1) dat bij gemeenschap van goederen geen schenking ontstaat (eigen afleiding uit art. 1:94/1:100 BW); (2) het tijdstip waarop een eventuele schenking ontstaat (de tool rekent met verkoop/overdracht).</div>
+      </div>
     </div>
   );
 }
@@ -3019,7 +3104,7 @@ function App() {
   const [form, setForm] = useState({
     naam1: "Jan Janssen", naam2: "Loes Bakker", geb1: "1998-03-01", geb2: "2001-01-01", bsn1: "", bsn2: "",
     adres: "Dorpstraat 1, 1000AA ONS DORP", aankoopprijs: "400000", verwervingskosten: "20000", geldverstrekker: "ABN AMRO",
-    context: "aankoop", relatievorm: "ongehuwd", trouwenPlannen: false,
+    context: "aankoop", relatievorm: "ongehuwd", sbRelatie: "", trouwenPlannen: false,
     eigendom1: "50", eigendom2: "50",
     ewv1: false, ewv2: false,
     ewr1: "", ewr2: "", bews1: "", bews2: "", jaren1: "", jaren2: "", afsstand1: "", afsstand2: "",
