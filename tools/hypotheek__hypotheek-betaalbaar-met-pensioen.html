@@ -101,6 +101,27 @@ input:focus,select:focus{border-color:var(--navy);}
           </select>
         </div>
 
+        <div class="sep" style="grid-column:1/-1;margin-top:4px;">Leeftijd &amp; pensioentoets (nog geen AOW)</div>
+        <div class="fl">
+          <label>Geboortedatum (optioneel)</label>
+          <div class="iw"><input type="date" id="geboortedatum" onchange="updGeb()"></div>
+          <span class="hint" id="gebHint">Bepaalt leeftijd en AOW-datum automatisch (67 jaar t/m geboortejaar 1960, daarna 67 jaar en 3 maanden — na 2031 indicatief).</span>
+        </div>
+        <div class="fl">
+          <label>Pensioentoets vanaf leeftijd</label>
+          <select id="pensioenDrempel">
+            <option value="0">Niet toetsen</option>
+            <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+            <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+          </select>
+          <span class="hint">Nog geen AOW maar wel deze leeftijd: getoetst op huidig inkomen én op het inkomen vanaf AOW (hierboven, AOW-tabel); de laagste uitkomst telt.</span>
+        </div>
+        <div class="fl">
+          <label>Huidig bruto inkomen (vóór AOW, optioneel)</label>
+          <div class="iw"><span class="px">€</span><input type="number" id="huidigInk" value="" step="500" placeholder="—"></div>
+          <span class="hint">Alleen relevant als de AOW-leeftijd nog niet is bereikt (Trhk tabel 1, niet-AOW). Leeg = alleen toetsen op inkomen vanaf AOW.</span>
+        </div>
+
         <div class="sep" style="grid-column:1/-1;margin-top:4px;">Hypotheeksituatie</div>
         <div class="fl">
           <label>Openstaande hypotheek</label>
@@ -146,7 +167,7 @@ input:focus,select:focus{border-color:var(--navy);}
         </div>
         <div class="fl">
           <label>Huidige leeftijd</label>
-          <div class="iw"><span class="sx">jr</span><input type="number" id="leeftijd" value="65" step="1" class="sr" min="55" max="85"></div>
+          <div class="iw"><span class="sx">jr</span><input type="number" id="leeftijd" value="65" step="1" class="sr" min="40" max="85"></div>
         </div>
       </div>
       <button class="btn" onclick="bereken()">👴 Bereken pensioen hypotheektoets</button>
@@ -282,6 +303,123 @@ function getFLPPensioen(ink,r){
   row=Math.max(0,Math.min(FLP_AOW_2026.length-1,row));
   return FLP_AOW_2026[row][col]/100;
 }
+// Trhk 2026, Bijlage 1, tabel 1: financieringslastpercentages niet-AOW, hypotheekrente aftrekbaar (€ 30.000 – € 125.000, stappen € 1.000)
+const FLP_NAOW_2026_MIN=30000, FLP_NAOW_2026_STAP=1000;
+const FLP_NAOW_2026=[
+  [15.5,16.5,17.5,18.4,19.3,20.1,20.9,21.6,22.2,22.7,23.2,23.7],
+  [16.2,17.3,18.3,19.3,20.2,21.2,22.0,22.7,23.4,24.1,24.6,25.1],
+  [16.7,17.9,19.0,20.1,21.1,22.1,23.0,23.8,24.6,25.3,25.9,26.4],
+  [17.1,18.3,19.5,20.6,21.6,22.6,23.6,24.6,25.4,26.1,26.8,27.4],
+  [17.3,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.4,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.5,18.5,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.6,18.6,19.6,20.6,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.7,18.7,19.7,20.7,21.6,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.7,18.7,19.7,20.7,21.7,22.6,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.8,18.8,19.8,20.7,21.7,22.7,23.6,24.6,25.5,26.4,27.3,28.1],
+  [17.8,18.9,19.9,20.9,21.8,22.7,23.7,24.6,25.5,26.4,27.3,28.1],
+  [17.9,18.9,19.9,21.0,21.9,22.8,23.7,24.6,25.5,26.4,27.3,28.1],
+  [18.0,19.0,20.0,21.0,22.0,22.9,23.8,24.7,25.5,26.4,27.3,28.1],
+  [18.1,19.1,20.1,21.1,22.1,23.0,23.9,24.7,25.6,26.4,27.3,28.1],
+  [18.2,19.2,20.2,21.2,22.2,23.1,24.0,24.8,25.7,26.5,27.3,28.1],
+  [18.3,19.4,20.4,21.4,22.3,23.2,24.1,25.0,25.8,26.7,27.4,28.2],
+  [18.5,19.5,20.5,21.5,22.5,23.4,24.3,25.1,26.0,26.8,27.6,28.3],
+  [18.6,19.7,20.7,21.7,22.7,23.6,24.5,25.3,26.2,27.0,27.8,28.5],
+  [18.8,19.9,20.9,21.9,22.9,23.8,24.7,25.6,26.4,27.2,28.0,28.7],
+  [19.0,20.0,21.1,22.1,23.1,24.1,25.0,25.8,26.6,27.4,28.2,28.9],
+  [19.1,20.2,21.3,22.3,23.3,24.3,25.2,26.0,26.9,27.6,28.4,29.2],
+  [19.3,20.4,21.5,22.5,23.5,24.5,25.4,26.3,27.1,27.9,28.6,29.3],
+  [19.4,20.5,21.6,22.6,23.7,24.6,25.6,26.4,27.3,28.1,28.8,29.5],
+  [19.5,20.6,21.7,22.8,23.8,24.8,25.7,26.6,27.5,28.2,29.0,29.7],
+  [19.6,20.8,21.9,22.9,24.0,24.9,25.9,26.8,27.6,28.4,29.2,29.9],
+  [19.7,20.9,22.0,23.1,24.1,25.1,26.1,27.0,27.8,28.6,29.4,30.1],
+  [19.8,20.9,22.1,23.2,24.2,25.2,26.2,27.1,27.9,28.7,29.5,30.2],
+  [19.9,21.0,22.2,23.2,24.3,25.3,26.3,27.2,28.1,28.9,29.6,30.3],
+  [20.0,21.1,22.2,23.3,24.3,25.4,26.4,27.3,28.1,29.0,29.7,30.4],
+  [20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.3,28.2,29.0,29.8,30.5],
+  [20.1,21.2,22.3,23.4,24.4,25.4,26.4,27.4,28.2,29.1,29.9,30.6],
+  [20.2,21.3,22.4,23.4,24.5,25.5,26.5,27.4,28.3,29.1,29.9,30.6],
+  [20.2,21.3,22.4,23.5,24.5,25.5,26.5,27.4,28.3,29.2,29.9,30.7],
+  [20.2,21.4,22.5,23.5,24.6,25.6,26.5,27.4,28.4,29.2,30.0,30.7],
+  [20.3,21.4,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.2,30.0,30.8],
+  [20.4,21.5,22.5,23.6,24.6,25.6,26.6,27.5,28.4,29.3,30.1,30.8],
+  [20.5,21.5,22.6,23.7,24.7,25.7,26.6,27.6,28.4,29.3,30.1,30.8],
+  [20.5,21.6,22.6,23.7,24.7,25.7,26.7,27.6,28.5,29.3,30.1,30.9],
+  [20.5,21.6,22.7,23.7,24.8,25.8,26.7,27.6,28.5,29.3,30.2,30.9],
+  [20.6,21.7,22.7,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],
+  [20.7,21.7,22.8,23.8,24.8,25.8,26.8,27.7,28.6,29.4,30.2,31.0],
+  [20.8,21.8,22.8,23.9,24.9,25.9,26.9,27.8,28.6,29.5,30.2,31.0],
+  [20.8,21.9,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.3,31.0],
+  [20.9,21.9,23.0,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0],
+  [21.0,22.0,23.0,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.4,31.1],
+  [21.0,22.1,23.1,24.1,25.1,26.1,27.0,27.9,28.8,29.6,30.4,31.1],
+  [21.1,22.1,23.2,24.2,25.1,26.1,27.1,28.0,28.8,29.6,30.4,31.2],
+  [21.1,22.2,23.2,24.2,25.2,26.1,27.1,28.0,28.9,29.7,30.5,31.2],
+  [21.2,22.2,23.3,24.3,25.3,26.2,27.1,28.0,28.9,29.7,30.5,31.2],
+  [21.2,22.3,23.4,24.4,25.3,26.3,27.1,28.1,28.9,29.8,30.5,31.3],
+  [21.3,22.4,23.4,24.4,25.4,26.3,27.2,28.1,29.0,29.8,30.6,31.3],
+  [21.3,22.4,23.5,24.5,25.5,26.4,27.3,28.1,29.0,29.8,30.6,31.3],
+  [21.3,22.5,23.5,24.5,25.5,26.5,27.3,28.2,29.1,29.9,30.6,31.4],
+  [21.4,22.5,23.6,24.6,25.6,26.5,27.4,28.2,29.1,29.9,30.7,31.4],
+  [21.4,22.5,23.7,24.7,25.6,26.6,27.5,28.3,29.1,30.0,30.7,31.5],
+  [21.5,22.6,23.7,24.7,25.7,26.7,27.5,28.4,29.2,30.0,30.8,31.5],
+  [21.5,22.6,23.7,24.8,25.8,26.7,27.6,28.4,29.2,30.0,30.8,31.5],
+  [21.6,22.7,23.7,24.8,25.8,26.7,27.7,28.5,29.3,30.0,30.8,31.5],
+  [21.6,22.7,23.8,24.8,25.9,26.8,27.7,28.5,29.3,30.1,30.8,31.6],
+  [21.7,22.8,23.8,24.9,25.9,26.8,27.7,28.6,29.4,30.1,30.9,31.6],
+  [21.7,22.8,23.9,24.9,25.9,26.9,27.8,28.7,29.4,30.2,30.9,31.7],
+  [21.8,22.9,23.9,25.0,25.9,26.9,27.8,28.7,29.5,30.2,30.9,31.7],
+  [21.8,22.9,24.0,25.0,26.0,26.9,27.9,28.7,29.5,30.3,31.0,31.7],
+  [21.8,22.9,24.0,25.0,26.0,27.0,27.9,28.8,29.6,30.3,31.0,31.7],
+  [21.9,23.0,24.1,25.1,26.1,27.0,28.0,28.8,29.6,30.4,31.1,31.8],
+  [21.9,23.0,24.1,25.1,26.1,27.1,28.0,28.9,29.7,30.4,31.1,31.8],
+  [22.0,23.1,24.1,25.2,26.2,27.1,28.0,28.9,29.7,30.5,31.2,31.9],
+  [22.0,23.1,24.2,25.2,26.2,27.2,28.1,28.9,29.8,30.5,31.3,31.9],
+  [22.0,23.2,24.2,25.3,26.3,27.2,28.1,29.0,29.8,30.6,31.3,32.0],
+  [22.1,23.2,24.3,25.3,26.3,27.3,28.2,29.0,29.9,30.6,31.4,32.0],
+  [22.1,23.2,24.3,25.4,26.4,27.3,28.2,29.1,29.9,30.7,31.4,32.1],
+  [22.2,23.3,24.4,25.4,26.4,27.4,28.3,29.1,29.9,30.8,31.5,32.1],
+  [22.2,23.3,24.4,25.5,26.5,27.4,28.3,29.2,30.0,30.8,31.5,32.2]
+];
+function getFLPNietAOW(ink,r){
+  let col=FLP_RENTE_GRENZEN.findIndex(g=>r<=g); if(col<0) col=11;
+  let row=Math.floor((ink-FLP_NAOW_2026_MIN)/FLP_NAOW_2026_STAP);
+  row=Math.max(0,Math.min(FLP_NAOW_2026.length-1,row));
+  return FLP_NAOW_2026[row][col]/100;
+}
+// AOW-datum uit geboortedatum: t/m 1960 67 jaar, daarna 67 jaar en 3 maanden (na 2031 indicatief)
+function aowDatumUit(geb){const m=geb.getFullYear()<=1960?0:3;const d=new Date(geb.getFullYear()+67,geb.getMonth()+m,1);d.setDate(Math.min(geb.getDate(),new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d;}
+function leeftijdOp(geb,dt){let a=dt.getFullYear()-geb.getFullYear();if(dt.getMonth()<geb.getMonth()||(dt.getMonth()===geb.getMonth()&&dt.getDate()<geb.getDate()))a--;return a;}
+function leesGeb(){const v=document.getElementById('geboortedatum').value;if(!v)return null;const d=new Date(v+'T00:00:00');return isNaN(d)?null:d;}
+function updGeb(){
+  const geb=leesGeb(),h=document.getElementById('gebHint');
+  if(!geb){h.textContent='Bepaalt leeftijd en AOW-datum automatisch (67 jaar t/m geboortejaar 1960, daarna 67 jaar en 3 maanden — na 2031 indicatief).';return;}
+  const nu=new Date(),l=leeftijdOp(geb,nu),a=aowDatumUit(geb);
+  document.getElementById('leeftijd').value=l;
+  h.textContent='Leeftijd '+l+' jaar · AOW-datum (indicatief) '+a.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})+(nu>=a?' — AOW bereikt':'');
+}
 function ann(s,r,n){const rm=r/12;if(rm===0)return s/n;return s*rm*Math.pow(1+rm,n)/(Math.pow(1+rm,n)-1);}
 function ml(s,r,n,vorm){if(vorm==='af')return s*r/12;if(vorm==='lin')return s/n+s*r/12;return ann(s,r,n);}
 
@@ -295,11 +433,35 @@ function bereken(){
   const totaalInk=aow+aanv+overig;
   const ltv=ww>0?hyp/ww*100:0;
 
+  // Pensioentoets: AOW bereikt → alleen inkomen vanaf AOW (AOW-tabel). Nog geen AOW maar leeftijd ≥ drempel (57/52) →
+  // laagste van toets op huidig inkomen (tabel 1) en op inkomen vanaf AOW (tabel 2). Jonger dan de drempel → huidig inkomen.
+  const geb=leesGeb(), nu=new Date();
+  const lftT=geb?leeftijdOp(geb,nu):lft;
+  const aowBereikt=geb?(nu>=aowDatumUit(geb)):(lftT>=67);
+  const drempel=parseInt(document.getElementById('pensioenDrempel').value,10)||0;
+  const huidigInk=N('huidigInk');
+  const ptGeldt=!aowBereikt&&drempel>0&&lftT>=drempel;
+  let modus=aowBereikt?'aow':ptGeldt?'pt':(huidigInk>0?'huidig':'alleenPensioen');
+  if((modus==='aow'||modus==='pt')&&totaalInk<=0){
+    document.getElementById('verdictDiv').innerHTML='<div class="verdict nee"><div class="v-ico">❌</div><div><div class="v-titel">Vul inkomen vanaf AOW in</div><div class="v-sub">'+(modus==='pt'?'De pensioentoets (vanaf '+drempel+' jaar) is van toepassing':'De AOW-leeftijd is bereikt')+': vul AOW en aanvullend pensioen in. Er wordt niet stilzwijgend met het huidige inkomen gerekend.</div></div></div>';
+    ['hoofd','scGrid','tbl'].forEach(id=>document.getElementById(id).innerHTML='');
+    document.getElementById('resCard').classList.remove('hidden');return;
+  }
+
   // Toetsrente (Trhk/AFM): rentevaste periode < 10 jaar → AFM-toetsrente 5% (of hogere werkelijke rente), anders werkelijke rente
   const rvp=parseInt(document.getElementById('rvp').value)||10;
   const toets=rvp<10?Math.max(5.0,rente*100)/100:rente;
   const flp=getFLPPensioen(totaalInk,toets*100);
-  const maxJaarLast=totaalInk*flp;
+  const flpH=huidigInk>0?getFLPNietAOW(huidigInk,toets*100):0;
+  const lastPens=totaalInk*flp, lastHuidig=huidigInk*flpH;
+  const maxJaarLast=modus==='huidig'?lastHuidig:(modus==='pt'&&huidigInk>0?Math.min(lastPens,lastHuidig):lastPens);
+  const toetsInkOms=modus==='huidig'?'huidig inkomen '+fmt(huidigInk)+' (niet-AOW-tabel, woonquote '+fmtPct(flpH*100,1)+')':
+    (modus==='pt'&&huidigInk>0&&lastHuidig<lastPens)?'huidig inkomen '+fmt(huidigInk)+' (niet-AOW-tabel, woonquote '+fmtPct(flpH*100,1)+'; lager dan de toets op inkomen vanaf AOW)':
+    'pensioeninkomen '+fmt(totaalInk)+' (AOW-tabel, woonquote '+fmtPct(flp*100,1)+')';
+  const ptTekst=drempel<=0?'Pensioentoets: niet getoetst (uitgeschakeld)'+(aowBereikt?'; AOW-leeftijd bereikt — getoetst op inkomen vanaf AOW met de AOW-tabel':(huidigInk>0?'; getoetst op huidig inkomen':'; geen huidig inkomen ingevuld — getoetst op inkomen vanaf AOW')):
+    aowBereikt?'Pensioentoets (vanaf '+drempel+' jaar): AOW-leeftijd bereikt — getoetst op '+fmt(totaalInk)+' met de AOW-tabel':
+    ptGeldt?'Pensioentoets (vanaf '+drempel+' jaar): van toepassing (leeftijd '+lftT+') — getoetst op '+fmt(totaalInk)+' met de AOW-tabel'+(huidigInk>0?' én op huidig inkomen '+fmt(huidigInk)+'; de laagste uitkomst geldt':''):
+    'Pensioentoets (vanaf '+drempel+' jaar): niet van toepassing (leeftijd '+lftT+')'+(huidigInk>0?' — getoetst op huidig inkomen':' — geen huidig inkomen ingevuld, daarom getoetst op inkomen vanaf AOW');
   const annF=ann(1,toets,lt*12);
   const maxHyp=maxJaarLast/12/annF;
 
@@ -315,7 +477,7 @@ function bereken(){
   if(kanHyp){
     vCls='ok';vIco='✅';
     vT=`Hypotheek haalbaar op pensioeninkomen`;
-    vS=`Op basis van pensioeninkomen ${fmt(totaalInk)}/jaar (woonquote ${fmtPct(flp*100,1)}) kunt u maximaal ${fmt(maxEff)} lenen. De gewenste hypotheek van ${fmt(hyp)} past daarbinnen. LTV: ${fmtPct(ltv)}.`;
+    vS=`Op basis van ${toetsInkOms} kunt u maximaal ${fmt(maxEff)} lenen. De gewenste hypotheek van ${fmt(hyp)} past daarbinnen. LTV: ${fmtPct(ltv)}.`;
   } else if(maxEff>hyp*0.7){
     vCls='warn';vIco='⚠️';
     vT=`Hypotheek deels haalbaar — zoek maatwerk`;
@@ -325,7 +487,8 @@ function bereken(){
     vT=`Hypotheek niet haalbaar op pensioeninkomen`;
     vS=`Maximale hypotheek: ${fmt(maxEff)} op inkomen/LTV-normen. Alternatief: opeethypotheek (bank leent geld op overwaarde), seniorenlening, of (gedeeltelijk) aflossen huidige schuld.`;
   }
-  document.getElementById('verdictDiv').innerHTML=`<div class="verdict ${vCls}"><div class="v-ico">${vIco}</div><div><div class="v-titel">${vT}</div><div class="v-sub">${vS}</div></div></div>`;
+  if(modus==='huidig'){vT=vT.replace('op pensioeninkomen','op huidig inkomen');}
+  document.getElementById('verdictDiv').innerHTML=`<div class="verdict ${vCls}"><div class="v-ico">${vIco}</div><div><div class="v-titel">${vT}</div><div class="v-sub">${vS}<br><em id="ptStatus">${ptTekst}.</em></div></div></div>`;
 
   document.getElementById('hoofd').innerHTML=`
     <div class="hb n"><div class="hbl">Pensioeninkomen</div><div class="hbv">${fmt(totaalInk)}</div><div class="hbs">AOW + aanvullend</div></div>
@@ -353,6 +516,10 @@ function bereken(){
   if(overig>0)html+=`<tr><td>Overig inkomen</td><td>${fmt(overig)}</td><td>Lijfrente, huur etc.</td></tr>`;
   html+=`<tr class="tot"><td><strong>Totaal pensioeninkomen</strong></td><td><strong>${fmt(totaalInk)}</strong></td><td></td></tr>`;
   html+=`<tr><td>Woonquote (Trhk 2026, AOW-tabel)</td><td>${fmtPct(flp*100,1)}</td><td>Toetsrente ${fmtPct(toets*100,2)} (RVP ${rvp} jaar${rvp<10?' → AFM-toetsrente':' → werkelijke rente'})</td></tr>`;
+  if(huidigInk>0&&!aowBereikt){
+    html+=`<tr><td>Huidig inkomen (vóór AOW)</td><td>${fmt(huidigInk)}</td><td>Woonquote ${fmtPct(flpH*100,1)} (Trhk 2026 tabel 1, niet-AOW) → ${fmt(lastHuidig/12)}/mnd</td></tr>`;
+  }
+  html+=`<tr><td>Pensioentoets</td><td>${drempel>0?'vanaf '+drempel+' jaar':'uit'}</td><td>${ptTekst}</td></tr>`;
   html+=`<tr><td>Max. jaarlijkse hypotheeklast</td><td>${fmt(maxJaarLast)}</td><td>${fmt(maxJaarLast/12)}/mnd</td></tr>`;
   html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(maxHyp)}</td><td></td></tr>`;
   html+=`<tr><td>Max. hypotheek op LTV (${ltvMax}%)</td><td>${fmt(maxOpWoningWaarde)}</td><td>Woningwaarde ${fmt(ww)}</td></tr>`;

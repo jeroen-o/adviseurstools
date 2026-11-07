@@ -100,11 +100,16 @@ tr.rvp-change td{background:#f0f8ff}
     <div class="field"><label>Naam</label><input id="naam" value="Aanvrager"></div>
     <div class="field"><label>Geboortedatum</label><input id="geboortedatum" type="date" value="1970-03-01" oninput="updateAowBar()"></div>
     <div class="field"><label>Huidig inkomen (€/jr)</label><input id="inkomen" type="number" value="50000" min="0"></div>
-    <div class="field"><label>AOW-inkomen (€/jr)</label><input id="aow_inkomen" type="number" value="20000" min="0"></div>
+    <div class="field"><label>Inkomen vanaf AOW (AOW + pensioen, €/jr)</label><input id="aow_inkomen" type="number" value="20000" min="0"></div>
   </div>
   <div class="fg fg-4" style="margin-top:10px">
     <div class="field"><label>Standaard toetsrente (%)</label><input id="toetsrente" type="number" value="5.0" step="0.1" min="1" max="10"></div>
-    <div></div><div></div><div></div>
+    <div class="field"><label>Pensioentoets vanaf leeftijd</label><select id="pensioenDrempel" onchange="if(data.length)bereken()">
+      <option value="0">Niet toetsen</option>
+      <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
+      <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
+    </select></div>
+    <div style="grid-column:span 2;font-size:11px;color:#666;align-self:end;line-height:1.5">Vanaf deze leeftijd (tot de AOW-datum) wordt getoetst op het laagste van de maximale maandlast op huidig inkomen en die op het inkomen vanaf AOW (AOW-tabel). Na de AOW-datum: alleen inkomen vanaf AOW.</div>
   </div>
 </div>
 
@@ -133,8 +138,9 @@ tr.rvp-change td{background:#f0f8ff}
     <div class="kpi"><div class="lbl">Max hypotheek nu</div><div class="val" id="k1">—</div><div class="sub" id="k1s"></div></div>
     <div class="kpi"><div class="lbl">Max maandlast nu</div><div class="val" id="k2">—</div><div class="sub" id="k2s"></div></div>
     <div class="kpi"><div class="lbl">AOW-ingangsdatum</div><div class="val" id="k3">—</div><div class="sub" id="k3s"></div></div>
-    <div class="kpi"><div class="lbl">Pensioendrempel per</div><div class="val" id="k4">—</div><div class="sub">10-jaar CHF-drempel</div></div>
+    <div class="kpi"><div class="lbl">Pensioentoets per</div><div class="val" id="k4">—</div><div class="sub" id="k4s">vanaf 57 jaar</div></div>
   </div>
+  <div id="pt-status" style="margin-top:10px;font-size:12px;line-height:1.6;color:var(--navy)"></div>
 </div>
 
 <!-- 4. GRAFIEK -->
@@ -579,11 +585,14 @@ function effectieveToetsrente(delen, calcDate, defaultTr){
   return contractRente!==null ? contractRente : defaultTr;
 }
 
+// Leeftijd in hele jaren op datum dt
+function leeftijdOp(geb,dt){let a=dt.getFullYear()-geb.getFullYear();if(dt.getMonth()<geb.getMonth()||(dt.getMonth()===geb.getMonth()&&dt.getDate()<geb.getDate()))a--;return a;}
+
 // ── HOOFDBEREKENING ───────────────────────────────────────────
 let data=[], chartInst=null, view='hyp';
 
 function bereken(){
-  const geb=new Date(document.getElementById('geboortedatum').value);
+  const geb=new Date(document.getElementById('geboortedatum').value+'T00:00:00');
   if(isNaN(geb)){alert('Ongeldige geboortedatum');return;}
   const ink=parseFloat(document.getElementById('inkomen').value)||0;
   const aowInk=parseFloat(document.getElementById('aow_inkomen').value)||0;
@@ -591,8 +600,11 @@ function bereken(){
   const defaultTr=parseFloat(document.getElementById('toetsrente').value)/100||0.05;
   if(!ink){alert('Vul huidig inkomen in');return;}
 
+  const aowInkLeeg=document.getElementById('aow_inkomen').value.trim()==='';
+  const drempel=parseInt(document.getElementById('pensioenDrempel').value,10)||0;
   const aow=calcAow(geb);
   const aowDatum=aow.datum;
+  if(aowInkLeeg){alert('Vul inkomen vanaf AOW (AOW + pensioen) in: dat is nodig voor de pensioentoets'+(drempel>0?' (vanaf '+drempel+' jaar)':'')+' en voor de periode na de AOW-datum.');return;}
   const delen=getDelen();
   const start=new Date(); start.setDate(1);
   data=[];
@@ -601,8 +613,8 @@ function bereken(){
     const dt=new Date(start.getFullYear(),start.getMonth()+m,1);
     const age=(dt-geb)/(365.25*24*3600*1000);
     const isAOW=dt>=aowDatum;
-    const toAOW=(aowDatum-dt)/(365.25*24*3600*1000);
-    const pen=!isAOW&&toAOW<=10;
+    // Pensioentoets: vanaf de gekozen drempelleeftijd (57 of 52 jaar) tot de AOW-datum
+    const pen=!isAOW&&drempel>0&&leeftijdOp(geb,dt)>=drempel;
 
     // Effectieve toetsrente op dit moment
     const effTr=effectieveToetsrente(delen,dt,defaultTr);
@@ -637,8 +649,15 @@ function bereken(){
   document.getElementById('k2s').textContent='CHF 2026 · toetsrente '+(d0.effTr*100).toFixed(2).replace('.',',')+'%';
   if(aowIdx>=0){const a=data[aowIdx];document.getElementById('k3').textContent=fmtDtS(a.dt);document.getElementById('k3s').textContent='Leeftijd '+aow.label;}
   else document.getElementById('k3').textContent='Buiten 30 jaar';
+  document.getElementById('k4s').textContent=drempel>0?('vanaf '+drempel+' jaar'):'niet getoetst';
   if(penIdx>0)document.getElementById('k4').textContent=fmtDtS(data[penIdx].dt);
+  else if(penIdx===0)document.getElementById('k4').textContent='nu';
   else document.getElementById('k4').textContent='n.v.t.';
+  const pt=document.getElementById('pt-status');
+  if(drempel<=0) pt.innerHTML='<strong>Pensioentoets:</strong> niet getoetst (uitgeschakeld). Na de AOW-datum wordt wel op het inkomen vanaf AOW getoetst.';
+  else if(d0.isAOW) pt.innerHTML='<strong>Pensioentoets (vanaf '+drempel+' jaar):</strong> AOW-leeftijd bereikt — getoetst op '+E(aowInk)+' met de AOW-tabel.';
+  else if(d0.pen) pt.innerHTML='<strong>Pensioentoets (vanaf '+drempel+' jaar):</strong> van toepassing — getoetst op huidig inkomen '+E(ink)+' én op inkomen vanaf AOW '+E(aowInk)+' met de AOW-tabel; de laagste maximale maandlast geldt.';
+  else pt.innerHTML='<strong>Pensioentoets (vanaf '+drempel+' jaar):</strong> nu niet van toepassing (leeftijd '+leeftijdOp(geb,new Date())+' jaar)'+(penIdx>0?'; geldt vanaf '+fmtDtS(data[penIdx].dt)+'.':'.');
 
   document.getElementById('chart-label').textContent=naam+' — maximale hypotheekruimte (30 jaar, per maand)';
   ['sec-kpi','sec-chart','sec-table','sec-toelichting'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
