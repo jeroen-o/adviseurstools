@@ -20,3 +20,9 @@ Kopieer een bestaande `index.html` uit een map op dezelfde diepte en pas de tite
 - Bewerken: `WACHTWOORD='…' node scripts/beveilig-pagina.js decrypt project-jeroen/index.html /tmp/pj.html`
 - Na bewerken opnieuw versleutelen: `WACHTWOORD='…' node scripts/beveilig-pagina.js encrypt /tmp/pj.html project-jeroen/index.html`
 - Commit nooit de leesbare versie.
+
+## Zoeker
+In de kop van elke pagina staat een zoekveld ("Wat zoek je, wat wil je berekenen?"), toegevoegd door `assets/site.js`. De zoekindex staat in `assets/zoekindex.js`.
+- Na het toevoegen of hernoemen van pagina's: `python3 scripts/maak-zoekindex.py`
+- Zonder resultaat biedt de zoeker een concept-mail aan (mailto) naar jeroen@oversteegen.nl met de zoekvraag erin.
+- Sneltoets: `/` zet de cursor in het zoekveld.
