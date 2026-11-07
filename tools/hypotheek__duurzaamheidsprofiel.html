@@ -197,7 +197,7 @@ var LBL_KLEUR={'G':'#c4161c','F':'#e0461b','E':'#f39200','D':'#f9b000','C':'#ffe
 // NTA 8800: energieprestatie EP2 (kWh primair fossiel per m² per jaar), bovengrens per label
 var EP_GRENS={'A++++':0,'A+++':50,'A++':75,'A+':105,'A':160,'B':190,'C':250,'D':290,'E':335,'F':380};
 var EP_MID={'G':420,'F':357,'E':312,'D':270,'C':220,'B':175,'A':132,'A+':90,'A++':62,'A+++':25,'A++++':0};
-var LBL_BOUW=['F','E','D','C','B','A','A+'];          // typisch label per bouwjaarklasse
+var LBL_BOUW=['E','E','D','B','B','A','A'];          // mediaan geregistreerd label per bouwjaarklasse (steekproef 47 woningen)
 var GAS_M2=[17,15,14,11,8.5,6.5,2.5];                  // m³ gas per m² per jaar (ruimteverwarming + tapwater)
 var TYPE_F={app:0.75,tussen:0.85,hoek:1.0,'2o1':1.1,vrij:1.25};
 var GEVEL={app:25,tussen:45,hoek:85,'2o1':110,vrij:160}; // m² dichte gevel
@@ -299,9 +299,9 @@ function woning(){
   return {type:type,opp:opp,bouw:bouw,bj:bj,vve:type==='app'&&$('vve').checked,grondM2:grond,dakM2:type==='app'?0:grond*1.3,gevelM2:GEVEL[type]*Math.sqrt(opp/110),glasM2:opp*0.16};
 }
 function bouwjaar(){var y=Math.round(num('bouwjaar'));return y>1500&&y<2100?y:1970;}
-// voorinstelling huidige situatie op bouwjaar (zoals gebruikelijk: vóór 1930 meestal geen spouwmuur; 1970–1991 dak en spouw meestal geïsoleerd; vanaf 1992 volledig)
+// voorinstelling huidige situatie op bouwjaar: t/m 1930 geen spouwmuur; 1931–1970 niet geïsoleerd; 1971–1990 dak en spouw geïsoleerd; vanaf 1991 ook vloer en HR++ glas
 function voorinstelling(){var y=bouwjaar(),p;
-  if(y<1930)p={s_dak:0,s_gevel:3,s_vloer:0,s_glas:1};else if(y<1970)p={s_dak:0,s_gevel:0,s_vloer:0,s_glas:1};else if(y<1992)p={s_dak:2,s_gevel:2,s_vloer:0,s_glas:1};else p={s_dak:2,s_gevel:2,s_vloer:2,s_glas:2};
+  if(y<=1930)p={s_dak:0,s_gevel:3,s_vloer:0,s_glas:1};else if(y<=1970)p={s_dak:0,s_gevel:0,s_vloer:0,s_glas:1};else if(y<=1990)p={s_dak:2,s_gevel:2,s_vloer:0,s_glas:1};else p={s_dak:2,s_gevel:2,s_vloer:2,s_glas:2};
   Object.keys(p).forEach(function(k){var e=$(k);if(!e.dataset.hand)e.value=p[k];});}
 function staat(){return {dak:+$('s_dak').value,gevel:+$('s_gevel').value,vloer:+$('s_vloer').value,glas:+$('s_glas').value,verw:$('s_verw').value,pv:num('s_pv'),kier:+$('s_kier').value,wtw:+$('s_wtw').value};}
 
