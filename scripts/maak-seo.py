@@ -4,7 +4,9 @@
 Draai als laatste stap (na maak-overzicht.py en opmaak-site.py):  python3 scripts/maak-seo.py
 Idempotent: bestaande SEO-blokken (tussen <!--SEO--> en <!--/SEO-->) worden vervangen.
 """
-import datetime, glob, html, json, os, re, urllib.parse
+import datetime, glob, html, json, os, re, sys, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import deelafbeelding
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = 'https://adviseurstools.nl/'
@@ -94,6 +96,21 @@ for f in sorted(glob.glob(os.path.join(ROOT, '**', 'index.html'), recursive=True
         bc = [{'@type': 'ListItem', 'position': i + 1, 'name': t, 'item': abs_url(pad, h)} for i, (t, h) in enumerate(kruimel)]
         bc.append({'@type': 'ListItem', 'position': len(bc) + 1, 'name': titel, 'item': url})
         graph.append({'@type': 'BreadcrumbList', 'itemListElement': bc})
+    # Deelafbeelding per pagina (LinkedIn, WhatsApp, Teams, X): titel, korte omschrijving en rubriek
+    if beveiligd or is_home:
+        og_naam, og_alt = 'og.png', f'{SITE} — gratis rekentools voor hypotheek, krediet en pensioen'
+        if is_home:
+            deelafbeelding.maak(SITE, 'Maximale hypotheek, maandlasten, boeterente, pensioen en AOW — voor adviseurs en consumenten',
+                                '', os.path.join(ROOT, 'assets', 'og.png'))
+    else:
+        slug = re.sub(r'[^a-z0-9]+', '-', urllib.parse.unquote(pad).lower().replace('é', 'e').replace('ë', 'e')).strip('-')
+        og_naam = 'og/' + slug + '.png'
+        og_titel = (CATS[pad.rstrip('/')] + ' rekentools') if is_cat else titel
+        og_sub = oms or ('Gratis rekentools volgens de normen 2026 en 2027' if is_cat else '')
+        rubriek = '' if is_cat else CATS.get(pad.split('/')[0], '')
+        deelafbeelding.maak(og_titel, og_sub, rubriek, os.path.join(ROOT, 'assets', og_naam))
+        og_alt = f'{og_titel} — {SITE}'
+    og_url = BASE + 'assets/' + og_naam
     meta = [f'<meta name="description" content="{E(desc)}">',
             f'<meta name="robots" content="{"noindex,nofollow" if beveiligd else "index,follow,max-image-preview:large"}">',
             f'<link rel="canonical" href="{E(url)}">',
@@ -101,12 +118,17 @@ for f in sorted(glob.glob(os.path.join(ROOT, '**', 'index.html'), recursive=True
             f'<meta property="og:type" content="{"website" if is_home else "article"}">',
             f'<meta property="og:site_name" content="{SITE}">', '<meta property="og:locale" content="nl_NL">',
             f'<meta property="og:title" content="{E(ttl)}">', f'<meta property="og:description" content="{E(desc)}">',
-            f'<meta property="og:url" content="{E(url)}">', f'<meta property="og:image" content="{BASE}assets/og.png">',
+            f'<meta property="og:url" content="{E(url)}">', f'<meta property="og:image" content="{og_url}">',
+            f'<meta property="og:image:secure_url" content="{og_url}">', '<meta property="og:image:type" content="image/png">',
             '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">',
+            f'<meta property="og:image:alt" content="{E(og_alt)}">',
             '<meta name="twitter:card" content="summary_large_image">',
+            f'<meta name="twitter:title" content="{E(ttl)}">', f'<meta name="twitter:description" content="{E(desc)}">',
+            f'<meta name="twitter:image" content="{og_url}">', f'<meta name="twitter:image:alt" content="{E(og_alt)}">',
             ld({'@context': 'https://schema.org', '@graph': graph})]
     blok = '<!--SEO-->' + '\n'.join(meta) + '<!--/SEO-->'
     s = re.sub(r'<!--SEO-->.*?<!--/SEO-->\n?', '', s, flags=re.S)
+    s = re.sub(r'<meta name="description"[^>]*>\n?', '', s)  # losse (dubbele) description buiten het SEO-blok
     s = re.sub(r'<title>.*?</title>', f'<title>{E(ttl)}</title>', s, count=1, flags=re.S)
     s = s.replace('</title>', '</title>\n' + blok, 1)
     open(f, 'w', encoding='utf-8').write(s)
