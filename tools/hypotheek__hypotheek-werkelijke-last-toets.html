@@ -270,7 +270,7 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
 </header>
 
 <div class="intro">
-  <strong>Over deze tool:</strong> de werkelijke maandlast bestaat uit rente + aflossing + inleg opbouwproduct + erfpachtcanon. Het toetskader (Box 1 of Box 3) wordt per leningdeel bepaald; het effectieve woonquote-percentage wordt gewogen op basis van het hoofdsom-aandeel.
+  <strong>Over deze tool:</strong> de werkelijke maandlast bestaat uit rente + aflossing + inleg opbouwproduct + erfpachtcanon. Het toetskader (Box 1 of Box 3) wordt per leningdeel bepaald; advies (Trhk): de last van box 3-delen wordt gebruteerd met de verhouding box 1- / box 3-percentage (zoals MAX. HYP. 2027); beheer (NHG): percentage gewogen op basis van het hoofdsom-aandeel.
 </div>
 
 <div class="grid">
@@ -343,7 +343,7 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
         </select>
       </div>
     </div>
-    <div class="info"><strong>Toetsinkomen:</strong> hoogste + 100% laagste. <strong>Tabelkeuze advies (Trhk art. 3 lid 7):</strong> heeft één aanvrager de AOW-leeftijd bereikt, dan volgt de tabel de aanvrager met het hoogste toetsinkomen; beiden AOW → AOW-tabel. <strong>Beheer (NHG):</strong> paar-AOW-tabel alleen als beiden AOW hebben. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0. <strong>Pensioentoets:</strong> vanaf de gekozen leeftijd (en vóór de AOW-datum) wordt per persoon óók getoetst op het inkomen vanaf AOW met de AOW-tabel (advies: Trhk welAOW; beheer: NHG 5e/5f, box 3: 5k/5l); de laagste uitkomst telt. Is de AOW-leeftijd al bereikt, vul dan bij toetsinkomen het AOW-/pensioeninkomen in.</div>
+    <div class="info"><strong>Toetsinkomen:</strong> hoogste + 100% laagste. <strong>Tabelkeuze advies (Trhk art. 3 lid 7):</strong> heeft één aanvrager de AOW-leeftijd bereikt, dan volgt de tabel de aanvrager met het hoogste toetsinkomen; beiden AOW → AOW-tabel. <strong>Beheer (NHG):</strong> paar-AOW-tabel alleen als beiden AOW hebben. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0. <strong>Pensioentoets advies (Trhk):</strong> per persoon telt vanaf de gekozen leeftijd het laagste van huidig inkomen en inkomen vanaf AOW; daarnaast wordt getoetst op de AOW-datum en de drempeldatum binnen 10 jaar; het krapste toetsmoment is bepalend. <strong>Beheer:</strong> vanaf de gekozen leeftijd (en vóór de AOW-datum) óók toetsing op het inkomen vanaf AOW (NHG 5e/5f, box 3: 5k/5l); de laagste uitkomst telt. Is de AOW-leeftijd al bereikt, vul dan bij toetsinkomen het AOW-/pensioeninkomen in.</div>
   </div>
 
   <div class="card">
@@ -447,7 +447,8 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
       <ul>
         <li>Financieringslasttabel normjaar <span class="njTxt">2026</span> — Bijlage 1 Trhk (2026: Trhk 2026; 2027: Wijzigingsregeling hypothecair krediet 2027, Stcrt. 2026, 38415).</li>
         <li>Toetsrente: 5,00% (AFM; 2026 en 2027 ongewijzigd). Bij gewogen RVP ≥ 10 jr werkelijke rente, anders max(toetsrente, werkelijke).</li>
-        <li>FL% per box (1 of 3) gewogen naar hoofdsom-aandeel.</li>
+        <li>Box 3-delen: geen gewogen percentage maar brutering (zoals MAX. HYP. 2027): max. last = toetsinkomen × FL% box 1 − verplichtingen; de last van box 3-delen telt × FL% box 1 / FL% box 3. Volledig box 3: alleen de box 3-tabel.</li>
+        <li>Pensioentoets: per persoon op elk toetsmoment (aanvang, AOW-datum en drempeldatum binnen 10 jaar) — AOW: inkomen vanaf AOW; vanaf de drempelleeftijd: laagste van huidig inkomen en inkomen vanaf AOW. Tabel volgt de aanvrager met het hoogste toetsinkomen (art. 3 lid 7); het krapste moment is bepalend.</li>
         <li>DK-aftrek 2% van limiet; studieschuld werkelijke maandlast × bruteringsfactor.</li>
       </ul>
     </details>
@@ -897,43 +898,100 @@ function bereken(){
     toetsrenteAdv = Math.max(TOETSRENTE_MIN_ADVIES, wgRente);
     toetsregelAdv = `Gewogen RVP < 10 jr → max(toetsrente ${pctStr(TOETSRENTE_MIN_ADVIES)}, werkelijke)`;
   }
-  const tabBox1Adv = tabelAOW ? ADV.w : ADV.n;
-  const tabBox3Adv = tabelAOW ? ADV.b3w : ADV.b3n;
-  const flCurB1Adv = lookupFLpct(tabBox1Adv, toetsInkomen, toetsrenteAdv);
-  const flCurB3Adv = lookupFLpct(tabBox3Adv, toetsInkomen, toetsrenteAdv);
-  const flCurAdv = aandeelBox1 * flCurB1Adv + aandeelBox3 * flCurB3Adv;
-  /* Pensioentoets advies: Trhk welAOW-tabel (box 1) / box3 welAOW, op het inkomen vanaf AOW */
-  let pensAdv = null;
-  if (pensScenario){
-    const tP1 = pensAdvAOW ? ADV.w : ADV.n, tP3 = pensAdvAOW ? ADV.b3w : ADV.b3n;
-    const b1 = lookupFLpct(tP1, pensInk, toetsrenteAdv), b3 = lookupFLpct(tP3, pensInk, toetsrenteAdv);
-    const fl = aandeelBox1*b1 + aandeelBox3*b3;
-    pensAdv = {b1, b3, fl, jaar: pensInk*fl, naam: pensAdvAOW ? 'CHF welAOW '+NJ + (pensAlleAOW ? '' : ' (aanvrager met hoogste inkomen AOW, art. 3 lid 7)') : 'CHF nietAOW '+NJ+' (aanvrager met hoogste inkomen nog geen AOW, art. 3 lid 7)'};
-  }
-  /* Pensioentoets: extra toetsmoment in de periode vervroegd pensioen → AOW (als ingevuld); de laagste uitkomst telt */
+  /* Trhk-normtoets (zoals MAX. HYP. 2027).
+     Regel 1 — pensioentoets per persoon op elk toetsmoment: AOW bereikt → inkomen vanaf AOW; vanaf de drempelleeftijd
+     (57/52) zonder AOW → MIN(huidig inkomen, inkomen vanaf AOW); anders huidig inkomen. Toetsmomenten: bij aanvang,
+     de AOW-datum en de drempeldatum van elke aanvrager binnen 10 jaar (en de periode vervroegd pensioen, indien ingevuld).
+     Tabel (art. 3 lid 7): AOW-tabel als de aanvrager met het hoogste toetsinkomen de AOW-leeftijd heeft bereikt;
+     bij gelijk inkomen en verschillende status de laagste uitkomst. Het krapste moment is bepalend.
+     Regel 2 — brutering: max. last = toetsinkomen × q1 / 12 − verplichtingen; de last van box 3-delen telt × q1/q3
+     (q1 = tabel box 1, q3 = box 3-tabel). Volledig box 3: alleen de box 3-tabel, studieschuld niet gebruteerd. */
+  /* (gebruikt door de beheertoets) periode vervroegd pensioen → AOW */
   const heeftPre = pensScenario && ((pt1 && pre1 !== null) || (!isAlleenstaand && pt2 && pre2 !== null));
   const q1 = (pt1 && pre1 !== null) ? pre1 : ink1, q2 = isAlleenstaand ? 0 : ((pt2 && pre2 !== null) ? pre2 : ink2);
   const preInk = q1 + q2;
-  let pensInkAdv = pensInk;
-  if (heeftPre){
-    const preAOW = isAlleenstaand ? false : (q1 >= q2 ? !!av1?.isAOW : !!av2?.isAOW); // art. 3 lid 7; vervroegd gepensioneerde heeft nog geen AOW
-    const b1 = lookupFLpct(preAOW ? ADV.w : ADV.n, preInk, toetsrenteAdv), b3 = lookupFLpct(preAOW ? ADV.b3w : ADV.b3n, preInk, toetsrenteAdv);
-    const fl = aandeelBox1*b1 + aandeelBox3*b3;
-    if (preInk*fl < pensAdv.jaar){ pensAdv = {b1, b3, fl, jaar: preInk*fl, naam: (preAOW ? 'CHF welAOW '+NJ : 'CHF nietAOW '+NJ) + ' — periode vervroegd pensioen vóór AOW'}; pensInkAdv = preInk; }
+  const dkLast = dkLimiet * 0.02;
+  const volledigBox3 = totaalHoofdsom > 0 && aandeelBox1 === 0;
+  const werkelijkB3 = ldRows.filter(r => r.box === 3).reduce((t,r) => t + r.m, 0);
+  const werkelijkB1 = werkelijkLD - werkelijkB3;
+  const hoofdsomB3 = ldRows.filter(r => r.box === 3).reduce((t,r) => t + (r.H>0 ? r.H : 0), 0);
+  const duoFAdv = volledigBox3 ? 1 : getBruteringStudieschuld(toetsrenteAdv);
+  const duoBrutoAdv = duoTerm * duoFAdv;
+  const aftrekAdv = dkLast + aflK + duoBrutoAdv + lease + ovv;
+  const annTrhkAdv = annuMaand(1, toetsrenteAdv, 30);
+  function trhkUitkomst(ink, aow){
+    const q1 = lookupFLpct(aow ? ADV.w : ADV.n, ink, toetsrenteAdv), q3 = lookupFLpct(aow ? ADV.b3w : ADV.b3n, ink, toetsrenteAdv);
+    const pct = volledigBox3 ? q3 : q1;
+    const verh = (volledigBox3 || q3 <= 0) ? 1 : q1/q3;
+    const beschikbaar = ink * pct / 12 - aftrekAdv;
+    const toetslast = werkelijkB1 + werkelijkB3 * verh + erfpacht + inleg;
+    /* max. hypotheek (annuïtair 30 jr op de toetsrente): (H − B)·a + B·a·q1/q3 = beschikbaar − erfpacht */
+    const h1 = annTrhkAdv > 0 ? Math.max(0, beschikbaar - erfpacht) / annTrhkAdv : 0;
+    let maxH = h1 - hoofdsomB3 * (verh - 1);
+    if (!volledigBox3 && maxH < hoofdsomB3) maxH = h1 / verh;
+    return {q1, q3, pct, verh, aow, ink, beschikbaar, toetslast, ruimte: beschikbaar - toetslast, maxH: Math.max(0, maxH)};
   }
-  const advPens = !!(pensAdv && pensAdv.jaar < toetsInkomen * flCurAdv);
-  const toetsInkomenAdv = advPens ? pensInkAdv : toetsInkomen;
-  const flBox1Adv = advPens ? pensAdv.b1 : flCurB1Adv;
-  const flBox3Adv = advPens ? pensAdv.b3 : flCurB3Adv;
-  const flAdv = advPens ? pensAdv.fl : flCurAdv;
+  const nuAdv = new Date(), hzAdv = new Date(nuAdv.getFullYear()+10, nuAdv.getMonth(), nuAdv.getDate());
+  const gebD = g => { const d = g ? new Date(g) : null; return d && !isNaN(d.getTime()) ? d : null; };
+  const lftOp = (geb, d) => { let a = d.getFullYear() - geb.getFullYear(); if (d.getMonth() < geb.getMonth() || (d.getMonth() === geb.getMonth() && d.getDate() < geb.getDate())) a--; return a; };
+  const PA = [{av: av1, geb: gebD(gb1), ink: ink1, pens: pens1, pre: pre1, wie: 'aanvrager 1'}];
+  if (!isAlleenstaand) PA.push({av: av2, geb: gebD(gb2), ink: ink2, pens: pens2, pre: pre2, wie: 'aanvrager 2'});
+  function persOpAdv(p, d, metPre){
+    if (!p.av || !p.geb) return {ink: p.ink, aow: false};
+    if (p.av.isAOW) return {ink: p.ink, aow: true};
+    if (d >= p.av.aowDate) return {ink: p.pens, aow: true, nodig: true};
+    if (pensioenDrempel > 0 && lftOp(p.geb, d) >= pensioenDrempel){
+      const werk = (metPre && p.pre !== null) ? p.pre : p.ink;
+      return {ink: p.pens === null ? null : Math.min(werk, p.pens), aow: false, nodig: true};
+    }
+    return {ink: p.ink, aow: false};
+  }
+  const momAdv = [{d: nuAdv, lbl: 'bij aanvang'}];
+  PA.forEach(p => {
+    if (!p.av || !p.geb || p.av.isAOW) return;
+    if (p.av.aowDate > nuAdv && p.av.aowDate <= hzAdv) momAdv.push({d: p.av.aowDate, lbl: 'AOW-datum ' + p.wie + ' (' + fmtDateNL(p.av.aowDate) + ')'});
+    if (pensioenDrempel > 0){
+      const dd = new Date(p.geb.getFullYear() + pensioenDrempel, p.geb.getMonth(), p.geb.getDate());
+      if (dd > nuAdv && dd <= hzAdv) momAdv.push({d: dd, lbl: p.wie + ' bereikt ' + pensioenDrempel + ' jaar (' + fmtDateNL(dd) + ')'});
+    }
+  });
+  if (PA.some(p => p.av && !p.av.isAOW && p.pre !== null && pensioenDrempel > 0 && p.av.leeftijd >= pensioenDrempel))
+    momAdv.push({d: nuAdv, metPre: true, lbl: 'periode vervroegd pensioen vóór AOW'});
+  let advOnvolledig = false;
+  const uitkAdv = [];
+  momAdv.forEach(m => {
+    const pers = PA.map(p => persOpAdv(p, m.d, m.metPre));
+    if (pers.some(x => x.nodig && x.ink === null)){
+      advOnvolledig = true;
+      if (m !== momAdv[0]) return;
+      pers.forEach((x,i) => { if (x.ink === null){ x.ink = PA[i].ink; x.aow = false; } }); /* aanvang: alleen op huidig inkomen (onvolledig) */
+    }
+    const ink = pers.reduce((t,x) => t + x.ink, 0);
+    let u;
+    if (pers.length === 1) u = trhkUitkomst(ink, pers[0].aow);
+    else {
+      const mx = Math.max(...pers.map(x => x.ink)), top = pers.filter(x => x.ink === mx);
+      const wa = top.some(x => x.aow), wn = top.some(x => !x.aow);
+      if (wa && wn){ const uA = trhkUitkomst(ink, true), uN = trhkUitkomst(ink, false); u = uA.ruimte < uN.ruimte ? uA : uN; u.tie = true; }
+      else u = trhkUitkomst(ink, wa);
+    }
+    u.lbl = m.lbl; uitkAdv.push(u);
+  });
+  const bepAdv = uitkAdv.reduce((x,y) => y.ruimte < x.ruimte ? y : x, uitkAdv[0]);
+  const maxHAdv = Math.min(...uitkAdv.map(u => u.maxH));
+  const advPens = bepAdv !== uitkAdv[0];
+  const advTabelAOW = bepAdv.aow;
+  const toetsInkomenAdv = bepAdv.ink;
+  const pensInkAdv = bepAdv.ink;
+  const flBox1Adv = bepAdv.q1;
+  const flBox3Adv = bepAdv.q3;
+  const flAdv = bepAdv.pct;
+  const toetslastAdv = bepAdv.toetslast;
   const maxFLjaarAdv  = toetsInkomenAdv * flAdv;
   const maxFLmndAdv   = maxFLjaarAdv / 12;
-  const dkLast = dkLimiet * 0.02;
-  const duoBrutoAdv = duoTerm * getBruteringStudieschuld(toetsrenteAdv);
-  const aftrekAdv = dkLast + aflK + duoBrutoAdv + lease + ovv;
-  const beschikbaarAdv = maxFLmndAdv - aftrekAdv;
-  const ruimteAdv = beschikbaarAdv - werkelijkTot;
-  const benutAdv = beschikbaarAdv > 0 ? (werkelijkTot / beschikbaarAdv) * 100 : 999;
+  const beschikbaarAdv = bepAdv.beschikbaar;
+  const ruimteAdv = bepAdv.ruimte;
+  const benutAdv = beschikbaarAdv > 0 ? (toetslastAdv / beschikbaarAdv) * 100 : 999;
 
   /* ===========================================================
      BEHEER TOETS (NHG D.6.5)
@@ -1017,16 +1075,16 @@ function bereken(){
      =========================================================== */
   /* Status panelen: advies op werkelijke last; beheer op MINIMALE last (NHG D.6.5 norm-bepalend) */
   renderTopStatus('adviesStatusBox', 'adviesBar', 'adviesBarNote',
-    benutAdv, ruimteAdv, werkelijkTot, beschikbaarAdv, 'CHF/GHF advies-toets');
+    benutAdv, ruimteAdv, toetslastAdv, beschikbaarAdv, 'CHF/GHF advies-toets');
   renderTopStatus('beheerStatusBox', 'beheerBar', 'beheerBarNote',
     benutBhMin, ruimteBhMin, minimaalTot, beschikbaarBh, 'NHG beheer-toets (minimale last)');
 
   /* Gewogen RVP < 10 jr: de werkelijke-lasttoets rekent de last op de contractrente, maar de Trhk-toets
      (art. 3) rekent de financieringslast op de toetsrente (annuïtair, 30 jaar). Die is dan strenger: toon wat Trhk toestaat. */
   if (wgRvp < 10 && totaalHoofdsom > 0){
-    const annTrhk = annuMaand(1, toetsrenteAdv, 30);
-    const trhkLast = totaalHoofdsom * annTrhk + erfpacht;
-    const trhkMax = annTrhk > 0 ? Math.max(0, beschikbaarAdv - erfpacht) / annTrhk : 0;
+    const annTrhk = annTrhkAdv;
+    const trhkLast = (totaalHoofdsom - hoofdsomB3 + hoofdsomB3 * bepAdv.verh) * annTrhk + erfpacht; /* box 3-deel gebruteerd × q1/q3 */
+    const trhkMax = maxHAdv;
     const trhkOk = Math.round(trhkMax) >= Math.round(totaalHoofdsom);
     const p2 = v => v.toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
     document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend',
@@ -1040,14 +1098,16 @@ function bereken(){
   else if (!pensioentoetsGeldt) pensStatus = 'niet van toepassing';
   else if (pensOnvolledig) pensStatus = 'van toepassing — inkomen vanaf AOW ontbreekt';
   else pensStatus = `van toepassing — getoetst op ${fmt(pensInk)} (inkomen vanaf AOW)` + (heeftPre ? ` en ${fmt(preInk)} (periode vervroegd pensioen)` : '');
+  /* Advies (Trhk): toetsmomenten — inkomen vanaf AOW ontbreekt voor een moment binnen 10 jaar */
+  if (advOnvolledig){
+    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', `<div class="status bad" style="margin-top:10px"><h3>${pensTxt}: vul inkomen vanaf AOW in</h3><p>Binnen de toetshorizon van 10 jaar is de pensioentoets of de AOW-leeftijd van toepassing, maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. Die toetsmomenten zijn overgeslagen; de uitkomst is daarom <b>onvolledig</b>.</p></div>`);
+  }
+  document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', `<div class="status ok" style="margin-top:10px"><p><b>Bepalend toetsmoment (Trhk):</b> ${bepAdv.lbl} — toetsinkomen ${fmt(bepAdv.ink)} met de ${bepAdv.aow?'AOW-tabel':'niet-AOW-tabel'}${uitkAdv.length>1?` (getoetst op ${uitkAdv.length} momenten binnen 10 jaar: ${uitkAdv.map(u => u.lbl + ' ruimte ' + fmt(u.ruimte)).join('; ')})`:''}${hoofdsomB3>0&&!volledigBox3?`; box 3-last gebruteerd × ${fmtD2(bepAdv.verh)} (${pctStr(bepAdv.q1*100)} / ${pctStr(bepAdv.q3*100)})`:''}. Maximale hypotheek volgens deze norm (annuïtair 30 jaar op ${fmtD2(toetsrenteAdv)}%, exclusief energielabel- en alleenstaandenbedrag): <b>${fmt(Math.round(maxHAdv))}</b>.</p></div>`);
   if (pensOnvolledig){
     const w = `<div class="status bad" style="margin-top:10px"><h3>${pensTxt}: vul inkomen vanaf AOW in</h3><p>De pensioentoets is van toepassing (${pt1?'aanvrager 1':''}${pt1&&pt2?' en ':''}${pt2?'aanvrager 2':''}), maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. De uitkomst hieronder is alleen op het huidige inkomen gebaseerd en is daarom <b>onvolledig</b>.</p></div>`;
-    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', w);
     document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', w);
   } else if (pensScenario){
-    const wa = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met de AOW-tabel${heeftPre?` en op ${fmt(preInk)} in de periode vervroegd pensioen vóór AOW`:''}; laagste: ${fmt(pensInkAdv)} (${pensAdv.naam}). ${advPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
     const wb = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met de AOW-tabel${heeftPre?` en op ${fmt(preInk)} in de periode vervroegd pensioen vóór AOW`:''}; laagste: ${fmt(pensInkBh)} (${pensBh.naam}). ${bhPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
-    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', wa);
     document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', wb);
   }
 
@@ -1065,24 +1125,25 @@ function bereken(){
 
   /* Tabellen advies */
   document.getElementById('adviesMaxTable').innerHTML = `
-    <tr><td>Gezamenlijk toetsinkomen${advPens?(pensInkAdv===pensInk?' (inkomen vanaf AOW — pensioentoets)':' (periode vervroegd pensioen vóór AOW — pensioentoets)'):''}</td><td class="num">${fmt(toetsInkomenAdv)}</td></tr>${alimJaar>0?`
+    <tr><td>Gezamenlijk toetsinkomen (${bepAdv.lbl})</td><td class="num">${fmt(toetsInkomenAdv)}</td></tr>${alimJaar>0?`
     <tr class="sub"><td>waarvan afgetrokken: betaalde partneralimentatie aanvrager 1 (NHG V&amp;N 2026 C.7.14.2)</td><td class="num">− ${fmt(alimJaar)} /jr</td></tr>`:''}
     <tr><td>FL% box 1 (${pctStr(aandeelBox1*100)} aandeel)</td><td class="num">${(flBox1Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
     <tr><td>FL% box 3 (${pctStr(aandeelBox3*100)} aandeel)</td><td class="num">${(flBox3Adv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</td></tr>
-    <tr><td>Effectief gewogen FL%</td><td class="num"><b>${(flAdv*100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}%</b></td></tr>
+    <tr><td>Toegepast FL% ${volledigBox3?'(volledig box 3: box 3-tabel)':(hoofdsomB3>0?'(box 1-tabel; box 3-last gebruteerd)':'(box 1-tabel)')}</td><td class="num"><b>${(flAdv*100).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}%</b></td></tr>
     <tr><td>Max financieringslast / jaar</td><td class="num">${fmt(maxFLjaarAdv)}</td></tr>
     <tr class="total"><td>Max financieringslast / maand (bruto)</td><td class="num">${fmt(maxFLmndAdv)}</td></tr>
     <tr class="sub"><td>af: doorlopend krediet (${fmt(dkLimiet)} × 2%)</td><td class="num">− ${fmt(dkLast)}</td></tr>
     <tr class="sub"><td>af: aflopend krediet</td><td class="num">− ${fmt(aflK)}</td></tr>
-    <tr class="sub"><td>af: studieschuld DUO (${fmt(duoTerm)} × ${fmtD2(getBruteringStudieschuld(toetsrenteAdv))})</td><td class="num">− ${fmt(duoBrutoAdv)}</td></tr>
+    <tr class="sub"><td>af: studieschuld DUO (${fmt(duoTerm)} × ${fmtD2(duoFAdv)})</td><td class="num">− ${fmt(duoBrutoAdv)}</td></tr>
     <tr class="sub"><td>af: private lease</td><td class="num">− ${fmt(lease)}</td></tr>
     <tr class="sub"><td>af: overige verplichtingen</td><td class="num">− ${fmt(ovv)}</td></tr>
-    <tr class="highlight"><td>Beschikbaar voor hypotheek­last (per maand)</td><td class="num">${fmt(beschikbaarAdv)}</td></tr>
+    <tr class="highlight"><td>Beschikbaar voor hypotheek­last (per maand)</td><td class="num">${fmt(beschikbaarAdv)}</td></tr>${(hoofdsomB3>0&&!volledigBox3)?`
+    <tr class="sub"><td>Toetslast: werkelijke last, box 3-delen × ${fmtD2(bepAdv.verh)} (q1/q3)</td><td class="num">${fmt(toetslastAdv)}</td></tr>`:''}
   `;
   document.getElementById('adviesParamTable').innerHTML = `
     <tr><td>Normjaar</td><td class="num">${NJ} — ${ADV.bron}</td></tr>
-    <tr><td>Gebruikte tabel</td><td class="num">${advPens ? pensAdv.naam + ' (pensioentoets)' : (tabelAOW?'CHF welAOW '+NJ:'CHF nietAOW '+NJ) + ((oneAOW && !isAlleenstaand)?(tabelAOW?' (één AOW, met hoogste inkomen → AOW-tabel, art. 3 lid 7)':' (één AOW, niet met hoogste inkomen → niet-AOW-tabel, art. 3 lid 7)'):'')}</td></tr>
-    <tr><td>${pensTxt}</td><td class="num">${pensStatus}</td></tr>
+    <tr><td>Gebruikte tabel</td><td class="num">${(advTabelAOW?'CHF welAOW '+NJ:'CHF nietAOW '+NJ) + (advPens ? ' — ' + bepAdv.lbl + ' (pensioentoets)' : '') + (bepAdv.tie ? ' (gelijk toetsinkomen, verschillende AOW-status → laagste uitkomst, art. 3 lid 7)' : '') + ((!bepAdv.tie && !advPens && oneAOW && !isAlleenstaand)?(advTabelAOW?' (één AOW, met hoogste inkomen → AOW-tabel, art. 3 lid 7)':' (één AOW, niet met hoogste inkomen → niet-AOW-tabel, art. 3 lid 7)'):'')}</td></tr>
+    <tr><td>${pensTxt}</td><td class="num">${pensioenDrempel === 0 ? 'niet toetsen (uitgeschakeld)' : (advOnvolledig ? 'van toepassing — inkomen vanaf AOW ontbreekt' : (uitkAdv.length > 1 || PA.some(p => p.av && !p.av.isAOW && p.av.leeftijd >= pensioenDrempel) ? 'getoetst op ' + uitkAdv.length + ' toetsmoment' + (uitkAdv.length>1?'en':'') + '; bepalend: ' + bepAdv.lbl : 'niet van toepassing'))}</td></tr>
     <tr><td>Gewogen debetrente</td><td class="num">${fmtD2(wgRente)}%</td></tr>
     <tr><td>Gewogen rentevaste periode</td><td class="num">${fmtD2(wgRvp)} jr</td></tr>
     <tr><td>Toetsrente toegepast</td><td class="num"><b>${fmtD2(toetsrenteAdv)}%</b></td></tr>

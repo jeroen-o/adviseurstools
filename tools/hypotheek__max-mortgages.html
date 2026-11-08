@@ -171,7 +171,7 @@ body>.form-body,body>.fout-box,body>.btnrow,body>#res-blok,body>.footer{max-widt
         <option value="52">52 (some lenders)</option>
       </select>
     </div>
-    <div class="ibox" id="info-pdr" style="display:none">From this age (as long as the state pension age has not yet been reached) the mortgage is also tested on the income from state pension age (AOW + pension) using the AOW table; the lower outcome applies. Default 57 (Nibud / Dutch Temporary Mortgage Credit Regulation); some lenders already apply this test from age 52.</div>
+    <div class="ibox" id="info-pdr" style="display:none">From this age (as long as the state pension age has not yet been reached) the lower of current income and income from state pension age (AOW + pension) counts per person, using the non-AOW table. The mortgage is also tested at the state pension date and at the date someone reaches this age, if within 10 years (AOW table if the person with the highest qualifying income has reached state pension age); the lowest outcome applies. Default 57 (Nibud / Dutch Temporary Mortgage Credit Regulation); some lenders already apply this test from age 52.</div>
   </div>
 
   <div class="veld">
@@ -190,7 +190,7 @@ body>.form-body,body>.fout-box,body>.btnrow,body>#res-blok,body>.footer{max-widt
       <button id="aow-b10"><span class="pdrT">57</span>+, not yet AOW</button>
       <button id="aow-nee" class="act">No</button>
     </div>
-    <div class="ibox" id="info-aow" style="display:none">Choose:<br><br>• <b>Yes</b> – you have reached the Dutch state pension age (67 in 2026–2027; 67 years and 3 months for those reaching it in 2028–2031).<br>• <b><span class="pdrT">57</span>+, not yet AOW</b> – you have reached the selected pension test age but not yet the state pension age. The test is then run on your current income and on your income from state pension age (AOW table); the lower outcome applies.<br>• <b>No</b> – neither applies.<br><br>With a date of birth this is determined automatically (state pension age 67 if born up to 31-12-1960, otherwise 67 years and 3 months — indicative after 2031).</div>
+    <div class="ibox" id="info-aow" style="display:none">Choose:<br><br>• <b>Yes</b> – you have reached the Dutch state pension age (67 in 2026–2027; 67 years and 3 months for those reaching it in 2028–2031).<br>• <b><span class="pdrT">57</span>+, not yet AOW</b> – you have reached the selected pension test age but not yet the state pension age. The lower of your current income and your income from state pension age then counts (non-AOW table); in addition the test is run at the state pension date (within 10 years; always without a date of birth) using the AOW table. The lowest outcome applies.<br>• <b>No</b> – neither applies.<br><br>With a date of birth this is determined automatically (state pension age 67 if born up to 31-12-1960, otherwise 67 years and 3 months — indicative after 2031).</div>
   </div>
 
   <div class="veld">
@@ -327,7 +327,7 @@ body>.form-body,body>.fout-box,body>.btnrow,body>#res-blok,body>.footer{max-widt
       <span class="iaf">€</span>
       <input type="number" id="box3d" placeholder="0" inputmode="decimal">
     </div>
-    <div class="ibox" id="info-box3d" style="display:none">The portion of the mortgage not deductible in box 1, e.g. an interest-only part taken out before 2013.</div>
+    <div class="ibox" id="info-box3d" style="display:none">The portion of the mortgage not deductible in box 1, e.g. an interest-only part taken out before 2013. The monthly cost of this part is grossed up by the ratio of the box 1 and box 3 percentages (as in MAX. HYP. 2027).</div>
   </div>
 
   <div class="sl"></div>
@@ -473,15 +473,18 @@ function annF(r,j){const rm=r/12,n=j*12;return rm===0?n:(1-Math.pow(1+rm,-n))/rm
    (toetsinkomen × financieringslast% / 12 − bruto maandlasten verplichtingen) × annuïteitsfactor(toetsrente, looptijd) */
 function maxHypScenario(o){
   const aowTab=o.aowTab, ink=o.ink, tr=o.tr;
-  const M1=ink*flpPct(aowTab?'a':'n',ink,tr)/12;
-  const M3=ink*flpPct(aowTab?'a3':'n3',ink,tr)/12;
+  const q1=flpPct(aowTab?'a':'n',ink,tr), q3=flpPct(aowTab?'a3':'n3',ink,tr);
+  const M1=ink*q1/12;
+  const M3=ink*q3/12;
   const af=annF(tr,o.lpt);
   let mh;
   if(o.box1==='nee'){mh=(M3-o.last)*af;}
   else if(o.box1==='deels'){
-    const h1=(M1-o.last)*af,h3=(M3-o.last)*af;
-    const f=Math.min(1,Math.max(0,o.box3d/Math.max(h1,1)));
-    mh=h1*(1-f)+h3*f;
+    // Brutering (zoals MAX. HYP. 2027): de toetslast van het box 3-deel B telt × q1/q3 (box 1- / box 3-percentage).
+    // Los op: (H − B)·a + B·a·q1/q3 = M1 − lasten  →  H = (M1 − lasten)·annuïteitsfactor − B·(q1/q3 − 1)
+    const B=Math.max(0,o.box3d||0), h1=(M1-o.last)*af;
+    mh=h1-B*(q1/q3-1);
+    if(mh<B)mh=h1*q3/q1; // hypotheek kleiner dan B: geheel box 3 (gebruteerd)
   } else {mh=(M1-o.last)*af;}
   const AL=ALLEEN[o.jaar||normJaar()];
   const startI=aowTab?AL.grensAOW:AL.grens;
@@ -560,11 +563,16 @@ function setDW(key,val){
   const btn=g(key+'-'+val);
   if(btn)btn.classList.add('act');
   if(key==='box1')g('box3d-veld').style.display=val==='deels'?'block':'none';
-  if(key==='aow')g('i1aow-veld').style.display=val==='b10'?'block':'none';
-  if(key==='aowP')g('i2aow-veld').style.display=val==='b10'?'block':'none';
+  if(key==='aow')g('i1aow-veld').style.display=(val==='b10'||aowInkNodig('geb1'))?'block':'none';
+  if(key==='aowP')g('i2aow-veld').style.display=(val==='b10'||aowInkNodig('geb2'))?'block':'none';
 }
 // Pensioentoets: drempel 57 (standaard) of 52 jaar; AOW-leeftijd uit geboortedatum
 function pDrempel(){return parseInt(gv('pdr'),10)||0;}
+/* Toetshorizon pensioentoets: 10 jaar vanaf vandaag (zoals MAX. HYP. 2027) */
+function horizonDatum(){const n=new Date();return new Date(n.getFullYear()+10,n.getMonth(),n.getDate());}
+function drempelDatum(geb,dr){return new Date(geb.getFullYear()+dr,geb.getMonth(),geb.getDate());}
+/* Inkomen vanaf AOW nodig: AOW-datum of drempelleeftijd valt binnen de toetshorizon */
+function aowInkNodig(gebId){const geb=leesGeb(gebId);if(!geb)return false;const nu=new Date(),hz=horizonDatum(),a=aowDatumUit(geb),dr=pDrempel();if(nu>=a)return false;return a<=hz||(dr>0&&drempelDatum(geb,dr)<=hz);}
 function aowDatumUit(geb){const m=geb.getFullYear()<=1960?0:3;/* t/m 1960: 67 jaar; daarna 67 jaar en 3 maanden (na 2031 indicatief) */const d=new Date(geb.getFullYear()+67,geb.getMonth()+m,1);d.setDate(Math.min(geb.getDate(),new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d;}
 function leeftijdOp(geb,dt){let a=dt.getFullYear()-geb.getFullYear();if(dt.getMonth()<geb.getMonth()||(dt.getMonth()===geb.getMonth()&&dt.getDate()<geb.getDate()))a--;return a;}
 function leesGeb(id){const v=gv(id);if(!v)return null;const d=new Date(v+'T00:00:00');return isNaN(d)?null:d;}
@@ -643,25 +651,51 @@ function bereken(){
   const studieF=S.box1==='nee'?1:brutFactor(tr);
   // Erfpachtcanon: niet bruteren. Overige niet-aftrekbare lasten: bruteren met dezelfde factor. Partneralimentatie zit in het toetsinkomen.
   const last=gn('pLening')+gn('aKred')*.02+gn('studie')*studieF+gn('erfp')+gn('overig')*studieF;
-  // AOW-tabel volgt de persoon met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
-  function scen(a1,a2,st1,st2){
+  // Trhk art. 3 lid 7: tabel van de persoon met het hoogste toetsinkomen; bij gelijk inkomen en verschillende AOW-status de laagste uitkomst
+  function scen(a1,a2,aw1,aw2){
     // betaalde partneralimentatie per persoon van het toetsinkomen af (ook na AOW: geen einddatum bekend), niet negatief
     const x1=Math.max(0,a1-alimZj), x2=Math.max(0,a2-alimPj);
-    const hoogsteAow=(x1>=x2?st1:st2)==='ja';
-    return maxHypScenario({ink:x1+x2,aowTab:hoogsteAow,tr:tr,lpt:lpt,box1:S.box1,box3d:gn('box3d'),last:last,jaar:jaar,alleen:!(heeftPartner&&a2>0)});
+    const o={ink:x1+x2,tr:tr,lpt:lpt,box1:S.box1,box3d:gn("box3d"),last:last,jaar:jaar,alleen:!(heeftPartner&&a2>0)};
+    if(heeftPartner&&x1===x2&&aw1!==aw2){
+      const hA=maxHypScenario(Object.assign({aowTab:true},o)), hN=maxHypScenario(Object.assign({aowTab:false},o));
+      return hA<hN?{h:hA,aowTab:true,ink:o.ink}:{h:hN,aowTab:false,ink:o.ink};
+    }
+    const aowTab=(heeftPartner&&x2>x1)?aw2:aw1;
+    return {h:maxHypScenario(Object.assign({aowTab:aowTab},o)),aowTab:aowTab,ink:o.ink};
   }
-  // 1. Toets op het huidige inkomen (wie de AOW-leeftijd al heeft: AOW-tabel)
-  let mh=scen(i1,i2,aow1,aowP);
-  // 2. Pensioentoets (vanaf de gekozen drempelleeftijd, zolang de AOW-leeftijd nog niet is bereikt): ook toetsen op het inkomen vanaf AOW met de AOW-tabel; laagste uitkomst telt
-  let aowToets=null;
-  if(aow1==='b10'||aowP==='b10'){
-    const ia1=aow1==='b10'?parseFloat(gv('i1aow')):i1;
-    const ia2=aowP==='b10'?parseFloat(gv('i2aow')):i2;
-    if(isNaN(ia1)||isNaN(ia2)){fout.innerHTML='Pension test (from age '+dr+') applies: please enter the income from state pension age (AOW + pension).';fout.style.display='block';return;}
-    const mhAow=scen(ia1,ia2,aow1==='b10'?'ja':aow1,aowP==='b10'?'ja':aowP);
-    aowToets={nu:mh,aow:mhAow,ink:(aow1==='b10'?ia1:i1)+(aowP==='b10'?ia2:i2)};
-    mh=Math.min(mh,mhAow);
+  // Pensioentoets (zoals MAX. HYP. 2027): per persoon op elk toetsmoment — AOW bereikt: inkomen vanaf AOW;
+  // vanaf de drempelleeftijd (57/52) zonder AOW: MIN(huidig inkomen, inkomen vanaf AOW); anders huidig inkomen.
+  // Toetsmomenten: bij aanvang, op de AOW-datum en op de drempeldatum van elke aanvrager binnen 10 jaar. Laagste uitkomst telt.
+  const nu=new Date(), hz=horizonDatum();
+  const P=[{ps:ps1,geb:leesGeb("geb1"),ink:i1,aowInk:parseFloat(gv("i1aow"))}, heeftPartner?{ps:ps2,geb:leesGeb("geb2"),ink:i2,aowInk:parseFloat(gv("i2aow"))}:null];
+  function persOp(p,d,naAow){
+    if(!p)return {ink:0,aow:false};
+    if(p.ps.st==="ja")return {ink:p.ink,aow:true}; // AOW al bereikt: het ingevulde inkomen is het inkomen vanaf AOW
+    if(p.geb&&p.ps.aowD){
+      if(d>=p.ps.aowD)return {ink:p.aowInk,aow:true,nodig:true};
+      if(dr>0&&leeftijdOp(p.geb,d)>=dr)return {ink:Math.min(p.ink,p.aowInk),aow:false,nodig:true};
+      return {ink:p.ink,aow:false};
+    }
+    if(p.ps.st==="b10")return naAow?{ink:p.aowInk,aow:true,nodig:true}:{ink:Math.min(p.ink,p.aowInk),aow:false,nodig:true};
+    return {ink:p.ink,aow:false};
   }
+  const mom=[{d:nu,lbl:"at the start"}];
+  P.forEach(function(p,k){
+    if(!p||!p.geb||p.ps.st==="ja")return;
+    const wie=k?"partner":"applicant";
+    if(p.ps.aowD>nu&&p.ps.aowD<=hz)mom.push({d:p.ps.aowD,lbl:"state pension date "+wie+" ("+dEN(p.ps.aowD)+")"});
+    if(dr>0){const dd=drempelDatum(p.geb,dr);if(dd>nu&&dd<=hz)mom.push({d:dd,lbl:wie+" reaches age "+dr+" ("+dEN(dd)+")"});}
+  });
+  if(P.some(function(p){return p&&!p.geb&&p.ps.st==="b10";}))mom.push({d:nu,naAow:true,lbl:"from state pension age (no date of birth: date unknown)"});
+  let ontbreekt=false;
+  const uitk=mom.map(function(m){
+    const a=persOp(P[0],m.d,m.naAow), b=persOp(P[1],m.d,m.naAow);
+    if((a.nodig&&isNaN(a.ink))||(b.nodig&&isNaN(b.ink))){ontbreekt=true;return {lbl:m.lbl,h:0,aowTab:false,ink:0};}
+    return Object.assign({lbl:m.lbl},scen(a.ink,b.ink,a.aow,b.aow));
+  });
+  if(ontbreekt){fout.innerHTML="Within the 10-year test horizon the pension test (from age "+dr+") or state pension age applies: please enter the income from state pension age (AOW + pension).";fout.style.display="block";return;}
+  const bep=uitk.reduce(function(a,b){return b.h<a.h?b:a;},uitk[0]);
+  let mh=bep.h;
   mh=Math.max(0,mh);
   var lbl=gv('lbl');
   const aankoopB=BA[lbl]||0;
@@ -680,9 +714,11 @@ function bereken(){
     +((alimZj+alimPj)>0?'<br>Spousal support paid has been deducted from qualifying income (NHG V&amp;N 2026 C.7.14.2): '+[alimZj>0?'applicant '+fmt(alimZj)+' per year':'',alimPj>0?'partner '+fmt(alimPj)+' per year':''].filter(Boolean).join(', ')+'; also in the pension test.':'')
     +(lbl==='geen'?'<br>No valid energy label: '+fmt(10000)+' extra applies at purchase (and '+fmt(10000)+' for energy-saving measures).':'')
     +'<br>'+(dr<=0?'Pension test: not tested (switched off).':
-      aowToets?'Pension test (from age '+dr+'): applies — tested on current income ('+fmt(Math.max(0,aowToets.nu))+') and on income from state pension age '+fmt(aowToets.ink)+' using the AOW table ('+fmt(Math.max(0,aowToets.aow))+'); the lower outcome applies (before energy-label amount).':
+      uitk.length>1?'Pension test'+(dr>0?' (from age '+dr+')':'')+': tested at '+uitk.length+' test moments within 10 years ('+uitk.map(function(u){return u.lbl+': '+fmt(Math.max(0,u.h));}).join('; ')+'); the lowest outcome applies (before energy-label amount).':
+      (aow1==='b10')||(aowP==='b10')?'Pension test (from age '+dr+'): applies — tested on the lower of current income and income from state pension age; the state pension date is beyond the 10-year test horizon.':
       (aow1==='ja'||aowP==='ja')?'Pension test (from age '+dr+'): state pension age reached — tested on the income entered using the AOW table.':
-      'Pension test (from age '+dr+'): not applicable'+((ps1.lft!=null)?' (age '+ps1.lft+(ps2.lft!=null?' / '+ps2.lft:'')+')':'')+'.');
+      'Pension test (from age '+dr+'): not applicable'+((ps1.lft!=null)?' (age '+ps1.lft+(ps2.lft!=null?' / '+ps2.lft:'')+')':'')+'.')
+    +'<br>Decisive test moment: '+bep.lbl+' — qualifying income '+fmt(bep.ink)+' using the '+(bep.aowTab?'AOW table':'non-AOW table')+(S.box1==='deels'&&gn('box3d')>0?'; box 3 part '+fmt(gn('box3d'))+' grossed up by the ratio of the box 1 / box 3 percentage':'')+'.';
 
   const energieCard=g('res-energie');
   if(S.verb&&verbouwB>0){

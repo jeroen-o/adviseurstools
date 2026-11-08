@@ -182,7 +182,7 @@ input[type=date]{font-family:inherit}
         <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
       </select>
     </div>
-    <div class="ibox" id="info-pdr" style="display:none">Vanaf deze leeftijd (en zolang de AOW-leeftijd nog niet is bereikt) wordt naast het huidige inkomen ook getoetst op het inkomen vanaf AOW (AOW + pensioen) met de AOW-tabel; de laagste uitkomst telt. Standaard 57 jaar (Nibud/Tijdelijke regeling hypothecair krediet); sommige geldverstrekkers toetsen al vanaf 52 jaar.</div>
+    <div class="ibox" id="info-pdr" style="display:none">Vanaf deze leeftijd (en zolang de AOW-leeftijd nog niet is bereikt) telt per persoon het laagste van het huidige inkomen en het inkomen vanaf AOW (AOW + pensioen), met de niet-AOW-tabel. Daarnaast wordt getoetst op de AOW-datum en op de datum waarop iemand deze leeftijd bereikt, voor zover binnen 10 jaar (AOW-tabel als de persoon met het hoogste toetsinkomen AOW heeft); de laagste uitkomst telt. Standaard 57 jaar (Nibud/Tijdelijke regeling hypothecair krediet); sommige geldverstrekkers toetsen al vanaf 52 jaar.</div>
   </div>
 
   <div class="veld">
@@ -203,7 +203,7 @@ input[type=date]{font-family:inherit}
       <button id="aow-b10" onclick="setDW('aow','b10')"><span class="pdrT">57</span>+ jaar, nog geen AOW</button>
       <button id="aow-nee" onclick="setDW('aow','nee')" class="act">nee</button>
     </div>
-    <div class="ibox" id="info-aow" style="display:none">Kies:<br><br>• <b>ja</b> – u heeft de AOW-leeftijd al bereikt (67 jaar in 2026–2027; 67 jaar en 3 maanden voor wie die in 2028–2031 bereikt).<br>• <b><span class="pdrT">57</span>+ jaar, nog geen AOW</b> – u bent de gekozen pensioentoetsleeftijd gepasseerd maar heeft de AOW-leeftijd nog niet. Er wordt dan getoetst op uw huidige inkomen én op uw inkomen vanaf AOW (AOW-tabel); de laagste uitkomst telt.<br>• <b>nee</b> – geen van beide is van toepassing.<br><br>Met een ingevulde geboortedatum wordt dit automatisch bepaald (AOW-leeftijd 67 jaar voor geboren t/m 31-12-1960, anders 67 jaar en 3 maanden — na 2031 indicatief).<br><br>Afhankelijk van uw leeftijd gelden andere financieringslastnormen voor normjaar <span class="njT">2026</span>.</div>
+    <div class="ibox" id="info-aow" style="display:none">Kies:<br><br>• <b>ja</b> – u heeft de AOW-leeftijd al bereikt (67 jaar in 2026–2027; 67 jaar en 3 maanden voor wie die in 2028–2031 bereikt).<br>• <b><span class="pdrT">57</span>+ jaar, nog geen AOW</b> – u bent de gekozen pensioentoetsleeftijd gepasseerd maar heeft de AOW-leeftijd nog niet. Er telt dan het laagste van uw huidige inkomen en uw inkomen vanaf AOW (niet-AOW-tabel); daarnaast wordt op de AOW-datum (binnen 10 jaar; zonder geboortedatum altijd) getoetst met de AOW-tabel. De laagste uitkomst telt.<br>• <b>nee</b> – geen van beide is van toepassing.<br><br>Met een ingevulde geboortedatum wordt dit automatisch bepaald (AOW-leeftijd 67 jaar voor geboren t/m 31-12-1960, anders 67 jaar en 3 maanden — na 2031 indicatief).<br><br>Afhankelijk van uw leeftijd gelden andere financieringslastnormen voor normjaar <span class="njT">2026</span>.</div>
   </div>
 
   <div class="veld">
@@ -339,7 +339,7 @@ input[type=date]{font-family:inherit}
       <span class="iaf">€</span>
       <input type="number" id="box3d" placeholder="0" inputmode="decimal">
     </div>
-    <div class="ibox" id="info-box3d" style="display:none">Het hypotheekdeel dat niet aftrekbaar is in box 1, bijv. een aflossingsvrij hypotheekdeel afgesloten vóór 2013.</div>
+    <div class="ibox" id="info-box3d" style="display:none">Het hypotheekdeel dat niet aftrekbaar is in box 1, bijv. een aflossingsvrij hypotheekdeel afgesloten vóór 2013. De maandlast van dit deel wordt gebruteerd met de verhouding tussen het box 1- en het box 3-percentage (zoals MAX. HYP. 2027).</div>
   </div>
 
   <div class="sl"></div>
@@ -484,15 +484,18 @@ function annF(r,j){const rm=r/12,n=j*12;return rm===0?n:(1-Math.pow(1+rm,-n))/rm
    (toetsinkomen × financieringslast% / 12 − bruto maandlasten verplichtingen) × annuïteitsfactor(toetsrente, looptijd) */
 function maxHypScenario(o){
   const aowTab=o.aowTab, ink=o.ink, tr=o.tr;
-  const M1=ink*flpPct(aowTab?'a':'n',ink,tr)/12;
-  const M3=ink*flpPct(aowTab?'a3':'n3',ink,tr)/12;
+  const q1=flpPct(aowTab?'a':'n',ink,tr), q3=flpPct(aowTab?'a3':'n3',ink,tr);
+  const M1=ink*q1/12;
+  const M3=ink*q3/12;
   const af=annF(tr,o.lpt);
   let mh;
   if(o.box1==='nee'){mh=(M3-o.last)*af;}
   else if(o.box1==='deels'){
-    const h1=(M1-o.last)*af,h3=(M3-o.last)*af;
-    const f=Math.min(1,Math.max(0,o.box3d/Math.max(h1,1)));
-    mh=h1*(1-f)+h3*f;
+    // Brutering (zoals MAX. HYP. 2027): de toetslast van het box 3-deel B telt × q1/q3 (box 1- / box 3-percentage).
+    // Los op: (H − B)·a + B·a·q1/q3 = M1 − lasten  →  H = (M1 − lasten)·annuïteitsfactor − B·(q1/q3 − 1)
+    const B=Math.max(0,o.box3d||0), h1=(M1-o.last)*af;
+    mh=h1-B*(q1/q3-1);
+    if(mh<B)mh=h1*q3/q1; // hypotheek kleiner dan B: geheel box 3 (gebruteerd)
   } else {mh=(M1-o.last)*af;}
   const AL=ALLEEN[o.jaar||normJaar()];
   const startI=aowTab?AL.grensAOW:AL.grens;
@@ -519,11 +522,16 @@ function setDW(key,val){
   const btn=g(key+"-"+val);
   if(btn)btn.classList.add("act");
   if(key==="box1")g("box3d-veld").style.display=val==="deels"?"block":"none";
-  if(key==="aow")g("i1aow-veld").style.display=val==="b10"?"block":"none";
-  if(key==="aowP")g("i2aow-veld").style.display=val==="b10"?"block":"none";
+  if(key==="aow")g("i1aow-veld").style.display=(val==="b10"||aowInkNodig("geb1"))?"block":"none";
+  if(key==="aowP")g("i2aow-veld").style.display=(val==="b10"||aowInkNodig("geb2"))?"block":"none";
 }
 // Pensioentoets: drempel 57 (standaard) of 52 jaar; AOW-leeftijd uit geboortedatum
 function pDrempel(){return parseInt(gv("pdr"),10)||0;}
+/* Toetshorizon pensioentoets: 10 jaar vanaf vandaag (zoals MAX. HYP. 2027) */
+function horizonDatum(){const n=new Date();return new Date(n.getFullYear()+10,n.getMonth(),n.getDate());}
+function drempelDatum(geb,dr){return new Date(geb.getFullYear()+dr,geb.getMonth(),geb.getDate());}
+/* Inkomen vanaf AOW nodig: AOW-datum of drempelleeftijd valt binnen de toetshorizon */
+function aowInkNodig(gebId){const geb=leesGeb(gebId);if(!geb)return false;const nu=new Date(),hz=horizonDatum(),a=aowDatumUit(geb),dr=pDrempel();if(nu>=a)return false;return a<=hz||(dr>0&&drempelDatum(geb,dr)<=hz);}
 function aowDatumUit(geb){const m=geb.getFullYear()<=1960?0:3;/* t/m 1960: 67 jaar; daarna 67 jaar en 3 maanden (na 2031 indicatief) */const d=new Date(geb.getFullYear()+67,geb.getMonth()+m,1);d.setDate(Math.min(geb.getDate(),new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d;}
 function leeftijdOp(geb,dt){let a=dt.getFullYear()-geb.getFullYear();if(dt.getMonth()<geb.getMonth()||(dt.getMonth()===geb.getMonth()&&dt.getDate()<geb.getDate()))a--;return a;}
 function leesGeb(id){const v=gv(id);if(!v)return null;const d=new Date(v+"T00:00:00");return isNaN(d)?null:d;}
@@ -611,25 +619,51 @@ function bereken(){
   const studieF=S.box1==="nee"?1:brutFactor(tr);
   // Erfpachtcanon: niet bruteren. Overige niet-aftrekbare lasten: bruteren met dezelfde factor. Partneralimentatie zit in het toetsinkomen.
   const last=gn("pLening")+gn("aKred")*.02+gn("studie")*studieF+gn("erfp")+gn("overig")*studieF;
-  // AOW-tabel volgt de persoon met het hoogste toetsinkomen (art. 3 lid 7 Trhk)
-  function scen(a1,a2,st1,st2){
+  // Trhk art. 3 lid 7: tabel van de persoon met het hoogste toetsinkomen; bij gelijk inkomen en verschillende AOW-status de laagste uitkomst
+  function scen(a1,a2,aw1,aw2){
     // betaalde partneralimentatie per persoon van het toetsinkomen af (ook na AOW: geen einddatum bekend), niet negatief
     const x1=Math.max(0,a1-alimZj), x2=Math.max(0,a2-alimPj);
-    const hoogsteAow=(x1>=x2?st1:st2)==="ja";
-    return maxHypScenario({ink:x1+x2,aowTab:hoogsteAow,tr:tr,lpt:lpt,box1:S.box1,box3d:gn("box3d"),last:last,jaar:jaar,alleen:!(heeftPartner&&a2>0)});
+    const o={ink:x1+x2,tr:tr,lpt:lpt,box1:S.box1,box3d:gn("box3d"),last:last,jaar:jaar,alleen:!(heeftPartner&&a2>0)};
+    if(heeftPartner&&x1===x2&&aw1!==aw2){
+      const hA=maxHypScenario(Object.assign({aowTab:true},o)), hN=maxHypScenario(Object.assign({aowTab:false},o));
+      return hA<hN?{h:hA,aowTab:true,ink:o.ink}:{h:hN,aowTab:false,ink:o.ink};
+    }
+    const aowTab=(heeftPartner&&x2>x1)?aw2:aw1;
+    return {h:maxHypScenario(Object.assign({aowTab:aowTab},o)),aowTab:aowTab,ink:o.ink};
   }
-  // 1. Toets op het huidige inkomen (wie de AOW-leeftijd al heeft: AOW-tabel)
-  let mh=scen(i1,i2,aow1,aowP);
-  // 2. Pensioentoets (vanaf de gekozen drempelleeftijd, zolang de AOW-leeftijd nog niet is bereikt): ook toetsen op het inkomen vanaf AOW met de AOW-tabel; laagste uitkomst telt
-  let aowToets=null;
-  if(aow1==="b10"||aowP==="b10"){
-    const ia1=aow1==="b10"?parseFloat(gv("i1aow")):i1;
-    const ia2=aowP==="b10"?parseFloat(gv("i2aow")):i2;
-    if(isNaN(ia1)||isNaN(ia2)){fout.innerHTML="Pensioentoets (vanaf "+dr+" jaar) is van toepassing: vul het inkomen vanaf AOW (AOW + pensioen) in.";fout.style.display="block";return;}
-    const mhAow=scen(ia1,ia2,aow1==="b10"?"ja":aow1,aowP==="b10"?"ja":aowP);
-    aowToets={nu:mh,aow:mhAow,ink:(aow1==="b10"?ia1:i1)+(aowP==="b10"?ia2:i2)};
-    mh=Math.min(mh,mhAow);
+  // Pensioentoets (zoals MAX. HYP. 2027): per persoon op elk toetsmoment — AOW bereikt: inkomen vanaf AOW;
+  // vanaf de drempelleeftijd (57/52) zonder AOW: MIN(huidig inkomen, inkomen vanaf AOW); anders huidig inkomen.
+  // Toetsmomenten: bij aanvang, op de AOW-datum en op de drempeldatum van elke aanvrager binnen 10 jaar. Laagste uitkomst telt.
+  const nu=new Date(), hz=horizonDatum();
+  const P=[{ps:ps1,geb:leesGeb("geb1"),ink:i1,aowInk:parseFloat(gv("i1aow"))}, heeftPartner?{ps:ps2,geb:leesGeb("geb2"),ink:i2,aowInk:parseFloat(gv("i2aow"))}:null];
+  function persOp(p,d,naAow){
+    if(!p)return {ink:0,aow:false};
+    if(p.ps.st==="ja")return {ink:p.ink,aow:true}; // AOW al bereikt: het ingevulde inkomen is het inkomen vanaf AOW
+    if(p.geb&&p.ps.aowD){
+      if(d>=p.ps.aowD)return {ink:p.aowInk,aow:true,nodig:true};
+      if(dr>0&&leeftijdOp(p.geb,d)>=dr)return {ink:Math.min(p.ink,p.aowInk),aow:false,nodig:true};
+      return {ink:p.ink,aow:false};
+    }
+    if(p.ps.st==="b10")return naAow?{ink:p.aowInk,aow:true,nodig:true}:{ink:Math.min(p.ink,p.aowInk),aow:false,nodig:true};
+    return {ink:p.ink,aow:false};
   }
+  const mom=[{d:nu,lbl:"bij aanvang"}];
+  P.forEach(function(p,k){
+    if(!p||!p.geb||p.ps.st==="ja")return;
+    const wie=k?"partner":"aanvrager";
+    if(p.ps.aowD>nu&&p.ps.aowD<=hz)mom.push({d:p.ps.aowD,lbl:"AOW-datum "+wie+" ("+dNL(p.ps.aowD)+")"});
+    if(dr>0){const dd=drempelDatum(p.geb,dr);if(dd>nu&&dd<=hz)mom.push({d:dd,lbl:wie+" bereikt "+dr+" jaar ("+dNL(dd)+")"});}
+  });
+  if(P.some(function(p){return p&&!p.geb&&p.ps.st==="b10";}))mom.push({d:nu,naAow:true,lbl:"vanaf AOW (geen geboortedatum: AOW-datum onbekend)"});
+  let ontbreekt=false;
+  const uitk=mom.map(function(m){
+    const a=persOp(P[0],m.d,m.naAow), b=persOp(P[1],m.d,m.naAow);
+    if((a.nodig&&isNaN(a.ink))||(b.nodig&&isNaN(b.ink))){ontbreekt=true;return {lbl:m.lbl,h:0,aowTab:false,ink:0};}
+    return Object.assign({lbl:m.lbl},scen(a.ink,b.ink,a.aow,b.aow));
+  });
+  if(ontbreekt){fout.innerHTML="Binnen de toetshorizon van 10 jaar geldt de pensioentoets (vanaf "+dr+" jaar) of de AOW-leeftijd: vul het inkomen vanaf AOW (AOW + pensioen) in.";fout.style.display="block";return;}
+  const bep=uitk.reduce(function(a,b){return b.h<a.h?b:a;},uitk[0]);
+  let mh=bep.h;
   mh=Math.max(0,mh);
   const lbl=gv("lbl");
   const aankoopB=BA[lbl]||0;
@@ -653,9 +687,11 @@ function bereken(){
     +((alimZj+alimPj)>0?"<br>Betaalde partneralimentatie is van het toetsinkomen afgetrokken (NHG V&amp;N 2026 C.7.14.2): "+[alimZj>0?"aanvrager "+fmt(alimZj)+" per jaar":"",alimPj>0?"partner "+fmt(alimPj)+" per jaar":""].filter(Boolean).join(", ")+"; ook bij de pensioentoets.":"")
     +(lbl==="geen"?"<br>Geen geldig energielabel: "+fmt(10000)+" extra bij aankoop (en "+fmt(10000)+" voor energiebesparende voorzieningen).":"")
     +"<br>"+(dr<=0?"Pensioentoets: niet getoetst (uitgeschakeld).":
-      aowToets?"Pensioentoets (vanaf "+dr+" jaar): van toepassing — getoetst op huidig inkomen ("+fmt(Math.max(0,aowToets.nu))+") én op inkomen vanaf AOW "+fmt(aowToets.ink)+" met de AOW-tabel ("+fmt(Math.max(0,aowToets.aow))+"); de laagste uitkomst geldt (vóór energielabelbedrag).":
+      uitk.length>1?"Pensioentoets"+(dr>0?" (vanaf "+dr+" jaar)":"")+": getoetst op "+uitk.length+" toetsmomenten binnen 10 jaar ("+uitk.map(function(u){return u.lbl+": "+fmt(Math.max(0,u.h));}).join("; ")+"); de laagste uitkomst geldt (vóór energielabelbedrag).":
+      (aow1==="b10")||(aowP==="b10")?"Pensioentoets (vanaf "+dr+" jaar): van toepassing — getoetst op het laagste van huidig inkomen en inkomen vanaf AOW; AOW-datum valt buiten de toetshorizon van 10 jaar.":
       (aow1==="ja"||aowP==="ja")?"Pensioentoets (vanaf "+dr+" jaar): AOW-leeftijd bereikt — getoetst op het ingevulde inkomen met de AOW-tabel.":
-      "Pensioentoets (vanaf "+dr+" jaar): niet van toepassing"+((ps1.lft!=null)?" (leeftijd "+ps1.lft+(ps2.lft!=null?" / "+ps2.lft:"")+" jaar)":"")+".");
+      "Pensioentoets (vanaf "+dr+" jaar): niet van toepassing"+((ps1.lft!=null)?" (leeftijd "+ps1.lft+(ps2.lft!=null?" / "+ps2.lft:"")+" jaar)":"")+".")
+    +"<br>Bepalend toetsmoment: "+bep.lbl+" — toetsinkomen "+fmt(bep.ink)+" met de "+(bep.aowTab?"AOW-tabel":"niet-AOW-tabel")+(S.box1==="deels"&&gn("box3d")>0?"; box 3-deel "+fmt(gn("box3d"))+" gebruteerd met de verhouding box 1-/box 3-percentage":"")+".";
 
   // Energiebesparende maatregelen — toon altijd als verbouwbonus > 0 EN verb=ja
   const energieCard=g("res-energie");

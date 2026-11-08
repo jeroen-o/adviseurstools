@@ -562,26 +562,35 @@ function bereken(){
     :(t.alleen>0?`van toepassing: één aanvrager en toetsinkomen ${fmt(t.ink)} hoger dan ${fmt(t.grens)}${t.tbl===FL_T2?' (AOW-tabel)':''} → + ${fmt(t.alleen)} buiten de financieringslast`
     :`niet van toepassing: toetsinkomen ${fmt(t.ink)} niet hoger dan ${fmt(t.grens)}${t.tbl===FL_T2?' (AOW-tabel)':''}`);
   const drempelTxt=drempel>0?`vanaf ${drempel} jaar`:'niet toetsen';
-  const pensioenNodig=aowBereikt||pensioentoetsGeldt;
+  // Pensioentoets (zoals MAX. HYP. 2027): toetsmomenten bij aanvang, op de datum waarop de drempelleeftijd wordt bereikt
+  // en op de AOW-datum, voor zover binnen de toetshorizon van 10 jaar. Laagste uitkomst telt.
+  const hz=new Date(vandaag.getFullYear()+10,vandaag.getMonth(),vandaag.getDate());
+  const drD=(geb&&drempel>0)?new Date(geb.getFullYear()+drempel,geb.getMonth(),geb.getDate()):null;
+  const aowBinnen=!aowBereikt&&!!aowD&&aowD<=hz;
+  const drBinnen=!aowBereikt&&!pensioentoetsGeldt&&!!drD&&drD>vandaag&&drD<=hz;
+  const pensioenNodig=aowBereikt||pensioentoetsGeldt||aowBinnen||drBinnen;
   if(pensioenNodig&&pensioenInk===null){
-    document.getElementById('verdictDiv').innerHTML=`<div class="verdict warn"><div class="v-ico">⚠️</div><div><div class="v-titel">Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in</div><div class="v-sub">${aowBereikt?'De AOW-leeftijd is bereikt':'De achterblijver is '+leeftijd+' jaar'}; daarom moet (ook) worden getoetst op het inkomen vanaf AOW (AOW + pensioen). Er wordt niet met het huidige inkomen gerekend.</div></div></div>`;
+    document.getElementById('verdictDiv').innerHTML=`<div class="verdict warn"><div class="v-ico">⚠️</div><div><div class="v-titel">Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in</div><div class="v-sub">${aowBereikt?'De AOW-leeftijd is bereikt':(pensioentoetsGeldt?'De achterblijver is '+leeftijd+' jaar':'Binnen 10 jaar bereikt de achterblijver '+(drBinnen?'de pensioentoetsleeftijd':'de AOW-leeftijd'))}; daarom moet (ook) worden getoetst op het inkomen vanaf AOW (AOW + pensioen). Er wordt niet met het huidige inkomen gerekend.</div></div></div>`;
     document.getElementById('hoofd').innerHTML='';
     document.getElementById('tbl').innerHTML='';
     document.getElementById('resCard').classList.remove('hidden');
     document.getElementById('resCard').scrollIntoView({behavior:'smooth',block:'start'});
     return;
   }
-  // Toets 1: huidige situatie (na AOW: alleen pensioeninkomen)
-  const tNu=toets(Math.max(0,(aowBereikt?pensioenInk:inkomen)+alimentatie-alimBetaald),TBL_NU);
-  // Toets 2: pensioentoets — inkomen vanaf AOW met de AOW-tabel; laagste uitkomst telt
-  const tPens=pensioentoetsGeldt?toets(Math.max(0,pensioenInk+alimentatie-alimBetaald),TBL_AOW):null;
-  const bindend=(tPens&&tPens.maxHyp<tNu.maxHyp)?tPens:tNu;
+  // Per toetsmoment: AOW bereikt → inkomen vanaf AOW (AOW-tabel); vanaf de drempelleeftijd zonder AOW →
+  // MIN(huidig inkomen, inkomen vanaf AOW) met de niet-AOW-tabel; anders huidig inkomen.
+  const adj=x=>Math.max(0,x+alimentatie-alimBetaald);
+  const mom=[Object.assign(toets(adj(aowBereikt?pensioenInk:(pensioentoetsGeldt?Math.min(inkomen,pensioenInk):inkomen)),TBL_NU),{lbl:'bij aanvang'})];
+  if(drBinnen) mom.push(Object.assign(toets(adj(Math.min(inkomen,pensioenInk)),TBL_NU),{lbl:`bij ${drempel} jaar (${drD.toLocaleDateString('nl-NL')})`}));
+  if(aowBinnen) mom.push(Object.assign(toets(adj(pensioenInk),TBL_AOW),{lbl:`AOW-datum (${aowD.toLocaleDateString('nl-NL')})`}));
+  const tNu=mom[0];
+  const bindend=mom.reduce((a,b)=>b.maxHyp<a.maxHyp?b:a,mom[0]);
   const totaalInk=bindend.ink;
   const flp=bindend.flp;
   // Maximale hypotheek o.b.v. annuïtaire last over 30 jaar (laagste van beide toetsen)
   const maxHyp=bindend.maxHyp;
   let pensRegel;
-  if(pensioentoetsGeldt) pensRegel=`Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(tPens.ink)} met ${tblNaam(TBL_AOW)}: max. ${fmt(tPens.maxHyp)}${tPens.alleen>0?' incl. alleenstaandenbedrag':''} (huidig inkomen: ${fmt(tNu.maxHyp)}${tNu.alleen>0?' incl. alleenstaandenbedrag':''})${bindend===tPens?' — pensioeninkomen is bepalend':''}`;
+  if(pensioentoetsGeldt||mom.length>1) pensRegel=`Pensioentoets (${drempelTxt}): van toepassing — ${pensioentoetsGeldt?'nu getoetst op het laagste van huidig inkomen en inkomen vanaf AOW; ':''}${mom.length} toetsmoment${mom.length>1?'en':''} binnen 10 jaar (${mom.map(t=>t.lbl+': '+fmt(t.ink)+' met '+tblNaam(t.tbl)+', max. '+fmt(t.maxHyp)+(t.alleen>0?' incl. alleenstaandenbedrag':'')).join('; ')}); de laagste uitkomst telt`;
   else if(aowBereikt) pensRegel=`Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(tNu.ink)} met ${tblNaam(TBL_AOW)}`;
   else pensRegel=`Pensioentoets (${drempelTxt}): niet van toepassing${geb?'':' (geen geboortedatum ingevuld)'}`;
   // vergelijking op hele euro's (zoals getoond): hypotheek tot en met het maximum (incl. alleenstaandenbedrag) is akkoord
@@ -621,9 +630,10 @@ function bereken(){
   html+=`<tr class="cat"><td colspan="3">Toetsing</td></tr>`;
   html+=`<tr><td>Toetsnorm</td><td>${norm==='beheer'?'Beheer':'Acceptatie'} · normjaar ${jaar}</td><td>${tblNaam(bindend.tbl)} · toetsinkomen ${fmt(totaalInk)}${alimentatie>0?' (incl. ontvangen partneralimentatie '+fmt(alimentatie)+'/jr)':''}${alimBetaald>0?' (na aftrek betaalde partneralimentatie '+fmt(alimBetaald)+'/jr, NHG C.7.14.2)':''}</td></tr>`;
   html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(bindend.maxInk)}</td><td>Financieringslast ${fmtPct(flp*100,1)} van ${fmt(totaalInk)}${verplMaand>0?' na aftrek verplichtingen':''}, 30 jr annuïtair · ${toetsTxt}</td></tr>`;
-  html+=`<tr><td>Alleenstaandenbedrag</td><td>${bindend.alleen>0?'+'+fmt(bindend.alleen):'—'}</td><td>${NJ.bron} art. 3 lid 8: ${alleenTxt(bindend)}${pensioentoetsGeldt?` (pensioentoets: ${tPens.alleen>0?'+'+fmt(tPens.alleen):'n.v.t.'}; huidig inkomen: ${tNu.alleen>0?'+'+fmt(tNu.alleen):'n.v.t.'})`:''}.</td></tr>`;
+  html+=`<tr><td>Alleenstaandenbedrag</td><td>${bindend.alleen>0?'+'+fmt(bindend.alleen):'—'}</td><td>${NJ.bron} art. 3 lid 8: ${alleenTxt(bindend)}${mom.length>1?` (per toetsmoment: ${mom.map(t=>t.lbl+' '+(t.alleen>0?'+'+fmt(t.alleen):'n.v.t.')).join('; ')})`:''}.</td></tr>`;
   html+=`<tr class="tot"><td>Maximale hypotheek</td><td>${fmt(maxHyp)}</td><td>${bindend.alleen>0?'Hypotheek tot dit maximum is akkoord: het alleenstaandenbedrag blijft buiten de financieringslast':''}</td></tr>`;
-  html+=`<tr><td>Pensioentoets</td><td>${pensioentoetsGeldt?'van toepassing':(aowBereikt?'AOW bereikt':'n.v.t.')}</td><td>${pensRegel}</td></tr>`;
+  html+=`<tr><td>Pensioentoets</td><td>${(pensioentoetsGeldt||mom.length>1)?'van toepassing':(aowBereikt?'AOW bereikt':'n.v.t.')}</td><td>${pensRegel}</td></tr>`;
+  html+=`<tr><td>Bepalend toetsmoment</td><td>${bindend.lbl}</td><td>toetsinkomen ${fmt(bindend.ink)} met ${tblNaam(bindend.tbl)} → max. ${fmt(bindend.maxHyp)}</td></tr>`;
   if(nhg)html+=`<tr><td>NHG toepasbaar?</td><td>${nhgOk?'✓ Ja':'✗ Boven'+fmt(nhgGrens)}</td><td>NHG-kostengrens ${jaar}${nhgEbv?' met energiebesparende voorzieningen':''}: ${fmt(nhgGrens)} · hypotheek incl. uitkoop ${fmt(hypMet)} · borgtochtprovisie ${fmtPct(NJ.nhg.provisie*100,1)}${nhgOk?' = '+fmt(hypMet*NJ.nhg.provisie):''}</td></tr>`;
   if(verplMaand>0)html+=`<tr><td>Verplichtingen in de toets</td><td>${fmt(verplMaand)}/mnd</td><td>${kredietLimiet>0?'krediet 2% × '+fmt(kredietLimiet)+' = '+fmt(kredietLast)+'; ':''}${duoTermijn>0?'DUO '+fmt(duoTermijn)+' × '+duoFactor.toFixed(2).replace('.',',')+' = '+fmt(duoLast)+'; ':''}${verp>0?'overig '+fmt(verp):''}</td></tr>`;
   document.getElementById('tbl').innerHTML=html+'</tbody>';

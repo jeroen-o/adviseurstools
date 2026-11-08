@@ -550,8 +550,13 @@ function bereken(){
   const aowBereikt=!!(aowDatum&&vandaag>=aowDatum);
   const situatie=aowBereikt?'aow':situatieKeuze;
   const pensioentoetsGeldt=situatie!=='aow'&&pensioenDrempel>0&&leeftijd!==null&&leeftijd>=pensioenDrempel;
-  const pensOnvolledig=pensioentoetsGeldt&&pensInk===null;
-  const pensScenario=pensioentoetsGeldt&&!pensOnvolledig;
+  // Pensioentoets (zoals MAX. HYP. 2027): toetsmomenten bij aanvang, bij het bereiken van de drempelleeftijd en op de
+  // AOW-datum, voor zover binnen 10 jaar. Vanaf de drempelleeftijd zonder AOW: MIN(huidig inkomen, inkomen vanaf AOW).
+  const hz=new Date(vandaag.getFullYear()+10,vandaag.getMonth(),vandaag.getDate());
+  const drD=(geb&&pensioenDrempel>0)?new Date(geb.getFullYear()+pensioenDrempel,geb.getMonth(),geb.getDate()):null;
+  const aowBinnen=situatie!=='aow'&&!!aowDatum&&aowDatum<=hz;
+  const drBinnen=situatie!=='aow'&&!pensioentoetsGeldt&&!!drD&&drD>vandaag&&drD<=hz;
+  const pensOnvolledig=(pensioentoetsGeldt||aowBinnen||drBinnen)&&pensInk===null;
 
   const BT=BEHEER_TABELLEN[situatie]||BEHEER_TABELLEN.werk;
   const BTP=BEHEER_TABELLEN.aow;
@@ -573,11 +578,15 @@ function bereken(){
     const wqS=s/totHS,wqB=b/totHS;
     return {ink,wqS,wqB,exclS:(ink/12)*wqS,exclB:(ink/12)*wqB,tabs,bt,st};
   }
-  const cur=scenario(Math.max(0,inkomen-alimJaar),ST,BT);
-  const pen=pensScenario?scenario(Math.max(0,pensInk-alimJaar),STP,BTP):null; // geen einddatum bekend: ook na AOW aftrekken
-  const stdPens=!!(pen&&pen.exclS<cur.exclS);
-  const behPens=!!(pen&&pen.exclB<cur.exclB);
-  const sS=stdPens?pen:cur, sB=behPens?pen:cur;
+  const ink0=Math.max(0,inkomen-alimJaar), pensA=pensInk===null?null:Math.max(0,pensInk-alimJaar); // alimentatie: geen einddatum bekend, ook na AOW
+  const cur=Object.assign(scenario((pensioentoetsGeldt&&pensA!==null)?Math.min(ink0,pensA):ink0,ST,BT),{lbl:'bij aanvang'});
+  const momenten=[cur];
+  if(pensA!==null&&drBinnen) momenten.push(Object.assign(scenario(Math.min(ink0,pensA),ST,BT),{lbl:'bij '+pensioenDrempel+' jaar ('+drD.toLocaleDateString('nl-NL')+')'}));
+  if(pensA!==null&&aowBinnen) momenten.push(Object.assign(scenario(pensA,STP,BTP),{lbl:'AOW-datum ('+aowDatum.toLocaleDateString('nl-NL')+')'}));
+  // laagste uitkomst per toets: standaard op max. hypotheek (incl. alleenstaandenbedrag van dat moment), beheer op de maandlast
+  const lpe0=totHS>0?mbd/totHS:0;
+  const stdMaxOp=sc=>{const g=(sc.st===STP||situatie==='aow')?SY.alleen.grensAOW:SY.alleen.grens;const a=sc.ink>g?SY.alleen.bedrag:0;return lpe0>0?Math.max(0,sc.exclS-verpl)/lpe0+a:sc.exclS;};
+  const sS=momenten.reduce((a,b)=>stdMaxOp(b)<stdMaxOp(a)?b:a,cur), sB=momenten.reduce((a,b)=>b.exclB<a.exclB?b:a,cur);
   const wqStd=sS.wqS, wqBeh=sB.wqB;
   const exclStd=sS.exclS, exclBeh=sB.exclB;
   const mflStd=exclStd-verpl;
@@ -680,10 +689,10 @@ function bereken(){
   let ptxt;
   if(!geb) ptxt=pt+': geen geboortedatum ingevuld — AOW-status en pensioentoets niet bepaald.';
   else if(aowBereikt) ptxt='AOW-leeftijd bereikt (AOW-datum '+aowDatum.toLocaleDateString('nl-NL')+'): getoetst op het ingevulde inkomen met de AOW-tabellen (Trhk welAOW; beheer 5f/5l).'+(situatieKeuze!=='aow'?' Situatie is daarom als “AOW-gerechtigd” behandeld.':'');
-  else if(pensioenDrempel===0) ptxt=pt+': niet toetsen (uitgeschakeld). Leeftijd '+leeftijd+' jaar, AOW-datum '+aowDatum.toLocaleDateString('nl-NL')+'.';
-  else if(!pensioentoetsGeldt) ptxt=pt+': niet van toepassing (leeftijd '+leeftijd+' jaar'+(situatie==='aow'?', situatie AOW-gerechtigd':'')+').';
-  else if(pensOnvolledig) ptxt=pt+': van toepassing (leeftijd '+leeftijd+' jaar) — vul inkomen vanaf AOW (AOW + pensioen) in.';
-  else ptxt=pt+': van toepassing — getoetst op '+fmtE(pensInk)+' met AOW-tabel (standaard: '+STP.naam+' '+fmtPct(pen.wqS)+'; beheer: '+pen.tabs.map(t=>t.naam).join(' + ')+' '+fmtPct(pen.wqB)+'). Bepalend (laagste uitkomst): standaard '+(stdPens?'pensioentoets':'huidig inkomen')+', beheer '+(behPens?'pensioentoets':'huidig inkomen')+'.';
+  else if(pensOnvolledig) ptxt=pt+': van toepassing (leeftijd '+leeftijd+' jaar'+(pensioentoetsGeldt?'':'; binnen 10 jaar '+(drBinnen?'de drempelleeftijd':'de AOW-datum'))+') — vul inkomen vanaf AOW (AOW + pensioen) in.';
+  else if(pensioenDrempel===0&&momenten.length===1) ptxt=pt+': niet toetsen (uitgeschakeld). Leeftijd '+leeftijd+' jaar, AOW-datum '+aowDatum.toLocaleDateString('nl-NL')+'.';
+  else if(!pensioentoetsGeldt&&momenten.length===1) ptxt=pt+': niet van toepassing (leeftijd '+leeftijd+' jaar'+(situatie==='aow'?', situatie AOW-gerechtigd':'')+').';
+  else ptxt=pt+': van toepassing — '+(pensioentoetsGeldt?'nu getoetst op het laagste van huidig inkomen en inkomen vanaf AOW; ':'')+momenten.length+' toetsmoment'+(momenten.length>1?'en':'')+' binnen 10 jaar ('+momenten.map(m=>m.lbl+': '+fmtE(Math.round(m.ink))+', standaard '+m.st.naam+' '+fmtPct(m.wqS)+', beheer '+m.tabs.map(t=>t.naam).join(' + ')+' '+fmtPct(m.wqB)).join('; ')+'). Bepalend toetsmoment (laagste uitkomst): standaard '+sS.lbl+', beheer '+sB.lbl+'.';
   np.style.display='block';
   np.textContent='ℹ '+ptxt;
 }

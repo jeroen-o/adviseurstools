@@ -1255,29 +1255,34 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
 
     function voorJaar(jaar){
       var tables = TABLES_BY_YEAR[jaar];
+      // Brutering zoals op het hoofdscherm: box 1-percentage (tabel 1/2) bepaalt de maximale maandlast; de toetslast van
+      // het box 3-deel wordt gebruteerd met pctA/pctN → factorLast = (1 − s3) + s3 × pctA/pctN. Volledig box 3: alleen tabel 3/4.
       function metTabel(aow){
         var tabA = aow ? "2" : "1", tabN = aow ? "4" : "3";
         var pctA = interpolatePercentage(tables, tabA, inkomen, bandIdx);
         var pctN = interpolatePercentage(tables, tabN, inkomen, bandIdx);
-        return pctA*(1-nietAftrekPct) + pctN*nietAftrekPct;
+        var volledigBox3 = nietAftrekPct >= 1;
+        var pct = volledigBox3 ? pctN : pctA;
+        var maandlast = Math.max(0, inkomen * (pct/100) / 12 - verplLastVL);
+        var factorLast = volledigBox3 ? 1 : (1 - nietAftrekPct) + nietAftrekPct * (pctN>0 ? pctA/pctN : 1);
+        return {pct:pct, pctN:pctN, maandlast:maandlast, hyp: maandlast * annuiteitFactor(iMaand, looptijd) / factorLast};
       }
       var aowTab = topAOW && !topNiet;
-      if(topAOW && topNiet){ aowTab = metTabel(true) < metTabel(false); }
-      var pctGew = metTabel(aowTab);
-      var maandlast = Math.max(0, inkomen * (pctGew/100) / 12 - verplLastVL);
+      if(topAOW && topNiet){ aowTab = metTabel(true).hyp < metTabel(false).hyp; }
+      var mt = metTabel(aowTab);
       var norm = ALLEENSTAAND[jaar];
       var grens = (!partner && client.aowBereikt) ? norm.grensAOW : norm.grens;
       var alleenExtra = (!partner && inkomen > grens) ? norm.bedrag : 0;
-      var maxHyp = maandlast * annuiteitFactor(iMaand, looptijd) + labelExtra + alleenExtra;
-      return {pct:pctGew, maandlast:maandlast, maxHyp:maxHyp, aowTab:aowTab, alleenExtra:alleenExtra};
+      var maxHyp = mt.hyp + labelExtra + alleenExtra;
+      return {pct:mt.pct, pctN:mt.pctN, maandlast:mt.maandlast, maxHyp:maxHyp, aowTab:aowTab, alleenExtra:alleenExtra};
     }
     var r2026 = voorJaar("2026"), r2027 = voorJaar("2027");
     var verschil = r2027.maxHyp - r2026.maxHyp;
 
     var table = document.getElementById("vlTable");
     table.innerHTML = "<thead><tr><th>Normjaar</th><th>Woonquote</th><th>Max. maandlast</th><th>Maximale hypotheek</th></tr></thead><tbody>" +
-      "<tr><td>2026</td><td>"+fmtPct1(r2026.pct)+"</td><td>"+fmtEUR(r2026.maandlast)+"</td><td>"+fmtEUR(r2026.maxHyp)+"</td></tr>" +
-      "<tr><td>2027</td><td>"+fmtPct1(r2027.pct)+"</td><td>"+fmtEUR(r2027.maandlast)+"</td><td>"+fmtEUR(r2027.maxHyp)+"</td></tr>" +
+      "<tr><td>2026</td><td>"+fmtPct1(r2026.pct)+(nietAftrekPct>0 && nietAftrekPct<1 ? " (box 3: "+fmtPct1(r2026.pctN)+")" : "")+"</td><td>"+fmtEUR(r2026.maandlast)+"</td><td>"+fmtEUR(r2026.maxHyp)+"</td></tr>" +
+      "<tr><td>2027</td><td>"+fmtPct1(r2027.pct)+(nietAftrekPct>0 && nietAftrekPct<1 ? " (box 3: "+fmtPct1(r2027.pctN)+")" : "")+"</td><td>"+fmtEUR(r2027.maandlast)+"</td><td>"+fmtEUR(r2027.maxHyp)+"</td></tr>" +
       "</tbody>";
     document.getElementById("vl_toetsinkomenHint").textContent =
       "Toetsinkomen (som aanvrager" + (partnerAanwezig?" + partner":"") + "): " + fmtEUR(inkomen) +
@@ -1290,6 +1295,8 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       (alimJaarVL > 0 ? " · na aftrek betaalde partneralimentatie " + fmtEUR(alimJaarVL) + " per jaar bij de aanvrager (NHG C.7.14.2)" : "") +
       (verplLastVL > 0 ? " · verplichtingen: " + fmtEUR(verplLastVL) + " bruto per maand in mindering" : "") +
       (!partner ? " · alleenstaandenbedrag: 2026 " + (r2026.alleenExtra ? "+ " + fmtEUR(r2026.alleenExtra) : "n.v.t. (toetsinkomen niet boven " + fmtEUR(client.aowBereikt ? 29000 : 30000) + ")") + ", 2027 " + (r2027.alleenExtra ? "+ " + fmtEUR(r2027.alleenExtra) : "n.v.t. (toetsinkomen niet boven € 31.000)") : "") +
+      " · bepalend toetsmoment: de toetsdatum (zoals de maximale hypotheek op het hoofdscherm)" +
+      (nietAftrekPct > 0 && nietAftrekPct < 1 ? " · box 3-deel (" + (nietAftrekPct*100).toLocaleString("nl-NL",{maximumFractionDigits:1}) + "%) gebruteerd met de verhouding box 1-/box 3-woonquote" : "") +
       (onvolledig ? " · let op: pensioeninkomen ontbreekt terwijl de pensioentoets/AOW van toepassing is — vul dit in voor een juiste berekening (nu op € 0 gezet)" : "");
     document.getElementById("vlBox").innerHTML =
       "<strong>Verschil 2027 t.o.v. 2026:</strong> " + (verschil>=0?"+":"−") + fmtEUR(Math.abs(verschil)) +
