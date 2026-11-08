@@ -65,7 +65,7 @@ def main():
             'alleenstaandenbedrag': ln['alleenstaandenbedrag'][jaar],
             'energielabel_aankoop': ln['energielabel_aankoop'],
             'energiebesparende_voorzieningen': ln['energiebesparende_voorzieningen'],
-            'nhg': n['nhg'][jaar], 'fiscaal': n['fiscaal'].get(jaar) or n['fiscaal'][max(n['fiscaal'])],
+            'nhg': n['nhg'][jaar], 'nhg_beheer': n['nhg']['beheer'], 'pensioentoets': n.get('pensioentoets'), 'fiscaal': n['fiscaal'].get(jaar) or n['fiscaal'][max(n['fiscaal'])],
         }
         open(os.path.join(ROOT, 'api', f'normen-{jaar}.json'), 'w', encoding='utf-8').write(compact(sub))
     lib = open(LIB, encoding='utf-8').read().replace('/*@DATA*/null', compact(n))

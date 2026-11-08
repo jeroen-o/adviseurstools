@@ -88,6 +88,27 @@
       totaal: opInkomen + lab + verd + alleen };
   }
 
+  /**
+   * Maximale hypotheek volgens de NHG-beheercriteria (V&N D.6) — alleen voor een bestaande lening met NHG.
+   * opt: {inkomen, rente (huidige gewogen rente, %), aanvragers (1|2), aow (alle aanvragers AOW),
+   *       zonderWerk, box3Aandeel (0..1), verplichtingenMnd (werkelijk, niet gebruteerd),
+   *       lastPerEuro (werkelijke maandlast per € 1 hoofdsom; leeg = 50% aflossingsvrij + 50% annuïtair 30 jaar)}
+   * Pensioen telt alleen als de AOW binnen 36 maanden ligt: reken dan ook met het inkomen vanaf AOW en aow:true
+   * en neem de laagste uitkomst. Geen vrijgestelde bedragen; vermogenscorrectie (D.6.5) niet inbegrepen.
+   */
+  function maxHypotheekBeheer(o) {
+    var tr = rond3(o.rente), r = tr / 100 / 12, R = D.nhg.beheer.regels.aanname_zonder_leningdelen;
+    var sit = ((o.aanvragers || 1) > 1 ? 'paar' : 'alleen') + '_' + (o.aow ? 'aow' : (o.zonderWerk ? 'zonderwerk' : 'werk'));
+    var s3 = Math.min(1, Math.max(0, o.box3Aandeel || 0));
+    var q1 = beheerquote(sit, o.inkomen, tr), q3 = beheerquote('b3_' + sit, o.inkomen, tr);
+    var q = s3 >= 1 ? q3 : q1, maxLast = (o.inkomen || 0) * q / 100 / 12;
+    var lpe = o.lastPerEuro || (R.aflossingsvrij_aandeel * r + (1 - R.aflossingsvrij_aandeel) / annuiteitFactor(tr, R.annuitair_looptijd_maanden));
+    var factorLast = s3 >= 1 ? 1 : (1 - s3) + s3 * (q3 > 0 ? q1 / q3 : 1);
+    var beschikbaar = Math.max(0, maxLast - (o.verplichtingenMnd || 0));
+    return { tabel: sit, toetsrente: tr, kolom: L.rentekolommen.labels[kolom(tr)], woonquote: q, woonquoteBox3: q3,
+      maxMaandlast: maxLast, lastPerEuro: lpe, aanname5050: !o.lastPerEuro, totaal: beschikbaar / (lpe * factorLast) };
+  }
+
   // ── AOW ──
   function aowDatum(geboortedatum) {
     var g = new Date(geboortedatum); if (isNaN(g)) return null;
@@ -123,7 +144,7 @@
     data: D, versie: D.versie, normjaar: normjaar, kolom: kolom, kolomLabel: function (tr) { return L.rentekolommen.labels[kolom(tr)]; },
     woonquote: woonquote, beheerquote: beheerquote, toetsrente: toetsrente, annuiteitFactor: annuiteitFactor,
     studieschuldFactor: studieschuldFactor, alleenstaandenbedrag: alleenstaandenbedrag, labelAankoop: labelAankoop,
-    energiebesparend: energiebesparend, nhg: nhg, maxHypotheek: maxHypotheek, aowDatum: aowDatum,
+    energiebesparend: energiebesparend, nhg: nhg, maxHypotheek: maxHypotheek, maxHypotheekBeheer: maxHypotheekBeheer, aowDatum: aowDatum,
     box1Belasting: box1Belasting, aftrekTarief: aftrekTarief, eigenwoningforfait: eigenwoningforfait,
     overdrachtsbelasting: overdrachtsbelasting, fiscaal: fisc
   };
