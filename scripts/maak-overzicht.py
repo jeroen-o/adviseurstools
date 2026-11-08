@@ -107,6 +107,7 @@ CURATED = {
     'nazorg': ('Nazorg', 'Periodieke klantcheck', None),
     'financiële-tijdscapsule': ('Financiële tijdscapsule', 'Prijzen en lonen vroeger en nu', None),
     'klimaatcijfer-nl': ('Klimaatcijfer', 'Klimaatrisico\'s van een adres', None),
+    'funderingscijfer': ('Funderingscijfer', 'Indicatief funderingsrisico van een woning op postcode en huisnummer', None),
     'woningcijfer-nl': ('Woningcijfer', 'Bouwkundige en omgevingsscore van een woning', None),
     'woz-bezwaar': ('WOZ-bezwaar', 'Bezwaar tegen de WOZ-waarde voorbereiden', None),
     'ww-tool-impact-hypotheek': ('WW en hypotheek', 'WW-uitkering en het effect op je woonlasten', None),
@@ -118,7 +119,7 @@ CURATED = {
 }
 
 
-EXTRA = {'hypotheek': [('../hypotheek/boeteberekening/', 'Boeterente berekenen'), ('../hypotheek/duurzaamheidsprofiel/', 'Duurzaamheidsprofiel woning')], 'overige': [('https://pandwise.nl/', 'PandWise')], 'krediet': [('../krediet/maximaal-krediet-caribisch-nederland/', 'Maximaal krediet Caribisch Nederland')]}
+EXTRA = {'hypotheek': [('../hypotheek/boeteberekening/', 'Boeterente berekenen'), ('../hypotheek/duurzaamheidsprofiel/', 'Duurzaamheidsprofiel woning')], 'overige': [('https://pandwise.nl/', 'PandWise'), ('../overige/funderingscijfer/', 'Funderingscijfer')], 'krediet': [('../krediet/maximaal-krediet-caribisch-nederland/', 'Maximaal krediet Caribisch Nederland')]}
 UITGELICHT = ['max-hyp-2027', 'pensioenklif', 'max-hyp-box-1-3']
 
 

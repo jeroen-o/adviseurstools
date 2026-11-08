@@ -812,8 +812,8 @@ async function getBROBodemtype(lat, lon) {
     // BRO Geomorfologische kaart via PDOK WMS GetFeatureInfo
     const bbox_size = 0.001;
     const minx = lon-bbox_size, miny = lat-bbox_size, maxx = lon+bbox_size, maxy = lat+bbox_size;
-    const url = 'https://service.pdok.nl/bro/brk/wms/v2_0?SERVICE=WMS&VERSION=1.3.0'
-              + '&REQUEST=GetFeatureInfo&LAYERS=bodemkaart250&QUERY_LAYERS=bodemkaart250'
+    const url = 'https://service.pdok.nl/bzk/bro-bodemkaart/wms/v1_0?SERVICE=WMS&VERSION=1.3.0'
+              + '&REQUEST=GetFeatureInfo&LAYERS=soilarea&QUERY_LAYERS=soilarea'
               + '&CRS=EPSG:4326&BBOX=' + miny + ',' + minx + ',' + maxy + ',' + maxx
               + '&WIDTH=11&HEIGHT=11&I=5&J=5&INFO_FORMAT=application/json';
     const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
@@ -822,8 +822,9 @@ async function getBROBodemtype(lat, lon) {
     // Try to get bodemtype from features
     const props = d.features?.[0]?.properties;
     if (props) {
-      const code = props.bodemcode || props.code || props.grondsoort || null;
-      const naam = props.bodem_omschrijving || props.omschrijving || null;
+      const _raw=(props.soilcode||props.first_soilcode||''),_hl=(_raw.match(/[A-Z]/g)||[]).join(''),_c=_raw?(/[VW]/.test(_hl)?'V':/^E?L/.test(_hl)?'L':/^E?Z|^[HYXZ]/.test(_hl)?'Z':/[MRKE]/.test(_hl)?'K':null):null;
+      const code = _c || props.bodemcode || props.code || props.grondsoort || null;
+      const naam = (props.first_soilname ? props.first_soilname+' ('+_raw+')' : null) || props.bodem_omschrijving || props.omschrijving || null;
       if (code || naam) return { code, naam: naam || BRO_LEGEND[code] || 'Onbekend' };
     }
     return null;
@@ -920,7 +921,7 @@ async function getHoogteNAP(lat, lon) {
   try {
     const d = 0.0015;
     const bbox = (lat-d)+','+(lon-d)+','+(lat+d)+','+(lon+d)+',EPSG:4326';
-    const url = 'https://service.pdok.nl/ahn/ahn4/wms/v1_0?SERVICE=WMS&VERSION=1.3.0'
+    const url = 'https://service.pdok.nl/rws/ahn/wms/v1_0?SERVICE=WMS&VERSION=1.3.0'
               + '&REQUEST=GetFeatureInfo&LAYERS=dtm_05m&QUERY_LAYERS=dtm_05m'
               + '&CRS=EPSG:4326&BBOX=' + (lat-d) + ',' + (lon-d) + ',' + (lat+d) + ',' + (lon+d)
               + '&WIDTH=11&HEIGHT=11&I=5&J=5&INFO_FORMAT=application/json';
