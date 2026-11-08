@@ -151,6 +151,7 @@ input[type=range]::-webkit-slider-thumb{width:18px;height:18px}
  */
 function ptGrafiek(el, o) {
   if (!el) return;
+  if (o.ontbreekt) { el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Maximale hypotheek per leeftijd bij aanvraag</div><p style="font-size:12px;color:#5f6b7a;margin:0">Vul het inkomen vanaf AOW (AOW + pensioen) in om de grafiek te tonen.</p>'; return; }
   var KEUZES = [
     { k: '57', lbl: 'Vanaf 57 jaar', kl: '#003057', dash: '' },
     { k: '52', lbl: 'Vanaf 52 jaar', kl: '#e5a138', dash: '' },
@@ -198,7 +199,7 @@ function ptGrafiek(el, o) {
   var tab = '<details style="margin-top:8px;font-size:12px"><summary style="cursor:pointer">Bedragen per leeftijd</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:3px 8px">Pensioentoets</th>' +
     jaren.map(function (a) { return '<th style="padding:3px 6px;text-align:right">' + a + '</th>'; }).join('') + '</tr>' + reeks.map(rij).join('') + '</table></div></details>';
   el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Maximale hypotheek per leeftijd bij aanvraag</div>' +
-    '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).</div>' + s + leg + tab;
+    '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met ' + (o.methode === 'trhk' ? 'de Trhk/NHG-methode (annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen na de AOW-datum).' : 'de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).') + '</div>' + s + leg + tab;
 }
 
 // ── Hulpfuncties voor de pensioentoets-grafiek ──────────────────────────────
@@ -259,7 +260,7 @@ function ptKernMax(fn){var oudK=PT_KERN;PT_KERN={max:0};try{fn();return +PT_KERN
         <div class="f"><div class="fl">Betaalde partneralimentatie aanvrager 1 (€/mnd) — gaat van het toetsinkomen af, ook vanaf AOW (NHG V&amp;N 2026 C.7.14.2); niet bij verplichtingen opnemen</div><input type="number" class="in" id="mhAlim" value="0" oninput="calcMh()"></div>
       </div></div>
       <div class="card"><div class="ch"><span class="ct">Leeftijd &amp; pensioentoets</span></div><div class="cb">
-        <div class="f"><div class="fl">Pensioentoets vanaf leeftijd</div><select class="se" id="mhDrempel" onchange="calcMh()"><option value="57" selected>Vanaf 57 jaar</option><option value="52">Vanaf 52 jaar</option><option value="aow10">10 jaar vóór AOW-datum</option><option value="aow15">15 jaar vóór AOW-datum</option><option value="0">Niet toetsen</option></select><div class="pt-nhg-melding" style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.4">Restschuldmethode: getoetst op de restschuld op de AOW-datum. NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&amp;N C.7.4.2); hun uitkomst kan lager zijn.</div></div>
+        <div class="f"><div class="fl">Pensioentoets vanaf leeftijd</div><select class="se" id="mhDrempel" onchange="calcMh()"><option value="57" selected>Vanaf 57 jaar</option><option value="52">Vanaf 52 jaar</option><option value="aow10">10 jaar vóór AOW-datum</option><option value="aow15">15 jaar vóór AOW-datum</option><option value="0">Niet toetsen</option></select><div class="pt-nhg-melding" style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.4">Restschuldmethode: getoetst op de restschuld op de AOW-datum. NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&amp;N C.7.4.2); hun uitkomst kan lager zijn.</div><div class="pt-methode" style="margin-top:8px"><label for="ptMethode" style="display:block;font-size:12px;font-weight:600;margin-bottom:3px">Methode pensioentoets</label><select id="ptMethode" class="se" onchange="ptMethodeMelding();var d=document.getElementById('mhDrempel');if(d)d.dispatchEvent(new Event('change',{bubbles:true}));"><option value="rest" selected>Restschuldmethode</option><option value="trhk">Trhk/NHG (hele bedrag)</option></select></div></div>
         <div class="f"><div class="fl">Geboortedatum aanvrager 1 <span class="fv" id="mhAow1V"></span></div><input type="date" class="in" id="mhGeb1" oninput="calcMh()"></div>
         <div class="f"><div class="fl">Inkomen vanaf AOW aanvrager 1 (AOW + pensioen, bruto €/jr)</div><input type="number" class="in" id="mhPens1" placeholder="bijv. 25000" oninput="calcMh()"></div>
         <div class="f"><div class="fl">Geboortedatum aanvrager 2 <span class="fv" id="mhAow2V"></span></div><input type="date" class="in" id="mhGeb2" oninput="calcMh()"></div>
@@ -575,6 +576,11 @@ function ptGeldtVoor(v,geb,aowD,td){const k=ptKeuze(v);if(!k||!geb||!aowD||td>=a
   if(k.lft){let a=td.getFullYear()-geb.getFullYear();if(td.getMonth()<geb.getMonth()||(td.getMonth()===geb.getMonth()&&td.getDate()<geb.getDate()))a--;return a>=k.lft;}
   return aowD<=new Date(td.getFullYear()+k.aowJr,td.getMonth(),td.getDate());}
 const PT_NHG_MELDING='Restschuldmethode: getoetst op de restschuld op de AOW-datum. NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&N C.7.4.2); hun uitkomst kan lager zijn.';
+const PT_TRHK_MELDING='Trhk/NHG-methode: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen na de AOW-datum (Trhk art. 3 lid 2; NHG V&N C.7.4.2).';
+// Methode pensioentoets: 'rest' = restschuld op de AOW-datum (standaard), 'trhk' = annuïteit op het hele bedrag (restfactor 1)
+function ptMethode(){const e=document.getElementById('ptMethode');return e&&e.value==='trhk'?'trhk':'rest';}
+function ptMethodeTekst(){return ptMethode()==='trhk'?'Trhk/NHG-methode (hele bedrag)':'restschuldmethode';}
+function ptMethodeMelding(){const t=ptMethode()==='trhk'?PT_TRHK_MELDING:PT_NHG_MELDING;document.querySelectorAll('.pt-nhg-melding').forEach(function(e){e.textContent=t;});}
 // Pensioentoets per persoon: geldt als de AOW-leeftijd nog niet is bereikt en aan de gekozen drempel is voldaan
 function pensioenPersoon(nr,inkomen,drempel){
   const gv=document.getElementById('mhGeb'+nr).value;const geb=gv?new Date(gv+'T00:00:00'):null;const nu=new Date();
@@ -643,7 +649,7 @@ function calcMh(){
   const r=toetsR/100/12;
   const af360=(Math.pow(1+r,360)-1)/(r*Math.pow(1+r,360));
   // Restschuld na m maanden van € 1 (annuïtair 30 jaar op de toetsrente)
-  const restF=m=>m<=0?1:(Math.pow(1+r,360)-Math.pow(1+r,m))/(Math.pow(1+r,360)-1);
+  const restF=m=>(m<=0||ptMethode()==='trhk')?1:(Math.pow(1+r,360)-Math.pow(1+r,m))/(Math.pow(1+r,360)-1);
   const duoBruto=duo*factorStudie(toetsR);
   // Alleenstaandenbedrag (Trhk art. 3 lid 8, per normjaar: 2026 € 17.000 / 2027 € 18.000): bij één aanvrager (geen inkomen 2) extra boven op de maximale
   // hypotheek (buiten de financieringslast) als het toetsinkomen ná aftrek van betaalde partneralimentatie hoger is dan
@@ -661,7 +667,7 @@ function calcMh(){
   const q=mB.q;
   const tblNaam=x=>x.tbl===N.a?'AOW-tabel':'niet-AOW-tabel';
   const pensRegel=`Pensioentoets (${drempelTxt}): `+(ptGeldt?`toetsmomenten: ${scens.map((x,i)=>x.m.lbl+' '+fmt(x.ink)+' ('+tblNaam(x)+(x.m.mnd>0?', restschuld '+fmtD(ms[i].rf*100,1)+' na '+x.m.mnd+' mnd':'')+') → '+fmt(ms[i].maxHyp)).join('; ')}.`:(pp.some(p=>p.aow)?`AOW-leeftijd bereikt — getoetst op inkomen vanaf AOW.`:`niet van toepassing${pp.every(p=>p.lft===null)?' (geen geboortedatum ingevuld)':''}.`))
-    +` Bepalend toetsmoment: ${bindend.m.lbl} — toetsinkomen ${fmt(bindend.ink)} met de ${tblNaam(bindend)}.`;
+    +` Bepalend toetsmoment: ${bindend.m.lbl} — toetsinkomen ${fmt(bindend.ink)} met de ${tblNaam(bindend)} (${ptMethodeTekst()}).`;
   const maxLastBruto=mB.maxLastBruto;
   const maxLast=mB.maxLast;
   const basisZonder=Math.round(maxLastBruto*af360/mB.rf);
@@ -695,7 +701,8 @@ function mhPtGrafiek(){
   const td=new Date(),g1=document.getElementById('mhGeb1').value,g2=document.getElementById('mhGeb2').value;
   const huidig=g1?leeftijdOp(new Date(g1+'T00:00:00'),td):null;
   ptGrafiek(el,{berekenMax:(lft,k)=>{const g=ptVerschuifGeb(g1,g2,td,lft);return ptMetVelden({mhGeb1:g[0],mhGeb2:g[1],mhDrempel:k},()=>ptKernMax(calcMh));},
-    huidigeLeeftijd:huidig,gekozen:document.getElementById('mhDrempel').value,vanaf:50,tot:67});
+    huidigeLeeftijd:huidig,gekozen:document.getElementById('mhDrempel').value,vanaf:50,tot:67,methode:ptMethode(),
+    ontbreekt:document.getElementById('mhPens1').value.trim()===''||((parseFloat(document.getElementById('mhI2N').value)||0)>0&&document.getElementById('mhPens2').value.trim()==='')});
   ptKernMax(calcMh); // hulpteksten (leeftijd/AOW-datum) weer volgens de echte invoer
 }
 calcMh();
