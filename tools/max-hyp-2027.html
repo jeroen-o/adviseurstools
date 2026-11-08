@@ -726,22 +726,21 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
     var horizonMnd = toetshorizonJaren * 12; // GHF/TRHK: wijzigingen buiten deze horizon worden niet getoetst
     var pensioenDrempel = parseInt(document.getElementById("pensioenDrempel").value,10) || 0;
 
+    // Pensioentoets (werkwijze B): voor wie op de toetsdatum 52 jaar of ouder is, is de AOW-datum een toetsmoment op de restschuld;
+    // er is geen apart toetsmoment op de datum waarop iemand de drempelleeftijd bereikt.
+    var aowHorizonMnd = Math.max(horizonMnd, 180), aowMomenten = {};
     [client, partner].forEach(function(p){
       if(p && p.aow){
         var mAow = monthsBetween(toetsdatum, p.aow);
-        if(mAow > 0 && mAow <= horizonMnd) momenten.push(mAow);
-      }
-      if(p && pensioenDrempel>0 && p.geb){
-        var datumDrempel = addYM(p.geb, pensioenDrempel, 0);
-        var mDrempel = monthsBetween(toetsdatum, datumDrempel);
-        if(mDrempel > 0 && mDrempel <= horizonMnd) momenten.push(mDrempel);
+        var oudGenoeg = p.geb ? leeftijdOp(p.geb, toetsdatum) >= 52 : (mAow <= aowHorizonMnd);
+        if(mAow > 0 && oudGenoeg){ momenten.push(mAow); aowMomenten[mAow] = true; }
       }
       if(p && p.prepDatum){
         var mPrep = monthsBetween(toetsdatum, p.prepDatum);
         if(mPrep > 0 && mPrep <= horizonMnd) momenten.push(mPrep);
       }
     });
-    momenten = momenten.filter(function(m){ return m>=0 && m<=maxDuur && m<=horizonMnd; });
+    momenten = momenten.filter(function(m){ return m>=0 && m<=maxDuur && (m<=horizonMnd || aowMomenten[m]); });
     momenten = Array.from(new Set(momenten)).sort(function(a,b){return a-b;});
     if(momenten.length===0) momenten=[0];
 
@@ -749,8 +748,9 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       return persoon && persoon.aow && datumOpMoment >= persoon.aow;
     }
     function pensioentoetsGeldtOp(persoon, datumOpMoment){
+      // Drempel (57 of 52) wordt beoordeeld op de toetsdatum: wie dan de drempel heeft, wordt op het laagste van werk- en pensioeninkomen getoetst
       if(!persoon || !persoon.geb || pensioenDrempel<=0) return false;
-      return leeftijdOp(persoon.geb, datumOpMoment) >= pensioenDrempel;
+      return leeftijdOp(persoon.geb, toetsdatum) >= pensioenDrempel;
     }
 
     // Toetsinkomen op een moment, per persoon: (pre)pensioen vóór AOW, pensioentoets (laagste van beide) en AOW
@@ -912,7 +912,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       return {
         m:m, datum:datumOpMoment, toetsinkomen:toetsinkomen, onvolledig:inkObj.onvolledig,
         woonquote: pctAftrek, maxMaandlast:maxMaandlast, berekendeLast:berekendeLast, lastGebruteerd:lastGebruteerd,
-        gebruteerd: lastNietAftrekbaar > 0.5, ruimte:ruimte, aowTabel: tb.aow, verplLast: verplLast, verhouding: verhouding, inkObj: inkObj,
+        gebruteerd: lastNietAftrekbaar > 0.5, ruimte:ruimte, aowTabel: tb.aow, verplLast: verplLast, verhouding: verhouding, inkObj: inkObj, vfFactor: vf.factor,
         vrijgesteld: vf.Vm
       };
     });
@@ -934,8 +934,12 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
     var s3 = totBedrag>0 ? totBox3/totBedrag : 0;
     var bepalend = null;
     rows.forEach(function(r){
+      // Toetslast per euro hoofdsom op dit moment volgens de restschuld van de ingevoerde lening (incl. brutering box 3);
+      // zo telt de aflossing tot dat moment mee. Zonder ingevoerde lening: 30-jaars annuïteit.
       var fl = (1 - s3) + s3 * (r.verhouding || 1);
-      var opInk = Math.max(0, r.maxMaandlast) * annuiteitFactor(iGew, 360) / fl;
+      var lastPerEuro = (totBedrag > 0 && r.vfFactor > 0) ? (r.lastGebruteerd / r.vfFactor) / totBedrag : fl / annuiteitFactor(iGew, 360);
+      if(r.m === 0 || !(lastPerEuro > 0)) lastPerEuro = fl / annuiteitFactor(iGew, 360);
+      var opInk = Math.max(0, r.maxMaandlast) / lastPerEuro;
       var extra = vrijstellingOp(r.inkObj);
       if(!bepalend || opInk + extra < bepalend.opInk + bepalend.extra) bepalend = {m:r.m, datum:r.datum, opInk:opInk, extra:extra, inkObj:r.inkObj};
     });
@@ -1351,6 +1355,11 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
     "fo_koopsom","fo_kkpct","fo_verbouwing","fo_aflossingBestaand","fo_overigeKosten","fo_eigenMiddelen","ml_tarief",
     "vl_toetsdatum","vl_rente","vl_looptijd","vl_nietaftrek","vl_label","vl_partnerAanwezig","vl_pensioenDrempel",
     "vl_c_geboortedatum","vl_c_inkomen","vl_c_pensioen","vl_p_geboortedatum","vl_p_inkomen","vl_p_pensioen"];
+  // Bij een nieuwe geboortedatum de AOW-datum opnieuw bepalen (anders blijft een oude AOW-datum staan)
+  ["c","p"].forEach(function(pr){
+    var g=document.getElementById(pr+"_geboortedatum"), a=document.getElementById(pr+"_aowdatum");
+    if(g&&a) g.addEventListener("change",function(){ a.value = g.value ? defaultAowDatum(new Date(g.value+"T00:00:00")).toISOString().slice(0,10) : ""; });
+  });
   watchIds.forEach(function(id){
     var el = document.getElementById(id);
     el.addEventListener("input", bereken);
