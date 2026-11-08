@@ -248,7 +248,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
             <option value="52">Vanaf 52 jaar</option>
             <option value="aow10">10 jaar vóór AOW-datum</option>
             <option value="aow15">15 jaar vóór AOW-datum</option>
-          </select><div class="field" style="margin-top:10px"><label for="vl_ptMethode">Methode pensioentoets</label><select id="vl_ptMethode"><option value="rest" selected>Restschuldmethode</option><option value="trhk">Trhk/NHG (hele bedrag)</option></select><div class="hint" id="vl_ptMethodeHint"></div></div>
+          </select><div class="field" style="margin-top:10px"><label for="vl_ptMethode">Rekenmethode (acceptatie)</label><select id="vl_ptMethode"><option value="rest" selected>Acceptatie – restschuldmethode</option><option value="trhk">Acceptatie – Trhk/NHG (hele bedrag)</option></select><div class="hint" id="vl_ptMethodeHint"></div></div>
         </div>
         <div class="field"><label for="vl_nietaftrek">Aandeel niet-aftrekbaar / box 3 (%)</label><input type="text" id="vl_nietaftrek" value="0" inputmode="decimal"></div>
         <div class="field">
@@ -324,7 +324,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
             <option value="aow10">10 jaar vóór AOW-datum</option>
             <option value="aow15">15 jaar vóór AOW-datum</option>
           </select>
-          <div class="hint" id="pensioenHint"></div><div class="field" style="margin-top:10px"><label for="ptMethode">Methode pensioentoets</label><select id="ptMethode"><option value="rest" selected>Restschuldmethode</option><option value="trhk">Trhk/NHG (hele bedrag)</option></select><div class="hint" id="ptMethodeHint"></div></div>
+          <div class="hint" id="pensioenHint"></div><div class="field" style="margin-top:10px"><label for="ptMethode">Rekenmethode</label><select id="ptMethode"><option value="rest" selected>Acceptatie – restschuldmethode</option><option value="trhk">Acceptatie – Trhk/NHG (hele bedrag)</option><option value="beheer">NHG-beheercriteria (bestaande NHG-lening)</option></select><div class="hint" id="ptMethodeHint"></div></div>
         </div>
         <div class="field">
           <label for="toetshorizon">Toetshorizon (jaren)</label>
@@ -333,29 +333,14 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
         </div>
       </div>
       <div class="grid c3" style="margin-bottom:14px;">
-        <div class="field">
-          <label for="woonquoteNorm">Woonquotes (norm)</label>
-          <select id="woonquoteNorm">
-            <option value="acceptatie" selected>Acceptatie (nieuwe lening)</option>
-            <option value="beheer">Beheer (bestaande lening, bijv. scheiding)</option>
-          </select>
-          <div class="hint" id="woonquoteNormHint">Acceptatie gebruikt de Nibud-tabellen 2026/2027. Beheer gebruikt de NHG-beheercriteria (Bijlage 5, normen 2026) — bedoeld voor het ongewijzigd laten overnemen van een bestaande lening, bijv. bij een scheiding.</div>
-        </div>
-        <div class="field">
-          <label for="inkomenssituatie">Inkomenssituatie (alleen bij Beheer, vóór AOW)</label>
+        <input type="hidden" id="woonquoteNorm" value="acceptatie"><input type="hidden" id="aflossingsvrijToets" value="acceptatie">
+        <div class="field" id="beheerInfoVeld" style="grid-column:span 2"><div class="hint" id="woonquoteNormHint"></div></div>
+        <div class="field" id="inkSitVeld">
+          <label for="inkomenssituatie">Inkomenssituatie (NHG-beheer, vóór AOW)</label>
           <select id="inkomenssituatie">
             <option value="werk" selected>Met werk</option>
             <option value="geenwerk">Zonder werk (bijv. uitkering)</option>
           </select>
-        </div>
-        <div class="field">
-          <label for="aflossingsvrijToets">Type toets aflossingsvrij</label>
-          <select id="aflossingsvrijToets">
-            <option value="acceptatie" selected>Acceptatie-standaard (30-jaars annuïteit)</option>
-            <option value="beheerwerkend">Beheer (werkend) — werkelijke rentelast</option>
-            <option value="beheernietwerkend">Beheer (niet-werkend) — werkelijke rentelast</option>
-          </select>
-          <div class="hint">⚠️ Nog te verifiëren (AFM-relevant): voor de twee Beheer-opties test dit tool de werkelijke, niet-geamortiseerde rentelast i.p.v. een herrekende 30-jaars annuïteit. Controleer dit tegen het brondocument van je geldverstrekker vóór gebruik in een dossier.</div>
         </div>
       </div>
 
@@ -521,6 +506,7 @@ function ptGrafiek(el, o) {
     { k: 'aow10', lbl: '10 jaar vóór AOW', kl: '#4a7fb5', dash: '6 4' },
     { k: 'aow15', lbl: '15 jaar vóór AOW', kl: '#b9771f', dash: '6 4' }
   ];
+  if (o.methode === 'beheer') KEUZES = [{ k: 'beheer', lbl: 'NHG-beheer (pensioen alleen binnen 3 jaar)', kl: '#003057', dash: '' }];
   var van = o.vanaf || 50, tot = o.tot || 67, jaren = [];
   for (var a = van; a <= tot; a++) jaren.push(a);
   var reeks = KEUZES.map(function (K) {
@@ -562,7 +548,7 @@ function ptGrafiek(el, o) {
   var tab = '<details style="margin-top:8px;font-size:12px"><summary style="cursor:pointer">Bedragen per leeftijd</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:3px 8px">Pensioentoets</th>' +
     jaren.map(function (a) { return '<th style="padding:3px 6px;text-align:right">' + a + '</th>'; }).join('') + '</tr>' + reeks.map(rij).join('') + '</table></div></details>';
   el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Maximale hypotheek per leeftijd bij aanvraag</div>' +
-    '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met ' + (o.methode === 'trhk' ? 'de Trhk/NHG-methode (annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen na de AOW-datum).' : 'de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).') + '</div>' + s + leg + tab;
+    '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met ' + (o.methode === 'beheer' ? 'de NHG-beheercriteria (beheertabel, werkelijke lasten; pensioen telt alleen mee als het binnen 3 jaar ingaat).' : o.methode === 'trhk' ? 'de Trhk/NHG-methode (annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen na de AOW-datum).' : 'de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).') + '</div>' + s + leg + tab;
 }
 </script>
 <script>
@@ -612,7 +598,7 @@ function ptGrafiek(el, o) {
     return jaren;
   }
   // Pensioentoets-drempel: '57'/'52' = leeftijd op de toetsdatum; 'aow10'/'aow15' = AOW-datum binnen 10/15 jaar na de toetsdatum
-  var PT_HINT = {"rest": "Restschuldmethode: wie aan de drempel voldoet, wordt getoetst op de AOW-datum, op de restschuld na aflossen tot dan (inkomen vanaf AOW verplicht). NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&N C.7.4.2); hun uitkomst kan lager zijn.", "trhk": "Trhk/NHG-methode: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen na de AOW-datum (Trhk art. 3 lid 2; NHG V&N C.7.4.2)."};
+  var PT_HINT = {"rest": "Restschuldmethode: wie aan de drempel voldoet, wordt getoetst op de AOW-datum, op de restschuld na aflossen tot dan (inkomen vanaf AOW verplicht). NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&N C.7.4.2); hun uitkomst kan lager zijn.", "beheer": "NHG-beheercriteria (V&N D.6): beheertabel (Bijlage 5), werkelijk inkomen en werkelijke lasten per leningdeel tegen de huidige rente (geen 5%-minimum, geen herrekening naar 30-jaars annuïteit); geen energielabel-, verduurzamings- of alleenstaandenbedrag; verplichtingen niet gebruteerd. Pensioen telt alleen mee als het binnen 3 jaar ingaat (D.6.3). Alleen voor een bestaande lening met NHG (bijv. ontslag hoofdelijke aansprakelijkheid of overname bij scheiding).", "trhk": "Trhk/NHG-methode: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen na de AOW-datum (Trhk art. 3 lid 2; NHG V&N C.7.4.2)."};
   function drempelGeldt(keuze, geb, aowDatum, toetsdatum){
     if(!keuze || keuze==="0" || !geb) return false;
     if(aowDatum && toetsdatum >= aowDatum) return false;
@@ -622,6 +608,12 @@ function ptGrafiek(el, o) {
       return mnd <= (keuze==="aow10" ? 120 : 180);
     }
     return leeftijdOp(geb, toetsdatum) >= parseInt(keuze,10);
+  }
+  // NHG D.6.3: pensioen/AOW telt bij beheer alleen mee als de AOW-datum binnen 3 jaar (36 maanden) na de toetsdatum ligt
+  function beheerPensioenGeldt(p, toetsdatum){
+    if(!p || !p.aow || toetsdatum >= p.aow) return false;
+    var mnd = (p.aow.getFullYear()-toetsdatum.getFullYear())*12 + (p.aow.getMonth()-toetsdatum.getMonth()) - (p.aow.getDate()<toetsdatum.getDate()?1:0);
+    return mnd <= 36;
   }
   function defaultAowDatum(geboortedatum){
     var d67 = addYM(geboortedatum,67,0);
@@ -649,7 +641,7 @@ function ptGrafiek(el, o) {
       alimentatie: parseBedrag(prefix+"alimentatie"), erfpacht: parseBedrag(prefix+"erfpacht"), overig: parseBedrag(prefix+"overig") };
   }
   function verplichtingenLast(v, bandIdx, aftrekbaar){
-    var f = aftrekbaar ? BRUTERING_STUDIE[bandIdx] : 1;
+    var f = (aftrekbaar && !BEHEER_MODUS) ? BRUTERING_STUDIE[bandIdx] : 1; // NHG-beheer (D.6.4): werkelijke lasten, niet gebruteerd
     return v.studie*f + v.krediet*0.02 + v.erfpacht + v.overig*f; // partneralimentatie: van het toetsinkomen af (C.7.14.2), geen maandlast
   }
   function verplichtingenTotaalNominaal(v){ return v.studie + v.krediet*0.02 + v.erfpacht + v.overig; }
@@ -726,7 +718,9 @@ function ptGrafiek(el, o) {
   });
 
   // ---------- toetsrente per deel ----------
+  var BEHEER_MODUS = false;
   function toetsrenteDeel(d, normrente){
+    if(BEHEER_MODUS) return d.rente; // NHG D.6.5: huidige rente (zie melding bij rentevaste periode < 3 jaar)
     if(d.rentevast >= 120) return d.rente;
     if(d.vorm !== "aflossingsvrij" && d.duur <= d.rentevast) return d.rente; // volledig afgelost binnen rentevastperiode
     return normrente;
@@ -743,12 +737,23 @@ function ptGrafiek(el, o) {
     var normrente = parseNLNumber(document.getElementById("normrente").value);
     if(!isFinite(normrente)) normrente = 5.0;
 
-    var woonquoteNorm = document.getElementById("woonquoteNorm").value; // "acceptatie" | "beheer"
+    var ptMethodeKeuze = document.getElementById("ptMethode").value;
+    var woonquoteNorm = ptMethodeKeuze === "beheer" ? "beheer" : "acceptatie"; // één keuze: Rekenmethode
+    BEHEER_MODUS = woonquoteNorm === "beheer";
+    document.getElementById("woonquoteNorm").value = woonquoteNorm;
     var werkSituatie = document.getElementById("inkomenssituatie").value; // "werk" | "geenwerk"
-    var aflossingsvrijToets = document.getElementById("aflossingsvrijToets").value;
-    document.getElementById("woonquoteNormHint").textContent = (woonquoteNorm==="beheer" && jaar==="2027")
-      ? "Beheer gebruikt de NHG-beheercriteria (Bijlage 5). Let op: alleen de normen 2026 zijn beschikbaar — bij normjaar 2027 wordt de 2026-beheertabel als beste benadering gebruikt."
-      : "Acceptatie gebruikt de Nibud-tabellen 2026/2027. Beheer gebruikt de NHG-beheercriteria (Bijlage 5, normen 2026) — bedoeld voor het ongewijzigd laten overnemen van een bestaande lening, bijv. bij een scheiding.";
+    var aflossingsvrijToets = BEHEER_MODUS ? "beheer" : "acceptatie";
+    document.getElementById("aflossingsvrijToets").value = aflossingsvrijToets;
+    document.getElementById("inkSitVeld").style.display = BEHEER_MODUS ? "" : "none";
+    document.getElementById("beheerInfoVeld").style.display = BEHEER_MODUS ? "" : "none";
+    var pdEl = document.getElementById("pensioenDrempel"); pdEl.disabled = BEHEER_MODUS; pdEl.style.opacity = BEHEER_MODUS ? ".5" : "";
+    document.getElementById("pensioenHint").textContent = BEHEER_MODUS ? "Bij de beheertoets telt pensioen alleen mee als het binnen 3 jaar ingaat (NHG D.6.3.4); deze keuze geldt dan niet." : "";
+    var kortRvp = delenState.some(function(d){ return d.bedrag > 0 && d.rentevast < 36; });
+    document.getElementById("woonquoteNormHint").innerHTML = BEHEER_MODUS
+      ? "<b>NHG-beheercriteria (V&amp;N D.6)</b> — beheertabellen Bijlage 5 (normen 2026, gelden ook in 2027). Toetsrente = huidige rente per leningdeel; werkelijke lasten (annuïtair/lineair over de resterende looptijd, aflossingsvrij = alleen rente)."
+        + (kortRvp ? " <b>Let op:</b> een leningdeel heeft een resterende rentevaste periode korter dan 3 jaar: NHG rekent dan met de NHG-rente voor 3 jaar vast als die hoger is." : "")
+        + " Is de last te hoog, dan staat NHG toe vermogen of opgebouwde waarde (minus 1,7% van de WOZ en € 3.550 per persoon) van de hoofdsom af te trekken (D.6.5); dat rekent de tool niet uit. Kredieten: 2% van de limiet (gebruik de werkelijke termijn als die lager is volgens het dossier)."
+      : "";
 
     var partnerAanwezig = document.getElementById("partnerAanwezig").checked;
     document.getElementById("partnerBlock").style.opacity = partnerAanwezig ? "1" : ".4";
@@ -836,6 +841,7 @@ function ptGrafiek(el, o) {
     }
     function pensioentoetsGeldtOp(persoon, datumOpMoment){
       // Drempel (57 of 52) wordt beoordeeld op de toetsdatum: wie dan de drempel heeft, wordt op het laagste van werk- en pensioeninkomen getoetst
+      if(BEHEER_MODUS) return beheerPensioenGeldt(persoon, toetsdatum);
       return !!persoon && drempelGeldt(pensioenKeuze, persoon.geb, persoon.aow, toetsdatum);
     }
 
@@ -912,9 +918,12 @@ function ptGrafiek(el, o) {
     }
     // Maandlast van één leningdeel voor de toetsing — normaliter 30-jaars annuïteit,
     // tenzij het een aflossingsvrij deel betreft met een expliciet afwijkend "Type toets aflossingsvrij".
-    function maandlastVoorToets(d, rest, iMaand){
-      if(d.vorm === "aflossingsvrij" && aflossingsvrijToets !== "acceptatie"){
-        return rest * iMaand; // werkelijke (niet-geamortiseerde) rentelast — zie AFM-waarschuwing bij dit veld
+    function maandlastVoorToets(d, rest, iMaand, m){
+      if(BEHEER_MODUS){
+        // NHG D.6.5: werkelijke lasten (rente + aflossing) tegen de toetsrente
+        if(d.vorm === "aflossingsvrij") return rest * iMaand;
+        if(d.vorm === "lineair") return rest * iMaand + (d.duur > 0 ? d.bedrag / d.duur : 0);
+        return rest / annuiteitFactor(iMaand, Math.max(1, d.duur - (m || 0)));
       }
       return rest / annuiteitFactor(iMaand, 360);
     }
@@ -936,7 +945,7 @@ function ptGrafiek(el, o) {
           if(rest<=0) return;
           var renteDeel = toetsrenteDeel(d, normrente);
           var iMaand = (renteDeel/100)/12;
-          var maandlastVol = maandlastVoorToets(d, rest, iMaand);
+          var maandlastVol = maandlastVoorToets(d, rest, iMaand, m);
           berekendeLast += maandlastVol;
           var maandlastDeel = maandlastVol * vf.factor;
           var aftrekGeldigNu = m < d.aftrekbaarTm;
@@ -975,7 +984,7 @@ function ptGrafiek(el, o) {
         var renteDeel = toetsrenteDeel(d, normrente);
         var iMaand = (renteDeel/100)/12;
         // elk deel wordt als 30-jaars annuïteit getoetst, tenzij "Type toets aflossingsvrij" anders aangeeft
-        var maandlastVol = maandlastVoorToets(d, rest, iMaand);
+        var maandlastVol = maandlastVoorToets(d, rest, iMaand, m);
         berekendeLast += maandlastVol;
         var maandlastDeel = maandlastVol * vf.factor; // vrijgesteld deel (V) naar rato buiten de financieringslast
 
@@ -1024,7 +1033,7 @@ function ptGrafiek(el, o) {
       // zo telt de aflossing tot dat moment mee. Zonder ingevoerde lening: 30-jaars annuïteit.
       var fl = (1 - s3) + s3 * (r.verhouding || 1);
       var lastPerEuro = (totBedrag > 0 && r.vfFactor > 0) ? (r.lastGebruteerd / r.vfFactor) / totBedrag : fl / annuiteitFactor(iGew, 360);
-      if(r.m === 0 || !(lastPerEuro > 0)) lastPerEuro = fl / annuiteitFactor(iGew, 360);
+      if((r.m === 0 && !BEHEER_MODUS) || !(lastPerEuro > 0)) lastPerEuro = fl / annuiteitFactor(iGew, 360);
       var opInk = Math.max(0, r.maxMaandlast) / lastPerEuro;
       var extra = vrijstellingOp(r.inkObj);
       if(!bepalend || opInk + extra < bepalend.opInk + bepalend.extra) bepalend = {m:r.m, datum:r.datum, opInk:opInk, extra:extra, inkObj:r.inkObj};
@@ -1038,7 +1047,7 @@ function ptGrafiek(el, o) {
       function schuif(p){ if(!p) return null; var g = p.geb ? new Date(p.geb.getTime()+delta) : null; return {geb:g, aow:g?defaultAowDatum(g):null, inkomen:p.inkomen, pensioen:p.pensioen}; }
       var ps = [schuif(client)].concat(partner ? [schuif(partner)] : []);
       var mom = [0];
-      ps.forEach(function(p){ if(p.aow && drempelGeldt(keuze, p.geb, p.aow, toetsdatum)){ var m = monthsBetween(toetsdatum, p.aow); if(m>0 && m<=maxDuur) mom.push(m); } });
+      ps.forEach(function(p){ if(p.aow && (BEHEER_MODUS ? beheerPensioenGeldt(p, toetsdatum) : drempelGeldt(keuze, p.geb, p.aow, toetsdatum))){ var m = monthsBetween(toetsdatum, p.aow); if(m>0 && m<=maxDuur) mom.push(m); } });
       var laagste = null;
       mom.forEach(function(m){
         var datum = addMonths(toetsdatum, m), personen = [], totaal = 0;
@@ -1052,8 +1061,8 @@ function ptGrafiek(el, o) {
         var pA = interpolatePercentage(tb.tables, tb.tabA, totaal, bandIdx), pN = interpolatePercentage(tb.tables, tb.tabN, totaal, bandIdx);
         var verh = pN>0 ? pA/pN : 1, la = 0, ln = 0;
         delenState.forEach(function(d){
-          var rest = (m===0 || ptMethode==="trhk") ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); if(rest <= 0) return;
-          var ml = maandlastVoorToets(d, rest, (toetsrenteDeel(d, normrente)/100)/12);
+          var rest = (m===0 || ptMethode==="trhk") && !BEHEER_MODUS ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); if(rest <= 0) return;
+          var ml = maandlastVoorToets(d, rest, (toetsrenteDeel(d, normrente)/100)/12, m);
           var b3 = d.bedrag>0 ? Math.min(1,(d.box3||0)/d.bedrag) : 0, aftr = (m < d.aftrekbaarTm) ? (1-b3) : 0;
           la += ml*aftr; ln += ml*(1-aftr);
         });
@@ -1170,7 +1179,7 @@ function ptGrafiek(el, o) {
       "<div style='margin-bottom:8px;'>" + hoofdsomStatus + extraTekstResultaat + "</div>" + scenarioHtml;
     try{
       var aowLft = client && client.geb && client.aow ? Math.floor((client.aow - client.geb)/31557600000) : 67;
-      ptGrafiek(document.getElementById("ptGrafiek"), { berekenMax: grafiekMax, huidigeLeeftijd: client && client.geb ? leeftijdOp(client.geb, toetsdatum) : null, gekozen: pensioenKeuze, methode: ptMethode, ontbreekt: (client && client.pensioen===null) || (partner && partner.pensioen===null), vanaf: 50, tot: Math.max(67, aowLft) });
+      ptGrafiek(document.getElementById("ptGrafiek"), { berekenMax: grafiekMax, huidigeLeeftijd: client && client.geb ? leeftijdOp(client.geb, toetsdatum) : null, gekozen: BEHEER_MODUS ? "beheer" : pensioenKeuze, methode: ptMethode, ontbreekt: (client && client.pensioen===null) || (partner && partner.pensioen===null), vanaf: 50, tot: Math.max(67, aowLft) });
     }catch(e){ document.getElementById("ptGrafiek").innerHTML = ""; }
 
     // ---------- Route naar akkoord ----------
@@ -1495,7 +1504,7 @@ function ptGrafiek(el, o) {
   renderDelen();
 
   var watchIds = ["jaar","toetsdatum","normrente","partnerAanwezig","alleenstaandeVerhoging","pensioenDrempel","ptMethode","toetshorizon",
-    "woonquoteNorm","inkomenssituatie","aflossingsvrijToets",
+    "inkomenssituatie",
     "c_naam","c_geboortedatum","c_aowdatum","c_inkomen","c_pensioen","c_prepensioendatum","c_prepensioen",
     "p_naam","p_geboortedatum","p_aowdatum","p_inkomen","p_pensioen","p_prepensioendatum","p_prepensioen",
     "v_studie","v_krediet","v_alimentatie","v_erfpacht","v_overig",
@@ -1558,6 +1567,7 @@ function ptGrafiek(el, o) {
       if(!el || !(id in vals)) return;
       if(el.type === "checkbox"){ el.checked = !!vals[id]; } else { el.value = vals[id]; }
     });
+    if(vals.woonquoteNorm === "beheer") document.getElementById("ptMethode").value = "beheer"; // oud dossier: aparte beheerkeuze
   }
 
   document.getElementById("nieuweBerekeningBtn").addEventListener("click", function(){
