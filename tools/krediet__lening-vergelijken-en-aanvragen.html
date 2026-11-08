@@ -733,7 +733,9 @@ const el  = id => document.getElementById(id);
 const v   = id => parseFloat(el(id).value) || 0;
 const sv  = id => el(id).value.trim();
 const fmt = n  => '\u20AC\u00a0' + Math.round(n).toLocaleString('nl-NL');
-const fmtD = n => { const s=n>0?'+':''; return s+'\u20AC\u00a0'+Math.abs(Math.round(n)).toLocaleString('nl-NL'); }
+const fmtD = n => { const s=n>0?'+':n<0?'\u2212':''; return s+'\u20AC\u00a0'+Math.abs(Math.round(n)).toLocaleString('nl-NL'); }
+const fmtDn = n => (n>0?'+':n<0?'\u2212':'')+Math.abs(Math.round(n)).toLocaleString('nl-NL');
+const fmtDp = n => (n>0?'+':n<0?'\u2212':'')+Math.abs(n).toFixed(2).replace('.',',')+'%';
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(id, el2) {
@@ -842,15 +844,15 @@ function berekenVGL(){
 
   const hjr=hL%12===0?`${hL/12} jr`:`${hL} mnd`;
   const njr=nL%12===0?`${nL/12} jr`:`${nL} mnd`;
-  el('b-hml').textContent=fmt(hML); el('b-hlt').textContent=`${hjr} · ${hR.toFixed(1)}%`;
-  el('b-nml').textContent=fmt(nML); el('b-nlt').textContent=`${njr} · ${nR.toFixed(1)}%`;
+  el('b-hml').textContent=fmt(hML); el('b-hlt').textContent=`${hjr} · ${hR.toFixed(1).replace('.',',')}%`;
+  el('b-nml').textContent=fmt(nML); el('b-nlt').textContent=`${njr} · ${nR.toFixed(1).replace('.',',')}%`;
   const dmlEl=el('b-dml'); dmlEl.textContent=fmtD(dML)+'/mnd'; dmlEl.className='sb-val '+(dML<=0?'diff-pos':'diff-neg');
   const drEl=el('b-dr'); drEl.textContent=fmtD(dRen); drEl.className='sb-val '+(dRen<=0?'diff-pos':'diff-neg');
 
   const rows=[
     ['Leenbedrag',fmt(hS),fmt(nS),fmtD(nS-hS),nS>hS?'dc':nS<hS?'ds':''],
-    ['Rente p.j.',hR.toFixed(2)+'%',nR.toFixed(2)+'%',fmtD(nR-hR)+'%',nR>hR?'dc':nR<hR?'ds':''],
-    ['Looptijd',`${hL} mnd`,`${nL} mnd`,fmtD(nL-hL)+' mnd',nL>hL?'dc':'ds'],
+    ['Rente p.j.',hR.toFixed(2).replace('.',',')+'%',nR.toFixed(2).replace('.',',')+'%',fmtDp(nR-hR),nR>hR?'dc':nR<hR?'ds':''],
+    ['Looptijd',`${hL} mnd`,`${nL} mnd`,fmtDn(nL-hL)+' mnd',nL>hL?'dc':'ds'],
     ['Maandlast',fmt(hML),fmt(nML),fmtD(dML)+'/mnd',dML>0?'dc':'ds'],
     ['Totale betaling',fmt(hTot),fmt(nTot),fmtD(nTot-hTot),nTot>hTot?'dc':'ds'],
     ['Totale rente',fmt(hRen),fmt(nRen),fmtD(dRen),dRen>0?'dc':'ds'],

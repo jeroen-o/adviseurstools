@@ -511,7 +511,8 @@ const el  = id => document.getElementById(id);
 const v   = id => parseFloat(el(id).value) || 0;
 const sel = id => el(id).value;
 const fmt = n  => n===null||isNaN(n) ? '\u2013' : '\u20AC\u00a0' + Math.round(n).toLocaleString('nl-NL');
-const fmtD= n  => { const s=n>0?'+':''; return s+'\u20AC\u00a0'+Math.abs(Math.round(n)).toLocaleString('nl-NL'); }
+const fmtD= n  => { const s=n>0?'+':n<0?'\u2212':''; return s+'\u20AC\u00a0'+Math.abs(Math.round(n)).toLocaleString('nl-NL'); }
+const fmtDn= n => (n>0?'+':n<0?'\u2212':'')+Math.abs(Math.round(n)).toLocaleString('nl-NL');
 const show= (id,vis) => { const e=el(id); if(e) e.style.display=vis?'':'none'; }
 
 function ann(som, rJaar, n) {
@@ -649,7 +650,7 @@ function herbereken() {
 
   const rows=[
     ['Maandlast',fmt(oudML),fmt(nieuwML),fmtD(dML),dML<0?'pos':dML>0?'neg':''],
-    ['Looptijd',(s==='aflos'||s==='handmatig')?'\u2013':oudLt+' mnd',(s==='aflos')?'afgelost':(s==='handmatig')?'\u2013':nieuwLt+' mnd',s!=='aflos'&&s!=='handmatig'?fmtD(nieuwLt-oudLt)+' mnd':'\u2013',(nieuwLt>oudLt)?'neg':'pos'],
+    ['Looptijd',(s==='aflos'||s==='handmatig')?'\u2013':oudLt+' mnd',(s==='aflos')?'afgelost':(s==='handmatig')?'\u2013':nieuwLt+' mnd',s!=='aflos'&&s!=='handmatig'?fmtDn(nieuwLt-oudLt)+' mnd':'\u2013',(nieuwLt>oudLt)?'neg':'pos'],
     ['Totale rente',fmt(oudRen),s==='aflos'?fmt(0):fmt(nieuwRen),s!=='aflos'&&s!=='handmatig'?fmtD(dRen):'\u2013',dRen>0?'neg':'pos'],
     ['Totale betaling',fmt(oudTot),s==='aflos'?fmt(oudSom):fmt(nieuwTot),s!=='aflos'&&s!=='handmatig'?fmtD(dTot):'\u2013',dTot>0?'neg':'pos'],
   ];

@@ -533,7 +533,7 @@ let hypoMode='aflossingsvrij', beMode='breakeven';
 
 // ─── FORMATTERING ───────────────────────────────────────────
 function fmt(n){if(n===null||isNaN(n)||!isFinite(n))return'—';return'€\u202F'+Math.round(n).toLocaleString('nl-NL');}
-function fmtP(n,d=2){if(n===null||isNaN(n)||!isFinite(n))return'—';return n.toFixed(d)+'%';}
+function fmtP(n,d=2){if(n===null||isNaN(n)||!isFinite(n))return'—';return n.toFixed(d).replace('.',',')+'%';}
 function fmtMnd(n){if(!n||n<1)return'—';n=Math.round(n);const j=Math.floor(n/12),m=n%12;let s=n+' mnd';if(j>0)s+=' ('+j+(m>0?' jr '+m+' mnd':' jaar')+')';return s;}
 function updLL(lid,lbl){const v=parseFloat(document.getElementById(lid).value)||0;const j=Math.floor(v/12),m=v%12;let s='';if(j>0&&m>0)s=`= ${j} jr ${m} mnd`;else if(j>0)s=`= ${j} jaar`;else if(m>0)s=`= ${m} mnd`;document.getElementById(lbl).textContent=s;}
 
@@ -789,7 +789,9 @@ function calcDoel(){
 }
 
 // ─── VERMOGEN VOOR INKOMEN ────────────────────────────────────
-function solveN(pv,r,pmt,fv){if(r===0)return(pv-fv)/pmt;let lo=0,hi=1200;for(let i=0;i<60;i++){const mid=(lo+hi)/2;const c=pmt*(1-Math.pow(1+r,-mid))/r+fv*Math.pow(1+r,-mid);if(c>pv)lo=mid;else hi=mid;}return(lo+hi)/2;}
+function solveN(pv,r,pmt,fv){if(r===0)return(pv-fv)/pmt;let lo=0,hi=1200;for(let i=0;i<60;i++){const mid=(lo+hi)/2;const c=pmt*(1-Math.pow(1+r,-mid))/r+fv*Math.pow(1+r,-mid);if(c<pv)lo=mid;else hi=mid;}return(lo+hi)/2;}
+// Werkelijke looptijd: aaneengesloten maanden met onttrekking waarin het vermogen niet onder de gewenste restwaarde zakt
+function werkLooptijd(rows,rest){let n=0;for(const r of rows){if(r.onttrekking>0&&r.vermogen>=(rest||0)-0.005)n++;else break;}return n;}
 function calcDuur(){
   const verm=parseFloat(document.getElementById('i-vermogen').value)||0;
   const rente=parseFloat(document.getElementById('i-rente').value)||0;
@@ -802,8 +804,8 @@ function calcDuur(){
   const simMnd=Math.min(Math.ceil(isFinite(ltEstimate)?ltEstimate*1.2+24:1200),1200);
   const rows=buildData('onttrek',{startVermogen:verm,jaarRente:rente,onttrekking:ont,looptijd:simMnd,hvv});
   // Werkelijke looptijd = laatste maand met positieve onttrekking
-  const werkLt=rows.reduce((last,r,i)=>r.onttrekking>0?i+1:last,0);
-  const totOnt=rows.reduce((s,r)=>s+r.onttrekking,0);
+  const werkLt=werkLooptijd(rows,rest);
+  const totOnt=rows.slice(0,werkLt).reduce((s,r)=>s+r.onttrekking,0);
   const restVal=werkLt>0?rows[werkLt-1].vermogen:0;
   const totH=rows.slice(0,werkLt).reduce((s,r)=>s+r.maandHeffing,0);
   const duurtOneindig=!hvv.active&&!isFinite(ltEstimate);
@@ -999,8 +1001,8 @@ function calcPensioen(){
   const sim2=Math.min(Math.ceil(isFinite(lt2est)?lt2est*1.2+24:1200),1200);
   const hvv2=getHvv('pp',rente2);
   const rows2=buildData('onttrek',{startVermogen:vermPensioen,jaarRente:rente2,onttrekking:opname,looptijd:sim2,hvv:hvv2});
-  const werkLt2=rows2.reduce((last,r,i)=>r.onttrekking>0?i+1:last,0)||sim2;
-  const totOnt2=rows2.reduce((s,r)=>s+r.onttrekking,0);
+  const werkLt2=werkLooptijd(rows2,rest)||sim2;
+  const totOnt2=rows2.slice(0,werkLt2).reduce((s,r)=>s+r.onttrekking,0);
   const heff2=rows2.slice(0,werkLt2).reduce((s,r)=>s+r.maandHeffing,0);
   const duurt2Oneindig=!hvv2.active&&!isFinite(lt2est);
   document.getElementById('pp-r-duur').textContent=duurt2Oneindig?'Oneindig':fmtMnd(werkLt2);
@@ -1075,10 +1077,12 @@ function calcHypo(){
     // Met extra inleg: netto onttrekking = ont - inleg
     const netOnt=Math.max(0,ont-inleg);
     let lt=mr>0?solveN(verm,mr,netOnt,rest):netOnt>0?(verm-rest)/netOnt:Infinity;
-    const lmnd=Math.min(Math.ceil(isFinite(lt)?lt:1200),1200);
-    const rows=buildData('onttrek',{startVermogen:verm,jaarRente:rente,onttrekking:netOnt,looptijd:lmnd,hvv});
-    const totOnt=netOnt*lmnd;const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
-    document.getElementById('hv-r-duur').textContent=isFinite(lt)?fmtMnd(lmnd):'Oneindig';
+    const simMnd=Math.min(Math.ceil(isFinite(lt)?lt*1.2+24:1200),1200);
+    const rowsSim=buildData('onttrek',{startVermogen:verm,jaarRente:rente,onttrekking:netOnt,looptijd:simMnd,hvv});
+    const lmnd=werkLooptijd(rowsSim,rest)||simMnd;
+    const rows=rowsSim.slice(0,lmnd);
+    const totOnt=rows.reduce((s,r)=>s+r.onttrekking,0);const totH=rows.reduce((s,r)=>s+r.maandHeffing,0);
+    document.getElementById('hv-r-duur').textContent=(!hvv.active&&!isFinite(lt))?'Oneindig':fmtMnd(lmnd);
     document.getElementById('hv-r-totaal').textContent=fmt(totOnt);
     const tr=document.getElementById('hv-tax-row');
     if(hvv.active){tr.style.display='';document.getElementById('hv-r-heffing').textContent=fmt(totH);}else tr.style.display='none';
