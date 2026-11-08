@@ -497,7 +497,7 @@ body{background:var(--bg);line-height:1.55;}
 </div>
 
 <div class="disc">
-  Annuïtaire berekening. Doorlopend krediet: toetslast = 2% van kredietlimiet. Indicatieve extra hypotheekcapaciteit op basis van GHF-systematiek (vrijgekomen budget ÷ netfactor × PV-factor). HRA-factor = 37,56% (maximaal aftrektarief 2026) × 50% gemiddelde rentefractie = 18,78% (Box 1). Aan deze berekening kunnen geen rechten worden ontleend.
+  Annuïtaire berekening. Doorlopend krediet: toetslast = 2% van kredietlimiet. Indicatieve extra hypotheekcapaciteit volgens de Trhk: vrijgekomen toetslast × annuïteitsfactor (toetsrente, looptijd), zonder brutering. HRA-factor = 37,56% (maximaal aftrektarief 2026) × 50% gemiddelde rentefractie = 18,78% (Box 1). Aan deze berekening kunnen geen rechten worden ontleend.
 </div>
 
 </div><!-- /main -->
@@ -612,7 +612,8 @@ function herbereken() {
   const netFactor = 1 - aftrekPct*intFracGem; // 0.8126
   const rT = toetsR/100/12;
   const pvFac = (1-Math.pow(1+rT,-hypLt))/rT;
-  const effectief = vrij>0 ? (isBox1 ? vrij/netFactor : vrij) : 0;
+  // Trhk: de toetslast van een krediet gaat 1-op-1 (zonder brutering) van de toegestane financieringslast af
+  const effectief = vrij>0 ? vrij : 0;
   const extraHyp  = vrij>0 ? Math.round(effectief*pvFac) : 0;
   const netML     = vrij>0 ? Math.round(effectief*netFactor) : 0;
 
