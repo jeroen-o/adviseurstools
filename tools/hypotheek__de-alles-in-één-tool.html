@@ -1602,8 +1602,34 @@ function pensioentoetsStatus() {
 const p1 = persoonStatus(state.geboortedatum1);
 const heeftP2 = state.situatie === 'samen' && state.inkomen2 > 0;
 const p2 = heeftP2 ? persoonStatus(state.geboortedatum2) : { aow: false, pt: false, leeftijd: null };
-const ontbreekt = (p1.pt && state.pensioen1Leeg) || (p2.pt && state.pensioen2Leeg);
+const ontbreekt = (p1.pt && state.pensioen1Leeg) || (p2.pt && state.pensioen2Leeg) || toetsMomenten().ontbreekt;
 return { p1, p2, heeftP2, geldt: p1.pt || p2.pt, ontbreekt };
+}
+// Toetsmomenten (zoals MAX. HYP. 2027): bij aanvang, op de AOW-datum en bij het bereiken van de drempelleeftijd van elke aanvrager,
+// binnen de toetshorizon (10 jaar; bij drempel 52: 15 jaar). Per persoon: AOW bereikt → inkomen vanaf AOW; anders vanaf de drempelleeftijd
+// → laagste van huidig inkomen en inkomen vanaf AOW; anders huidig inkomen. inkOp geeft null als het inkomen vanaf AOW nodig is maar ontbreekt.
+function toetsMomenten() {
+const drempel = state.pensioenDrempel || 0;
+const heeftP2 = state.situatie === 'samen' && state.inkomen2 > 0;
+const mk = (gebStr, ink, pens, leeg, force) => { let geb = gebStr ? new Date(gebStr + 'T00:00:00') : null; if (geb && isNaN(geb)) geb = null; return { geb, aowD: geb ? aowDatumUit(geb) : null, ink, pens: leeg ? null : pens, force }; };
+const pers = [mk(state.geboortedatum1, state.inkomen1, state.pensioen1, state.pensioen1Leeg, state.aow === 'ja')];
+if (heeftP2) pers.push(mk(state.geboortedatum2, state.inkomen2, state.pensioen2, state.pensioen2Leeg, false));
+const td = toetsDatum(), hor = drempel > 0 ? Math.max(10, 67 - drempel) : 10;
+const horD = new Date(td.getFullYear() + hor, td.getMonth(), td.getDate());
+const dNL = (d) => d.toLocaleDateString('nl-NL');
+const mom = [{ d: td, lbl: 'bij aanvang' }];
+pers.forEach((p, i) => { const wie = pers.length > 1 ? 'aanvrager ' + (i + 1) : 'aanvrager'; if (p.force) return;
+if (p.aowD && p.aowD > td && p.aowD <= horD) mom.push({ d: p.aowD, lbl: 'AOW-datum ' + wie + ' (' + dNL(p.aowD) + ')' });
+if (p.geb && drempel > 0) { const dd = new Date(p.geb.getFullYear() + drempel, p.geb.getMonth(), p.geb.getDate()); if (dd > td && dd <= horD && !(p.aowD && dd >= p.aowD)) mom.push({ d: dd, lbl: wie + ' ' + drempel + ' jaar (' + dNL(dd) + ')' }); } });
+mom.sort((a, b) => a.d - b.d);
+for (let i = mom.length - 1; i > 0; i--) if (+mom[i].d === +mom[i - 1].d) { mom[i - 1].lbl += ' / ' + mom[i].lbl; mom.splice(i, 1); } // zelfde datum: één toetsmoment
+const status = (p, d) => { const aowNu = p.force || !!(p.aowD && d >= p.aowD); return { aowNu, ptNu: !aowNu && drempel > 0 && !!p.geb && leeftijdOp(p.geb, d) >= drempel }; };
+const inkOp = (p, d) => { const st = status(p, d);
+if (st.aowNu) return p.pens !== null ? p.pens : (status(p, td).aowNu ? p.ink : null); // AOW al bij aanvang zonder apart AOW-inkomen: het ingevulde inkomen
+if (st.ptNu) return p.pens !== null ? Math.min(p.ink, p.pens) : null;
+return p.ink; };
+const ontbreekt = mom.some(m => pers.some(p => inkOp(p, m.d) === null));
+return { pers, mom, status, inkOp, ontbreekt };
 }
 
 // ============================================================
@@ -1640,22 +1666,24 @@ return { ink, tab, eff, fl, isAow, maxNaVerpl: netto / annFactor(toetsrente, loo
 // geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief).
 const alimJaar = (alimentatieMaandlast || 0) * 12;
 const naAlim = (x) => Math.max(0, x - alimJaar);
-const ink1Nu = naAlim((pt.p1.aow && !state.pensioen1Leeg) ? state.pensioen1 : inkomen1);
-const ink2Nu = (pt.heeftP2 && pt.p2.aow && !state.pensioen2Leeg) ? state.pensioen2 : inkomen2;
-// Tabelkeuze (Trhk art. 3 lid 7): heeft één van beide de AOW-leeftijd bereikt, dan volgt de tabel de persoon met het hoogste toetsinkomen.
-// AOW-status aanvrager: schakelaar 'AOW-gerechtigde' of geboortedatum; partner: geboortedatum.
-const aow1 = aow === 'ja' || pt.p1.aow, aow2 = pt.heeftP2 && pt.p2.aow;
-const tabelAow = (i1, a1, i2, a2) => (!pt.heeftP2 || i1 >= i2) ? a1 : a2;
-const scHuidig = scenarioLTI(ink1Nu + ink2Nu, tabelAow(ink1Nu, aow1, ink2Nu, aow2));
-let scPensioen = null;
-if (pt.geldt && !pt.ontbreekt) {
-const i1 = pt.p1.pt ? naAlim(state.pensioen1) : ink1Nu;
-const i2 = pt.p2.pt ? state.pensioen2 : ink2Nu;
-// In dit scenario geldt wie onder de pensioentoets valt als AOW-gerechtigd
-scPensioen = scenarioLTI(i1 + i2, tabelAow(i1, pt.p1.pt || aow1, i2, pt.p2.pt || aow2));
-}
-const scBepalend = (scPensioen && scPensioen.maxNaVerpl < scHuidig.maxNaVerpl) ? scPensioen : scHuidig;
-const pensioentoetsBepalend = scBepalend === scPensioen;
+// Tabelkeuze (Trhk art. 3 lid 7): AOW-tabel als de aanvrager met het hoogste toetsinkomen de AOW-leeftijd heeft bereikt
+// (schakelaar 'AOW-gerechtigde' of geboortedatum); gelijk inkomen met verschillende status → laagste uitkomst.
+const TM = toetsMomenten();
+const scens = TM.mom.map(m => {
+const st = TM.pers.map(p => TM.status(p, m.d));
+const inks = TM.pers.map((p, i) => { const x = TM.inkOp(p, m.d) || 0; return i === 0 ? naAlim(x) : x; });
+const mx = Math.max(...inks), top = st.filter((x, i) => inks[i] === mx);
+const wel = top.some(x => x.aowNu), niet = top.some(x => !x.aowNu);
+const tot = inks.reduce((x, y) => x + y, 0);
+let isA = wel && !niet;
+if (wel && niet) { const sA = scenarioLTI(tot, true), sN = scenarioLTI(tot, false); isA = sA.maxNaVerpl < sN.maxNaVerpl; }
+const sc = scenarioLTI(tot, isA); sc.moment = m; sc.pt = st.some(x => x.ptNu); return sc;
+});
+const scHuidig = scens[0];
+let scBepalend = scHuidig; scens.forEach(x => { if (x.maxNaVerpl < scBepalend.maxNaVerpl) scBepalend = x; });
+const scPensioen = scBepalend !== scHuidig ? scBepalend : null;
+const ptGeldt = scens.length > 1 || scHuidig.pt;
+const pensioentoetsBepalend = scBepalend !== scHuidig;
 
 // Toetsinkomen
 const toetsinkomen = scBepalend.ink;
@@ -1678,11 +1706,13 @@ const alleenstaandeGrens = scBepalend.isAow ? AL.grensAOW : AL.grens;
 const alleenstaandeOpslag = (situatie === 'alleenstaand' && inkomen2 === 0 && toetsinkomen > alleenstaandeGrens) ? AL.bedrag : 0;
 
 const drempelTxt = state.pensioenDrempel > 0 ? `vanaf ${state.pensioenDrempel} jaar` : '';
-const ptTekst = state.pensioenDrempel <= 0 ? 'Pensioentoets: niet getoetst (uitgeschakeld)'
-: pt.ontbreekt ? `Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in`
-: pt.geldt ? `Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${euro(scPensioen.ink)} met de ${scPensioen.isAow ? 'AOW-tabel' : 'niet-AOW-tabel'} (max. ${euro(scPensioen.maxNaVerpl)}) én op huidig inkomen ${euro(scHuidig.ink)} (max. ${euro(scHuidig.maxNaVerpl)}); ${pensioentoetsBepalend ? 'pensioeninkomen is bepalend' : 'huidig inkomen is bepalend'}`
+const tNaam = (x) => x.isAow ? 'AOW-tabel' : 'niet-AOW-tabel';
+const ptTekst = (pt.ontbreekt ? `Pensioentoets${drempelTxt ? ' (' + drempelTxt + ')' : ''}: van toepassing — vul inkomen vanaf AOW in`
+: ptGeldt ? `Pensioentoets${drempelTxt ? ' (' + drempelTxt + ')' : ''}: toetsmomenten ${scens.map(x => x.moment.lbl + ' ' + euro(x.ink) + ' (' + tNaam(x) + ', max. ' + euro(x.maxNaVerpl) + ')').join('; ')}`
+: state.pensioenDrempel <= 0 ? 'Pensioentoets: niet getoetst (uitgeschakeld)'
 : (pt.p1.aow || aow === 'ja') ? `Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op ${euro(scHuidig.ink)} met de ${scHuidig.isAow ? 'AOW-tabel' : 'niet-AOW-tabel'}`
-: `Pensioentoets (${drempelTxt}): niet van toepassing${pt.p1.leeftijd !== null ? ' (leeftijd ' + pt.p1.leeftijd + (pt.p2.leeftijd !== null ? ' / ' + pt.p2.leeftijd : '') + ' jaar)' : ' (geen geboortedatum)'}`;
+: `Pensioentoets (${drempelTxt}): niet van toepassing${pt.p1.leeftijd !== null ? ' (leeftijd ' + pt.p1.leeftijd + (pt.p2.leeftijd !== null ? ' / ' + pt.p2.leeftijd : '') + ' jaar)' : ' (geen geboortedatum)'}`)
++ (pt.ontbreekt ? '' : ` · bepalend toetsmoment: ${scBepalend.moment.lbl} — toetsinkomen ${euro(scBepalend.ink)} met de ${tNaam(scBepalend)}`);
 
 // Energielabel-opslag (bij aankoop)
 const labelOpslag = getLabelOpslag(label);
@@ -1764,7 +1794,7 @@ if (ltv > 100) risicos.push({ type: 'bad', text: `LTV van ${pct(ltv,1)} overschr
 if (benutting > 100) risicos.push({ type: 'bad', text: `Gewenste hypotheek overschrijdt de maximale leenruimte` });
 if (benutting > 95) risicos.push({ type: 'warn', text: `Maximaal lenen: uitgebreid stilstaan bij uitgavenpatroon vereist (AFM Leidraad)` });
 if (state.kinderwens === 'ja') risicos.push({ type: 'warn', text: `Kinderwens: doorrekenen effect op inkomen en woonlasten bij eventuele teruggang in arbeid` });
-if (pt.geldt) risicos.push({ type: pensioentoetsBepalend ? 'warn' : 'ok', text: ptTekst });
+if (ptGeldt) risicos.push({ type: pensioentoetsBepalend ? 'warn' : 'ok', text: ptTekst });
 if (state.pensioen10j === 'ja') risicos.push({ type: 'warn', text: `Pensioen binnen 10 jaar: toets of hypotheek betaalbaar blijft op pensioenniveau (Trhk-verplichting)` });
 if (stijgingMaandlast > 200) risicos.push({ type: 'warn', text: `Renteschok +2%: maandlast stijgt met ${euro(stijgingMaandlast)}/mnd bij herziening` });
 if (state.aoverzekering === 'nee') risicos.push({ type: 'warn', text: `Geen AO-verzekering: adviseer doorrekening arbeidsongeschiktheidsscenario` });
@@ -2350,7 +2380,7 @@ document.getElementById('next1').addEventListener('click', function() {
 readStep1();
 if (!state.klantNaam) { alert('Vul de naam van de klant in.'); return; }
 if (!state.inkomen1 || state.inkomen1 <= 0) { alert('Vul een bruto jaarinkomen in.'); return; }
-{ const pt = pensioentoetsStatus(); if (pt.ontbreekt) { alert('De pensioentoets (vanaf ' + state.pensioenDrempel + ' jaar) is van toepassing: vul inkomen vanaf AOW (AOW + pensioen) in.'); return; } }
+{ const pt = pensioentoetsStatus(); if (pt.ontbreekt) { alert('Op een toetsmoment (pensioentoets of AOW-datum binnen de toetshorizon) is het inkomen vanaf AOW nodig: vul inkomen vanaf AOW (AOW + pensioen) in.'); return; } }
 showStep(2);
 });
 

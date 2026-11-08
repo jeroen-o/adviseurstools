@@ -1374,38 +1374,58 @@ function run(){
     const actieveAanvragers = aanvrager2Actief ? aanvragers.slice(0,2) : [aanvragers[0]];
     const statussen = actieveAanvragers.map(pensioenStatus);
     const drempel = getPensioenDrempel();
-    const ontbreekt = statussen.some(st => (st.aow || st.geldt) && st.pensioen === null);
-    const pensioentoetsActief = statussen.some(st => st.geldt);
-    // Toets 1 — huidige situatie: AOW-gerechtigden op pensioeninkomen, overigen op huidig inkomen
-    const ink1 = statussen.reduce((s,st) => s + (st.aow ? (st.pensioen||0) : st.inkomen), 0);
-    let calc = ontbreekt ? null : berekenMaxHypotheek(ink1, fase, target, targetCol);
-    let calcPensioen = null, inkP = 0, faseP = null;
-    if(calc && pensioentoetsActief){
-      // Toets 2 — inkomen vanaf AOW voor wie de pensioentoets geldt, met de AOW-tabel (welAOW) als alle aanvragers in die situatie zijn
-      inkP = statussen.reduce((s,st) => s + ((st.aow || st.geldt) ? st.pensioen : st.inkomen), 0);
-      faseP = faseVoor(statussen.map(st => ({inkomen: (st.aow || st.geldt) ? st.pensioen : st.inkomen, aow: st.aow || st.geldt})));
-      calcPensioen = berekenMaxHypotheek(inkP, faseP, target, targetCol);
-      if(!calcPensioen) calcPensioen = {wq:0, maxMaandlast:0, maxHyp:0};
-    }
-    const pensioenBepalend = calcPensioen && calcPensioen.maxHyp < calc.maxHyp;
+    // Toetsmomenten (zoals MAX. HYP. 2027): bij aanvang, op de AOW-datum en bij het bereiken van de drempelleeftijd van elke aanvrager binnen de toetshorizon
+    const nuD = new Date(), horJr = drempel > 0 ? Math.max(10, 67 - drempel) : 10;
+    const horD = new Date(nuD.getFullYear() + horJr, nuD.getMonth(), nuD.getDate());
+    const geldigeD = d => !!(d && !isNaN(d.getTime()));
+    const lftOp = (g, d) => { let l = d.getFullYear() - g.getFullYear(); if(d.getMonth() < g.getMonth() || (d.getMonth() === g.getMonth() && d.getDate() < g.getDate())) l--; return l; };
+    const pers = actieveAanvragers.map((a, i) => { const g = a.geboortedatum ? new Date(a.geboortedatum) : null; const ad = aowDatumEffectief(a); return {st: statussen[i], geb: geldigeD(g) ? g : null, aowD: geldigeD(ad) ? ad : null}; });
+    const momenten = [{d: nuD, lbl: 'bij aanvang'}];
+    pers.forEach((p, i) => { const wie = pers.length > 1 ? 'aanvrager ' + (i + 1) : 'aanvrager';
+      if(p.aowD && p.aowD > nuD && p.aowD <= horD) momenten.push({d: p.aowD, lbl: 'AOW-datum ' + wie + ' (' + fmtDatumNL(p.aowD) + ')'});
+      if(p.geb && drempel > 0){ const dd = new Date(p.geb.getFullYear() + drempel, p.geb.getMonth(), p.geb.getDate()); if(dd > nuD && dd <= horD && !(p.aowD && dd >= p.aowD)) momenten.push({d: dd, lbl: wie + ' ' + drempel + ' jaar (' + fmtDatumNL(dd) + ')'}); } });
+    momenten.sort((x, y) => x.d - y.d);
+    for(let i = momenten.length - 1; i > 0; i--) if(+momenten[i].d === +momenten[i-1].d){ momenten[i-1].lbl += ' / ' + momenten[i].lbl; momenten.splice(i, 1); }
+    // Per aanvrager: AOW bereikt → inkomen vanaf AOW; anders vanaf de drempelleeftijd → laagste van huidig inkomen en inkomen vanaf AOW; anders huidig inkomen.
+    // Tabel (Trhk art. 3 lid 7): AOW-tabel als de aanvrager met het hoogste toetsinkomen de AOW-leeftijd heeft bereikt; gelijk inkomen met verschillende status → laagste uitkomst.
+    const scens = momenten.map(m => {
+      let ontbr = false;
+      const sts = pers.map(p => { const aowNu = p.st.aow || !!(p.aowD && m.d >= p.aowD); return {aowNu, ptNu: !aowNu && drempel > 0 && !!p.geb && lftOp(p.geb, m.d) >= drempel}; });
+      const inks = pers.map((p, i) => { const x = sts[i]; if(x.aowNu || x.ptNu){ if(p.st.pensioen === null){ ontbr = true; return 0; } return x.aowNu ? p.st.pensioen : Math.min(p.st.inkomen, p.st.pensioen); } return p.st.inkomen; });
+      const mx = Math.max(...inks), top = sts.filter((x, i) => inks[i] === mx), wel = top.some(x => x.aowNu), niet = top.some(x => !x.aowNu);
+      const tot = inks.reduce((x, y) => x + y, 0);
+      let fs = (wel && !niet) ? 'welAOW' : 'nietAOW';
+      if(wel && niet) fs = getWoonquota(tot, targetCol.idx, 'welAOW') < getWoonquota(tot, targetCol.idx, 'nietAOW') ? 'welAOW' : 'nietAOW';
+      return {m, ink: tot, fase: fs, ontbr, pt: sts.some(x => x.ptNu)};
+    });
+    const ontbreekt = scens.some(x => x.ontbr);
+    const pensioentoetsActief = scens.length > 1 || scens[0].pt;
+    const leeg = {wq:0, maxMaandlast:0, maxHyp:0, brutoMaandlast:0, verplMaand:0, basis:0, alleenstaand:0, label:0, factor:1};
+    const calc0 = ontbreekt ? null : berekenMaxHypotheek(scens[0].ink, scens[0].fase, target, targetCol);
+    const calcs = calc0 ? scens.map((x, i) => i === 0 ? calc0 : (berekenMaxHypotheek(x.ink, x.fase, target, targetCol) || leeg)) : [];
+    let bi = 0; calcs.forEach((c, i) => { if(c.maxHyp < calcs[bi].maxHyp) bi = i; }); // laagste uitkomst over de toetsmomenten telt
+    let calc = calc0 ? calcs[bi] : null;
+    const bep = scens[bi];
+    const pensioenBepalend = bi > 0;
     const drempelTxt = drempel > 0 ? `vanaf ${drempel} jaar` : 'niet toetsen';
+    const tblTxt = fs => fs === 'welAOW' ? 'AOW-tabel' : 'niet-AOW-tabel';
+    const bepTxt = `Bepalend toetsmoment: <b>${bep.m.lbl}</b> — toetsinkomen ${fmtEur(bep.ink)} met de ${tblTxt(bep.fase)}.`;
     let pensioenRegel = '';
     if(ontbreekt){
-      pensioenRegel = `<div class="banner err" style="margin:12px 0"><span class="icon">!</span><div><b>Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in.</b> Voor ten minste één aanvrager geldt de pensioentoets of is de AOW-leeftijd al bereikt, maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. Er wordt niet met het huidige inkomen gerekend.</div></div>`;
-    } else if(pensioentoetsActief){
-      pensioenRegel = `<div style="background:var(--orange-light);border-left:3px solid var(--orange);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin:12px 0"><b style="color:var(--orange)">Pensioentoets (${drempelTxt}): van toepassing</b> — getoetst op ${fmtEur(inkP)} met de ${faseP==='welAOW'?'AOW-tabel (welAOW)':'niet-AOW-tabel (hoogste toetsinkomen heeft nog geen AOW; Trhk art. 3 lid 7)'}: max. ${fmtEur(calcPensioen.maxHyp)} (woonquota ${calcPensioen.wq.toFixed(1).replace('.',',')}%). Huidige situatie: max. ${fmtEur(calc.maxHyp)}. De laagste uitkomst telt${pensioenBepalend?' — het pensioeninkomen is bepalend':''}.</div>`;
+      pensioenRegel = `<div class="banner err" style="margin:12px 0"><span class="icon">!</span><div><b>Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in.</b> Voor ten minste één aanvrager geldt op een toetsmoment de pensioentoets of de AOW-leeftijd, maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. Er wordt niet met het huidige inkomen gerekend.</div></div>`;
+    } else if(pensioentoetsActief && calc0){
+      pensioenRegel = `<div style="background:var(--orange-light);border-left:3px solid var(--orange);padding:8px 12px;border-radius:0 var(--radius) var(--radius) 0;font-size:12px;margin:12px 0"><b style="color:var(--orange)">Pensioentoets (${drempelTxt}): toetsmomenten</b> — ${scens.map((x, i) => `${x.m.lbl}: ${fmtEur(x.ink)}, ${tblTxt(x.fase)}, max. ${fmtEur(calcs[i].maxHyp)} (woonquota ${calcs[i].wq.toFixed(1).replace('.',',')}%)`).join('; ')}. De laagste uitkomst telt. ${bepTxt}</div>`;
     } else {
-      const aowTxt = statussen.some(st => st.aow) ? ` AOW-leeftijd bereikt: getoetst op pensioeninkomen met de ${fase==='welAOW'?'AOW-tabel':'niet-AOW-tabel'} (tabel van de aanvrager met het hoogste toetsinkomen).` : '';
-      pensioenRegel = `<div class="muted" style="margin:12px 0;font-size:12px">Pensioentoets (${drempelTxt}): niet van toepassing.${aowTxt}</div>`;
+      const aowTxt = statussen.some(st => st.aow) ? ` AOW-leeftijd bereikt: getoetst op pensioeninkomen met de ${bep.fase==='welAOW'?'AOW-tabel':'niet-AOW-tabel'} (tabel van de aanvrager met het hoogste toetsinkomen).` : '';
+      pensioenRegel = `<div class="muted" style="margin:12px 0;font-size:12px">Pensioentoets (${drempelTxt}): niet van toepassing.${aowTxt} ${bepTxt}</div>`;
     }
-    if(calc && pensioenBepalend) calc = calcPensioen;
-    const toetsInkomenGetoond = (calc && pensioenBepalend) ? inkP : ink1;
+    const toetsInkomenGetoond = bep.ink;
     if(!calc){
       maxHypotheekBlock = pensioenRegel || `<div class="muted" style="margin-top:14px">Geen maximale hypotheek te bepalen.</div>`;
     }
     if(calc){
       const tweetrapsBanner = pensioenRegel;
-      const faseUsed = pensioenBepalend ? faseP : fase;
+      const faseUsed = bep.fase;
       const faseLabel = faseUsed === 'welAOW' ? 'AOW-tabel (welAOW)' : 'Niet-AOW-tabel (nietAOW)';
       maxHypotheekBlock = `
         ${tweetrapsBanner}

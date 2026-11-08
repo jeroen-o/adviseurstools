@@ -571,42 +571,61 @@ function flnAowDatum(geb){var x=(geb<new Date(1961,0,1))?0:3;return new Date(geb
 function flnLeeftijdOp(geb,dt){var a=dt.getFullYear()-geb.getFullYear();if(dt.getMonth()<geb.getMonth()||(dt.getMonth()===geb.getMonth()&&dt.getDate()<geb.getDate()))a--;return a;}
 function flnDatumNL(d){return d?d.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}):'—';}
 /* personen: [{inkomen, pensioen (null = niet ingevuld), geb (Date of null)}]
-   opt: {drempel, datum (toetsdatum), rente (toetsrente %), box3 (true = niet-aftrekbare tabellen)}
-   Toets 1: inkomen op de toetsdatum (wie de AOW-leeftijd al heeft: inkomen vanaf AOW).
-   Toets 2 (pensioentoets, alleen als iemand de drempelleeftijd heeft maar de AOW-leeftijd nog niet): die persoon op inkomen vanaf AOW.
-   Tabel: volgens de persoon met het hoogste toetsinkomen (art. 3 lid 7). Bindend = de laagste toegestane maandlast van beide toetsen. */
+   opt: {drempel, datum (toetsdatum), rente (toetsrente %), box3 (true = niet-aftrekbare tabellen), horizon (jaren; standaard 10, bij drempel 52: 15)}
+   Toetsmomenten (zoals MAX. HYP. 2027): bij aanvang, op de AOW-datum van elke aanvrager en op het moment dat iemand de drempelleeftijd
+   bereikt, voor zover binnen de toetshorizon. Per persoon op een moment: AOW-leeftijd bereikt → inkomen vanaf AOW; anders leeftijd ≥ drempel
+   → laagste van huidig inkomen en inkomen vanaf AOW; anders huidig inkomen.
+   Tabel (Trhk art. 3 lid 7): AOW-tabel als de persoon met het hoogste toetsinkomen de AOW-leeftijd heeft bereikt; gelijk inkomen met
+   verschillende status → laagste uitkomst. Bindend = het toetsmoment met de laagste toegestane maandlast. */
 function flnToets(personen,opt){
   var drempel=+opt.drempel||0,dt=opt.datum||new Date();
+  var hor=opt.horizon||(drempel>0?Math.max(10,67-drempel):10);
+  var horD=new Date(dt.getFullYear()+hor,dt.getMonth(),dt.getDate());
   var info=personen.map(function(p){var aowD=p.geb?flnAowDatum(p.geb):null;var aow=aowD?dt>=aowD:false;var lft=p.geb?flnLeeftijdOp(p.geb,dt):null;
-    return {p:p,aowDatum:aowD,aow:aow,leeftijd:lft,pt:(!aow&&drempel>0&&lft!==null&&lft>=drempel)};});
-  function scen(metPensioen){
-    var tot=0,hoogste=-1,aowH=false,ontbreekt=false;
-    info.forEach(function(i){var alsAow=i.aow||(metPensioen&&i.pt);var ink;
-      if(alsAow){if(i.p.pensioen==null||isNaN(i.p.pensioen)){ontbreekt=true;ink=0;}else ink=+i.p.pensioen;}else ink=+i.p.inkomen||0;
-      tot+=ink;if(ink>hoogste){hoogste=ink;aowH=alsAow;}});
-    var tabel=opt.box3?(aowH?'box3WelAOW':'box3NietAOW'):(aowH?'welAOW':'nietAOW');
+    var drD=(p.geb&&drempel>0)?new Date(p.geb.getFullYear()+drempel,p.geb.getMonth(),p.geb.getDate()):null;
+    return {p:p,aowDatum:aowD,drempelDatum:drD,aow:aow,leeftijd:lft,pt:(!aow&&drempel>0&&lft!==null&&lft>=drempel)};});
+  var wie=function(n){return personen.length>1?'aanvrager '+(n+1):'aanvrager';};
+  var mom=[{d:dt,lbl:'bij aanvang'}];
+  info.forEach(function(i,n){
+    if(i.aowDatum&&i.aowDatum>dt&&i.aowDatum<=horD)mom.push({d:i.aowDatum,lbl:'AOW-datum '+wie(n)+' ('+flnDatumNL(i.aowDatum)+')'});
+    if(i.drempelDatum&&i.drempelDatum>dt&&i.drempelDatum<=horD&&!(i.aowDatum&&i.drempelDatum>=i.aowDatum))mom.push({d:i.drempelDatum,lbl:wie(n)+' '+drempel+' jaar ('+flnDatumNL(i.drempelDatum)+')'});});
+  mom.sort(function(x,y){return x.d-y.d;});
+  for(var k=mom.length-1;k>0;k--)if(+mom[k].d===+mom[k-1].d){mom[k-1].lbl+=' / '+mom[k].lbl;mom.splice(k,1);} // zelfde datum: één toetsmoment
+  function scen(m){
+    var tot=0,ontbreekt=false,pers=[];
+    info.forEach(function(i){var aowNu=!!(i.aowDatum&&m.d>=i.aowDatum);var ptNu=!aowNu&&drempel>0&&!!i.p.geb&&flnLeeftijdOp(i.p.geb,m.d)>=drempel;var ink;
+      var pensOk=!(i.p.pensioen==null||isNaN(i.p.pensioen));var werk=+i.p.inkomen||0;
+      if(aowNu||ptNu){if(!pensOk){ontbreekt=true;ink=0;}else ink=aowNu?+i.p.pensioen:Math.min(werk,+i.p.pensioen);}else ink=werk;
+      tot+=ink;pers.push({ink:ink,aow:aowNu,pt:ptNu});});
+    var mx=Math.max.apply(null,pers.map(function(q){return q.ink;}));var top=pers.filter(function(q){return q.ink===mx;});
+    var wel=top.some(function(q){return q.aow;}),niet=top.some(function(q){return !q.aow;});
+    var tA=opt.box3?'box3WelAOW':'welAOW',tN=opt.box3?'box3NietAOW':'nietAOW';
+    var aowH=wel&&!niet;if(wel&&niet)aowH=flnPct(tot,opt.rente,tA)<flnPct(tot,opt.rente,tN);
+    var tabel=aowH?tA:tN;
     var pct=flnPct(tot,opt.rente,tabel);
-    return {inkomen:tot,tabel:tabel,aowTabel:aowH,pct:pct,maxLast:tot*pct/12,ontbreekt:ontbreekt};
+    return {inkomen:tot,tabel:tabel,aowTabel:aowH,pct:pct,maxLast:tot*pct/12,ontbreekt:ontbreekt,moment:m,pers:pers};
   }
-  var huidig=scen(false),ptGeldt=info.some(function(i){return i.pt;}),pens=ptGeldt?scen(true):null;
-  var bindend=(pens&&pens.maxLast<huidig.maxLast)?pens:huidig;
-  return {huidig:huidig,pensioen:pens,bindend:bindend,ptGeldt:ptGeldt,aowBereikt:info.some(function(i){return i.aow;}),
-          ontbreekt:huidig.ontbreekt||!!(pens&&pens.ontbreekt),personen:info,drempel:drempel};
+  var scens=mom.map(scen),huidig=scens[0],bindend=huidig;
+  scens.forEach(function(x){if(x.maxLast<bindend.maxLast)bindend=x;});
+  var ptGeldt=scens.length>1||huidig.pers.some(function(q){return q.pt;});
+  return {huidig:huidig,pensioen:bindend!==huidig?bindend:null,bindend:bindend,momenten:scens,ptGeldt:ptGeldt,aowBereikt:info.some(function(i){return i.aow;}),
+          ontbreekt:scens.some(function(x){return x.ontbreekt;}),personen:info,drempel:drempel};
 }
 /* Korte uitleg voor in het resultaat */
 function flnToetsTekst(t,fmtE){
-  var f=fmtE||function(n){return '€ '+Math.round(n).toLocaleString('nl-NL');};
+  var f=fmtE||function(n){return '€ '+Math.round(n).toLocaleString('nl-NL');};
   var tl=function(s){return s.aowTabel?'AOW-tabel':'tabel niet-AOW';};
   var d=t.drempel?('vanaf '+t.drempel+' jaar'):'niet toetsen';
   var s='Pensioentoets ('+d+'): ';
-  if(!t.drempel) s+='niet toegepast (keuze)';
-  else if(t.ptGeldt&&t.pensioen.ontbreekt) s+='van toepassing — inkomen vanaf AOW ontbreekt';
-  else if(t.ptGeldt) s+='van toepassing — getoetst op '+f(t.pensioen.inkomen)+' met '+tl(t.pensioen)+' ('+(t.pensioen.pct*100).toFixed(1).replace('.',',')+'%)'+(t.bindend===t.pensioen?'; deze toets is bindend':'; de toets op het huidige inkomen is lager en dus bindend');
+  if(t.ontbreekt) s+='van toepassing — inkomen vanaf AOW ontbreekt';
+  else if(t.ptGeldt) s+='toetsmomenten: '+t.momenten.map(function(x){return x.moment.lbl+' '+f(x.inkomen)+' ('+tl(x)+', '+(x.pct*100).toFixed(1).replace('.',',')+'%)';}).join('; ');
+  else if(!t.drempel) s+='niet toegepast (keuze)';
   else if(t.aowBereikt) s+='niet nodig';
   else s+='niet van toepassing'+(t.personen.some(function(i){return !i.p.geb;})?' (geboortedatum niet ingevuld)':'');
   if(t.aowBereikt) s+=' · AOW-leeftijd op de toetsdatum bereikt: getoetst op inkomen vanaf AOW';
   t.personen.forEach(function(i,n){if(i.aowDatum)s+=' · AOW-datum '+(t.personen.length>1?('persoon '+(n+1)+' '):'')+flnDatumNL(i.aowDatum);});
   if(t.ontbreekt) s+=' · LET OP: vul het inkomen vanaf AOW (AOW + pensioen) in — zonder dat bedrag is de uitkomst niet juist';
+  else s+=' · Bepalend toetsmoment: '+t.bindend.moment.lbl+' — toetsinkomen '+f(t.bindend.inkomen)+' met '+tl(t.bindend);
   return s;
 }
 

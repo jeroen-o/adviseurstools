@@ -686,13 +686,27 @@ function bereken(){
   // Pensioentoets: AOW bereikt → alleen inkomen vanaf AOW (AOW-tabel). Nog geen AOW maar leeftijd ≥ drempel (57/52) →
   // laagste van toets op huidig inkomen (tabel 1) en op inkomen vanaf AOW (tabel 2). Jonger dan de drempel → huidig inkomen.
   const geb=leesGeb(), nu=new Date();
-  const lftT=geb?leeftijdOp(geb,nu):lft;
-  const aowBereikt=geb?(nu>=aowDatumUit(geb)):(lftT>=67);
+  // Zonder geboortedatum: leeftijd op de toetsdatum (vandaag) en de AOW-regel (t/m 1960: 67 jaar; vanaf 1961: 67 jaar en 3 maanden)
+  const gebT=geb||new Date(nu.getFullYear()-lft,nu.getMonth(),nu.getDate());
+  const aowD=aowDatumUit(gebT);
+  const lftT=leeftijdOp(gebT,nu);
+  const aowBereikt=nu>=aowD;
   const drempel=parseInt(document.getElementById('pensioenDrempel').value,10)||0;
   const huidigInk=N('huidigInk');
   const ptGeldt=!aowBereikt&&drempel>0&&lftT>=drempel;
   let modus=aowBereikt?'aow':ptGeldt?'pt':(huidigInk>0?'huidig':'alleenPensioen');
-  if((modus==='aow'||modus==='pt')&&totaalInk<=0){
+  // Toetsmomenten (zoals MAX. HYP. 2027): bij aanvang, op de AOW-datum en bij het bereiken van de drempelleeftijd, binnen de toetshorizon
+  const horJr=drempel>0?Math.max(10,67-drempel):10, horD=new Date(nu.getFullYear()+horJr,nu.getMonth(),nu.getDate());
+  const dNL=d=>d.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'});
+  const mom=[{d:nu,lbl:'bij aanvang'}];
+  if(aowD>nu&&aowD<=horD)mom.push({d:aowD,lbl:'AOW-datum ('+dNL(aowD)+')'});
+  if(drempel>0){const dd=new Date(gebT.getFullYear()+drempel,gebT.getMonth(),gebT.getDate());if(dd>nu&&dd<=horD&&dd<aowD)mom.push({d:dd,lbl:drempel+' jaar ('+dNL(dd)+')'});}
+  mom.sort((a,b)=>a.d-b.d);
+  // Per moment: AOW bereikt → inkomen vanaf AOW (AOW-tabel); vanaf de drempelleeftijd → laagste van huidig inkomen en inkomen vanaf AOW (niet-AOW-tabel);
+  // anders huidig inkomen (niet-AOW-tabel). Geen huidig inkomen ingevuld en jonger dan de drempel: inkomen vanaf AOW (zoals voorheen).
+  const statusOp=d=>{const aowNu=d>=aowD;return {aowNu,ptNu:!aowNu&&drempel>0&&leeftijdOp(gebT,d)>=drempel};};
+  const nodigAOWInk=mom.some(m=>{const st=statusOp(m.d);return st.aowNu||st.ptNu;});
+  if((modus==='aow'||modus==='pt'||nodigAOWInk)&&totaalInk<=0){
     document.getElementById('verdictDiv').innerHTML='<div class="verdict nee"><div class="v-ico">❌</div><div><div class="v-titel">Vul inkomen vanaf AOW in</div><div class="v-sub">'+(modus==='pt'?'De pensioentoets (vanaf '+drempel+' jaar) is van toepassing':'De AOW-leeftijd is bereikt')+': vul AOW en aanvullend pensioen in. Er wordt niet stilzwijgend met het huidige inkomen gerekend.</div></div></div>';
     ['hoofd','scGrid','tbl'].forEach(id=>document.getElementById(id).innerHTML='');
     document.getElementById('resCard').classList.remove('hidden');return;
@@ -711,17 +725,26 @@ function bereken(){
   const ALLEEN_BEDRAG=NA.bedrag;
   const alleenVan=(ink,aowTbl)=>situatie==='single'&&ink>(aowTbl?NA.grensAOW:NA.grens)?ALLEEN_BEDRAG:0;
   const annLt=ann(1,toets,lt*12);
-  const bindHuidig=modus==='huidig'||(modus==='pt'&&huidigInk>0&&(lastHuidig/12/annLt+alleenVan(huidigInk,false))<(lastPens/12/annLt+alleenVan(totaalInk,true)));
-  const maxJaarLast=bindHuidig?lastHuidig:lastPens;
-  const alleenBedrag=bindHuidig?alleenVan(huidigInk,false):alleenVan(totaalInk,true);
-  const alleenGrens=bindHuidig?NA.grens:NA.grensAOW, alleenInk=bindHuidig?huidigInk:totaalInk;
-  const toetsInkOms=modus==='huidig'?'huidig inkomen '+fmt(huidigInk)+' (niet-AOW-tabel, woonquote '+fmtPct(flpH*100,1)+')':
-    (modus==='pt'&&bindHuidig)?'huidig inkomen '+fmt(huidigInk)+' (niet-AOW-tabel, woonquote '+fmtPct(flpH*100,1)+'; lager dan de toets op inkomen vanaf AOW)':
-    'pensioeninkomen '+fmt(totaalInk)+' (AOW-tabel, woonquote '+fmtPct(flp*100,1)+')';
+  const scens=mom.map(m=>{const st=statusOp(m.d);let ink,aowTbl;
+    if(st.aowNu){ink=totaalInk;aowTbl=true;}
+    else if(huidigInk>0){ink=st.ptNu?Math.min(huidigInk,totaalInk):huidigInk;aowTbl=false;}
+    else {ink=totaalInk;aowTbl=!st.ptNu;}
+    const q=aowTbl?getFLPPensioen(ink,toets*100):getFLPNietAOW(ink,toets*100);const last=ink*q,alleen=alleenVan(ink,aowTbl);
+    return {m,ink,aowTbl,pt:st.ptNu,q,last,alleen,max:last/12/annLt+alleen};});
+  let bi=0;scens.forEach((x,i)=>{if(x.max<scens[bi].max)bi=i;}); // laagste uitkomst over de toetsmomenten telt
+  const B=scens[bi];
+  const bindHuidig=!B.aowTbl;
+  const maxJaarLast=B.last;
+  const alleenBedrag=B.alleen;
+  const alleenGrens=B.aowTbl?NA.grensAOW:NA.grens, alleenInk=B.ink;
+  const tblTxt=x=>(x.aowTbl?'AOW-tabel':'niet-AOW-tabel')+', woonquote '+fmtPct(x.q*100,1);
+  const bepTxt='bepalend toetsmoment: '+B.m.lbl+' — toetsinkomen '+fmt(B.ink)+' ('+(B.aowTbl?'AOW-tabel':'niet-AOW-tabel')+')';
+  const toetsInkOms=(B.aowTbl?'pensioeninkomen '+fmt(B.ink)+' (':B.pt&&huidigInk>0?'toetsinkomen '+fmt(B.ink)+' (laagste van huidig inkomen en inkomen vanaf AOW; ':huidigInk>0?'huidig inkomen '+fmt(B.ink)+' (':'inkomen vanaf AOW '+fmt(B.ink)+' (')+tblTxt(B)+')';
   const ptTekst=drempel<=0?'Pensioentoets: niet getoetst (uitgeschakeld)'+(aowBereikt?'; AOW-leeftijd bereikt — getoetst op inkomen vanaf AOW met de AOW-tabel':(huidigInk>0?'; getoetst op huidig inkomen':'; geen huidig inkomen ingevuld — getoetst op inkomen vanaf AOW')):
     aowBereikt?'Pensioentoets (vanaf '+drempel+' jaar): AOW-leeftijd bereikt — getoetst op '+fmt(totaalInk)+' met de AOW-tabel':
-    ptGeldt?'Pensioentoets (vanaf '+drempel+' jaar): van toepassing (leeftijd '+lftT+') — getoetst op '+fmt(totaalInk)+' met de AOW-tabel'+(huidigInk>0?' én op huidig inkomen '+fmt(huidigInk)+'; de laagste uitkomst geldt':''):
-    'Pensioentoets (vanaf '+drempel+' jaar): niet van toepassing (leeftijd '+lftT+')'+(huidigInk>0?' — getoetst op huidig inkomen':' — geen huidig inkomen ingevuld, daarom getoetst op inkomen vanaf AOW');
+    ptGeldt?'Pensioentoets (vanaf '+drempel+' jaar): van toepassing (leeftijd '+lftT+') — tot de AOW-leeftijd getoetst op de laagste van huidig inkomen en inkomen vanaf AOW (niet-AOW-tabel), vanaf de AOW-datum op inkomen vanaf AOW (AOW-tabel)':
+    'Pensioentoets (vanaf '+drempel+' jaar): niet van toepassing (leeftijd '+lftT+')'+(huidigInk>0?(mom.length>1?' op de toetsdatum':' — getoetst op huidig inkomen'):' — geen huidig inkomen ingevuld, daarom getoetst op inkomen vanaf AOW');
+  const ptTekstVol=ptTekst+(scens.length>1?' · toetsmomenten: '+scens.map(x=>x.m.lbl+' '+fmt(x.ink)+' ('+tblTxt(x)+')').join('; '):'')+' · '+bepTxt.charAt(0).toUpperCase()+bepTxt.slice(1);
   const annF=ann(1,toets,lt*12);
   const maxHyp=maxJaarLast/12/annF+alleenBedrag;
 
@@ -748,7 +771,7 @@ function bereken(){
     vS=`Maximale hypotheek: ${fmt(maxEff)} op inkomen/LTV-normen. Alternatief: opeethypotheek (bank leent geld op overwaarde), seniorenlening, of (gedeeltelijk) aflossen huidige schuld.`;
   }
   if(modus==='huidig'){vT=vT.replace('op pensioeninkomen','op huidig inkomen');}
-  document.getElementById('verdictDiv').innerHTML=`<div class="verdict ${vCls}"><div class="v-ico">${vIco}</div><div><div class="v-titel">${vT}</div><div class="v-sub">${vS}<br><em id="ptStatus">${ptTekst}.</em></div></div></div>`;
+  document.getElementById('verdictDiv').innerHTML=`<div class="verdict ${vCls}"><div class="v-ico">${vIco}</div><div><div class="v-titel">${vT}</div><div class="v-sub">${vS}<br><em id="ptStatus">${ptTekstVol}.</em></div></div></div>`;
 
   document.getElementById('hoofd').innerHTML=`
     <div class="hb n"><div class="hbl">Pensioeninkomen</div><div class="hbv">${fmt(totaalInk)}</div><div class="hbs">AOW + aanvullend</div></div>
@@ -780,7 +803,7 @@ function bereken(){
   if(huidigInk>0&&!aowBereikt){
     html+=`<tr><td>Huidig inkomen (vóór AOW)</td><td>${fmt(huidigInk)}</td><td>Woonquote ${fmtPct(flpH*100,1)} (${NBRON} tabel 1, niet-AOW) → ${fmt(lastHuidig/12)}/mnd${modus==='huidig'?' · toetsrente '+fmtPct(toets*100,2)+' (RVP '+rvp+' jaar'+(rvp<10?' → AFM-toetsrente':' → werkelijke rente')+')':''}</td></tr>`;
   }
-  html+=`<tr><td>Pensioentoets</td><td>${drempel>0?'vanaf '+drempel+' jaar':'uit'}</td><td>${ptTekst}</td></tr>`;
+  html+=`<tr><td>Pensioentoets</td><td>${drempel>0?'vanaf '+drempel+' jaar':'uit'}</td><td>${ptTekstVol}</td></tr>`;
   html+=`<tr><td>Max. jaarlijkse hypotheeklast</td><td>${fmt(maxJaarLast)}</td><td>${fmt(maxJaarLast/12)}/mnd</td></tr>`;
   html+=`<tr><td>Alleenstaandenbedrag</td><td>${alleenBedrag>0?'+'+fmt(alleenBedrag):'—'}</td><td>${NBRON} art. 3 lid 8: ${situatie!=='single'?'niet van toepassing (met partner)':alleenBedrag>0?'van toepassing: één aanvrager en toetsinkomen '+fmt(alleenInk)+' hoger dan '+fmt(alleenGrens)+(bindHuidig?'':' (AOW-tabel)')+' → buiten de financieringslast':'niet van toepassing: toetsinkomen '+fmt(alleenInk)+' niet hoger dan '+fmt(alleenGrens)+(bindHuidig?'':' (AOW-tabel)')}</td></tr>`;
   html+=`<tr><td>Max. hypotheek op inkomen</td><td>${fmt(maxHyp)}</td><td>${alleenBedrag>0?'Incl. alleenstaandenbedrag; '+fmt(maxHyp-alleenBedrag)+' op de financieringslast':''}</td></tr>`;

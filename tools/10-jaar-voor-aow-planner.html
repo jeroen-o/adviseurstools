@@ -870,6 +870,13 @@ function bereken(){
   updNormjaar();
   const start=new Date(); start.setDate(1);
   data=[];
+  // Pensioentoets (zoals MAX. HYP. 2027): AOW bereikt → inkomen vanaf AOW (AOW-tabel); vanaf de drempelleeftijd → laagste van
+  // huidig inkomen en inkomen vanaf AOW (niet-AOW-tabel, want de AOW-leeftijd is nog niet bereikt); anders huidig inkomen.
+  const mndOp=(isAOW,pen,kol)=>{
+    if(isAOW) return {mnd:aowInk*quota(T_AOW,aowInk,kol)/12,norm:'AOW',ti:aowInk,tbl:'AOW-tabel'};
+    if(pen){const ti=Math.min(ink,aowInk);return {mnd:ti*quota(T_NIET,ti,kol)/12,norm:'Pensioen',ti,tbl:'niet-AOW-tabel'};}
+    return {mnd:ink*quota(T_NIET,ink,kol)/12,norm:'Huidig',ti:ink,tbl:'niet-AOW-tabel'};
+  };
 
   for(let m=0;m<=360;m++){
     const dt=new Date(start.getFullYear(),start.getMonth()+m,1);
@@ -884,10 +891,7 @@ function bereken(){
     const kol=rKol(effTr);
     const rm=effTr/12;
 
-    let mnd,norm;
-    if(isAOW){mnd=aowInk*quota(T_AOW,aowInk,kol)/12;norm='AOW';}
-    else if(pen){mnd=Math.min(ink*quota(T_NIET,ink,kol)/12,aowInk*quota(T_AOW,aowInk,kol)/12);norm='Pensioen';}
-    else{mnd=ink*quota(T_NIET,ink,kol)/12;norm='Huidig';}
+    const {mnd,norm}=mndOp(isAOW,pen,kol);
 
     const maxH=Math.round(mnd*af(rm,360-m));
     const maxH30=Math.round(mnd*af(rm,360));
@@ -905,10 +909,21 @@ function bereken(){
 
   // KPI's
   const d0=data[0];
+  // Maximale hypotheek nu = laagste uitkomst over de toetsmomenten: bij aanvang, op de AOW-datum en bij het bereiken van de
+  // drempelleeftijd, voor zover binnen de toetshorizon (10 jaar; bij drempel 52: 15 jaar). Toetsrente en 30 jaar annuïtair als bij aanvang.
+  const horMnd=(drempel>0?Math.max(10,67-drempel):10)*12;
+  const momIdx=[0];
+  {const ai=data.findIndex(d=>d.isAOW);if(ai>0&&ai<=horMnd)momIdx.push(ai);
+   const pi=data.findIndex(d=>d.pen);if(pi>0&&pi<=horMnd)momIdx.push(pi);}
+  momIdx.sort((a,b)=>a-b);
+  const kol0=rKol(d0.effTr);
+  const momenten=momIdx.map(i=>{const d=data[i];const r=mndOp(d.isAOW,d.pen,kol0);
+    return {i,d,ti:r.ti,tbl:r.tbl,mnd:r.mnd,max:Math.round(r.mnd*af(d0.effTr/12,360)),lbl:i===0?'bij aanvang':(d.isAOW?'AOW-datum':drempel+' jaar')+' ('+fmtDtS(d.dt)+')'};});
+  let bep=momenten[0];momenten.forEach(x=>{if(x.max<bep.max)bep=x;});
   const aowIdx=data.findIndex(d=>d.isAOW);
   const penIdx=data.findIndex(d=>d.pen);
-  document.getElementById('k1').textContent=E(d0.maxH);
-  document.getElementById('k1s').textContent=d0.norm+' · eff. rente '+(d0.effTr*100).toFixed(2).replace('.',',')+'%';
+  document.getElementById('k1').textContent=E(bep.max);
+  document.getElementById('k1s').textContent=(bep.i===0?d0.norm:'bepalend: '+bep.lbl)+' · eff. rente '+(d0.effTr*100).toFixed(2).replace('.',',')+'%';
   document.getElementById('k2').textContent=E(d0.mnd)+'/mnd';
   document.getElementById('k2s').textContent='CHF '+NJ+' ('+CHF_BY_YEAR[NJ].bron+') · toetsrente '+(d0.effTr*100).toFixed(2).replace('.',',')+'%';
   if(aowIdx>=0){const a=data[aowIdx];document.getElementById('k3').textContent=fmtDtS(a.dt);document.getElementById('k3s').textContent='Leeftijd '+aow.label;}
@@ -920,9 +935,10 @@ function bereken(){
   const pt=document.getElementById('pt-status');
   if(drempel<=0) pt.innerHTML='<strong>Pensioentoets:</strong> niet getoetst (uitgeschakeld). Na de AOW-datum wordt wel op het inkomen vanaf AOW getoetst.';
   else if(d0.isAOW) pt.innerHTML='<strong>Pensioentoets (vanaf '+drempel+' jaar):</strong> AOW-leeftijd bereikt — getoetst op '+E(aowInk)+' met de AOW-tabel.';
-  else if(d0.pen) pt.innerHTML='<strong>Pensioentoets (vanaf '+drempel+' jaar):</strong> van toepassing — getoetst op huidig inkomen '+E(ink)+' én op inkomen vanaf AOW '+E(aowInk)+' met de AOW-tabel; de laagste maximale maandlast geldt.';
+  else if(d0.pen) pt.innerHTML='<strong>Pensioentoets (vanaf '+drempel+' jaar):</strong> van toepassing — tot de AOW-datum getoetst op de laagste van huidig inkomen '+E(ink)+' en inkomen vanaf AOW '+E(aowInk)+' met de niet-AOW-tabel; vanaf de AOW-datum op '+E(aowInk)+' met de AOW-tabel.';
   else pt.innerHTML='<strong>Pensioentoets (vanaf '+drempel+' jaar):</strong> nu niet van toepassing (leeftijd '+leeftijdOp(geb,new Date())+' jaar)'+(penIdx>0?'; geldt vanaf '+fmtDtS(data[penIdx].dt)+'.':'.');
 
+  pt.innerHTML+=' Toetsmomenten: '+momenten.map(x=>x.lbl+' '+E(x.ti)+' ('+x.tbl+') → '+E(x.max)).join('; ')+'. <strong>Bepalend toetsmoment: '+bep.lbl+'</strong> — maximale hypotheek '+E(bep.max)+'.';
   document.getElementById('chart-label').textContent=naam+' — maximale hypotheekruimte (30 jaar, per maand)';
   ['sec-kpi','sec-chart','sec-table','sec-toelichting'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
   renderChart();

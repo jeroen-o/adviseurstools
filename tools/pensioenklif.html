@@ -886,10 +886,12 @@ function tabelIsAOW(inc1, aow1, inc2, aow2, heeft2) {
 function toetsMax(inc1, aow1, inc2, aow2, heeft2, box3, rate) {
   rate = (rate === undefined) ? TK.refRate : rate;
   inc2 = heeft2 ? (inc2 || 0) : 0;
-  const isAow = tabelIsAOW(inc1, aow1, inc2, aow2, heeft2);
-  const type = (box3 ? 'box3_' : '') + (isAow ? 'aow' : 'werkend');
+  let isAow = tabelIsAOW(inc1, aow1, inc2, aow2, heeft2);
   const reken = calcRekeninkomen(inc1, inc2);
   const gez = (inc1 || 0) + inc2;
+  // Gelijk toetsinkomen met verschillende AOW-status: de laagste uitkomst (zoals MAX. HYP. 2027)
+  if (heeft2 && inc1 === inc2 && !!aow1 !== !!aow2) isAow = getFLP(reken, (box3 ? 'box3_' : '') + 'aow', rate) < getFLP(reken, (box3 ? 'box3_' : '') + 'werkend', rate);
+  const type = (box3 ? 'box3_' : '') + (isAow ? 'aow' : 'werkend');
   const flp = getFLP(reken, type, rate);
   const bruto = flp / 100 * gez / 12;
   const verl = verlagingenVoor(type, rate);
@@ -898,6 +900,16 @@ function toetsMax(inc1, aow1, inc2, aow2, heeft2, box3, rate) {
   const label = gez > 0 ? (TK.labelExtra || 0) : 0;
   return { type, isAow, reken, gez, flp, bruto, verl, netto, verh, label, loan: maxLoan(netto, rate, 30) + verh + label };
 }
+// Pensioentoets per persoon op een toetsmoment (zoals MAX. HYP. 2027): AOW-leeftijd bereikt → inkomen vanaf AOW;
+// anders leeftijd ≥ drempel (57/52) → laagste van huidig inkomen en inkomen vanaf AOW; anders huidig inkomen.
+function persoonOp(app, leeftijd) {
+  const drempel = getPensioenDrempel();
+  const aow = leeftijd >= app.aowAge - 0.001;
+  const pt = !aow && drempel > 0 && leeftijd >= drempel;
+  return { aow, pt, inc: aow ? app.pension : (pt ? Math.min(app.salary, app.pension) : app.salary) };
+}
+// Toetshorizon in jaren: 10 jaar (bij drempel 52: tot de drempelafstand, 15 jaar)
+function toetsHorizon() { const d = getPensioenDrempel(); return d > 0 ? Math.max(10, 67 - d) : 10; }
 function maxMonthly(income, type, rate) { return getFLP(income, type, rate) / 100 * income / 12; }
 function maxLoan(m, r, t) { const ri = r/100/12, n = t*12; if (ri === 0) return m*n; return m * (1 - Math.pow(1+ri, -n)) / ri; }
 function monthlyAnn(L, r, t) { const ri = r/100/12, n = t*12; if (ri === 0) return L/n; return L * ri / (1 - Math.pow(1+ri, -n)); }
@@ -1070,20 +1082,25 @@ function calc3Scenarios(applicants, refRate, verlagingenMnd, verhoging) {
   const isSolo = !jongste;
 
   // SCENARIO 1: NU — per persoon salaris als nog werkend, anders pensioen
-  const inc1_now = oudste.age >= oudste.aowAge ? oudste.pension : oudste.salary;
-  const inc2_now = jongste ? (jongste.age >= jongste.aowAge ? jongste.pension : jongste.salary) : 0;
-  const anyNowAOW = (oudste.age >= oudste.aowAge) || (jongste && jongste.age >= jongste.aowAge);
-  const allNowAOW = (oudste.age >= oudste.aowAge) && (!jongste || jongste.age >= jongste.aowAge);
+  // Pensioentoets: vanaf de drempelleeftijd telt de laagste van huidig inkomen en inkomen vanaf AOW (niet-AOW-tabel)
+  const o_now = persoonOp(oudste, oudste.age), j_now = jongste ? persoonOp(jongste, jongste.age) : null;
+  const inc1_now = o_now.inc;
+  const inc2_now = j_now ? j_now.inc : 0;
+  const anyNowAOW = o_now.aow || (j_now && j_now.aow);
+  const allNowAOW = o_now.aow && (!j_now || j_now.aow);
+  const ptNow = o_now.pt || (j_now && j_now.pt);
   const gez_now = inc1_now + inc2_now;
   let s1Sub;
   if (isSolo) {
-    s1Sub = allNowAOW ? `Gepensioneerd · € ${gez_now.toLocaleString('nl-NL')}` : `Werkend · € ${gez_now.toLocaleString('nl-NL')}`;
+    s1Sub = allNowAOW ? `Gepensioneerd · € ${gez_now.toLocaleString('nl-NL')}` : ptNow ? `Pensioentoets · € ${gez_now.toLocaleString('nl-NL')}` : `Werkend · € ${gez_now.toLocaleString('nl-NL')}`;
+  } else if (ptNow) {
+    s1Sub = `Pensioentoets (laagste van huidig en AOW-inkomen) · totaal € ${gez_now.toLocaleString('nl-NL')}`;
   } else {
     s1Sub = allNowAOW ? `Beide gepensioneerd · totaal € ${gez_now.toLocaleString('nl-NL')}` :
             anyNowAOW ? `Gemengd (1 AOW, 1 werkend) · totaal € ${gez_now.toLocaleString('nl-NL')}` :
             `Beide werkend · totaal € ${gez_now.toLocaleString('nl-NL')}`;
   }
-  const s1 = calcScenario('Nu', s1Sub, inc1_now, oudste.age >= oudste.aowAge, inc2_now, !!jongste && jongste.age >= jongste.aowAge, !!jongste, refRate);
+  const s1 = calcScenario('Nu', s1Sub, inc1_now, o_now.aow, inc2_now, !!j_now && j_now.aow, !!jongste, refRate);
 
   // SCENARIO 2: Eerste persoon AOW (oudste pensioen, jongste nog salaris of solo pensioen)
   let s2 = null;
@@ -1091,7 +1108,7 @@ function calc3Scenarios(applicants, refRate, verlagingenMnd, verhoging) {
   const tegelijkAOW = !!jongste && Math.abs(jongste.yearsToAOW - oudste.yearsToAOW) < 1 / 24;
   if (oudste.yearsToAOW > 0 && !tegelijkAOW) {
     const inc1_s2 = oudste.pension;
-    const inc2_s2 = isSolo ? 0 : jongste.salary;
+    const inc2_s2 = isSolo ? 0 : persoonOp(jongste, jongste.age + oudste.yearsToAOW).inc; // jongste op dat moment: pensioentoets als die dan geldt
     const gez_s2 = inc1_s2 + inc2_s2;
     const s2Sub = isSolo
       ? `Pensioen · € ${gez_s2.toLocaleString('nl-NL')} · over ${formatYearsMonths(oudste.yearsToAOW)}`
@@ -1247,8 +1264,9 @@ function calcMaxAtMoment(scenario, applicants, rate, term = 30) {
   let totalIncome = 0;
   let pensionedCount = 0;
   const pp = applicants.map(a => {
-    const isPens = (a.age + t) >= a.aowAge - 0.001;
-    const inc = isPens ? a.pension : a.salary;
+    const st = persoonOp(a, a.age + t);
+    const isPens = st.aow;
+    const inc = st.inc;
     totalIncome += inc;
     if (isPens) pensionedCount++;
     return { inc, isPens };
@@ -1633,39 +1651,33 @@ function calculate() {
     // monthly = bruto maandlast (FLP × inkomen / 12); netto = monthly − verlagingen; loan = maxLoan(netto) + verhoging
     const toetsen = [];
 
-    // Toets W: werkend (zolang niemand AOW heeft; bij pensioentoets telt de laagste van W en P)
+    // Toetsmomenten (zoals MAX. HYP. 2027) vanaf leeftijd a: nu, de AOW-datum van elke aanvrager en het bereiken van de
+    // drempelleeftijd, binnen de toetshorizon. Per moment per persoon: AOW → inkomen vanaf AOW; ≥ drempel → laagste van
+    // huidig inkomen en inkomen vanaf AOW; anders huidig inkomen. Tabel volgens art. 3 lid 7 (hoogste toetsinkomen).
     const heeft2 = !!jongsteApp;
     const mk = (r, status, isPens) => ({ income: r.gez, reken: r.reken, type: r.type, isAowTabel: r.isAow, flp: r.flp, monthly: r.bruto, netto: r.netto, loan: r.loan, status, isPens });
-    if (!oudsteAOW && !jongsteAOW) {
-      const r = toetsMax(oudsteApp.salary, false, heeft2 ? jongsteApp.salary : 0, false, heeft2, false, refRate);
-      toetsen.push(mk(r, 'Werkend', false));
+    const horJr = toetsHorizon();
+    const lftO = a, lftJ = jongsteApp ? a - ageDiff : null;
+    const offs = [{ t: 0, lbl: 'Nu' }];
+    const voegToe = (t, lbl) => { if (t > 1e-9 && t <= horJr + 1e-9) offs.push({ t, lbl }); };
+    voegToe(oudsteApp.aowAge - lftO, heeft2 ? '1e AOW' : 'AOW');
+    if (jongsteApp) voegToe(jongsteApp.aowAge - lftJ, '2e AOW');
+    if (drempel > 0) {
+      if (drempel < oudsteApp.aowAge) voegToe(drempel - lftO, (heeft2 ? 'Oudste ' : '') + drempel + ' jaar');
+      if (jongsteApp && drempel < jongsteApp.aowAge) voegToe(drempel - lftJ, 'Jongste ' + drempel + ' jaar');
     }
-
-    // Toets P1: 1e AOW-toets (oudste vanaf drempelleeftijd, of oudste reeds AOW); tabel volgens art. 3 lid 7
-    if (oudsteAOW || oudstePT) {
-      const inc2 = jongsteApp ? (jongsteAOW ? jongsteApp.pension : jongsteApp.salary) : 0;
-      const r = toetsMax(oudsteApp.pension, true, inc2, jongsteAOW, heeft2, false, refRate);
-      const status = !jongsteApp ? (oudsteAOW ? 'Gepensioneerd' : 'Pens. in toets')
-                   : (oudsteAOW && !jongsteAOW) ? '1e AOW (gemengd)'
-                   : (oudsteAOW && jongsteAOW) ? 'Beide AOW (1e-toets)'
-                   : 'Pens. in toets (1e AOW)';
-      toetsen.push(mk(r, status, true));
-    }
-
-    // Toets P2: 2e AOW-toets (bij 2 personen: jongste vanaf drempelleeftijd of reeds AOW)
-    if (jongsteApp && (jongsteAOW || jongstePT)) {
-      const r = toetsMax(oudsteApp.pension, true, jongsteApp.pension, true, true, false, refRate);
-      const status = jongsteAOW ? 'Beide AOW' : 'Pens. in toets (2e AOW)';
-      toetsen.push(mk(r, status, true));
-    }
-
-    // Vangnet (bijv. jongste wel AOW, oudste niet): huidige inkomensmix, tabel volgens art. 3 lid 7
-    if (toetsen.length === 0) {
-      const inc1 = oudsteAOW ? oudsteApp.pension : oudsteApp.salary;
-      const inc2 = jongsteApp ? (jongsteAOW ? jongsteApp.pension : jongsteApp.salary) : 0;
-      const r = toetsMax(inc1, oudsteAOW, inc2, jongsteAOW, heeft2, false, refRate);
-      toetsen.push(mk(r, 'Gemengd', false));
-    }
+    offs.sort((x, y) => x.t - y.t);
+    for (let i = offs.length - 1; i > 0; i--) if (Math.abs(offs[i].t - offs[i - 1].t) < 1 / 24) { offs[i - 1].lbl += ' / ' + offs[i].lbl; offs.splice(i, 1); }
+    offs.forEach(o => {
+      const p1 = persoonOp(oudsteApp, lftO + o.t), p2 = jongsteApp ? persoonOp(jongsteApp, lftJ + o.t) : null;
+      const r = toetsMax(p1.inc, p1.aow, p2 ? p2.inc : 0, p2 ? p2.aow : false, heeft2, false, refRate);
+      const isPens = p1.aow || p1.pt || !!(p2 && (p2.aow || p2.pt));
+      const status = o.t > 0 ? `${o.lbl} (over ${formatYearsMonths(o.t)})`
+        : !isPens ? 'Werkend'
+        : (p1.aow && (!p2 || p2.aow)) ? (heeft2 ? 'Beide AOW' : 'Gepensioneerd')
+        : (p1.pt || (p2 && p2.pt)) ? 'Pens. in toets (nu)' : 'Gemengd';
+      toetsen.push(mk(r, status, isPens));
+    });
     // Bindende toets = laagste max hypotheek
     toetsen.sort((x, y) => x.loan - y.loan);
     const binding = toetsen[0];
@@ -1723,16 +1735,16 @@ function renderPensioenToetsInfo(inp, results, oudsteApp, drempel) {
   const nuRow = results.find(r => r.age === inp.age) || null;
   const geldt = inp.applicants.filter(a => a.pensioentoetsGeldt);
   const aow = inp.applicants.filter(a => a.aowReached);
-  const ontbreekt = inp.applicants.some(a => (a.pensioentoetsGeldt || a.aowReached) && a.pensionMissing);
+  const ontbreekt = inp.applicants.some(a => (a.pensioentoetsGeldt || a.aowReached || a.yearsToAOW <= toetsHorizon()) && a.pensionMissing);
   let html;
   if (ontbreekt) {
     html = `<strong style="color:#b91c1c;">Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW in.</strong> Het pensioeninkomen (AOW + pensioen) ontbreekt voor een aanvrager voor wie de toets geldt; er wordt niet met het huidige inkomen gerekend.`;
   } else if (geldt.length > 0 || aow.length > 0) {
     const ink = nuRow ? formatEuro(nuRow.testIncome) : '—';
     html = `<strong>Pensioentoets (${drempelTxt}): van toepassing</strong>${aow.length > 0 && geldt.length === 0 ? ' (AOW-leeftijd bereikt)' : ''} — ` +
-      (nuRow ? `bindende toets nu: ${nuRow.status}, getoetst op ${ink} met ${nuRow.isAowTabel ? 'de AOW-tabel' : 'de niet-AOW-tabel'} → max box 1 ${formatEuro(nuRow.loan)}.` : 'zie tabel.');
+      (nuRow ? `bepalend toetsmoment: ${/\(over /.test(nuRow.status) ? nuRow.status : 'nu (' + nuRow.status.replace(' (nu)', '').toLowerCase() + ')'}, getoetst op ${ink} met ${nuRow.isAowTabel ? 'de AOW-tabel' : 'de niet-AOW-tabel'} → max box 1 ${formatEuro(nuRow.loan)}.` : 'zie tabel.');
   } else {
-    html = `<strong>Pensioentoets (${drempelTxt}): niet van toepassing</strong> — getoetst op het huidige inkomen${nuRow ? ` (${formatEuro(nuRow.testIncome)}) → max box 1 ${formatEuro(nuRow.loan)}` : ''}.`;
+    html = `<strong>Pensioentoets (${drempelTxt}): niet van toepassing</strong> op de toetsdatum${nuRow ? ` — bepalend toetsmoment: ${/\(over /.test(nuRow.status) ? nuRow.status : 'nu (' + nuRow.status.replace(' (nu)', '').toLowerCase() + ')'}, getoetst op ${formatEuro(nuRow.testIncome)} met ${nuRow.isAowTabel ? 'de AOW-tabel' : 'de niet-AOW-tabel'} → max box 1 ${formatEuro(nuRow.loan)}` : ''}.`;
   }
   el.innerHTML = html;
 }

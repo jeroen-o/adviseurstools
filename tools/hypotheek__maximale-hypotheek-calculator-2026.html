@@ -623,7 +623,7 @@ function leesPersoonPT(nr, drempel){
   const pv=document.getElementById('pens'+nr).value.trim(); const pens=(pv!==''&&isFinite(parseFloat(pv)))?parseFloat(pv):null;
   const geldt=!aow&&drempel>0&&lft!==null&&lft>=drempel;
   const h=document.getElementById('geb'+nr+'Hint'); if(h&&geb) h.textContent=`Leeftijd ${lft} jr · AOW-datum ${aowD.toLocaleDateString('nl-NL')}${aow?' (bereikt)':''}${geldt?' · pensioentoets van toepassing':''}`;
-  return {lft,aow,geldt,pens};
+  return {lft,aow,geldt,pens,geb,aowD};
 }
 let ptMelding = '';
 function getBruteringStudie(toetsrente){
@@ -646,7 +646,18 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const pp = [Object.assign({ink:i1}, leesPersoonPT(1,drempel))];
   if(i2>0) pp.push(Object.assign({ink:i2}, leesPersoonPT(2,drempel)));
   const drempelTxt = drempel>0 ? `vanaf ${drempel} jaar` : 'niet toetsen';
-  if(pp.some(p=>(p.geldt||p.aow)&&p.pens===null)){
+  // Toetsmomenten (zoals MAX. HYP. 2027): bij aanvang, op de AOW-datum en bij het bereiken van de drempelleeftijd van elke aanvrager binnen de toetshorizon
+  const nuD = new Date(); const horJr = drempel>0 ? Math.max(10, 67-drempel) : 10;
+  const horD = new Date(nuD.getFullYear()+horJr, nuD.getMonth(), nuD.getDate());
+  const momenten = [{d:nuD, lbl:'bij aanvang'}];
+  pp.forEach((p,i)=>{ const wie = pp.length>1 ? 'aanvrager '+(i+1) : 'aanvrager';
+    if(p.aowD && p.aowD>nuD && p.aowD<=horD) momenten.push({d:p.aowD, lbl:'AOW-datum '+wie+' ('+p.aowD.toLocaleDateString('nl-NL')+')'});
+    if(p.geb && drempel>0){ const dd=new Date(p.geb.getFullYear()+drempel, p.geb.getMonth(), p.geb.getDate()); if(dd>nuD && dd<=horD && !(p.aowD && dd>=p.aowD)) momenten.push({d:dd, lbl:wie+' '+drempel+' jaar ('+dd.toLocaleDateString('nl-NL')+')'}); } });
+  momenten.sort((a,b)=>a.d-b.d);
+  for(let i=momenten.length-1;i>0;i--) if(+momenten[i].d===+momenten[i-1].d){ momenten[i-1].lbl+=' / '+momenten[i].lbl; momenten.splice(i,1); } // zelfde datum: één toetsmoment
+  // Per persoon op een moment: AOW bereikt → inkomen vanaf AOW; anders ≥ drempel → laagste van huidig inkomen en inkomen vanaf AOW; anders huidig inkomen
+  const statusOp = (p,d)=>{ const aowNu = !!(p.aowD && d>=p.aowD); const ptNu = !aowNu && drempel>0 && !!p.geb && leeftijdOp(p.geb,d)>=drempel; return {aowNu, ptNu}; };
+  if(momenten.some(m=>pp.some(p=>{ const st=statusOp(p,m.d); return (st.aowNu||st.ptNu) && p.pens===null; }))){
     ptMelding = `Pensioentoets (${drempelTxt}): van toepassing — vul inkomen vanaf AOW (AOW + pensioen) in. Er wordt niet met het huidige inkomen gerekend.`;
     return null;
   }
@@ -658,14 +669,18 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   // Betaalde partneralimentatie: jaarbedrag van het toetsinkomen van de aanvrager af (NHG V&N 2026 C.7.14.2), niet negatief;
   // geen einddatum bekend → ook van het inkomen vanaf AOW (conservatief). Geen maandlast meer.
   const alimJaar = Math.max(0, N('alimentatie')) * 12;
-  function scen(pensSit){
-    const inks = pp.map((p,i)=>Math.max(0, (pensSit(p)?p.pens:p.ink) - (i===0?alimJaar:0)));
-    const idx = inks.indexOf(Math.max(...inks));
-    const aowTbl = pensSit(pp[idx]);
+  // Tabel (Trhk art. 3 lid 7): AOW-tabel als de aanvrager met het hoogste toetsinkomen de AOW-leeftijd heeft bereikt; gelijk inkomen met verschillende status → laagste uitkomst
+  function scen(m){
+    const st = pp.map(p=>statusOp(p,m.d));
+    const inks = pp.map((p,i)=>Math.max(0, (st[i].aowNu ? p.pens : (st[i].ptNu ? Math.min(p.ink, p.pens) : p.ink)) - (i===0?alimJaar:0)));
+    const mx = Math.max(...inks); const top = st.filter((x,i)=>inks[i]===mx);
+    const wel = top.some(x=>x.aowNu), niet = top.some(x=>!x.aowNu);
     const ti = inks.reduce((x,y)=>x+y,0);
+    let aowTbl = wel && !niet;
+    if(wel && niet) aowTbl = (fiscaal==='box3' ? getFLP(ti,toetsRente,T.a3) < getFLP(ti,toetsRente,T.n3) : getFLP(ti,toetsRente,T.a) < getFLP(ti,toetsRente,T.n));
     const f = getFLP(ti, toetsRente, aowTbl?T.a:T.n);
     const f3 = getFLP(ti, toetsRente, aowTbl?T.a3:T.n3);
-    return {inks, toetsInkomen:ti, aowTbl, flp:f, flp3:f3, jaarLast:ti*f};
+    return {inks, toetsInkomen:ti, aowTbl, flp:f, flp3:f3, jaarLast:ti*f, moment:m, pt: st.some(x=>x.ptNu)};
   }
   // Verplichtingen (bruto maandlast, Trhk 2026), in mindering op de toegestane financieringslast
   // Studieschuld (art. 3a): werkelijke maandtermijn × bruteringsfactor (toetsrente). Alleen saldo bekend → schatting.
@@ -692,21 +707,21 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
     let mi, b3info='';
     if(fiscaal==='box3'){ mi = h3; }
     else if(fiscaal==='deels' && box3Deel>0){
-      // Box 3-deel gebruikt toetslastruimte tegen het box 3-percentage, de rest tegen het box 1-percentage:
-      // box3Deel/h3 + (H − box3Deel)/h1 = 1  →  H = h1 − box3Deel × (h1/h3 − 1)
-      if(h3<=0 || box3Deel>=h3){ mi = h3; b3info='box 3-deel groter dan de ruimte volgens de box 3-tabel'; }
-      else mi = h1 - box3Deel*(h1/h3 - 1);
+      // Brutering (zoals MAX. HYP. 2027): de toetslast van het box 3-deel telt mee × q1/q3 (q1 = box 1-percentage, q3 = box 3-percentage):
+      // (H − B)·a + B·a·q1/q3 = beschikbare maandlast  →  H = h1 − B × (q1/q3 − 1)
+      const mDeels = sc.flp3>0 ? h1 - box3Deel*(sc.flp/sc.flp3 - 1) : 0;
+      if(h3<=0 || mDeels<=box3Deel){ mi = h3; b3info='box 3-deel groter dan de ruimte volgens de box 3-tabel'; }
+      else mi = mDeels;
     } else { mi = h1; }
     const grens = sc.aowTbl ? AL.grensAOW : AL.grens;
     const alleen = (aantalAanvragers===1 && ti > grens) ? AL.bedrag : 0;  // art. 3 lid 8 Trhk (normjaar)
     return {mi, h1, h3, alleen, grens, b3info, tot: mi + alleen};
   }
-  const sNu = scen(p=>p.aow);               // huidige situatie (na AOW: alleen pensioeninkomen)
-  const ptGeldt = pp.some(p=>p.geldt);
-  const sPens = ptGeldt ? scen(p=>p.aow||p.geldt) : null;
-  const uNu = uitkomst(sNu), uPens = sPens ? uitkomst(sPens) : null;
-  const bindend = (sPens && uPens.tot < uNu.tot) ? sPens : sNu; // laagste uitkomst telt
-  const ub = bindend===sPens ? uPens : uNu;
+  const scens = momenten.map(scen), us = scens.map(uitkomst);
+  let bi = 0; us.forEach((u,i)=>{ if(u.tot < us[bi].tot) bi = i; }); // laagste uitkomst over de toetsmomenten telt
+  const sNu = scens[0], bindend = scens[bi], ub = us[bi];
+  const ptGeldt = scens.length>1 || sNu.pt;
+  const sPens = bindend!==sNu ? bindend : null;
   // Tweeverdieners: beide inkomens 100% (gezamenlijk toetsinkomen, Trhk 2026)
   const hoogste = Math.max(...bindend.inks);
   const laagste = bindend.inks.length>1 ? Math.min(...bindend.inks) : 0;
@@ -717,8 +732,8 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
   const maxJaarLast = toetsInkomen * flp;
   const tabelNaam = (sc)=> (fiscaal==='box3' ? (sc.aowTbl?'AOW-tabel box 3':'box 3-tabel') : (sc.aowTbl?'AOW-tabel (tabel 2)':'niet-AOW-tabel')) + (fiscaal==='deels'&&box3Deel>0?' + box 3-tabel voor het niet-aftrekbare deel':'');
   const pensioenRegel = ptGeldt
-    ? `Pensioentoets (${drempelTxt}): van toepassing — getoetst op ${fmt(sPens.toetsInkomen)} met de ${tabelNaam(sPens)}${bindend===sPens?' — pensioeninkomen is bepalend':' — huidig inkomen is bepalend'}`
-    : (pp.some(p=>p.aow) ? `Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(sNu.toetsInkomen)} met de ${tabelNaam(sNu)}` : `Pensioentoets (${drempelTxt}): niet van toepassing${pp.every(p=>p.lft===null)?' (geen geboortedatum ingevuld)':''}`);
+    ? `Pensioentoets (${drempelTxt}): toetsmomenten ${scens.map(x=>x.moment.lbl+' '+fmt(x.toetsInkomen)+' ('+(x.aowTbl?'AOW-tabel':'niet-AOW-tabel')+')').join('; ')} — bepalend toetsmoment: ${bindend.moment.lbl}, ${fmt(bindend.toetsInkomen)} met de ${tabelNaam(bindend)}`
+    : (pp.some(p=>p.aow) ? `Pensioentoets (${drempelTxt}): AOW-leeftijd bereikt — getoetst op pensioeninkomen ${fmt(sNu.toetsInkomen)} met de ${tabelNaam(sNu)}` : `Pensioentoets (${drempelTxt}): niet van toepassing${pp.every(p=>p.lft===null)?' (geen geboortedatum ingevuld)':''}`) + (ptGeldt ? '' : ' — bepalend toetsmoment: bij aanvang');
   const beschikbaarJaar = Math.max(0, maxJaarLast - lastMnd*12);
   const beschikbaarMnd = beschikbaarJaar / 12;
   const alleenstaandExtra = ub.alleen;
