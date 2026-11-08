@@ -1085,7 +1085,9 @@ function pensioentoetsGeldtOp(app, lft) {
 }
 // Restschuld na t jaar van € 1 (annuïtair 30 jaar op de toetsrente)
 function restFactor(tJaar, rate) {
-  const m = Math.round((tJaar || 0) * 12), n = 360, ri = (rate === undefined ? TK.refRate : rate) / 100 / 12;
+  // Aantal volle maanden (betaalde termijnen) tot het toetsmoment, naar beneden afgerond zoals in de andere tools;
+  // kleine marge (± 1 dag) tegen afrondingsruis van de leeftijd in jaren (dagen / 365,25)
+  const m = Math.floor((tJaar || 0) * 12 + 0.04), n = 360, ri = (rate === undefined ? TK.refRate : rate) / 100 / 12;
   if (m <= 0 || ptMethode() === 'trhk' || ptMethode() === 'beheer') return 1; // beheer: werkelijke lasten, geen restfactor if (m >= n) return 1e-9; if (ri <= 0) return 1 - m / n;
   return (Math.pow(1 + ri, n) - Math.pow(1 + ri, m)) / (Math.pow(1 + ri, n) - 1);
 }
