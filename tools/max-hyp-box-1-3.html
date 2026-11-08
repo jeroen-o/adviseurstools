@@ -253,11 +253,13 @@ tr.tekort td{background:var(--redlt)!important}
     <label class="f">Normrente (min. toetsrente)<input type="text" class="pct" id="normrente" value="5,000"></label>
     <label class="f" style="align-self:end"><span class="switch" style="margin-top:0"><input type="checkbox" id="partnerAan" checked> Partner aanwezig</span></label>
     <label class="f" style="align-self:end"><span class="switch" style="margin-top:0"><input type="checkbox" id="alleenstaand" checked> Alleenstaandenbedrag toepassen (<span class="njAlBedrag">€ 17.000</span>)</span><span class="hint" id="alleenHint" style="display:block;margin-top:4px">Alleen bij één aanvrager en toetsinkomen boven <span class="njAlGrens">€ 30.000 (AOW: € 29.000)</span>.</span></label>
-    <label class="f">Pensioentoets vanaf leeftijd<select id="pdr">
+    <label class="f">Pensioentoets<select id="pdr">
+      <option value="57" selected>Vanaf 57 jaar</option>
+      <option value="52">Vanaf 52 jaar</option>
+      <option value="aow10">10 jaar vóór AOW-datum</option>
+      <option value="aow15">15 jaar vóór AOW-datum</option>
       <option value="0">Niet toetsen</option>
-      <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
-      <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
-    </select></label>
+    </select><span class="hint" style="display:block;margin-top:4px">Restschuldmethode: getoetst op de restschuld op de AOW-datum. NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&amp;N C.7.4.2); hun uitkomst kan lager zijn.</span></label>
   </div>
   <div class="grid" style="grid-template-columns:1fr 1fr" id="personen">
     <div class="persoon">
@@ -345,6 +347,7 @@ tr.tekort td{background:var(--redlt)!important}
 </div>
 
 <div class="card" id="resultaat"></div>
+<div class="card"><div id="ptGrafiek"></div></div>
 
 <div class="actiebalk">
   <div class="actie-links">
@@ -391,11 +394,11 @@ tr.tekort td{background:var(--redlt)!important}
    <li>Het <b>alleenstaandenbedrag</b> (normjaar 2026: € 17.000 bij een toetsinkomen hoger dan € 30.000, AOW: € 29.000; normjaar 2027: € 18.000 bij hoger dan € 31.000, ook AOW) wordt automatisch meegenomen als er geen partner is: een vast extra bedrag buiten de toetsing. Het is bedoeld voor huishoudens zonder persoonlijk onvermijdbare uitgaven — leg dit vast in het dossier.</li>
   </ul>
 
-  <h4>AOW binnen 10 jaar (senioren)</h4>
+  <h4>AOW-toetsmoment (senioren)</h4>
   <ul>
    <li>Het pensioenscenario is meestal het <b>krapste toetsmoment</b>. De klassieke oplossing: zet een deel om in een <b>kortlopend annuïtair leningdeel dat vóór de AOW-datum volledig is afgelost</b> — precies wat de "route naar akkoord" automatisch uitrekent. Je benut zo de ruime maandlasten vóór pensionering zonder het AOW-moment te belasten.</li>
    <li><b>Volledig pensioeninkomen aantonen</b> — vul AOW plus álle aanvullende pensioenen in; elk euro pensioeninkomen verhoogt de toegestane maandlast op het AOW-moment direct.</li>
-   <li>Ligt de AOW-datum <b>meer dan 10 jaar</b> na de toetsdatum, dan valt het pensioenscenario buiten de toets — een latere AOW-datum (controleer de werkelijke datum via de SVB) kan dus het verschil maken.</li>
+   <li>Voldoet een aanvrager aan de gekozen pensioentoetsdrempel (vanaf 57 of 52 jaar, of AOW-datum binnen 10 of 15 jaar), dan wordt naast de toets bij aanvang ook op zijn AOW-datum getoetst op het inkomen vanaf AOW, over de <b>restschuld</b> op dat moment (restschuldmethode). NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag; hun uitkomst kan lager zijn.</li>
   </ul>
 
   <h4>Einde renteaftrek binnen 10 jaar (30-jaarstermijn / bijleenregeling)</h4>
@@ -415,6 +418,71 @@ tr.tekort td{background:var(--redlt)!important}
  </div>
 </div>
 
+<script>
+/* ── Pensioentoets-grafiek (Adviseurstools.nl) ─────────────────────────────────
+ * Maximale hypotheek per leeftijd bij aanvraag (50 jaar t/m AOW-leeftijd) voor de
+ * vier pensioentoets-keuzes, met de restschuldmethode van de tool zelf.
+ * Gebruik:
+ *   ptGrafiek(document.getElementById('ptGrafiek'), {
+ *     berekenMax: function(leeftijd, keuze){ return maxHypotheek; },  // keuze: '57','52','aow10','aow15'
+ *     huidigeLeeftijd: 57,          // optioneel: markering
+ *     gekozen: '57',                // optioneel: dikkere lijn
+ *     vanaf: 50, tot: 67            // optioneel
+ *   });
+ * Inline SVG, geen externe bibliotheek; NL-notatie; schaalt mee op mobiel.
+ */
+function ptGrafiek(el, o) {
+  if (!el) return;
+  var KEUZES = [
+    { k: '57', lbl: 'Vanaf 57 jaar', kl: '#003057', dash: '' },
+    { k: '52', lbl: 'Vanaf 52 jaar', kl: '#e5a138', dash: '' },
+    { k: 'aow10', lbl: '10 jaar vóór AOW', kl: '#4a7fb5', dash: '6 4' },
+    { k: 'aow15', lbl: '15 jaar vóór AOW', kl: '#b9771f', dash: '6 4' }
+  ];
+  var van = o.vanaf || 50, tot = o.tot || 67, jaren = [];
+  for (var a = van; a <= tot; a++) jaren.push(a);
+  var reeks = KEUZES.map(function (K) {
+    return { K: K, w: jaren.map(function (a) { var v = +o.berekenMax(a, K.k); return isFinite(v) && v > 0 ? v : 0; }) };
+  });
+  var max = 0; reeks.forEach(function (r) { r.w.forEach(function (v) { if (v > max) max = v; }); });
+  if (!(max > 0)) { el.innerHTML = '<p style="font-size:12px;color:#5f6b7a">Vul inkomen en inkomen vanaf AOW in om de grafiek te tonen.</p>'; return; }
+  var stap = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / stap) * stap;
+  if (top / stap <= 3) { stap = stap / 2; top = Math.ceil(max / stap) * stap; }
+  var W = 720, H = 300, L = 74, R = 14, T = 14, B = 34, pw = W - L - R, ph = H - T - B;
+  var x = function (a) { return L + (a - van) / (tot - van) * pw; }, y = function (v) { return T + ph - v / top * ph; };
+  var eur = function (v) { return '€ ' + Math.round(v).toLocaleString('nl-NL'); };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Maximale hypotheek per leeftijd bij aanvraag" style="width:100%;height:auto;display:block;font-family:inherit">';
+  for (var g = 0; g <= top + 1e-6; g += stap) {
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="#e3e9ef"/>' +
+      '<text x="' + (L - 6) + '" y="' + (y(g) + 4) + '" text-anchor="end" font-size="11" fill="#5f6b7a">' + eur(g) + '</text>';
+  }
+  jaren.forEach(function (a) {
+    if ((a - van) % 2 === 0 || a === tot) s += '<text x="' + x(a) + '" y="' + (H - B + 16) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">' + a + '</text>';
+  });
+  s += '<text x="' + (L + pw / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">Leeftijd bij aanvraag (jaar)</text>';
+  if (o.huidigeLeeftijd >= van && o.huidigeLeeftijd <= tot) {
+    s += '<line x1="' + x(o.huidigeLeeftijd) + '" x2="' + x(o.huidigeLeeftijd) + '" y1="' + T + '" y2="' + (T + ph) + '" stroke="#b42318" stroke-dasharray="3 3"/>' +
+      '<text x="' + (x(o.huidigeLeeftijd) + 4) + '" y="' + (T + 11) + '" font-size="11" fill="#b42318">nu ' + o.huidigeLeeftijd + ' jr</text>';
+  }
+  reeks.forEach(function (r) {
+    var dik = r.K.k === o.gekozen ? 3.5 : 2;
+    var pts = r.w.map(function (v, i) { return x(jaren[i]) + ',' + y(v); }).join(' ');
+    s += '<polyline points="' + pts + '" fill="none" stroke="' + r.K.kl + '" stroke-width="' + dik + '"' + (r.K.dash ? ' stroke-dasharray="' + r.K.dash + '"' : '') + '/>';
+    r.w.forEach(function (v, i) {
+      s += '<circle cx="' + x(jaren[i]) + '" cy="' + y(v) + '" r="' + (dik > 2 ? 3.2 : 2.4) + '" fill="' + r.K.kl + '"><title>' + r.K.lbl + ' · ' + jaren[i] + ' jaar: ' + eur(v) + '</title></circle>';
+    });
+  });
+  s += '</svg>';
+  var leg = '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:12px">' + KEUZES.map(function (K) {
+    return '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="26" height="8"><line x1="0" x2="26" y1="4" y2="4" stroke="' + K.kl + '" stroke-width="' + (K.k === o.gekozen ? 3.5 : 2) + '"' + (K.dash ? ' stroke-dasharray="' + K.dash + '"' : '') + '/></svg>' + K.lbl + (K.k === o.gekozen ? ' <b>(gekozen)</b>' : '') + '</span>';
+  }).join('') + '</div>';
+  var rij = function (r) { return '<tr><td style="padding:3px 8px;white-space:nowrap">' + r.K.lbl + '</td>' + r.w.map(function (v) { return '<td style="padding:3px 6px;text-align:right;white-space:nowrap">' + eur(v) + '</td>'; }).join('') + '</tr>'; };
+  var tab = '<details style="margin-top:8px;font-size:12px"><summary style="cursor:pointer">Bedragen per leeftijd</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:3px 8px">Pensioentoets</th>' +
+    jaren.map(function (a) { return '<th style="padding:3px 6px;text-align:right">' + a + '</th>'; }).join('') + '</tr>' + reeks.map(rij).join('') + '</table></div></details>';
+  el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Maximale hypotheek per leeftijd bij aanvraag</div>' +
+    '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).</div>' + s + leg + tab;
+}
+</script>
 <script>
 const NIBUD2026={"n":{"s":30000,"r":[[155,165,175,184,193,201,209,216,222,227,232,237],[162,173,183,193,202,212,220,227,234,241,246,251],[167,179,190,201,211,221,230,238,246,253,259,264],[171,183,195,206,216,226,236,246,254,261,268,274],[173,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[174,185,196,206,216,226,236,246,255,264,273,281],[175,185,196,206,216,226,236,246,255,264,273,281],[176,186,196,206,216,226,236,246,255,264,273,281],[176,186,196,206,216,226,236,246,255,264,273,281],[177,187,197,207,216,226,236,246,255,264,273,281],[177,187,197,207,217,226,236,246,255,264,273,281],[178,188,198,207,217,227,236,246,255,264,273,281],[178,189,199,209,218,227,237,246,255,264,273,281],[179,189,199,210,219,228,237,246,255,264,273,281],[180,190,200,210,220,229,238,247,255,264,273,281],[181,191,201,211,221,230,239,247,256,264,273,281],[182,192,202,212,222,231,240,248,257,265,273,281],[183,194,204,214,223,232,241,250,258,267,274,282],[185,195,205,215,225,234,243,251,260,268,276,283],[186,197,207,217,227,236,245,253,262,270,278,285],[188,199,209,219,229,238,247,256,264,272,280,287],[190,200,211,221,231,241,250,258,266,274,282,289],[191,202,213,223,233,243,252,260,269,276,284,292],[193,204,215,225,235,245,254,263,271,279,286,293],[194,205,216,226,237,246,256,264,273,281,288,295],[195,206,217,228,238,248,257,266,275,282,290,297],[196,208,219,229,240,249,259,268,276,284,292,299],[197,209,220,231,241,251,261,270,278,286,294,301],[198,209,221,232,242,252,262,271,279,287,295,302],[199,210,222,232,243,253,263,272,281,289,296,303],[200,211,222,233,243,254,264,273,281,290,297,304],[201,212,223,234,244,254,264,273,282,290,298,305],[201,212,223,234,244,254,264,274,282,291,299,306],[202,213,224,234,245,255,265,274,283,291,299,306],[202,213,224,235,245,255,265,274,283,292,299,307],[202,214,225,235,246,256,265,274,284,292,300,307],[203,214,225,236,246,256,266,275,284,292,300,308],[204,215,225,236,246,256,266,275,284,293,301,308],[205,215,226,237,247,257,266,276,284,293,301,308],[205,216,226,237,247,257,267,276,285,293,301,309],[205,216,227,237,248,258,267,276,285,293,302,309],[206,217,227,238,248,258,268,277,286,294,302,310],[207,217,228,238,248,258,268,277,286,294,302,310],[208,218,228,239,249,259,269,278,286,295,302,310],[208,219,229,239,250,259,269,278,287,295,303,310],[209,219,230,240,250,260,269,279,287,295,303,310],[210,220,230,240,250,260,270,279,288,296,304,311],[210,221,231,241,251,261,270,279,288,296,304,311],[211,221,232,242,251,261,271,280,288,296,304,312],[211,222,232,242,252,261,271,280,289,297,305,312],[212,222,233,243,253,262,271,280,289,297,305,312],[212,223,234,244,253,263,271,281,289,298,305,313],[213,224,234,244,254,263,272,281,290,298,306,313],[213,224,235,245,255,264,273,281,290,298,306,313],[213,225,235,245,255,265,273,282,291,299,306,314],[214,225,236,246,256,265,274,282,291,299,307,314],[214,225,237,247,256,266,275,283,291,300,307,315],[215,226,237,247,257,267,275,284,292,300,308,315],[215,226,237,248,258,267,276,284,292,300,308,315],[216,227,237,248,258,267,277,285,293,300,308,315],[216,227,238,248,259,268,277,285,293,301,308,316],[217,228,238,249,259,268,277,286,294,301,309,316],[217,228,239,249,259,269,278,287,294,302,309,317],[218,229,239,250,259,269,278,287,295,302,309,317],[218,229,240,250,260,269,279,287,295,303,310,317],[218,229,240,250,260,270,279,288,296,303,310,317],[219,230,241,251,261,270,280,288,296,304,311,318],[219,230,241,251,261,271,280,289,297,304,311,318],[220,231,241,252,262,271,280,289,297,305,312,319],[220,231,242,252,262,272,281,289,298,305,313,319],[220,232,242,253,263,272,281,290,298,306,313,320],[221,232,243,253,263,273,282,290,299,306,314,320],[221,232,243,254,264,273,282,291,299,307,314,321],[222,233,244,254,264,274,283,291,299,308,315,321],[222,233,244,255,265,274,283,292,300,308,315,322]]},"a":{"s":29000,"r":[[185,189,194,197,201,204,207,209,211,213,215,217],[192,198,203,208,211,215,218,221,223,225,227,229],[199,206,212,217,221,225,228,231,234,237,239,241],[205,212,218,224,230,234,238,241,244,247,249,252],[209,217,223,229,235,240,245,248,252,255,257,260],[212,220,228,234,240,245,251,255,259,262,265,267],[216,224,231,239,245,251,256,261,265,269,272,275],[218,227,235,243,249,256,261,266,271,275,279,282],[219,229,238,246,253,260,266,271,275,280,284,288],[220,231,240,249,257,263,270,275,280,284,289,292],[221,232,242,251,259,266,273,279,284,289,293,297],[222,233,243,252,261,269,276,282,288,293,297,301],[223,234,244,253,263,271,279,285,291,296,301,305],[224,235,245,255,264,273,281,288,294,300,305,309],[225,236,246,256,266,274,283,290,297,303,308,313],[227,237,248,258,267,276,284,292,299,306,311,316],[228,239,249,259,268,277,286,294,301,308,314,319],[229,240,250,260,269,279,287,295,303,309,316,322],[231,241,252,261,271,280,289,297,304,311,318,324],[231,243,253,263,273,282,290,299,306,313,320,326],[233,244,255,265,275,283,292,300,308,315,322,328],[234,246,256,267,276,286,294,302,310,317,324,330],[236,248,258,268,279,288,297,305,313,320,327,333],[239,250,262,272,281,291,300,308,316,323,330,337],[242,254,265,275,285,294,304,312,320,327,335,341],[245,257,268,279,289,298,307,316,324,332,339,345],[248,260,272,283,293,303,311,320,329,336,343,350],[250,264,276,286,297,307,316,324,332,340,347,355],[252,266,279,290,300,311,320,328,337,344,352,359],[253,268,281,294,304,314,324,333,341,348,355,363],[254,270,284,296,308,318,328,337,345,353,360,366],[255,271,286,299,311,321,331,341,349,357,364,371],[256,272,287,301,314,325,335,344,353,361,368,375],[257,273,289,304,316,328,338,348,357,365,372,379],[258,274,290,305,319,330,341,351,360,368,376,383],[258,276,291,307,321,333,344,354,363,372,379,386],[259,276,292,308,323,336,346,356,366,375,383,390],[259,276,294,309,324,338,349,360,368,378,386,393],[260,277,294,310,325,340,352,362,371,380,389,397],[260,277,295,311,326,341,354,364,375,383,392,400],[261,278,295,312,327,342,356,367,377,386,394,403],[262,279,296,313,328,343,357,369,379,389,397,405],[262,279,296,313,329,344,358,371,382,391,399,407],[263,280,297,314,330,345,359,373,384,394,403,410],[264,280,297,314,331,346,360,373,384,395,405,413],[265,281,297,314,331,347,361,373,384,395,406,416],[265,282,298,314,331,348,361,373,384,395,406,417],[266,283,299,315,332,348,361,373,384,395,406,417],[267,283,300,316,332,348,361,373,384,395,406,417],[268,284,300,316,333,348,361,373,384,395,406,417],[269,285,301,317,333,348,361,373,384,395,406,417],[271,285,301,317,333,348,361,373,384,395,406,417],[272,286,302,318,334,348,361,373,384,395,406,417],[272,288,302,319,334,348,361,373,384,395,406,417],[273,288,303,319,334,348,361,373,384,395,406,417],[274,289,304,319,334,348,361,373,384,395,406,417],[275,290,304,319,334,348,361,373,384,395,406,417],[276,291,305,319,334,348,361,373,384,395,406,417],[277,291,306,320,334,348,361,373,384,395,406,417],[277,292,306,320,334,348,361,373,384,395,406,417],[277,292,306,320,334,348,361,373,384,395,406,417],[277,292,306,321,334,348,361,373,384,395,406,417],[278,292,307,321,334,348,361,373,384,395,406,417],[278,293,307,321,334,348,361,373,384,395,406,417],[278,293,307,321,335,348,361,373,384,395,406,417],[278,293,307,321,335,348,361,373,384,395,406,417],[279,293,308,321,335,348,361,373,384,395,406,417],[279,294,308,322,335,348,361,373,384,395,406,417],[279,294,308,322,335,348,361,373,384,395,406,417],[280,294,308,322,336,348,361,373,384,395,406,417],[280,294,309,322,336,349,361,373,384,395,406,417],[280,295,309,323,336,349,361,373,384,395,406,417],[281,295,309,323,336,349,361,373,384,395,406,417],[281,295,309,323,336,349,361,373,384,395,406,417],[281,296,309,323,337,349,362,373,384,395,406,417],[282,296,310,323,337,350,362,374,385,395,406,417],[282,296,310,324,337,350,362,374,385,395,406,417],[282,296,310,324,337,350,362,374,385,395,406,417],[283,297,311,324,337,350,363,374,385,396,406,417],[283,297,311,325,338,351,363,374,385,396,406,417],[283,297,311,325,338,351,363,375,385,396,406,417],[284,298,312,325,338,351,363,375,386,396,406,417]]},"b3n":{"s":30000,"r":[[140,142,145,147,149,151,152,154,156,157,158,160],[145,148,150,152,154,156,158,160,161,163,164,166],[150,153,155,157,160,162,163,165,167,168,170,171],[153,156,158,161,163,165,167,168,170,172,173,175],[156,158,161,163,165,167,169,171,173,174,176,177],[157,160,162,165,167,169,171,173,175,176,178,179],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,161,164,166,169,171,173,174,176,178,179,181],[159,162,164,167,169,171,173,175,176,178,179,181],[159,162,165,167,169,171,173,175,177,178,180,181],[160,163,165,168,170,172,174,176,178,179,181,182],[161,163,166,168,171,173,175,177,178,180,182,183],[161,164,167,169,171,174,175,177,179,181,182,184],[162,165,167,170,172,174,176,178,180,181,183,184],[163,165,168,170,173,175,177,179,180,182,184,185],[163,166,169,171,173,175,177,179,181,183,184,186],[164,167,169,172,174,176,178,180,182,183,185,186],[164,167,170,172,175,177,179,181,183,184,186,187],[165,168,171,173,175,178,180,182,183,185,187,188],[166,169,171,174,176,179,181,182,184,186,187,189],[167,170,172,175,177,179,182,183,185,187,188,190],[167,170,173,176,178,180,182,184,186,188,190,191],[168,171,174,177,179,181,184,185,187,189,191,192],[169,173,176,178,181,183,185,187,189,190,192,193],[170,173,177,180,182,184,186,188,190,192,193,195],[172,175,178,181,184,186,188,190,192,194,195,197],[173,176,179,182,185,187,190,192,193,195,197,198],[175,178,181,184,187,189,191,193,195,197,199,200],[177,180,183,185,188,191,193,195,197,199,200,202],[178,181,184,187,190,193,195,197,199,201,202,204],[180,183,186,188,191,194,196,198,200,202,204,206],[181,184,187,190,192,195,198,200,202,204,205,207],[182,186,188,191,194,197,199,201,203,205,207,209],[183,187,190,193,195,198,200,203,205,207,208,210],[185,188,191,194,196,199,202,204,206,208,210,211],[185,189,192,195,198,200,203,205,207,209,211,213],[186,190,193,196,199,201,204,206,209,210,212,214],[187,191,194,197,200,202,205,207,210,212,213,215],[188,191,195,198,201,203,206,208,210,213,214,216],[189,192,196,199,202,204,206,209,211,213,215,217],[190,193,197,200,202,205,207,209,212,214,216,218],[191,194,197,200,203,206,208,210,213,215,217,219],[191,195,198,201,204,206,209,211,213,216,218,219],[192,195,198,202,205,207,210,212,214,217,219,220],[193,196,199,203,205,208,210,213,215,217,219,221],[193,197,200,203,206,209,211,213,216,218,220,222],[194,197,201,204,207,209,212,214,216,218,221,223],[195,198,201,204,207,210,213,215,217,219,221,223],[195,199,202,205,208,211,213,216,218,220,222,224],[196,199,203,206,208,211,214,216,218,220,222,225],[196,200,203,206,209,212,215,217,219,221,223,225],[197,200,204,207,210,213,215,218,220,222,224,225],[197,201,204,207,210,213,216,218,220,223,224,226],[198,202,205,208,211,214,216,219,221,223,225,227],[198,202,205,209,212,214,217,220,222,224,226,227],[199,202,206,209,212,215,218,220,222,224,226,228],[199,203,207,210,213,215,218,221,223,225,227,229],[200,203,207,210,213,216,218,221,224,226,228,229],[201,204,207,211,214,217,219,222,224,226,228,230],[201,205,208,211,214,217,220,222,225,227,229,231],[201,205,208,212,215,218,220,223,225,227,229,231],[202,206,209,212,215,218,221,223,226,228,230,232],[202,206,209,212,216,219,221,224,226,228,230,232],[203,207,210,213,216,219,222,224,226,229,231,233],[203,207,210,213,217,220,222,225,227,229,231,233],[203,207,211,214,217,220,223,225,227,230,232,234],[204,208,211,214,217,220,223,226,228,230,232,234],[204,208,212,215,218,221,224,226,228,230,233,235],[204,208,212,215,218,221,224,226,229,231,233,235],[205,208,212,215,218,222,224,227,229,231,233,235],[205,209,213,216,219,222,225,227,229,232,234,236],[205,209,213,216,219,222,225,228,230,232,234,236],[206,209,213,217,220,222,225,228,230,232,234,237],[206,210,214,217,220,223,226,228,231,233,235,237],[207,210,214,217,220,223,226,229,231,233,235,237],[207,211,214,218,221,223,226,229,231,234,236,238],[207,211,214,218,221,224,227,229,232,234,236,238],[208,211,215,218,222,224,227,230,232,234,236,238],[208,212,215,219,222,225,227,230,233,235,237,239],[208,212,215,219,222,225,228,231,233,235,237,239],[209,212,216,219,223,226,228,231,233,236,238,240]]},"b3a":{"s":29000,"r":[[179,182,185,188,190,193,195,197,199,201,202,204],[186,189,192,195,198,200,202,204,206,208,210,211],[192,195,198,201,204,206,208,211,213,215,216,218],[197,200,203,206,209,212,214,216,218,220,222,224],[200,203,207,210,212,215,217,220,222,224,226,228],[202,205,209,212,214,217,220,222,224,226,228,230],[203,207,210,213,216,219,221,223,226,228,230,231],[205,208,211,214,217,220,222,225,227,229,231,233],[206,209,212,216,218,221,224,226,228,230,232,234],[207,210,214,217,220,222,225,227,229,231,233,235],[208,211,214,217,220,223,226,228,230,232,234,236],[208,212,215,218,221,224,226,229,231,233,235,237],[209,213,216,219,222,225,227,230,232,234,236,238],[211,214,218,221,224,226,229,231,234,236,238,240],[212,216,219,222,225,228,231,233,235,237,239,241],[214,217,221,224,227,230,232,235,237,239,241,243],[215,219,222,225,228,231,234,236,238,241,243,244],[216,220,223,227,230,232,235,238,240,242,244,246],[217,221,225,228,231,234,236,239,241,243,245,247],[219,222,226,229,232,235,238,240,242,245,247,249],[220,224,228,231,234,237,240,242,245,247,249,251],[221,225,229,233,236,239,241,244,246,248,251,253],[222,227,231,234,237,240,243,246,248,250,252,254],[224,228,232,236,239,242,245,248,250,252,254,256],[226,230,234,238,241,244,247,249,252,254,256,258],[227,231,235,239,242,245,248,251,253,255,258,260],[228,232,236,240,244,247,249,252,255,257,259,261],[229,233,237,241,245,248,251,254,256,258,261,263],[231,235,238,242,246,249,252,255,257,260,262,264],[232,236,240,243,247,250,253,256,259,261,263,265],[232,237,240,244,248,251,254,257,259,262,264,266],[233,237,241,244,248,251,254,257,260,262,264,267],[233,237,241,245,248,252,255,258,260,263,265,267],[234,238,242,245,249,252,255,258,261,263,265,268],[234,238,242,246,249,252,256,259,262,264,266,268],[235,239,243,247,250,253,257,259,262,265,267,269],[235,240,243,247,251,254,257,260,263,265,268,270],[236,240,244,248,251,255,258,261,264,266,269,271],[237,241,245,249,252,256,259,262,265,267,270,272],[238,242,246,250,253,257,260,262,266,268,271,273],[239,243,247,251,254,258,260,263,266,269,272,274],[239,243,247,252,255,258,261,264,267,270,272,275],[240,244,248,252,256,259,262,265,268,271,273,276],[241,246,249,253,257,261,264,266,269,271,274,277],[243,247,251,255,259,262,265,268,271,273,276,278],[244,249,253,256,260,263,267,270,272,275,277,280],[245,250,254,258,261,265,268,271,274,276,279,282],[246,251,256,259,263,266,270,273,275,278,280,283],[248,253,257,261,264,268,271,274,277,280,282,284],[249,254,258,262,266,269,273,276,279,281,283,286],[251,255,260,264,267,271,274,277,280,283,285,287],[252,256,261,265,269,272,275,279,282,284,287,289],[253,258,262,266,270,273,277,280,283,286,288,290],[254,259,263,267,271,275,278,281,284,287,289,292],[255,260,264,268,272,276,279,282,285,288,291,293],[256,261,265,269,273,277,280,283,287,289,292,294],[257,262,266,270,274,278,281,284,287,290,293,295],[258,263,267,271,275,279,282,285,288,291,294,296],[258,264,268,272,276,280,283,286,289,292,295,297],[259,264,269,273,276,280,284,287,290,292,295,298],[260,264,269,273,277,281,284,287,290,293,296,299],[260,265,269,274,277,281,285,288,291,294,297,299],[261,265,270,274,278,282,285,289,291,294,297,299],[261,265,270,275,278,282,286,289,292,294,297,300],[261,266,270,275,279,282,286,289,292,295,297,300],[262,266,271,275,279,283,286,290,293,295,298,301],[262,267,271,276,280,283,287,290,293,296,298,301],[262,267,271,276,280,283,287,290,293,296,299,301],[263,267,272,276,280,284,287,291,294,297,299,302],[263,268,272,276,280,284,287,291,294,297,299,302],[263,268,272,277,281,285,288,291,294,297,300,302],[264,268,273,277,281,285,288,292,295,298,300,303],[264,269,273,277,281,285,289,292,295,298,301,303],[264,269,273,277,282,285,289,292,295,298,301,303],[265,269,274,278,282,286,289,292,296,298,301,304],[265,270,274,278,282,286,290,293,296,299,302,304],[265,270,274,278,283,286,290,293,296,299,302,304],[266,270,275,279,283,286,290,293,297,299,302,305],[266,271,275,279,283,287,290,294,297,300,302,305],[266,271,275,279,283,287,291,294,297,300,303,305],[266,271,276,280,283,287,291,294,297,300,303,306],[267,271,276,280,284,288,291,294,298,301,303,306]]}};
 // Nibud-financieringslastnormen 2027 (Wijzigingsregeling hypothecair krediet 2027, Stcrt. 2026, 38415)
@@ -453,6 +521,17 @@ function quote(tab,inkomen,kol){const T=NIBUD[tab];let idx=Math.floor((inkomen-T
 function maandenTussen(d1,d2){if(!d1||!d2)return null;const a=new Date(d1),b=new Date(d2);
   return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+1;}
 const momentLbl=m=>m===1?"Bij aanvang":"Na "+(m-1)+" maanden";
+/* Werkwijze B: AOW-toetsmoment = moment (1-based) op de AOW-datum (gedeeltelijke maand naar boven, zoals MAX. HYP. 2027) */
+function aowMoment(td,aow){if(!td||!aow)return null;const a=new Date(td),b=new Date(aow);if(isNaN(a)||isNaN(b))return null;
+  let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());if(b.getDate()>a.getDate())m++;return m+1;}
+function leeftijdOpTd(td,geb){if(!td||!geb)return null;const a=new Date(td),g=new Date(geb);if(isNaN(a)||isNaN(g))return null;
+  let l=a.getFullYear()-g.getFullYear();if(a.getMonth()<g.getMonth()||(a.getMonth()===g.getMonth()&&a.getDate()<g.getDate()))l--;return l;}
+/* AOW-toetsmoment alleen voor wie aan de gekozen pensioentoetsdrempel voldoet (restschuldmethode) */
+const aowMomentGeldt=p=>p.aowMom!==null&&p.aowM!==null&&p.aowM>=1&&!!p.geldt;
+/* Restschuld van een leningdeel na e maanden volgens het eigen aflosschema (contractrente) */
+function restDeel(d,e){const n=Math.min(d.duur,360);if(e<=0)return d.bedrag;if(e>=n&&!/aflossingsvrij/i.test(d.vorm))return 0;
+  if(/aflossingsvrij/i.test(d.vorm))return d.bedrag;const i=d.rente/100/12;if(/lineair/i.test(d.vorm)||i===0)return d.bedrag*(1-e/n);
+  return d.bedrag*(Math.pow(1+i,n)-Math.pow(1+i,e))/(Math.pow(1+i,n)-1);}
 
 function leeftijdOp(gebStr,peil){
   if(!gebStr)return null;const g=new Date(gebStr);if(isNaN(g))return null;
@@ -506,12 +585,12 @@ function leesInput(){
   const {delen,trs}=leesDelen();
   const partner=$("partnerAan").checked, td=$("toetsdatum").value;
   setNormjaar(td);
-  const drempel=parseInt($("pdr").value,10)||0;
-  // Pensioentoets: drM = moment (maanden vanaf toetsdatum) waarop de persoon de drempelleeftijd (57/52) bereikt
-  const drempelM=gebId=>{const v=$(gebId).value;if(!drempel||!v)return null;const d=new Date(v);if(isNaN(d))return null;
-    d.setFullYear(d.getFullYear()+drempel);return maandenTussen(td,d.toISOString().slice(0,10));};
+  const drV=$("pdr").value, drempel=(drV==="aow10"||drV==="aow15")?drV:(parseInt(drV,10)||0);
+  // Pensioentoets geldt: nog geen AOW en aan de drempel voldaan op de toetsdatum (leeftijd ≥ 57/52, of AOW-datum binnen 10/15 jaar)
+  const geldtVoor=pf=>geldtB13(td,$(pf+"_aow").value,$(pf+"_geb").value,drempel);
   const persoon=pf=>({ink:parseEur($(pf+"_ink").value),pens:parseEur($(pf+"_pens").value),pensLeeg:!$(pf+"_pens").value.trim(),
-    aowM:maandenTussen(td,$(pf+"_aow").value),drM:drempelM(pf+"_geb"),
+    aowM:maandenTussen(td,$(pf+"_aow").value),geldt:geldtVoor(pf),
+    aowMom:aowMoment(td,$(pf+"_aow").value),lft:leeftijdOpTd(td,$(pf+"_geb").value),
     prepM:$(pf+"_prep").value&&$(pf+"_prepink").value.trim()?maandenTussen(td,$(pf+"_prep").value):null,prepInk:parseEur($(pf+"_prepink").value)});
   const pers=[persoon("c")];
   if(partner)pers.push(persoon("p"));
@@ -526,6 +605,21 @@ function leesInput(){
     alleenAan:!partner&&$("alleenstaand").checked,verpl,drempel};
 }
 
+/* Pensioentoets geldt: nog geen AOW en aan de drempel voldaan op de toetsdatum (leeftijd ≥ 57/52, of AOW-datum binnen 10/15 jaar) */
+function geldtB13(td,aowV,gebV,drempel){if(!drempel||!aowV||!td)return false;const a=new Date(aowV),t=new Date(td);if(isNaN(a)||isNaN(t)||a<=t)return false;
+  if(drempel==="aow10"||drempel==="aow15")return a<=new Date(t.getFullYear()+(drempel==="aow10"?10:15),t.getMonth(),t.getDate());
+  const l=leeftijdOpTd(td,gebV);return l!==null&&l>=drempel;}
+/* Grafiek: maximale hypotheek (zelfde kern, restschuldmethode) met de aanvrager op leeftijd lft op de toetsdatum en keuze 'keuze' */
+function grafiekMaxB13(inp,lft,keuze){
+  const td=$("toetsdatum").value,g0=$("c_geb").value;if(!td||!g0)return 0;
+  const t=new Date(td),delta=Date.UTC(t.getUTCFullYear()-lft,t.getUTCMonth(),t.getUTCDate())-new Date(g0).getTime();
+  const kk=(keuze==="aow10"||keuze==="aow15")?keuze:(parseInt(keuze,10)||0);
+  const pers=inp.pers.map((p,i)=>{const pf=i?"p":"c",gv=$(pf+"_geb").value;
+    const g=gv?new Date(new Date(gv).getTime()+delta).toISOString().slice(0,10):null,aow=g?aowDatumUit(g):$(pf+"_aow").value;
+    return Object.assign({},p,{aowM:maandenTussen(td,aow),aowMom:aowMoment(td,aow),lft:leeftijdOpTd(td,g),geldt:geldtB13(td,aow,g,kk)});});
+  const M=berekenCore(Object.assign({},inp,{pers,drempel:kk}));
+  return (!M||M.onvolledig)?0:M.maxHyp;
+}
 /* ---------- kernberekening (herbruikbaar met alternatieve delen) ---------- */
 function berekenCore(inp){
   const delen=inp.delen.map(d=>({...d}));
@@ -557,27 +651,26 @@ function berekenCore(inp){
   delen.forEach(d=>{const e=Math.min(d.duur,360);
     if(d.aftm>=1&&d.aftm<e)mSet.add(d.aftm+1);
     if(e<360)mSet.add(e+1);});
-  // AOW-datum binnen de toetshorizon: vanaf dan alleen inkomen vanaf AOW (tabelkeuze: Trhk art. 3 lid 7)
-  pers.forEach(p=>{if(p.aowM!==null&&p.aowM>=1&&p.aowM<=120)mSet.add(p.aowM+1);});
-  // Pensioentoets: vanaf het moment dat de persoon de drempelleeftijd (57 of 52 jaar) bereikt, binnen de horizon
-  pers.forEach(p=>{if(p.drM!==null&&p.drM>=1&&p.drM<=120)mSet.add(p.drM+1);});
+  // Restschuldmethode: AOW-datum van iedere aanvrager die aan de pensioentoetsdrempel voldoet (ook na 10 jaar); toetst de restschuld.
+  // Geen apart toetsmoment op de datum waarop iemand de drempel bereikt; geen MIN-toets bij aanvang.
+  const aowMomenten=new Set();
+  pers.forEach(p=>{if(aowMomentGeldt(p)){mSet.add(p.aowMom);aowMomenten.add(p.aowMom);}});
   // (Pre)pensioen vóór AOW: vanaf die datum telt het (pre)pensioeninkomen in plaats van het bruto jaarinkomen
   pers.forEach(p=>{if(p.prepM!==null&&p.prepM>=1&&p.prepM<=120)mSet.add(p.prepM+1);});
-  const momenten=[...mSet].filter(m=>m>=1&&m<=HORIZON).sort((a,b)=>a-b);
+  const momenten=[...mSet].filter(m=>m>=1&&(m<=HORIZON||aowMomenten.has(m))).sort((a,b)=>a-b);
 
   const rows=momenten.map(m=>{
     let ink=0,pt=false,onvolledig=false,aowNu=false;
     const perP=[];
     pers.forEach((p,pIdx)=>{
       const alAOW=p.aowM!==null&&p.aowM<1;                       // al AOW op toetsdatum
-      const wordtAOW=p.aowM!==null&&p.aowM>=1&&p.aowM<=120;      // AOW binnen 10 jaar
-      const isAOW=alAOW||(wordtAOW&&m>p.aowM);
-      const ptGeldt=!isAOW&&p.drM!==null&&m>p.drM;               // pensioentoets: drempelleeftijd bereikt, nog geen AOW
+      const isAOW=alAOW||(p.aowMom!==null&&m>=p.aowMom);         // AOW-datum op of vóór dit moment: inkomen vanaf AOW
+      if(p.geldt&&!isAOW)pt=true;                                // pensioentoets van toepassing (AOW-moment volgt)
       const werkInk=(p.prepM!==null&&m>p.prepM)?p.prepInk:p.ink;  // (pre)pensioen vóór AOW
       let pi;
       if(alAOW){pi=p.pensLeeg?p.ink:p.pens;aowNu=true;}            // AOW al bereikt: inkomen vanaf AOW (leeg = bruto jaarinkomen is al het AOW-inkomen)
       else if(isAOW){pi=p.pens;if(p.pensLeeg)onvolledig=true;}
-      else if(ptGeldt){pt=true;if(p.pensLeeg){onvolledig=true;pi=0;}else pi=Math.min(werkInk,p.pens);} // laagste van huidig en pensioeninkomen
+      else if(p.geldt&&p.pensLeeg)onvolledig=true,pi=werkInk;   // inkomen vanaf AOW verplicht voor wie de pensioentoets geldt
       else pi=werkInk;
       if(pIdx===0&&alimJaar>0)pi=Math.max(0,pi-alimJaar); // betaalde partneralimentatie, op elk toetsmoment (geen einddatum bekend)
       ink+=pi;perP.push({ink:pi,aow:isAOW});
@@ -593,7 +686,8 @@ function berekenCore(inp){
     delen.forEach(d=>{
       if(m>Math.min(d.duur,360))return;
       const fB3=d.bedrag>0?Math.min(d.box3,d.bedrag)/d.bedrag:0;
-      const lB1=d.last*(1-fB3),lB3=d.last*fB3;
+      const dl=m>1?d.last*restDeel(d,m-1)/d.bedrag:d.last; // later moment: restschuld (als 30-jarige annuïteit op de toetsrente)
+      const lB1=dl*(1-fB3),lB3=dl*fB3;
       if(m<=d.aftm)lastAftrek+=lB1;
       last+=(m>d.aftm?lB1*brut:lB1)+lB3*brut;
     });
@@ -618,7 +712,7 @@ function berekenCore(inp){
   const maxInkomen=baseMax;                 // verhoging alleenstaande zit al in de maandruimte
   const maxInkomenIncl=baseMax+extraLening;
   const maxOnderpand=inp.mw>0?Math.min(inp.mw+inp.ebv,inp.mw*1.06):0;
-  const maxHyp=Math.min(maxInkomenIncl,maxOnderpand||Infinity);
+  const maxHyp=Math.min(maxInkomen,maxOnderpand||Infinity); // laagste over de toetsmomenten (incl. vrijgestelde bedragen); extra kortlopende lening apart
   const alleRuimteOk=rows.every(r=>r.ruimte>=-0.5);
   const akkoord=alleRuimteOk&&(!maxOnderpand||hoofdsom<=maxOnderpand+0.5);
   return {delen,hoofdsom,toetsrente,kol,normrente:inp.normrente,norminkomen,alimJaar,
@@ -774,7 +868,7 @@ function bereken(){
   const inp=leesInput();
   const M=berekenCore(inp);
   const el=$("resultaat");
-  if(!M){el.innerHTML='<h2>Resultaat</h2><p style="color:#5f6b7a">Vul minimaal één inkomen en één leningdeel in om de toetsing te zien.</p>';return;}
+  if(!M){$("ptGrafiek").innerHTML="";el.innerHTML='<h2>Resultaat</h2><p style="color:#5f6b7a">Vul minimaal één inkomen en één leningdeel in om de toetsing te zien.</p>';return;}
   M.trs=inp.trs;
   const r0=M.rows[0];
   const ah=$("alleenHint");
@@ -782,8 +876,8 @@ function bereken(){
     (!$("alleenstaand").checked?"Uitgezet: geen alleenstaandenbedrag.":
      (r0.alleen>0?"Van toepassing: toetsinkomen "+fmt0(r0.ink)+" hoger dan "+fmt0(r0.aowTab?ALLEEN.grensAOW:ALLEEN.grens)+" → + "+fmt0(ALLEEN.bedrag)+" buiten de toetsing.":
       "Niet van toepassing: toetsinkomen "+fmt0(r0.ink)+" niet hoger dan "+fmt0(r0.aowTab?ALLEEN.grensAOW:ALLEEN.grens)+"."));
-  const basis=M.maxHyp===M.maxOnderpand&&M.maxOnderpand<M.maxInkomenIncl?"op basis van marktwaarde":
-    (M.extraLening>1&&M.maxInkomenIncl>M.maxInkomen+1?"op basis van inkomen en extra aflossing(en)":"op basis van inkomen");
+  const basis=M.maxHyp===M.maxOnderpand&&M.maxOnderpand<M.maxInkomen?"op basis van marktwaarde":
+    "op basis van inkomen (laagste toetsmoment: "+momentLbl(M.rows[M.bindIdx].m).toLowerCase()+")";
 
   let melding;
   if(M.akkoord)melding='<div class="melding ok">✔ De hoofdsom van '+fmt0(M.hoofdsom)+' is akkoord.</div>';
@@ -808,7 +902,7 @@ function bereken(){
    (M.rows.some(r=>r.aowTab)&&inp.pers.length>1?'<p style="margin:6px 0 0;font-size:13px;color:#5f6b7a">Tabelkeuze (Trhk art. 3 lid 7): heeft één van beiden de AOW-leeftijd bereikt, dan geldt de tabel van de aanvrager met het hoogste toetsinkomen.</p>':'')+
    '<div class="tbl-scroll"><table class="res"><tbody>'+
     '<tr><td>Maximaal op basis van inkomen</td><td class="r" style="font-weight:700">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie'+(M.verhAlleen?' · incl. verhoging alleenstaande ('+fmt0(M.verhAlleen)+' in de maandruimte)':'')+'</td></tr>'+
-    (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r" style="font-weight:700">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden, rente '+fmtP3(M.toetsrente)+' → samen '+fmt0(M.maxInkomenIncl)+'</td></tr>':'')+
+    (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r" style="font-weight:700">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden, rente '+fmtP3(M.toetsrente)+' → samen '+fmt0(M.maxInkomenIncl)+' (niet opgenomen in de maximale hypotheek: alleen als dit deel vóór het bepalende moment is afgelost)</td></tr>':'')+
     '<tr><td>Maximaal op basis van marktwaarde</td><td class="r" style="font-weight:700">'+(M.maxOnderpand?fmt0(M.maxOnderpand):'—')+'</td><td>'+(M.mw?(M.ebv>0?'100% + EBV (max 106%) van ':'100% van ')+fmt0(M.mw):'geen marktwaarde ingevuld')+'</td></tr>'+
     '<tr style="background:#f8fafc"><td style="font-weight:800;color:var(--primary)">Maximale hypotheek</td><td class="r" style="font-weight:800;color:var(--primary);font-size:17px">'+fmt0(M.maxHyp)+'</td><td>'+basis+'</td></tr>'+
    '</tbody></table></div>'+
@@ -816,16 +910,22 @@ function bereken(){
    box3Vergelijk(inp,M)+
    (M.akkoord?'':routeNaarAkkoord(inp,M));
 
+  try{ptGrafiek($("ptGrafiek"),{berekenMax:(l,k)=>grafiekMaxB13(inp,l,k),huidigeLeeftijd:inp.pers[0].lft,gekozen:String(inp.drempel),vanaf:50,tot:67});}catch(e){$("ptGrafiek").innerHTML="";}
   const b1=$("btnOmzet");if(b1)b1.addEventListener("click",applyOmzetting);
   const b2=$("btnVerlaag");if(b2)b2.addEventListener("click",applyVerlaging);
 }
 
 /* ---------- pensioentoets: status ---------- */
 function ptTekst(M){
-  if(!M.drempel)return 'Pensioentoets: niet getoetst (uitgeschakeld). Een AOW-datum binnen 10 jaar wordt wel getoetst op het inkomen vanaf AOW.';
-  if(!M.ptRows.length)return 'Pensioentoets (vanaf '+M.drempel+' jaar): '+(M.rows[0]&&M.rows[0].aowNu?'AOW-leeftijd bereikt — getoetst op inkomen vanaf AOW (toetsinkomen '+fmt0(M.rows[0].ink)+')'+'.':'niet van toepassing binnen de toetshorizon van 10 jaar.');
-  const r=M.ptRows[0];
-  return 'Pensioentoets (vanaf '+M.drempel+' jaar): van toepassing '+(r.m===1?'vanaf aanvang':momentLbl(r.m).toLowerCase())+' — per persoon getoetst op het laagste van huidig inkomen en inkomen vanaf AOW (toetsinkomen '+fmt0(r.ink)+').';
+  const b=M.rows[M.bindIdx];
+  return ptTekst0(M)+(b?' Bepalend toetsmoment: '+momentLbl(b.m).toLowerCase()+(b.m>1?' (op de restschuld)':'')+' — toetsinkomen '+fmt0(b.ink)+' met de '+(b.aowTab?'AOW-tabel':'niet-AOW-tabel')+'.':'');
+}
+function ptTekst0(M){
+  const dl=M.drempel==="aow10"?"10 jaar vóór AOW-datum":M.drempel==="aow15"?"15 jaar vóór AOW-datum":"vanaf "+M.drempel+" jaar";
+  if(!M.drempel)return 'Pensioentoets: niet getoetst (uitgeschakeld).';
+  if(M.rows[0]&&M.rows[0].aowNu&&!M.ptRows.length)return 'Pensioentoets ('+dl+'): AOW-leeftijd bereikt — getoetst op inkomen vanaf AOW (toetsinkomen '+fmt0(M.rows[0].ink)+').';
+  if(!M.ptRows.length)return 'Pensioentoets ('+dl+'): niet van toepassing.';
+  return 'Pensioentoets ('+dl+'): van toepassing — bij aanvang op het werkinkomen (volle bedrag) en op de AOW-datum op het inkomen vanaf AOW, over de restschuld. Restschuldmethode: getoetst op de restschuld op de AOW-datum. NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&N C.7.4.2); hun uitkomst kan lager zijn.';
 }
 function ptMelding(M){
   return (M.onvolledig?'<div class="melding err">Vul inkomen vanaf AOW (AOW + pensioen) in: de pensioentoets of AOW-datum is van toepassing, maar het inkomen vanaf AOW ontbreekt. Er wordt niet met het huidige inkomen gerekend (ontbrekend inkomen telt als € 0).</div>':'')+
@@ -866,8 +966,8 @@ function print_(){
     M.delen.map(d=>'<tr><td>'+d.vorm+'</td><td class="r">'+fmt0(d.bedrag)+'</td><td class="r">'+d.aftm+' mnd</td><td class="r">'+(d.box3?fmt0(d.box3):'—')+'</td><td class="r">'+d.rv+' mnd</td><td class="r">'+fmtP3(d.rente)+'</td><td class="r">'+d.duur+' mnd</td><td class="r">'+fmtP3(d.toetsrente)+'</td></tr>').join("")+'</tbody></table>';
 
   /* --- resultaten --- */
-  const basis=M.maxHyp===M.maxOnderpand&&M.maxOnderpand<M.maxInkomenIncl?"op basis van marktwaarde":
-    (M.extraLening>1&&M.maxInkomenIncl>M.maxInkomen+1?"op basis van inkomen en extra aflossing(en)":"op basis van inkomen");
+  const basis=M.maxHyp===M.maxOnderpand&&M.maxOnderpand<M.maxInkomen?"op basis van marktwaarde":
+    "op basis van inkomen (laagste toetsmoment: "+momentLbl(M.rows[M.bindIdx].m).toLowerCase()+")";
   const verr=[M.extraBedrag>0?'energielabel ('+fmt0(M.extraBedrag)+')':null,M.verhAlleen>0?'alleenstaande ('+fmt0(M.verhAlleen)+')':null].filter(Boolean).join(' en ');
   let resultaten='<table class="res"><tbody>'+
     '<tr><td style="width:40%">Norm-/toetsinkomen</td><td class="r">'+fmt0(M.norminkomen)+'</td><td>woonquote box 1: '+fmtP(r0.q1)+' · box 3: '+fmtP(r0.q3)+'</td></tr>'+
@@ -875,7 +975,7 @@ function print_(){
     '<tr><td>Toetsrente</td><td class="r">'+fmtP3(M.toetsrente)+'</td><td>normrente '+fmtP3(M.normrente)+'</td></tr>'+
     M.rows.map(r=>'<tr'+(r.ruimte<-0.5?' class="tekort"':'')+'><td>Maximale maandlast '+momentLbl(r.m).toLowerCase()+'</td><td class="r">'+fmt0(r.maxM)+'</td><td>berekende maandlast '+fmt0(r.last)+', ruimte '+fmt0(r.ruimte)+'</td></tr>').join("")+
     '<tr><td>Maximaal op basis van inkomen</td><td class="r">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie</td></tr>'+
-    (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden → samen '+fmt0(M.maxInkomenIncl)+'</td></tr>':'')+
+    (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden → samen '+fmt0(M.maxInkomenIncl)+' (niet in de maximale hypotheek)</td></tr>':'')+
     '<tr><td>Maximaal op basis van marktwaarde</td><td class="r">'+(M.maxOnderpand?fmt0(M.maxOnderpand):'—')+'</td><td>'+(M.mw?(M.ebv>0?'100% + EBV (max 106%) van ':'100% van ')+fmt0(M.mw):'')+'</td></tr>'+
     '<tr class="tot"><td><b>Maximale hypotheek</b></td><td class="r"><b>'+fmt0(M.maxHyp)+'</b></td><td>'+basis+'</td></tr></tbody></table>';
 
@@ -892,9 +992,8 @@ function print_(){
       if(d.aftm+1===m)r.push("de renteaftrek van leningdeel "+(i+1)+" ("+d.vorm.toLowerCase()+" "+fmt0(d.bedrag)+") eindigt; de last van dit deel telt vanaf dan gebruteerd mee");
       if(Math.min(d.duur,360)+1===m)r.push("leningdeel "+(i+1)+" is dan volledig afgelost en telt niet meer mee");
     });
-    inp.pers.forEach((p,i)=>{if(p.aowM!==null&&p.aowM+1===m)r.push((i===0?"de cliënt":"de partner")+" bereikt de AOW-leeftijd; vanaf dan wordt getoetst op het inkomen vanaf AOW");});
+    inp.pers.forEach((p,i)=>{if(p.aowMom!==null&&p.aowMom===m&&m>1)r.push((i===0?"de cliënt":"de partner")+" bereikt de AOW-leeftijd; vanaf dan wordt getoetst op het inkomen vanaf AOW");});
     inp.pers.forEach((p,i)=>{if(p.prepM!==null&&p.prepM+1===m)r.push((i===0?"de cliënt":"de partner")+" stopt met werken ((pre)pensioen); vanaf dan telt het inkomen van "+fmt0(p.prepInk));});
-    inp.pers.forEach((p,i)=>{if(p.drM!==null&&p.drM+1===m)r.push((i===0?"de cliënt":"de partner")+" bereikt de pensioentoetsleeftijd van "+M.drempel+" jaar; vanaf dan wordt getoetst op het laagste van het huidige inkomen en het inkomen vanaf AOW");});
     return r;
   };
   let uitleg='<h2>Toelichting op deze uitkomst</h2>';

@@ -328,12 +328,15 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
     </div>
     <div class="row two">
       <div>
-        <label for="pensioenDrempel">Pensioentoets vanaf leeftijd <span class="hint">advies én beheer</span></label>
+        <label for="pensioenDrempel">Pensioentoets <span class="hint">advies én beheer</span></label>
         <select id="pensioenDrempel">
+          <option value="57" selected>Vanaf 57 jaar</option>
+          <option value="52">Vanaf 52 jaar</option>
+          <option value="aow10">10 jaar vóór AOW-datum</option>
+          <option value="aow15">15 jaar vóór AOW-datum</option>
           <option value="0">Niet toetsen</option>
-          <option value="57" selected>57 jaar (Nibud/Tijdelijke regeling)</option>
-          <option value="52">52 jaar (bij sommige geldverstrekkers)</option>
         </select>
+        <div class="hint" style="display:block;margin-top:4px;font-size:11px">Restschuldmethode: getoetst op de restschuld op de AOW-datum. NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&amp;N C.7.4.2); hun uitkomst kan lager zijn.</div>
       </div>
       <div>
         <label for="beheerSituatie">Situatie beheertoets <span class="hint">NHG bijlage 5</span></label>
@@ -343,7 +346,7 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
         </select>
       </div>
     </div>
-    <div class="info"><strong>Toetsinkomen:</strong> hoogste + 100% laagste. <strong>Tabelkeuze advies (Trhk art. 3 lid 7):</strong> heeft één aanvrager de AOW-leeftijd bereikt, dan volgt de tabel de aanvrager met het hoogste toetsinkomen; beiden AOW → AOW-tabel. <strong>Beheer (NHG):</strong> paar-AOW-tabel alleen als beiden AOW hebben. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0. <strong>Pensioentoets advies (Trhk):</strong> per persoon telt vanaf de gekozen leeftijd het laagste van huidig inkomen en inkomen vanaf AOW; daarnaast wordt getoetst op de AOW-datum en de drempeldatum binnen 10 jaar; het krapste toetsmoment is bepalend. <strong>Beheer:</strong> vanaf de gekozen leeftijd (en vóór de AOW-datum) óók toetsing op het inkomen vanaf AOW (NHG 5e/5f, box 3: 5k/5l); de laagste uitkomst telt. Is de AOW-leeftijd al bereikt, vul dan bij toetsinkomen het AOW-/pensioeninkomen in.</div>
+    <div class="info"><strong>Toetsinkomen:</strong> hoogste + 100% laagste. <strong>Tabelkeuze advies (Trhk art. 3 lid 7):</strong> heeft één aanvrager de AOW-leeftijd bereikt, dan volgt de tabel de aanvrager met het hoogste toetsinkomen; beiden AOW → AOW-tabel. <strong>Beheer (NHG):</strong> paar-AOW-tabel alleen als beiden AOW hebben. <strong>Alleenstaand:</strong> NHG-beheertabel "alleenstaand" wanneer ink2 = 0. <strong>Pensioentoets advies (Trhk, restschuldmethode):</strong> bij aanvang telt het werkinkomen (volle bedrag); voor iedere aanvrager die aan de gekozen drempel voldoet (vanaf 57/52 jaar of AOW-datum binnen 10/15 jaar) wordt ook getoetst op zijn AOW-datum, op het inkomen vanaf AOW en de restschuld op dat moment; het krapste toetsmoment is bepalend. <strong>Beheer:</strong> vanaf de gekozen leeftijd (en vóór de AOW-datum) óók toetsing op het inkomen vanaf AOW (NHG 5e/5f, box 3: 5k/5l); de laagste uitkomst telt. Is de AOW-leeftijd al bereikt, vul dan bij toetsinkomen het AOW-/pensioeninkomen in.</div>
   </div>
 
   <div class="card">
@@ -420,6 +423,7 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
   <!-- Pane: CHF/GHF advies -->
   <div class="toets-pane active" id="pane-advies" data-print-title="CHF/GHF advies-toets">
     <div id="adviesStatusBox"></div>
+    <div class="card" style="margin-top:10px"><div id="ptGrafiek"></div></div>
     <div class="bar-outer"><div class="bar-fill" id="adviesBar" style="width:0%">0%</div></div>
     <div class="bar-legend"><span>Werkelijke maandlast</span><span id="adviesBarNote">0% benutting</span></div>
 
@@ -448,7 +452,7 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
         <li>Financieringslasttabel normjaar <span class="njTxt">2026</span> — Bijlage 1 Trhk (2026: Trhk 2026; 2027: Wijzigingsregeling hypothecair krediet 2027, Stcrt. 2026, 38415).</li>
         <li>Toetsrente: 5,00% (AFM; 2026 en 2027 ongewijzigd). Bij gewogen RVP ≥ 10 jr werkelijke rente, anders max(toetsrente, werkelijke).</li>
         <li>Box 3-delen: geen gewogen percentage maar brutering (zoals MAX. HYP. 2027): max. last = toetsinkomen × FL% box 1 − verplichtingen; de last van box 3-delen telt × FL% box 1 / FL% box 3. Volledig box 3: alleen de box 3-tabel.</li>
-        <li>Pensioentoets: per persoon op elk toetsmoment (aanvang, AOW-datum en drempeldatum binnen 10 jaar) — AOW: inkomen vanaf AOW; vanaf de drempelleeftijd: laagste van huidig inkomen en inkomen vanaf AOW. Tabel volgt de aanvrager met het hoogste toetsinkomen (art. 3 lid 7); het krapste moment is bepalend.</li>
+        <li>Pensioentoets: per persoon op elk toetsmoment (aanvang op het volle bedrag met werkinkomen; AOW-datum op de restschuld voor wie aan de drempel voldoet) — AOW: inkomen vanaf AOW, anders werkinkomen. Tabel volgt de aanvrager met het hoogste toetsinkomen (art. 3 lid 7); het krapste moment is bepalend.</li>
         <li>DK-aftrek 2% van limiet; studieschuld werkelijke maandlast × bruteringsfactor.</li>
       </ul>
     </details>
@@ -563,6 +567,71 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
 </div>
 
 <script>
+/* ── Pensioentoets-grafiek (Adviseurstools.nl) ─────────────────────────────────
+ * Maximale hypotheek per leeftijd bij aanvraag (50 jaar t/m AOW-leeftijd) voor de
+ * vier pensioentoets-keuzes, met de restschuldmethode van de tool zelf.
+ * Gebruik:
+ *   ptGrafiek(document.getElementById('ptGrafiek'), {
+ *     berekenMax: function(leeftijd, keuze){ return maxHypotheek; },  // keuze: '57','52','aow10','aow15'
+ *     huidigeLeeftijd: 57,          // optioneel: markering
+ *     gekozen: '57',                // optioneel: dikkere lijn
+ *     vanaf: 50, tot: 67            // optioneel
+ *   });
+ * Inline SVG, geen externe bibliotheek; NL-notatie; schaalt mee op mobiel.
+ */
+function ptGrafiek(el, o) {
+  if (!el) return;
+  var KEUZES = [
+    { k: '57', lbl: 'Vanaf 57 jaar', kl: '#003057', dash: '' },
+    { k: '52', lbl: 'Vanaf 52 jaar', kl: '#e5a138', dash: '' },
+    { k: 'aow10', lbl: '10 jaar vóór AOW', kl: '#4a7fb5', dash: '6 4' },
+    { k: 'aow15', lbl: '15 jaar vóór AOW', kl: '#b9771f', dash: '6 4' }
+  ];
+  var van = o.vanaf || 50, tot = o.tot || 67, jaren = [];
+  for (var a = van; a <= tot; a++) jaren.push(a);
+  var reeks = KEUZES.map(function (K) {
+    return { K: K, w: jaren.map(function (a) { var v = +o.berekenMax(a, K.k); return isFinite(v) && v > 0 ? v : 0; }) };
+  });
+  var max = 0; reeks.forEach(function (r) { r.w.forEach(function (v) { if (v > max) max = v; }); });
+  if (!(max > 0)) { el.innerHTML = '<p style="font-size:12px;color:#5f6b7a">Vul inkomen en inkomen vanaf AOW in om de grafiek te tonen.</p>'; return; }
+  var stap = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / stap) * stap;
+  if (top / stap <= 3) { stap = stap / 2; top = Math.ceil(max / stap) * stap; }
+  var W = 720, H = 300, L = 74, R = 14, T = 14, B = 34, pw = W - L - R, ph = H - T - B;
+  var x = function (a) { return L + (a - van) / (tot - van) * pw; }, y = function (v) { return T + ph - v / top * ph; };
+  var eur = function (v) { return '€ ' + Math.round(v).toLocaleString('nl-NL'); };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Maximale hypotheek per leeftijd bij aanvraag" style="width:100%;height:auto;display:block;font-family:inherit">';
+  for (var g = 0; g <= top + 1e-6; g += stap) {
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="#e3e9ef"/>' +
+      '<text x="' + (L - 6) + '" y="' + (y(g) + 4) + '" text-anchor="end" font-size="11" fill="#5f6b7a">' + eur(g) + '</text>';
+  }
+  jaren.forEach(function (a) {
+    if ((a - van) % 2 === 0 || a === tot) s += '<text x="' + x(a) + '" y="' + (H - B + 16) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">' + a + '</text>';
+  });
+  s += '<text x="' + (L + pw / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">Leeftijd bij aanvraag (jaar)</text>';
+  if (o.huidigeLeeftijd >= van && o.huidigeLeeftijd <= tot) {
+    s += '<line x1="' + x(o.huidigeLeeftijd) + '" x2="' + x(o.huidigeLeeftijd) + '" y1="' + T + '" y2="' + (T + ph) + '" stroke="#b42318" stroke-dasharray="3 3"/>' +
+      '<text x="' + (x(o.huidigeLeeftijd) + 4) + '" y="' + (T + 11) + '" font-size="11" fill="#b42318">nu ' + o.huidigeLeeftijd + ' jr</text>';
+  }
+  reeks.forEach(function (r) {
+    var dik = r.K.k === o.gekozen ? 3.5 : 2;
+    var pts = r.w.map(function (v, i) { return x(jaren[i]) + ',' + y(v); }).join(' ');
+    s += '<polyline points="' + pts + '" fill="none" stroke="' + r.K.kl + '" stroke-width="' + dik + '"' + (r.K.dash ? ' stroke-dasharray="' + r.K.dash + '"' : '') + '/>';
+    r.w.forEach(function (v, i) {
+      s += '<circle cx="' + x(jaren[i]) + '" cy="' + y(v) + '" r="' + (dik > 2 ? 3.2 : 2.4) + '" fill="' + r.K.kl + '"><title>' + r.K.lbl + ' · ' + jaren[i] + ' jaar: ' + eur(v) + '</title></circle>';
+    });
+  });
+  s += '</svg>';
+  var leg = '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:12px">' + KEUZES.map(function (K) {
+    return '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="26" height="8"><line x1="0" x2="26" y1="4" y2="4" stroke="' + K.kl + '" stroke-width="' + (K.k === o.gekozen ? 3.5 : 2) + '"' + (K.dash ? ' stroke-dasharray="' + K.dash + '"' : '') + '/></svg>' + K.lbl + (K.k === o.gekozen ? ' <b>(gekozen)</b>' : '') + '</span>';
+  }).join('') + '</div>';
+  var rij = function (r) { return '<tr><td style="padding:3px 8px;white-space:nowrap">' + r.K.lbl + '</td>' + r.w.map(function (v) { return '<td style="padding:3px 6px;text-align:right;white-space:nowrap">' + eur(v) + '</td>'; }).join('') + '</tr>'; };
+  var tab = '<details style="margin-top:8px;font-size:12px"><summary style="cursor:pointer">Bedragen per leeftijd</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:3px 8px">Pensioentoets</th>' +
+    jaren.map(function (a) { return '<th style="padding:3px 6px;text-align:right">' + a + '</th>'; }).join('') + '</tr>' + reeks.map(rij).join('') + '</table></div></details>';
+  el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Maximale hypotheek per leeftijd bij aanvraag</div>' +
+    '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).</div>' + s + leg + tab;
+}
+</script>
+<script>
 /* =============================================================
    1. CHF/GHF ADVIES tabellen 2026 (Bijlage 1 Trhk / Nibud)
    Percentages × 1000.
@@ -651,6 +720,15 @@ function linMaandEerste(H, rentePct, jaren){
 }
 function aflVrijMaand(H, rentePct){ return H<=0 ? 0 : H*(rentePct/100)/12; }
 
+/* Pensioentoets-drempel: 57 / 52 (leeftijd op de toetsdatum), 'aow10' / 'aow15' (AOW-datum binnen 10/15 jaar), 0 = niet toetsen */
+function leesDrempel(){ const v = (document.getElementById('pensioenDrempel')||{}).value || '57'; return (v === 'aow10' || v === 'aow15') ? v : (parseInt(v,10) || 0); }
+function drempelLabel(dr){ return dr === 'aow10' ? '10 jaar vóór AOW-datum' : dr === 'aow15' ? '15 jaar vóór AOW-datum' : dr ? 'vanaf ' + dr + ' jaar' : 'niet toetsen'; }
+/* geldt: nog geen AOW en aan de drempel voldaan (op de toetsdatum = vandaag) */
+function ptGeldt(av, dr){
+  if (!av || av.isAOW || !dr) return false;
+  if (dr === 'aow10' || dr === 'aow15'){ const n = new Date(), j = dr === 'aow10' ? 10 : 15; return av.aowDate <= new Date(n.getFullYear()+j, n.getMonth(), n.getDate()); }
+  return av.leeftijd >= dr;
+}
 /* AOW-leeftijd volgens SVB-staffel */
 function bepaalAOW(birthStr){
   if (!birthStr) return null;
@@ -805,7 +883,7 @@ function bereken(){
   const gb2  = document.getElementById('gb2').value;
   const kinderen = +document.getElementById('kinderen').value || 0;
   const rente3jr = +document.getElementById('rente3jr').value || 4.50;
-  const pensioenDrempel = parseInt(document.getElementById('pensioenDrempel').value,10) || 0;
+  const pensioenDrempel = leesDrempel();
   const beheerSituatie = document.getElementById('beheerSituatie').value;
   const pensRaw1 = document.getElementById('pens1').value, pensRaw2 = document.getElementById('pens2').value;
   const pens1 = pensRaw1 === '' ? null : Math.max(0, (+pensRaw1 || 0) - alimJaar);
@@ -841,8 +919,8 @@ function bereken(){
 
   /* Pensioentoets: geldt voor een persoon met leeftijd ≥ drempel die de AOW-leeftijd nog niet heeft bereikt.
      Dan wordt óók getoetst op het inkomen vanaf AOW (AOW-tabellen); de laagste uitkomst telt. */
-  const pt1 = !!(av1 && !av1.isAOW && pensioenDrempel > 0 && av1.leeftijd >= pensioenDrempel);
-  const pt2 = !isAlleenstaand && !!(av2 && !av2.isAOW && pensioenDrempel > 0 && av2.leeftijd >= pensioenDrempel);
+  const pt1 = ptGeldt(av1, pensioenDrempel);
+  const pt2 = !isAlleenstaand && ptGeldt(av2, pensioenDrempel);
   const pensioentoetsGeldt = pt1 || pt2;
   const pensOnvolledig = (pt1 && pens1 === null) || (pt2 && pens2 === null);
   const pensScenario = pensioentoetsGeldt && !pensOnvolledig;
@@ -899,9 +977,9 @@ function bereken(){
     toetsregelAdv = `Gewogen RVP < 10 jr → max(toetsrente ${pctStr(TOETSRENTE_MIN_ADVIES)}, werkelijke)`;
   }
   /* Trhk-normtoets (zoals MAX. HYP. 2027).
-     Regel 1 — pensioentoets per persoon op elk toetsmoment: AOW bereikt → inkomen vanaf AOW; vanaf de drempelleeftijd
-     (57/52) zonder AOW → MIN(huidig inkomen, inkomen vanaf AOW); anders huidig inkomen. Toetsmomenten: bij aanvang,
-     de AOW-datum en de drempeldatum van elke aanvrager binnen 10 jaar (en de periode vervroegd pensioen, indien ingevuld).
+     Regel 1 — pensioentoets (restschuldmethode): per persoon AOW bereikt → inkomen vanaf AOW, anders werkinkomen.
+     Toetsmomenten: bij aanvang (volle bedrag), de AOW-datum van elke aanvrager die aan de drempel voldoet (op de restschuld)
+     en de periode vervroegd pensioen, indien ingevuld.
      Tabel (art. 3 lid 7): AOW-tabel als de aanvrager met het hoogste toetsinkomen de AOW-leeftijd heeft bereikt;
      bij gelijk inkomen en verschillende status de laagste uitkomst. Het krapste moment is bepalend.
      Regel 2 — brutering: max. last = toetsinkomen × q1 / 12 − verplichtingen; de last van box 3-delen telt × q1/q3
@@ -919,19 +997,38 @@ function bereken(){
   const duoBrutoAdv = duoTerm * duoFAdv;
   const aftrekAdv = dkLast + aflK + duoBrutoAdv + lease + ovv;
   const annTrhkAdv = annuMaand(1, toetsrenteAdv, 30);
-  function trhkUitkomst(ink, aow){
+  /* Restschuld per leningdeel na m maanden volgens het eigen aflosschema (annuïteit op de contractrente, lineair, aflossingsvrij) */
+  function restDeel(d, m){
+    const H = d.hoofdsom > 0 ? d.hoofdsom : 0, n = Math.round((d.looptijd||30)*12);
+    if (m <= 0) return H; if (m >= n) return 0;
+    if (d.vorm === 'aflvrij') return H;
+    if (d.vorm === 'lineair') return H * (1 - m/n);
+    const i = (d.rente||0)/100/12; if (i === 0) return H * (1 - m/n);
+    return H * (Math.pow(1+i,n) - Math.pow(1+i,m)) / (Math.pow(1+i,n) - 1);
+  }
+  function trhkUitkomst(ink, aow, m){
     const q1 = lookupFLpct(aow ? ADV.w : ADV.n, ink, toetsrenteAdv), q3 = lookupFLpct(aow ? ADV.b3w : ADV.b3n, ink, toetsrenteAdv);
     const pct = volledigBox3 ? q3 : q1;
     const verh = (volledigBox3 || q3 <= 0) ? 1 : q1/q3;
     const beschikbaar = ink * pct / 12 - aftrekAdv;
-    const toetslast = werkelijkB1 + werkelijkB3 * verh + erfpacht + inleg;
-    /* max. hypotheek (annuïtair 30 jr op de toetsrente): (H − B)·a + B·a·q1/q3 = beschikbaar − erfpacht */
-    const h1 = annTrhkAdv > 0 ? Math.max(0, beschikbaar - erfpacht) / annTrhkAdv : 0;
+    /* Aanvang: werkelijke maandlast. Later moment (AOW-datum): werkelijke restschuld per deel, getoetst als 30-jarige annuïteit
+       op de toetsrente (zoals MAX. HYP. 2027); box 3-delen × q1/q3. */
+    let toetslast, rf = 1;
+    if (m > 0){
+      let rest = 0, restLast = 0;
+      leningdelen.forEach(d => { const r = restDeel(d, m); rest += r; restLast += r * annTrhkAdv * (d.box === 3 ? verh : 1); });
+      toetslast = restLast + erfpacht + inleg;
+      rf = totaalHoofdsom > 0 ? rest / totaalHoofdsom : 1;
+    } else toetslast = werkelijkB1 + werkelijkB3 * verh + erfpacht + inleg;
+    /* max. hypotheek (annuïtair 30 jr op de toetsrente): (H − B)·rf·a + B·rf·a·q1/q3 = beschikbaar − erfpacht; rf = restfactor op het moment */
+    const h1 = (annTrhkAdv > 0 && rf > 0) ? Math.max(0, beschikbaar - erfpacht) / annTrhkAdv / rf : (rf > 0 ? 0 : Infinity);
     let maxH = h1 - hoofdsomB3 * (verh - 1);
     if (!volledigBox3 && maxH < hoofdsomB3) maxH = h1 / verh;
-    return {q1, q3, pct, verh, aow, ink, beschikbaar, toetslast, ruimte: beschikbaar - toetslast, maxH: Math.max(0, maxH)};
+    return {q1, q3, pct, verh, aow, ink, beschikbaar, toetslast, rf, ruimte: beschikbaar - toetslast, maxH: Math.max(0, maxH)};
   }
-  const nuAdv = new Date(), hzAdv = new Date(nuAdv.getFullYear()+10, nuAdv.getMonth(), nuAdv.getDate());
+  /* AOW-moment alleen voor wie aan de gekozen drempel voldoet; geen apart drempelmoment */
+  const nuAdv = new Date(), hzAdv = new Date(nuAdv.getFullYear()+15, nuAdv.getMonth(), nuAdv.getDate());
+  const mndTot = (d0, d1) => { let m = (d1.getFullYear()-d0.getFullYear())*12 + (d1.getMonth()-d0.getMonth()); if (d1.getDate() > d0.getDate()) m++; return m; };
   const gebD = g => { const d = g ? new Date(g) : null; return d && !isNaN(d.getTime()) ? d : null; };
   const lftOp = (geb, d) => { let a = d.getFullYear() - geb.getFullYear(); if (d.getMonth() < geb.getMonth() || (d.getMonth() === geb.getMonth() && d.getDate() < geb.getDate())) a--; return a; };
   const PA = [{av: av1, geb: gebD(gb1), ink: ink1, pens: pens1, pre: pre1, wie: 'aanvrager 1'}];
@@ -940,22 +1037,18 @@ function bereken(){
     if (!p.av || !p.geb) return {ink: p.ink, aow: false};
     if (p.av.isAOW) return {ink: p.ink, aow: true};
     if (d >= p.av.aowDate) return {ink: p.pens, aow: true, nodig: true};
-    if (pensioenDrempel > 0 && lftOp(p.geb, d) >= pensioenDrempel){
-      const werk = (metPre && p.pre !== null) ? p.pre : p.ink;
-      return {ink: p.pens === null ? null : Math.min(werk, p.pens), aow: false, nodig: true};
-    }
-    return {ink: p.ink, aow: false};
+    /* restschuldmethode: vóór de AOW-datum telt het werkinkomen (geen MIN-toets bij aanvang); periode vervroegd pensioen: dat inkomen */
+    return {ink: (metPre && p.pre !== null && ptGeldt(p.av, pensioenDrempel)) ? p.pre : p.ink, aow: false};
   }
   const momAdv = [{d: nuAdv, lbl: 'bij aanvang'}];
   PA.forEach(p => {
     if (!p.av || !p.geb || p.av.isAOW) return;
-    if (p.av.aowDate > nuAdv && p.av.aowDate <= hzAdv) momAdv.push({d: p.av.aowDate, lbl: 'AOW-datum ' + p.wie + ' (' + fmtDateNL(p.av.aowDate) + ')'});
-    if (pensioenDrempel > 0){
-      const dd = new Date(p.geb.getFullYear() + pensioenDrempel, p.geb.getMonth(), p.geb.getDate());
-      if (dd > nuAdv && dd <= hzAdv) momAdv.push({d: dd, lbl: p.wie + ' bereikt ' + pensioenDrempel + ' jaar (' + fmtDateNL(dd) + ')'});
+    if (ptGeldt(p.av, pensioenDrempel)){ /* AOW-moment alleen voor wie aan de gekozen drempel voldoet */
+      const mm = mndTot(nuAdv, p.av.aowDate);
+      momAdv.push({d: p.av.aowDate, m: mm, lbl: 'AOW-datum ' + p.wie + ' (' + fmtDateNL(p.av.aowDate) + ', na ' + mm + ' mnd, restschuld)'});
     }
   });
-  if (PA.some(p => p.av && !p.av.isAOW && p.pre !== null && pensioenDrempel > 0 && p.av.leeftijd >= pensioenDrempel))
+  if (PA.some(p => p.pre !== null && ptGeldt(p.av, pensioenDrempel)))
     momAdv.push({d: nuAdv, metPre: true, lbl: 'periode vervroegd pensioen vóór AOW'});
   let advOnvolledig = false;
   const uitkAdv = [];
@@ -968,17 +1061,19 @@ function bereken(){
     }
     const ink = pers.reduce((t,x) => t + x.ink, 0);
     let u;
-    if (pers.length === 1) u = trhkUitkomst(ink, pers[0].aow);
+    const mm = m.m || 0;
+    if (pers.length === 1) u = trhkUitkomst(ink, pers[0].aow, mm);
     else {
       const mx = Math.max(...pers.map(x => x.ink)), top = pers.filter(x => x.ink === mx);
       const wa = top.some(x => x.aow), wn = top.some(x => !x.aow);
-      if (wa && wn){ const uA = trhkUitkomst(ink, true), uN = trhkUitkomst(ink, false); u = uA.ruimte < uN.ruimte ? uA : uN; u.tie = true; }
-      else u = trhkUitkomst(ink, wa);
+      if (wa && wn){ const uA = trhkUitkomst(ink, true, mm), uN = trhkUitkomst(ink, false, mm); u = uA.ruimte < uN.ruimte ? uA : uN; u.tie = true; }
+      else u = trhkUitkomst(ink, wa, mm);
     }
     u.lbl = m.lbl; uitkAdv.push(u);
   });
   const bepAdv = uitkAdv.reduce((x,y) => y.ruimte < x.ruimte ? y : x, uitkAdv[0]);
-  const maxHAdv = Math.min(...uitkAdv.map(u => u.maxH));
+  const bepMaxAdv = uitkAdv.reduce((x,y) => y.maxH < x.maxH ? y : x, uitkAdv[0]);
+  const maxHAdv = bepMaxAdv.maxH;
   const advPens = bepAdv !== uitkAdv[0];
   const advTabelAOW = bepAdv.aow;
   const toetsInkomenAdv = bepAdv.ink;
@@ -1092,17 +1187,17 @@ function bereken(){
   }
 
   /* Pensioentoets-meldingen */
-  const pensTxt = pensioenDrempel > 0 ? `Pensioentoets (vanaf ${pensioenDrempel} jaar)` : 'Pensioentoets';
+  const pensTxt = pensioenDrempel ? `Pensioentoets (${drempelLabel(pensioenDrempel)})` : 'Pensioentoets';
   let pensStatus;
   if (pensioenDrempel === 0) pensStatus = 'niet toetsen (uitgeschakeld)';
   else if (!pensioentoetsGeldt) pensStatus = 'niet van toepassing';
   else if (pensOnvolledig) pensStatus = 'van toepassing — inkomen vanaf AOW ontbreekt';
   else pensStatus = `van toepassing — getoetst op ${fmt(pensInk)} (inkomen vanaf AOW)` + (heeftPre ? ` en ${fmt(preInk)} (periode vervroegd pensioen)` : '');
-  /* Advies (Trhk): toetsmomenten — inkomen vanaf AOW ontbreekt voor een moment binnen 10 jaar */
+  /* Advies (Trhk): toetsmomenten — inkomen vanaf AOW ontbreekt voor een toetsmoment */
   if (advOnvolledig){
-    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', `<div class="status bad" style="margin-top:10px"><h3>${pensTxt}: vul inkomen vanaf AOW in</h3><p>Binnen de toetshorizon van 10 jaar is de pensioentoets of de AOW-leeftijd van toepassing, maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. Die toetsmomenten zijn overgeslagen; de uitkomst is daarom <b>onvolledig</b>.</p></div>`);
+    document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', `<div class="status bad" style="margin-top:10px"><h3>${pensTxt}: vul inkomen vanaf AOW in</h3><p>De pensioentoets of het AOW-moment (AOW-leeftijd binnen 15 jaar) is van toepassing, maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. Die toetsmomenten zijn overgeslagen; de uitkomst is daarom <b>onvolledig</b>.</p></div>`);
   }
-  document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', `<div class="status ok" style="margin-top:10px"><p><b>Bepalend toetsmoment (Trhk):</b> ${bepAdv.lbl} — toetsinkomen ${fmt(bepAdv.ink)} met de ${bepAdv.aow?'AOW-tabel':'niet-AOW-tabel'}${uitkAdv.length>1?` (getoetst op ${uitkAdv.length} momenten binnen 10 jaar: ${uitkAdv.map(u => u.lbl + ' ruimte ' + fmt(u.ruimte)).join('; ')})`:''}${hoofdsomB3>0&&!volledigBox3?`; box 3-last gebruteerd × ${fmtD2(bepAdv.verh)} (${pctStr(bepAdv.q1*100)} / ${pctStr(bepAdv.q3*100)})`:''}. Maximale hypotheek volgens deze norm (annuïtair 30 jaar op ${fmtD2(toetsrenteAdv)}%, exclusief energielabel- en alleenstaandenbedrag): <b>${fmt(Math.round(maxHAdv))}</b>.</p></div>`);
+  document.getElementById('adviesStatusBox').insertAdjacentHTML('beforeend', `<div class="status ok" style="margin-top:10px"><p><b>Bepalend toetsmoment (Trhk):</b> ${bepAdv.lbl} — toetsinkomen ${fmt(bepAdv.ink)} met de ${bepAdv.aow?'AOW-tabel':'niet-AOW-tabel'}${uitkAdv.length>1?` (getoetst op ${uitkAdv.length} momenten: ${uitkAdv.map(u => u.lbl + ' ruimte ' + fmt(u.ruimte) + ', max. ' + fmt(Math.round(u.maxH))).join('; ')})`:''}${hoofdsomB3>0&&!volledigBox3?`; box 3-last gebruteerd × ${fmtD2(bepAdv.verh)} (${pctStr(bepAdv.q1*100)} / ${pctStr(bepAdv.q3*100)})`:''}. ${uitkAdv.length>1?'<br><small>Restschuldmethode: getoetst op de restschuld op de AOW-datum. NHG en veel geldverstrekkers toetsen de annuïteit op het hele bedrag (Trhk art. 3 lid 2; NHG V&amp;N C.7.4.2); hun uitkomst kan lager zijn.</small><br>':''}Maximale hypotheek volgens deze norm (annuïtair 30 jaar op ${fmtD2(toetsrenteAdv)}%, exclusief energielabel- en alleenstaandenbedrag): <b>${fmt(Math.round(maxHAdv))}</b>${bepMaxAdv !== bepAdv ? ' (bepalend voor het maximum: ' + bepMaxAdv.lbl + ')' : ''}.</p></div>`);
   if (pensOnvolledig){
     const w = `<div class="status bad" style="margin-top:10px"><h3>${pensTxt}: vul inkomen vanaf AOW in</h3><p>De pensioentoets is van toepassing (${pt1?'aanvrager 1':''}${pt1&&pt2?' en ':''}${pt2?'aanvrager 2':''}), maar het inkomen vanaf AOW (AOW + pensioen) ontbreekt. De uitkomst hieronder is alleen op het huidige inkomen gebaseerd en is daarom <b>onvolledig</b>.</p></div>`;
     document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', w);
@@ -1110,6 +1205,37 @@ function bereken(){
     const wb = `<div class="status ok" style="margin-top:10px"><p><b>${pensTxt}:</b> van toepassing — getoetst op ${fmt(pensInk)} met de AOW-tabel${heeftPre?` en op ${fmt(preInk)} in de periode vervroegd pensioen vóór AOW`:''}; laagste: ${fmt(pensInkBh)} (${pensBh.naam}). ${bhPens?'De pensioentoets is bepalend (laagste uitkomst).':'De toets op het huidige inkomen blijft bepalend (laagste uitkomst).'}</p></div>`;
     document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', wb);
   }
+
+  /* Grafiek: maximale hypotheek (Trhk-norm) per leeftijd bij aanvraag en per pensioentoets-keuze — zelfde rekenkern */
+  function grafiekMax(leeftijd, keuze){
+    if (!PA[0].av || !PA[0].geb) return 0;
+    const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const doel = new Date(nuAdv.getFullYear()-leeftijd, nuAdv.getMonth(), nuAdv.getDate());
+    const g0 = new Date(PA[0].geb.getFullYear(), PA[0].geb.getMonth(), PA[0].geb.getDate());
+    const kk = (keuze === 'aow10' || keuze === 'aow15') ? keuze : (parseInt(keuze,10) || 0);
+    const pers = PA.map(p => {
+      if (!p.av || !p.geb) return {av: null, werk: p.ink, aowI: p.pens, echtAOW: false};
+      const g = new Date(p.geb.getFullYear(), p.geb.getMonth(), p.geb.getDate());
+      const av = bepaalAOW(iso(new Date(g.getTime() + (doel - g0))));
+      return {av, werk: p.av.isAOW ? NaN : p.ink, aowI: p.av.isAOW ? p.ink : p.pens, echtAOW: p.av.isAOW, geldt: ptGeldt(av, kk)};
+    });
+    const momG = [{d: nuAdv, m: 0}];
+    pers.forEach(p => { if (p.geldt) momG.push({d: p.av.aowDate, m: mndTot(nuAdv, p.av.aowDate)}); });
+    let low = Infinity;
+    for (const M of momG){
+      const v = pers.map(p => (!p.av) ? {ink: p.echtAOW ? p.aowI : p.werk, aow: p.echtAOW} : (M.d >= p.av.aowDate ? {ink: p.aowI, aow: true} : {ink: p.werk, aow: false}));
+      if (v.some(x => x.ink === null || isNaN(x.ink))) return 0;
+      const ink = v.reduce((t,x) => t + x.ink, 0);
+      let u;
+      if (v.length === 1) u = trhkUitkomst(ink, v[0].aow, M.m);
+      else { const mx = Math.max(...v.map(x => x.ink)), top = v.filter(x => x.ink === mx), wa = top.some(x => x.aow), wn = top.some(x => !x.aow);
+        if (wa && wn){ const uA = trhkUitkomst(ink, true, M.m), uN = trhkUitkomst(ink, false, M.m); u = uA.ruimte < uN.ruimte ? uA : uN; } else u = trhkUitkomst(ink, wa, M.m); }
+      low = Math.min(low, u.maxH);
+    }
+    return isFinite(low) ? low : 0;
+  }
+  try { ptGrafiek(document.getElementById('ptGrafiek'), {berekenMax: grafiekMax, huidigeLeeftijd: av1 ? av1.leeftijd : null, gekozen: String(pensioenDrempel), vanaf: 50, tot: 67}); }
+  catch(e){ document.getElementById('ptGrafiek').innerHTML = ''; }
 
   /* Kwetsbaarheidstoets */
   if ((kinderen === 2 && toetsInkomen < 25000) || (kinderen >= 3 && toetsInkomen < 30000)){
@@ -1143,7 +1269,7 @@ function bereken(){
   document.getElementById('adviesParamTable').innerHTML = `
     <tr><td>Normjaar</td><td class="num">${NJ} — ${ADV.bron}</td></tr>
     <tr><td>Gebruikte tabel</td><td class="num">${(advTabelAOW?'CHF welAOW '+NJ:'CHF nietAOW '+NJ) + (advPens ? ' — ' + bepAdv.lbl + ' (pensioentoets)' : '') + (bepAdv.tie ? ' (gelijk toetsinkomen, verschillende AOW-status → laagste uitkomst, art. 3 lid 7)' : '') + ((!bepAdv.tie && !advPens && oneAOW && !isAlleenstaand)?(advTabelAOW?' (één AOW, met hoogste inkomen → AOW-tabel, art. 3 lid 7)':' (één AOW, niet met hoogste inkomen → niet-AOW-tabel, art. 3 lid 7)'):'')}</td></tr>
-    <tr><td>${pensTxt}</td><td class="num">${pensioenDrempel === 0 ? 'niet toetsen (uitgeschakeld)' : (advOnvolledig ? 'van toepassing — inkomen vanaf AOW ontbreekt' : (uitkAdv.length > 1 || PA.some(p => p.av && !p.av.isAOW && p.av.leeftijd >= pensioenDrempel) ? 'getoetst op ' + uitkAdv.length + ' toetsmoment' + (uitkAdv.length>1?'en':'') + '; bepalend: ' + bepAdv.lbl : 'niet van toepassing'))}</td></tr>
+    <tr><td>${pensTxt}</td><td class="num">${pensioenDrempel === 0 ? 'niet toetsen (uitgeschakeld)' : (advOnvolledig ? 'van toepassing — inkomen vanaf AOW ontbreekt' : (uitkAdv.length > 1 || PA.some(p => ptGeldt(p.av, pensioenDrempel)) ? 'getoetst op ' + uitkAdv.length + ' toetsmoment' + (uitkAdv.length>1?'en':'') + '; bepalend: ' + bepAdv.lbl : 'niet van toepassing'))}</td></tr>
     <tr><td>Gewogen debetrente</td><td class="num">${fmtD2(wgRente)}%</td></tr>
     <tr><td>Gewogen rentevaste periode</td><td class="num">${fmtD2(wgRvp)} jr</td></tr>
     <tr><td>Toetsrente toegepast</td><td class="num"><b>${fmtD2(toetsrenteAdv)}%</b></td></tr>
@@ -1238,8 +1364,8 @@ function renderAanvragerStatus(elId, av, num, drempel){
     const now = new Date();
     const monthsTo = (av.aowDate.getFullYear()-now.getFullYear())*12 + (av.aowDate.getMonth()-now.getMonth());
     const jrTo = Math.floor(monthsTo/12), mnTo = monthsTo%12;
-    const pt = drempel > 0 && av.leeftijd >= drempel;
-    el.innerHTML = `<span class="pill ${pt?'warn':'no'}">Niet AOW</span> Leeftijd ${av.leeftijd} · AOW-leeftijd ${mAOW} · AOW-datum ${aowDatum} (over ${jrTo} jr ${mnTo} mnd)${pt?` — pensioentoets (vanaf ${drempel} jaar) van toepassing: vul inkomen vanaf AOW in`:''}`;
+    const pt = ptGeldt(av, drempel);
+    el.innerHTML = `<span class="pill ${pt?'warn':'no'}">Niet AOW</span> Leeftijd ${av.leeftijd} · AOW-leeftijd ${mAOW} · AOW-datum ${aowDatum} (over ${jrTo} jr ${mnTo} mnd)${pt?` — pensioentoets (${drempelLabel(drempel)}) van toepassing: vul inkomen vanaf AOW in`:''}`;
   }
 }
 
