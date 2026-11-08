@@ -912,7 +912,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       return {
         m:m, datum:datumOpMoment, toetsinkomen:toetsinkomen, onvolledig:inkObj.onvolledig,
         woonquote: pctAftrek, maxMaandlast:maxMaandlast, berekendeLast:berekendeLast, lastGebruteerd:lastGebruteerd,
-        gebruteerd: lastNietAftrekbaar > 0.5, ruimte:ruimte, aowTabel: tb.aow, verplLast: verplLast,
+        gebruteerd: lastNietAftrekbaar > 0.5, ruimte:ruimte, aowTabel: tb.aow, verplLast: verplLast, verhouding: verhouding, inkObj: inkObj,
         vrijgesteld: vf.Vm
       };
     });
@@ -928,10 +928,21 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
     var verplLastAanvang = verplichtingenLast(verpl, bandIdx, heeftAftrekAanvang);
     var maxMaandlastAanvang = Math.max(0, inkAanvang.bedrag * (pctAftrekA/100) / 12 - verplLastAanvang);
     var iGew = (gewogenToetsrente/100)/12;
-    var maxOpBasisInkomen = maxMaandlastAanvang * annuiteitFactor(iGew, 360);
-    var alleenstaandeExtra = alleenstaandeOp(inkAanvang);
+    // Maximum op inkomen = laagste uitkomst over alle toetsmomenten (aanvang, drempel- en AOW-moment binnen de horizon),
+    // met brutering van het box 3-aandeel via q1/q3 — gelijk aan de overige tools.
+    var totBox3 = delenState.reduce(function(a,d){ return a + Math.min(d.bedrag, d.box3||0); }, 0);
+    var s3 = totBedrag>0 ? totBox3/totBedrag : 0;
+    var bepalend = null;
+    rows.forEach(function(r){
+      var fl = (1 - s3) + s3 * (r.verhouding || 1);
+      var opInk = Math.max(0, r.maxMaandlast) * annuiteitFactor(iGew, 360) / fl;
+      var extra = vrijstellingOp(r.inkObj);
+      if(!bepalend || opInk + extra < bepalend.opInk + bepalend.extra) bepalend = {m:r.m, datum:r.datum, opInk:opInk, extra:extra, inkObj:r.inkObj};
+    });
+    var maxOpBasisInkomen = bepalend ? bepalend.opInk : maxMaandlastAanvang * annuiteitFactor(iGew, 360);
+    var alleenstaandeExtra = alleenstaandeOp(bepalend ? bepalend.inkObj : inkAanvang);
     // Beheer: V niet optellen (NHG-beheercriteria houden deze bedragen voor zover bekend niet buiten de financieringslast) — consistent met de toets per moment
-    var extraBuitenToetsing = vrijstellingOp(inkAanvang);
+    var extraBuitenToetsing = bepalend ? bepalend.extra : vrijstellingOp(inkAanvang);
     var hoofdsomTotaal = totBedrag;
     var maxOpBasisMarktwaarde = ltvMax;
     var maximaleHypotheek = Math.min(maxOpBasisInkomen + extraBuitenToetsing, maxOpBasisMarktwaarde) ;
@@ -1015,7 +1026,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
 
     var krapsteMoment = rows.reduce(function(a,b){ return b.ruimte < a.ruimte ? b : a; }, rows[0]);
     var extraTekstResultaat =
-      "<br><br><strong>Maximaal op basis van inkomen:</strong> " + fmtEUR(maxOpBasisInkomen) + "   " +
+      "<br><br><strong>Maximaal op basis van inkomen:</strong> " + fmtEUR(maxOpBasisInkomen) + (bepalend && bepalend.m>0 ? " <span class='hint' style='display:inline;'>(bepalend toetsmoment: na " + bepalend.m + " maanden, " + bepalend.datum.toLocaleDateString('nl-NL',{month:'long',year:'numeric'}) + ")</span>" : "") + "   " +
       "<strong>Maximaal op basis van marktwaarde (incl. EBV):</strong> " + fmtEUR(maxOpBasisMarktwaarde) + "   " +
       "<strong>Maximale hypotheek:</strong> " + fmtEUR(maximaleHypotheek) +
       ((woonquoteNorm === "beheer" && (labelExtra + verduurzamingExtra + alleenstaandeExtra) > 0)
