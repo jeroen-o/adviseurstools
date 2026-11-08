@@ -1957,14 +1957,15 @@ if (ltv > 100) risicos.push({ type: 'bad', text: `LTV van ${pct(ltv,1)} overschr
 if (benutting > 100) risicos.push({ type: 'bad', text: `Gewenste hypotheek overschrijdt de maximale leenruimte` });
 if (benutting > 95) risicos.push({ type: 'warn', text: `Maximaal lenen: uitgebreid stilstaan bij uitgavenpatroon vereist (AFM Leidraad)` });
 if (state.kinderwens === 'ja') risicos.push({ type: 'warn', text: `Kinderwens: doorrekenen effect op inkomen en woonlasten bij eventuele teruggang in arbeid` });
-if (ptGeldt) risicos.push({ type: pensioentoetsBepalend ? 'warn' : 'ok', text: ptTekst });
+if (beheerB) risicos.push({ type: beheerB.bepalend.m.mnd > 0 ? 'warn' : 'ok', text: beheerB.tekst });
+else if (ptGeldt) risicos.push({ type: pensioentoetsBepalend ? 'warn' : 'ok', text: ptTekst });
 if (state.pensioen10j === 'ja') risicos.push({ type: 'warn', text: `Pensioen binnen 10 jaar: toets of hypotheek betaalbaar blijft op pensioenniveau (Trhk-verplichting)` });
 if (stijgingMaandlast > 200) risicos.push({ type: 'warn', text: `Renteschok +2%: maandlast stijgt met ${euro(stijgingMaandlast)}/mnd bij herziening` });
 if (state.aoverzekering === 'nee') risicos.push({ type: 'warn', text: `Geen AO-verzekering: adviseer doorrekening arbeidsongeschiktheidsscenario` });
 if (ltv < 101 && benutting <= 100) risicos.push({ type: 'ok', text: `LTV ${pct(ltv,1)} — binnen toegestane norm van 100%` });
 if (nhgCheck === 'ja') risicos.push({ type: 'ok', text: `NHG mogelijk: woningwaarde en hypotheekbedrag binnen NHG-grens ${normJaar()} (${euro(nhgGrens)})` });
 
-return {
+const R = {
 toetsinkomen, toetsrente, tabelType, flPct, alimJaar,
 normjaar, alleenstaandeGrens, maxHypLTI_basis, alleenstaandeOpslag: beheerB ? 0 : alleenstaandeOpslag, labelOpslag: beheerB ? 0 : labelOpslag, ebvOpslag: beheerB ? 0 : ebvOpslag, isAowTabel: scBepalend.isAow,
 ptTekst: beheerB ? beheerB.tekst + ' ' + beheerB.meldingen.join(' ') : ptTekst, beheer: beheerB, pensioentoetsBepalend, scHuidig, scPensioen,
@@ -1977,6 +1978,16 @@ renteScenario, hypotheekNa10Jaar, maandLastNa10Jaar, stijgingMaandlast,
 inkomenAO, maxHypAO, maandlastAO_pct,
 eigenaarslasten, woz, risicos
 };
+// NHG-beheercriteria: alle onderdelen volgen de beheertoets (beheertabel, huidige rente, werkelijke lasten, geen brutering of vrijgestelde bedragen)
+if (beheerB) {
+const bb = beheerB.bepalend, verplB = duoMaandlast + kredietMaandlast * 0.02 + erfpachtJaar / 12 + overigeVerplichtingen;
+Object.assign(R, { toetsinkomen: bb.ink, toetsrente: rente, tabelType: bb.tab, flPct: bb.q, isAowTabel: /aow$/.test(bb.tab),
+maxHypLTI_basis: bb.maxLast / beheerB.lastPerEuro, totaalVerplichtingenMaand: verplB, bruteringFactor: 1, duoGebruteerd: duoMaandlast, kredietGebruteerd: kredietMaandlast * 0.02,
+brutoBeschikbaarMaand: bb.maxLast, nettoBeschikbaarMaand: Math.max(0, bb.maxLast - verplB), maxHypLTI_naVerplichtingen: beheerB.max, maxHypLTI_finaal: beheerB.max,
+inkomenAO: bb.ink * 0.70, maxHypAO: Math.max(0, bb.ink * 0.70 * beheerPct(bb.tab, bb.ink * 0.70, rente * 100) / 12 - verplB) / beheerB.lastPerEuro,
+pensioentoetsBepalend: bb.m.mnd > 0 });
+}
+return R;
 }
 
 // ============================================================
@@ -2027,7 +2038,7 @@ container.innerHTML = `
 <div class="result-hero-label">${r.beheer ? 'Maximale hypotheek — NHG-beheercriteria (V&amp;N D.6)' : 'Maximale hypotheek (LTI conform Trhk ' + r.normjaar + ')'}</div>${r.beheer ? '<div class="result-hero-sub" style="margin-bottom:6px">' + r.ptTekst + '</div>' : ''}
 <div class="result-hero-amount">${euro(r.maxHyp)}</div>
 <div class="result-hero-sub">
-Toetsinkomen ${euro(r.toetsinkomen)}${r.alimJaar > 0 ? ` (na aftrek ${euro(r.alimJaar)} betaalde partneralimentatie)` : ''} · Toetsrente ${pct(r.toetsrente*100, 2)} · FL-percentage ${pct(r.flPct*100, 1)}
+Toetsinkomen ${euro(r.toetsinkomen)}${r.alimJaar > 0 ? ` (na aftrek ${euro(r.alimJaar)} betaalde partneralimentatie)` : ''} · ${r.beheer ? 'Huidige rente' : 'Toetsrente'} ${pct(r.toetsrente*100, 2)} · ${r.beheer ? 'NHG-beheertabel ' + r.tabelType : 'FL-percentage'} ${pct(r.flPct*100, 1)}
 </div>
 </div>
 
@@ -2079,12 +2090,12 @@ ${r.nhgCheck === 'ja' ? `<span style="font-size:13px; color:#5f6b7a; margin-left
 <div class="card-title"><span class="icon">🔢</span> Opbouw maximale hypotheek</div>
 <table class="breakdown-table">
 <tr><td colspan="2" style="font-size:12px;color:#5f6b7a">${r.ptTekst}.</td></tr>
-<tr><td>Maximale hypotheek o.b.v. FL-tabel (${r.isAowTabel?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'}${r.pensioentoetsBepalend?', pensioeninkomen':''})</td><td>${euro(r.maxHypLTI_basis)}</td></tr>
-${r.totaalVerplichtingenMaand > 0 ? `<tr class="minus"><td>− Verplichtingen (bruto ${euro(r.totaalVerplichtingenMaand)}/mnd; DUO en overige gebruteerd, factor ${nf(r.bruteringFactor, 2)})</td><td>−${euro((r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen))}</td></tr>` : ''}
+<tr><td>${r.beheer ? 'Maximale hypotheek o.b.v. NHG-beheertabel (' + r.tabelType + ', werkelijke lasten' + (r.pensioentoetsBepalend ? ', inkomen vanaf AOW' : '') + ')' : 'Maximale hypotheek o.b.v. FL-tabel (' + (r.isAowTabel?'AOW':'niet-AOW') + ', ' + (state.aftrek==='box3'?'box 3':'box 1') + (r.pensioentoetsBepalend?', pensioeninkomen':'') + ')'}</td><td>${euro(r.maxHypLTI_basis)}</td></tr>
+${r.totaalVerplichtingenMaand > 0 ? `<tr class="minus"><td>− Verplichtingen (${r.beheer ? 'werkelijk ' + euro(r.totaalVerplichtingenMaand) + '/mnd, niet gebruteerd' : 'bruto ' + euro(r.totaalVerplichtingenMaand) + '/mnd; DUO en overige gebruteerd, factor ' + nf(r.bruteringFactor, 2)})</td><td>−${euro((r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen))}</td></tr>` : ''}
 ${r.alleenstaandeOpslag > 0 ? `<tr class="plus"><td>+ Alleenstaandenbedrag (Trhk art. 3 lid 8)</td><td>+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
 ${r.labelOpslag > 0 ? `<tr class="plus"><td>+ Energielabel-opslag (${state.label})</td><td>+${euro(r.labelOpslag)}</td></tr>` : ''}
 ${r.ebvOpslag > 0 ? `<tr class="plus"><td>+ EBV-opslag verduurzaming</td><td>+${euro(r.ebvOpslag)}</td></tr>` : ''}
-<tr class="total-row"><td>Maximale hypotheek LTI</td><td>${euro(Math.floor(r.maxHypLTI_finaal))}</td></tr>
+<tr class="total-row"><td>${r.beheer ? 'Maximale hypotheek NHG-beheercriteria' : 'Maximale hypotheek LTI'}</td><td>${euro(Math.floor(r.maxHypLTI_finaal))}</td></tr>
 <tr><td>Maximale hypotheek LTV (100% van ${euro(state.woningWaarde || r.maxHyp)})</td><td>${euro(r.maxHypLTV)}</td></tr>
 <tr class="total-row"><td>✅ Definitief maximum (laagste van LTI / LTV)</td><td>${euro(r.maxHyp)}</td></tr>
 </table>
@@ -2137,7 +2148,7 @@ ${checkItems}
 
 <!-- DISCLAIMER -->
 <div class="disclaimer">
-<strong>Disclaimer:</strong> Deze berekening is gebaseerd op de Tijdelijke regeling hypothecair krediet (Trhk) ${r.normjaar}, de officiële financieringslastnormen normjaar ${r.normjaar} (${bronNormJaar(r.normjaar)}) en de AFM Leidraad Hypotheekadvisering (december 2025). De uitkomsten zijn indicatief. De definitieve hypotheekbeslissing ligt bij de geldverstrekker. Deze tool vervangt geen individueel hypotheekadvies in de zin van artikel 4:23 Wft. Controleer altijd de actuele NHG-grens via nhg.nl. Datum berekening: ${new Date().toLocaleDateString('nl-NL')}.
+<strong>Disclaimer:</strong> Deze berekening is gebaseerd op ${r.beheer ? 'de NHG-beheercriteria (Voorwaarden &amp; Normen, hoofdstuk D.6, beheertabellen 2026) en daarnaast ' : ''}de Tijdelijke regeling hypothecair krediet (Trhk) ${r.normjaar}, de officiële financieringslastnormen normjaar ${r.normjaar} (${bronNormJaar(r.normjaar)}) en de AFM Leidraad Hypotheekadvisering (december 2025). De uitkomsten zijn indicatief. De definitieve hypotheekbeslissing ligt bij de geldverstrekker. Deze tool vervangt geen individueel hypotheekadvies in de zin van artikel 4:23 Wft. Controleer altijd de actuele NHG-grens via nhg.nl. Datum berekening: ${new Date().toLocaleDateString('nl-NL')}.
 </div>
 `;
 aiePtGrafiek();
@@ -2246,7 +2257,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <div>
 <div class="badge">HYPOTHEEKADVIESRAPPORT · NORMJAAR ${r.normjaar}</div>
 <h1>🏠 Hypotheekadvies</h1>
-<div class="sub">Trhk ${r.normjaar} · Officiële FL-tabellen normjaar ${r.normjaar} · AFM Leidraad december 2025</div>
+<div class="sub">${r.beheer ? 'NHG-beheercriteria (V&amp;N D.6) · NHG-beheertabellen 2026' : 'Trhk ' + r.normjaar + ' · Officiële FL-tabellen normjaar ' + r.normjaar} · AFM Leidraad december 2025</div>
 </div>
 <div class="meta">
 <div><strong>Klant:</strong> ${klant}</div>
@@ -2264,7 +2275,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <div class="kf-box accent">
 <div class="kf-label">Maximale hypotheek</div>
 <div class="kf-value">${euro(r.maxHyp)}</div>
-<div class="kf-sub">Conform Trhk ${r.normjaar}, na alle correcties</div>
+<div class="kf-sub">${r.beheer ? 'Volgens de NHG-beheercriteria (V&amp;N D.6)' : 'Conform Trhk ' + r.normjaar + ', na alle correcties'}</div>
 </div>
 <div class="kf-box">
 <div class="kf-label">Bruto maandlast</div>
@@ -2279,7 +2290,7 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <div class="kf-box">
 <div class="kf-label">FL-percentage</div>
 <div class="kf-value">${pct(r.flPct*100,1)}</div>
-<div class="kf-sub">${r.isAowTabel?'AOW':'Niet-AOW'} · ${state.aftrek==='box3'?'Box 3':'Box 1'} · ${pct(r.toetsrente*100,2)} toetsrente</div>
+<div class="kf-sub">${r.beheer ? 'NHG-beheercriteria · ' + r.tabelType : (r.isAowTabel?'AOW':'Niet-AOW') + ' · ' + (state.aftrek==='box3'?'Box 3':'Box 1')} · ${pct(r.toetsrente*100,2)} ${r.beheer ? 'huidige rente' : 'toetsrente'}</div>
 </div>
 <div class="kf-box">
 <div class="kf-label">LTV</div>
@@ -2301,12 +2312,12 @@ tr:nth-child(even) td { background: #F8FAFC; }
 <table>
 <tr><th>Component</th><th style="text-align:right">Bedrag</th></tr>
 <tr><td colspan="2" style="font-size:12px;color:#555">${r.ptTekst}.</td></tr>
-<tr><td>Maximale hypotheek FL-tabel (${r.isAowTabel?'AOW':'niet-AOW'}, ${state.aftrek==='box3'?'box 3':'box 1'}, toetsinkomen ${euro(r.toetsinkomen)}, FL ${pct(r.flPct*100,1)})</td><td class="td-right">${euro(r.maxHypLTI_basis)}</td></tr>
-${r.totaalVerplichtingenMaand > 0 ? `<tr><td class="minus">− Effect verplichtingen (bruto maandlast ${euro(r.totaalVerplichtingenMaand)}; DUO en overige gebruteerd, factor ${nf(r.bruteringFactor,2)}; krediet 2% van de limiet)</td><td class="td-right minus">−${euro(r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen)}</td></tr>` : ''}
+<tr><td>${r.beheer ? 'Maximale hypotheek NHG-beheertabel (' + r.tabelType : 'Maximale hypotheek FL-tabel (' + (r.isAowTabel?'AOW':'niet-AOW') + ', ' + (state.aftrek==='box3'?'box 3':'box 1')}, toetsinkomen ${euro(r.toetsinkomen)}, ${r.beheer ? 'percentage' : 'FL'} ${pct(r.flPct*100,1)})</td><td class="td-right">${euro(r.maxHypLTI_basis)}</td></tr>
+${r.totaalVerplichtingenMaand > 0 ? `<tr><td class="minus">− Effect verplichtingen (${r.beheer ? 'werkelijke maandlast ' + euro(r.totaalVerplichtingenMaand) + ', niet gebruteerd; krediet 2% van de limiet' : 'bruto maandlast ' + euro(r.totaalVerplichtingenMaand) + '; DUO en overige gebruteerd, factor ' + nf(r.bruteringFactor,2) + '; krediet 2% van de limiet'})</td><td class="td-right minus">−${euro(r.maxHypLTI_basis - r.maxHypLTI_naVerplichtingen)}</td></tr>` : ''}
 ${r.alleenstaandeOpslag > 0 ? `<tr><td class="plus">+ Alleenstaandenbedrag (Trhk ${r.normjaar} art. 3 lid 8, inkomen > ${euro(r.alleenstaandeGrens)})</td><td class="td-right plus">+${euro(r.alleenstaandeOpslag)}</td></tr>` : ''}
 ${r.labelOpslag > 0 ? `<tr><td class="plus">+ Energielabel-opslag bij aankoop (label ${state.label})</td><td class="td-right plus">+${euro(r.labelOpslag)}</td></tr>` : ''}
 ${r.ebvOpslag > 0 ? `<tr><td class="plus">+ EBV-opslag verduurzaming (label ${state.label})</td><td class="td-right plus">+${euro(r.ebvOpslag)}</td></tr>` : ''}
-<tr class="total-row"><td>Maximale hypotheek LTI (na alle correcties)</td><td class="td-right">${euro(Math.floor(r.maxHypLTI_finaal))}</td></tr>
+<tr class="total-row"><td>${r.beheer ? 'Maximale hypotheek NHG-beheercriteria' : 'Maximale hypotheek LTI (na alle correcties)'}</td><td class="td-right">${euro(Math.floor(r.maxHypLTI_finaal))}</td></tr>
 <tr><td>Maximale hypotheek LTV (${euro(state.woningWaarde || r.maxHyp)} × 100%)</td><td class="td-right">${euro(r.maxHypLTV)}</td></tr>
 <tr class="total-row"><td>✅ Definitief maximum (laagste van LTI / LTV)</td><td class="td-right">${euro(r.maxHyp)}</td></tr>
 </table>
@@ -2394,7 +2405,7 @@ ${state.aoverzekering === 'nee' ? '<li style="color:#8a6d00">⚠️ Geen AO-verz
 <tr><td><strong>Woningwaarde</strong></td><td>${euro(state.woningWaarde)}</td><td><strong>Energielabel</strong></td><td>${state.label}</td></tr>
 <tr><td><strong>Geoffreerde rente</strong></td><td>${pct(state.rente*100,2)}</td><td><strong>RVP</strong></td><td>${state.rvp} jaar</td></tr>
 <tr><td><strong>Toetsrente</strong></td><td>${pct(r.toetsrente*100,2)}</td><td><strong>Looptijd</strong></td><td>${state.looptijd} jaar</td></tr>
-${r.totaalVerplichtingenMaand > 0 ? `<tr><td><strong>Verplichtingen</strong></td><td colspan="3">${euro(r.totaalVerplichtingenMaand)}/mnd (DUO en overige gebruteerd, factor ${nf(r.bruteringFactor,2)}; krediet 2% van de limiet)</td></tr>` : ''}
+${r.totaalVerplichtingenMaand > 0 ? `<tr><td><strong>Verplichtingen</strong></td><td colspan="3">${euro(r.totaalVerplichtingenMaand)}/mnd (${r.beheer ? 'werkelijke maandlasten, niet gebruteerd' : 'DUO en overige gebruteerd, factor ' + nf(r.bruteringFactor,2)}; krediet 2% van de limiet)</td></tr>` : ''}
 </table>
 </div>
 

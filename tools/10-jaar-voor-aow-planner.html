@@ -1018,7 +1018,7 @@ function bereken(){
   if(aowInkLeeg&&ptMethode()!=='beheer'){if(PT_KERN){PT_KERN.max=0;return;}ptGrafiek(document.getElementById('ptGrafiek'),{ontbreekt:true,berekenMax:()=>0});alert('Vul inkomen vanaf AOW (AOW + pensioen) in: dat is nodig voor de pensioentoets'+(ptKeuze(drempel)?' ('+drTxt+')':'')+' en voor de periode na de AOW-datum.');return;}
   const delen=getDelen();
   // NHG-beheercriteria (V&N D.6): werkelijke rente en werkelijke lasten van de leningdelen (anders 50/50-aanname); pensioen alleen binnen 36 maanden
-  let B=null;
+  let B=null, beheerMaand=null, beheerRente=null;
   if(ptMethode()==='beheer'){
     const totD=delen.reduce((t,d)=>t+d.bedrag,0), b3D=delen.filter(d=>d.box===3).reduce((t,d)=>t+d.bedrag,0);
     const renteB=totD>0?Math.round(delen.reduce((t,d)=>t+d.rente*d.bedrag,0)/totD*1000)/1000:Math.round(defaultTr*100*1000)/1000;
@@ -1026,7 +1026,20 @@ function bereken(){
     B=beheerMax({personen:[{werk:ink,pens:aowInkLeeg?null:aowInk,aowD:aowDatum}],rente:renteB,
       lastPerEuro:totD>0?delen.reduce((t,d)=>t+maandlastD(d,0),0)/totD:null,aanname:totD>0?'Werkelijke leningdelen (vorm, looptijd en rente per deel).':null,
       verpl:0,rvpRestJr:rvpJr.length?Math.min.apply(null,rvpJr):null,box3:totD>0&&b3D>=totD?'ja':(b3D>0?'deels':'nee'),b3bedrag:b3D,
-      meldingen:['De tijdlijn hieronder toont de acceptatietoets per maand.']});
+      meldingen:['De tijdlijn toetst per maand volgens de NHG-beheercriteria: pensioen telt pas mee binnen 3 jaar vóór de AOW-datum, daarna het inkomen vanaf AOW.']});
+    // Beheertoets op een later moment (maand m): werkelijke last per € restschuld van de leningdelen (anders 50/50), huidige rente;
+    // AOW binnen 36 maanden na dat moment → ook toetsen op inkomen vanaf AOW (laagste telt)
+    beheerRente=renteB;
+    beheerMaand=(dt,m)=>{
+      const totR=delen.reduce((t,d)=>t+restSchuld(d,m),0);
+      const a=totR>0?delen.reduce((t,d)=>t+maandlastD(d,m),0)/totR:beheerLast5050(renteB);
+      const b3all=totD>0&&b3D>=totD;
+      const toets=aow=>{const ti=aow?aowInk:ink,tab=(b3all?'b3_':'')+'alleen_'+(aow?'aow':'werk'),q=beheerPct(tab,ti,renteB),ml=ti*q/12;return {tab,ml,max:Math.max(0,ml)/a};};
+      let r=toets(dt>=aowDatum);
+      const tot=(aowDatum.getFullYear()-dt.getFullYear())*12+(aowDatum.getMonth()-dt.getMonth())-(aowDatum.getDate()<dt.getDate()?1:0);
+      if(dt<aowDatum&&tot<=36&&!aowInkLeeg){const x=toets(true);if(x.max<r.max)r=x;}
+      return {mnd:r.ml,norm:/aow$/.test(r.tab)?'AOW':'Huidig',max:Math.round(r.max)};
+    };
   }
   const NJ=normjaar(), T_NIET=CHF_BY_YEAR[NJ].niet, T_AOW=CHF_BY_YEAR[NJ].aow;
   updNormjaar();
@@ -1045,18 +1058,19 @@ function bereken(){
     const age=(dt-geb)/(365.25*24*3600*1000);
     const isAOW=dt>=aowDatum;
     // Pensioentoets van toepassing (gekozen drempel) tot de AOW-datum
-    const pen=ptGeldtVoor(drempel,geb,aowDatum,dt);
+    const pen=beheerMaand?(dt<aowDatum&&((aowDatum.getFullYear()-dt.getFullYear())*12+(aowDatum.getMonth()-dt.getMonth())-(aowDatum.getDate()<dt.getDate()?1:0))<=36):ptGeldtVoor(drempel,geb,aowDatum,dt); // beheer: binnen 3 jaar vóór AOW
 
     // Effectieve toetsrente op dit moment
-    const effTr=effectieveToetsrente(delen,dt,defaultTr);
+    const effTr=beheerMaand?beheerRente/100:effectieveToetsrente(delen,dt,defaultTr); // beheer: huidige rente
     const usesContract=delen.some(d=>d.rvpDatum&&(d.rvpDatum-dt)/(365.25*24*3600*1000)>=10);
     const kol=rKol(effTr);
     const rm=effTr/12;
 
-    const {mnd,norm}=mndOp(isAOW,pen,kol);
+    let {mnd,norm}=mndOp(isAOW,pen,kol);
 
-    const maxH=Math.round(mnd*af(rm,360-m));
-    const maxH30=Math.round(mnd*af(rm,360));
+    let maxH=Math.round(mnd*af(rm,360-m));
+    let maxH30=Math.round(mnd*af(rm,360));
+    if(beheerMaand){const bm=beheerMaand(dt,m);mnd=bm.mnd;norm=bm.norm;maxH=bm.max;maxH30=bm.max;} // NHG-beheercriteria per maand
 
     let s1=0,s3=0,ml=0;
     for(const d of delen){const rs=restSchuld(d,m);d.box===3?s3+=rs:s1+=rs;ml+=maandlastD(d,m);}
@@ -1108,7 +1122,11 @@ function bereken(){
 
   pt.innerHTML+=' Toetsmomenten: '+momenten.map(x=>x.lbl+' '+E(x.ti)+' ('+x.tbl+(x.i>0?', restschuld '+(x.rf*100).toFixed(1).replace('.',',')+'% na '+x.i+' mnd':'')+') → '+E(x.max)).join('; ')+'. <strong>Bepalend toetsmoment: '+bep.lbl+'</strong> — maximale hypotheek '+E(bep.max)+' ('+ptMethodeTekst()+').';
   if(B){document.getElementById('k1').textContent=B.ontbreekt?'—':E(B.max);document.getElementById('k1s').textContent='NHG-beheercriteria · bepalend: '+B.bepalend.m.lbl;pt.innerHTML=beheerHtml(B);}
-  document.getElementById('chart-label').textContent=naam+' — maximale hypotheekruimte (30 jaar, per maand)';
+  // Legenda en kolomkoppen volgens de rekenmethode
+  [...document.querySelectorAll('#sec-chart .leg'), ...document.querySelectorAll('#sec-table th')].forEach(el=>{if(el.dataset.orig===undefined)el.dataset.orig=el.innerHTML;});
+  const bhTxt={'Max (rest. looptijd) — huidig':'NHG-beheer — werkinkomen','Max (rest. looptijd) — pensioenscenario':'NHG-beheer — binnen 3 jaar vóór AOW','Max (rest. looptijd) — na AOW':'NHG-beheer — na AOW','Eff. toetsrente':'Huidige rente','Max hyp. (rest. looptijd)':'Max hyp. (NHG-beheer)','Max hyp. (30 jr vast)':'Max hyp. (NHG-beheer)'};
+  [...document.querySelectorAll('#sec-chart .leg'), ...document.querySelectorAll('#sec-table th')].forEach(el=>{const o=el.dataset.orig;let h=o;if(B)Object.keys(bhTxt).forEach(k=>{h=h.split(k).join(bhTxt[k]);});el.innerHTML=h;});
+  document.getElementById('chart-label').textContent=naam+(B?' — maximale hypotheek per maand volgens de NHG-beheercriteria':' — maximale hypotheekruimte (30 jaar, per maand)');
   ['sec-kpi','sec-ptgrafiek','sec-chart','sec-table','sec-toelichting'].forEach(id=>document.getElementById(id).classList.remove('hidden'));
   renderChart();
   renderTable();
@@ -1117,10 +1135,12 @@ function bereken(){
 // Pensioentoets-grafiek: maximale hypotheek per leeftijd bij aanvraag (zelfde rekenkern: bereken() in kern-modus)
 function aowPtGrafiek(geb,keuze){
   const el=document.getElementById('ptGrafiek');if(!el)return;
+  const dataBak=data; // de kern-berekeningen voor de grafiek overschrijven 'data'; daarna terugzetten (tabel/tooltip)
   const td=new Date(),g1=document.getElementById('geboortedatum').value;
   ptGrafiek(el,{berekenMax:(lft,k)=>ptMetVelden({geboortedatum:ptVerschuifGeb(g1,'',td,lft)[0],pensioenDrempel:k},()=>ptKernMax(bereken)),
     huidigeLeeftijd:leeftijdOp(geb,td),gekozen:keuze,vanaf:50,tot:67,methode:ptMethode(),
     ontbreekt:document.getElementById('aow_inkomen').value.trim()===''});
+  data=dataBak;
 }
 
 // ── GRAFIEK ──────────────────────────────────────────────────

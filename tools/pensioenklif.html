@@ -606,8 +606,8 @@ function ptKernMax(fn){var oudK=PT_KERN;PT_KERN={max:0};try{fn();return +PT_KERN
       </div>
 
       <div class="chart-section" id="momentsSection">
-        <h2 class="section-title">Max hypotheek per pensioenfase</h2>
-        <p class="section-subtitle">30jr annuïtair, rente <span id="momentsRente">4,00%</span>, inclusief verplichtingen, alleenstaandenbedrag en energielabelbedrag (buiten de maandlasttoets). Eerste/tweede persoon op leeftijd (oudste eerst).</p>
+        <h2 class="section-title" id="momentsTitel">Max hypotheek per pensioenfase</h2>
+        <p class="section-subtitle" id="momentsSub">30jr annuïtair, rente <span id="momentsRente">4,00%</span>, inclusief verplichtingen, alleenstaandenbedrag en energielabelbedrag (buiten de maandlasttoets). Eerste/tweede persoon op leeftijd (oudste eerst).</p>
         <div class="table-wrapper">
           <table class="results">
             <thead>
@@ -685,8 +685,8 @@ function ptKernMax(fn){var oudK=PT_KERN;PT_KERN={max:0};try{fn();return +PT_KERN
       </div>
 
       <div class="chart-section">
-        <h2 class="section-title">Pensioenklif: max box 1-hypotheek per leeftijd</h2>
-        <p class="section-subtitle">Vanaf de pensioentoets-leeftijd (instelbaar: 57 of 52 jaar) wordt ook op het pensioeninkomen getoetst en zakt de leencapaciteit naar het pensioen-niveau.</p>
+        <h2 class="section-title" id="klifTitel">Pensioenklif: max box 1-hypotheek per leeftijd</h2>
+        <p class="section-subtitle" id="klifSub">Vanaf de pensioentoets-leeftijd (instelbaar: 57 of 52 jaar) wordt ook op het pensioeninkomen getoetst en zakt de leencapaciteit naar het pensioen-niveau.</p>
         <div class="chart-container">
           <svg id="chart" class="chart-svg" viewBox="0 0 720 360" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="chart-legend">
@@ -961,7 +961,30 @@ function tabelIsAOW(inc1, aow1, inc2, aow2, heeft2) {
   return (inc1 >= inc2) ? !!aow1 : !!aow2;
 }
 // Eén toetsmoment: max hypotheek (30 jr annuïtair) na verplichtingen, plus alleenstaandenbedrag en energielabelbedrag (beide buiten de maandlasttoets)
+// NHG-beheercriteria: lening-info (werkelijke leningdelen, anders 50/50-aanname) en huidige rente
+function beheerLeningInfo() {
+  const delen = parts.filter(p => p.amount > 0), tot = delen.reduce((s, p) => s + p.amount, 0);
+  const b3 = delen.filter(p => p.box === 3).reduce((s, p) => s + p.amount, 0);
+  const refR = parseFloatNL(document.getElementById('refRente').value) || 4.0;
+  const rente = tot > 0 ? Math.round(delen.reduce((s, p) => s + p.rate * p.amount, 0) / tot * 1000) / 1000 : Math.round(refR * 1000) / 1000;
+  const a = tot > 0 ? delen.reduce((s, p) => s + partActualPayment(p, 0), 0) / tot : beheerLast5050(rente);
+  return { delen, tot, b3, rente, a };
+}
+// Eén toetsmoment volgens de NHG-beheercriteria (V&N D.6): beheertabel (AOW-tabel als alle aanvragers AOW hebben), huidige rente,
+// werkelijke lasten (niet gebruteerd), geen alleenstaanden- of labelbedrag; box 3: b3_-tabel, gemengd gebruteerd met q1/q3
+function toetsMaxBeheer(inc1, aow1, inc2, aow2, heeft2, box3) {
+  const L = beheerLeningInfo(), d = TK.d;
+  inc2 = heeft2 ? (inc2 || 0) : 0;
+  const allAow = !!aow1 && (!heeft2 || !!aow2), gez = (inc1 || 0) + inc2;
+  const basis = (heeft2 ? 'paar_' : 'alleen_') + (allAow ? 'aow' : 'werk'), tab = (box3 ? 'b3_' : '') + basis;
+  const q = beheerPct(tab, gez, L.rente), q3 = beheerPct('b3_' + basis, gez, L.rente);
+  const bruto = gez * q / 12, verl = d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, netto = Math.max(0, bruto - verl);
+  let loan = netto / L.a;
+  if (!box3 && L.b3 > 0 && L.b3 < L.tot && q3 > 0) loan = Math.max(0, loan - L.b3 * (q / q3 - 1));
+  return { type: tab, isAow: allAow, reken: gez, gez, flp: q * 100, bruto, verl, netto, verh: 0, label: 0, loan, beheer: true };
+}
 function toetsMax(inc1, aow1, inc2, aow2, heeft2, box3, rate) {
+  if (ptMethode() === 'beheer') return toetsMaxBeheer(inc1, aow1, inc2, aow2, heeft2, box3);
   rate = (rate === undefined) ? TK.refRate : rate;
   inc2 = heeft2 ? (inc2 || 0) : 0;
   let isAow = tabelIsAOW(inc1, aow1, inc2, aow2, heeft2);
@@ -1063,7 +1086,7 @@ function pensioentoetsGeldtOp(app, lft) {
 // Restschuld na t jaar van € 1 (annuïtair 30 jaar op de toetsrente)
 function restFactor(tJaar, rate) {
   const m = Math.round((tJaar || 0) * 12), n = 360, ri = (rate === undefined ? TK.refRate : rate) / 100 / 12;
-  if (m <= 0 || ptMethode() === 'trhk') return 1; if (m >= n) return 1e-9; if (ri <= 0) return 1 - m / n;
+  if (m <= 0 || ptMethode() === 'trhk' || ptMethode() === 'beheer') return 1; // beheer: werkelijke lasten, geen restfactor if (m >= n) return 1e-9; if (ri <= 0) return 1 - m / n;
   return (Math.pow(1 + ri, n) - Math.pow(1 + ri, m)) / (Math.pow(1 + ri, n) - 1);
 }
 // Toets op een later moment: de restschuld moet passen → max. hypotheek (financieringslastdeel) ÷ restfactor; vaste bedragen blijven
@@ -1303,9 +1326,10 @@ function renderScenarios(applicants, refRate, verlagingenMnd, verhoging) {
 
   function card(s, isPrimary) {
     if (!s) return '';
+    const tblNm = ptMethode() === 'beheer' ? (s.flpType === 'aow' ? 'NHG-beheertabel AOW' : 'NHG-beheertabel werk') : (s.flpType === 'aow' ? 'AOW-tabel' : 'niet-AOW-tabel');
     const flpInfo = (s.rekeninkomen !== s.gezamenlijk)
-      ? `${s.flpType === 'aow' ? 'AOW-tabel' : 'niet-AOW-tabel'} · FLP @ rekeninkomen € ${Math.round(s.rekeninkomen).toLocaleString('nl-NL')}: b1 ${s.flp_b1.toFixed(1).replace('.', ',')}% · b3 ${s.flp_b3.toFixed(1).replace('.', ',')}%`
-      : `${s.flpType === 'aow' ? 'AOW-tabel' : 'niet-AOW-tabel'} · FLP @ € ${Math.round(s.gezamenlijk).toLocaleString('nl-NL')}: b1 ${s.flp_b1.toFixed(1).replace('.', ',')}% · b3 ${s.flp_b3.toFixed(1).replace('.', ',')}%`;
+      ? `${tblNm} · FLP @ rekeninkomen € ${Math.round(s.rekeninkomen).toLocaleString('nl-NL')}: b1 ${s.flp_b1.toFixed(1).replace('.', ',')}% · b3 ${s.flp_b3.toFixed(1).replace('.', ',')}%`
+      : `${tblNm} · FLP @ € ${Math.round(s.gezamenlijk).toLocaleString('nl-NL')}: b1 ${s.flp_b1.toFixed(1).replace('.', ',')}% · b3 ${s.flp_b3.toFixed(1).replace('.', ',')}%`;
     // Adjustments-regel (alleen tonen als er verlagingen of verhoging actief is)
     let adjustments = '';
     if (s.verlagingenMnd > 0 || s.verhoging > 0 || s.labelExtra > 0) {
@@ -1353,7 +1377,7 @@ function renderTweetrapMix(inp, refRate) {
   const jongste = sorted[1] || null;
   const yToFirstAOW = oudste.aowAge - oudste.age;
 
-  if (yToFirstAOW <= 0 || !oudste.pensioentoetsGeldt || oudste.pensionMissing) {
+  if (ptMethode() === 'beheer' || yToFirstAOW <= 0 || !oudste.pensioentoetsGeldt || oudste.pensionMissing) {
     section.style.display = 'none';
     return;
   }
@@ -1815,15 +1839,17 @@ function calculate() {
     const lftO = aE, lftJ = jA ? aE - ageDiff : null;
     const offs = [{ t: 0, lbl: 'Nu' }];
     const voegToe = (t, lbl, geldt) => { if (t > 1e-9 && geldt) offs.push({ t, lbl }); };
-    voegToe(oA.aowAge - lftO, heeft2 ? '1e AOW' : 'AOW', oudstePT);
-    if (jA) voegToe(jA.aowAge - lftJ, '2e AOW', jongstePT);
+    // Beheer (NHG D.6.3.4): pensioen telt alleen als de AOW binnen 36 maanden na dat moment ingaat
+    const bh = ptMethode() === 'beheer';
+    voegToe(oA.aowAge - lftO, heeft2 ? '1e AOW' : 'AOW', bh ? (oA.aowAge - lftO) <= 3 + 1e-9 : oudstePT);
+    if (jA) voegToe(jA.aowAge - lftJ, '2e AOW', bh ? (jA.aowAge - lftJ) <= 3 + 1e-9 : jongstePT);
     offs.sort((x, y) => x.t - y.t);
     for (let i = offs.length - 1; i > 0; i--) if (Math.abs(offs[i].t - offs[i - 1].t) < 1 / 24) { offs[i - 1].lbl += ' / ' + offs[i].lbl; offs.splice(i, 1); }
     offs.forEach(o => {
       const p1 = persoonOp(oA, lftO + o.t), p2 = jA ? persoonOp(jA, lftJ + o.t) : null;
       const r = opRestschuld(toetsMax(p1.inc, p1.aow, p2 ? p2.inc : 0, p2 ? p2.aow : false, heeft2, false, refRate), o.t, refRate);
       const isPens = p1.aow || p1.pt || !!(p2 && (p2.aow || p2.pt));
-      const status = o.t > 0 ? `${o.lbl} (over ${formatYearsMonths(o.t)}, restschuld ${fmtPct(r.rf * 100)})`
+      const status = o.t > 0 ? `${o.lbl} (over ${formatYearsMonths(o.t)}${bh ? ', NHG-beheer' : ', restschuld ' + fmtPct(r.rf * 100)})`
         : !isPens ? 'Werkend'
         : (p1.aow && (!p2 || p2.aow)) ? (heeft2 ? 'Beide AOW' : 'Gepensioneerd')
         : (p1.pt || (p2 && p2.pt)) ? 'Pens. in toets (nu)' : 'Gemengd';
@@ -1859,7 +1885,9 @@ function calculate() {
       const inc2s = jongsteApp ? jongsteApp.salary : 0;
       const rekenS = calcRekeninkomen(inc1s, inc2s);
       const gezS = inc1s + inc2s;
-      if (gezS > 0) {
+      if (gezS > 0 && ptMethode() === 'beheer') {
+        loanSalary = toetsMax(inc1s, false, inc2s, false, !!jongsteApp, false).loan; // beheer: werkinkomen met de beheertabel
+      } else if (gezS > 0) {
         const flpS = getFLP(rekenS, 'werkend', refRate);
         const ms = flpS / 100 * gezS / 12;
         loanSalary = maxLoan(ms, refRate, 30) + (TK.labelExtra || 0);
@@ -1869,7 +1897,7 @@ function calculate() {
     // Tweetrap-mix: probeer 4 box-combinaties en kies de hoogste totaal
     let tweetrap = binding.loan;
     let tweetrapVariants = null;
-    if (yToFirstAOW > 0 && oudstePT && !oudsteApp.pensionMissing) {
+    if (ptMethode() !== 'beheer' && yToFirstAOW > 0 && oudstePT && !oudsteApp.pensionMissing) {
       tweetrapVariants = calcTweetrapVariants(yToFirstAOW, refRate, oudsteApp, jongsteApp, toetsen);
       if (tweetrapVariants && tweetrapVariants.length > 0) {
         tweetrap = tweetrapVariants[0].total; // hoogste variant
@@ -1882,6 +1910,7 @@ function calculate() {
       rekenIncome: binding.reken,
       isPens: binding.isPens,
       isAowTabel: binding.isAowTabel,
+      type: binding.type,
       status: binding.status,
       flp: binding.flp,
       monthly: binding.monthly,
@@ -1892,6 +1921,12 @@ function calculate() {
   }
 
   renderPensioenToetsInfo(inp, results, oudsteApp, drempel);
+  // Koppen volgens de rekenmethode (oorspronkelijke teksten bewaard voor rest/trhk)
+  [['momentsTitel', 'Max hypotheek per pensioenfase — NHG-beheercriteria'], ['momentsSub', 'NHG-beheercriteria (V&N D.6): beheertabel, werkelijke lasten van de leningdelen (anders 50% aflossingsvrij + 50% annuïtair), huidige rente, verplichtingen niet gebruteerd, geen alleenstaanden- of energielabelbedrag.'],
+   ['klifTitel', 'Pensioenklif: max hypotheek per leeftijd — NHG-beheercriteria'], ['klifSub', 'Per leeftijd een beheertoets: pensioen telt pas mee binnen 3 jaar vóór de AOW-datum (NHG D.6.3.4), na de AOW-datum het inkomen vanaf AOW.']].forEach(([id, t]) => {
+    const el = document.getElementById(id); if (!el) return; if (el.dataset.orig === undefined) el.dataset.orig = el.innerHTML;
+    el.innerHTML = ptMethode() === 'beheer' ? t : el.dataset.orig; });
+  { const mr = document.getElementById('momentsRente'); if (mr) mr.textContent = refRate.toFixed(2).replace('.', ',') + '%'; }
   // NHG-beheercriteria (V&N D.6): werkelijke rente en lasten van de leningdelen (anders 50/50-aanname), pensioen alleen binnen 36 maanden
   const tdB = new Date();
   const beheerVoor = (apps) => {
@@ -1904,7 +1939,7 @@ function calculate() {
       aanname: tot > 0 ? 'Werkelijke leningdelen (vorm, looptijd en rente per deel).' : null,
       verpl: d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, rvpRestJr: tot > 0 ? Math.min.apply(null, delen.map(p => p.fixedYrs || 99)) : inp.refRvp,
       box3: tot > 0 && b3 >= tot ? 'ja' : (b3 > 0 ? 'deels' : 'nee'), b3bedrag: b3,
-      meldingen: [d.kredietMnd > 0 ? 'Krediet: werkelijke maandtermijn onbekend, gerekend met 2% van de limiet.' : '', 'Verplichtingen: werkelijke maandlasten (niet gebruteerd).', 'De overige onderdelen van deze pagina (scenario’s, klif) tonen de acceptatietoets.'].filter(Boolean) });
+      meldingen: [d.kredietMnd > 0 ? 'Krediet: werkelijke maandtermijn onbekend, gerekend met 2% van de limiet.' : '', 'Verplichtingen: werkelijke maandlasten (niet gebruteerd).'].filter(Boolean) });
   };
   if (ptMethode() === 'beheer') { const elI = document.getElementById('pensioenToetsInfo'); if (elI) elI.innerHTML = beheerHtml(beheerVoor(inp.applicants)); }
   renderChart(results, inp);
@@ -2329,9 +2364,15 @@ function renderTable(results, currentAge, pensionAge, refRate, inp) {
     const badge = r.isPens
       ? `<span class="badge badge-pension">${r.status}</span>`
       : `<span class="badge badge-work">${r.status}</span>`;
+    let loanB3;
+    if (ptMethode() === 'beheer') { // box 3-kolom volgens de NHG-beheertabel (b3_), werkelijke lasten, geen labelbedrag
+      const LB = beheerLeningInfo(), basis = String(r.type || '').replace(/^b3_/, ''), d = TK.d;
+      loanB3 = Math.max(0, r.testIncome * beheerPct('b3_' + basis, r.testIncome, LB.rente) / 12 - (d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd)) / LB.a;
+    } else {
     const flpB3 = getFLP(r.testIncome, r.isPens ? 'box3_aow' : 'box3_werkend', refRate);
     const mB3 = flpB3 / 100 * r.testIncome / 12;
-    const loanB3 = maxLoan(mB3, refRate, 30) + (TK.labelExtra || 0); // + energielabelbedrag (buiten de maandlasttoets)
+    loanB3 = maxLoan(mB3, refRate, 30) + (TK.labelExtra || 0); // + energielabelbedrag (buiten de maandlasttoets)
+    }
     const extra = r.tweetrap - r.loan;
     const hasExtra = extra > 1000;
     html += `<tr class="${rowClass}">
