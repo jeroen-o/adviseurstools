@@ -38,3 +38,12 @@ Kop met kruimelpad, gerelateerde tools onder elke tool, sitefooter en de homepag
 2. `python3 scripts/opmaak-site.py` (kop, footer, gerelateerde tools, homepage)
 3. `python3 scripts/maak-zoekindex.py` (zoeker)
 4. `python3 scripts/maak-seo.py` (meta-tags, canonical, Open Graph, JSON-LD, sitemap.xml, robots.txt, llms.txt)
+
+## Normen aanpassen (één plek)
+Alle leennormen, NHG-grenzen en fiscale waarden staan in `data/normen.json`.
+1. Pas de waarde aan in `data/normen.json` (bijv. een nieuw normjaar toevoegen onder `leennormen.financieringslast`, `alleenstaandenbedrag` en `nhg`).
+2. Draai `python3 scripts/maak-normen.py`. Dat controleert de data en werkt bij:
+   - de open data: `api/normen.json`, `api/normen-<jaar>.json` (uitleg op `/api/`);
+   - de rekenbibliotheek `assets/normen.js` (`window.ATNormen`, zie `scripts/normen-lib.js`);
+   - elke tool met een blok `<script id="at-normen"></script>`: daarin wordt de bibliotheek met de actuele normen gezet, zodat de tool een losstaand bestand blijft.
+3. Daarna de gebruikelijke stappen (opmaak, zoekindex, SEO) en committen.
