@@ -412,7 +412,7 @@ const WIA_2026 = {
   wgaLoongrel2:    0.70,             // daarna
   wgaLoonaanvul:   0.70,             // loonaanvullingsuitkering
   // WGA vervolguitkering als % van minimumloon per AO-klasse:
-  wgaVervolgPct: { 35:0.28, 45:0.35, 55:0.42, 65:0.50, 80:0.65 },
+  wgaVervolgPct: { 35:0.28, 45:0.35, 55:0.42, 65:0.5075, 80:0.5075 }, // art. 61 lid 6 WIA
   wmlMnd:          2294.40 * 1.08,   // incl. vakantiegeld ≈ €2.478/mnd
   loondoorBetaling: 0.70,            // min. 70% bij werkgever
   wachttijd:       104,              // weken
@@ -495,23 +495,23 @@ function berekenWia(brutoJaarInkomen, aoType, aoPct, arbVerleden, rvc){
     fases.push({ label:'Fase 2: IVA-uitkering', duur:'Tot AOW', bruto:ivaUitkering, pctVanLoon:(ivaUitkering/brutoMnd*100), type:'iva' });
   } else if(aoType === 'wga80'){
     const wgaLG = maandloon * WIA_2026.wgaLoongrel2;
-    const wgaLA = maandloon * WIA_2026.wgaLoonaanvul * (aoPct/100);
+    const wgaLA = maandloon * WIA_2026.wgaLoonaanvul; // 80-100%: 70% van het maandloon (geen inkomen)
     fases.push({ label:`Fase 2a: WGA loongerelateerd (${wgaDuur} mnd)`, duur:`${wgaDuur} maanden`, bruto:wgaLG, pctVanLoon:(wgaLG/brutoMnd*100), type:'wga' });
     fases.push({ label:'Fase 2b: WGA loonaanvullingsuitkering', duur:'Tot AOW / herstel', bruto:wgaLA, pctVanLoon:(wgaLA/brutoMnd*100), type:'wga' });
   } else if(aoType === 'wga35_80'){
-    const wgaLG = maandloon * WIA_2026.wgaLoongrel2 * (aoPct/100);
+    const wgaLG = maandloon * WIA_2026.wgaLoongrel2; // 70% × (maandloon − inkomen), hier zonder inkomen
     // loonaanvullingsuitkering: 70% van verschil maatmanloon - rvc
     const rvcMnd = rvc || 0;
-    const wgaLA = Math.max(0, (maandloon - rvcMnd) * 0.70 * (aoPct/100));
+    const wgaLA = Math.max(0, (maandloon - rvcMnd) * 0.70);
     // vervolguitkering: % van minimumloon
     const klasseKeys = [35,45,55,65,80].filter(k=>aoPct>=k);
     const klasse = klasseKeys.length ? klasseKeys[klasseKeys.length-1] : 35;
     const wgaVVU = WIA_2026.wmlMnd * WIA_2026.wgaVervolgPct[klasse];
     fases.push({ label:`Fase 2a: WGA loongerelateerd (${wgaDuur} mnd)`, duur:`${wgaDuur} maanden`, bruto:wgaLG, pctVanLoon:(wgaLG/brutoMnd*100), type:'wga' });
-    if(rvcMnd>0 && rvcMnd >= maandloon * 0.50 * (aoPct/100)){
+    if(rvcMnd>0){ // gaat ervan uit dat de restverdiencapaciteit wordt benut (≥ 50% RVC)
       fases.push({ label:'Fase 2b: WGA loonaanvullingsuitkering + arbeid', duur:'Tot herstel/AOW', bruto:wgaLA + rvcMnd, pctVanLoon:((wgaLA+rvcMnd)/brutoMnd*100), type:'wga', note:'incl. arbeidsinkomsten' });
     } else {
-      fases.push({ label:'Fase 2b: WGA vervolguitkering', duur:'Tot AOW / herstel', bruto:wgaVVU, pctVanLoon:(wgaVVU/brutoMnd*100), type:'vvu', note:`${aoPct}% AO → ${fmtPct(WIA_2026.wgaVervolgPct[klasse]*100)}% WML` });
+      fases.push({ label:'Fase 2b: WGA vervolguitkering', duur:'Tot AOW / herstel', bruto:wgaVVU, pctVanLoon:(wgaVVU/brutoMnd*100), type:'vvu', note:`${aoPct}% AO → ${fmtPct(WIA_2026.wgaVervolgPct[klasse]*100,2)} WML` });
     }
   }
 

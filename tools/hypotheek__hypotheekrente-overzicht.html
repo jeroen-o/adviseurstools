@@ -872,7 +872,13 @@ function renderOverzicht() {
 }
 
 function verwijderRecord(i) {
-  const data = getData();
+  // zelfde sortering als renderOverzicht, zodat index i naar het getoonde record wijst
+  const data = getData().sort((a,b) => {
+    if (a.periode !== b.periode) return a.periode.localeCompare(b.periode);
+    if (a.nhg !== b.nhg) return a.nhg.localeCompare(b.nhg);
+    if (a.vorm !== b.vorm) return a.vorm.localeCompare(b.vorm);
+    return a.rente - b.rente;
+  });
   data.splice(i, 1);
   saveData(data);
   renderOverzicht();
