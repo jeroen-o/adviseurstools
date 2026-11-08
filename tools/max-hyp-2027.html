@@ -591,6 +591,10 @@ function ptGrafiek(el, o) {
     if(d1.getDate() > d0.getDate()) m++;
     return m;
   }
+  // Volle maanden (aantal betaalde termijnen) tussen d0 en d1: naar beneden afgerond, zoals in de overige tools
+  function volleMaanden(d0, d1){
+    return (d1.getFullYear()-d0.getFullYear())*12 + (d1.getMonth()-d0.getMonth()) - (d1.getDate() < d0.getDate() ? 1 : 0);
+  }
   function leeftijdOp(geboortedatum, peildatum){
     var jaren = peildatum.getFullYear() - geboortedatum.getFullYear();
     var m = peildatum.getMonth() - geboortedatum.getMonth();
@@ -821,15 +825,18 @@ function ptGrafiek(el, o) {
 
     // Pensioentoets (restschuldmethode): voor wie aan de gekozen drempel voldoet is de AOW-datum een toetsmoment op de restschuld;
     // er is geen apart toetsmoment op de datum waarop iemand de drempelleeftijd bereikt.
-    var aowHorizonMnd = Math.max(horizonMnd, 180), aowMomenten = {};
+    var aowHorizonMnd = Math.max(horizonMnd, 180), aowMomenten = {}, momentDatumMap = {};
+    // Restschuld na het aantal volle maanden tot de datum; het inkomen wordt bepaald op de datum zelf (AOW- of prepensioendatum)
+    function momentDatum(m){ return momentDatumMap[m] || addMonths(toetsdatum, m); }
+    function zetMomentDatum(m, d){ if(!momentDatumMap[m] || d > momentDatumMap[m]) momentDatumMap[m] = d; }
     [client, partner].forEach(function(p){
       if(p && p.aow){
-        var mAow = monthsBetween(toetsdatum, p.aow);
-        if(mAow > 0 && pensioentoetsGeldtOp(p, toetsdatum)){ momenten.push(mAow); aowMomenten[mAow] = true; }
+        var mAow = volleMaanden(toetsdatum, p.aow);
+        if(mAow > 0 && pensioentoetsGeldtOp(p, toetsdatum)){ momenten.push(mAow); aowMomenten[mAow] = true; zetMomentDatum(mAow, p.aow); }
       }
       if(p && p.prepDatum){
-        var mPrep = monthsBetween(toetsdatum, p.prepDatum);
-        if(mPrep > 0 && mPrep <= horizonMnd) momenten.push(mPrep);
+        var mPrep = volleMaanden(toetsdatum, p.prepDatum);
+        if(mPrep > 0 && mPrep <= horizonMnd){ momenten.push(mPrep); zetMomentDatum(mPrep, p.prepDatum); }
       }
     });
     momenten = momenten.filter(function(m){ return m>=0 && m<=maxDuur && (m<=horizonMnd || aowMomenten[m]); });
@@ -934,7 +941,7 @@ function ptGrafiek(el, o) {
       var gRente = Math.round(delenArr.reduce(function(s,d){ return s + toetsrenteDeel(d,normrente)*d.bedrag; },0) / totB * 1000) / 1000;
       var bIdx = renteBandIndex(gRente);
       var rws = momenten.map(function(m){
-        var datumOpMoment = addMonths(toetsdatum, m);
+        var datumOpMoment = momentDatum(m);
         var inkObj = toetsinkomenOp(datumOpMoment);
         var toetsinkomen = inkObj.bedrag;
         var tb = bepaalTabellen(inkObj, datumOpMoment);
@@ -966,7 +973,7 @@ function ptGrafiek(el, o) {
     }
 
     var rows = momenten.map(function(m){
-      var datumOpMoment = addMonths(toetsdatum, m);
+      var datumOpMoment = momentDatum(m);
       var inkObj = toetsinkomenOp(datumOpMoment);
       var toetsinkomen = inkObj.bedrag;
 
@@ -1046,11 +1053,11 @@ function ptGrafiek(el, o) {
       var delta = new Date(toetsdatum.getFullYear()-leeftijd, toetsdatum.getMonth(), toetsdatum.getDate()) - client.geb;
       function schuif(p){ if(!p) return null; var g = p.geb ? new Date(p.geb.getTime()+delta) : null; return {geb:g, aow:g?defaultAowDatum(g):null, inkomen:p.inkomen, pensioen:p.pensioen}; }
       var ps = [schuif(client)].concat(partner ? [schuif(partner)] : []);
-      var mom = [0];
-      ps.forEach(function(p){ if(p.aow && (BEHEER_MODUS ? beheerPensioenGeldt(p, toetsdatum) : drempelGeldt(keuze, p.geb, p.aow, toetsdatum))){ var m = monthsBetween(toetsdatum, p.aow); if(m>0 && m<=maxDuur) mom.push(m); } });
+      var mom = [0], gDat = {};
+      ps.forEach(function(p){ if(p.aow && (BEHEER_MODUS ? beheerPensioenGeldt(p, toetsdatum) : drempelGeldt(keuze, p.geb, p.aow, toetsdatum))){ var m = volleMaanden(toetsdatum, p.aow); if(m>0 && m<=maxDuur){ mom.push(m); if(!gDat[m] || p.aow > gDat[m]) gDat[m] = p.aow; } } });
       var laagste = null;
       mom.forEach(function(m){
-        var datum = addMonths(toetsdatum, m), personen = [], totaal = 0;
+        var datum = gDat[m] || addMonths(toetsdatum, m), personen = [], totaal = 0;
         ps.forEach(function(p, idx){
           var aowNu = p.aow && datum >= p.aow, ink = aowNu ? (p.pensioen!==null ? p.pensioen : 0) : p.inkomen;
           if(idx===0 && verpl.alimentatie > 0) ink = Math.max(0, ink - verpl.alimentatie*12);
@@ -1096,7 +1103,7 @@ function ptGrafiek(el, o) {
 
     // -- scenario: alles in box 3 (geen enkele renteaftrek) --
     var box3Rows = momenten.map(function(m){
-      var datumOpMoment = addMonths(toetsdatum, m);
+      var datumOpMoment = momentDatum(m);
       var inkObj = toetsinkomenOp(datumOpMoment);
       var toetsinkomen = inkObj.bedrag;
       var tb = bepaalTabellen(inkObj, datumOpMoment);
@@ -1387,7 +1394,7 @@ function ptGrafiek(el, o) {
     var vlMomenten = [{m:0, datum:toetsdatum, personen: vlPersonen.map(function(p){ return {ink:p.inkomen, aow:p.aowBereikt}; })}];
     vlPersonen.forEach(function(q){
       if(!q.pensioentoetsGeldt || !q.aowDatum) return;
-      var m = (q.aowDatum.getFullYear()-toetsdatum.getFullYear())*12 + (q.aowDatum.getMonth()-toetsdatum.getMonth());
+      var m = volleMaanden(toetsdatum, q.aowDatum);
       if(m <= 0) return;
       vlMomenten.push({m:m, datum:q.aowDatum, personen: vlPersonen.map(function(p){
         var pensNu = p.aowBereikt || (p.aowDatum && p.aowDatum <= q.aowDatum);
