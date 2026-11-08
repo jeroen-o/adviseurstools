@@ -471,6 +471,8 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       <div class="scenariobox" id="scenarioBox"></div>
     </div>
 
+    <div class="card" id="ptGrafiekCard"><div id="ptGrafiek"></div></div>
+
     <div class="card" id="routeCard" style="display:none;">
       <h2>Route naar akkoord</h2>
       <div id="routeBody"></div>
@@ -495,6 +497,72 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
   <div class="footer-strip">Rekenhulp maximale hypotheek — indicatief, geen bindend advies</div>
 </div>
 
+<script>
+/* ── Pensioentoets-grafiek (Adviseurstools.nl) ─────────────────────────────────
+ * Maximale hypotheek per leeftijd bij aanvraag (50 jaar t/m AOW-leeftijd) voor de
+ * vier pensioentoets-keuzes, met de restschuldmethode van de tool zelf.
+ * Gebruik:
+ *   ptGrafiek(document.getElementById('ptGrafiek'), {
+ *     berekenMax: function(leeftijd, keuze){ return maxHypotheek; },  // keuze: '57','52','aow10','aow15'
+ *     huidigeLeeftijd: 57,          // optioneel: markering
+ *     gekozen: '57',                // optioneel: dikkere lijn
+ *     vanaf: 50, tot: 67            // optioneel
+ *   });
+ * Inline SVG, geen externe bibliotheek; NL-notatie; schaalt mee op mobiel.
+ */
+function ptGrafiek(el, o) {
+  if (!el) return;
+  var KEUZES = [
+    { k: '57', lbl: 'Vanaf 57 jaar', kl: '#003057', dash: '' },
+    { k: '52', lbl: 'Vanaf 52 jaar', kl: '#e5a138', dash: '' },
+    { k: 'aow10', lbl: '10 jaar vóór AOW', kl: '#4a7fb5', dash: '6 4' },
+    { k: 'aow15', lbl: '15 jaar vóór AOW', kl: '#b9771f', dash: '6 4' }
+  ];
+  var van = o.vanaf || 50, tot = o.tot || 67, jaren = [];
+  for (var a = van; a <= tot; a++) jaren.push(a);
+  var reeks = KEUZES.map(function (K) {
+    return { K: K, w: jaren.map(function (a) { var v = +o.berekenMax(a, K.k); return isFinite(v) && v > 0 ? v : 0; }) };
+  });
+  var max = 0; reeks.forEach(function (r) { r.w.forEach(function (v) { if (v > max) max = v; }); });
+  if (!(max > 0)) { el.innerHTML = '<p style="font-size:12px;color:#5f6b7a">Vul inkomen en inkomen vanaf AOW in om de grafiek te tonen.</p>'; return; }
+  var stap = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / stap) * stap;
+  if (top / stap <= 3) { stap = stap / 2; top = Math.ceil(max / stap) * stap; }
+  var W = 720, H = 300, L = 74, R = 14, T = 14, B = 34, pw = W - L - R, ph = H - T - B;
+  var x = function (a) { return L + (a - van) / (tot - van) * pw; }, y = function (v) { return T + ph - v / top * ph; };
+  var eur = function (v) { return '€ ' + Math.round(v).toLocaleString('nl-NL'); };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Maximale hypotheek per leeftijd bij aanvraag" style="width:100%;height:auto;display:block;font-family:inherit">';
+  for (var g = 0; g <= top + 1e-6; g += stap) {
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="#e3e9ef"/>' +
+      '<text x="' + (L - 6) + '" y="' + (y(g) + 4) + '" text-anchor="end" font-size="11" fill="#5f6b7a">' + eur(g) + '</text>';
+  }
+  jaren.forEach(function (a) {
+    if ((a - van) % 2 === 0 || a === tot) s += '<text x="' + x(a) + '" y="' + (H - B + 16) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">' + a + '</text>';
+  });
+  s += '<text x="' + (L + pw / 2) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">Leeftijd bij aanvraag (jaar)</text>';
+  if (o.huidigeLeeftijd >= van && o.huidigeLeeftijd <= tot) {
+    s += '<line x1="' + x(o.huidigeLeeftijd) + '" x2="' + x(o.huidigeLeeftijd) + '" y1="' + T + '" y2="' + (T + ph) + '" stroke="#b42318" stroke-dasharray="3 3"/>' +
+      '<text x="' + (x(o.huidigeLeeftijd) + 4) + '" y="' + (T + 11) + '" font-size="11" fill="#b42318">nu ' + o.huidigeLeeftijd + ' jr</text>';
+  }
+  reeks.forEach(function (r) {
+    var dik = r.K.k === o.gekozen ? 3.5 : 2;
+    var pts = r.w.map(function (v, i) { return x(jaren[i]) + ',' + y(v); }).join(' ');
+    s += '<polyline points="' + pts + '" fill="none" stroke="' + r.K.kl + '" stroke-width="' + dik + '"' + (r.K.dash ? ' stroke-dasharray="' + r.K.dash + '"' : '') + '/>';
+    r.w.forEach(function (v, i) {
+      s += '<circle cx="' + x(jaren[i]) + '" cy="' + y(v) + '" r="' + (dik > 2 ? 3.2 : 2.4) + '" fill="' + r.K.kl + '"><title>' + r.K.lbl + ' · ' + jaren[i] + ' jaar: ' + eur(v) + '</title></circle>';
+    });
+  });
+  s += '</svg>';
+  var leg = '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:12px">' + KEUZES.map(function (K) {
+    return '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="26" height="8"><line x1="0" x2="26" y1="4" y2="4" stroke="' + K.kl + '" stroke-width="' + (K.k === o.gekozen ? 3.5 : 2) + '"' + (K.dash ? ' stroke-dasharray="' + K.dash + '"' : '') + '/></svg>' + K.lbl + (K.k === o.gekozen ? ' <b>(gekozen)</b>' : '') + '</span>';
+  }).join('') + '</div>';
+  var rij = function (r) { return '<tr><td style="padding:3px 8px;white-space:nowrap">' + r.K.lbl + '</td>' + r.w.map(function (v) { return '<td style="padding:3px 6px;text-align:right;white-space:nowrap">' + eur(v) + '</td>'; }).join('') + '</tr>'; };
+  var tab = '<details style="margin-top:8px;font-size:12px"><summary style="cursor:pointer">Bedragen per leeftijd</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:3px 8px">Pensioentoets</th>' +
+    jaren.map(function (a) { return '<th style="padding:3px 6px;text-align:right">' + a + '</th>'; }).join('') + '</tr>' + reeks.map(rij).join('') + '</table></div></details>';
+  el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Maximale hypotheek per leeftijd bij aanvraag</div>' +
+    '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).</div>' + s + leg + tab;
+}
+
+</script>
 <script>
 (function(){
   "use strict";
@@ -956,6 +1024,41 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       if(!bepalend || opInk + extra < bepalend.opInk + bepalend.extra) bepalend = {m:r.m, datum:r.datum, opInk:opInk, extra:extra, inkObj:r.inkObj};
     });
     var maxOpBasisInkomen = bepalend ? bepalend.opInk : maxMaandlastAanvang * annuiteitFactor(iGew, 360);
+
+    // ── Grafiek: maximale hypotheek per leeftijd bij aanvraag en per pensioentoets-keuze (restschuldmethode) ──
+    function grafiekMax(leeftijd, keuze){
+      if(!client || !client.geb) return 0;
+      var delta = new Date(toetsdatum.getFullYear()-leeftijd, toetsdatum.getMonth(), toetsdatum.getDate()) - client.geb;
+      function schuif(p){ if(!p) return null; var g = p.geb ? new Date(p.geb.getTime()+delta) : null; return {geb:g, aow:g?defaultAowDatum(g):null, inkomen:p.inkomen, pensioen:p.pensioen}; }
+      var ps = [schuif(client)].concat(partner ? [schuif(partner)] : []);
+      var mom = [0];
+      ps.forEach(function(p){ if(p.aow && drempelGeldt(keuze, p.geb, p.aow, toetsdatum)){ var m = monthsBetween(toetsdatum, p.aow); if(m>0 && m<=maxDuur) mom.push(m); } });
+      var laagste = null;
+      mom.forEach(function(m){
+        var datum = addMonths(toetsdatum, m), personen = [], totaal = 0;
+        ps.forEach(function(p, idx){
+          var aowNu = p.aow && datum >= p.aow, ink = aowNu ? (p.pensioen!==null ? p.pensioen : 0) : p.inkomen;
+          if(idx===0 && verpl.alimentatie > 0) ink = Math.max(0, ink - verpl.alimentatie*12);
+          totaal += ink; personen.push({ink:ink, aow:!!aowNu});
+        });
+        var inkObj = {bedrag:totaal, onvolledig:false, personen:personen};
+        var tb = bepaalTabellen(inkObj, datum);
+        var pA = interpolatePercentage(tb.tables, tb.tabA, totaal, bandIdx), pN = interpolatePercentage(tb.tables, tb.tabN, totaal, bandIdx);
+        var verh = pN>0 ? pA/pN : 1, la = 0, ln = 0;
+        delenState.forEach(function(d){
+          var rest = m===0 ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); if(rest <= 0) return;
+          var ml = maandlastVoorToets(d, rest, (toetsrenteDeel(d, normrente)/100)/12);
+          var b3 = d.bedrag>0 ? Math.min(1,(d.box3||0)/d.bedrag) : 0, aftr = (m < d.aftrekbaarTm) ? (1-b3) : 0;
+          la += ml*aftr; ln += ml*(1-aftr);
+        });
+        var lastPerEuro = totBedrag>0 ? (la + ln*verh)/totBedrag : 0;
+        if(!(lastPerEuro > 0)) return;
+        var maxMl = totaal * (pA/100)/12 - verplichtingenLast(verpl, bandIdx, la > 0.005);
+        var h = Math.max(0, maxMl) / lastPerEuro + vrijstellingOp(inkObj);
+        if(laagste===null || h < laagste) laagste = h;
+      });
+      return Math.min(laagste||0, ltvMax);
+    }
     var alleenstaandeExtra = alleenstaandeOp(bepalend ? bepalend.inkObj : inkAanvang);
     // Beheer: V niet optellen (NHG-beheercriteria houden deze bedragen voor zover bekend niet buiten de financieringslast) — consistent met de toets per moment
     var extraBuitenToetsing = bepalend ? bepalend.extra : vrijstellingOp(inkAanvang);
@@ -1059,6 +1162,10 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
 
     document.getElementById("scenarioBox").innerHTML =
       "<div style='margin-bottom:8px;'>" + hoofdsomStatus + extraTekstResultaat + "</div>" + scenarioHtml;
+    try{
+      var aowLft = client && client.geb && client.aow ? Math.floor((client.aow - client.geb)/31557600000) : 67;
+      ptGrafiek(document.getElementById("ptGrafiek"), { berekenMax: grafiekMax, huidigeLeeftijd: client && client.geb ? leeftijdOp(client.geb, toetsdatum) : null, gekozen: pensioenKeuze, vanaf: 50, tot: Math.max(67, aowLft) });
+    }catch(e){ document.getElementById("ptGrafiek").innerHTML = ""; }
 
     // ---------- Route naar akkoord ----------
     var routeCard = document.getElementById("routeCard");
