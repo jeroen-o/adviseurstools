@@ -499,8 +499,8 @@ function simuleer(){
     depotRest  -= opname;
     depotOpgen += opname;
 
-    // Hypotheekrente over: hypEx + opgenomen deel van depot
-    const saldoHyp    = hypEx + depotOpgen;
+    // Hypotheekrente over het volledige hypotheekbedrag, dus ook over het deel dat nog in het depot staat
+    const saldoHyp    = hypEx + depot;
     const renteHyp    = saldoHyp * hypR;
 
     // Depotrente ontvangen over restant depot (begin van de maand = voor opname)
@@ -508,6 +508,8 @@ function simuleer(){
     const renteDepot    = depotBeginMnd * depR;
 
     const nettoLast = renteHyp - renteDepot;
+    // Depotkosten: renteverschil over het depotrestant (hypotheekrente over nog niet opgenomen geld − depotrente)
+    const depotKost = depotBeginMnd * hypR - renteDepot;
 
     rows.push({
       mnd: t+1,
@@ -518,6 +520,7 @@ function simuleer(){
       renteHyp,
       renteDepot,
       nettoLast,
+      depotKost,
     });
   }
 
@@ -544,7 +547,7 @@ function bereken(){
   const totRenteHyp   = simData.reduce((s,r)=>s+r.renteHyp, 0);
   const totRenteDepot = simData.reduce((s,r)=>s+r.renteDepot, 0);
   const totNetto      = simData.reduce((s,r)=>s+r.nettoLast, 0);
-  const depotKosten   = totRenteHyp - totRenteDepot; // = totNetto
+  const depotKosten   = simData.reduce((s,r)=>s+r.depotKost, 0); // renteverschil over het depotrestant
   const maxLast       = Math.max(...simData.map(r=>r.nettoLast));
   const minLast       = Math.min(...simData.map(r=>r.nettoLast));
 
@@ -554,7 +557,7 @@ function bereken(){
     <div class="mbox navy">
       <div class="ml">Totale depotkosten</div>
       <div class="mv">${fmt(depotKosten)}</div>
-      <div class="ms">Hypotheekrente min depotrente</div>
+      <div class="ms">Renteverschil over het depotrestant</div>
     </div>
     <div class="mbox gold">
       <div class="ml">Hypotheekrente (totaal)</div>
@@ -577,8 +580,8 @@ function bereken(){
   document.getElementById('infoBox').innerHTML = `
     <strong>Berekening:</strong> Depot ${fmt(depot)} · Hypotheekrente ${N('hypRente').toFixed(2)}% · Depotrente ${N('depRente').toFixed(2)}% · 
     Looptijd ${looptijd} maanden · Patroon: ${patroonNm[patroon]}<br><br>
-    De <strong>hypotheekrente</strong> loopt over het volledige bedrag: hypotheek excl. depot (${fmt(N('totHyp')-N('depot'))}) 
-    plus het reeds opgenomen deel uit het depot. Over het <strong>restant in het depot</strong> ontvang je depotrente terug.
+    De <strong>hypotheekrente</strong> loopt over het volledige hypotheekbedrag (${fmt(N('totHyp'))}), 
+    dus ook over het deel dat nog in het depot staat. Over het <strong>restant in het depot</strong> ontvang je depotrente terug.
     Het renteverschil (${(N('hypRente')-N('depRente')).toFixed(2)}%) over het gemiddelde depotrestant vormt de netto depotkosten van <strong>${fmt(depotKosten)}</strong>.`;
 
   // Maandtabel
@@ -671,11 +674,11 @@ function tekenGrafiek(){
     ];
   } else {
     // rente-analyse: cummulatief
-    let cumH=0, cumD=0;
+    let cumH=0, cumD=0, cumK=0;
     const cH=[], cD=[], cN=[];
     simData.forEach(r => {
-      cumH += r.renteHyp; cumD += r.renteDepot;
-      cH.push(cumH); cD.push(cumD); cN.push(cumH-cumD);
+      cumH += r.renteHyp; cumD += r.renteDepot; cumK += r.depotKost;
+      cH.push(cumH); cD.push(cumD); cN.push(cumK);
     });
     datasets = [
       { label:'Cum. hypotheekrente', data:cH, borderColor:'#003057', backgroundColor:'rgba(0,48,87,.1)', borderWidth:2, fill:true, tension:.3, pointRadius:0 },

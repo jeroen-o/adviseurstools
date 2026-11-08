@@ -455,17 +455,19 @@ function bereken(){
 
   // 3. Combinatie: eenmalig + jaarlijks voorgaande jaren spreiden
   if(kanEenmalig){
-    const cumulJaarlijks = VR.jaarlijksKind * spreidJaren;
+    // De eenmalige vrijstelling vervangt de jaarlijkse vrijstelling van dat jaar:
+    // over N jaar dus 1× eenmalig + (N−1)× jaarlijks (zelfde opbouw als de spreidingstabel)
+    const cumulJaarlijks = VR.jaarlijksKind * (spreidJaren - 1);
     const totaalCombo = cumulJaarlijks + VR.eenmaligVrij;
     // Spreiding + eenmalige = totaal belastingvrij
     strategieen.push({
-      naam:`Combo: ${spreidJaren}× jaarlijks + eenmalig`, klasse:'combo',
+      naam:`Combo: eenmalig + ${spreidJaren-1}× jaarlijks`, klasse:'combo',
       ico:'🔀', vrijstelling:totaalCombo,
       vrijBedrag:Math.min(schenkBedrag, totaalCombo),
       belastbaar:Math.max(0,schenkBedrag-totaalCombo),
       schenkbelasting:berekenSchenkbelasting(schenkBedrag, totaalCombo),
       nettoKind:schenkBedrag-berekenSchenkbelasting(schenkBedrag, totaalCombo),
-      toelichting:`Over ${spreidJaren} jaar + eenmalig = max ${fmt(totaalCombo)}`,
+      toelichting:`Over ${spreidJaren} jaar (eenmalig vervangt jaarlijks in jaar 1) = max ${fmt(totaalCombo)}`,
       cumulJaarlijks, totaalCombo,
     });
   }

@@ -452,7 +452,7 @@ function datumNaarLooptijd(){
   const d = document.getElementById('eindDatum').value;
   if(!d) return;
   const nu = new Date(); nu.setDate(1);
-  const eind = new Date(d + '-01');
+  const eind = new Date(d.length === 7 ? d + '-01' : d); // type=date levert JJJJ-MM-DD
   const mnd = (eind.getFullYear()-nu.getFullYear())*12 + (eind.getMonth()-nu.getMonth());
   if(mnd > 0) document.getElementById('looptijd').value = mnd;
 }
@@ -509,7 +509,9 @@ function simuleer(saldo0, rJaar, nMnd, extraEenmalig, extraPerMaand, vorm){
     const linAfl = vorm === 'lineair' ? saldo0/nMnd : 0;
     let totRente = 0;
     let mnd = 0;
-    while(saldo > 0.01 && mnd < nMnd * 3){  // max 3x looptijd als vangnet
+    // Aflossingsvrij: zelfde looptijd als basis (anders telt rente na einde looptijd mee)
+    const maxMnd = vorm === 'aflossingsvrij' ? nMnd : nMnd * 3;
+    while(saldo > 0.01 && mnd < maxMnd){  // max 3x looptijd als vangnet
       mnd++;
       const rente = saldo * rMnd;
       let afl;

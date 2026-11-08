@@ -379,7 +379,10 @@ function calculate() {
 
   var leeftijdNu    = Math.floor((nu - gebDate) / (365.25*24*3600*1000));
   var jarenTotEind  = Math.max(0, Math.round((eindDate - nu) / (365.25*24*3600*1000)));
-  var leeftijdOpEind = leeftijdNu + jarenTotEind;
+  // Leeftijd op de einddatum exact uit de datums (leeftijd nu + afgeronde jaren kan 1 jaar afwijken rond de 57-grens)
+  var peilEind = eindDate > nu ? eindDate : nu;
+  var leeftijdOpEind = peilEind.getFullYear() - gebDate.getFullYear();
+  if (peilEind.getMonth() < gebDate.getMonth() || (peilEind.getMonth() === gebDate.getMonth() && peilEind.getDate() < gebDate.getDate())) leeftijdOpEind--;
   var aowDatum = aowDatumUit(gebDate);
   var aowBereiktOpEind = !!aowDatum && eindDate >= aowDatum;
   var aowLeeftTekst = aowDatum && (aowDatum.getMonth() !== gebDate.getMonth()) ? '67 jaar en 3 maanden' : '67 jaar';

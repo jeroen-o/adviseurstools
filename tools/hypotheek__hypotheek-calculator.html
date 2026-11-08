@@ -98,7 +98,7 @@
             };
 
             const berekenMaandlast = (deel) => {
-                if (parseFloat(deel.bedrag) <= 0 || parseFloat(deel.rente) < 0 || parseInt(deel.looptijd) <= 0) return 0;
+                if (!(parseFloat(deel.bedrag) > 0) || !(parseFloat(deel.rente) >= 0) || !(parseInt(deel.looptijd) > 0)) return 0;
                 switch (deel.type) {
                     case 'annuitair': return berekenAnnuitair(deel);
                     case 'lineair': return berekenLineair(deel);
@@ -112,7 +112,7 @@
             };
 
             const generateTable = () => {
-                const aantalMaanden = Math.max(...leningdelen.map(d => parseInt(d.looptijd) * 12));
+                const aantalMaanden = Math.max(0, ...leningdelen.map(d => parseInt(d.looptijd) * 12).filter(n => n > 0));
                 const data = [];
                 for (let i = 1; i <= aantalMaanden; i++) {
                     let maandlast = 0, totalRente = 0, totalAflossing = 0, totalRestschuld = 0;
@@ -121,7 +121,7 @@
                         const jaarRente = parseFloat(deel.rente) / 100;
                         const maandRente = jaarRente / 12;
                         const aantalMaandenDeel = parseInt(deel.looptijd) * 12;
-                        if (i <= aantalMaandenDeel) {
+                        if (i <= aantalMaandenDeel && P > 0 && jaarRente >= 0) {
                             if (deel.type === 'aflossingsvrij') {
                                 const ml = berekenAflossingsvrij(deel);
                                 maandlast += ml; totalRente += ml; totalRestschuld += P;
