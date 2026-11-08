@@ -438,7 +438,8 @@ const FLP_AOW_2027=[
 ];
 // Woonquote AOW-tabel van het gekozen normjaar (toetsinkomen afgerond op de tabelrij eronder; buiten het bereik: eerste/laatste rij)
 function getFLPPensioen(ink,r){
-  let col=FLP_RENTE_GRENZEN.findIndex(g=>r<=g); if(col<0) col=11;
+  r=Math.round(r*1000)/1000; // toetsrente eerst op 3 decimalen (voorkomt o.a. 3,5000000000000004 → verkeerde kolom)
+  let col=FLP_RENTE_GRENZEN.findIndex(g=>r<=g+1e-9); if(col<0) col=11;
   const T=NORM_BY_YEAR[normjaar()].aow;
   let row=Math.floor((ink-T.min)/FLP_AOW_2026_STAP);
   row=Math.max(0,Math.min(T.rows.length-1,row));
@@ -651,7 +652,8 @@ const NORM_BY_YEAR={
 function normjaar(){const el=document.getElementById('normjaar');return el&&NORM_BY_YEAR[el.value]?el.value:'2026';}
 document.getElementById('normjaar').value=new Date()>=new Date(2027,0,1)?'2027':'2026';
 function getFLPNietAOW(ink,r){
-  let col=FLP_RENTE_GRENZEN.findIndex(g=>r<=g); if(col<0) col=11;
+  r=Math.round(r*1000)/1000; // toetsrente eerst op 3 decimalen (voorkomt o.a. 3,5000000000000004 → verkeerde kolom)
+  let col=FLP_RENTE_GRENZEN.findIndex(g=>r<=g+1e-9); if(col<0) col=11;
   const T=NORM_BY_YEAR[normjaar()].naow;
   let row=Math.floor((ink-T.min)/FLP_NAOW_2026_STAP);
   row=Math.max(0,Math.min(T.rows.length-1,row));
