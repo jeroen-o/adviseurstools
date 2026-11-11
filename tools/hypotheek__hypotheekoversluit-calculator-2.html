@@ -197,6 +197,18 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48
 .vtbl td{padding:8px 12px;}
 .vtbl tbody tr:nth-child(even) td{background:#f8fafc;}
 .vtbl .subtotal,.vtbl .subtotal td{background:var(--gold-lt)!important;font-weight:700;}
+/* TERUGVERDIENTIJD + FISCAAL */
+.tvt{margin-top:18px;border:1px solid var(--border);border-left:4px solid var(--navy);border-radius:0 10px 10px 0;padding:14px 16px;background:#fff;}
+.tvt.ok{border-left-color:var(--green);}
+.tvt.nee{border-left-color:var(--red);background:var(--redlt);}
+.tvt-kop{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.tvt-val{font-size:22px;font-weight:800;color:var(--navy);line-height:1.25;margin:2px 0 4px;font-variant-numeric:tabular-nums;}
+.tvt-txt{font-size:13px;color:var(--text);line-height:1.5;}
+.tvt-txt .som{font-variant-numeric:tabular-nums;}
+.tvt-txt small{display:block;color:var(--muted);font-size:11.5px;margin-top:6px;}
+.fisc{margin-top:12px;background:var(--gold-lt);border-left:4px solid var(--gold);border-radius:0 10px 10px 0;padding:12px 16px;font-size:12.5px;line-height:1.55;color:var(--text);}
+.fisc strong{color:var(--navy);}
+.fisc ul{margin:6px 0 0 18px;padding:0;}
 </style>
 </head>
 <body>
@@ -274,6 +286,23 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48
             </div>
             <span class="hint">Laat 0 voor automatische schatting · of vul in vanuit de Boeterente Calculator</span>
           </div>
+          <div class="fg fg2">
+            <div class="field">
+              <label for="hoofdsom">Oorspronkelijke hoofdsom</label>
+              <div class="iw"><span class="pre">€</span>
+                <input type="number" id="hoofdsom" placeholder="= saldo" min="0" step="5000">
+              </div>
+              <span class="hint">Grondslag boetevrije ruimte · leeg = openstaand saldo</span>
+            </div>
+            <div class="field">
+              <label for="boetevrijPct">Boetevrij per jaar</label>
+              <div class="iw">
+                <input type="number" id="boetevrijPct" value="10" min="0" max="100" step="1" class="rs" style="padding-right:42px;">
+                <span class="suf">%</span>
+              </div>
+              <span class="hint">Van de hoofdsom; zie de voorwaarden</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -343,6 +372,14 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48
               </div>
             </div>
           </div>
+          <div class="field">
+            <label for="aftrekPct">Aftrektarief hypotheekrente</label>
+            <div class="iw">
+              <input type="number" id="aftrekPct" value="37.56" min="0" max="49.5" step="0.01" class="rs" style="padding-right:42px;">
+              <span class="suf">%</span>
+            </div>
+            <span class="hint">Voor het netto voordeel (terugverdientijd). Max. aftrektarief 2026: 37,56%. Vul 0 in als de rente niet aftrekbaar is (bijv. box 3).</span>
+          </div>
         </div>
       </div>
 
@@ -359,6 +396,16 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48
     <div class="card-body">
       <div id="verdictBox" class="verdict loont" style="margin-bottom:20px;"></div>
       <div class="metrics-row" id="metricsRow"></div>
+      <div id="tvtBox" class="tvt"></div>
+      <div class="fisc" id="fiscBox">
+        <strong>Fiscale gevolgen van oversluiten (indicatief)</strong>
+        <ul>
+          <li>Een <strong>boete/vergoeding voor vervroegde aflossing</strong> is onder voorwaarden aftrekbaar als kosten van de eigenwoningschuld (box 1).</li>
+          <li>Worden <strong>advies-, notaris- en taxatiekosten meegefinancierd</strong>, dan valt dat deel van de lening niet zonder meer in de eigenwoningschuld; zonder aan de voorwaarden te voldoen kan het in box 3 vallen (geen renteaftrek).</li>
+          <li>Ook bestaande fiscale afspraken (bijv. overgangsrecht van vóór 2013, het aflossingsschema) kunnen door oversluiten veranderen.</li>
+        </ul>
+        <div style="margin-top:6px;">De terugverdientijd hierboven rekent met de bruto kosten en houdt geen rekening met aftrek van kosten. Laat de fiscale gevolgen toetsen door een fiscalist of fiscaal adviseur.</div>
+      </div>
     </div>
   </div>
 
@@ -413,6 +460,8 @@ const N = id => parseFloat(document.getElementById(id).value) || 0;
 const Nv = id => parseFloat(document.getElementById(id).value);
 function fmt(n,dec=0){ if(isNaN(n)||n===null) return '—'; const neg=n<0; return (neg?'− ':'')+' €\u00A0'+Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:dec,maximumFractionDigits:dec})+(dec===0?',-':''); }
 function fmtMnd(m){ if(m<=0) return 'direct'; if(m<12) return Math.round(m)+' mnd'; const j=Math.floor(m/12),r=Math.round(m%12); return j+'j'+( r>0?' '+r+'m':''); }
+function fmtGetal(n,dec=0){ return n.toLocaleString('nl-NL',{minimumFractionDigits:0,maximumFractionDigits:dec}); }
+function fmtTvt(m){ const j=Math.floor(m/12), r=m%12; const d=`${m} ${m===1?'maand':'maanden'}`; if(m<12) return d; return `${d} (${j} jaar${r?` en ${r} ${r===1?'maand':'maanden'}`:''})`; }
 function fmtPct(n){ return n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
 
 function updateHints(){
@@ -456,12 +505,15 @@ function simSaldo(saldo0, rJaar, nMnd, vorm){
 }
 
 // ── BOETERENTE SCHATTING (NCW methode) ────────────────────────────────────
-function schatBoeterente(saldo, crHuidig, crNieuw, rvpMnd, looptijdMnd){
+// Boeteplichtig deel = saldo − boetevrije ruimte (pct × oorspronkelijke hoofdsom).
+// Aflossingen tijdens de resterende RVP worden niet meegenomen → bovengrens.
+function schatBoeterente(saldo, crHuidig, crNieuw, rvpMnd, looptijdMnd, boetevrij=0){
   if(crNieuw >= crHuidig) return 0; // geen boete als nieuwe rente hoger
   const diff = (crHuidig-crNieuw)/100/12;
   const rMnd = crNieuw/100/12;
+  const basis = Math.max(0, saldo - boetevrij);
   let ncw=0;
-  for(let t=0;t<rvpMnd;t++) ncw += saldo*diff*Math.pow(1+rMnd,-(t+1));
+  for(let t=0;t<rvpMnd;t++) ncw += basis*diff*Math.pow(1+rMnd,-(t+1));
   return Math.max(0, ncw);
 }
 
@@ -480,12 +532,15 @@ function bereken(){
   if(saldo<=0||crH<=0||crN<=0||looptijd<1){ alert('Vul geldige waarden in.'); return; }
 
   // Kosten
-  const boeterente  = N('boeterente') || schatBoeterente(saldo, crH, crN, rvpMnd, looptijd);
+  const boetevrij   = (N('hoofdsom') || saldo) * Math.min(100, Math.max(0, N('boetevrijPct'))) / 100;
+  const boeteGeschat = N('boeterente') === 0;
+  const boeterente  = N('boeterente') || schatBoeterente(saldo, crH, crN, rvpMnd, looptijd, boetevrij);
   const kAdvies     = N('kAdvies');
   const kNotaris    = N('kNotaris');
   const kTaxatie    = N('kTaxatie');
   const kOverig     = N('kOverig');
   const totKosten   = boeterente + kAdvies + kNotaris + kTaxatie + kOverig;
+  const aftrekPct   = Math.min(100, Math.max(0, N('aftrekPct')));
 
   // Simuleer beide hypotheken over gemeenschappelijke horizon (looptijdN mnd)
   const rowsH = simSaldo(saldo, crH, looptijd, aflosH);
@@ -529,7 +584,7 @@ function bereken(){
   } else if(breakEvenMnd===null){
     verdictCls='loont-niet'; verdictIco='⚠️';
     verdictTitel='Break-even niet bereikt binnen analysehorizon';
-    verdictSub=`De totale oversluitkosten (${fmt(totKosten)}) worden binnen de nieuwe rentevaste periode niet terugverdiend. Heroverweeg de timing.`;
+    verdictSub=`De totale oversluitkosten (${fmt(totKosten)}) worden binnen de analyseperiode (${fmtGetal(horizon/12,1)} jaar) niet terugverdiend. Heroverweeg de timing.`;
   } else if(breakEvenMnd > rvpNieuw){
     verdictCls='risico'; verdictIco='⚠️';
     verdictTitel=`Kritisch: break-even na ${fmtMnd(breakEvenMnd)}`;
@@ -537,11 +592,11 @@ function bereken(){
   } else if(breakEvenMnd <= 24){
     verdictCls='loont'; verdictIco='✅';
     verdictTitel=`Oversluiten loont uitstekend!`;
-    verdictSub=`Break-even al na ${fmtMnd(breakEvenMnd)}. U bespaart ${fmt(mndVerschil,2)} per maand en totaal ${fmt(totBesparing)} over de resterende looptijd.`;
+    verdictSub=`Break-even al na ${fmtMnd(breakEvenMnd)}. U bespaart ${fmt(mndVerschil,2)} per maand en totaal ${fmt(totBesparing)} over de analyseperiode (${fmtGetal(horizon/12,1)} jaar).`;
   } else {
     verdictCls='loont'; verdictIco='✅';
     verdictTitel=`Oversluiten loont`;
-    verdictSub=`Break-even na ${fmtMnd(breakEvenMnd)}. Maandelijkse besparing: ${fmt(mndVerschil,2)}. Netto voordeel over gehele looptijd: ${fmt(totBesparing - totKosten)}.`;
+    verdictSub=`Break-even na ${fmtMnd(breakEvenMnd)}. Maandelijkse besparing: ${fmt(mndVerschil,2)}. Netto voordeel over de analyseperiode (${fmtGetal(horizon/12,1)} jaar): ${fmt(totBesparing - totKosten)}.`;
   }
 
   vBox.className = `verdict ${verdictCls}`;
@@ -568,19 +623,46 @@ function bereken(){
     <div class="mbox red">
       <div class="ml">Totale oversluitkosten</div>
       <div class="mv">${fmt(totKosten)}</div>
-      <div class="ms">Incl. boeterente ${fmt(boeterente)}</div>
+      <div class="ms">Incl. boeterente ${fmt(boeterente)}${boeteGeschat?' (schatting, bovengrens)':''}</div>
     </div>
     <div class="mbox ${totBesparing>totKosten?'green':'orange'}">
-      <div class="ml">Netto voordeel (looptijd)</div>
+      <div class="ml">Netto voordeel (${fmtGetal(horizon/12,1)} jaar)</div>
       <div class="mv">${fmt(totBesparing - totKosten)}</div>
       <div class="ms">Besparing ${fmt(totBesparing)} min kosten ${fmt(totKosten)}</div>
     </div>`;
+
+  // ── TERUGVERDIENTIJD (AFM-Leidraad § 10) ──
+  // totale oversluitkosten ÷ maandelijks netto voordeel (renteverschil maand 1 na renteaftrek).
+  // Aflossing telt niet als voordeel: dat is vermogensopbouw, geen kosten.
+  const renteVoordeelBruto = (rowsH[0]?.rente||0) - (rowsN[0]?.rente||0);
+  const renteVoordeelNetto = renteVoordeelBruto * (1 - aftrekPct/100);
+  const tvtMnd = renteVoordeelNetto > 0.005 ? Math.ceil(totKosten / renteVoordeelNetto - 1e-9) : null;
+  const tvtBinnenRvp = tvtMnd !== null && tvtMnd <= rvpNieuw;
+  const tvtMndBruto = mndVerschil > 0.005 ? Math.ceil(totKosten / mndVerschil - 1e-9) : null;
+  const tb = document.getElementById('tvtBox');
+  tb.className = 'tvt ' + (tvtBinnenRvp ? 'ok' : 'nee');
+  const rvpTxt = `${fmtGetal(rvpNieuw/12,1)} jaar`;
+  tb.innerHTML = `<div class="tvt-kop">Terugverdientijd (netto)</div>
+    <div class="tvt-val">${tvtMnd===null ? 'Verdient zich niet terug' : fmtTvt(tvtMnd)}</div>
+    <div class="tvt-txt">
+      ${tvtMnd===null
+        ? `<strong>Er is geen maandelijks netto voordeel (renteverschil ${fmt(renteVoordeelBruto,2).trim()} per maand); de oversluitkosten van ${fmt(totKosten).trim()} verdienen zich niet terug.</strong>`
+        : `<span class="som">${fmt(totKosten).trim()} totale oversluitkosten ÷ ${fmt(renteVoordeelNetto,2).trim()} netto voordeel per maand</span>
+      (renteverschil ${fmt(renteVoordeelBruto,2).trim()} bruto, na ${fmtGetal(aftrekPct,2)}% renteaftrek).`}
+      ${tvtMnd===null
+        ? ``
+        : tvtBinnenRvp
+          ? `<br>De kosten zijn terugverdiend binnen de nieuwe rentevaste periode (${rvpTxt}).`
+          : `<br><strong>Verdient zich niet terug binnen de nieuwe rentevaste periode (${rvpTxt}).</strong>`}
+      <small>Ter vergelijking, op basis van het bruto maandlastverschil (${fmt(mndVerschil,2).trim()}, inclusief verschil in aflossing; zoals de break-even hierboven): ${tvtMndBruto===null?'geen terugverdientijd':fmtTvt(tvtMndBruto)}. Het voordeel is berekend op de eerste maand; doordat de schuld afneemt, wordt het renteverschil later kleiner. Indicatief.</small>
+    </div>`;
+  Object.assign(simData, { tvtMnd, tvtMndBruto, renteVoordeelBruto, renteVoordeelNetto, aftrekPct, tvtBinnenRvp });
 
   // ── KOSTENTABEL ──
   const kt = document.getElementById('kostenTbl');
   kt.innerHTML = `<thead><tr><th>Post</th><th style="text-align:right">Bedrag</th></tr></thead>
     <tbody>
-      <tr><td>Boeterente${N('boeterente')===0?' (geschat)':''}</td><td class="hl-red">${fmt(boeterente)}</td></tr>
+      <tr><td>Boeterente${boeteGeschat?` (geschat, na boetevrije ruimte ${fmt(boetevrij).trim()}; bovengrens)`:''}</td><td class="hl-red">${fmt(boeterente)}</td></tr>
       <tr><td>Advieskosten</td><td class="hl-red">${fmt(kAdvies)}</td></tr>
       <tr><td>Notariskosten</td><td class="hl-red">${fmt(kNotaris)}</td></tr>
       <tr><td>Taxatiekosten</td><td class="hl-red">${fmt(kTaxatie)}</td></tr>

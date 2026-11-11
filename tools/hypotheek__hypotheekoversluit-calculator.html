@@ -461,6 +461,10 @@ table.bk tr.total td:last-child{color:var(--navy)}
 @media print{body{background:#fff;color:#000}.hero{background:#fff;border-bottom:2px solid #000}.hero h1,.hero p{color:#000}.card,.kpi,.breakdown,.chart-wrap{box-shadow:none}button,.steps{display:none!important}}
 
 @media(max-width:480px){.hero{grid-template-columns:1fr}.hero-badge{grid-column:1;grid-row:3;justify-self:start;margin-top:8px}}
+.fisc{margin-top:14px;background:var(--gold-lt);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:12px 16px;font-size:12.5px;line-height:1.55;color:var(--text);}
+.fisc strong{color:var(--navy);}
+.fisc ul{margin:6px 0 0 18px;padding:0;}
+.kosten-row input[type=checkbox]{width:20px;height:20px;}
 </style>
 </head>
 <body>
@@ -688,6 +692,23 @@ table.bk tr.total td:last-child{color:var(--navy)}
             <input type="number" id="kOverig" value="0" min="0" step="100">
           </div>
         </div>
+        <div class="kosten-row">
+          <div class="kosten-lbl">
+            <label for="meefin">Kosten meefinancieren</label>
+            <div class="kosten-sub">Aangevinkt: boete en kosten worden bij de nieuwe lening opgeteld (hogere schuld en maandlast). Ze tellen in de terugverdientijd maar één keer mee.</div>
+          </div>
+          <div class="kosten-input" style="text-align:right;"><input type="checkbox" id="meefin" checked></div>
+        </div>
+        <div class="kosten-row">
+          <div class="kosten-lbl">
+            <label for="aftrekPct">Aftrektarief hypotheekrente</label>
+            <div class="kosten-sub">Voor het netto voordeel (terugverdientijd). Max. aftrektarief 2026: 37,56%. Vul 0 in als de rente niet aftrekbaar is (bijv. box 3).</div>
+          </div>
+          <div class="kosten-input input-wrap has-suffix">
+            <input type="number" id="aftrekPct" value="37.56" min="0" max="49.5" step="0.01">
+            <span class="input-suffix">%</span>
+          </div>
+        </div>
 
         <button class="btn-calc" onclick="bereken()">🔢 Bereken — Is oversluiten verstandig?</button>
         <div class="nav" style="margin-top:8px;">
@@ -722,6 +743,15 @@ table.bk tr.total td:last-child{color:var(--navy)}
     <div class="chart-wrap" id="tvtWrap">
       <h3>⏱️ Terugverdientijd</h3>
       <div id="tvtContent"></div>
+      <div class="fisc">
+        <strong>Fiscale gevolgen van oversluiten (indicatief)</strong>
+        <ul>
+          <li>Een <strong>boete/vergoeding voor vervroegde aflossing</strong> is onder voorwaarden aftrekbaar als kosten van de eigenwoningschuld (box 1).</li>
+          <li>Worden <strong>advies-, notaris- en taxatiekosten meegefinancierd</strong>, dan valt dat deel van de lening niet zonder meer in de eigenwoningschuld; zonder aan de voorwaarden te voldoen kan het in box 3 vallen (geen renteaftrek).</li>
+          <li>Ook bestaande fiscale afspraken (bijv. overgangsrecht van vóór 2013, het aflossingsschema) kunnen door oversluiten veranderen.</li>
+        </ul>
+        <div style="margin-top:6px;">De terugverdientijd rekent met de bruto kosten en houdt geen rekening met aftrek van kosten. Laat de fiscale gevolgen toetsen door een fiscalist of fiscaal adviseur.</div>
+      </div>
     </div>
 
     <!-- NIEUW BEREKENEN -->
@@ -741,9 +771,13 @@ table.bk tr.total td:last-child{color:var(--navy)}
 // ══════════════════════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════════════════════
-const fmt   = n => '€\u00a0' + Math.round(n).toLocaleString('nl-NL') + ',-';
+const fmt   = n => (Math.round(n)<0?'− ':'') + '€\u00a0' + Math.abs(Math.round(n)).toLocaleString('nl-NL') + ',-';
 const fmtK  = n => '€\u00a0' + Math.round(n/1000*10)/10 + 'k';
 const fmtPct= (n,d=2) => n.toFixed(d).replace('.',',') + '%';
+const fmt2  = n => (n<0?'− ':'') + '€\u00a0' + Math.abs(n).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtGetal = (n,d=0) => n.toLocaleString('nl-NL',{minimumFractionDigits:0,maximumFractionDigits:d});
+// Terugverdientijd: hele maanden (naar boven afgerond), plus jaren en maanden
+function fmtTvt(m){ const j=Math.floor(m/12), r=m%12; const d=`${m} ${m===1?'maand':'maanden'}`; if(m<12) return d; return `${d} (${j} jaar${r?` en ${r} ${r===1?'maand':'maanden'}`:''})`; }
 const v     = id => { const x = parseFloat(document.getElementById(id)?.value); return isNaN(x) ? 0 : x; };
 const vStr  = id => document.getElementById(id)?.value || '';
 
@@ -900,28 +934,34 @@ function bereken(){
   // ── Maandlast oud ──
   const mlOud = maandlast(saldo0, contractRente, looptijdMnd, aflosvorm);
 
-  // ── Maandlast nieuw ──
-  const nieuwSaldo      = saldo0 + boeR.boete + kAdvies + kNotaris + kTaxatie + kBank + kOverig;
+  // ── Kosten ──
+  const totaleKosten = boeR.boete + kAdvies + kNotaris + kTaxatie + kBank + kOverig;
+  const meefin    = document.getElementById('meefin').checked;
+  const aftrekPct = Math.min(100, Math.max(0, v('aftrekPct')));
+
+  // ── Maandlast nieuw ── (bij meefinancieren: kosten bij de nieuwe schuld)
+  const nieuwSaldo      = saldo0 + (meefin ? totaleKosten : 0);
   const nieuwLooptijdMnd= nieuweLooptijdJr * 12;
   const mlNieuw         = maandlast(nieuwSaldo, nieuweRente, nieuwLooptijdMnd, nieuweAflosvorm);
+  const mlNieuwExcl     = maandlast(saldo0, nieuweRente, nieuwLooptijdMnd, nieuweAflosvorm); // zonder meegefinancierde kosten
 
-  // ── Rentebesparing per maand ──
+  // ── Besparing per maand (bruto maandlast, incl. eventueel meegefinancierde kosten) ──
   const besparingMnd    = mlOud - mlNieuw;
 
-  // ── Totale kosten ──
-  const totaleKosten = boeR.boete + kAdvies + kNotaris + kTaxatie + kBank + kOverig;
+  // ── Terugverdientijd (AFM-Leidraad § 10) ──
+  // Voordeel = renteverschil maand 1 (aflossing is vermogensopbouw, geen kosten), na renteaftrek.
+  // Bij meefinancieren telt de rente over de meegefinancierde kosten als nadeel; de kosten zelf tellen één keer.
+  const renteVoordeelBruto = saldo0*contractRente/100/12 - nieuwSaldo*nieuweRente/100/12;
+  const renteVoordeelNetto = renteVoordeelBruto * (1 - aftrekPct/100);
+  const tvtMnd = renteVoordeelNetto > 0.005 ? Math.ceil(totaleKosten / renteVoordeelNetto - 1e-9) : Infinity;
+  // Vergelijking (bruto maandlast, zonder de meegefinancierde kosten zodat ze niet dubbel tellen)
+  const bespBrutoExcl = mlOud - mlNieuwExcl;
+  const tvtMndBruto = bespBrutoExcl > 0.005 ? Math.ceil(totaleKosten / bespBrutoExcl - 1e-9) : Infinity;
 
-  // ── Terugverdientijd ──
-  const tvtMnd = besparingMnd > 0 ? Math.ceil(totaleKosten / besparingMnd) : Infinity;
-  const tvtJr  = tvtMnd / 12;
-
-  // ── Resterende looptijd voor besparing ──
-  const restLooptijdMnd = Math.max(0, looptijdMnd);
-  const totaalBespaard  = besparingMnd * restLooptijdMnd - totaleKosten;
-
-  // ── Rentekosten over RVP oud vs nieuw ──
+  // ── Nieuwe rentevaste periode: rentekosten oud vs nieuw (schuld neemt af) ──
+  const rvpNieuwMnd = Math.round(nieuweRvpJr * 12);
+  const nMnd = Math.min(rvpNieuwMnd, looptijdMnd, nieuwLooptijdMnd);
   let rentekostenOud = 0, rentekostenNieuw = 0;
-  const nMnd = Math.min(rvpMnd, nieuweRvpJr * 12, looptijdMnd);
   let sOud = saldo0, sNieuw = nieuwSaldo;
   const rOud = contractRente/100/12, rNieuw = nieuweRente/100/12;
   const annO = (aflosvorm === 'annuitair' && rOud > 0) ? saldo0*rOud/(1-Math.pow(1+rOud,-looptijdMnd)) : 0;
@@ -934,6 +974,11 @@ function bereken(){
     if(nieuweAflosvorm === 'lineair')        sNieuw = Math.max(0, sNieuw - nieuwSaldo/nieuwLooptijdMnd);
     else if(nieuweAflosvorm === 'annuitair') sNieuw = Math.max(0, sNieuw - (annN - sNieuw*rNieuw));
   }
+  // Aanname: de huidige rente zou ook na het einde van de huidige rentevaste periode gelijk blijven.
+  const renteBespRvpNetto = (rentekostenOud - rentekostenNieuw) * (1 - aftrekPct/100);
+  const totaalBespaard    = renteBespRvpNetto - totaleKosten; // netto resultaat over de nieuwe RVP
+  const binnenRvp = tvtMnd <= nMnd;
+  const rvpTxt = `${fmtGetal(nMnd/12,1)} jaar`;
 
   // ══ TOON RESULTATEN ══
   document.getElementById('resultaten').style.display = 'block';
@@ -942,21 +987,23 @@ function bereken(){
   // ── VERDICT ──
   const verdictEl = document.getElementById('verdictBox');
   let verdictClass, verdictIcon, verdictTitle, verdictTekst;
-  if(besparingMnd <= 0){
+  if(renteVoordeelNetto <= 0.005){
     verdictClass = 'red';
     verdictIcon  = '❌';
     verdictTitle = 'Oversluiten is niet voordelig';
-    verdictTekst = `Met de nieuwe rente van ${fmtPct(nieuweRente)} is de maandlast <strong>${fmt(mlNieuw - mlOud)} hoger</strong> dan bij je huidige hypotheek. Oversluiten levert geen directe besparing op. Overweeg te wachten tot het einde van je rentevaste periode.`;
-  } else if(tvtJr > 7 || totaalBespaard < 0){
+    verdictTekst = `Met de nieuwe rente van ${fmtPct(nieuweRente)} levert oversluiten geen maandelijks rentevoordeel op${meefin && totaleKosten>0 ? ' (inclusief rente over de meegefinancierde kosten)' : ''}. De kosten van ${fmt(totaleKosten)} verdienen zich niet terug. Overweeg te wachten tot het einde van je rentevaste periode.`;
+  } else if(!binnenRvp || totaalBespaard < 0){
     verdictClass = 'amber';
     verdictIcon  = '⚠️';
-    verdictTitle = 'Twijfelachtig — overleg met adviseur';
-    verdictTekst = `Je bespaart ${fmt(besparingMnd)} per maand, maar de terugverdientijd is <strong>${tvtJr < Infinity ? Math.ceil(tvtJr)+' jaar' : '∞'}</strong>. Of dit verstandig is hangt sterk af van je persoonlijke situatie en plannen. Laat je goed adviseren.`;
+    verdictTitle = binnenRvp ? 'Twijfelachtig — overleg met adviseur' : 'Verdient zich niet terug binnen de nieuwe rentevaste periode';
+    verdictTekst = binnenRvp
+      ? `Je netto voordeel is ${fmt2(renteVoordeelNetto)} per maand en de terugverdientijd (<strong>${fmtTvt(tvtMnd)}</strong>) valt net binnen de nieuwe rentevaste periode (${rvpTxt}). Doordat de schuld afneemt, wordt het renteverschil kleiner: over de hele periode is het netto resultaat <strong>${fmt(totaalBespaard)}</strong>. Laat je goed adviseren.`
+      : `Je netto voordeel is ${fmt2(renteVoordeelNetto)} per maand; de terugverdientijd is <strong>${fmtTvt(tvtMnd)}</strong>, langer dan de nieuwe rentevaste periode (${rvpTxt}). Na die periode is de rente onbekend. Laat je goed adviseren.`;
   } else {
     verdictClass = 'green';
     verdictIcon  = '✅';
     verdictTitle = 'Oversluiten is waarschijnlijk verstandig!';
-    verdictTekst = `Je bespaart <strong>${fmt(besparingMnd)} per maand</strong>. De totale oversluitkosten verdien je terug in <strong>${Math.ceil(tvtJr)} jaar</strong>. Over de resterende looptijd spaar je netto <strong>${fmt(Math.max(0,totaalBespaard))}</strong> uit.`;
+    verdictTekst = `Je netto voordeel is <strong>${fmt2(renteVoordeelNetto)} per maand</strong>. De totale oversluitkosten verdien je terug in <strong>${fmtTvt(tvtMnd)}</strong>, binnen de nieuwe rentevaste periode (${rvpTxt}). Netto resultaat over die periode: <strong>${fmt(totaalBespaard)}</strong>.`;
   }
   verdictEl.innerHTML = `
     <div class="verdict ${verdictClass}">
@@ -970,14 +1017,14 @@ function bereken(){
   // ── KPI'S ──
   const kpiEl = document.getElementById('kpiGrid');
   const boeteStr = fmt(boeR.boete);
-  const tvtStr   = tvtMnd === Infinity ? '∞' : (tvtJr < 1 ? Math.ceil(tvtMnd)+' mnd' : Math.ceil(tvtJr*10)/10+' jr');
+  const tvtStr   = tvtMnd === Infinity ? 'verdient zich niet terug' : fmtTvt(tvtMnd);
   const kleurMl  = besparingMnd > 0 ? 'green' : 'red';
-  const kleurTvt = tvtJr <= 5 ? 'green' : tvtJr <= 7 ? 'amber' : 'red';
+  const kleurTvt = binnenRvp ? 'green' : 'red';
   kpiEl.innerHTML = `
     <div class="kpi"><div class="kpi-val ${kleurMl}">${fmt(Math.abs(besparingMnd))}</div><div class="kpi-lbl">${besparingMnd >= 0 ? 'Besparing/maand' : 'Extra kosten/maand'}</div></div>
     <div class="kpi"><div class="kpi-val red">${boeteStr}</div><div class="kpi-lbl">Boeterente (AFM)</div></div>
     <div class="kpi"><div class="kpi-val">${fmt(totaleKosten)}</div><div class="kpi-lbl">Totale oversluitkosten</div></div>
-    <div class="kpi"><div class="kpi-val ${kleurTvt}">${tvtStr}</div><div class="kpi-lbl">Terugverdientijd</div></div>`;
+    <div class="kpi"><div class="kpi-val ${kleurTvt}">${tvtStr}</div><div class="kpi-lbl">Terugverdientijd (netto)</div></div>`;
 
   // ── BREAKDOWN TABLE ──
   const bkEl = document.getElementById('bkTable');
@@ -990,7 +1037,6 @@ function bereken(){
     ['Overige kosten', kOverig, 'neg'],
   ].filter(r => r[1] > 0);
 
-  const bespTotaal = besparingMnd > 0 ? besparingMnd * restLooptijdMnd : 0;
 
   let bkHtml = `<tr><th>Post</th><th style="text-align:right">Bedrag</th></tr>
   <tr><td colspan="2" style="padding:6px 18px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:var(--bg);">Kosten</td></tr>`;
@@ -1000,13 +1046,12 @@ function bereken(){
   bkHtml += `<tr class="total"><td>Totale oversluitkosten</td><td style="text-align:right">${fmt(totaleKosten)}</td></tr>`;
   bkHtml += `<tr><td colspan="2" style="padding:6px 18px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:var(--bg);">Maandlasten vergelijking</td></tr>`;
   bkHtml += `<tr><td>Huidige maandlast (${aflosvorm})</td><td style="text-align:right">${fmt(mlOud)}</td></tr>`;
-  bkHtml += `<tr><td>Nieuwe maandlast (${nieuweAflosvorm})</td><td style="text-align:right">${fmt(mlNieuw)}</td></tr>`;
+  bkHtml += `<tr><td>Nieuwe maandlast (${nieuweAflosvorm}${meefin && totaleKosten>0 ? ', incl. meegefinancierde kosten' : ''})</td><td style="text-align:right">${fmt(mlNieuw)}</td></tr>`;
   bkHtml += `<tr class="total"><td>${besparingMnd >= 0 ? 'Besparing per maand' : 'Extra last per maand'}</td><td style="text-align:right" class="${besparingMnd >= 0 ? 'td-pos' : 'td-neg'}">${fmt(Math.abs(besparingMnd))}</td></tr>`;
-  if(bespTotaal > 0){
-    bkHtml += `<tr><td colspan="2" style="padding:6px 18px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:var(--bg);">Netto resultaat over looptijd</td></tr>`;
-    bkHtml += `<tr><td>Totale besparing (${Math.round(restLooptijdMnd/12)} jr)</td><td style="text-align:right" class="td-pos">${fmt(bespTotaal)}</td></tr>`;
-    bkHtml += `<tr class="total"><td>Netto voordeel / nadeel</td><td style="text-align:right" class="${totaalBespaard >= 0 ? 'td-pos' : 'td-neg'}">${fmt(totaalBespaard)}</td></tr>`;
-  }
+  bkHtml += `<tr><td colspan="2" style="padding:6px 18px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;background:var(--bg);">Netto resultaat over de nieuwe rentevaste periode (${rvpTxt})</td></tr>`;
+  bkHtml += `<tr><td>Rentebesparing na ${fmtGetal(aftrekPct,2)}% renteaftrek</td><td style="text-align:right" class="${renteBespRvpNetto >= 0 ? 'td-pos' : 'td-neg'}">${fmt(renteBespRvpNetto)}</td></tr>`;
+  bkHtml += `<tr class="total"><td>Netto voordeel / nadeel (na kosten)</td><td style="text-align:right" class="${totaalBespaard >= 0 ? 'td-pos' : 'td-neg'}">${fmt(totaalBespaard)}</td></tr>`;
+  bkHtml += `<tr><td colspan="2" style="padding:6px 18px;font-size:11px;color:var(--muted);">Aanname: de huidige rente blijft ook na afloop van je huidige rentevaste periode gelijk. Na de nieuwe rentevaste periode is de rente onbekend; daarom wordt niet over de hele looptijd gerekend.</td></tr>`;
   bkEl.innerHTML = bkHtml;
 
   // ── BAR CHART ──
@@ -1032,38 +1077,35 @@ function bereken(){
 
   // ── TERUGVERDIENTIJD METER ──
   const tvtWrap = document.getElementById('tvtContent');
-  if(besparingMnd > 0 && tvtMnd !== Infinity){
-    const maxMaanden = Math.max(tvtMnd, restLooptijdMnd);
+  const somTxt = `${fmt(totaleKosten)} totale oversluitkosten ÷ ${fmt2(renteVoordeelNetto)} netto voordeel per maand (renteverschil ${fmt2(renteVoordeelBruto)} bruto${meefin && totaleKosten>0?', incl. rente over meegefinancierde kosten':''}, na ${fmtGetal(aftrekPct,2)}% renteaftrek)`;
+  const vglTxt = `Ter vergelijking, op basis van het bruto maandlastverschil zonder meegefinancierde kosten (${fmt2(bespBrutoExcl)}, inclusief verschil in aflossing): ${tvtMndBruto===Infinity ? 'geen terugverdientijd' : fmtTvt(tvtMndBruto)}. Het voordeel is berekend op de eerste maand; doordat de schuld afneemt, wordt het renteverschil later kleiner. Indicatief.`;
+  if(tvtMnd !== Infinity){
+    const maxMaanden = Math.max(tvtMnd, nMnd);
     const pTvt = Math.min(100, Math.round(tvtMnd / maxMaanden * 100));
-    const pRest = Math.min(100, Math.round(restLooptijdMnd / maxMaanden * 100));
-    const kleurTvt2 = tvtJr <= 5 ? 'var(--green)' : tvtJr <= 7 ? 'var(--amber)' : 'var(--red)';
+    const pRvp = Math.min(100, Math.round(nMnd / maxMaanden * 100));
+    const kleurTvt2 = binnenRvp ? 'var(--green)' : 'var(--red)';
     tvtWrap.innerHTML = `
-      <div style="margin-bottom:14px;font-size:13px;color:var(--ink2);">
-        Je moet <strong>${Math.ceil(tvtJr)} jaar</strong> in de woning blijven wonen om de oversluitkosten terug te verdienen.
-        Jouw resterende hypotheeklooptijd is <strong>${Math.round(restLooptijdMnd/12)} jaar</strong>.
-      </div>
+      <div style="margin-bottom:14px;font-size:13px;color:var(--ink2);">${somTxt} = <strong>${fmtTvt(tvtMnd)}</strong>.</div>
       <div class="meter-wrap">
         <div class="meter-label">
-          <span>Terugverdientijd: <strong>${tvtStr}</strong></span>
-          <span>Resterende looptijd: <strong>${Math.round(restLooptijdMnd/12)} jr</strong></span>
+          <span>Terugverdientijd: <strong>${fmtTvt(tvtMnd)}</strong></span>
+          <span>Nieuwe rentevaste periode: <strong>${rvpTxt}</strong></span>
         </div>
         <div class="meter-track" style="height:18px;margin-bottom:8px;background:var(--bg);">
           <div class="meter-fill" style="width:${pTvt}%;background:${kleurTvt2};"></div>
         </div>
         <div class="meter-track" style="height:18px;background:var(--bg);">
-          <div class="meter-fill" style="width:${pRest}%;background:var(--accent);"></div>
+          <div class="meter-fill" style="width:${pRvp}%;background:var(--accent);"></div>
         </div>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:6px;">
-        ${tvtMnd < restLooptijdMnd
-          ? `✅ Je terugverdientijd (${tvtStr}) is korter dan je resterende looptijd (${Math.round(restLooptijdMnd/12)} jr) — je profiteert van de besparing.`
-          : `⚠️ Je terugverdientijd (${tvtStr}) is langer dan je resterende looptijd — mogelijk niet rendabel.`
-        }
+        ${binnenRvp
+          ? `✅ De kosten zijn terugverdiend binnen de nieuwe rentevaste periode (${rvpTxt}).`
+          : `⚠️ <strong>Verdient zich niet terug binnen de nieuwe rentevaste periode (${rvpTxt}).</strong>`}
+        <br>${vglTxt}
       </div>`;
-  } else if(besparingMnd <= 0){
-    tvtWrap.innerHTML = `<p style="color:var(--red);font-size:14px;">Geen terugverdientijd berekend — de nieuwe maandlast is hoger dan de huidige.</p>`;
   } else {
-    tvtWrap.innerHTML = `<p style="color:var(--muted);font-size:14px;">Geen besparing gevonden.</p>`;
+    tvtWrap.innerHTML = `<p style="color:var(--red);font-size:14px;">Verdient zich niet terug: er is geen maandelijks netto rentevoordeel (renteverschil ${fmt2(renteVoordeelBruto)} per maand).</p><div style="font-size:12px;color:var(--muted);">${vglTxt}</div>`;
   }
 }
 

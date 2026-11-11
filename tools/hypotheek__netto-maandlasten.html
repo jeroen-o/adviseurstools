@@ -111,6 +111,19 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
 .uitleg strong{color:var(--gold-dk);}
 @media(max-width:600px){.hdr{flex-wrap:wrap;}.hdr-badge{margin-left:0;}.hbv{font-size:22px;}}
 @media print{body{background:#fff;color:#000}button,.btn,.gtabs{display:none!important}.card{box-shadow:none}}
+/* TOTALE WOONLASTEN (AFM-Leidraad § 4) */
+.wl{margin-top:18px;border-top:1px solid var(--border);padding-top:14px;}
+.wl-kop{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+.wl-intro{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;}
+.iw input.eur{padding-left:24px;text-align:right;}
+.wl-som{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch;margin-top:14px;}
+.wl-som .op{align-self:center;font-size:20px;font-weight:800;color:var(--muted);text-align:center;}
+.wl-som .hbox{padding:12px 14px;}
+.wl-som .hbv{font-size:22px;}
+.wl-note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5;}
+.wl-reset{background:none;border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;}
+.wl-reset:hover{border-color:var(--navy);}
+@media(max-width:600px){.wl-som{grid-template-columns:1fr;}.wl-som .op{line-height:1;}}
 </style>
 <script id="at-normen">
 /* Adviseurstools.nl — rekenbibliotheek normen (ATNormen)
@@ -369,6 +382,48 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
     <div class="cb">
       <div class="hoofd" id="hoofd"></div>
       <table class="bktbl" id="bktbl"></table>
+
+      <!-- TOTALE WOONLASTEN (optioneel) -->
+      <div class="wl" id="wlBlok">
+        <div class="wl-kop">🏡 Totale woonlasten (optioneel)</div>
+        <div class="wl-intro">Woonlasten zijn meer dan de hypotheeklast: ook energie, onderhoud, belastingen, opstalverzekering en eventueel VvE en erfpacht tellen mee. De bedragen zijn vooraf ingevuld met indicatieve Nibud-normbedragen op basis van de WOZ-waarde; pas ze aan naar de werkelijke situatie.</div>
+        <div class="row r3">
+          <div class="fl">
+            <label for="wlEnergie">Energie (gas, stroom, warmte)</label>
+            <div class="iw"><span class="px">€</span><input id="wlEnergie" class="eur wl-in" inputmode="decimal" data-norm="energie"></div>
+            <span class="sub" id="wlEnergieSub"></span>
+          </div>
+          <div class="fl">
+            <label for="wlOnderhoud">Onderhoud woning</label>
+            <div class="iw"><span class="px">€</span><input id="wlOnderhoud" class="eur wl-in" inputmode="decimal" data-norm="onderhoud"></div>
+            <span class="sub" id="wlOnderhoudSub"></span>
+          </div>
+          <div class="fl">
+            <label for="wlOzb">OZB (eigenarendeel)</label>
+            <div class="iw"><span class="px">€</span><input id="wlOzb" class="eur wl-in" inputmode="decimal" data-norm="ozb"></div>
+            <span class="sub" id="wlOzbSub"></span>
+          </div>
+          <div class="fl">
+            <label for="wlWaterschap">Waterschapslasten</label>
+            <div class="iw"><span class="px">€</span><input id="wlWaterschap" class="eur wl-in" inputmode="decimal" data-norm="waterschap"></div>
+            <span class="sub" id="wlWaterschapSub"></span>
+          </div>
+          <div class="fl">
+            <label for="wlOpstal">Opstalverzekering</label>
+            <div class="iw"><span class="px">€</span><input id="wlOpstal" class="eur wl-in" inputmode="decimal" data-norm="opstal"></div>
+            <span class="sub" id="wlOpstalSub"></span>
+          </div>
+          <div class="fl">
+            <label for="wlVve">VvE-bijdrage</label>
+            <div class="iw"><span class="px">€</span><input id="wlVve" class="eur wl-in" inputmode="decimal" value="0"></div>
+            <span class="sub">Bij een appartement. Let op dubbeltelling: bevat de bijdrage al opstalverzekering of onderhoud, verlaag die posten dan.</span>
+          </div>
+        </div>
+        <div class="sub" id="wlErfpacht" style="margin-top:8px;"></div>
+        <div style="margin-top:10px;"><button type="button" class="wl-reset" onclick="wlHerstel()">↺ Normbedragen opnieuw invullen</button></div>
+        <div class="wl-som" id="wlSom"></div>
+        <div class="wl-note" id="wlBron"></div>
+      </div>
     </div>
   </div>
 
@@ -394,7 +449,7 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(0,48,87,.12);}
         <strong>Eigenwoningforfait (EWF) 2026:</strong> Als woningeigenaar rekent de Belastingdienst een fictief inkomen uit uw woning: <strong>0,35% van de WOZ-waarde</strong> (tot €1.350.000; daarboven €4.725 + 2,35% over het meerdere) per jaar. Over dit bedrag betaalt u inkomstenbelasting. Bij een WOZ van €380.000 is dat €1.330/jaar = €111/maand bijtelling.<br><br>
         <strong>Wet Hillen (afbouw):</strong> Heeft u (bijna) geen hypotheekschuld meer en is EWF > HRA? Dan mocht u vroeger het verschil aftrekken. Deze regeling wordt sinds 2019 afgebouwd (versneld vanaf 2025). In 2026 is nog <strong>71,867%</strong> van het verschil aftrekbaar.<br><br>
         <strong>Erfpacht:</strong> de canon telt mee in de bruto en netto last en is aftrekbaar als kosten van de eigen woning (ook bij aflossingsvrij).<br><br>
-        <strong>Begrippen:</strong> netto hypotheeklasten = rente + aflossing (+ erfpachtcanon) − fiscaal voordeel. Woonlasten zijn breder: daarbij komen ook energie, onderhoud en overige eigenaarslasten (niet in deze tool).<br><br>
+        <strong>Begrippen:</strong> netto hypotheeklasten = rente + aflossing (+ erfpachtcanon) − fiscaal voordeel. Woonlasten zijn breder: daarbij komen ook energie, onderhoud en overige eigenaarslasten (zie het blok Totale woonlasten bij de uitkomst; indicatieve Nibud-normbedragen).<br><br>
         <strong>Netto formule:</strong> Bruto maandlast − (aftrekbare rente − EWF/12) × aftrektarief (35,75% of max. 37,56%). Is het EWF hoger dan de rente, dan wordt het verschil na Hillen-aftrek (28,133% resteert) belast tegen uw schijftarief.
       </div>
     </div>
@@ -568,6 +623,7 @@ function bereken(){
 
   // Cache voor grafiek
   lastData={hyp,r,lt,woz,inkomen,vorm,afsluiting};
+  wlBereken();
 
   ['resCard','grafCard'].forEach(id=>{document.getElementById(id).classList.remove('hidden');});
   tekenGrafiek();
@@ -622,6 +678,66 @@ function tekenGrafiek(){
     ]},options:gopts});
   }
 }
+
+// ── TOTALE WOONLASTEN (AFM-Leidraad § 4) — normen uit ATNormen: leennormen.woonlasten_nibud ──
+const _WL = ATNormen.data.leennormen.woonlasten_nibud;
+const _WLJ = _WL[_NJ] ? _NJ : Object.keys(_WL).filter(k=>/^\d{4}$/.test(k)).sort().pop();
+const _W = _WL[_WLJ], _WP = _W.eigenaarslasten_pct;
+function wlParse(s){
+  s=String(s==null?'':s).replace(/[€\s]/g,''); if(s==='') return 0;
+  const neg=/^[-−]/.test(s); s=s.replace(/^[-−]/,'');
+  if(s.indexOf(',')>=0) s=s.replace(/\./g,'').replace(',','.');
+  else if(!/^\d+\.\d{1,2}$/.test(s)) s=s.replace(/\./g,'');
+  let v=parseFloat(s); if(!isFinite(v)) v=0; return neg?-v:v;
+}
+function wlFmtInput(el){ if(!el.value.trim()) return; const v=wlParse(el.value); const c=Math.round(Math.abs(v)*100)%100; el.value=(v<0?'-':'')+_n(Math.abs(v),c?2:0); }
+function energieNorm(w){ const T=_W.energie_efg_naar_woningwaarde; let b=T[0][1]; for(const r of T){ if(w>=r[0]) b=r[1]; } return b; } // per jaar, label EFG
+function wlNormen(woz){
+  const w=Math.max(0,woz);
+  return { energie:energieNorm(w)/12, onderhoud:w*_WP.onderhoud/100/12, ozb:w*_WP.ozb/100/12,
+           waterschap:w*_WP.waterschap/100/12, opstal:w*_WP.opstalverzekering/100/12 };
+}
+const WL_VELDEN={energie:'wlEnergie',onderhoud:'wlOnderhoud',ozb:'wlOzb',waterschap:'wlWaterschap',opstal:'wlOpstal'};
+// Vul normbedragen in (afgerond op hele euro's), behalve velden die de gebruiker zelf heeft aangepast
+function wlVulNormen(forceer){
+  const woz=N('woz'), nm=wlNormen(woz), pj=_n(woz);
+  Object.entries(WL_VELDEN).forEach(([k,id])=>{
+    const el=document.getElementById(id);
+    if(forceer || !el.dataset.eigen){ el.value=_n(Math.round(nm[k])); delete el.dataset.eigen; }
+  });
+  const pc=v=>_n(v,4).replace(/0+$/,'').replace(/,$/,'');
+  document.getElementById('wlEnergieSub').textContent='Norm: '+fmt(energieNorm(woz)).trim()+' per jaar (label EFG, woningwaarde € '+pj+') ÷ 12';
+  document.getElementById('wlOnderhoudSub').textContent='Norm: '+pc(_WP.onderhoud)+'% van € '+pj+' per jaar ÷ 12';
+  document.getElementById('wlOzbSub').textContent='Norm: '+pc(_WP.ozb)+'% van € '+pj+' per jaar ÷ 12';
+  document.getElementById('wlWaterschapSub').textContent='Norm: '+pc(_WP.waterschap)+'% van € '+pj+' per jaar ÷ 12';
+  document.getElementById('wlOpstalSub').textContent='Norm: '+pc(_WP.opstalverzekering)+'% van € '+pj+' per jaar ÷ 12';
+}
+function wlHerstel(){ wlVulNormen(true); wlBereken(); }
+function wlBereken(){
+  if(!lastData) return;
+  const {hyp,r,lt,woz,inkomen,vorm,afsluiting}=lastData;
+  const m=berekenMaand(hyp,r,lt,woz,inkomen,vorm,afsluiting,0);
+  const v=id=>Math.max(0,wlParse(document.getElementById(id).value));
+  const energie=v('wlEnergie'), eig=v('wlOnderhoud')+v('wlOzb')+v('wlWaterschap')+v('wlOpstal'), vve=v('wlVve');
+  const overig=energie+eig+vve;
+  const nettoR=Math.round(m.netto), overigR=Math.round(overig);
+  document.getElementById('wlErfpacht').innerHTML = m.canon>0
+    ? 'Erfpachtcanon ('+fmt(m.canon,2).trim()+' per maand) zit al in de netto hypotheeklast en telt hier niet nog een keer mee.'
+    : 'Erfpacht: vul de canon in bij de hypotheekgegevens; die telt dan mee in de netto hypotheeklast (aftrekbaar).';
+  document.getElementById('wlSom').innerHTML = `
+    <div class="hbox netto"><div class="hbl">Netto hypotheeklast</div><div class="hbv">${fmt(nettoR)}</div><div class="hbs">Maand 1, na HRA & EWF${m.canon>0?' (incl. erfpacht)':''}</div></div>
+    <div class="op" aria-hidden="true">+</div>
+    <div class="hbox bruto"><div class="hbl">Overige woonlasten</div><div class="hbv">${fmt(overigR)}</div><div class="hbs">Energie ${fmt(Math.round(energie)).trim()} · eigenaarslasten ${fmt(Math.round(eig)).trim()}${vve>0?' · VvE '+fmt(Math.round(vve)).trim():''}</div></div>
+    <div class="op" aria-hidden="true">=</div>
+    <div class="hbox besparing"><div class="hbl">Totale woonlasten</div><div class="hbv" id="wlTotaal">${fmt(nettoR+overigR)}</div><div class="hbs">per maand</div></div>`;
+  document.getElementById('wlBron').innerHTML = 'Bron: Nibud, Advies hypotheeknormen '+_WLJ+' / bijlage financieringslastnormen '+_WLJ+' (blad onderhoud en energie). Energie: voorbeeldbedrag label EFG naar woningwaarde; eigenaarslasten '+_n(_WP.totaal,4)+'% van de woningwaarde per jaar (onderhoud, OZB, waterschap, opstalverzekering). Hier berekend over de WOZ-waarde. <strong>Indicatief</strong>: werkelijke lasten verschillen per woning, gemeente en huishouden. Bedragen per maand, afgerond op hele euro\'s.';
+}
+document.querySelectorAll('input.wl-in').forEach(el=>{
+  el.addEventListener('input',()=>{ if(el.dataset.norm) el.dataset.eigen='1'; wlBereken(); });
+  el.addEventListener('blur',()=>{ wlFmtInput(el); wlBereken(); });
+});
+document.getElementById('woz').addEventListener('input',()=>{ wlVulNormen(false); });
+wlVulNormen(false);
 
 // Init
 liveCalc();
