@@ -580,6 +580,7 @@ body>.form-body,body>.fout-box,body>.btnrow,body>#res-blok,body>.footer{max-widt
     <span class="res-main-amt" id="res-hoofd"></span>
   </div>
   <p class="res-note" id="res-note"></p>
+  <div id="ldr-meld" style="margin-bottom:12px"></div>
   <div class="res-card" style="padding:12px 14px;background:#fff"><div id="ptGrafiek"></div></div>
 
   <div id="res-energie" class="res-card">
@@ -714,6 +715,73 @@ function ptGrafiek(el, o) {
 }
 </script>
 <script>
+/* ── Leidraad Hypotheekadvisering (AFM, april 2026): gedeelde meldingen (Adviseurstools.nl) — ENGELSE variant (zelfde opmaak/functies) ──
+ * Engelse vertaling van leidraad.js voor de Engelstalige tool; bedragen in de notatie van de tool (nl-NL), datums en-GB.
+ *   LDR.maxNietVerantwoord()                         → HTML-melding (§ 3, voorbeeld 1)
+ *   LDR.naAow({aowDatum, einddatum} | {aowDatum, toetsdatum, looptijdMaanden}, opt)
+ *                                                    → HTML-melding als de lening na de AOW-datum doorloopt (§ 3/§ 4), anders ''
+ *       opt.pensioenGetoetst: true als de tool het AOW-moment al toetst (dan alleen een korte verwijzing)
+ *       opt.link: relatieve link naar Pensioenklif (standaard '../pensioenklif/')
+ *   LDR.renteStress(delen, opt)                      → HTML-blok "Wat als de rente stijgt?" (§ 5, voorbeeld 7), anders ''
+ *       delen: [{bedrag, rente (%), rvpMaanden, looptijdMaanden, vorm:'annuitair'|'lineair'|'aflossingsvrij'}]
+ *       opt.maxMaandlast: toegestane bruto maandlast volgens de leennormen (optioneel, voor de vergelijking)
+ *       opt.stappen: [2,3] (procentpunt)
+ */
+var LDR = (function () {
+  var eur = function (n) { var r = Math.round(n); return (r < 0 ? '−' : '') + '€ ' + Math.abs(r).toLocaleString('nl-NL'); };
+  var box = function (kl, titel, inhoud) {
+    var c = { info: ['#eaf2fb', '#1f4e79', '#4a7fb5'], let: ['#fff6e5', '#5a3b00', '#b9771f'] }[kl];
+    return '<div class="ldr-melding" role="note" style="margin-top:10px;padding:10px 12px;border-left:4px solid ' + c[2] + ';background:' + c[0] + ';color:' + c[1] +
+      ';border-radius:6px;font-size:13px;line-height:1.5"><strong>' + titel + '</strong> ' + inhoud + '</div>';
+  };
+  function maxNietVerantwoord() {
+    return box('info', 'Borrowing the maximum is not the same as borrowing responsibly.',
+      'This maximum follows from the standard lending norms (Trhk), which assume a household without children and do not take your own spending, plans or savings goals into account. ' +
+      'There is no guarantee that a lender will provide this amount. An affordable mortgage may be lower: discuss with your adviser which monthly payment suits your situation ' +
+      '(AFM, Mortgage Advice Guideline 2026).');
+  }
+  function mnd(a, b) { return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()) - (b.getDate() < a.getDate() ? 1 : 0); }
+  function naAow(o, opt) {
+    opt = opt || {};
+    var aow = o.aowDatum ? new Date(o.aowDatum) : null; if (!aow || isNaN(aow)) return '';
+    var eind = o.einddatum ? new Date(o.einddatum) : null;
+    if (!eind && o.toetsdatum && o.looptijdMaanden) { var t = new Date(o.toetsdatum); eind = new Date(t.getFullYear(), t.getMonth() + o.looptijdMaanden, t.getDate()); }
+    if (!eind || isNaN(eind) || eind <= aow) return '';
+    var m = mnd(aow, eind), j = Math.floor(m / 12), r = m % 12;
+    var duur = (j ? j + ' year' + (j > 1 ? 's' : '') : '') + (j && r ? ' and ' : '') + (r ? r + ' month' + (r > 1 ? 's' : '') : '');
+    var link = opt.link || '../pensioenklif/';
+    if (opt.pensioenGetoetst) return box('info', 'The loan runs ' + duur + ' beyond the state pension (AOW) date.', 'The pension test in this calculation already takes the income from state pension age into account.');
+    return box('let', 'Please note: the loan runs ' + duur + ' beyond the state pension (AOW) date (' + aow.toLocaleDateString('en-GB') + ').',
+      'The lending-norm test only looks at pension income if the state pension date falls within the chosen period. Also check whether the housing costs remain affordable on the pension income, ' +
+      'even if the state pension date is still far away — for example with <a href="' + link + '" target="_blank" rel="noopener">Pensioenklif</a> (AFM, Mortgage Advice Guideline 2026, § 3 and § 4).');
+  }
+  function maandlast(d, extra) {
+    var B = +d.bedrag || 0; if (!(B > 0)) return 0;
+    var i = ((+d.rente || 0) + (extra || 0)) / 1200, n = Math.max(1, +d.looptijdMaanden || 360);
+    if (d.vorm === 'aflossingsvrij') return B * i;
+    if (d.vorm === 'lineair') return B * i + B / n;
+    return i > 0 ? B * i / (1 - Math.pow(1 + i, -n)) : B / n;
+  }
+  function renteStress(delen, opt) {
+    opt = opt || {}; var stappen = opt.stappen || [2, 3];
+    delen = (delen || []).filter(function (d) { return +d.bedrag > 0; });
+    var kort = delen.filter(function (d) { return (+d.rvpMaanden || 0) < 120; });
+    if (!kort.length) return '';
+    var nu = delen.reduce(function (s, d) { return s + maandlast(d, 0); }, 0);
+    var rij = function (x) {
+      var tot = delen.reduce(function (s, d) { return s + maandlast(d, (+d.rvpMaanden || 0) < 120 ? x : 0); }, 0);
+      var past = opt.maxMaandlast > 0 ? (tot <= opt.maxMaandlast ? '<span style="color:#1a7f4b">within ' + eur(opt.maxMaandlast) + '</span>' : '<span style="color:#b42318">above ' + eur(opt.maxMaandlast) + '</span>') : '';
+      return '<tr><td style="padding:3px 8px">+' + String(x) + ' percentage point' + (x === 1 ? '' : 's') + '</td><td style="padding:3px 8px;text-align:right">' + eur(tot) + '</td><td style="padding:3px 8px;text-align:right">+' + eur(tot - nu) + '</td><td style="padding:3px 8px">' + past + '</td></tr>';
+    };
+    var bedragKort = kort.reduce(function (s, d) { return s + (+d.bedrag); }, 0);
+    return box('let', 'What if the interest rate rises?',
+      eur(bedragKort) + ' has a fixed-rate period shorter than 10 years. Gross monthly payment (interest and repayment) if the rate on those parts rises after the fixed-rate period:' +
+      '<div style="overflow-x:auto"><table style="border-collapse:collapse;margin-top:6px;font-size:13px"><tr><th style="text-align:left;padding:3px 8px">Interest</th><th style="text-align:right;padding:3px 8px">Gross monthly payment</th><th style="text-align:right;padding:3px 8px">Difference</th><th></th></tr>' +
+      '<tr><td style="padding:3px 8px">now</td><td style="padding:3px 8px;text-align:right">' + eur(nu) + '</td><td></td><td></td></tr>' + stappen.map(rij).join('') + '</table></div>' +
+      '<span style="font-size:12px">Indicative, based on the current principal; discuss whether the client can and wants to bear this increase (AFM, Mortgage Advice Guideline 2026, § 5).</span>');
+  }
+  return { maxNietVerantwoord: maxNietVerantwoord, naAow: naAow, renteStress: renteStress, maandlast: maandlast };
+})();
 /* ─── LOOKUP TABLES (volledig, ongewijzigd) ─── */
 /* ─── Financieringslastpercentages 2026 (Bijlage 1 Trhk, Wijzigingsregeling hypothecair krediet 2026, Stcrt. 2025, 36471) ───
    n = niet-AOW box 1, a = AOW box 1, n3 = niet-AOW box 3 (niet aftrekbaar), a3 = AOW box 3.
@@ -1078,6 +1146,20 @@ function bereken(){
   } else {
     nhgCard.style.display='none';
   }
+
+  // AFM Mortgage Advice Guideline 2026 (Leidraad Hypotheekadvisering): maximum ≠ responsible (not for NHG management criteria), loan beyond AOW (earliest AOW date), rate stress
+  (function(){
+    let h=methode==="beheer"?"":LDR.maxNietVerantwoord();
+    const pa=P.filter(function(p){return p&&p.ps&&p.ps.aowD;}).sort(function(a,b){return a.ps.aowD-b.ps.aowD;})[0];
+    if(pa){
+      const getoetst=pa.ps.st==="ja"||(methode==="beheer"?(pa.ps.aowD>nu&&beheerMaanden(nu,pa.ps.aowD)<=ATN_BEH_MND):mom.some(function(m){return m.d===pa.ps.aowD;}));
+      h+=LDR.naAow({aowDatum:pa.ps.aowD,toetsdatum:nu,looptijdMaanden:lpt*12},{pensioenGetoetst:getoetst,link:"https://adviseurstools.nl/pensioenklif/"});
+    }
+    let maxML=0; // beheer: no comparison (management table assumes 50% interest-only)
+    if(methode!=="beheer"){const u0=uitk[0],tb=S.box1==="nee"?(u0.aowTab?"a3":"n3"):(u0.aowTab?"a":"n");maxML=u0.ink*flpPct(tb,u0.ink,tr)/12-last;}
+    h+=LDR.renteStress([{bedrag:hoofd,rente:r*100,rvpMaanden:S.renteLang?120:60,looptijdMaanden:lpt*12,vorm:"annuitair"}],{maxMaandlast:maxML});
+    g("ldr-meld").innerHTML=h;
+  })();
 
   const resBlok=g('res-blok');
   resBlok.style.display='block';
