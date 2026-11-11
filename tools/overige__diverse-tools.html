@@ -669,6 +669,7 @@ input[type=range]{accent-color:var(--navy);}
               </select>
             </div>
             <div class="f"><label class="fl">KvK-jaren (inschrijving)</label><input class="inp" type="number" id="zzpJarenInschr" value="5" step="1" oninput="calcZzp()"></div>
+            <label class="check"><input type="checkbox" id="zzpAlleen" checked onchange="calcZzp()"><div><div class="check-t">Alleenstaand (één aanvrager)</div><div class="check-s">Alleenstaandenbedrag (Trhk art. 3 lid 8) bij een toetsinkomen boven de grens; alleen bij hypotheek.</div></div></label>
           </div>
         </div>
       </div>
@@ -1329,8 +1330,12 @@ function calcZzp(){
   // Energielabelbedrag bij aankoop (Trhk, overige parameters; 2026 en 2027 gelijk): bovenop de inkomenstoets, telt niet mee in de maandlast
   const zzpLbl=(document.getElementById('zzpLabel')||{}).value||'EFG';
   const labelExtra=FLN2026_LABEL_AANKOOP[zzpLbl]||0;
-  const mh=ink=>Math.floor(ink*flnPct(ink,toetsrente*100,'nietAOW',nj)/12*af)+labelExtra;
-  const maxHyp=mh(toetsInk);
+  // Alleenstaandenbedrag (Trhk art. 3 lid 8, normjaar): één aanvrager en toetsinkomen boven de grens; buiten de toetslast
+  const zzpAlleen=!!(document.getElementById('zzpAlleen')||{}).checked;
+  const AL=LN.alleenstaandenbedrag[nj]||LN.alleenstaandenbedrag[FLN_NJ_DEFAULT];
+  const alleenBedrag=ink=>zzpAlleen&&ink>AL.grens?AL.bedrag:0;
+  const mh=ink=>Math.floor(ink*flnPct(ink,toetsrente*100,'nietAOW',nj)/12*af)+labelExtra+alleenBedrag(ink);
+  const maxHyp=mh(toetsInk), alleenExtra=alleenBedrag(toetsInk);
   
   // Persoonlijke lening
   const maxPersLening=Math.round(toetsInk*0.10/12*((Math.pow(1+0.07/12,48)-1)/((0.07/12)*Math.pow(1+0.07/12,48))));
@@ -1355,7 +1360,7 @@ function calcZzp(){
       <div class="kpi"><div class="kpi-lbl">3-jr gemiddelde winst</div><div class="kpi-v b">${fmt(gem3)}</div></div>
       <div class="kpi"><div class="kpi-lbl">Laagste jaar</div><div class="kpi-v a">${fmt(laagste)}</div></div>
       <div class="kpi"><div class="kpi-lbl">Toetsinkomen</div><div class="kpi-v o">${fmt(toetsInk)}</div><div class="kpi-sub">Basis voor alle berekeningen</div></div>
-      <div class="kpi"><div class="kpi-lbl">${doel==='hypotheek'?'Max hypotheek':'Max lening'}</div><div class="kpi-v g">${doel==='hypotheek'?fmt(maxHyp):fmt(maxPersLening)}</div><div class="kpi-sub">${doel==='hypotheek'?'Trhk '+nj+' · '+fmtPct(q*100,1)+' · '+LN.toetsrente.minimum+'%'+(labelExtra>0?' · incl. label +'+fmt(labelExtra):''):'7% / 4 jr'}</div></div>
+      <div class="kpi"><div class="kpi-lbl">${doel==='hypotheek'?'Max hypotheek':'Max lening'}</div><div class="kpi-v g">${doel==='hypotheek'?fmt(maxHyp):fmt(maxPersLening)}</div><div class="kpi-sub">${doel==='hypotheek'?'Trhk '+nj+' · '+fmtPct(q*100,1)+' · '+LN.toetsrente.minimum+'%'+(labelExtra>0?' · incl. label +'+fmt(labelExtra):'')+(alleenExtra>0?' · incl. alleenstaand +'+fmt(alleenExtra):''):'7% / 4 jr'}</div></div>
     </div>`;
     
     out+=`<div class="section-title">Methodiek per geldverstrekker</div>
@@ -1385,7 +1390,7 @@ function calcZzp(){
     else if(trend<0) out+=alertBlock('wa','⚠️','Dalende winst',`${Math.round(trend)}% daling over 3 jaar. Onderbouw met orderportefeuille en prognose om vertrouwen te wekken.`);
     else if(trend>20) out+=alertBlock('ok','✅','Sterke stijgende trend',`+${Math.round(trend)}% over 3 jaar is gunstig. Florius en Munt kunnen soepeler zijn met laatste-jaarsmethode.`);
     
-    if(doel==='hypotheek') out+=alertBlock('in','🏠','Toetsingsregels '+nj+' ZZP (Trhk/Nibud)',`Normjaar ${nj} (${nj==='2027'?'Wijzigingsregeling hypothecair krediet 2027, Stcrt. 2026, 38415':'Wijzigingsregeling hypothecair krediet 2026, Stcrt. 2025, 36471'}) · Toetsrente minimaal ${fmtPct(LN.toetsrente.minimum,1)} · Financieringslastpercentage volgens de officiële tabel ${nj}: ${fmtPct(q*100,1)} bij een toetsinkomen van ${fmt(toetsInk)} · Max. hypotheek zonder financiële verplichtingen en zonder alleenstaandenbedrag${labelExtra>0?' · inclusief energielabelbedrag '+fmt(labelExtra)+' (buiten de inkomenstoets)':' · energielabel E, F of G: geen energielabelbedrag'} · Conservatieve indicatie: de voorzichtigheid zit alleen in het toetsinkomen (afslag per geldverstrekker), niet in het percentage · NHG-grens 2026 €${ATNormen.data.nhg['2026'].kostengrens.toLocaleString('nl-NL')} (€${ATNormen.data.nhg['2026'].kostengrens_ebv.toLocaleString('nl-NL')} bij energiemaatregelen ${LN.max_ltv_ebv_pct}%). Tweede inkomen 100% telt mee.`);
+    if(doel==='hypotheek') out+=alertBlock('in','🏠','Toetsingsregels '+nj+' ZZP (Trhk/Nibud)',`Normjaar ${nj} (${nj==='2027'?'Wijzigingsregeling hypothecair krediet 2027, Stcrt. 2026, 38415':'Wijzigingsregeling hypothecair krediet 2026, Stcrt. 2025, 36471'}) · Toetsrente minimaal ${fmtPct(LN.toetsrente.minimum,1)} · Financieringslastpercentage volgens de officiële tabel ${nj}: ${fmtPct(q*100,1)} bij een toetsinkomen van ${fmt(toetsInk)} · Max. hypotheek zonder financiële verplichtingen${zzpAlleen?(alleenExtra>0?' · inclusief alleenstaandenbedrag '+fmt(AL.bedrag)+' (één aanvrager, toetsinkomen boven '+fmt(AL.grens)+'; Trhk '+nj+' art. 3 lid 8, buiten de inkomenstoets; per geldverstrekker getoetst op diens toetsinkomen)':' · alleenstaandenbedrag niet van toepassing (toetsinkomen niet hoger dan '+fmt(AL.grens)+')'):' · twee aanvragers: geen alleenstaandenbedrag'}${labelExtra>0?' · inclusief energielabelbedrag '+fmt(labelExtra)+' (buiten de inkomenstoets)':' · energielabel E, F of G: geen energielabelbedrag'} · Conservatieve indicatie: de voorzichtigheid zit alleen in het toetsinkomen (afslag per geldverstrekker), niet in het percentage · NHG-grens 2026 €${ATNormen.data.nhg['2026'].kostengrens.toLocaleString('nl-NL')} (€${ATNormen.data.nhg['2026'].kostengrens_ebv.toLocaleString('nl-NL')} bij energiemaatregelen ${LN.max_ltv_ebv_pct}%). Tweede inkomen 100% telt mee.`);
     out+=alertBlock('in','💡','Vergelijk geldverstrekkers actief','Verschil in methodiek tussen banken kan tienduizenden euro\'s schelen. ING/Rabo conservatief, Florius soepeler, Munt/BLG speciaal voor korter zelfstandigen.');
     out+=alertBlock('wa','⚠️','Inkomensverklaring Ondernemer (IVO)','De meeste geldverstrekkers accepteren inmiddels alleen nog IVO 3.0 van een erkend expert (ca. €400-€650). Let op geldigheidsduur (meestal 6 maanden).');
   }

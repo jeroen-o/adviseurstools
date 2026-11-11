@@ -556,11 +556,12 @@ function ptKernMax(fn){var oudK=PT_KERN;PT_KERN={max:0};try{fn();return +PT_KERN
 </div>
 <script>
 // ── CHF NORMENTABELLEN per normjaar uit ATNormen (data/normen.json; keuze via #normjaar) ─────
-// Kolommen: 0=≤1.5% … 7=4.5-5% … 11=≥6.5%; niet = tabel 1 (niet-AOW), aow = tabel 2 (AOW), rente aftrekbaar; waarden als fractie
+// Kolommen: 0=≤1.5% … 7=4.5-5% … 11=≥6.5%; niet = tabel 1 (niet-AOW), aow = tabel 2 (AOW), rente aftrekbaar;
+// niet3/aow3 = tabel 3/4 (box 3, rente niet aftrekbaar); waarden als fractie
 // Inkomen onder minimum: laagste rij wordt gebruikt (conservatief)
 function chfUitAT(j,t){return atFl(j,t).map(r=>[r[0]].concat(r.slice(1).map(v=>Math.round(v*10)/1000)));}
 const CHF_BY_YEAR={};
-atJaren().forEach(j=>{const st=(ATL.bron[j].match(/\(Stcrt[^)]*\)/)||[''])[0];CHF_BY_YEAR[j]={niet:chfUitAT(j,'1'),aow:chfUitAT(j,'2'),bron:'Trhk '+j+(st?' '+st:'')};});
+atJaren().forEach(j=>{const st=(ATL.bron[j].match(/\(Stcrt[^)]*\)/)||[''])[0];CHF_BY_YEAR[j]={niet:chfUitAT(j,'1'),aow:chfUitAT(j,'2'),niet3:chfUitAT(j,'3'),aow3:chfUitAT(j,'4'),bron:'Trhk '+j+(st?' '+st:'')};});
 function normjaar(){const el=document.getElementById('normjaar');return el&&CHF_BY_YEAR[el.value]?el.value:ATNormen.normjaar();}
 function updNormjaar(){const j=normjaar();document.querySelectorAll('.njTxt').forEach(e=>{e.textContent=j;});}
 atJaarOpties();document.getElementById('normjaar').value=ATNormen.normjaar();
@@ -848,17 +849,25 @@ function bereken(){
       return {mnd:r.ml,norm:/aow$/.test(r.tab)?'AOW':'Huidig',max:Math.round(r.max)};
     };
   }
-  const NJ=normjaar(), T_NIET=CHF_BY_YEAR[NJ].niet, T_AOW=CHF_BY_YEAR[NJ].aow, NT=ATL.toetsrente.toetslooptijd_maanden, PB=ATD.nhg.beheer.regels.pensioen_binnen_maanden;
+  const NJ=normjaar(), T_NIET=CHF_BY_YEAR[NJ].niet, T_AOW=CHF_BY_YEAR[NJ].aow, T_NIET3=CHF_BY_YEAR[NJ].niet3, T_AOW3=CHF_BY_YEAR[NJ].aow3, NT=ATL.toetsrente.toetslooptijd_maanden, PB=ATD.nhg.beheer.regels.pensioen_binnen_maanden;
   updNormjaar();
   const start=new Date(); start.setDate(1);
   data=[];
   // Inkomen op een moment: AOW bereikt → inkomen vanaf AOW (AOW-tabel); anders huidig inkomen (niet-AOW-tabel; geen MIN-toets).
   // 'pen' markeert alleen dat de pensioentoets geldt (gekozen drempel); het inkomen blijft dan het huidige inkomen.
+  // q1 = tabel 1/2 (box 1), q3 = tabel 3/4 (box 3) voor het niet-aftrekbare deel.
   const mndOp=(isAOW,pen,kol)=>{
-    if(isAOW) return {mnd:aowInk*quota(T_AOW,aowInk,kol)/12,norm:'AOW',ti:aowInk,tbl:'AOW-tabel'};
-    if(pen) return {mnd:ink*quota(T_NIET,ink,kol)/12,norm:'Pensioen',ti:ink,tbl:'niet-AOW-tabel'};
-    return {mnd:ink*quota(T_NIET,ink,kol)/12,norm:'Huidig',ti:ink,tbl:'niet-AOW-tabel'};
+    const ti=isAOW?aowInk:ink,q1=quota(isAOW?T_AOW:T_NIET,ti,kol),q3=quota(isAOW?T_AOW3:T_NIET3,ti,kol);
+    return {mnd:ti*q1/12,q1,q3,norm:isAOW?'AOW':pen?'Pensioen':'Huidig',ti,tbl:isAOW?'AOW-tabel':'niet-AOW-tabel'};
   };
+  // Box 3-aandeel van de (rest)schuld na m maanden; het box 3-deel wordt gebruteerd met q1/q3 (zoals ATNormen.maxHypotheek):
+  // toetslast = H × annuïteit × ((1 − s3) + s3 × q1/q3). Volledig box 3 → gelijk aan de box 3-tabel.
+  const b3Aandeel=m=>{let t=0,b=0;for(const d of delen){const rs=restSchuld(d,m);t+=rs;if(d.box===3)b+=rs;}return t>0?b/t:0;};
+  const factorLast=(s3,r)=>s3>0&&r.q3>0?(1-s3)+s3*r.q1/r.q3:1;
+  // Alleenstaandenbedrag (Trhk art. 3 lid 8): de planner kent één aanvrager; buiten de toetslast opgeteld als het toetsinkomen
+  // boven de grens van het normjaar ligt (AOW-grens na de AOW-datum). Niet bij de NHG-beheercriteria (geen vrijgestelde bedragen).
+  const AL=ATD.leennormen.alleenstaandenbedrag[NJ]||ATD.leennormen.alleenstaandenbedrag[ATNormen.normjaar()];
+  const alleenOp=r=>{if(beheerMaand)return {bedrag:0,grens:0};const grens=r.norm==='AOW'?AL.grens_aow:AL.grens;return {bedrag:r.ti>grens?AL.bedrag:0,grens};};
 
   for(let m=0;m<=360;m++){
     const dt=new Date(start.getFullYear(),start.getMonth()+m,1);
@@ -873,10 +882,12 @@ function bereken(){
     const kol=rKol(effTr);
     const rm=effTr/12;
 
-    let {mnd,norm}=mndOp(isAOW,pen,kol);
+    const rM=mndOp(isAOW,pen,kol);
+    let {mnd,norm}=rM;
+    const fL=factorLast(b3Aandeel(m),rM), alM=alleenOp(rM).bedrag;
 
-    let maxH=Math.round(mnd*af(rm,NT-m));
-    let maxH30=Math.round(mnd*af(rm,NT));
+    let maxH=Math.round(mnd*af(rm,NT-m)/fL)+alM;
+    let maxH30=Math.round(mnd*af(rm,NT)/fL)+alM;
     if(beheerMaand){const bm=beheerMaand(dt,m);mnd=bm.mnd;norm=bm.norm;maxH=bm.max;maxH30=bm.max;} // NHG-beheercriteria per maand
 
     let s1=0,s3=0,ml=0;
@@ -906,7 +917,8 @@ function bereken(){
   const momDef=[{mndN:0,isAOW:aow0,pen:false,lbl:'bij aanvang'}];
   if(pen0)momDef.push({mndN:mndTussen(vandaag,aowDatum),isAOW:true,pen:false,lbl:'AOW-datum ('+fmtDtS(aowDatum)+')'});
   const momenten=momDef.map(x=>{const r=mndOp(x.isAOW,x.pen,kol0);const rf=restF(x.mndN);
-    return {i:x.mndN,ti:r.ti,tbl:r.tbl,mnd:r.mnd,rf,max:Math.round(r.mnd*af(d0.effTr/12,NT)/rf),lbl:x.lbl,norm:r.norm};});
+    const s3=b3Aandeel(ptMethode()==='trhk'?0:x.mndN),fL=factorLast(s3,r),al=alleenOp(r),opInk=Math.round(r.mnd*af(d0.effTr/12,NT)/rf/fL);
+    return {i:x.mndN,ti:r.ti,tbl:r.tbl,mnd:r.mnd,rf,s3,q1:r.q1,q3:r.q3,opInk,alleen:al.bedrag,grens:al.grens,max:opInk+al.bedrag,lbl:x.lbl,norm:r.norm};});
   let bep=momenten[0];momenten.forEach(x=>{if(x.max<bep.max)bep=x;});
   if(PT_KERN){PT_KERN.max=B?B.max:bep.max;return;} // grafiek: alleen het maximum
   const aowIdx=data.findIndex(d=>d.isAOW);
@@ -927,7 +939,9 @@ function bereken(){
   else if(pen0) pt.innerHTML='<strong>Pensioentoets ('+drTxt+'):</strong> van toepassing — bij aanvang getoetst op huidig inkomen '+E(ink)+' (niet-AOW-tabel), op de AOW-datum de restschuld op inkomen vanaf AOW '+E(aowInk)+' (AOW-tabel).';
   else pt.innerHTML='<strong>Pensioentoets ('+drTxt+'):</strong> nu niet van toepassing (leeftijd '+leeftijdOp(geb,new Date())+' jaar)'+(penIdx>0?'; geldt vanaf '+fmtDtS(data[penIdx].dt)+'.':'.');
 
-  pt.innerHTML+=' Toetsmomenten: '+momenten.map(x=>x.lbl+' '+E(x.ti)+' ('+x.tbl+(x.i>0?', restschuld '+(x.rf*100).toFixed(1).replace('.',',')+'% na '+x.i+' mnd':'')+') → '+E(x.max)).join('; ')+'. <strong>Bepalend toetsmoment: '+bep.lbl+'</strong> — maximale hypotheek '+E(bep.max)+' ('+ptMethodeTekst()+').';
+  pt.innerHTML+=' Toetsmomenten: '+momenten.map(x=>x.lbl+' '+E(x.ti)+' ('+x.tbl+(x.i>0?', restschuld '+(x.rf*100).toFixed(1).replace('.',',')+'% na '+x.i+' mnd':'')+(x.s3>0?', box 3-aandeel '+(x.s3*100).toFixed(1).replace('.',',')+'% gebruteerd met '+(x.q1*100).toFixed(1).replace('.',',')+'%/'+(x.q3*100).toFixed(1).replace('.',',')+'%':'')+') → '+(x.alleen?E(x.opInk)+' + alleenstaandenbedrag '+E(x.alleen)+' = ':'')+E(x.max)).join('; ')+'. <strong>Bepalend toetsmoment: '+bep.lbl+'</strong> — maximale hypotheek '+E(bep.max)+(bep.alleen?' (op inkomen '+E(bep.opInk)+' + alleenstaandenbedrag '+E(bep.alleen)+')':'')+' ('+ptMethodeTekst()+').'+
+    ' <br><strong>Alleenstaandenbedrag</strong> (Trhk '+NJ+' art. 3 lid 8, één aanvrager): '+atEur(AL.bedrag)+' extra buiten de toetslast als het toetsinkomen hoger is dan '+atEur(AL.grens)+' (na de AOW-datum '+atEur(AL.grens_aow)+')'+(bep.alleen?' — toegepast.':' — niet van toepassing op het bepalende toetsmoment.')+
+    (momenten.some(x=>x.s3>0)?' <strong>Box 3:</strong> het niet-aftrekbare deel is getoetst met tabel '+(bep.norm==='AOW'?'4':'3')+(momenten.some(x=>x.s3>0&&x.s3<1)?'; bij een gemengde lening telt de toetslast van het box 3-deel × box 1-/box 3-percentage mee.':'.'):'');
   if(B){document.getElementById('k1').textContent=B.ontbreekt?'—':E(B.max);document.getElementById('k1s').textContent='NHG-beheercriteria · bepalend: '+B.bepalend.m.lbl;pt.innerHTML=beheerHtml(B);}
   // Legenda en kolomkoppen volgens de rekenmethode
   [...document.querySelectorAll('#sec-chart .leg'), ...document.querySelectorAll('#sec-table th')].forEach(el=>{if(el.dataset.orig===undefined)el.dataset.orig=el.innerHTML;});
