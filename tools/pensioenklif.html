@@ -1719,18 +1719,22 @@ function partActualPayment(part, yearsFromStart) {
 function checkParts(testParts, income, group, globalToets) {
   // group: 'werkend' of 'aow'. Per deel: box1 → group; box3 → 'box3_'+group
   // FLP-lookup gebruikt toetsrente (= werkelijke rente bij vast ≥10, anders max)
-  // Alleenstaandenbedrag (€ 17.000) en energielabelbedrag blijven buiten de toets: lasten naar rato verlaagd.
+  // Alleenstaandenbedrag en energielabelbedrag blijven buiten de toets en gaan eerst van de box 1-delen af
+  // (box 3 = vast bedrag); alleen een restant gaat van het box 3-deel af.
+  // Rentekolom: de naar bedrag gewogen toetsrente (3 decimalen) voor alle delen; de last per deel tegen de eigen toetsrente.
   // Verplichtingen (bruto maandlast) gebruiken een deel van de ruimte (box 1-tabel als er een box 1-deel is).
   const totaal = testParts.reduce((s, p) => s + p.amount, 0);
   const verh = alleenstaandenBedrag(income, group === 'aow') + (income > 0 ? (TK.labelExtra || 0) : 0); // + energielabelbedrag, ook buiten de toets
-  const schaal = totaal > 0 ? Math.max(0, totaal - verh) / totaal : 1;
-  let fraction = 0, payment = 0;
+  const t1 = testParts.filter(p => p.box === 1).reduce((s, p) => s + p.amount, 0), t3 = totaal - t1;
+  const v1 = Math.min(verh, t1), v3 = Math.min(Math.max(0, verh - v1), t3);
+  const sch1 = t1 > 0 ? 1 - v1 / t1 : 1, sch3 = t3 > 0 ? 1 - v3 / t3 : 1;
+  const gewR = totaal > 0 ? Math.round(testParts.reduce((s, p) => s + getToetsRate(p, globalToets) * p.amount, 0) / totaal * 1000) / 1000 : TK.refRate;
+  let fraction = 0, payment = 0, tol = 0;
   for (const p of testParts) {
     const flpType = (p.box === 1) ? group : 'box3_' + group;
-    const toetsR = getToetsRate(p, globalToets);
-    const maxM = maxMonthly(income, flpType, toetsR);
+    const maxM = maxMonthly(income, flpType, gewR);
     const pay = partTestPayment(p, globalToets);
-    if (maxM > 0) fraction += pay * schaal / maxM;
+    if (maxM > 0) fraction += pay * (p.box === 1 ? sch1 : sch3) / maxM;
     payment += pay;
   }
   if (testParts.length > 0) {
@@ -1738,8 +1742,9 @@ function checkParts(testParts, income, group, globalToets) {
     const verl = verlagingenVoor(vType);
     const maxV = maxMonthly(income, vType, TK.refRate);
     if (verl > 0) fraction += maxV > 0 ? verl / maxV : Infinity;
+    tol = maxV > 0 ? 0.5 / maxV : 0; // marge € 0,50 bruto per maand (afronding), niet 0,1% van de toegestane last
   }
-  return { fraction, payment, fits: fraction <= 1.001 };
+  return { fraction, payment, fits: fraction <= 1 + tol };
 }
 
 function calcOptimalTweetrap(inp) {

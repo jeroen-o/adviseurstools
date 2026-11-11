@@ -961,6 +961,17 @@ function bereken(){
   const AL=ATD.leennormen.alleenstaandenbedrag[NJ]||ATD.leennormen.alleenstaandenbedrag[ATNormen.normjaar()];
   const alleenOp=r=>{if(beheerMaand)return {bedrag:0,grens:0};const grens=r.norm==='AOW'?AL.grens_aow:AL.grens;return {bedrag:r.ti>grens?AL.bedrag:0,grens};};
 
+  // Max. per maand met leningdelen (zoals 'bij aanvang' hieronder): toetslast per deel = (rest)schuld ÷ annuïteitsfactor tegen de
+  // toetsrente van dat deel (D2); gemengd: box 3-deel VAST bedrag, extra ruimte in box 1, box 3-last × q1/q3 (D1); het
+  // alleenstaandenbedrag komt er daarna bovenop (gaat dus van box 1 af). null → geen (rest)schuld: formule zonder delen.
+  const maxMetDelen=(dt,m,n,r)=>{
+    if(!(n>0))return null;let l1=0,l3=0,h1=0,b3=0;
+    for(const d of delen){const rs=restSchuld(d,m);if(!(rs>0))continue;const l=rs/af(toetsrenteDeel(d,dt,defaultTr,m)/12,n);if(d.box===3){l3+=l;b3+=rs;}else{l1+=l;h1+=rs;}}
+    const tot=h1+b3;if(!(tot>0))return null;
+    const verh=!r.vol3&&r.q3>0?r.q1/r.q3:1;
+    if(r.vol3||!(b3>0)||!(h1>0)||!(l1>0)){const lpe=(l1+l3*verh)/tot;return lpe>0?Math.round(Math.max(0,r.mnd)/lpe):0;}
+    return Math.round(Math.max(0,r.mnd-l3*verh)/(l1/h1)+b3);
+  };
   for(let m=0;m<=360;m++){
     const dt=new Date(start.getFullYear(),start.getMonth()+m,1);
     const age=(dt-geb)/(365.25*24*3600*1000);
@@ -978,8 +989,9 @@ function bereken(){
     let {mnd,norm}=rM;
     const fL=factorLast(s3m,rM), alM=alleenOp(rM).bedrag;
 
-    let maxH=Math.round(mnd*af(rm,NT-m)/fL)+alM;
-    let maxH30=Math.round(mnd*af(rm,NT)/fL)+alM;
+    const xH=maxMetDelen(dt,m,NT-m,rM),x30=maxMetDelen(dt,m,NT,rM);
+    let maxH=(xH===null?Math.round(mnd*af(rm,NT-m)/fL):xH)+alM;
+    let maxH30=(x30===null?Math.round(mnd*af(rm,NT)/fL):x30)+alM;
     if(beheerMaand){const bm=beheerMaand(dt,m);mnd=bm.mnd;norm=bm.norm;maxH=bm.max;maxH30=bm.max;} // NHG-beheercriteria per maand
 
     let s1=0,s3=0,ml=0;
