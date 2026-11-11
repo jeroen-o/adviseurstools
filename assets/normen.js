@@ -63,7 +63,7 @@
 
   /**
    * Maximale hypotheek volgens de leennormen.
-   * opt: {jaar, toetsinkomen, rente, rvp, aow, box3Aandeel (0..1), studieschuldMnd, kredietLimiet,
+   * opt: {jaar, toetsinkomen, rente, rvp, aow, box3Bedrag (vast box 3-deel) of box3Aandeel (0..1), studieschuldMnd, kredietLimiet,
    *       erfpachtMnd, overigeLastenMnd, alimentatieBetaaldJaar, label, verduurzaming, aanvragers}
    * Betaalde partneralimentatie gaat van het toetsinkomen af (NHG V&N C.7.14.2).
    * Volledig box 3: tabel 3/4 en verplichtingen volledig van die ruimte af; gemengd: box 3-deel gebruteerd met q1/q3.
@@ -73,6 +73,9 @@
     var jaar = jaarOf(o.jaar), tr = toetsrente(o.rente, o.rvp == null ? 30 : o.rvp);
     var ink = Math.max(0, (o.toetsinkomen || 0) - (o.alimentatieBetaaldJaar || 0));
     var q1 = woonquote(jaar, ink, tr, { aow: o.aow }), q3 = woonquote(jaar, ink, tr, { aow: o.aow, box3: true });
+    // box 3: bij voorkeur als VAST bedrag (box3Bedrag; extra leenruimte valt in box 1). box3Aandeel (0..1) blijft voor
+    // oudere aanroepen; box3Aandeel 1 = volledig box 3.
+    var B3 = Math.max(0, o.box3Bedrag || 0);
     var s3 = Math.min(1, Math.max(0, o.box3Aandeel || 0));
     // Volledig box 3 (geen aftrekbare rente): tabel 3/4, verplichtingen volledig van die ruimte af (niet gebruteerd).
     // Gemengd: tabel 1/2, het box 3-deel van de last gebruteerd met q1/q3.
@@ -83,7 +86,8 @@
       + (o.erfpachtMnd || 0) + (o.overigeLastenMnd || 0) * fBr;
     var beschikbaar = Math.max(0, maxLast - verpl);
     var verh = q3 > 0 ? q1 / q3 : 1, factorLast = vol3 ? 1 : (1 - s3) + s3 * verh;
-    var opInkomen = beschikbaar * annuiteitFactor(tr) / factorLast;
+    var opInkomen = (B3 > 0 && !vol3) ? Math.max(0, beschikbaar * annuiteitFactor(tr) - B3 * (verh - 1))
+      : beschikbaar * annuiteitFactor(tr) / factorLast;
     var lab = labelAankoop(o.label), verd = Math.min(o.verduurzaming || 0, o.verduurzaming ? energiebesparend(o.label) : 0);
     var alleen = alleenstaandenbedrag(jaar, ink, o.aow, o.aanvragers || 1);
     return { jaar: jaar, toetsrente: tr, kolom: L.rentekolommen.labels[kolom(tr)], woonquote: q1, woonquoteBox3: q3,
