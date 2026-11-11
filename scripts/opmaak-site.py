@@ -92,7 +92,7 @@ def footer(r, s):
     </div>
     <div class="fcol"><h3>Categorieën</h3><ul>{cats}</ul></div>
     <div class="fcol"><h3>Uitgelicht</h3><ul>{uit}</ul></div>
-    <div class="fcol"><h3>Contact</h3><ul><li><a href="mailto:{MAIL}">{MAIL}</a></li><li><a href="tel:+31621247257">{TEL}</a></li><li><a href="{r}contact/">Contactpagina</a></li><li><a href="{r}methodiek/">Rekenmethode</a></li><li><a href="{r}api/">API normen</a></li></ul></div>
+    <div class="fcol"><h3>Contact</h3><ul><li><a href="mailto:{MAIL}">{MAIL}</a></li><li><a href="tel:+31621247257">{TEL}</a></li><li><a href="{r}contact/">Contactpagina</a></li><li><a href="{r}methodiek/">Rekenmethode</a></li><li><a href="{r}api/">API normen</a></li><li><a href="{r}methodiek/testmatrix.html">Testmatrix</a></li></ul></div>
   </div>
   <div class="wrap fdisc">
     <p class="fkern"><b>Let op:</b> experimentele (AI)tools. Uitkomsten zijn indicatief en geen financieel advies. Gebruik alleen fictieve testgegevens en laat berekeningen controleren door een erkend adviseur.</p>
