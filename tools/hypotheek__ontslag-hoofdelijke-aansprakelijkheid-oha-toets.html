@@ -981,7 +981,12 @@ function bereken(){
   const allB3=geldig.every(l=>l.box3==='JA');
   function bhOp(ink,situ,lbl){const bt=BEHEER_TABELLEN[situ]||BEHEER_TABELLEN.werk;const q1=wq(bt.b1,ink,kolB)||0,q3=wq(bt.b3,ink,kolB)||0;
     const verh=(allB3||q3<=0)?1:q1/q3,pct=allB3?q3:q1;const last=mDelen.reduce((t,x)=>t+x.m*((x.l.box3==='JA'&&!allB3)?verh:1),0);
-    const mm=ink*pct/12-verpl;return {lbl,ink,situ,bt,pct,verh,last,mm,ruimte:mm-last,maxH:last>0?Math.max(0,mm)/(last/totHS):Infinity,tabNaam:allB3?bt.b3naam:bt.b1naam};}
+    const mm=ink*pct/12-verpl;
+    // max. hypotheek: box 3-deel als VAST bedrag (werkelijke last × q1/q3), extra ruimte in box 1 tegen de werkelijke last per € box 1;
+    // past zelfs het box 3-deel niet, dan het bedrag dat geheel als (gebruteerd) box 3-deel past (zoals de standaardtoets)
+    const B3=allB3?0:mDelen.reduce((t,x)=>t+(x.l.box3==='JA'?x.l.hoofdsom:0),0),L3v=allB3?0:mDelen.reduce((t,x)=>t+(x.l.box3==='JA'?x.m*verh:0),0),L1=last-L3v,mp=Math.max(0,mm);
+    const maxH=B3>0?(mp<L3v?(L3v>0?mp/(L3v/B3):0):(L1>0?(mp-L3v)/(L1/(totHS-B3))+B3:Infinity)):(last>0?mp/(last/totHS):Infinity);
+    return {lbl,ink,situ,bt,pct,verh,last,mm,ruimte:mm-last,maxH,tabNaam:allB3?bt.b3naam:bt.b1naam};}
   function bhMom(inkA,pensAx,situ0,mA){const r=[bhOp(inkA,situ0,'bij aanvang')];if(mA<=ATN_BEH_MND&&pensAx!==null)r.push(bhOp(pensAx,'aow','AOW-datum (binnen 3 jaar)'));return r;}
   const bhList=bhMom(ink0,pensA,situatie,mAowB);
   const bhB=bhList.reduce((a,b)=>b.ruimte<a.ruimte?b:a,bhList[0]);

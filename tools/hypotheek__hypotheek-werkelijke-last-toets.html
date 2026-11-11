@@ -632,9 +632,9 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
 
     <div class="kpi" style="margin-top:14px">
       <div class="k">
-        <div class="lbl">Minimale beheerlast</div>
+        <div class="lbl">Werkelijke beheerlast</div>
         <div class="val" id="kBhWerkelijk">— </div>
-        <div class="sub">alle leningdelen aflvrij — NHG-norm</div>
+        <div class="sub">per leningdeel (huidige aflosvorm, huidige rente) — getoetst</div>
       </div>
       <div class="k">
         <div class="lbl">Max financieringslast (beheer)</div>
@@ -645,7 +645,7 @@ table.normtab tbody tr:nth-child(even) td.sticky-col{background:#e3ebf3;}
 
     <h2 style="margin-top:18px">Beheer-vergelijking: werkelijk vs minimaal</h2>
     <div style="overflow-x:auto;max-width:100%"><table class="detail"><tbody id="beheerVglTable"></tbody></table></div>
-    <div class="info"><strong>Minimale beheerlast</strong> = alle leningdelen fictief aflossingsvrij gemaakt → laagst mogelijke maandlast. Volgens NHG D.6.5 wordt voor de strikte beheer-acceptatie uitgegaan van een <em>"zo groot mogelijk aflossingsvrij deel van de Lening"</em>, dus de <strong>minimale beheerlast</strong> is de norm-bepalende toets. De werkelijke maandlast wordt daarnaast getoond ter informatie: als die ook past, is herstructurering niet nodig.</div>
+    <div class="info">De toets en de maximale hypotheek volgens de beheercriteria gaan uit van de <strong>werkelijke lasten per leningdeel</strong> (annuïtair en lineair over de looptijd, aflossingsvrij alleen rente; box 3-deel gebruteerd). <strong>Minimale beheerlast</strong> = alle leningdelen fictief aflossingsvrij → laagst mogelijke maandlast, ter informatie: NHG D.6.5 gaat uit van een <em>"zo groot mogelijk aflossingsvrij deel van de Lening"</em> (binnen de NHG-grens van 50% van de marktwaarde); past alleen de minimale last, dan kan omzetten naar aflossingsvrij een oplossing zijn.</div>
 
     <h2 style="margin-top:14px">Opbouw maximaal toegestane financieringslast (beheer)</h2>
     <table class="detail"><tbody id="beheerMaxTable"></tbody></table>
@@ -1402,9 +1402,14 @@ function bereken(){
     const pct = volledigBox3 ? q3 : q1, verh = (volledigBox3 || q3 <= 0) ? 1 : q1/q3;
     const beschikbaar = ink * pct / 12 - aftrekBh;
     const lastW = lB1w + lB3w*verh + erfpacht + inleg, lastM = lB1m + lB3m*verh + erfpacht + inleg;
-    const lpe = totaalHoofdsom > 0 ? (lB1w + lB3w) / totaalHoofdsom : 0;
-    let maxH = lpe > 0 ? Math.max(0, beschikbaar - erfpacht - inleg) / lpe - hoofdsomB3*(verh - 1) : 0;
-    if (lpe > 0 && !volledigBox3 && maxH < hoofdsomB3) maxH = Math.max(0, beschikbaar - erfpacht - inleg) / lpe / verh;
+    /* max. hypotheek bij de werkelijke lasten: box 3-deel als VAST bedrag (last × q1/q3), extra ruimte in box 1 tegen de werkelijke last per € box 1;
+       past zelfs het box 3-deel niet, dan het bedrag dat geheel als (gebruteerd) box 3-deel past (zoals de advies-toets) */
+    const Mb = Math.max(0, beschikbaar - erfpacht - inleg), gem3 = !volledigBox3 && hoofdsomB3 > 0;
+    const lpe = totaalHoofdsom > 0 ? (lB1w + lB3w) / totaalHoofdsom : 0, lpe1 = (totaalHoofdsom - hoofdsomB3) > 0 ? lB1w / (totaalHoofdsom - hoofdsomB3) : 0;
+    let maxH;
+    if (!gem3) maxH = lpe > 0 ? Mb / lpe : 0;
+    else if (Mb < lB3w * verh) maxH = lB3w > 0 ? Mb / (lB3w * verh / hoofdsomB3) : 0;
+    else maxH = lpe1 > 0 ? (Mb - lB3w * verh) / lpe1 + hoofdsomB3 : 0;
     return {ink, situ, k1, k3, q1, q3, pct, verh, beschikbaar, lastW, lastM, ruimteW: beschikbaar - lastW, ruimteM: beschikbaar - lastM, maxH: Math.max(0, maxH)};
   }
   /* momenten: aanvang + AOW-datum binnen 36 maanden (wie al AOW heeft: inkomen vanaf AOW) */
@@ -1422,7 +1427,7 @@ function bereken(){
   const BH = bhMomenten(PA);
   const bhOnvolledig = BH.mis || !BH.uit.length;
   if (!BH.uit.length) BH.uit.push(Object.assign(bhUitkomst(toetsInkomen, false), {lbl: 'bij aanvang (zonder pensioeninkomen)'}));
-  const bepBh = BH.uit.reduce((x,y) => y.ruimteM < x.ruimteM ? y : x, BH.uit[0]);
+  const bepBh = BH.uit.reduce((x,y) => y.ruimteW < x.ruimteW ? y : x, BH.uit[0]);
   const bepMaxBh = BH.uit.reduce((x,y) => y.maxH < x.maxH ? y : x, BH.uit[0]);
   const bhPens = bepBh !== BH.uit[0], pensInkBh = bepBh.ink, toetsInkomenBh = bepBh.ink;
   const flBox1Bh = bepBh.q1, flBox3Bh = bepBh.q3, flBh = bepBh.pct;
@@ -1441,11 +1446,12 @@ function bereken(){
   /* ===========================================================
      RENDER
      =========================================================== */
-  /* Status panelen: advies op de Trhk-toetslast (annuïtair 30 jaar); beheer op MINIMALE last (NHG D.6.5 norm-bepalend) */
+  /* Status panelen: advies op de Trhk-toetslast (annuïtair 30 jaar); beheer op de WERKELIJKE lasten per leningdeel (methodiek 5b),
+     dezelfde last als waarop de maximale hypotheek volgens de beheercriteria is berekend */
   renderTopStatus('adviesStatusBox', 'adviesBar', 'adviesBarNote',
     benutAdv, ruimteAdv, toetslastAdv, beschikbaarAdv, 'CHF/GHF advies-toets', 'toetslast (annuïtair 30 jaar op de toetsrente)');
   renderTopStatus('beheerStatusBox', 'beheerBar', 'beheerBarNote',
-    benutBhMin, ruimteBhMin, bepBh.lastM, beschikbaarBh, 'NHG beheer-toets (minimale last)');
+    benutBh, ruimteBh, bepBh.lastW, beschikbaarBh, 'NHG beheer-toets (werkelijke lasten)', 'werkelijke beheerlast');
   document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', `<div class="status ok" style="margin-top:10px"><p><b>Bepalend toetsmoment (NHG-beheercriteria):</b> ${bepBh.lbl} — toetsinkomen ${fmt(bepBh.ink)}, beheertabel ${beheerNaam(volledigBox3 ? bepBh.k3 : bepBh.k1)} (${pctStr(bepBh.pct*100)}), toetsrente ${fmtD2(toetsrenteBh)}%${hoofdsomB3>0&&!volledigBox3?`; box 3-last × ${fmtD2(bepBh.verh)}`:''}. Maximale hypotheek volgens de beheercriteria (werkelijke lasten van de huidige leningdelen): <b>${fmt(Math.round(bepMaxBh.maxH))}</b>${bepMaxBh !== bepBh ? ' (bepalend: ' + bepMaxBh.lbl + ')' : ''}.${bhOnvolledig ? ' <b>Let op:</b> de AOW-datum valt binnen 3 jaar maar het inkomen vanaf AOW ontbreekt — die toets is overgeslagen.' : ''}${wgRvp < 3 ? '<br><small>NHG: gebruik bij een resterende rentevaste periode korter dan 3 jaar de NHG-rente voor 3 jaar vast als die hoger is.</small>' : ''}<br><small>${BEHEER_VERMOGEN}</small></p></div>`);
 
   /* Gewogen RVP < 10 jr: de werkelijke-lasttoets rekent de last op de contractrente, maar de Trhk-toets
@@ -1541,7 +1547,7 @@ function bereken(){
 
   document.getElementById('kAdvWerkelijk').textContent = fmt(werkelijkTot);
   document.getElementById('kAdvMax').textContent = fmt(beschikbaarAdv);
-  document.getElementById('kBhWerkelijk').textContent = fmt(minimaalTot);
+  document.getElementById('kBhWerkelijk').textContent = fmt(bepBh.lastW);
   document.getElementById('kBhMax').textContent = fmt(beschikbaarBh);
 
   /* Tabellen advies */
