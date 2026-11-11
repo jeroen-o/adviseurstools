@@ -66,6 +66,7 @@
    * opt: {jaar, toetsinkomen, rente, rvp, aow, box3Aandeel (0..1), studieschuldMnd, kredietLimiet,
    *       erfpachtMnd, overigeLastenMnd, alimentatieBetaaldJaar, label, verduurzaming, aanvragers}
    * Betaalde partneralimentatie gaat van het toetsinkomen af (NHG V&N C.7.14.2).
+   * Volledig box 3: tabel 3/4 en verplichtingen volledig van die ruimte af; gemengd: box 3-deel gebruteerd met q1/q3.
    * Label-, verduurzamings- en alleenstaandenbedrag blijven buiten de toetslast.
    */
   function maxHypotheek(o) {
@@ -73,12 +74,15 @@
     var ink = Math.max(0, (o.toetsinkomen || 0) - (o.alimentatieBetaaldJaar || 0));
     var q1 = woonquote(jaar, ink, tr, { aow: o.aow }), q3 = woonquote(jaar, ink, tr, { aow: o.aow, box3: true });
     var s3 = Math.min(1, Math.max(0, o.box3Aandeel || 0));
-    var maxLast = ink * q1 / 100 / 12;
-    var fBr = s3 >= 1 ? 1 : studieschuldFactor(tr);
+    // Volledig box 3 (geen aftrekbare rente): tabel 3/4, verplichtingen volledig van die ruimte af (niet gebruteerd).
+    // Gemengd: tabel 1/2, het box 3-deel van de last gebruteerd met q1/q3.
+    var vol3 = s3 >= 1;
+    var maxLast = ink * (vol3 ? q3 : q1) / 100 / 12;
+    var fBr = vol3 ? 1 : studieschuldFactor(tr);
     var verpl = (o.studieschuldMnd || 0) * fBr + (o.kredietLimiet || 0) * L.krediet_maandlast_pct_limiet / 100
       + (o.erfpachtMnd || 0) + (o.overigeLastenMnd || 0) * fBr;
     var beschikbaar = Math.max(0, maxLast - verpl);
-    var verh = q3 > 0 ? q1 / q3 : 1, factorLast = (1 - s3) + s3 * verh;
+    var verh = q3 > 0 ? q1 / q3 : 1, factorLast = vol3 ? 1 : (1 - s3) + s3 * verh;
     var opInkomen = beschikbaar * annuiteitFactor(tr) / factorLast;
     var lab = labelAankoop(o.label), verd = Math.min(o.verduurzaming || 0, o.verduurzaming ? energiebesparend(o.label) : 0);
     var alleen = alleenstaandenbedrag(jaar, ink, o.aow, o.aanvragers || 1);
