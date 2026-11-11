@@ -1036,6 +1036,8 @@ function ptGrafiek(el, o) {
     var s3 = totBedrag>0 ? totBox3/totBedrag : 0;
     var bepalend = null;
     rows.forEach(function(r){
+      // Geen restschuld meer op dit moment (alle delen afgelost of volledig vrijgesteld): dit moment beperkt het maximum niet
+      if(r.m > 0 && !(r.lastGebruteerd > 0.005)) return;
       // Toetslast per euro hoofdsom op dit moment volgens de restschuld van de ingevoerde lening (incl. brutering box 3);
       // zo telt de aflossing tot dat moment mee. Zonder ingevoerde lening: 30-jaars annuïteit.
       var fl = (1 - s3) + s3 * (r.verhouding || 1);
@@ -1167,7 +1169,7 @@ function ptGrafiek(el, o) {
 
     var krapsteMoment = rows.reduce(function(a,b){ return b.ruimte < a.ruimte ? b : a; }, rows[0]);
     var extraTekstResultaat =
-      "<br><br><strong>Maximaal op basis van inkomen:</strong> " + fmtEUR(maxOpBasisInkomen) + (bepalend && bepalend.m>0 ? " <span class='hint' style='display:inline;'>(bepalend toetsmoment: na " + bepalend.m + " maanden, " + bepalend.datum.toLocaleDateString('nl-NL',{month:'long',year:'numeric'}) + ")</span>" : "") + "   " +
+      "<br><br><strong>Maximaal op basis van inkomen:</strong> " + fmtEUR(maxOpBasisInkomen) + (extraBuitenToetsing > 0 ? " + " + fmtEUR(extraBuitenToetsing) + " buiten de toetsing (label/verduurzaming/alleenstaande) = " + fmtEUR(maxOpBasisInkomen + extraBuitenToetsing) : "") + (bepalend && bepalend.m>0 ? " <span class='hint' style='display:inline;'>(bepalend toetsmoment: na " + bepalend.m + " maanden, " + bepalend.datum.toLocaleDateString('nl-NL',{month:'long',year:'numeric'}) + ")</span>" : "") + "   " +
       "<strong>Maximaal op basis van marktwaarde (incl. EBV):</strong> " + fmtEUR(maxOpBasisMarktwaarde) + "   " +
       "<strong>Maximale hypotheek:</strong> " + fmtEUR(maximaleHypotheek) +
       ((woonquoteNorm === "beheer" && (labelExtra + verduurzamingExtra + alleenstaandeExtra) > 0)
