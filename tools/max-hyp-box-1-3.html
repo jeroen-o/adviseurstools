@@ -721,9 +721,12 @@ function quote(tab,inkomen,kol){const T=NIBUD[tab];return T.r[atnRij(T.i,inkomen
 function maandenTussen(d1,d2){if(!d1||!d2)return null;const a=new Date(d1),b=new Date(d2);
   return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+1;}
 const momentLbl=m=>m===1?"Bij aanvang":"Na "+(m-1)+" maanden";
-/* Werkwijze B: AOW-toetsmoment = moment (1-based) op de AOW-datum (gedeeltelijke maand naar boven, zoals MAX. HYP. 2027) */
+/* Werkwijze B: AOW-toetsmoment = moment (1-based: moment 1 = bij aanvang) op de AOW-datum. Restschuld na het aantal VOLLE
+   maanden (betaalde termijnen) tot de AOW-datum, naar beneden afgerond (zoals MAX. HYP. 2027, volleMaanden); +1 = 1-based. */
 function aowMoment(td,aow){if(!td||!aow)return null;const a=new Date(td),b=new Date(aow);if(isNaN(a)||isNaN(b))return null;
-  let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());if(b.getDate()>a.getDate())m++;return m+1;}
+  return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())-(b.getDate()<a.getDate()?1:0)+1;}
+/* NHG-beheercriteria: AOW binnen 36 maanden — begonnen maand telt mee (beheerMaanden, gelijk aan de overige tools) */
+function aowBhM(td,aow){if(!td||!aow)return null;const a=new Date(td),b=new Date(aow);if(isNaN(a)||isNaN(b))return null;return beheerMaanden(a,b);}
 function leeftijdOpTd(td,geb){if(!td||!geb)return null;const a=new Date(td),g=new Date(geb);if(isNaN(a)||isNaN(g))return null;
   let l=a.getFullYear()-g.getFullYear();if(a.getMonth()<g.getMonth()||(a.getMonth()===g.getMonth()&&a.getDate()<g.getDate()))l--;return l;}
 /* AOW-toetsmoment alleen voor wie aan de gekozen pensioentoetsdrempel voldoet (restschuldmethode) */
@@ -793,7 +796,7 @@ function leesInput(){
   const geldtVoor=pf=>geldtB13(td,$(pf+"_aow").value,$(pf+"_geb").value,drempel);
   const persoon=pf=>({ink:parseEur($(pf+"_ink").value),pens:parseEur($(pf+"_pens").value),pensLeeg:!$(pf+"_pens").value.trim(),
     aowM:maandenTussen(td,$(pf+"_aow").value),geldt:geldtVoor(pf),
-    aowMom:aowMoment(td,$(pf+"_aow").value),lft:leeftijdOpTd(td,$(pf+"_geb").value),
+    aowMom:aowMoment(td,$(pf+"_aow").value),bhM:aowBhM(td,$(pf+"_aow").value),lft:leeftijdOpTd(td,$(pf+"_geb").value),
     prepM:$(pf+"_prep").value&&$(pf+"_prepink").value.trim()?maandenTussen(td,$(pf+"_prep").value):null,prepInk:parseEur($(pf+"_prepink").value)});
   const pers=[persoon("c")];
   if(partner)pers.push(persoon("p"));
@@ -823,7 +826,7 @@ function grafiekMaxB13(inp,lft,keuze){
   const kk=(keuze==="aow10"||keuze==="aow15")?keuze:(parseInt(keuze,10)||0);
   const pers=inp.pers.map((p,i)=>{const pf=i?"p":"c",gv=$(pf+"_geb").value;
     const g=gv?new Date(new Date(gv).getTime()+delta).toISOString().slice(0,10):null,aow=g?aowDatumUit(g):$(pf+"_aow").value;
-    return Object.assign({},p,{aowM:maandenTussen(td,aow),aowMom:aowMoment(td,aow),lft:leeftijdOpTd(td,g),geldt:geldtB13(td,aow,g,kk)});});
+    return Object.assign({},p,{aowM:maandenTussen(td,aow),aowMom:aowMoment(td,aow),bhM:aowBhM(td,aow),lft:leeftijdOpTd(td,g),geldt:geldtB13(td,aow,g,kk)});});
   const M=berekenCore(Object.assign({},inp,{pers,drempel:kk}));
   return (!M||M.onvolledig)?0:M.maxHyp;
 }
@@ -865,8 +868,8 @@ function berekenCore(inp){
   // Restschuldmethode: AOW-datum van iedere aanvrager die aan de pensioentoetsdrempel voldoet (ook na 10 jaar); toetst de restschuld.
   // Geen apart toetsmoment op de datum waarop iemand de drempel bereikt; geen MIN-toets bij aanvang.
   const aowMomenten=new Set();
-  pers.forEach(p=>{if(bh?(p.aowMom!==null&&p.aowM!==null&&p.aowM>=1&&p.aowMom-1<=ATN_BEH_MND):aowMomentGeldt(p)){mSet.add(p.aowMom);aowMomenten.add(p.aowMom);}});
-  const bhAow=p=>p.aowMom!==null&&p.aowM!==null&&p.aowM>=1&&p.aowMom-1<=ATN_BEH_MND;
+  pers.forEach(p=>{if(bh?(p.aowMom!==null&&p.aowM!==null&&p.aowM>=1&&p.bhM<=ATN_BEH_MND):aowMomentGeldt(p)){mSet.add(p.aowMom);aowMomenten.add(p.aowMom);}});
+  const bhAow=p=>p.aowMom!==null&&p.aowM!==null&&p.aowM>=1&&p.bhM<=ATN_BEH_MND;
   // (Pre)pensioen vóór AOW: vanaf die datum telt het (pre)pensioeninkomen in plaats van het bruto jaarinkomen
   pers.forEach(p=>{if(p.prepM!==null&&p.prepM>=1&&p.prepM<=120)mSet.add(p.prepM+1);});
   const momenten=[...mSet].filter(m=>m>=1&&(m<=HORIZON||aowMomenten.has(m))).sort((a,b)=>a-b);

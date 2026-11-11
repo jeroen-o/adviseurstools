@@ -852,7 +852,8 @@ function drempelGeldt(geb,aowD,nu,drX){const dr=drX!==undefined?drX:pDrempel();i
   if(dr==="aow10"||dr==="aow15"){const j=dr==="aow10"?10:15;return aowD<=new Date(nu.getFullYear()+j,nu.getMonth(),nu.getDate());}
   return !!geb&&leeftijdOp(geb,nu)>=dr;}
 /* Maanden tot een datum (partiële maand naar boven, zoals MAX. HYP. 2027) en restschuld van € 1 na m maanden (annuïtair) */
-function maandenTot(d0,d1){let m=(d1.getFullYear()-d0.getFullYear())*12+(d1.getMonth()-d0.getMonth());if(d1.getDate()>d0.getDate())m++;return m;}
+/* Volle maanden (betaalde termijnen) van d0 tot d1, naar beneden afgerond — zoals MAX. HYP. 2027 (volleMaanden) */
+function maandenTot(d0,d1){return (d1.getFullYear()-d0.getFullYear())*12+(d1.getMonth()-d0.getMonth())-(d1.getDate()<d0.getDate()?1:0);}
 function restFactor(r,m,n){if(m<=0)return 1;const i=r/12;if(i===0)return Math.max(0,1-m/n);return (Math.pow(1+i,n)-Math.pow(1+i,m))/(Math.pow(1+i,n)-1);}
 function aowInkNodig(gebId){const geb=leesGeb(gebId);if(!geb)return false;return drempelGeldt(geb,aowDatumUit(geb),new Date());}
 function aowDatumUit(geb){const R=atnAowRegel(geb),m=R.maanden;/* AOW-leeftijd uit normen.json (aow.regels) */const d=new Date(geb.getFullYear()+R.leeftijd_jaren,geb.getMonth()+m,1);d.setDate(Math.min(geb.getDate(),new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return d;}

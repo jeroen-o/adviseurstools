@@ -1233,7 +1233,8 @@ function bereken(){
   }
   /* AOW-moment alleen voor wie aan de gekozen drempel voldoet; geen apart drempelmoment */
   const nuAdv = new Date(), hzAdv = new Date(nuAdv.getFullYear()+15, nuAdv.getMonth(), nuAdv.getDate());
-  const mndTot = (d0, d1) => { let m = (d1.getFullYear()-d0.getFullYear())*12 + (d1.getMonth()-d0.getMonth()); if (d1.getDate() > d0.getDate()) m++; return m; };
+  /* volle maanden (betaalde termijnen) tot de AOW-datum, naar beneden afgerond — zoals MAX. HYP. 2027 (volleMaanden) */
+  const mndTot = (d0, d1) => (d1.getFullYear()-d0.getFullYear())*12 + (d1.getMonth()-d0.getMonth()) - (d1.getDate() < d0.getDate() ? 1 : 0);
   const gebD = g => { const d = g ? new Date(g) : null; return d && !isNaN(d.getTime()) ? d : null; };
   const lftOp = (geb, d) => { let a = d.getFullYear() - geb.getFullYear(); if (d.getMonth() < geb.getMonth() || (d.getMonth() === geb.getMonth() && d.getDate() < geb.getDate())) a--; return a; };
   const PA = [{av: av1, geb: gebD(gb1), ink: ink1, pens: pens1, pre: pre1, wie: 'aanvrager 1'}];
@@ -1326,7 +1327,7 @@ function bereken(){
   /* momenten: aanvang + AOW-datum binnen 36 maanden (wie al AOW heeft: inkomen vanaf AOW) */
   function bhMomenten(PAx){
     const mom = [{d: nuAdv, lbl: 'bij aanvang'}];
-    PAx.forEach(p => { if (p.av && !p.av.isAOW && p.av.aowDate > nuAdv && mndTot(nuAdv, p.av.aowDate) <= ATN_BEH_MND) mom.push({d: p.av.aowDate, lbl: 'AOW-datum ' + p.wie + ' (' + fmtDateNL(p.av.aowDate) + ', binnen 3 jaar)'}); });
+    PAx.forEach(p => { if (p.av && !p.av.isAOW && p.av.aowDate > nuAdv && beheerMaanden(nuAdv, p.av.aowDate) <= ATN_BEH_MND) mom.push({d: p.av.aowDate, lbl: 'AOW-datum ' + p.wie + ' (' + fmtDateNL(p.av.aowDate) + ', binnen 3 jaar)'}); });
     let mis = false; const uit = [];
     mom.forEach(m => {
       const v = PAx.map(p => { const aw = !!(p.av && (p.av.isAOW || m.d >= p.av.aowDate)); return {ink: (p.av && p.av.isAOW) ? p.ink : (aw ? p.pens : p.ink), aow: aw}; });
@@ -1558,7 +1559,7 @@ function renderAanvragerStatus(elId, av, num, drempel){
   } else {
     /* Aantal jaar tot AOW */
     const now = new Date();
-    const monthsTo = (av.aowDate.getFullYear()-now.getFullYear())*12 + (av.aowDate.getMonth()-now.getMonth());
+    const monthsTo = (av.aowDate.getFullYear()-now.getFullYear())*12 + (av.aowDate.getMonth()-now.getMonth()) - (av.aowDate.getDate() < now.getDate() ? 1 : 0);
     const jrTo = Math.floor(monthsTo/12), mnTo = monthsTo%12;
     const pt = ptGeldt(av, drempel);
     el.innerHTML = `<span class="pill ${pt?'warn':'no'}">Niet AOW</span> Leeftijd ${av.leeftijd} · AOW-leeftijd ${mAOW} · AOW-datum ${aowDatum} (over ${jrTo} jr ${mnTo} mnd)${pt?` — pensioentoets (${drempelLabel(drempel)}) van toepassing: vul inkomen vanaf AOW in`:''}`;

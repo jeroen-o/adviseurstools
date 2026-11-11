@@ -841,7 +841,8 @@ function bereken(){
   // Werkwijze B: AOW-toetsmoment voor wie op de toetsdatum 52 jaar of ouder is (op de restschuld); geen apart drempelmoment.
   const aowBinnen=pensioentoetsGeldt; // restschuldmethode: AOW-moment alleen als de pensioentoets geldt
   const drBinnen=false;
-  const aowM=aowBinnen?((aowDatum.getFullYear()-vandaag.getFullYear())*12+(aowDatum.getMonth()-vandaag.getMonth())+(aowDatum.getDate()>vandaag.getDate()?1:0)):0;
+  // restschuld na het aantal volle maanden (betaalde termijnen) tot de AOW-datum, naar beneden afgerond (zoals MAX. HYP. 2027)
+  const aowM=aowBinnen?((aowDatum.getFullYear()-vandaag.getFullYear())*12+(aowDatum.getMonth()-vandaag.getMonth())-(aowDatum.getDate()<vandaag.getDate()?1:0)):0;
   const pensOnvolledig=(pensioentoetsGeldt||aowBinnen||drBinnen)&&pensInk===null;
 
   const BT=BEHEER_TABELLEN[situatie]||BEHEER_TABELLEN.werk;
@@ -1019,7 +1020,7 @@ function bereken(){
     const stN={b1:SY.n1,b3:SY.n3,naam:'Trhk '+NJ+' nietAOW'},btN=BEHEER_TABELLEN[situatieKeuze==='aow'?'werk':situatieKeuze]||BEHEER_TABELLEN.werk;
     const maxOp=(sc,lpe)=>{const gr=sc.st===STP?SY.alleen.grensAOW:SY.alleen.grens;const al=sc.ink>gr?SY.alleen.bedrag:0;return lpe>0?Math.max(0,sc.exclS-verpl)/lpe+al:0;};
     const scA=aowNu?scenario(pensA,STP,BTP):scenario(ink0,stN,btN);let low=maxOp(scA,lpeAanvang(scA));
-    if(geldt){const m=(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())+(a.getDate()>vandaag.getDate()?1:0);
+    if(geldt){const m=(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())-(a.getDate()<vandaag.getDate()?1:0);
       const scP=scenario(pensA,STP,BTP);const lpe=geldig.reduce((t,l)=>t+restDeel(l,methode==='trhk'?0:m)*annP(toetsRenteDeel(l))*((l.box3==='JA')?scP.verh:1),0)/totHS;
       low=Math.min(low,maxOp(scP,lpe));}
     return low;

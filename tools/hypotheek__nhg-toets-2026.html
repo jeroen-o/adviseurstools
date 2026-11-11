@@ -1145,7 +1145,8 @@ function flnDatumNL(d){return d?d.toLocaleDateString('nl-NL',{day:'numeric',mont
    2. AOW-datum van iedere aanvrager die aan de drempel voldoet: inkomen op die datum, toetst de restschuld
       (annuïtair 30 jaar op de toetsrente) → maximum ÷ restfactor.
    Tabel: volgens de persoon met het hoogste toetsinkomen (art. 3 lid 7). Bindend = de laagste maximale hypotheek. */
-function flnMaanden(d0,d1){var m=(d1.getFullYear()-d0.getFullYear())*12+(d1.getMonth()-d0.getMonth());if(d1.getDate()>d0.getDate())m++;return m;}
+/* Volle maanden (betaalde termijnen) tot de AOW-datum, naar beneden afgerond — zoals MAX. HYP. 2027 (volleMaanden) */
+function flnMaanden(d0,d1){return (d1.getFullYear()-d0.getFullYear())*12+(d1.getMonth()-d0.getMonth())-(d1.getDate()<d0.getDate()?1:0);}
 function flnRestFactor(rente,m){if(m<=0)return 1;var i=rente/100/12,n=ATL.toetsrente.toetslooptijd_maanden;if(m>=n)return 0;if(i===0)return 1-m/n;return (Math.pow(1+i,n)-Math.pow(1+i,m))/(Math.pow(1+i,n)-1);}
 function flnToets(personen,opt){
   var drempel=(opt.drempel==='aow10'||opt.drempel==='aow15')?opt.drempel:(+opt.drempel||0),dt=opt.datum||new Date();
