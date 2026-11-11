@@ -6,6 +6,9 @@
 //                  → zet de versleutelde inhoud in de <script id="versleuteld"> van de pagina.
 //   Ontsleutelen:  WACHTWOORD='...' node scripts/beveilig-pagina.js decrypt <pagina/index.html> <uit.html>
 //                  → haalt de leesbare tool terug om te bewerken (niet committen!).
+//   Normen:        WACHTWOORD='...' node scripts/beveilig-pagina.js normen <pagina/index.html> <assets/normen.js>
+//                  → ontsleutelt alleen in het geheugen, zet de normenbibliotheek in <script id="at-normen">
+//                    en versleutelt opnieuw (gebruikt door maak-normen.py; er komt geen leesbare versie op schijf).
 //
 // Methode: PBKDF2-SHA256 (600.000 iteraties) → AES-256-GCM, compatibel met WebCrypto in de browser.
 const fs = require('fs');
@@ -42,5 +45,23 @@ const RE = /(<script type="application\/json" id="versleuteld">)([\s\S]*?)(<\/sc
       await sleutel(ww, Buffer.from(p.salt, 'base64')), Buffer.from(p.data, 'base64'));
     fs.writeFileSync(b, Buffer.from(pt));
     console.log('Ontsleuteld:', a, '→', b);
+  } else if (mode === 'normen') {
+    const page = fs.readFileSync(a, 'utf8');
+    const m = page.match(RE);
+    if (!m) throw new Error('Pagina mist versleuteld blok');
+    const p = JSON.parse(m[2]);
+    const pt = Buffer.from(await subtle.decrypt({ name: 'AES-GCM', iv: Buffer.from(p.iv, 'base64') },
+      await sleutel(ww, Buffer.from(p.salt, 'base64')), Buffer.from(p.data, 'base64'))).toString('utf8');
+    const BLOK = /(<script id="at-normen">)([\s\S]*?)(<\/script>)/;
+    if (!BLOK.test(pt)) { console.log('Geen at-normen-blok:', a); return; }
+    const lib = fs.readFileSync(b, 'utf8');
+    const nieuw = pt.replace(BLOK, (x, p1, p2, p3) => p1 + '\n' + lib + '\n' + p3);
+    if (nieuw === pt) { console.log('Normen al actueel:', a); return; }
+    const salt = webcrypto.getRandomValues(new Uint8Array(16));
+    const iv = webcrypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await subtle.encrypt({ name: 'AES-GCM', iv }, await sleutel(ww, salt), new TextEncoder().encode(nieuw)));
+    const payload = JSON.stringify({ v: 1, iter: ITER, salt: b64(salt), iv: b64(iv), data: b64(ct) });
+    fs.writeFileSync(a, page.replace(RE, (x, p1, p2, p3) => p1 + payload + p3));
+    console.log('Normen bijgewerkt (versleuteld):', a);
   } else { console.error('Onbekende modus'); process.exit(1); }
 })().catch((e) => { console.error('Fout:', e.message); process.exit(1); });

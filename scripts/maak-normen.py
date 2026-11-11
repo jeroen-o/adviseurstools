@@ -13,7 +13,7 @@ Wat het doet:
 4. Werkt elke tool bij die een blok <script id="at-normen">…</script> bevat: de bibliotheek
    met de actuele normen wordt daarin gezet, zodat de tool een losstaand HTML-bestand blijft.
 """
-import fcntl, glob, json, os, re, sys
+import fcntl, glob, json, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRON = os.path.join(ROOT, 'data', 'normen.json')
@@ -89,6 +89,17 @@ def main():
         if s2 != s:
             open(f, 'w', encoding='utf-8').write(s2)
         bijgewerkt.append(os.path.basename(f))
+    # Versleutelde pagina's (Project Jeroen, platformen): alleen met WACHTWOORD, ontsleuteld in het geheugen
+    if alleen is None:
+        versleuteld = [p for p in [os.path.join(ROOT, 'project-jeroen', 'index.html')] +
+                       sorted(glob.glob(os.path.join(ROOT, 'platformen', '*', 'index.html')))
+                       if 'id="versleuteld"' in open(p, encoding='utf-8').read()]
+        if os.environ.get('WACHTWOORD'):
+            for p in versleuteld:
+                subprocess.run(['node', os.path.join(ROOT, 'scripts', 'beveilig-pagina.js'), 'normen', p,
+                                os.path.join(ROOT, 'assets', 'normen.js')], check=True)
+        elif versleuteld:
+            print(f'LET OP: {len(versleuteld)} versleutelde pagina\'s niet bijgewerkt; draai met WACHTWOORD=... om ook die te verversen.')
     print(f'normen {n["versie"]}: API ({len(n["leennormen"]["financieringslast"])} normjaren), assets/normen.js, '
           f'{len(bijgewerkt)} tools bijgewerkt' + (': ' + ', '.join(bijgewerkt) if bijgewerkt else ''))
 
