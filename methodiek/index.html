@@ -73,6 +73,7 @@
 <li><a href="#woning">Duurzaamheidsprofiel en funderingscijfer</a></li>
 <li><a href="#kwaliteit">Controle en kwaliteit</a></li>
 <li><a href="#open">Beperkingen en open punten</a></li>
+<li><a href="#wijzigingen">Wijzigingen november 2026</a></li>
 </ol>
 </section>
 
@@ -84,7 +85,8 @@
 <tr><td>Boeterente</td><td>AFM-leidraad vergoeding vervroegde aflossing (20 maart 2017) en toelichting (15 mei 2017, EhFf-17041063)</td></tr>
 <tr><td>Fiscaal</td><td>Belastingdienst / Rijksoverheid, waarden 2026</td></tr>
 <tr><td>Woningdata</td><td>BAG, AHN, BRO-bodemkaart, RVO-funderingskaart (via PDOK, openbaar)</td></tr></table>
-<div class="kader"><b>Eén bron voor alle normen.</b> Alle normen staan in één bestand (<code>data/normen.json</code>) en zijn openbaar als <a href="../api/">API</a>. Een nieuw normjaar of een gewijzigd bedrag wordt daar één keer aangepast; het script <code>scripts/maak-normen.py</code> controleert de data en zet de waarden in de API, de rekenbibliotheek en de tools. Zo rekenen alle tools met dezelfde cijfers.</div>
+<div class="kader"><b>Eén bron voor alle normen.</b> Alle normen staan in één bestand (<code>data/normen.json</code>) en zijn openbaar als <a href="../api/">API</a>: financieringslasttabellen, NHG-grenzen en -beheertabellen, label-, verduurzamings- en alleenstaandenbedragen, AOW-regels en -bedragen, fiscale waarden (box 1, heffingskortingen, eigenwoningforfait, box 3, schenken, overdrachtsbelasting, maximumdagloon, minimumloon), VFN-leennormen, maximale kredietvergoeding en transitievergoeding. Een nieuw normjaar of een gewijzigd bedrag wordt daar één keer aangepast; <code>scripts/maak-normen.py</code> controleert de data en zet de waarden in de API, de rekenbibliotheek en <b>alle rekentools</b> (ruim 70). Elke tool blijft een losstaand bestand dat offline en in een iframe werkt: de normen zitten erin, er is geen verbinding met de API nodig. De met een wachtwoord beveiligde pagina's (Project Jeroen, adviesplatform, KredietPro) worden met <code>WACHTWOORD=… python3 scripts/maak-normen.py</code> alleen in het geheugen ontsleuteld, bijgewerkt en opnieuw versleuteld.</div>
+<p><b>Gecontroleerd tegen de bron.</b> De financieringslasttabellen 2026 en 2027 (tabel 1–4, 706 inkomensrijen × 12 rentekolommen) zijn cel voor cel vergeleken met de Staatscourant: geen afwijkingen. Ook het alleenstaandenbedrag 2027 (€ 18.000 boven € 31.000, met en zonder AOW) en de labelbedragen (Stcrt. 2025, 36471) zijn tegen de tekst gelegd.</p>
 <p><b>Normjaar.</b> In elke hypotheektool kies je normjaar 2026 of 2027. Tot en met 31-12-2026 staat 2026 voorgeselecteerd, vanaf 1-1-2027 automatisch 2027. Waarom: adviezen in het najaar gaan vaak over passeren in het volgende jaar.</p>
 </section>
 
@@ -92,13 +94,14 @@
 <h3>Hoe</h3>
 <ol>
 <li><b>Toetsinkomen</b> — het bruto toetsinkomen van aanvrager(s). Betaalde partneralimentatie gaat als jaarbedrag van het toetsinkomen af (NHG V&amp;N C.7.14.2); ontvangen partneralimentatie telt als inkomen.</li>
-<li><b>Toetsrente</b> — bij een rentevaste periode van minimaal 10 jaar de werkelijke rente, korter: minimaal 5%. Bij meerdere leningdelen de naar bedrag gewogen rente, afgerond op 3 decimalen.</li>
+<li><b>Toetsrente</b> — bij een rentevaste periode van minimaal 10 jaar (of een deel dat binnen de rentevaste periode volledig wordt afgelost) de werkelijke rente; korter: het hoogste van de werkelijke rente en 5%. Bij meerdere leningdelen de naar bedrag gewogen toetsrente, afgerond op 3 decimalen, met <b>één</b> rentekolom voor alle delen.</li>
 <li><b>Woonquote</b> — uit de financieringslasttabel van het normjaar: de rij van het naastlagere inkomen per € 1.000 (onder het minimum de laagste rij), de kolom op basis van de toetsrente (≤ 1,500% … ≥ 6,501%). Geen interpolatie. Box 1 en box 3 hebben eigen tabellen, net als wie de AOW-leeftijd heeft.</li>
 <li><b>AOW-tabel bij twee aanvragers</b> (Trhk art. 3 lid 7) — de tabel van de aanvrager met het hoogste toetsinkomen. Bij gelijk inkomen met verschillende AOW-status: de laagste uitkomst.</li>
 <li><b>Maximale maandlast</b> = toetsinkomen × woonquote / 12 − verplichtingen.</li>
 <li><b>Verplichtingen</b> — studieschuld: werkelijke maandlast × bruteringsfactor per rentekolom (1,05 t/m 1,40); doorlopend of aflopend krediet: 2% van de limiet of het kredietbedrag per maand; erfpacht: de canon (niet gebruteerd).</li>
-<li><b>Toetslast</b> — annuïtair over 30 jaar tegen de toetsrente (maandrente = jaarrente / 12). Maximale hypotheek = maximale maandlast × annuïteitsfactor.</li>
-<li><b>Box 3-leningdeel</b> — de toetslast van het box 3-deel wordt gebruteerd met de verhouding tussen de box 1- en box 3-woonquote (q1/q3).</li>
+<li><b>Toetslast</b> — annuïtair over 30 jaar tegen de toetsrente (maandrente = jaarrente / 12), <b>ongeacht vorm en looptijd</b> van het leningdeel (Trhk art. 3: "ongeacht de vorm van het hypothecair krediet … een annuïtair aflossingsschema gedurende 30 jaar"). Een deel van 20 jaar of een aflossingsvrij deel wordt dus als 30-jarige annuïteit getoetst; de werkelijke looptijd telt alleen voor de restschuld in de pensioentoets en bij de NHG-beheercriteria. Maximale hypotheek = maximale maandlast × annuïteitsfactor.</li>
+<li><b>Box 3</b> — bij een <b>gemengde</b> lening wordt de toetslast van het box 3-deel gebruteerd met de verhouding tussen de box 1- en box 3-woonquote (q1/q3); de verplichtingen gaan van de box 1-ruimte af. Is er <b>geen aftrekbare rente</b> (volledig box 3, of renteaftrek op dat toetsmoment voorbij), dan geldt de box 3-tabel (tabel 3/4) en gaan de verplichtingen volledig en niet gebruteerd van die ruimte af.</li>
+<li><b>Bedragen buiten de toetslast</b> (label, verduurzaming, alleenstaande; § 4) — het deel van de hypotheek tot dat bedrag blijft buiten de financieringslast, naar rato van de restschuld van de leningdelen: maximum = maximale maandlast / last per euro + vrijgesteld bedrag. De tools tonen dat als "op inkomen + … buiten de toetsing".</li>
 <li><b>Afronding</b> — een maximum wordt naar beneden afgerond; een hypotheek gelijk aan het getoonde maximum is akkoord.</li>
 </ol>
 <h3>Waarom</h3>
@@ -130,8 +133,8 @@
 
 <section class="blk" id="vrij"><h2>4. Bedragen buiten de toetslast</h2>
 <table><tr><th>Bedrag</th><th>2026</th><th>2027</th><th>Toelichting</th></tr>
-<tr><td>Energielabel bij aankoop</td><td colspan="2">E/F/G € 0 · C/D € 5.000 · A/B € 10.000 · A+/A++ € 20.000 · A+++ € 25.000 · A++++ € 30.000 · met energieprestatiegarantie € 40.000 · geen geldig label € 10.000</td><td>Trhk art. 4</td></tr>
-<tr><td>Energiebesparende voorzieningen</td><td colspan="2">E–G € 20.000 · C–D € 15.000 · A/B en A+/A++ € 10.000 · A+++ en hoger € 0 · geen label € 10.000</td><td>Max. 106% van de woningwaarde</td></tr>
+<tr><td>Energielabel bij aankoop</td><td colspan="2">E/F/G € 0 · C/D € 5.000 · A/B € 10.000 · A+/A++ € 20.000 · A+++ € 25.000 · A++++ € 30.000 · met energieprestatiegarantie € 40.000 · <b>geen geldig label € 0</b></td><td>Trhk art. 4 lid 3 (de tabel kent geen bedrag zonder label)</td></tr>
+<tr><td>Energiebesparende voorzieningen</td><td colspan="2">E–G € 20.000 · C–D € 15.000 · A/B en A+/A++ € 10.000 · A+++ en hoger € 0 · geen geldig label € 10.000</td><td>Trhk art. 4 lid 4/5; alleen voor maatregelen die echt worden getroffen; max. 106% van de woningwaarde</td></tr>
 <tr><td>Alleenstaandenbedrag</td><td>€ 17.000 boven € 30.000 (AOW-tabel € 29.000)</td><td>€ 18.000 boven € 31.000</td><td>Trhk art. 3 lid 8; alleen bij één aanvrager</td></tr></table>
 <p><b>Hoe en waarom:</b> deze bedragen tellen op bij het maximum, maar níet in de maandlasttoets. Een hypotheek gelijk aan maximum + vrijgesteld bedrag is dus akkoord. Een eerdere versie telde het labelbedrag wél in de toets mee en gaf daardoor ten onrechte "niet akkoord"; dat is hersteld. In de NHG-beheertoets tellen deze bedragen niet mee.</p>
 </section>
@@ -171,9 +174,11 @@
 <tr><td>Box 1</td><td>35,75% tot € 38.883 · 37,56% tot € 78.426 · 49,50% daarboven · AOW-gerechtigden 17,85% in de eerste schijf · hypotheekrenteaftrek maximaal 37,56%</td></tr>
 <tr><td>Eigenwoningforfait</td><td>0,35% (WOZ € 75.000 – € 1.350.000); villataks € 4.725 + 2,35% boven € 1.350.000 · Wet Hillen 71,867%</td></tr>
 <tr><td>Box 3</td><td>Heffingsvrij € 59.357 p.p. · tarief 36% · forfait sparen 1,28%, overig 6,00%, schulden 2,70% (drempel € 3.800 p.p.)</td></tr>
-<tr><td>Schenken</td><td>Vrijstelling kind € 6.908, overig € 2.769; eenmalig verhoogd (18–40 jaar) € 33.129</td></tr>
+<tr><td>Schenken</td><td>Vrijstelling kind € 6.908, overig € 2.769; eenmalig verhoogd (18 t/m 39 jaar) € 33.129; eenmalig voor studie € 69.009 · schenkbelasting tariefgroep I 10% / 20% (grens € 158.669)</td></tr>
 <tr><td>Overdrachtsbelasting</td><td>2% eigen woning · 0% starter (18 t/m 34 jaar, woningwaarde ≤ € 555.000, eenmalig) · 8% overige woningen · 10,4% niet-woningen</td></tr>
-<tr><td>Overig</td><td>Maximumdagloon € 309,91 (per 1-7-2026) · salderingsregeling eindigt 1-1-2027</td></tr></table>
+<tr><td>Heffingskortingen</td><td>Algemene heffingskorting, arbeidskorting (ook de variant voor AOW-gerechtigden), ouderenkorting en alleenstaande ouderenkorting 2026 — centraal vastgelegd en gebruikt in o.a. KredietPro, WW- en AOV-tools</td></tr>
+<tr><td>Overig</td><td>Maximumdagloon € 309,91 (per 1-7-2026) · minimumloon € 2.294,40 p/m (1-1-2026) en € 2.337 p/m (1-7-2026) · AOW per 1-7-2026 · maximale transitievergoeding € 102.000 (of het jaarsalaris als dat hoger is) · salderingsregeling eindigt 1-1-2027</td></tr></table>
+<p class="small">Aangekondigde maar nog niet vastgestelde waarden voor 2027 (overdrachtsbelasting overige woningen 7%, startersgrens € 615.000, maximaal aftrektarief 38,16%) staan apart als voorstel in de normen en worden pas gebruikt als ze definitief zijn.</p>
 </section>
 
 <section class="blk" id="boete"><h2>7. Boeterente (vergoeding vervroegde aflossing)</h2>
@@ -182,7 +187,8 @@
 </section>
 
 <section class="blk" id="krediet"><h2>8. Kredieten</h2>
-<p><b>Hoe:</b> een krediet weegt in de hypotheektoets als 2% van de limiet of het kredietbedrag per maand, en die last gaat zonder omrekening (brutering) van de toegestane maandlast af. Extra hypotheekruimte na aflossen = vrijgekomen toetslast × annuïteitsfactor. <b>Waarom:</b> zo schrijft de Trhk het voor; een eerdere versie rekende met een belastingfactor en kwam tot ca. 23% te ruim uit. Voor consumptief krediet gebruiken we annuïteitsformules en de effectieve jaarrente; voor Caribisch Nederland het AFM-rekenmodel (per 1-4-2026).</p>
+<p><b>Hoe:</b> een krediet weegt in de hypotheektoets als 2% van de limiet of het kredietbedrag per maand, en die last gaat zonder omrekening (brutering) van de toegestane maandlast af. Extra hypotheekruimte na aflossen = vrijgekomen toetslast × annuïteitsfactor. <b>Waarom:</b> zo schrijft de Trhk het voor; een eerdere versie rekende met een belastingfactor en kwam tot ca. 23% te ruim uit. Ook de extra hypotheekruimte na aflossen van een krediet wordt over 30 jaar getoetst, niet over de looptijd die je invult. Voor consumptief krediet gebruiken we annuïteitsformules en de effectieve jaarrente; voor Caribisch Nederland het AFM-rekenmodel (per 1-4-2026).</p>
+<p><b>Leennormen consumptief krediet:</b> de VFN-leennormenmethodiek (normbedragen 2025, v1.7 van 17-11-2025; bedragen 2026 nog niet gepubliceerd). Het netto inkomen rekenen we met box 1 en alle heffingskortingen, ook de arbeidskorting voor wie AOW heeft en werkt en de alleenstaande ouderenkorting. <b>Maximale kredietvergoeding:</b> wettelijke rente (4%) + 8 procentpunt = 12% per 1-1-2026; tools waarschuwen bij een hogere rente.</p>
 </section>
 
 <section class="blk" id="woning"><h2>9. Duurzaamheidsprofiel en funderingscijfer</h2>
@@ -195,6 +201,8 @@
 <li><b>Onafhankelijk nagerekend:</b> alle rekentools zijn doorgerekend met vaste testgevallen en vergeleken met een eigen, onafhankelijke berekening; gevonden rekenfouten zijn hersteld.</li>
 <li><b>Onderling consistent:</b> voor dezelfde invoer geven alle leennormtools dezelfde woonquote, verplichtingen, alleenstaandenbedrag, pensioentoets en box 3-brutering, in 2026 en 2027.</li>
 <li><b>Referentiecasussen</b> (o.a. het voorbeeld hierboven, de AFM-boetevoorbeelden en het AFM-rekenmodel Caribisch Nederland) worden na elke wijziging opnieuw gecontroleerd.</li>
+<li><b>Testmatrix maximale hypotheek:</b> 32 casussen (16 per normjaar) plus 5 pensioen- en beheercasussen, over alle tools die een maximale hypotheek berekenen. Gevarieerd: inkomen onder, binnen en boven de tabel; vier rentekolommen, waaronder rentevast korter dan 10 jaar; alleenstaand en met partner; box 3; studieschuld; krediet; energielabels (ook "geen geldig label"); looptijd 20 tegenover 30 jaar. De verwachte uitkomst komt uit de centrale rekenfunctie op de gecontroleerde tabellen. Elke afwijking is uitgezocht en hersteld; casussen die een tool niet kan rekenen (bijv. geen partnerveld) zijn als niet van toepassing gemarkeerd.</li>
+<li><b>Centraal-test:</b> per tool is aangetoond dat een gewijzigde waarde in de centrale normen de uitkomst verandert — de tools rekenen dus echt met de centrale normen en niet met een eigen kopie.</li>
 <li><b>Privacy:</b> alles rekent in de browser; er wordt niets opgeslagen. Alleen tools met een adresopzoeking vragen postcode en huisnummer op bij openbare overheidsdiensten.</li>
 </ul>
 </section>
@@ -203,9 +211,25 @@
 <ul>
 <li>De <b>restschuldmethode</b> in de pensioentoets is ruimer dan de letter van Trhk/NHG (zie § 3).</li>
 <li>Bij de <b>NHG-beheercriteria</b> rekenen de tools de vermogenscorrectie (D.6.5) niet uit en gebruiken ze bij een rentevaste periode korter dan 3 jaar de ingevulde rente (met melding).</li>
-<li>De normbedragen voor het <b>toetsinkomen bij kredieten</b> (VFN) zijn van 2025; de bedragen voor 2026 zijn nog niet geverifieerd.</li>
+<li>De normbedragen voor het <b>toetsinkomen bij kredieten</b> (VFN) zijn van 2025; de bedragen voor 2026 zijn nog niet gepubliceerd.</li>
+<li>De drempels voor een <b>kwetsbaar huishouden</b> (€ 25.000 bij 2 kinderen, € 30.000 bij 3 of meer) in de werkelijke-lasttoets zijn indicatief, afgeleid van de Nibud-basisbedragen; het is een signalering, geen toetsnorm.</li>
+<li>De <b>NHG-toets</b> toont een indicatief maximum dat boven de NHG-kostengrens kan liggen; met NHG is dat bedrag dan niet haalbaar.</li>
+<li>Tools zonder partnerveld, labelkeuze of box 3-invoer rekenen die onderdelen niet mee; de toelichting in de tool noemt dat.</li>
 <li>Kentallen in het <b>Duurzaamheidsprofiel</b> (kosten, besparing, label na verduurzaming) zijn gemiddelden en niet tegen een officiële bron gelegd; ISDE-subsidie staat standaard op € 0.</li>
 <li>Enkele tools rekenen met <b>vuistregels</b> (bijvoorbeeld levensstandaard en energiekosten) en geven alleen een richting.</li>
+</ul>
+</section>
+
+<section class="blk" id="wijzigingen"><h2>12. Wijzigingen november 2026</h2>
+<p>Gevonden bij het overzetten op de centrale normen en de testmatrix, en hersteld in alle tools:</p>
+<ul>
+<li><b>Toetslast over 30 jaar</b> — een aantal tools toetste leningdelen korter dan 30 jaar over de werkelijke looptijd (te laag maximum, bijv. € 302.106 in plaats van € 376.829), ook de einde-rentevaste-periodetools en de extra hypotheekruimte in krediettools.</li>
+<li><b>Geen geldig energielabel bij aankoop</b> — telde als € 10.000 extra; volgens Trhk art. 4 lid 3 is dat € 0 (de € 10.000 hoort bij energiebesparende voorzieningen).</li>
+<li><b>Box 3 met verplichtingen</b> — bij een lening zonder aftrekbare rente gaan verplichtingen nu in alle tools volledig van de box 3-ruimte af.</li>
+<li><b>Gewogen toetsrente</b> — de OHA-toets koos per leningdeel een rentekolom; nu één kolom op de gewogen toetsrente. Het adviesplatform gebruikte bij een rentevaste periode korter dan 10 jaar altijd 5%, ook als de rente hoger was.</li>
+<li><b>Maandtelling tot de AOW-datum</b> — overal het aantal volle (betaalde) maanden; een toetsmoment waarop de lening al is afgelost beperkt het maximum niet meer.</li>
+<li><b>Alleenstaandenbedrag</b> — ontbrak in de 10-jaar-voor-AOW-planner en het zzp-onderdeel; daar ook box 3 toegevoegd.</li>
+<li><b>Overig</b> — AOW-datum voor wie vóór 1957 is geboren (AOW-tabel), eigenwoningforfait bij een WOZ onder € 75.000, heffingskortingen voor AOW-gerechtigden in KredietPro, renteveld bij NHG-beheer zonder leningdelen.</li>
 </ul>
 <p class="small">Vragen of een fout gevonden? Mail <a href="mailto:jeroen@oversteegen.nl">jeroen@oversteegen.nl</a>.</p>
 </section>
