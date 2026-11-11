@@ -1261,7 +1261,12 @@ function flZoek(){
   var tabNaam={nietAOW:'tabel 1',welAOW:'tabel 2 (AOW)',box3NietAOW:'tabel 3',box3WelAOW:'tabel 4 (AOW)'}[bnd.tabel];
   document.getElementById('flUit').innerHTML='<strong>Financieringslastpercentage: '+fmtP(bnd.pct)+'</strong> ('+tabNaam+','+(alimJ>0?' toetsinkomen na aftrek '+fmt(alimJ).replace(',-','')+' betaalde partneralimentatie,':'')+' rij € '+Math.max(FLN[bnd.tabel].min,Math.min(FLN[bnd.tabel].max,Math.floor(bnd.inkomen/1000)*1000)).toLocaleString('nl-NL')+', toetsrente '+rente.toFixed(3).replace('.',',')+'%) · '+
     'max. financieringslast '+fmt(bnd.maxLast).replace(',-','')+'/mnd'+(lasten>0?' − verplichtingen '+fmt(lasten).replace(',-','')+'/mnd ('+lDet.join('; ')+')':'')+
-    ' · <strong>indicatieve maximale hypotheek '+(t.ontbreekt?'—':fmt(tot))+'</strong> (annuïtair 30 jaar: '+fmt(basis)+' + label '+fmt(label)+(alleen?' + alleenstaande '+fmt(alleen):'')+')'+(eenAanvr&&!alleen?' · alleenstaandenbedrag niet van toepassing (toetsinkomen niet hoger dan '+fmt(alleenGrens).replace(',-','')+')':'')+'.<br><span style="font-size:12px;">'+flnToetsTekst(t)+'</span>';
+    ' · <strong>indicatieve maximale hypotheek '+(t.ontbreekt?'—':fmt(tot))+'</strong> (annuïtair 30 jaar: '+fmt(basis)+' + label '+fmt(label)+(alleen?' + alleenstaande '+fmt(alleen):'')+')'+(eenAanvr&&!alleen?' · alleenstaandenbedrag niet van toepassing (toetsinkomen niet hoger dan '+fmt(alleenGrens).replace(',-','')+')':'')+'.<br><span style="font-size:12px;">'+flnToetsTekst(t)+'</span>'+
+    // Melding als het indicatieve maximum boven de NHG-kostengrens van het normjaar ligt
+    ((!t.ontbreekt&&tot>NB)?'<div role="alert" style="margin-top:10px;padding:10px 12px;border-left:4px solid #b9771f;background:#fff6e5;color:#5a3b00;border-radius:6px;font-size:13px;line-height:1.5">'+
+      '<strong>Boven de NHG-kostengrens '+NORMJAAR+'.</strong> De indicatieve maximale hypotheek ('+fmt(tot)+') ligt boven de NHG-kostengrens van '+fmt(NB)+
+      (tot>NE?' en boven de grens met energiebesparende voorzieningen van '+fmt(NE):' (met energiebesparende voorzieningen '+fmt(NE)+')')+
+      '. Met NHG is maximaal '+fmt(NB)+' mogelijk, of '+fmt(NE)+' als het meerdere ('+fmt(NE-NB)+') voor energiebesparende voorzieningen is. Een hoger bedrag kan alleen zonder NHG.</div>':'');
   try{ptGrafiek(document.getElementById('ptGrafiek'),{berekenMax:grafiekMax,huidigeLeeftijd:gebG?flnLeeftijdOp(gebG,nuG):null,gekozen:String(document.getElementById('flDrempel').value),methode:methode,ontbreekt:pensG===null,vanaf:50,tot:ATN_AOW_JR});}catch(e){document.getElementById('ptGrafiek').innerHTML='';}
 }
 /* Energielabelbedragen (keuzelijst en tabel) uit normen.json */
