@@ -3,6 +3,8 @@
 
 Gebruik na het aanpassen van data/normen.json:
     python3 scripts/maak-normen.py
+Alleen bepaalde tools bijwerken (bijv. tijdens het ombouwen van een tool):
+    python3 scripts/maak-normen.py --alleen tools/a.html tools/b.html
 
 Wat het doet:
 1. Controleert data/normen.json (tabellen compleet, inkomens oplopend, 12 rentekolommen).
@@ -11,7 +13,7 @@ Wat het doet:
 4. Werkt elke tool bij die een blok <script id="at-normen">…</script> bevat: de bibliotheek
    met de actuele normen wordt daarin gezet, zodat de tool een losstaand HTML-bestand blijft.
 """
-import glob, json, os, re, sys
+import fcntl, glob, json, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRON = os.path.join(ROOT, 'data', 'normen.json')
@@ -49,6 +51,11 @@ def controleer(n):
 
 
 def main():
+    alleen = None
+    if '--alleen' in sys.argv:
+        alleen = {os.path.abspath(x) for x in sys.argv[sys.argv.index('--alleen') + 1:]}
+    slot = open(os.path.join(ROOT, 'data', '.normen.lock'), 'w')
+    fcntl.flock(slot, fcntl.LOCK_EX)  # één tegelijk (API en bibliotheek schrijven)
     n = json.load(open(BRON, encoding='utf-8'))
     controleer(n)
     os.makedirs(os.path.join(ROOT, 'api'), exist_ok=True)
@@ -73,6 +80,8 @@ def main():
     blok = re.compile(r'(<script id="at-normen">)(.*?)(</script>)', re.S)
     bijgewerkt = []
     for f in sorted(glob.glob(os.path.join(ROOT, 'tools', '*.html'))):
+        if alleen is not None and os.path.abspath(f) not in alleen:
+            continue
         s = open(f, encoding='utf-8').read()
         if 'id="at-normen"' not in s:
             continue
