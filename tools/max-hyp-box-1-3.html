@@ -925,7 +925,7 @@ function berekenCore(inp){
   });
   const toetsrente=Math.round(st/sw*1000)/1000, kol=renteKolom(toetsrente);
   // verruimingen buiten de toetsing (Trhk): energielabel + evt. alleenstaandenbedrag = vast bedrag V. V blijft buiten de
-  // toetslast (naar rato van de restschuld): maximum = max. maandlast / last per euro + V (zoals MAX. HYP. 2027)
+  // toetslast en gaat eerst van het box 1-deel af (box 3 = vast bedrag, D1): maximum = max. maandlast / last per euro + V (zoals MAX. HYP. 2027)
   const annT=annF(toetsrente,ATL.toetsrente.toetslooptijd_maanden);
   const extraV=bh?0:inp.extraBedrag;
   const V=inp.verpl||{studie:0,krediet:0,alimentatie:0,erfpacht:0,overig:0};
@@ -997,12 +997,12 @@ function berekenCore(inp){
     const vL=verplLast(lastAftrek>0.005);
     const maxM=(ink*qT/100)/12-vL;                      // toegestane maandlast (zonder de bedragen buiten de toetsing)
     const Vm=extraV+alleen, lastVol=last;               // V buiten de toetsing; volle toetslast van de hoofdsom
-    const lastT=lastVol*Math.max(0,hoofdsom-Vm)/hoofdsom; // toetslast zonder het V-deel (naar rato van de restschuld)
     // D1: gemengd box 1/box 3 → het box 3-deel is een VAST bedrag; extra leenruimte valt in box 1 (naar rato over de box 1-delen).
     // lastBij(H): toetslast (zonder V) bij hoofdsom H; opInk(): hoofdsom waarbij die last gelijk is aan maxM.
     const gemengd=!vol3&&B3tot>0&&B1tot>0&&lastSchaal>0.005;
     const rate=lastVol/hoofdsom;
-    const lastBij=H=>gemengd?lastVast+Math.max(0,H-B3tot)*lastSchaal/B1tot:H*rate;
+    const lastBij=H=>gemengd?(H>=B3tot?lastVast+(H-B3tot)*lastSchaal/B1tot:lastVast*Math.max(0,H)/B3tot):H*rate;
+    const lastT=lastBij(Math.max(0,hoofdsom-Vm));        // toetslast zonder het V-deel (V eerst van box 1, restant van box 3)
     const opInk=()=>gemengd?Math.max(0,maxM-lastVast)/(lastSchaal/B1tot)+B3tot:maxM/rate;
     return {m,ink,q1,q3,qT,vol3,brut,last:lastT,lastVol,V:Vm,maxM,ruimte:maxM-lastT,rate,lastBij,opInk,pt,onvolledig,aowNu,aowTab,alleen,vL,bhK};
   });
