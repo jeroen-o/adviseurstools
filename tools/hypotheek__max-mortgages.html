@@ -1055,7 +1055,8 @@ function bereken(){
   P.forEach(function(p,k){
     if(!p||!p.geb||p.ps.st!=="b10")return;
     const wie=k?"partner":"applicant";
-    const mm=maandenTot(nu,p.ps.aowD);mom.push({d:p.ps.aowD,m:mm,lbl:"state pension date "+wie+" ("+dEN(p.ps.aowD)+", after "+mm+" months, "+(methode==="trhk"?"full loan":"outstanding balance")+")"});
+    const mm=maandenTot(nu,p.ps.aowD);if(mm>=lpt*12)return; // loan fully repaid on or before the state pension date (term ended): no test moment, also not with the Trhk/NHG method
+    mom.push({d:p.ps.aowD,m:mm,lbl:"state pension date "+wie+" ("+dEN(p.ps.aowD)+", after "+mm+" months, "+(methode==="trhk"?"full loan":"outstanding balance")+")"});
   });
   if(P.some(function(p){return p&&!p.geb&&p.ps.st==="b10";}))mom.push({d:nu,naAow:true,lbl:"from state pension age (no date of birth: date unknown, full amount)"});
   let ontbreekt=false;
@@ -1133,7 +1134,7 @@ function bereken(){
       // is de aanvrager nu al AOW-gerechtigd, dan is het ingevulde inkomen het inkomen vanaf AOW (werkinkomen onbekend)
       return {g:gg,a:a,werk:p.echtAOW?NaN:p.ink,aowI:p.echtAOW?p.ink:p.aowInk,echtAOW:p.echtAOW,geldt:gg?drempelGeldt(gg,a,nu,kk):false};});
     if(methode==="beheer"){const bb=beheerUitk(pers);return bb?(mv>0?Math.min(bb.h,mv):bb.h):0;}
-    const momG=[{d:nu,m:0}];pers.forEach(function(p){if(p&&p.geldt)momG.push({d:p.a,m:maandenTot(nu,p.a)});});
+    const momG=[{d:nu,m:0}];pers.forEach(function(p){if(p&&p.geldt&&maandenTot(nu,p.a)<lpt*12)momG.push({d:p.a,m:maandenTot(nu,p.a)});});
     let low=Infinity;
     for(const M of momG){
       const v=pers.map(function(p){if(!p)return {ink:0,aow:false};if(!p.g)return {ink:p.echtAOW?p.aowI:p.werk,aow:p.echtAOW};return (M.d>=p.a)?{ink:p.aowI,aow:true}:{ink:p.werk,aow:false};});

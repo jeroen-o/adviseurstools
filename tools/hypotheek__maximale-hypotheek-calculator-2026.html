@@ -1123,7 +1123,8 @@ function berekenMax(ink1, ink2, rente, rvpJaar, looptijdJaar, label, studieschul
     return { beheer: B, maxFinal: maxF, jaar };
   }
   // Restschuld na m maanden van € 1 (annuïtair over de looptijd op de toetsrente)
-  const restF = m=>{ const n=looptijdJaar*12, ri=toetsRente/100/12; if(m<=0 || ptMethode()==='trhk') return 1; if(m>=n) return 0; if(ri<=0) return 1-m/n; return (Math.pow(1+ri,n)-Math.pow(1+ri,m))/(Math.pow(1+ri,n)-1); };
+  // Trhk/NHG-methode: hele bedrag (factor 1), behalve als de lening vóór of op dat moment volledig is afgelost (0: moment toetst niets)
+  const restF = m=>{ const n=looptijdJaar*12, ri=toetsRente/100/12; if(m<=0) return 1; if(m>=n) return 0; if(ptMethode()==='trhk') return 1; if(ri<=0) return 1-m/n; return (Math.pow(1+ri,n)-Math.pow(1+ri,m))/(Math.pow(1+ri,n)-1); };
   function uitkomst(sc){
     const ti = sc.toetsInkomen;
     const rf = restF(sc.moment.mnd) || 1e-9; // max. hypotheek op dit moment = toegestane maandlast × annuïteitsfactor ÷ restfactor

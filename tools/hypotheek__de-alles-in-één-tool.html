@@ -1229,7 +1229,8 @@ const bf = (aftrek === 'box1') ? getBruteringFactor(toetsrente) : 1.0;
 return duoMaandlast * bf + kredietMaandlast * ATL.krediet_maandlast_pct_limiet / 100 + erfpachtJaar / 12 + overigeVerplichtingen * bf; // partneralimentatie: van het toetsinkomen af
 };
 // Restschuld na m maanden van € 1 volgens de aflosvorm (annuïtair op de rente over de looptijd; lineair; aflossingsvrij = 1)
-const restFactor = (m) => { const n = looptijd * 12; if (!m || m <= 0 || ptMethode() === 'trhk') return 1; if (m >= n) return aflosvorm === 'aflossingsvrij' ? 1 : 0;
+// Trhk/NHG-methode: hele bedrag (factor 1), behalve als de lening vóór of op dat moment volledig is afgelost (dan 0: moment toetst niets)
+const restFactor = (m) => { const n = looptijd * 12; if (!m || m <= 0) return 1; if (m >= n) return aflosvorm === 'aflossingsvrij' ? 1 : 0; if (ptMethode() === 'trhk') return 1;
 if (aflosvorm === 'aflossingsvrij') return 1; if (aflosvorm === 'lineair') return 1 - m / n;
 const rm = rente / 12; if (rm < 0.0001) return 1 - m / n; return (Math.pow(1 + rm, n) - Math.pow(1 + rm, m)) / (Math.pow(1 + rm, n) - 1); };
 const AL0 = ALLEENSTAAND[normJaar()];

@@ -860,7 +860,7 @@ function ptKernMax(fn){var oudK=PT_KERN;PT_KERN={max:0};try{fn();return +PT_KERN
           </div>
           <div class="toets-bar">
             <div class="toets-bar-header">
-              <span class="toets-bar-title">Pensioen-toets <span class="tooltip" data-tip="Alleen leningdelen die bij pensionering nog lopen worden getoetst tegen het pensioeninkomen via AOW-FLP-tabellen.">i</span></span>
+              <span class="toets-bar-title">Pensioen-toets <span class="tooltip" data-tip="Toets op het inkomen vanaf AOW (AOW-tabellen) op het moment dat alle aanvragers AOW hebben, volgens de gekozen methode. Restschuldmethode: de restschuld per leningdeel (eigen aflosvorm en looptijd) als 30-jarige annuïteit tegen de toetsrente van dat deel. Trhk/NHG-methode: het hele bedrag; een deel dat dan al is afgelost telt niet mee. NHG-beheer: de werkelijke last bij aanvang.">i</span></span>
               <span class="toets-bar-status" id="statusPens">—</span>
             </div>
             <div class="toets-bar-track"><div class="toets-bar-fill" id="fillPens" style="width:0%;"><span id="fillPensText"></span></div></div>
@@ -1136,7 +1136,7 @@ function bruteringsFactor(rate) {
   return ATL.studieschuld_bruteringsfactor[BRUT_FACTOREN.length];
 }
 // Toetscontext (wordt in calculate() gezet): rente, verplichtingen, aantal aanvragers
-let TK = { refRate: 4.0, d: { studieMnd: 0, kredietMnd: 0, alimMnd: 0, erfMnd: 0, overigMnd: 0 }, isSolo: true };
+let TK = { refRate: 4.0, toetsRate: 5, d: { studieMnd: 0, kredietMnd: 0, alimMnd: 0, erfMnd: 0, overigMnd: 0 }, isSolo: true };
 // Bruto maandlast verplichtingen (Trhk 2026): DUO en overige niet-aftrekbare lasten gebruteerd (alleen box 1-tabellen),
 // krediet 2% van de limiet, erfpacht niet gebruteerd. Betaalde partneralimentatie: van het toetsinkomen af (readApplicant).
 function verlagingenVoor(type, rate) {
@@ -1276,25 +1276,57 @@ function pensioentoetsGeldtOp(app, lft) {
   if (!k || lft >= app.aowAge - 0.001) return false;
   return k.lft ? lft >= k.lft - 1e-9 : (app.aowAge - lft) <= k.aowJr + 1e-6;
 }
-// Restschuld na t jaar van € 1 (annuïtair 30 jaar op de toetsrente)
+// Aantal volle maanden (betaalde termijnen) tot een toetsmoment over t jaar, naar beneden afgerond zoals in de andere tools;
+// kleine marge (± 1 dag) tegen afrondingsruis van de leeftijd in jaren (dagen / 365,25)
+function maandenTotMoment(tJaar) { return Math.floor((tJaar || 0) * 12 + 0.04); }
+// Restschuld van een leningdeel (fractie van de hoofdsom) na m maanden volgens het eigen aflosschema: contractrente, looptijd en aflosvorm.
+// Looptijd voorbij → 0 (afgelost).
+function deelRestFractie(p, m) {
+  const n = Math.round((p.term || 30) * 12);
+  if (m <= 0) return 1;
+  if (m >= n) return 0;
+  if (p.repayment === 'aflosvrij') return 1;
+  if (p.repayment === 'lineair') return 1 - m / n;
+  const i = (p.rate || 0) / 100 / 12; if (i <= 0) return 1 - m / n;
+  return (Math.pow(1 + i, n) - Math.pow(1 + i, m)) / (Math.pow(1 + i, n) - 1);
+}
+// Factor per leningdeel op het toetsmoment na m maanden: restschuldmethode = restschuld van dat deel; Trhk/NHG-methode = hele bedrag (1),
+// maar 0 als het deel vóór of op dat moment is afgelost; NHG-beheer = werkelijke last bij aanvang (1).
+function deelFactorOp(p, m) {
+  if (m <= 0 || ptMethode() === 'beheer') return 1;
+  const f = deelRestFractie(p, m);
+  return ptMethode() === 'trhk' ? (f > 0 ? 1 : 0) : f;
+}
+// Toetslast op een later moment t.o.v. aanvang (per € hoofdsom). Met leningdelen: per deel de restschuld (eigen aflosvorm/looptijd) resp.
+// het hele bedrag als 30-jarige annuïteit tegen de toetsrente van dat deel, gewogen naar de toetslast — gelijk aan de Pensioen-toets.
+// Zonder leningdelen: restschuld van € 1 annuïtair 30 jaar op de toetsrente (Trhk/NHG: 1).
 function restFactor(tJaar, rate) {
-  // Aantal volle maanden (betaalde termijnen) tot het toetsmoment, naar beneden afgerond zoals in de andere tools;
-  // kleine marge (± 1 dag) tegen afrondingsruis van de leeftijd in jaren (dagen / 365,25)
-  const m = Math.floor((tJaar || 0) * 12 + 0.04), n = ATL.toetsrente.toetslooptijd_maanden, ri = (rate === undefined ? TK.refRate : rate) / 100 / 12;
-  if (m <= 0 || ptMethode() === 'trhk' || ptMethode() === 'beheer') return 1; // beheer: werkelijke lasten, geen restfactor if (m >= n) return 1e-9; if (ri <= 0) return 1 - m / n;
+  const m = maandenTotMoment(tJaar), n = ATL.toetsrente.toetslooptijd_maanden, ri = (rate === undefined ? TK.refRate : rate) / 100 / 12;
+  if (m <= 0 || ptMethode() === 'beheer') return 1; // beheer: werkelijke lasten bij aanvang, geen restfactor
+  const delen = (typeof parts !== 'undefined' ? parts : []).filter(p => p.amount > 0);
+  if (delen.length) {
+    let t = 0, z = 0;
+    delen.forEach(p => { const l = partTestPayment(p, TK.toetsRate); t += l; z += l * deelFactorOp(p, m); });
+    return t > 0 ? z / t : 1;
+  }
+  if (ptMethode() === 'trhk') return 1;
+  if (m >= n) return 0;
+  if (ri <= 0) return 1 - m / n;
   return (Math.pow(1 + ri, n) - Math.pow(1 + ri, m)) / (Math.pow(1 + ri, n) - 1);
 }
-// Toets op een later moment: de restschuld moet passen → max. hypotheek (financieringslastdeel) ÷ restfactor; vaste bedragen blijven
+// Toets op een later moment: de restschuld moet passen → max. hypotheek (financieringslastdeel) ÷ restfactor; vaste bedragen blijven.
+// Geen lening meer op dat moment (alles afgelost): dat moment beperkt niets (loan = ∞).
 function opRestschuld(r, tJaar, rate) {
   const rf = restFactor(tJaar, rate);
   if (rf >= 1) return Object.assign({ rf: 1 }, r);
+  if (!(rf > 1e-9)) return Object.assign({}, r, { rf: 0, loan: Infinity });
   return Object.assign({}, r, { rf, loan: (r.loan - r.verh - r.label) / rf + r.verh + r.label });
 }
 function maxMonthly(income, type, rate) { return getFLP(income, type, rate) / 100 * income / 12; }
 function maxLoan(m, r, t) { const ri = r/100/12, n = t*12; if (ri === 0) return m*n; return m * (1 - Math.pow(1+ri, -n)) / ri; }
 function monthlyAnn(L, r, t) { const ri = r/100/12, n = t*12; if (ri === 0) return L/n; return L * ri / (1 - Math.pow(1+ri, -n)); }
 function parseEuro(v) { return parseInt(String(v).replace(/\D/g, '')) || 0; }
-function formatEuro(v) { return '€ ' + Math.round(v).toLocaleString('nl-NL'); }
+function formatEuro(v) { if (!isFinite(v)) return '— (afgelost)'; return '€ ' + Math.round(v).toLocaleString('nl-NL'); }
 function formatEuroShort(v) { if (v >= 1e6) return '€ ' + (v/1e6).toFixed(1).replace('.', ',') + 'M'; if (v >= 1000) return '€ ' + Math.round(v/1000) + 'k'; return '€ ' + Math.round(v); }
 function fmtPct(v) { return v.toFixed(1).replace('.', ',') + '%'; }
 function parseFloatNL(v) { return parseFloat(String(v).replace(',', '.')) || 0; }
@@ -1392,7 +1424,7 @@ function getInputs() {
   const isSolo = !a2;
   // Energielabelbedrag (Trhk art. 4): vast bedrag buiten de maandlasttoets, op elk toetsmoment
   const labelExtra = parseInt(document.getElementById('energielabel').value, 10) || 0;
-  TK = { refRate, d: { studieMnd, kredietMnd, alimMnd, erfMnd: erfJaar / 12, overigMnd }, isSolo, labelExtra };
+  TK = { refRate, toetsRate, d: { studieMnd, kredietMnd, alimMnd, erfMnd: erfJaar / 12, overigMnd }, isSolo, labelExtra };
   // Bruto maandlast verplichtingen bij de niet-AOW-tabel box 1 (ter weergave)
   const verlagingenMnd = verlagingenVoor('werkend', refRate);
   // Alleenstaandenbedrag huidige situatie (ter weergave; per toetsmoment opnieuw bepaald)
@@ -1734,6 +1766,9 @@ function checkParts(testParts, income, group, globalToets) {
     if (verlB > 0) fB += Mv > 0 ? verlB / Mv : Infinity;
     return { fraction: fB, payment: payB, fits: fB <= 1 + (Mv > 0 ? 0.5 / Mv : 0) };
   }
+  // p.f (optioneel): factor op het toetsmoment (restschuld per deel, of 0/1 bij de Trhk/NHG-methode); de vrijgestelde bedragen
+  // gaan van de HOOFDSOM af (zoals MAX. HYP. 2027), dus de verdeling over box 1/box 3 rekent met de hoofdsom van alle delen
+  const fD = p => (p.f == null ? 1 : p.f);
   const totaal = testParts.reduce((s, p) => s + p.amount, 0);
   const verh = alleenstaandenBedrag(income, group === 'aow') + (income > 0 ? (TK.labelExtra || 0) : 0); // + energielabelbedrag, ook buiten de toets
   const t1 = testParts.filter(p => p.box === 1).reduce((s, p) => s + p.amount, 0), t3 = totaal - t1;
@@ -1744,16 +1779,16 @@ function checkParts(testParts, income, group, globalToets) {
   for (const p of testParts) {
     const flpType = (p.box === 1) ? group : 'box3_' + group;
     const maxM = maxMonthly(income, flpType, gewR);
-    const pay = partTestPayment(p, globalToets);
+    const pay = partTestPayment(p, globalToets) * fD(p);
     if (maxM > 0) fraction += pay * (p.box === 1 ? sch1 : sch3) / maxM;
     payment += pay;
   }
-  if (testParts.length > 0) {
-    const vType = testParts.some(p => p.box === 1) ? group : 'box3_' + group;
+  if (testParts.some(p => fD(p) > 0)) {
+    const vType = testParts.some(p => p.box === 1 && fD(p) > 0) ? group : 'box3_' + group;
     const verl = verlagingenVoor(vType);
     const maxV = maxMonthly(income, vType, TK.refRate);
     if (verl > 0) fraction += maxV > 0 ? verl / maxV : Infinity;
-    tol = maxV > 0 ? 0.5 / maxV : 0; // marge € 0,50 bruto per maand (afronding), niet 0,1% van de toegestane last
+    tol = maxV > 0 ? 0.01 / maxV : 0; // marge € 0,01 bruto per maand (afronding van het getoonde maximum op hele euro's); € 0,50 is te ruim als de restschuld op het AOW-moment klein is
   }
   return { fraction, payment, fits: fraction <= 1 + tol };
 }
@@ -2071,11 +2106,15 @@ function calculate() {
   });
 
   // Toets samengestelde leningdelen
-  const yearsToPension = Math.max(0, inp.pensionAge - inp.age);
+  // Pensioen-toets op het moment dat alle aanvragers AOW hebben (zelfde moment als de AOW-scenariokaart), volgens de gekozen methode:
+  // restschuldmethode → restschuld per leningdeel (eigen aflosvorm en looptijd) als 30-jarige annuïteit tegen de toetsrente van dat deel;
+  // Trhk/NHG-methode → het hele bedrag (een deel dat dan al is afgelost valt weg); NHG-beheer → werkelijke last bij aanvang.
+  const mPensioen = maandenTotMoment(Math.max(0, ...inp.applicants.map(a => a.yearsToAOW)));
   const workParts = parts;
-  const pensParts = parts.filter(p => p.term > yearsToPension);
+  const pensAlle = parts.map(p => Object.assign({}, p, { f: deelFactorOp(p, mPensioen) }));
+  const pensParts = pensAlle.filter(p => p.f > 0);
   const workRes = checkParts(workParts, inp.salary, 'werkend', inp.toetsRate);
-  const pensRes = pensParts.length > 0 ? checkParts(pensParts, inp.pension, 'aow', inp.toetsRate) : { fraction: 0, payment: 0, fits: true };
+  const pensRes = pensParts.length > 0 ? checkParts(pensAlle, inp.pension, 'aow', inp.toetsRate) : { fraction: 0, payment: 0, fits: true };
 
   const totalAmount = parts.reduce((s, p) => s + p.amount, 0);
   document.getElementById('totalAmount').textContent = formatEuro(totalAmount);

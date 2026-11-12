@@ -539,13 +539,17 @@ function ptKernMax(fn){var oudK=PT_KERN;PT_KERN={max:0};try{fn();return +PT_KERN
     <div style="background:#fff;border-left:3px solid var(--navy);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7">
       <strong style="color:var(--navy);display:block;margin-bottom:4px">Max hyp. (rest. looptijd)</strong>
       Hoeveel kan de klant lenen als de hypotheek uiterlijk op maand 360 — 30 jaar vanaf vandaag — volledig afgelost moet zijn? De resterende terugbetaaltermijn krimpt elke maand mee. Over 10 jaar is er nog 240 maanden over, over 20 jaar nog 120 maanden. De maximale hypotheek daalt daardoor automatisch naarmate de einddatum nadert, ook als het inkomen en de maandlast gelijk blijven.<br><br>
-      <em style="color:#888">Gebruik: beheercriteria, doorlopende toets, past de huidige hypotheek nog binnen de norm?</em>
+      <em style="color:#888">Informatief: de kolom Marge en het oordeel rekenen niet met deze kolom.</em>
     </div>
     <div style="background:#fff;border-left:3px solid var(--green);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7">
       <strong style="color:var(--green);display:block;margin-bottom:4px">Max hyp. (30 jr vast)</strong>
-      Hoeveel kan de klant op dát toekomstige moment lenen als hij op dát moment een geheel nieuwe 30-jaars hypotheek afsluit? De terugbetaaltermijn staat altijd vast op 360 maanden, ongeacht het tijdstip in de grafiek. Alleen het inkomen (en de norm) bepaalt de uitkomst — niet de resterende looptijd van de huidige hypotheek.<br><br>
-      <em style="color:#888">Gebruik: oversluiting, renteherziening, nieuwe hypotheek op een later moment — wat is de leencapaciteit dan?</em>
+      Hoeveel kan de klant op dát toekomstige moment lenen als hij op dát moment een geheel nieuwe 30-jaars hypotheek afsluit? De terugbetaaltermijn staat altijd vast op 360 maanden, ongeacht het tijdstip in de grafiek. Alleen het inkomen (en de norm) bepaalt de uitkomst — niet de resterende looptijd van de huidige hypotheek. Met leningdelen is dit de maximale schuld op dat moment volgens de toets (per deel annuïtair over 30 jaar tegen de toetsrente bij aanvang; alleenstaandenbedrag naar rato van de schuld), de maatstaf voor de Marge.<br><br>
+      <em style="color:#888">Gebruik: oordeel per maand (Marge), oversluiting, renteherziening — wat is de leencapaciteit dan?</em>
     </div>
+  </div>
+  <div style="margin-top:12px;background:#fff;border-left:3px solid var(--navy);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7">
+    <strong style="color:var(--navy);display:block;margin-bottom:4px">Marge</strong>
+    De marge vergelijkt met het maximum volgens de toets (annuïteit over 30 jaar, kolom ‘Max hyp. (30 jr vast)’), net als de maximale hypotheek bovenaan: maximum min de restschuld van die maand. Bij de Trhk/NHG-methode telt vanaf de AOW-datum het hele bedrag van de leningdelen die dan nog lopen (een deel dat al is afgelost valt weg). Bij de NHG-beheercriteria: het beheermaximum min de restschuld. ‘Max hyp. (rest. looptijd)’ is alleen informatie.
   </div>
   <div style="margin-top:12px;background:#fff;border-left:3px solid var(--orange);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;font-size:12px;line-height:1.7">
     <strong style="color:#c05000;display:block;margin-bottom:4px">Concreet verschil — voorbeeld bij €1.000/mnd max maandlast en 5% toetsrente</strong>
@@ -1023,20 +1027,43 @@ function bereken(){
   // Toetslast per leningdeel (D2): (rest)schuld × annuïteit 30 jaar tegen de toetsrente van dat deel (bepaald bij aanvang).
   // Gemengd box 1/box 3 (D1): het box 3-deel is een VAST bedrag; extra leenruimte valt in box 1 (naar rato over de box 1-delen).
   const trD0=delen.map(d=>toetsrenteDeel(d,start,defaultTr,0));
+  // Schuld waarop een toetsmoment toetst: bij aanvang de hoofdsom; later de restschuld (restschuldmethode) of, bij de Trhk/NHG-methode
+  // op het AOW-moment, het hele bedrag van de delen die dan nog lopen (een deel dat vóór of op dat moment is afgelost valt weg).
+  const schuldOpMoment=(d,m)=>m>0?(ptMethode()==='trhk'?(restSchuld(d,m)>0?d.bedrag:0):restSchuld(d,m)):d.bedrag;
+  const b3Moment=m=>{let t=0,b=0;for(const d of delen){const rs=schuldOpMoment(d,m);t+=rs;if(d.box===3)b+=rs;}return t>0?b/t:0;};
   const H1=delen.reduce((t,d)=>t+(d.box===3?0:d.bedrag),0), B3=totB-H1;
   const opInkMoment=(x,r,s3,rf,fL)=>{
     if(!(totB>0))return Math.round(r.mnd*af(d0.effTr/12,NT)/rf/fL);
-    const mm=ptMethode()==='trhk'?0:x.mndN;let l1=0,l3=0;
-    delen.forEach((d,i)=>{const rs=mm>0?restSchuld(d,mm):d.bedrag;if(!(rs>0))return;const l=rs/af(trD0[i]/12,NT);if(d.box===3)l3+=l;else l1+=l;});
+    let l1=0,l3=0;
+    delen.forEach((d,i)=>{const rs=schuldOpMoment(d,x.mndN);if(!(rs>0))return;const l=rs/af(trD0[i]/12,NT);if(d.box===3)l3+=l;else l1+=l;});
     const verh=!r.vol3&&r.q3>0?r.q1/r.q3:1;
-    if(r.vol3||!(B3>0)||!(H1>0)||!(l1>0)){const lpe=(l1+l3*verh)/totB;return lpe>0?Math.round(Math.max(0,r.mnd)/lpe):0;}
+    // geen (rest)schuld meer op een later moment (alle delen afgelost): dat moment beperkt het maximum niet
+    if(r.vol3||!(B3>0)||!(H1>0)||!(l1>0)){const lpe=(l1+l3*verh)/totB;return lpe>0?Math.round(Math.max(0,r.mnd)/lpe):(x.mndN>0?Infinity:0);}
     return Math.round(Math.max(0,r.mnd-l3*verh)/(l1/H1)+B3);
   };
-  const momenten=momDef.map(x=>{const s3=b3Aandeel(ptMethode()==='trhk'?0:x.mndN),r=mndOp(x.isAOW,x.pen,kol0,s3);const rf=restF(x.mndN);
+  const momenten=momDef.map(x=>{const s3=b3Moment(x.mndN),r=mndOp(x.isAOW,x.pen,kol0,s3);const rf=restF(x.mndN);
     const fL=factorLast(s3,r),al=alleenOp(r),opInk=opInkMoment(x,r,s3,rf,fL);
     return {i:x.mndN,ti:r.ti,tbl:r.tbl,mnd:r.mnd,rf,s3,vol3:r.vol3,q1:r.q1,q3:r.q3,opInk,alleen:al.bedrag,grens:al.grens,max:opInk+al.bedrag,lbl:x.lbl,norm:r.norm};});
   let bep=momenten[0];momenten.forEach(x=>{if(x.max<bep.max)bep=x;});
   if(PT_KERN){PT_KERN.max=B?B.max:bep.max;return;} // grafiek: alleen het maximum
+  // Maandoverzicht: de marge vergelijkt met het maximum volgens de toets over 30 jaar (kolom '30 jr vast'), net als de KPI;
+  // 'Max hyp. (rest. looptijd)' blijft informatief.
+  // Per maand m > 0: getoetste schuld S (restschuld; Trhk/NHG vanaf de AOW-datum het hele bedrag van de lopende delen), toetslast per deel
+  // als annuïteit over 30 jaar tegen de toetsrente van dat deel (zoals bij de toetsmomenten), rentekolom bij aanvang; het
+  // alleenstaandenbedrag gaat — net als bij de toetsmomenten — van de hoofdsom af (naar rato in de last). 'Max hyp. (30 jr vast)' =
+  // de maximale schuld volgens die toets: S × (toegestane maandlast + vrijgesteld deel van de last) / toetslast.
+  const rijSchuld=(x,m,isAOW)=>(ptMethode()==='trhk'&&isAOW)?(restSchuld(x,m)>0?x.bedrag:0):restSchuld(x,m);
+  // Betaalde termijnen op de datum van de rij: volle maanden vanaf de toetsdatum (zoals bij de toetsmomenten), zodat de AOW-maand
+  // dezelfde restschuld toetst als het AOW-toetsmoment van de KPI; de kolommen schuld en box 3-schuld volgen dat.
+  data.forEach(d=>{d.vgl=d.schuld;
+    if(B||!(totB>0)||d.m===0)return;
+    const pm=Math.max(0,mndTussen(vandaag,d.dt));
+    let R=0,R3=0;delen.forEach(x=>{const rs=restSchuld(x,pm);R+=rs;if(x.box===3)R3+=rs;});d.schuld=Math.round(R);d.s3=Math.round(R3);
+    const sD=delen.map(x=>rijSchuld(x,pm,d.isAOW)),S=sD.reduce((t,v)=>t+v,0);d.vgl=Math.round(S);if(!(S>0))return;
+    let b3=0,l1=0,l3=0;delen.forEach((x,i)=>{if(!(sD[i]>0))return;const l=sD[i]/af(trD0[i]/12,NT);if(x.box===3){b3+=sD[i];l3+=l;}else l1+=l;});
+    const r=mndOp(d.isAOW,d.pen,kol0,b3/S),verh=!r.vol3&&r.q3>0?r.q1/r.q3:1,L0=l1+l3*verh,V=alleenOp(r).bedrag;
+    const gem=!(r.vol3||!(B3>0)||!(H1>0)||!(l1>0)),vLast=V>0?(gem?l1*Math.min(V,H1)/H1:L0*Math.min(V,totB)/totB):0;
+    if(L0>0){const mx=S*(Math.max(0,r.mnd)+vLast)/L0;d.maxH30=Math.round(mx);d.margeX=mx-S;}});
   const aowIdx=data.findIndex(d=>d.isAOW);
   const penIdx=data.findIndex(d=>d.pen);
   document.getElementById('k1').textContent=E(bep.max);
@@ -1055,7 +1082,7 @@ function bereken(){
   else if(pen0) pt.innerHTML='<strong>Pensioentoets ('+drTxt+'):</strong> van toepassing — bij aanvang getoetst op huidig inkomen '+E(ink)+' (niet-AOW-tabel), op de AOW-datum de restschuld op inkomen vanaf AOW '+E(aowInk)+' (AOW-tabel).';
   else pt.innerHTML='<strong>Pensioentoets ('+drTxt+'):</strong> nu niet van toepassing (leeftijd '+leeftijdOp(geb,new Date())+' jaar)'+(penIdx>0?'; geldt vanaf '+fmtDtS(data[penIdx].dt)+'.':'.');
 
-  pt.innerHTML+=' Toetsmomenten: '+momenten.map(x=>x.lbl+' '+E(x.ti)+' ('+x.tbl+(x.i>0?', restschuld '+(x.rf*100).toFixed(1).replace('.',',')+'% na '+x.i+' mnd':'')+(x.vol3?', volledig box 3: geen aftrekbare rente, woonquote '+(x.q3*100).toFixed(1).replace('.',',')+'% zonder brutering':x.s3>0?', box 3-aandeel '+(x.s3*100).toFixed(1).replace('.',',')+'% gebruteerd met '+(x.q1*100).toFixed(1).replace('.',',')+'%/'+(x.q3*100).toFixed(1).replace('.',',')+'%':'')+') → '+(x.alleen?E(x.opInk)+' + alleenstaandenbedrag '+E(x.alleen)+' = ':'')+E(x.max)).join('; ')+'. <strong>Bepalend toetsmoment: '+bep.lbl+'</strong> — maximale hypotheek '+E(bep.max)+(bep.alleen?' (op inkomen '+E(bep.opInk)+' + alleenstaandenbedrag '+E(bep.alleen)+')':'')+' ('+ptMethodeTekst()+').'+
+  pt.innerHTML+=' Toetsmomenten: '+momenten.map(x=>x.lbl+' '+E(x.ti)+' ('+x.tbl+(x.i>0?', restschuld '+(x.rf*100).toFixed(1).replace('.',',')+'% na '+x.i+' mnd':'')+(x.vol3?', volledig box 3: geen aftrekbare rente, woonquote '+(x.q3*100).toFixed(1).replace('.',',')+'% zonder brutering':x.s3>0?', box 3-aandeel '+(x.s3*100).toFixed(1).replace('.',',')+'% gebruteerd met '+(x.q1*100).toFixed(1).replace('.',',')+'%/'+(x.q3*100).toFixed(1).replace('.',',')+'%':'')+') → '+(x.alleen?E(x.opInk)+' + alleenstaandenbedrag '+E(x.alleen)+' = ':'')+(isFinite(x.max)?E(x.max):'geen lening meer (afgelost): toetst niets')).join('; ')+'. <strong>Bepalend toetsmoment: '+bep.lbl+'</strong> — maximale hypotheek '+E(bep.max)+(bep.alleen?' (op inkomen '+E(bep.opInk)+' + alleenstaandenbedrag '+E(bep.alleen)+')':'')+' ('+ptMethodeTekst()+').'+
     ' <br><strong>Alleenstaandenbedrag</strong> (Trhk '+NJ+' art. 3 lid 8, één aanvrager): '+atEur(AL.bedrag)+' extra buiten de toetslast als het toetsinkomen hoger is dan '+atEur(AL.grens)+' (na de AOW-datum '+atEur(AL.grens_aow)+')'+(bep.alleen?' — toegepast.':' — niet van toepassing op het bepalende toetsmoment.')+
     (momenten.some(x=>x.s3>0)?' <strong>Box 3:</strong> '+(momenten.some(x=>x.vol3)?'zonder aftrekbare rente (volledig box 3) geldt tabel '+(bep.norm==='AOW'?'4':'3')+' als woonquote en wordt de last niet gebruteerd; verplichtingen gaan dan volledig (niet gebruteerd) van die ruimte af':'het niet-aftrekbare deel is getoetst met tabel '+(bep.norm==='AOW'?'4':'3'))+(momenten.some(x=>x.s3>0&&x.s3<1)?'; bij een gemengde lening telt de toetslast van het box 3-deel × box 1-/box 3-percentage mee (tabel '+(bep.norm==='AOW'?'2':'1')+').':'.'):'');
   document.getElementById('ldrMeldingen').innerHTML=(B&&B.ontbreekt)?'':ldrAow10(delen,!!B,d0.mnd);
@@ -1157,12 +1184,14 @@ function renderTable(){
     else if(d.pen) tr.className='pen';
     else if(contractChanged) tr.className='rvp-change';
     prevContract=d.usesContract;
-    const marge=d.maxH-d.schuld;
+    // Marge t.o.v. het maximum volgens de toets over 30 jaar (zoals de KPI); Trhk/NHG vanaf de AOW-datum: hele bedrag van de lopende delen
+    // afronding: het getoonde maximum is op hele euro's afgerond, daarom een marge van € 1 (zoals € 0,50 per maand in de andere tools)
+    const vgl=d.vgl!=null?d.vgl:d.schuld, marge=d.maxH30-vgl, past=d.margeX!=null?d.margeX>=-1:marge>=0;
     const nm=d.norm==='AOW'?'<span class="badge b-aow">AOW</span>':d.norm==='Pensioen'?'<span class="badge b-pen">Pensioentoets</span>':'<span class="badge b-hui">Huidig</span>';
     const rBadge=d.usesContract
       ?`<span class="badge b-contract">${(d.effTr*100).toFixed(2).replace('.',',')}% contract</span>`
       :`${(d.effTr*100).toFixed(2).replace('.',',')}%`;
-    const ms=d.schuld>0?(marge>=0?'<span class="pos">+'+E(marge)+'</span>':'<span class="neg">▼'+E(-marge)+'</span>'):'—';
+    const ms=vgl>0?(past?'<span class="pos">+'+E(Math.max(0,marge))+'</span>':'<span class="neg">▼'+E(Math.max(1,-marge))+'</span>'):'—';
     const dtStr=d.dt.toLocaleDateString('nl-NL',{month:'short',year:'numeric'});
     const bdayFlag=(d.isBday?` <span title="Verjaardag: ${d.ageYr} jaar" style="font-size:13px">🚩</span>`:'')+
       (d.rvpEind&&d.rvpEind.length?` <span title="Einde rentevaste periode (informatief): ${d.rvpEind.join(', ')}" style="font-size:11px;color:var(--orange,#c60)">🔒 einde RVP</span>`:'');
@@ -1171,7 +1200,8 @@ function renderTable(){
       `<td>${rBadge}</td>`+
       `<td>${E(d.mnd)}</td><td><strong>${E(d.maxH)}</strong></td><td style="color:var(--green)">${E(d.maxH30)}</td>`+
       `<td>${d.schuld>0?E(d.schuld):'—'}</td><td>${d.s3>0?E(d.s3):'—'}</td>`+
-      `<td>${d.ml>0?E(d.ml):'—'}</td><td>${ms}</td>`;
+      `<td>${d.ml>0?E(d.ml):'—'}</td><td${vgl!==d.schuld?' title="Trhk/NHG-methode: hele bedrag van de lopende delen ('+E(vgl)+') t.o.v. het maximum over 30 jaar"':''}>${ms}</td>`;
+    tr.dataset.vgl=vgl;tr.dataset.max=d.maxH30;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag);

@@ -1096,6 +1096,15 @@ var LDR = (function () {
     momenten = Array.from(new Set(momenten)).sort(function(a,b){return a-b;});
     if(momenten.length===0) momenten=[0];
 
+    // Restschuld van een deel op toetsmoment m. Op het AOW-moment bij de Trhk/NHG-methode het hele bedrag en bij de
+    // NHG-beheercriteria de lening bij aanvang (werkelijke last bij aanvang); een deel dat vóór of op dat moment volledig is
+    // afgelost (looptijd voorbij), telt dan niet mee.
+    function restOpMoment(d, m){
+      if(aowMomenten[m] && (ptMethode === "trhk" || BEHEER_MODUS)) return m < d.duur ? d.bedrag : 0;
+      return restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
+    }
+    // Maand voor de werkelijke last (beheer): op het AOW-moment de last bij aanvang (resterende looptijd = hele looptijd)
+    function lastMaand(m){ return (BEHEER_MODUS && aowMomenten[m]) ? 0 : m; }
     function aowBereiktOp(persoon, datumOpMoment){
       return persoon && persoon.aow && datumOpMoment >= persoon.aow;
     }
@@ -1208,11 +1217,11 @@ var LDR = (function () {
         var vf = vrijstellingFactor(delenArr, m, vrijstellingOp(inkObj));
         var lastAftrekbaar=0, lastNietAftrekbaar=0, berekendeLast=0;
         delenArr.forEach(function(d){
-          var rest = (ptMethode === "trhk" && aowMomenten[m]) ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); // Trhk/NHG: hele bedrag op het AOW-moment (zoals de hoofdtoets)
+          var rest = restOpMoment(d, m); // Trhk/NHG: hele bedrag op het AOW-moment (zoals de hoofdtoets); beheer: lening bij aanvang
           if(rest<=0) return;
           var renteDeel = toetsrenteDeel(d, normrente);
           var iMaand = (renteDeel/100)/12;
-          var maandlastVol = maandlastVoorToets(d, rest, iMaand, m);
+          var maandlastVol = maandlastVoorToets(d, rest, iMaand, lastMaand(m));
           berekendeLast += maandlastVol;
           var aftrekGeldigNu = m < d.aftrekbaarTm;
           var box3Aandeel = d.bedrag>0 ? Math.min(1,(d.box3||0)/d.bedrag) : 0;
@@ -1250,7 +1259,7 @@ var LDR = (function () {
       var toetsinkomen = inkObj.bedrag;
 
       var tb = bepaalTabellen(inkObj, datumOpMoment);
-      var vf = vrijstellingFactor(delenState, m, vrijstellingOp(inkObj), function(d){ return (ptMethode === "trhk" && aowMomenten[m]) ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); });
+      var vf = vrijstellingFactor(delenState, m, vrijstellingOp(inkObj), function(d){ return restOpMoment(d, m); });
 
       // Last splitsen in aftrekbaar (box1) en niet-aftrekbaar (box3 + na einde renteaftrek) per deel,
       // en de niet-aftrekbare last bruteren via de verhouding tussen de box1- en box3-woonquote (GHF/TRHK-methodiek).
@@ -1258,13 +1267,14 @@ var LDR = (function () {
       var berekendeLast = 0;
       var spl = {sA:0, sN:0, vN:0}; // toetslast zonder vrijstelling: box 1-hoofdsom (aftrekbaar/niet) en vast box 3-deel
       delenState.forEach(function(d){
-        // Trhk/NHG-methode: op het AOW-moment de annuïteit op het hele bedrag; restschuldmethode: de restschuld
-        var rest = (ptMethode === "trhk" && aowMomenten[m]) ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
+        // Trhk/NHG-methode: op het AOW-moment de annuïteit op het hele bedrag (een deel dat dan al is afgelost, valt weg);
+        // NHG-beheer: op het AOW-moment de werkelijke last bij aanvang; restschuldmethode: de restschuld
+        var rest = restOpMoment(d, m);
         if(rest <= 0) return;
         var renteDeel = toetsrenteDeel(d, normrente);
         var iMaand = (renteDeel/100)/12;
         // elk deel wordt als 30-jaars annuïteit getoetst, tenzij "Type toets aflossingsvrij" anders aangeeft
-        var maandlastVol = maandlastVoorToets(d, rest, iMaand, m);
+        var maandlastVol = maandlastVoorToets(d, rest, iMaand, lastMaand(m));
         berekendeLast += maandlastVol;
         var aftrekGeldigNu = m < d.aftrekbaarTm;
         var box3Aandeel = d.bedrag>0 ? Math.min(1, (d.box3||0)/d.bedrag) : 0;
@@ -1349,8 +1359,9 @@ var LDR = (function () {
         var pA = interpolatePercentage(tb.tables, tb.tabA, totaal, bandIdx), pN = interpolatePercentage(tb.tables, tb.tabN, totaal, bandIdx);
         var verh = pN>0 ? pA/pN : 1, la = 0, ln = 0, gs = {sA:0, sN:0, vN:0};
         delenState.forEach(function(d){
-          var rest = (m===0 || ptMethode==="trhk") && !BEHEER_MODUS ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); if(rest <= 0) return;
-          var ml = maandlastVoorToets(d, rest, (toetsrenteDeel(d, normrente)/100)/12, m);
+          // m > 0 is hier altijd een AOW-moment: Trhk/NHG het hele bedrag en beheer de lening bij aanvang (afgeloste delen vallen weg)
+          var rest = m===0 ? d.bedrag : ((ptMethode==="trhk" || BEHEER_MODUS) ? (m < d.duur ? d.bedrag : 0) : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m)); if(rest <= 0) return;
+          var ml = maandlastVoorToets(d, rest, (toetsrenteDeel(d, normrente)/100)/12, BEHEER_MODUS ? 0 : m);
           var b3 = d.bedrag>0 ? Math.min(1,(d.box3||0)/d.bedrag) : 0, aftr = (m < d.aftrekbaarTm) ? (1-b3) : 0;
           la += ml*aftr; ln += ml*(1-aftr);
           if(m < d.aftrekbaarTm) gs.sA += ml*(1-b3); else gs.sN += ml*(1-b3);
@@ -1716,7 +1727,7 @@ var LDR = (function () {
 
     function voorJaar(jaar){
       var tables = TABLES_BY_YEAR[jaar];
-      function restFactorVL(m){ var n = looptijd; if(m<=0 || vlMethode==="trhk") return 1; return iMaand>0 ? Math.max(0,(Math.pow(1+iMaand,n)-Math.pow(1+iMaand,m))/(Math.pow(1+iMaand,n)-1)) : Math.max(0,1-m/n); }
+      function restFactorVL(m){ var n = looptijd; if(m<=0) return 1; if(m>=n) return 0; if(vlMethode==="trhk") return 1; return iMaand>0 ? Math.max(0,(Math.pow(1+iMaand,n)-Math.pow(1+iMaand,m))/(Math.pow(1+iMaand,n)-1)) : Math.max(0,1-m/n); }
       function opMoment(mo){
         var inkomenM = mo.personen.reduce(function(a,p){return a+p.ink;},0);
         // Brutering zoals op het hoofdscherm: factorLast = (1 − s3) + s3 × pctA/pctN. Volledig box 3: alleen tabel 3/4.

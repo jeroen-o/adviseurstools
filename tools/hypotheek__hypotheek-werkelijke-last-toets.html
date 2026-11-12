@@ -1301,7 +1301,7 @@ function bereken(){
        later moment (AOW-datum): werkelijke restschuld per deel, ook als 30-jarige annuïteit op de toetsrente (zoals MAX. HYP. 2027); box 3-delen × q1/q3. */
     /* per deel: (rest)schuld × annuïteit 30 jaar op de toetsrente van dat deel; L1/T1 box 1 (bij volledig box 3: alle delen), L3/B box 3 */
     let L1 = 0, T1 = 0, L3 = 0, rest = 0;
-    leningdelen.forEach(d => { const H = d.hoofdsom > 0 ? d.hoofdsom : 0; const r = m > 0 ? restDeel(d, methode === 'trhk' ? 0 : m) : H; rest += r;
+    leningdelen.forEach(d => { const H = d.hoofdsom > 0 ? d.hoofdsom : 0; const r = m > 0 ? (methode === 'trhk' ? (m < Math.round((d.looptijd||30)*12) ? H : 0) : restDeel(d, m)) : H; rest += r; /* Trhk/NHG: hele bedrag; deel dat vóór of op het AOW-moment is afgelost valt weg */
       const x = r * annDeelAdv(d); if (d.box === 3 && !volledigBox3) L3 += x; else { L1 += x; T1 += H; } });
     const toetslast = L1 + L3 * verh + erfpacht + inleg;
     const rf = totaalHoofdsom > 0 ? rest / totaalHoofdsom : 1;

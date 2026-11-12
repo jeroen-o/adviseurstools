@@ -814,7 +814,8 @@ function bereken(){
   const alleenVan=(ink,aowTbl)=>situatie==='single'&&ink>(aowTbl?NA.grensAOW:NA.grens)?ALLEEN_BEDRAG:0;
   const annLt=ann(1,toets,ATL.toetsrente.toetslooptijd_maanden); // Trhk art. 3: annuïtair 30 jaar, ongeacht vorm/looptijd
   // Restschuld na m maanden van € 1 volgens de aflosvorm (annuïtair op de rente, lineair, aflossingsvrij = 1) bij een looptijd van n maanden
-  const restF=(m,n)=>{if(!m||m<=0||vorm==='af'||ptMethode()==='trhk')return 1;if(m>=n)return 1e-9;if(vorm==='lin')return 1-m/n;const rm=rente/12;if(rm<=0)return 1-m/n;return (Math.pow(1+rm,n)-Math.pow(1+rm,m))/(Math.pow(1+rm,n)-1);};
+  // Trhk/NHG-methode: hele bedrag (factor 1), behalve als de lening vóór of op dat moment volledig is afgelost (moment toetst dan niets)
+  const restF=(m,n)=>{if(!m||m<=0||vorm==='af')return 1;if(m>=n)return 1e-9;if(ptMethode()==='trhk')return 1;if(vorm==='lin')return 1-m/n;const rm=rente/12;if(rm<=0)return 1-m/n;return (Math.pow(1+rm,n)-Math.pow(1+rm,m))/(Math.pow(1+rm,n)-1);};
   const scens=mom.map(m=>{const st=statusOp(m.d);let ink,aowTbl;
     if(st.aowNu){ink=totaalInk;aowTbl=true;}
     else if(huidigInk>0){ink=st.ptNu?Math.min(huidigInk,totaalInk):huidigInk;aowTbl=false;}

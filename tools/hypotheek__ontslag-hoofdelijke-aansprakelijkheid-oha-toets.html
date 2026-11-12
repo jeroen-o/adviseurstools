@@ -954,7 +954,8 @@ function bereken(){
   const annP=r=>{const i=r/100/12,n=ATL.toetsrente.toetslooptijd_maanden;return i===0?1/n:i/(1-Math.pow(1+i,-n));}; // Trhk art. 3: annuïteit 30 jaar op de toetsrente
   const isB3=l=>l.box3==='JA', allB3S=geldig.every(isB3);
   // lasten per toetsmoment: L1/T1 = box 1-last en -hoofdsom (bij volledig box 3: alle delen), L3/B = box 3-last en vast box 3-bedrag
-  function lastDelen(m){const o={L1:0,T1:0,L3:0,B:0};for(const l of geldig){const x=restDeel(l,m)*annP(toetsRenteDeel(l));if(isB3(l)&&!allB3S){o.L3+=x;o.B+=l.hoofdsom;}else{o.L1+=x;o.T1+=l.hoofdsom;}}return o;}
+  // heel = Trhk/NHG-methode op het AOW-moment: hele bedrag van elk deel, maar een deel dat vóór of op dat moment is afgelost valt weg
+  function lastDelen(m,heel){const o={L1:0,T1:0,L3:0,B:0};for(const l of geldig){const rd=restDeel(l,m),x=(heel?(rd>0?l.hoofdsom:0):rd)*annP(toetsRenteDeel(l));if(isB3(l)&&!allB3S){o.L3+=x;o.B+=l.hoofdsom;}else{o.L1+=x;o.T1+=l.hoofdsom;}}return o;}
   // maximale hypotheek (excl. alleenstaandenbedrag) bij de beschikbare maandlast: (besch − box 3-last × q1/q3) / last per € box 1 + box 3-bedrag;
   // past zelfs het box 3-deel niet, dan het bedrag dat geheel als (gebruteerd) box 3-deel past
   function maxStd(besch,sc,p){besch=Math.max(0,besch);const L3v=p.L3*sc.verh;
@@ -967,7 +968,7 @@ function bereken(){
     return H*(Math.pow(1+i,n)-Math.pow(1+i,m))/(Math.pow(1+i,n)-1);}
   if(pensA!==null&&aowBinnen){
     const sc=Object.assign(scenario(pensA,STP,BTP),{lbl:'AOW-datum ('+aowDatum.toLocaleDateString('nl-NL')+', na '+aowM+' mnd, '+(methode==='trhk'?'hele bedrag':'op de restschuld')+')'});
-    sc.p=lastDelen(methode==='trhk'?0:aowM);
+    sc.p=lastDelen(aowM,methode==='trhk');
     momenten.push(sc);
   }
   // laagste uitkomst per toets: standaard op max. hypotheek (incl. alleenstaandenbedrag van dat moment), beheer op de ruimte
@@ -1121,7 +1122,7 @@ function bereken(){
     const scA=aowNu?scenario(pensA,STP,BTP):scenario(ink0,stN,btN);let low=maxOp(scA,cur.p);
     if(geldt){const m=(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())-(a.getDate()<vandaag.getDate()?1:0);
       const scP=scenario(pensA,STP,BTP);
-      low=Math.min(low,maxOp(scP,lastDelen(methode==='trhk'?0:m)));}
+      low=Math.min(low,maxOp(scP,lastDelen(m,methode==='trhk')));}
     return low;
   }
   try{ptGrafiek(document.getElementById('ptGrafiek'),{berekenMax:grafiekMax,huidigeLeeftijd:leeftijd,gekozen:String(pensioenDrempel),methode:methode,ontbreekt:methode!=='beheer'&&situatie!=='aow'&&pensInk===null,vanaf:50,tot:ATN_AOW_JR});}catch(e){document.getElementById('ptGrafiek').innerHTML='';}
