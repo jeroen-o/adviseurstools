@@ -1390,12 +1390,18 @@ function bereken(){
   const duoBrutoBh = duoTerm; /* werkelijke termijn, niet gebruteerd */
   const aftrekBh = dkLast + aflK + duoBrutoBh + lease + ovv;
   const rDeelBh = d => wgRvp >= 3 ? (d.rente||0) : Math.max(d.rente||0, rente3jr);
-  let lB1w = 0, lB3w = 0, lB1m = 0, lB3m = 0;
-  leningdelen.forEach(d => { if (!(d.hoofdsom > 0)) return; const r = rDeelBh(d);
-    const w = d.vorm === 'annuiteit' ? annuMaand(d.hoofdsom, r, d.looptijd) : d.vorm === 'lineair' ? linMaandEerste(d.hoofdsom, r, d.looptijd) : aflVrijMaand(d.hoofdsom, r);
-    const mn = aflVrijMaand(d.hoofdsom, r);
-    if (d.box === 3){ lB3w += w; lB3m += mn; } else { lB1w += w; lB1m += mn; } });
-  function bhUitkomst(ink, alleAOW){
+  /* werkelijke lasten bij aanvang per box; op het AOW-moment na m volle maanden alleen de delen die dan nog lopen
+     (een deel dat vóór of op dat moment volledig is afgelost telt niet mee) */
+  function bhLasten(m){
+    const o = {lB1w: 0, lB3w: 0, lB1m: 0, lB3m: 0};
+    leningdelen.forEach(d => { if (!(d.hoofdsom > 0)) return; if (m > 0 && m >= Math.round((d.looptijd||30)*12)) return; const r = rDeelBh(d);
+      const w = d.vorm === 'annuiteit' ? annuMaand(d.hoofdsom, r, d.looptijd) : d.vorm === 'lineair' ? linMaandEerste(d.hoofdsom, r, d.looptijd) : aflVrijMaand(d.hoofdsom, r);
+      const mn = aflVrijMaand(d.hoofdsom, r);
+      if (d.box === 3){ o.lB3w += w; o.lB3m += mn; } else { o.lB1w += w; o.lB1m += mn; } });
+    return o;
+  }
+  function bhUitkomst(ink, alleAOW, m){
+    const {lB1w, lB3w, lB1m, lB3m} = bhLasten(m || 0), laterG = (m || 0) > 0 ? Infinity : 0; /* geen lopend deel meer op het AOW-moment: niet beperkend */
     const situ = alleAOW ? 'aow' : (zwBh ? 'zonderwerk' : 'werk');
     const k1 = beheerSleutel(paarBh, situ, false), k3 = beheerSleutel(paarBh, situ, true);
     const q1 = beheerPct(k1, ink, toetsrenteBh), q3 = beheerPct(k3, ink, toetsrenteBh);
@@ -1407,20 +1413,20 @@ function bereken(){
     const Mb = Math.max(0, beschikbaar - erfpacht - inleg), gem3 = !volledigBox3 && hoofdsomB3 > 0;
     const lpe = totaalHoofdsom > 0 ? (lB1w + lB3w) / totaalHoofdsom : 0, lpe1 = (totaalHoofdsom - hoofdsomB3) > 0 ? lB1w / (totaalHoofdsom - hoofdsomB3) : 0;
     let maxH;
-    if (!gem3) maxH = lpe > 0 ? Mb / lpe : 0;
+    if (!gem3) maxH = lpe > 0 ? Mb / lpe : laterG;
     else if (Mb < lB3w * verh) maxH = lB3w > 0 ? Mb / (lB3w * verh / hoofdsomB3) : 0;
-    else maxH = lpe1 > 0 ? (Mb - lB3w * verh) / lpe1 + hoofdsomB3 : 0;
+    else maxH = lpe1 > 0 ? (Mb - lB3w * verh) / lpe1 + hoofdsomB3 : laterG;
     return {ink, situ, k1, k3, q1, q3, pct, verh, beschikbaar, lastW, lastM, ruimteW: beschikbaar - lastW, ruimteM: beschikbaar - lastM, maxH: Math.max(0, maxH)};
   }
   /* momenten: aanvang + AOW-datum binnen 36 maanden (wie al AOW heeft: inkomen vanaf AOW) */
   function bhMomenten(PAx){
     const mom = [{d: nuAdv, lbl: 'bij aanvang'}];
-    PAx.forEach(p => { if (p.av && !p.av.isAOW && p.av.aowDate > nuAdv && beheerMaanden(nuAdv, p.av.aowDate) <= ATN_BEH_MND) mom.push({d: p.av.aowDate, lbl: 'AOW-datum ' + p.wie + ' (' + fmtDateNL(p.av.aowDate) + ', binnen 3 jaar)'}); });
+    PAx.forEach(p => { if (p.av && !p.av.isAOW && p.av.aowDate > nuAdv && beheerMaanden(nuAdv, p.av.aowDate) <= ATN_BEH_MND) mom.push({d: p.av.aowDate, m: mndTot(nuAdv, p.av.aowDate), lbl: 'AOW-datum ' + p.wie + ' (' + fmtDateNL(p.av.aowDate) + ', binnen 3 jaar)'}); });
     let mis = false; const uit = [];
     mom.forEach(m => {
       const v = PAx.map(p => { const aw = !!(p.av && (p.av.isAOW || m.d >= p.av.aowDate)); return {ink: (p.av && p.av.isAOW) ? p.ink : (aw ? p.pens : p.ink), aow: aw}; });
       if (v.some(x => x.ink === null || isNaN(x.ink))){ mis = true; return; }
-      const u = bhUitkomst(v.reduce((t,x) => t + x.ink, 0), v.every(x => x.aow)); u.lbl = m.lbl; uit.push(u);
+      const u = bhUitkomst(v.reduce((t,x) => t + x.ink, 0), v.every(x => x.aow), m.m); u.lbl = m.lbl; uit.push(u);
     });
     return {uit, mis};
   }
@@ -1451,7 +1457,8 @@ function bereken(){
   renderTopStatus('adviesStatusBox', 'adviesBar', 'adviesBarNote',
     benutAdv, ruimteAdv, toetslastAdv, beschikbaarAdv, 'CHF/GHF advies-toets', 'toetslast (annuïtair 30 jaar op de toetsrente)');
   renderTopStatus('beheerStatusBox', 'beheerBar', 'beheerBarNote',
-    benutBh, ruimteBh, bepBh.lastW, beschikbaarBh, 'NHG beheer-toets (werkelijke lasten)', 'werkelijke beheerlast');
+    benutBh, ruimteBh, bepBh.lastW, beschikbaarBh, 'NHG beheer-toets (werkelijke lasten)', 'werkelijke beheerlast',
+    totaalHoofdsom > 0 && beschikbaarBh > 0 && Math.round(totaalHoofdsom) <= Math.round(bepMaxBh.maxH));
   document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', `<div class="status ok" style="margin-top:10px"><p><b>Bepalend toetsmoment (NHG-beheercriteria):</b> ${bepBh.lbl} — toetsinkomen ${fmt(bepBh.ink)}, beheertabel ${beheerNaam(volledigBox3 ? bepBh.k3 : bepBh.k1)} (${pctStr(bepBh.pct*100)}), toetsrente ${fmtD2(toetsrenteBh)}%${hoofdsomB3>0&&!volledigBox3?`; box 3-last × ${fmtD2(bepBh.verh)}`:''}. Maximale hypotheek volgens de beheercriteria (werkelijke lasten van de huidige leningdelen): <b>${fmt(Math.round(bepMaxBh.maxH))}</b>${bepMaxBh !== bepBh ? ' (bepalend: ' + bepMaxBh.lbl + ')' : ''}.${bhOnvolledig ? ' <b>Let op:</b> de AOW-datum valt binnen 3 jaar maar het inkomen vanaf AOW ontbreekt — die toets is overgeslagen.' : ''}${wgRvp < 3 ? '<br><small>NHG: gebruik bij een resterende rentevaste periode korter dan 3 jaar de NHG-rente voor 3 jaar vast als die hoger is.</small>' : ''}<br><small>${BEHEER_VERMOGEN}</small></p></div>`);
 
   /* Gewogen RVP < 10 jr: de werkelijke-lasttoets rekent de last op de contractrente, maar de Trhk-toets
@@ -1625,11 +1632,12 @@ function bereken(){
   `;
 }
 
-function renderTopStatus(boxId, barId, noteId, benut, ruimte, werkelijk, beschikbaar, label, lastNaam){
+function renderTopStatus(boxId, barId, noteId, benut, ruimte, werkelijk, beschikbaar, label, lastNaam, pastMax){
   lastNaam = lastNaam || 'werkelijke maandlast';
   /* Afrondingsgrens: een last gelijk aan het normbudget (verschil < een halve cent, d.w.z. een hoofdsom gelijk aan het
-     afgeronde maximum) past; pas bij een werkelijke overschrijding is de uitkomst negatief. */
-  const over = (werkelijk - beschikbaar) > 0.005 || beschikbaar <= 0;
+     afgeronde maximum) past; pas bij een werkelijke overschrijding is de uitkomst negatief. pastMax (beheer): de hoofdsom is niet
+     hoger dan het getoonde (afgeronde) maximum — bij een hoge werkelijke last per € (korte looptijd) is een halve euro hoofdsom meer dan een halve cent last. */
+  const over = !pastMax && ((werkelijk - beschikbaar) > 0.005 || beschikbaar <= 0);
   const eur2 = n => '€ ' + n.toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2});
   let cls='ok', titel=`${label}: ${lastNaam} past binnen de norm`;
   let msg = `Er resteert een ruimte van ${fmt(Math.max(0, ruimte))} per maand (${(Math.round(Math.max(0, 100-benut)*10)/10).toString().replace('.',',')}% van het beschikbare normbudget).`;

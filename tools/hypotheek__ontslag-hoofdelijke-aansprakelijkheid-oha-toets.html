@@ -978,17 +978,21 @@ function bereken(){
   // pensioen alleen als de AOW binnen 36 maanden ingaat (D.6.3.4); box 3-last × q1/q3; verplichtingen werkelijk.
   const mAowB=(!aowBereikt&&aowDatum&&aowDatum>vandaag)?((aowDatum.getFullYear()-vandaag.getFullYear())*12+(aowDatum.getMonth()-vandaag.getMonth())+(aowDatum.getDate()>vandaag.getDate()?1:0)):999;
   const kolB=renteKolom(toetsrenteBeh);
-  const mDelen=geldig.map(l=>{const m=berekenMaandbedragDeel(l);return {l,m:m===null?mbd*l.hoofdsom/totHS:m};});
+  const mDelenAlle=geldig.map(l=>{const m=berekenMaandbedragDeel(l);return {l,m:m===null?mbd*l.hoofdsom/totHS:m};});
   const allB3=geldig.every(l=>l.box3==='JA');
-  function bhOp(ink,situ,lbl){const bt=BEHEER_TABELLEN[situ]||BEHEER_TABELLEN.werk;const q1=wq(bt.b1,ink,kolB)||0,q3=wq(bt.b3,ink,kolB)||0;
+  // m > 0 (AOW-moment, volle maanden): een deel dat vóór of op dat moment volledig is afgelost (looptijd voorbij) telt niet mee;
+  // de lopende delen met hun werkelijke last bij aanvang. Geen lopend deel meer: dat moment beperkt niets.
+  function bhOp(ink,situ,lbl,m){const bt=BEHEER_TABELLEN[situ]||BEHEER_TABELLEN.werk;const q1=wq(bt.b1,ink,kolB)||0,q3=wq(bt.b3,ink,kolB)||0;
+    const mDelen=mDelenAlle.filter(x=>!(m>0&&m>=(x.l.looptijd>0?x.l.looptijd:360)));
     const verh=(allB3||q3<=0)?1:q1/q3,pct=allB3?q3:q1;const last=mDelen.reduce((t,x)=>t+x.m*((x.l.box3==='JA'&&!allB3)?verh:1),0);
     const mm=ink*pct/12-verpl;
     // max. hypotheek: box 3-deel als VAST bedrag (werkelijke last × q1/q3), extra ruimte in box 1 tegen de werkelijke last per € box 1;
     // past zelfs het box 3-deel niet, dan het bedrag dat geheel als (gebruteerd) box 3-deel past (zoals de standaardtoets)
-    const B3=allB3?0:mDelen.reduce((t,x)=>t+(x.l.box3==='JA'?x.l.hoofdsom:0),0),L3v=allB3?0:mDelen.reduce((t,x)=>t+(x.l.box3==='JA'?x.m*verh:0),0),L1=last-L3v,mp=Math.max(0,mm);
+    const B3=allB3?0:mDelenAlle.reduce((t,x)=>t+(x.l.box3==='JA'?x.l.hoofdsom:0),0),L3v=allB3?0:mDelen.reduce((t,x)=>t+(x.l.box3==='JA'?x.m*verh:0),0),L1=last-L3v,mp=Math.max(0,mm);
     const maxH=B3>0?(mp<L3v?(L3v>0?mp/(L3v/B3):0):(L1>0?(mp-L3v)/(L1/(totHS-B3))+B3:Infinity)):(last>0?mp/(last/totHS):Infinity);
     return {lbl,ink,situ,bt,pct,verh,last,mm,ruimte:mm-last,maxH,tabNaam:allB3?bt.b3naam:bt.b1naam};}
-  function bhMom(inkA,pensAx,situ0,mA){const r=[bhOp(inkA,situ0,'bij aanvang')];if(mA<=ATN_BEH_MND&&pensAx!==null)r.push(bhOp(pensAx,'aow','AOW-datum (binnen 3 jaar)'));return r;}
+  const mAowV=(!aowBereikt&&aowDatum&&aowDatum>vandaag)?((aowDatum.getFullYear()-vandaag.getFullYear())*12+(aowDatum.getMonth()-vandaag.getMonth())-(aowDatum.getDate()<vandaag.getDate()?1:0)):0; // volle maanden (zoals MAX. HYP. 2027)
+  function bhMom(inkA,pensAx,situ0,mA,mV){const r=[bhOp(inkA,situ0,'bij aanvang',0)];if(mA<=ATN_BEH_MND&&pensAx!==null)r.push(bhOp(pensAx,'aow','AOW-datum (binnen 3 jaar)',mV==null?mAowV:mV));return r;}
   const bhList=bhMom(ink0,pensA,situatie,mAowB);
   const bhB=bhList.reduce((a,b)=>b.ruimte<a.ruimte?b:a,bhList[0]);
   const bhMaxB=Math.min(...bhList.map(x=>x.maxH));
@@ -1014,7 +1018,9 @@ function bereken(){
   // Uitslag: gebaseerd op standaard CHF-criterium. Vergelijking op hele euro's (zoals getoond):
   // een hypotheek gelijk aan het getoonde maximum is positief.
   const posStd=Math.round(maxHypStd)>=Math.round(totHS);
-  const posBeh=Math.round(ruimteBeh*100)>=0;
+  // positief: ruimte ≥ − € 0,005, of een hoofdsom niet hoger dan het getoonde (afgeronde) maximum (bij een korte looptijd is de werkelijke
+  // last per € hoog: een halve euro hoofdsom is dan meer dan een halve cent last)
+  const posBeh=Math.round(ruimteBeh*100)>=0||(totHS>0&&Math.round(totHS)<=Math.round(bhMaxB));
 
   const tb=document.getElementById('toets-block');
   let klasse, icoon, uitslag, detail;
@@ -1113,7 +1119,8 @@ function bereken(){
     const g=new Date(vandaag.getFullYear()-lft,vandaag.getMonth(),vandaag.getDate()),a=aowDatumVan(g);
     if(methode==='beheer'){const aN=vandaag>=a,mA=aN?999:(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())+(a.getDate()>vandaag.getDate()?1:0);
       if((aN||mA<=ATN_BEH_MND)&&pensA===null)return 0;const sit=aN?'aow':(situatieKeuze==='aow'?'werk':situatieKeuze);
-      return Math.min(...bhMom(aN?pensA:ink0,pensA,sit,mA).map(x=>x.maxH));}
+      const mV=aN?0:(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())-(a.getDate()<vandaag.getDate()?1:0);
+      return Math.min(...bhMom(aN?pensA:ink0,pensA,sit,mA,mV).map(x=>x.maxH));}
     const aowNu=vandaag>=a,kk=(keuze==='aow10'||keuze==='aow15')?keuze:(parseInt(keuze,10)||0);
     const geldt=!aowNu&&(kk==='aow10'||kk==='aow15'?a<=new Date(vandaag.getFullYear()+(kk==='aow10'?10:15),vandaag.getMonth(),vandaag.getDate()):(kk>0&&lft>=kk));
     if((aowNu||geldt)&&pensA===null)return 0;

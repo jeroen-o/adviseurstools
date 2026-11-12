@@ -1241,12 +1241,16 @@ function beheerMax(o){
   mom.sort(function(x,y){return x.d-y.d;});
   for(var k=mom.length-1;k>0;k--)if(+mom[k].d===+mom[k-1].d){mom[k-1].lbl+=' / '+mom[k].lbl;mom.splice(k,1);}
   var a=o.lastPerEuro||beheerLast5050(o.rente),ontbreekt=false,b3=o.box3||'nee';
-  var res=mom.map(function(m){var ink=0,alleAow=true;
+  // o.lastPerEuroOp(mnd) (optioneel): werkelijke last bij aanvang per € hoofdsom van de delen die op het AOW-moment na mnd volle maanden
+  // nog lopen; een deel dat vóór of op dat moment volledig is afgelost telt dan niet mee (0 = niets meer: dat moment beperkt niets);
+  // o.b3bedragOp(mnd) (optioneel): box 3-bedrag van die lopende delen (voor de brutering q1/q3)
+  var aOp=function(m){return (m.mnd>0&&o.lastPerEuroOp)?o.lastPerEuroOp(m.mnd):a;};
+  var res=mom.map(function(m){var ink=0,alleAow=true,aM=aOp(m),b3m=(m.mnd>0&&o.b3bedragOp)?o.b3bedragOp(m.mnd):(+o.b3bedrag||0);
     o.personen.forEach(function(p){var aow=!!(p.aowD&&m.d>=p.aowD);if(aow){if(p.pens==null||isNaN(p.pens))ontbreekt=true;else ink+=Math.max(0,+p.pens);}else{alleAow=false;ink+=Math.max(0,+p.werk||0);}});
     var basis=(paar?'paar_':'alleen_')+(alleAow?'aow':(o.zonderwerk?'zonderwerk':'werk'));
     var tab=(b3==='ja'?'b3_':'')+basis,q=beheerPct(tab,ink,o.rente),q3=beheerPct('b3_'+basis,ink,o.rente);
-    var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=beschikbaar/a;
-    if(b3==='deels'&&(+o.b3bedrag||0)>0&&q3>0)max=max-o.b3bedrag*(q/q3-1); // box 3-deel gebruteerd met q1/q3
+    var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=aM>0?beschikbaar/aM:Infinity;
+    if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3
     return {m:m,ink:ink,tab:tab,q:q,maxLast:maxLast,max:Math.max(0,max)};});
   var b=res[0];res.forEach(function(x){if(x.max<b.max)b=x;});
   var eur=function(v){return '€ '+Math.round(v).toLocaleString('nl-NL');},pc=function(v){return (v*100).toFixed(1).replace('.',',')+'%';};
@@ -1255,7 +1259,7 @@ function beheerMax(o){
   if(o.rvpRestJr!=null&&o.rvpRestJr<3)meld.push('NHG: gebruik dan de NHG-rente voor 3 jaar vast als die hoger is (gerekend met de ingevulde rente).');
   meld.push(BEHEER_VERMOGEN);
   var tekst='NHG-beheercriteria (V&N D.6): beheertabel, werkelijk inkomen en werkelijke lasten, toetsrente '+(+o.rente).toFixed(3).replace('.',',')+'% (huidige rente). Toetsmomenten: '+
-    res.map(function(x){return x.m.lbl+' '+eur(x.ink)+' (tabel '+x.tab+' '+pc(x.q)+') → '+eur(x.max);}).join('; ')+'. Bepalend toetsmoment: '+b.m.lbl+'.'+(ontbreekt?' LET OP: inkomen vanaf AOW ontbreekt.':'');
+    res.map(function(x){return x.m.lbl+' '+eur(x.ink)+' (tabel '+x.tab+' '+pc(x.q)+') → '+(isFinite(x.max)?eur(x.max):'niet beperkend (lening dan afgelost)');}).join('; ')+'. Bepalend toetsmoment: '+b.m.lbl+'.'+(ontbreekt?' LET OP: inkomen vanaf AOW ontbreekt.':'');
   return {max:ontbreekt?0:b.max,bepalend:b,momenten:res,ontbreekt:ontbreekt,lastPerEuro:a,tekst:tekst,meldingen:meld};
 }
 // Uitkomstblok voor de beheertoets (eigen opmaak, past in elke tool)
@@ -1290,20 +1294,25 @@ function deelRestFractie(p, m) {
   const i = (p.rate || 0) / 100 / 12; if (i <= 0) return 1 - m / n;
   return (Math.pow(1 + i, n) - Math.pow(1 + i, m)) / (Math.pow(1 + i, n) - 1);
 }
-// Factor per leningdeel op het toetsmoment na m maanden: restschuldmethode = restschuld van dat deel; Trhk/NHG-methode = hele bedrag (1),
-// maar 0 als het deel vóór of op dat moment is afgelost; NHG-beheer = werkelijke last bij aanvang (1).
+// Factor per leningdeel op het toetsmoment na m maanden: restschuldmethode = restschuld van dat deel; Trhk/NHG-methode = hele bedrag (1);
+// NHG-beheer = werkelijke last bij aanvang (1). Trhk en beheer: 0 als het deel vóór of op dat moment is afgelost (looptijd voorbij).
 function deelFactorOp(p, m) {
-  if (m <= 0 || ptMethode() === 'beheer') return 1;
+  if (m <= 0) return 1;
   const f = deelRestFractie(p, m);
-  return ptMethode() === 'trhk' ? (f > 0 ? 1 : 0) : f;
+  return ptMethode() === 'trhk' || ptMethode() === 'beheer' ? (f > 0 ? 1 : 0) : f;
 }
 // Toetslast op een later moment t.o.v. aanvang (per € hoofdsom). Met leningdelen: per deel de restschuld (eigen aflosvorm/looptijd) resp.
 // het hele bedrag als 30-jarige annuïteit tegen de toetsrente van dat deel, gewogen naar de toetslast — gelijk aan de Pensioen-toets.
 // Zonder leningdelen: restschuld van € 1 annuïtair 30 jaar op de toetsrente (Trhk/NHG: 1).
 function restFactor(tJaar, rate) {
   const m = maandenTotMoment(tJaar), n = ATL.toetsrente.toetslooptijd_maanden, ri = (rate === undefined ? TK.refRate : rate) / 100 / 12;
-  if (m <= 0 || ptMethode() === 'beheer') return 1; // beheer: werkelijke lasten bij aanvang, geen restfactor
+  if (m <= 0) return 1;
   const delen = (typeof parts !== 'undefined' ? parts : []).filter(p => p.amount > 0);
+  if (ptMethode() === 'beheer') { // beheer: werkelijke last bij aanvang van de delen die dan nog lopen (afgelost deel valt weg)
+    let t = 0, z = 0;
+    delen.forEach(p => { const l = partActualPayment(p, 0); t += l; z += l * deelFactorOp(p, m); });
+    return t > 0 ? z / t : 1;
+  }
   if (delen.length) {
     let t = 0, z = 0;
     delen.forEach(p => { const l = partTestPayment(p, TK.toetsRate); t += l; z += l * deelFactorOp(p, m); });
@@ -1761,7 +1770,7 @@ function checkParts(testParts, income, group, globalToets) {
     const LB = beheerLeningInfo(), d = TK.d, basis = (TK.isSolo ? 'alleen_' : 'paar_') + (group === 'aow' ? 'aow' : 'werk');
     const M1 = income * beheerPct(basis, income, LB.rente) / 12, M3 = income * beheerPct('b3_' + basis, income, LB.rente) / 12;
     let fB = 0, payB = 0;
-    for (const p of testParts) { const pay = partActualPayment(p, 0), M = p.box === 1 ? M1 : M3; payB += pay; fB += M > 0 ? pay / M : Infinity; }
+    for (const p of testParts) { const pay = partActualPayment(p, 0) * (p.f == null ? 1 : p.f), M = p.box === 1 ? M1 : M3; payB += pay; if (pay > 0) fB += M > 0 ? pay / M : Infinity; } // p.f = 0: deel afgelost op het AOW-moment
     const verlB = d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, Mv = testParts.some(p => p.box === 1) ? M1 : M3;
     if (verlB > 0) fB += Mv > 0 ? verlB / Mv : Infinity;
     return { fraction: fB, payment: payB, fits: fB <= 1 + (Mv > 0 ? 0.5 / Mv : 0) };
@@ -2108,7 +2117,7 @@ function calculate() {
   // Toets samengestelde leningdelen
   // Pensioen-toets op het moment dat alle aanvragers AOW hebben (zelfde moment als de AOW-scenariokaart), volgens de gekozen methode:
   // restschuldmethode → restschuld per leningdeel (eigen aflosvorm en looptijd) als 30-jarige annuïteit tegen de toetsrente van dat deel;
-  // Trhk/NHG-methode → het hele bedrag (een deel dat dan al is afgelost valt weg); NHG-beheer → werkelijke last bij aanvang.
+  // Trhk/NHG-methode → het hele bedrag; NHG-beheer → werkelijke last bij aanvang (bij beide valt een deel dat dan al is afgelost weg).
   const mPensioen = maandenTotMoment(Math.max(0, ...inp.applicants.map(a => a.yearsToAOW)));
   const workParts = parts;
   const pensAlle = parts.map(p => Object.assign({}, p, { f: deelFactorOp(p, mPensioen) }));
@@ -2257,6 +2266,8 @@ function calculate() {
     const d = TK.d;
     return beheerMax({ personen: apps.map(a => ({ werk: a.salary, pens: a.pensionMissing ? null : a.pension, aowD: (a.birthDate && !a.verschoven) ? (b => new Date(b.getFullYear() + a.aowYears, b.getMonth() + a.aowMonths, b.getDate()))(new Date(a.birthDate + 'T00:00:00')) : new Date(tdB.getTime() + (a.aowAge - a.age) * 365.25 * 864e5) })),
       td: tdB, rente: renteB, lastPerEuro: tot > 0 ? delen.reduce((s, p) => s + partActualPayment(p, 0), 0) / tot : null,
+      lastPerEuroOp: tot > 0 ? (mnd => delen.reduce((s, p) => s + (deelRestFractie(p, mnd) > 0 ? partActualPayment(p, 0) : 0), 0) / tot) : null, // deel afgelost vóór of op de AOW-datum telt niet mee
+      b3bedragOp: mnd => delen.reduce((s, p) => s + (p.box === 3 && deelRestFractie(p, mnd) > 0 ? p.amount : 0), 0),
       aanname: tot > 0 ? 'Werkelijke leningdelen (vorm, looptijd en rente per deel).' : null,
       verpl: d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, rvpRestJr: tot > 0 ? Math.min.apply(null, delen.map(p => p.fixedYrs || 99)) : inp.refRvp,
       box3: tot > 0 && b3 >= tot ? 'ja' : (b3 > 0 ? 'deels' : 'nee'), b3bedrag: b3,

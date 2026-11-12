@@ -874,12 +874,16 @@ function beheerMax(o){
   mom.sort(function(x,y){return x.d-y.d;});
   for(var k=mom.length-1;k>0;k--)if(+mom[k].d===+mom[k-1].d){mom[k-1].lbl+=' / '+mom[k].lbl;mom.splice(k,1);}
   var a=o.lastPerEuro||beheerLast5050(o.rente),ontbreekt=false,b3=o.box3||'nee';
-  var res=mom.map(function(m){var ink=0,alleAow=true;
+  // o.lastPerEuroOp(mnd) (optioneel): werkelijke last bij aanvang per € hoofdsom van de delen die op het AOW-moment na mnd volle maanden
+  // nog lopen; een deel dat vóór of op dat moment volledig is afgelost telt dan niet mee (0 = niets meer: dat moment beperkt niets);
+  // o.b3bedragOp(mnd) (optioneel): box 3-bedrag van die lopende delen (voor de brutering q1/q3)
+  var aOp=function(m){return (m.mnd>0&&o.lastPerEuroOp)?o.lastPerEuroOp(m.mnd):a;};
+  var res=mom.map(function(m){var ink=0,alleAow=true,aM=aOp(m),b3m=(m.mnd>0&&o.b3bedragOp)?o.b3bedragOp(m.mnd):(+o.b3bedrag||0);
     o.personen.forEach(function(p){var aow=!!(p.aowD&&m.d>=p.aowD);if(aow){if(p.pens==null||isNaN(p.pens))ontbreekt=true;else ink+=Math.max(0,+p.pens);}else{alleAow=false;ink+=Math.max(0,+p.werk||0);}});
     var basis=(paar?'paar_':'alleen_')+(alleAow?'aow':(o.zonderwerk?'zonderwerk':'werk'));
     var tab=(b3==='ja'?'b3_':'')+basis,q=beheerPct(tab,ink,o.rente),q3=beheerPct('b3_'+basis,ink,o.rente);
-    var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=beschikbaar/a;
-    if(b3==='deels'&&(+o.b3bedrag||0)>0&&q3>0)max=max-o.b3bedrag*(q/q3-1); // box 3-deel gebruteerd met q1/q3
+    var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=aM>0?beschikbaar/aM:Infinity;
+    if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3
     return {m:m,ink:ink,tab:tab,q:q,maxLast:maxLast,max:Math.max(0,max)};});
   var b=res[0];res.forEach(function(x){if(x.max<b.max)b=x;});
   var eur=function(v){return '€ '+Math.round(v).toLocaleString('nl-NL');},pc=function(v){return (v*100).toFixed(1).replace('.',',')+'%';};
@@ -888,7 +892,7 @@ function beheerMax(o){
   if(o.rvpRestJr!=null&&o.rvpRestJr<3)meld.push('NHG: gebruik dan de NHG-rente voor 3 jaar vast als die hoger is (gerekend met de ingevulde rente).');
   meld.push(BEHEER_VERMOGEN);
   var tekst='NHG-beheercriteria (V&N D.6): beheertabel, werkelijk inkomen en werkelijke lasten, toetsrente '+(+o.rente).toFixed(3).replace('.',',')+'% (huidige rente). Toetsmomenten: '+
-    res.map(function(x){return x.m.lbl+' '+eur(x.ink)+' (tabel '+x.tab+' '+pc(x.q)+') → '+eur(x.max);}).join('; ')+'. Bepalend toetsmoment: '+b.m.lbl+'.'+(ontbreekt?' LET OP: inkomen vanaf AOW ontbreekt.':'');
+    res.map(function(x){return x.m.lbl+' '+eur(x.ink)+' (tabel '+x.tab+' '+pc(x.q)+') → '+(isFinite(x.max)?eur(x.max):'niet beperkend (lening dan afgelost)');}).join('; ')+'. Bepalend toetsmoment: '+b.m.lbl+'.'+(ontbreekt?' LET OP: inkomen vanaf AOW ontbreekt.':'');
   return {max:ontbreekt?0:b.max,bepalend:b,momenten:res,ontbreekt:ontbreekt,lastPerEuro:a,tekst:tekst,meldingen:meld};
 }
 // Uitkomstblok voor de beheertoets (eigen opmaak, past in elke tool)
@@ -924,7 +928,10 @@ function bereken(){
     const renteB=totD>0?Math.round(delen.reduce((t,d)=>t+d.rente*d.bedrag,0)/totD*1000)/1000:Math.round(defaultTr*100*1000)/1000;
     const rvpJr=delen.filter(d=>d.rvpDatum).map(d=>(d.rvpDatum-new Date())/(365.25*864e5));
     B=beheerMax({personen:[{werk:ink,pens:aowInkLeeg?null:aowInk,aowD:aowDatum}],rente:renteB,
-      lastPerEuro:totD>0?delen.reduce((t,d)=>t+maandlastD(d,0),0)/totD:null,aanname:totD>0?'Werkelijke leningdelen (vorm, looptijd en rente per deel).':null,
+      lastPerEuro:totD>0?delen.reduce((t,d)=>t+maandlastD(d,0),0)/totD:null,
+      // AOW-moment: werkelijke last bij aanvang van de delen die dan nog lopen (deel afgelost vóór of op de AOW-datum telt niet mee)
+      lastPerEuroOp:totD>0?(mnd=>delen.reduce((t,d)=>t+(mnd<d.looptijd*12?maandlastD(d,0):0),0)/totD):null,
+      b3bedragOp:mnd=>delen.reduce((t,d)=>t+(d.box===3&&mnd<d.looptijd*12?d.bedrag:0),0),aanname:totD>0?'Werkelijke leningdelen (vorm, looptijd en rente per deel).':null,
       verpl:0,rvpRestJr:rvpJr.length?Math.min.apply(null,rvpJr):null,box3:totD>0&&b3D>=totD?'ja':(b3D>0?'deels':'nee'),b3bedrag:b3D,
       meldingen:(totD>0?[]:[leesRentePct()?'Geen leningdelen: gerekend met de ingevulde huidige rente van '+renteB.toFixed(3).replace('.',',')+'%.':'LET OP: geen geldige huidige rente ingevuld; gerekend met '+renteB.toFixed(3).replace('.',',')+'% (AFM-minimumtoetsrente). Vul de huidige rente in.']).concat(['De tijdlijn toetst per maand volgens de NHG-beheercriteria: pensioen telt pas mee binnen 3 jaar vóór de AOW-datum, daarna het inkomen vanaf AOW.'])});
     // Beheertoets op een later moment (maand m): werkelijke last per € restschuld van de leningdelen (anders 50/50), huidige rente;
@@ -935,11 +942,14 @@ function bereken(){
       const a=totR>0?delen.reduce((t,d)=>t+maandlastD(d,m),0)/totR:beheerLast5050(renteB);
       // box 3-aandeel van de restschuld op dat moment: volledig box 3 → b3_-tabel zonder brutering; gemengd → box 3-deel × q1/q3
       const b3R=delen.filter(d=>d.box===3).reduce((t,d)=>t+restSchuld(d,m),0), s3=totR>0?b3R/totR:(totD>0?b3D/totD:0), b3all=s3>=1-1e-9;
-      const toets=aow=>{const ti=aow?aowInk:ink,basis='alleen_'+(aow?'aow':'werk'),tab=(b3all?'b3_':'')+basis,q=beheerPct(tab,ti,renteB),q3=beheerPct('b3_'+basis,ti,renteB),
-        fL=!b3all&&s3>0&&q3>0?(1-s3)+s3*q/q3:1,ml=ti*q/12;return {tab,ml,max:Math.max(0,ml)/(a*fL)};};
-      let r=toets(dt>=aowDatum);
+      const toets=(aow,aa,s3x)=>{const ti=aow?aowInk:ink,basis='alleen_'+(aow?'aow':'werk'),tab=(b3all?'b3_':'')+basis,q=beheerPct(tab,ti,renteB),q3=beheerPct('b3_'+basis,ti,renteB),
+        fL=!b3all&&s3x>0&&q3>0?(1-s3x)+s3x*q/q3:1,ml=ti*q/12;return {tab,ml,max:aa>0?Math.max(0,ml)/(aa*fL):Infinity};};
+      let r=toets(dt>=aowDatum,a,s3);
       const tot=(aowDatum.getFullYear()-dt.getFullYear())*12+(aowDatum.getMonth()-dt.getMonth())-(aowDatum.getDate()<dt.getDate()?1:0);
-      if(dt<aowDatum&&tot<=ATD.nhg.beheer.regels.pensioen_binnen_maanden&&!aowInkLeeg){const x=toets(true);if(x.max<r.max)r=x;}
+      // AOW-moment: werkelijke last (op dat moment) van de delen die op de AOW-datum nog lopen; afgelost vóór of op de AOW-datum telt niet mee
+      const loopt=d=>m+tot<d.looptijd*12, aAow=totR>0?delen.reduce((t,d)=>t+(loopt(d)?maandlastD(d,m):0),0)/totR:a;
+      const rA=delen.reduce((t,d)=>t+(loopt(d)?restSchuld(d,m):0),0), s3A=rA>0?delen.reduce((t,d)=>t+(d.box===3&&loopt(d)?restSchuld(d,m):0),0)/rA:s3;
+      if(dt<aowDatum&&tot<=ATD.nhg.beheer.regels.pensioen_binnen_maanden&&!aowInkLeeg){const x=toets(true,aAow,s3A);if(x.max<r.max)r=x;}
       return {mnd:r.ml,norm:/aow$/.test(r.tab)?'AOW':'Huidig',max:Math.round(r.max)};
     };
   }

@@ -746,8 +746,9 @@ function bereken(){
   const adj=x=>Math.max(0,x+alimentatie-alimBetaald);
   const mom=[Object.assign(toets(adj(aowBereikt?pensioenInk:inkomen),TBL_NU),{lbl:'bij aanvang'})];
   const rfAow=methode!=='rest'?1:restF(aowM);
-  // lening vóór of op de AOW-datum volledig afgelost (looptijd voorbij): dat moment toetst niets (ook niet bij de Trhk/NHG-methode)
-  const aowAfgelost=methode!=='beheer'&&aowM>=lt&&vorm!=='af';
+  // lening vóór of op de AOW-datum volledig afgelost (looptijd voorbij): dat moment toetst niets (ook niet bij de Trhk/NHG-methode;
+  // NHG-beheer: werkelijke last bij aanvang, maar een lening die vóór of op de AOW-datum is afgelost telt dan niet mee, ook aflossingsvrij)
+  const aowAfgelost=aowM>=lt&&(methode==='beheer'||vorm!=='af');
   if(aowBinnen&&!aowAfgelost) mom.push(Object.assign(toets(adj(pensioenInk),TBL_AOW,rfAow),{lbl:methode==='beheer'?`AOW-datum (${aowD.toLocaleDateString('nl-NL')}, na ${mAow0} mnd, binnen 3 jaar — NHG-beheercriteria)`:methode==='trhk'?`AOW-datum (${aowD.toLocaleDateString('nl-NL')}, na ${aowM} mnd, Trhk/NHG-methode: hele bedrag)`:`AOW-datum (${aowD.toLocaleDateString('nl-NL')}, na ${aowM} mnd, op de restschuld: restfactor ${rfAow.toFixed(4).replace('.',',')})`}));
   const tNu=mom[0];
   const bindend=mom.reduce((a,b)=>b.maxHyp<a.maxHyp?b:a,mom[0]);
