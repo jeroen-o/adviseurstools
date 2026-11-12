@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<link rel="canonical" href="https://adviseurstools.nl/overige/adrescheck-funda/" data-site>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adrescheck — Funda-link of adres omzetten naar BAG-gegevens</title>
+<meta name="description" content="Plak een Funda-link of typ een adres: bouwjaar, oppervlakte, gebruiksdoel en status uit de BAG, links naar energielabel en WOZ, en snelkoppelingen naar de andere tools.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003057;--navy2:#0b4a7d;--gold:#e5a138;--gold-dk:#b97c14;--gold-lt:#fdf5e7;
+  --bg:#f4f7f9;--white:#fff;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;--soft:#eef4fa;
+  --green:#1a7f4b;--grlt:#e8f6ee;--red:#b42318;--redlt:#fdecea;--orange:#b45309;--orlt:#fef3c7;
+  --shadow:0 2px 14px rgba(0,48,87,.08);
+  --ff:Montserrat,Arial,Helvetica,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--ff);background:var(--bg);color:var(--text);font-size:15px;line-height:1.55;overflow-x:hidden}
+a{color:var(--navy2)}
+.hdr{background:var(--navy);padding:16px max(16px,calc((100% - 1148px)/2));display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hdr-ico{font-size:24px}
+.hdr-title{font-size:20px;font-weight:700;color:#fff;line-height:1.25}
+.hdr-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:2px}
+.hdr-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:18px}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ch .chr{margin-left:auto;font-weight:600;font-size:11.5px;color:rgba(255,255,255,.75)}
+.cb{padding:16px 18px}
+.intro{font-size:13px;color:var(--muted);margin-bottom:12px}
+.sep{font-size:10.5px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.09em;padding-bottom:4px;border-bottom:1px solid var(--border);margin:14px 0 8px}
+.sep:first-child{margin-top:0}
+label{font-size:12.5px;font-weight:600;color:var(--navy)}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.zoekrij{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.zoekrij.met-opt{grid-template-columns:1fr 150px 150px auto}
+input,select{width:100%;min-height:40px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:15px;color:var(--text);background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48,87,.12)}
+.btn{padding:10px 22px;min-height:40px;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#d8942b}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn2{padding:9px 18px;background:#fff;color:var(--navy);border:1.5px solid var(--navy);border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn2:hover{background:#f0f4f8}
+.acties{display:flex;gap:10px;flex-wrap:wrap}
+.ac-wrap{position:relative}
+.sug{position:absolute;left:0;right:0;top:100%;margin-top:2px;background:#fff;border:1.5px solid var(--border);border-radius:8px;box-shadow:var(--shadow);list-style:none;z-index:20;max-height:260px;overflow:auto;display:none}
+.sug li{padding:8px 12px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--bg)}
+.sug li:last-child{border-bottom:none}
+.sug li:hover,.sug li.act{background:var(--soft)}
+.hint{font-size:11.5px;color:var(--muted);margin-top:8px}
+.privacy{font-size:12px;color:var(--text);background:var(--soft);border-left:4px solid var(--navy2);border-radius:0 8px 8px 0;padding:8px 12px;margin-top:12px;line-height:1.5}
+.err{display:none;background:var(--redlt);border-left:4px solid var(--red);border-radius:0 8px 8px 0;color:var(--red);padding:10px 14px;font-size:13px;margin-top:12px}
+.laden{display:none;text-align:center;padding:26px 16px}
+.spin{width:36px;height:36px;border:4px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:sp .9s linear infinite;margin:0 auto 10px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.laden p{font-size:13px;color:var(--muted)}
+.res{display:none;flex-direction:column;gap:18px}
+.banner{background:var(--navy);color:#fff;border-radius:12px;padding:18px 22px;box-shadow:var(--shadow);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.banner .bl{flex:1;min-width:220px}
+.banner .lbl{font-size:11px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.06em}
+.banner .adr{font-size:20px;font-weight:800;line-height:1.25;margin:2px 0}
+.banner .sub{font-size:12.5px;color:rgba(255,255,255,.75)}
+.banner .stats{display:flex;gap:18px;flex-wrap:wrap}
+.banner .st{text-align:right}
+.banner .st .sl{font-size:10.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em}
+.banner .st .sv{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px 16px}
+.kv .k{font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.kv .v{font-size:15px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.kv .v.leeg{color:var(--muted);font-weight:500;font-style:italic;font-size:13px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.tbl td.n,.tbl th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .cat td{background:#f8fafb;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
+.tscroll{overflow-x:auto}
+.bron{font-size:11.5px;color:var(--muted);margin-top:12px;padding-top:8px;border-top:1px dashed var(--border);line-height:1.5}
+.bron a{color:var(--navy2);font-weight:600}
+.pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.p-groen{background:var(--grlt);color:var(--green)}
+.p-oranje{background:var(--orlt);color:var(--orange)}
+.p-rood{background:var(--redlt);color:var(--red)}
+.p-blauw{background:var(--soft);color:var(--navy)}
+.p-grijs{background:#eceff3;color:var(--muted)}
+.melding{background:var(--gold-lt);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;line-height:1.6}
+.melding strong{color:var(--navy)}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+.lnk{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:600;text-decoration:none;background:var(--soft);color:var(--navy);border:1px solid var(--border)}
+.lnk:hover{border-color:var(--navy)}
+.disc{font-size:12px;color:var(--text);background:var(--soft);border-left:4px solid var(--navy2);border-radius:0 8px 8px 0;padding:10px 14px;line-height:1.6}
+.disc strong{color:var(--navy)}
+.foot{background:var(--soft);color:var(--muted);border-top:1px solid var(--border);text-align:center;padding:16px;font-size:11px}
+.foot strong{color:var(--navy)}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:860px){.g2{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:640px){
+  .hdr-title{font-size:17px}.hdr-badge{margin-left:0}
+  .cb{padding:14px}
+  .zoekrij,.zoekrij.met-opt{grid-template-columns:1fr}
+  .btn{width:100%}
+  .banner .stats{width:100%;justify-content:space-between}
+  .banner .st{text-align:left}
+  .banner .adr{font-size:18px}
+  .kv{grid-template-columns:1fr 1fr}
+  .tbl{font-size:12.5px}.tbl th,.tbl td{padding:7px 6px}
+}
+#rapport{display:flex;flex-direction:column;gap:18px}
+.tbl th.n{white-space:normal}
+.tbl td:first-child{hyphens:auto;-webkit-hyphens:auto;overflow-wrap:anywhere}
+
+.afgeleid{font-size:12.5px;background:var(--soft);border-radius:8px;padding:8px 12px;margin-top:10px;display:none}
+.afgeleid code{font-family:inherit;font-weight:700;color:var(--navy)}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.tl{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);background:#fff}
+.tl:hover{border-color:var(--navy);background:#fbfcfd}
+.tl .ti{font-size:20px;line-height:1}
+.tl .tt{font-weight:700;color:var(--navy);font-size:14px}
+.tl .td{font-size:12px;color:var(--muted);line-height:1.4}
+.tl .tv{font-size:11px;font-weight:700;color:var(--green);margin-top:3px}
+.tl .tv.nee{color:var(--muted)}
+.bronrij td:last-child{font-size:11.5px;color:var(--muted)}
+.bronrij td:last-child a{font-weight:600}
+.bron-m{display:none;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.bron-m a{font-weight:600}
+@media(max-width:640px){.tbl.bronrij td:last-child{display:none}.tbl.bronrij th:last-child{display:none}.bron-m{display:block}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <span class="hdr-ico">🔗</span>
+  <div>
+    <div class="hdr-title">Adrescheck</div>
+    <div class="hdr-sub">Van Funda-link of adres naar BAG-gegevens, energielabel, WOZ en de juiste tools</div>
+  </div>
+  <div class="hdr-badge">BAG · PDOK</div>
+</header>
+
+<main class="wrap">
+  <section class="card noprint">
+    <div class="ch">🔍 Funda-link of adres</div>
+    <div class="cb">
+      <p class="intro">Plak de link van een woning op Funda, of typ een adres. Uit een Funda-link lezen we alleen het adres dat in de link zelf staat; Funda wordt niet bezocht of uitgelezen.</p>
+      <div class="zoekrij">
+        <div class="fl ac-wrap">
+          <label for="adres">Funda-link of adres</label>
+          <input type="text" id="adres" placeholder="https://www.funda.nl/detail/koop/… of Stationsplein 1 Amersfoort" autocomplete="off">
+          <ul class="sug" id="sug"></ul>
+        </div>
+        <button class="btn" id="zoekBtn">Check adres →</button>
+      </div>
+      <div class="afgeleid" id="afgeleid"></div>
+      <div class="privacy">🔒 <strong>Privacy:</strong> alleen het adres gaat rechtstreeks vanuit uw browser naar PDOK (Kadaster: Locatieserver en BAG). De Funda-link verlaat uw browser niet. Adviseurstools.nl slaat niets op.</div>
+      <div class="err" id="err"></div>
+    </div>
+  </section>
+
+  <div class="laden card" id="laden"><div class="spin"></div><p id="ladenTxt">Gegevens ophalen…</p></div>
+
+  <div class="res" id="res">
+    <div id="rapport"></div>
+    <div class="acties noprint">
+      <button class="btn2" id="printBtn">🖨️ Rapport afdrukken</button>
+      <button class="btn2" id="nieuwBtn">← Ander adres</button>
+    </div>
+    <div class="disc"><strong>Disclaimer:</strong> Gegevens komen uit de Basisregistratie Adressen en Gebouwen (BAG) via PDOK. De BAG-oppervlakte is de gebruiksoppervlakte volgens de gemeente en kan afwijken van de advertentie of een eigen NEN 2580-meting. Energielabel en WOZ-waarde zijn niet als open dienst zonder sleutel beschikbaar; controleer die via de links. Geen financieel advies. Opgehaald op <span id="datum"></span>.</div>
+  </div>
+</main>
+<footer class="foot"><strong>Adrescheck</strong> · Adviseurstools.nl · Open data: PDOK · BAG (Kadaster) · geen API-sleutel</footer>
+
+<script>
+// ── Gedeelde hulpfuncties (adviseurstools.nl) ─────────────────────
+const LS = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/';
+const $ = id => document.getElementById(id);
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function nl(n,dec){ if(n==null||isNaN(n)) return '–'; return Number(n).toLocaleString('nl-NL',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0}); }
+function euro(n){ if(n==null||isNaN(n)) return '–'; return '€ '+Number(n).toLocaleString('nl-NL',{maximumFractionDigits:0}); }
+function datumNL(s){ if(!s) return '–'; const d=new Date(s); if(isNaN(d)) return esc(s); return d.toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}); }
+function vandaag(){ return new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}); }
+function bron(items){ return '<div class="bron">Bron: '+items.map(b=>b.url?'<a href="'+esc(b.url)+'" target="_blank" rel="noopener">'+esc(b.naam)+'</a>'+(b.extra?' ('+esc(b.extra)+')':''):esc(b.naam)).join(' · ')+'</div>'; }
+async function haal(url, opts, ms){
+  const r = await fetch(url, Object.assign({signal:AbortSignal.timeout(ms||15000)}, opts||{}));
+  if(!r.ok) throw new Error('HTTP '+r.status+' van '+new URL(url).host);
+  return r;
+}
+async function haalJSON(url, ms){ return (await haal(url,null,ms)).json(); }
+function foutTekst(e, host){
+  const m = (e && e.name==='TimeoutError') ? 'geen antwoord binnen de tijd' : (e && e.message ? e.message : 'onbekende fout');
+  return host+' — '+m;
+}
+function parsePunt(wkt){ const m=String(wkt||'').match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/); return m?[parseFloat(m[1]),parseFloat(m[2])]:null; }
+function afstandM(lat1,lon1,lat2,lon2){ const R=6371000,t=Math.PI/180; const a=Math.sin((lat2-lat1)*t/2)**2+Math.cos(lat1*t)*Math.cos(lat2*t)*Math.sin((lon2-lon1)*t/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
+
+// PDOK Locatieserver: doc → adresobject
+function adresUitDoc(doc){
+  const ll=parsePunt(doc.centroide_ll), rd=parsePunt(doc.centroide_rd);
+  const toev=[doc.huisletter||'', doc.huisnummertoevoeging||''].join(' ').trim();
+  return { doc, weergave:doc.weergavenaam, straat:doc.straatnaam, huisnummer:doc.huisnummer, huisletter:doc.huisletter||'',
+    toevoeging:doc.huisnummertoevoeging||'', toe:toev, postcode:doc.postcode, woonplaats:doc.woonplaatsnaam,
+    gemeente:doc.gemeentenaam, gemeentecode:doc.gemeentecode, provincie:doc.provincienaam, buurtcode:doc.buurtcode,
+    buurtnaam:doc.buurtnaam, wijkcode:doc.wijkcode, wijknaam:doc.wijknaam, vboId:doc.adresseerbaarobject_id,
+    naId:doc.nummeraanduiding_id, perceel:(doc.gekoppeld_perceel||[]), lon:ll&&ll[0], lat:ll&&ll[1], x:rd&&rd[0], y:rd&&rd[1] };
+}
+async function zoekAdresVrij(q){
+  const d = await haalJSON(LS+'free?q='+encodeURIComponent(q)+'&fq=type:adres&rows=1&fl=*');
+  const doc = d.response && d.response.docs && d.response.docs[0];
+  return doc ? adresUitDoc(doc) : null;
+}
+async function zoekAdresId(id){
+  const d = await haalJSON(LS+'lookup?id='+encodeURIComponent(id)+'&fl=*');
+  const doc = d.response && d.response.docs && d.response.docs[0];
+  return doc ? adresUitDoc(doc) : null;
+}
+
+// Autocomplete op een invoerveld (PDOK suggest)
+function koppelSuggest(inp, lijst, opKies){
+  let timer=null, items=[], act=-1;
+  inp._gekozenId=null;
+  function sluit(){ lijst.style.display='none'; act=-1; }
+  function teken(){
+    lijst.innerHTML = items.map((it,i)=>'<li data-i="'+i+'"'+(i===act?' class="act"':'')+'>'+esc(it.weergavenaam)+'</li>').join('');
+    lijst.style.display = items.length ? 'block' : 'none';
+  }
+  inp.addEventListener('input', ()=>{
+    inp._gekozenId=null; clearTimeout(timer);
+    const q=inp.value.trim();
+    if(q.length<3 || /^https?:/i.test(q) || /funda\./i.test(q)){ items=[]; sluit(); return; }
+    timer=setTimeout(async()=>{
+      try{
+        const d=await haalJSON(LS+'suggest?q='+encodeURIComponent(q)+'&fq=type:adres&rows=7',8000);
+        items=(d.response&&d.response.docs)||[]; act=-1; teken();
+      }catch(e){ items=[]; sluit(); }
+    },220);
+  });
+  inp.addEventListener('keydown', e=>{
+    if(lijst.style.display==='block' && items.length){
+      if(e.key==='ArrowDown'){ act=Math.min(items.length-1,act+1); teken(); e.preventDefault(); return; }
+      if(e.key==='ArrowUp'){ act=Math.max(0,act-1); teken(); e.preventDefault(); return; }
+      if(e.key==='Enter' && act>=0){ kies(act); e.preventDefault(); return; }
+      if(e.key==='Escape'){ sluit(); return; }
+    }
+    if(e.key==='Enter'){ sluit(); opKies(); }
+  });
+  lijst.addEventListener('mousedown', e=>{ const li=e.target.closest('li'); if(li){ e.preventDefault(); kies(+li.dataset.i); } });
+  inp.addEventListener('blur', ()=>setTimeout(sluit,150));
+  function kies(i){ const it=items[i]; if(!it) return; inp.value=it.weergavenaam; inp._gekozenId=it.id; sluit(); opKies(); }
+}
+
+// Print via window.open (werkt ook binnen de iframe van de site)
+function printRapport(titel, html, extraCss){
+  const w = window.open('', '_blank');
+  if(!w){ alert('De printweergave is geblokkeerd door een pop-upblokkering. Sta pop-ups toe voor deze site.'); return; }
+  w.document.write('<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>'+esc(titel)+'</title><style>'+
+  'body{font-family:Montserrat,Arial,Helvetica,sans-serif;margin:0;font-size:9.5pt;color:#1d2632;line-height:1.45}'+
+  '.ph{border-bottom:3px solid #003057;padding-bottom:6px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-end}'+
+  '.ph h1{color:#003057;font-size:15pt;margin:0}.ph span{font-size:8pt;color:#5f6b7a}'+
+  '.card{border:1px solid #d1dce5;border-radius:6px;margin-bottom:9px;page-break-inside:avoid;overflow:hidden}'+
+  '.ch{background:#003057;color:#fff;padding:5px 10px;font-weight:700;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}.ch .chr{float:right;font-weight:400;font-size:8pt}'+
+  '.cb{padding:8px 10px}.banner{background:#003057;color:#fff;padding:10px 12px;border-radius:6px;margin-bottom:9px;-webkit-print-color-adjust:exact;print-color-adjust:exact;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}'+
+  '.banner .lbl,.banner .sl{font-size:7.5pt;opacity:.75;text-transform:uppercase}.banner .adr{font-size:13pt;font-weight:800}.banner .sub{font-size:8pt;opacity:.85}.banner .stats{display:flex;gap:14px}.banner .sv{font-size:13pt;font-weight:800}'+
+  '.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:5px 10px}.kv .k{font-size:7pt;color:#5f6b7a;text-transform:uppercase;font-weight:700}.kv .v{font-weight:700;color:#003057}'+
+  '.tbl{width:100%;border-collapse:collapse;font-size:8.5pt}.tbl th{background:#003057;color:#fff;text-align:left;padding:3px 6px;font-size:7.5pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}.tbl td{padding:3px 6px;border-bottom:1px solid #e3e9ef;vertical-align:top}.tbl .n{text-align:right}'+
+  '.tbl .cat td{background:#f4f7f9;font-weight:700;font-size:7.5pt;text-transform:uppercase}'+
+  '.bron{font-size:7.5pt;color:#5f6b7a;margin-top:5px;border-top:1px dashed #d1dce5;padding-top:3px}a{color:#0b4a7d;text-decoration:none}'+
+  '.pill{display:inline-block;padding:0 6px;border-radius:8px;font-size:7.5pt;font-weight:700;border:1px solid #d1dce5}'+
+  '.melding,.disc,.privacy{font-size:8pt;border-left:3px solid #e5a138;padding:5px 8px;margin:6px 0;background:#fdf5e7;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+  '.bron-m{display:none}.noprint,.acties,button,.filters,.lnk-only{display:none!important}.links{display:block}.lnk{display:block;font-size:8pt;margin:2px 0}'+
+  'svg{max-width:100%;height:auto}.g2{display:block}.tscroll{overflow:visible}'+
+  '*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{margin:14mm}'+(extraCss||'')+'</style></head><body><div class="ph"><h1>'+esc(titel)+'</h1><span>Adviseurstools.nl · '+esc(vandaag())+'</span></div>'+html+
+  '<p style="font-size:7.5pt;color:#5f6b7a;margin-top:10px">Indicatief overzicht op basis van openbare overheidsdata. Geen financieel advies. Controleer gegevens altijd bij de genoemde bron.</p></body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(()=>{ try{ w.print(); }catch(e){} }, 400);
+}
+
+
+const BAG = 'https://api.pdok.nl/kadaster/bag/ogc/v2/collections/';
+const TYPEN = ['huis','appartement','parkeergelegenheid','bouwgrond','woonhuis','woonboot','ligplaats','object','opslagruimte','garage','berging','standplaats'];
+
+// Funda-link → zoekterm (alleen de URL zelf, Funda wordt niet aangeroepen)
+function uitFundaLink(tekst){
+  let u; try{ u=new URL(tekst.trim()); }catch(e){ return null; }
+  if(!/(^|\.)funda\.nl$/i.test(u.hostname)) return null;
+  const seg=u.pathname.split('/').filter(Boolean).map(s=>decodeURIComponent(s).toLowerCase());
+  let i=seg.findIndex(s=>s==='koop'||s==='huur');
+  if(i<0||seg.length<i+3) return {fout:'In deze Funda-link staat geen adres. Gebruik de link van de woningpagina zelf.'};
+  const plaats=seg[i+1].replace(/-/g,' ');
+  let delen=seg[i+2].split('-');
+  if(TYPEN.indexOf(delen[0])>=0) delen=delen.slice(1);
+  delen=delen.filter(d=>!/^\d{6,}$/.test(d));
+  const k=delen.findIndex(d=>/^\d/.test(d));
+  if(k<=0) return {fout:'Uit deze Funda-link kon geen straat en huisnummer worden gehaald. Typ het adres zelf in.'};
+  const straat=delen.slice(0,k).join(' ');
+  const hn=parseInt(delen[k]);
+  const rest=(delen[k].replace(/^\d+/,'')+' '+delen.slice(k+1).join(' ')).trim();
+  return { straat, huisnummer:hn, toev:rest, plaats, zoek:(straat+' '+hn+(rest?' '+rest:'')+' '+plaats).replace(/\s+/g,' ') };
+}
+async function zoekFunda(f){
+  const d=await haalJSON(LS+'free?q='+encodeURIComponent(f.zoek)+'&fq=type:adres&rows=15&fl=*');
+  const docs=(d.response&&d.response.docs)||[];
+  const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const kand=docs.filter(x=>x.huisnummer===f.huisnummer && norm(x.woonplaatsnaam+x.gemeentenaam).indexOf(norm(f.plaats))>=0 || x.huisnummer===f.huisnummer && norm(x.woonplaatsnaam)===norm(f.plaats));
+  const pool=kand.length?kand:docs.filter(x=>x.huisnummer===f.huisnummer);
+  if(!pool.length) return null;
+  const t=norm(f.toev);
+  const best=pool.find(x=>norm((x.huisletter||'')+(x.huisnummertoevoeging||''))===t) || pool.find(x=>!x.huisletter&&!x.huisnummertoevoeging) || pool[0];
+  return adresUitDoc(best);
+}
+
+async function haalBag(vboId){
+  const d=await haalJSON(BAG+'verblijfsobject/items?f=json&identificatie='+encodeURIComponent(vboId),15000);
+  const v=d.features&&d.features[0]&&d.features[0].properties;
+  if(!v) return null;
+  const panden=await Promise.all((v['pand.href']||[]).slice(0,4).map(async h=>{
+    try{ const p=await haalJSON(h+(h.indexOf('?')>=0?'&':'?')+'f=json',15000); return p.properties; }catch(e){ return {fout:e}; }
+  }));
+  return {v, panden};
+}
+
+function rij(k,v,b){ return '<tr><td>'+k+'</td><td class="n" style="text-align:left;white-space:normal"><b>'+v+'</b><div class="bron-m">bron: '+b+'</div></td><td>'+b+'</td></tr>'; }
+function bl(naam,url){ return '<a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(naam)+'</a>'; }
+
+let laatsteAdres=null;
+async function start(){
+  const inp=$('adres'), q=inp.value.trim();
+  $('err').style.display='none'; $('afgeleid').style.display='none';
+  if(q.length<3){ toonFout('Plak een Funda-link of vul een adres in.'); return; }
+  $('res').style.display='none'; $('laden').style.display='block'; $('zoekBtn').disabled=true;
+  try{
+    let a=null, funda=null;
+    $('ladenTxt').textContent='Adres zoeken bij PDOK Locatieserver…';
+    if(/funda\./i.test(q)){
+      funda=uitFundaLink(/^https?:/i.test(q)?q:'https://'+q);
+      if(!funda) throw new Error('Dit lijkt geen geldige Funda-link. Controleer de link of typ het adres.');
+      if(funda.fout) throw new Error(funda.fout);
+      $('afgeleid').innerHTML='Adres uit de link: <code>'+esc(funda.zoek)+'</code>'; $('afgeleid').style.display='block';
+      try{ a=await zoekFunda(funda); }catch(e){ throw new Error('Adres zoeken mislukt: '+foutTekst(e,'api.pdok.nl')); }
+      if(!a) throw new Error('Het adres "'+funda.zoek+'" uit de link is niet gevonden in de BAG. Typ het adres zelf in.');
+    }else{
+      try{ a = inp._gekozenId ? await zoekAdresId(inp._gekozenId) : await zoekAdresVrij(q); }
+      catch(e){ throw new Error('Adres zoeken mislukt: '+foutTekst(e,'api.pdok.nl')); }
+      if(!a) throw new Error('Geen adres gevonden voor "'+q+'".');
+      inp.value=a.weergave;
+      try{ history.replaceState({},'','?adres='+encodeURIComponent(a.weergave)); }catch(e){}
+    }
+    laatsteAdres=a;
+    $('ladenTxt').textContent='BAG-gegevens ophalen…';
+    let bag=null, bagFout=null;
+    try{ bag=await haalBag(a.vboId); if(!bag) bagFout='geen verblijfsobject gevonden bij id '+a.vboId; }catch(e){ bagFout=foutTekst(e,'api.pdok.nl (BAG)'); }
+    const v=bag&&bag.v, panden=bag?bag.panden.filter(p=>p&&!p.fout):[];
+    const bj=panden.length?Math.min(...panden.map(p=>p.bouwjaar).filter(Boolean)):null;
+    const nVbo=panden.length?Math.max(...panden.map(p=>p.aantal_verblijfsobjecten||0)):null;
+    const bagUrl='https://bagviewer.kadaster.nl/?searchQuery='+encodeURIComponent(a.weergave);
+    const vboUrl=v?BAG+'verblijfsobject/items?f=html&identificatie='+a.vboId:bagUrl;
+    const wozUrl='https://www.wozwaardeloket.nl/?locatie='+encodeURIComponent(a.postcode+' '+a.huisnummer+(a.toe?' '+a.toe:''));
+
+    let h='<div class="banner"><div class="bl"><div class="lbl">'+(funda?'Adres uit Funda-link':'Adres')+'</div><div class="adr">'+esc(a.weergave)+'</div><div class="sub">'+esc(a.buurtnaam||'')+' · gemeente '+esc(a.gemeente||'')+' · '+esc(a.provincie||'')+'</div></div>'+
+      '<div class="stats"><div class="st"><div class="sl">Bouwjaar</div><div class="sv">'+(bj||'–')+'</div></div><div class="st"><div class="sl">Oppervlakte</div><div class="sv">'+(v&&v.oppervlakte?nl(v.oppervlakte)+' m²':'–')+'</div></div></div></div>';
+    if(funda){
+      const ok=String(a.huisnummer)===String(funda.huisnummer);
+      h+='<div class="melding"><strong>Controleer de koppeling.</strong> Uit de link is <b>'+esc(funda.zoek)+'</b> gelezen; dat is gekoppeld aan het BAG-adres <b>'+esc(a.weergave)+'</b>.'+(ok?'':' Het huisnummer wijkt af.')+' Een Funda-link bevat niet altijd de volledige toevoeging.</div>';
+    }
+    // BAG
+    h+='<section class="card"><div class="ch">🏠 Woninggegevens uit de BAG</div><div class="cb">';
+    if(bagFout) h+='<div class="melding"><strong>BAG niet opgehaald.</strong> '+esc(bagFout)+'. Bekijk het adres in de '+bl('BAG-viewer van het Kadaster',bagUrl)+'.</div>';
+    const bBag=bl('BAG verblijfsobject',vboUrl);
+    h+='<div class="tscroll"><table class="tbl bronrij"><tr><th>Gegeven</th><th>Waarde</th><th>Bron</th></tr>';
+    h+=rij('Adres',esc(a.weergave),bl('PDOK Locatieserver',LS+'free?q='+encodeURIComponent(a.weergave)+'&fq=type:adres&rows=1'));
+    if(v){
+      h+=rij('Gebruiksdoel',esc(v.gebruiksdoel||'–'),bBag);
+      h+=rij('Gebruiksoppervlakte',v.oppervlakte?nl(v.oppervlakte)+' m²':'–',bBag);
+      h+=rij('Status verblijfsobject',esc(v.status||'–'),bBag);
+      panden.forEach((p,i)=>{
+        const pb=bl('BAG pand '+p.identificatie,BAG+'pand/items?f=html&identificatie='+p.identificatie);
+        const pre=panden.length>1?'Pand '+(i+1)+': ':'';
+        h+=rij(pre+'Bouwjaar',esc(p.bouwjaar||'–'),pb);
+        h+=rij(pre+'Status pand',esc(p.status||'–'),pb);
+        h+=rij(pre+'Verblijfsobjecten in het pand',nl(p.aantal_verblijfsobjecten)+(p.aantal_verblijfsobjecten>1?' <span class="hint">(gedeeld pand, bijv. appartementen of bovenwoning)</span>':' <span class="hint">(één object in het pand)</span>'),pb);
+      });
+    }
+    h+=rij('Postcode en huisnummer',esc(a.postcode+' '+a.huisnummer+(a.toe?' '+a.toe:'')),bl('PDOK Locatieserver',LS+'ui/'));
+    h+=rij('Kadastraal perceel',esc(a.perceel.join(', ')||'–'),bl('PDOK Locatieserver (gekoppeld perceel)',LS+'ui/'));
+    h+=rij('Buurt / wijk',esc((a.buurtnaam||'–')+' / '+(a.wijknaam||'–')),bl('PDOK Locatieserver',LS+'ui/'));
+    h+=rij('BAG-identificaties','<span style="font-weight:500;font-size:12px">vbo '+esc(a.vboId)+'<br>num. '+esc(a.naId)+'</span>',bl('BAG-viewer',bagUrl));
+    h+='</table></div>'+bron([{naam:'Basisregistratie Adressen en Gebouwen (Kadaster) via PDOK OGC API', url:'https://api.pdok.nl/kadaster/bag/ogc/v2'},{naam:'PDOK Locatieserver', url:LS+'ui/'}])+'</div></section>';
+    // Energielabel en WOZ
+    h+='<div class="g2"><section class="card"><div class="ch">⚡ Energielabel</div><div class="cb">'+
+      '<p class="intro" style="margin-bottom:10px">Het energielabel staat in EP-online (RVO). De open API van EP-online vraagt een persoonlijke sleutel en mag niet rechtstreeks vanuit de browser worden aangeroepen; daarom tonen we hier geen label maar een link.</p>'+
+      '<div class="links"><a class="lnk" href="https://www.ep-online.nl/" target="_blank" rel="noopener">Zoek op EP-online: '+esc(a.postcode+' '+a.huisnummer+(a.toe?' '+a.toe:''))+' ↗</a></div>'+
+      bron([{naam:'EP-online (RVO)', url:'https://www.ep-online.nl/'}])+'</div></section>'+
+      '<section class="card"><div class="ch">🏷️ WOZ-waarde</div><div class="cb">'+
+      '<p class="intro" style="margin-bottom:10px">De WOZ-waarden staan in het WOZ-waardeloket. Die dienst staat geen aanroepen vanaf andere websites toe; de link opent het loket met dit adres.</p>'+
+      '<div class="links"><a class="lnk" href="'+esc(wozUrl)+'" target="_blank" rel="noopener">Open WOZ-waardeloket ↗</a></div>'+
+      bron([{naam:'WOZ-waardeloket (Waarderingskamer)', url:'https://www.wozwaardeloket.nl/'}])+'</div></section></div>';
+    // Snelkoppelingen
+    const pcHn='pc='+encodeURIComponent(a.postcode)+'&hn='+encodeURIComponent(a.huisnummer)+(a.toe?'&toe='+encodeURIComponent(a.toe.replace(/\s+/g,'')):'')+(bj?'&bj='+bj:'');
+    const adr=encodeURIComponent(a.weergave);
+    const T=[
+      ['🌍','Klimaatcijfer','Klimaatrisico\'s van dit adres','overige__klimaatcijfer-nl.html?adres='+adr+(bj?'&bj='+bj:''),true],
+      ['🧱','Funderingscijfer','Indicatief funderingsrisico','overige__funderingscijfer.html?'+pcHn,true],
+      ['🏡','Woningcijfer','Bouwkundige en omgevingsscore','overige__woningcijfer-nl.html?adres='+adr,true],
+      ['🏘️','Buurtscore','Leefbaarheid, voorzieningen, kerncijfers','overige__buurtscore.html?adres='+adr,true],
+      ['🏗️','Bouwplannen en vergunningen','Bekendmakingen en geluid in de buurt','overige__bouwplannen-vergunningen.html?adres='+adr,true],
+      ['💶','Kosten koper','Overdrachtsbelasting, notaris en eigen geld','../hypotheek/kosten-koper-calculator/',false],
+      ['📐','Maximale hypotheek','Leencapaciteit volgens de normen','../hypotheek/maximale-hypotheek-calculator-2026/',false],
+    ];
+    h+='<section class="card noprint"><div class="ch">🧰 Verder met dit adres</div><div class="cb"><div class="tools">'+
+      T.map(t=>'<a class="tl" href="'+esc(t[3])+'" target="'+(t[4]?'_blank':'_top')+'" rel="noopener"><span class="ti">'+t[0]+'</span><span><span class="tt">'+t[1]+'</span><br><span class="td">'+t[2]+'</span><div class="tv'+(t[4]?'':' nee')+'">'+(t[4]?'✓ adres'+(t[1]==='Funderingscijfer'||t[1]==='Klimaatcijfer'?(bj?' en bouwjaar':''):'')+' al ingevuld':'adres niet nodig; vul koopsom en inkomen in')+'</div></span></a>').join('')+
+      '</div></div></section>';
+    h+='<section class="card"><div class="ch">🔗 Controleren bij de bron</div><div class="cb"><div class="links">'+
+      '<a class="lnk" href="'+esc(bagUrl)+'" target="_blank" rel="noopener">BAG-viewer Kadaster ↗</a>'+
+      '<a class="lnk" href="'+esc(wozUrl)+'" target="_blank" rel="noopener">WOZ-waardeloket ↗</a>'+
+      '<a class="lnk" href="https://www.ep-online.nl/" target="_blank" rel="noopener">EP-online energielabel ↗</a>'+
+      (funda?'<a class="lnk" href="'+esc(/^https?:/i.test(q)?q:'https://'+q)+'" target="_blank" rel="noopener noreferrer">Terug naar de advertentie ↗</a>':'')+
+      '</div></div></section>';
+    $('rapport').innerHTML=h;
+    $('datum').textContent=vandaag();
+    $('laden').style.display='none'; $('res').style.display='flex';
+  }catch(e){
+    $('laden').style.display='none'; toonFout(e.message||String(e));
+  }finally{ $('zoekBtn').disabled=false; }
+}
+function toonFout(m){ const el=$('err'); el.textContent=m; el.style.display='block'; }
+
+koppelSuggest($('adres'), $('sug'), start);
+$('zoekBtn').addEventListener('click', start);
+$('printBtn').addEventListener('click', ()=>printRapport('Adrescheck — '+(laatsteAdres?laatsteAdres.weergave:''), $('rapport').innerHTML+'<div class="disc">'+$('res').querySelector('.disc').innerHTML+'</div>', '.hint,.intro{font-size:8pt;color:#5f6b7a}.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}'));
+$('nieuwBtn').addEventListener('click', ()=>{ $('res').style.display='none'; $('afgeleid').style.display='none'; $('adres').value=''; $('adres').focus(); try{history.replaceState({},'',location.pathname);}catch(e){} });
+try{ const p=new URLSearchParams(location.search).get('adres'); if(p){ $('adres').value=p; setTimeout(start,200); } }catch(e){}
+</script>
+</body>
+</html>

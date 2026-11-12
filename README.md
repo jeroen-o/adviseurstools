@@ -47,3 +47,10 @@ Alle leennormen, NHG-grenzen en fiscale waarden staan in `data/normen.json`.
    - de rekenbibliotheek `assets/normen.js` (`window.ATNormen`, zie `scripts/normen-lib.js`);
    - elke tool met een blok `<script id="at-normen"></script>`: daarin wordt de bibliotheek met de actuele normen gezet, zodat de tool een losstaand bestand blijft.
 3. Daarna de gebruikelijke stappen (opmaak, zoekindex, SEO) en committen.
+
+## Woningdata per gemeente (jaarlijks verversen)
+De tools "Waar kan ik kopen?", "Woonlasten per gemeente" en "Biedindicatie" (`tools/hypotheek__waar-kan-ik-kopen.html`, `tools/hypotheek__woonlasten-per-gemeente.html`, `tools/hypotheek__biedindicatie.html`) hebben de data vast in het bestand, in een blok `<script id="at-woningdata"></script>`. Tijdens gebruik is er geen API-aanroep.
+- Verversen (één commando, alleen standaard-Python): `python3 scripts/maak-woningdata.py`. Proef zonder schrijven: `--droog`.
+- Het script haalt op: CBS 83625NED (gemiddelde verkoopprijs per gemeente, recentste volledige jaar), 85792NED (prijsindex per provincie en de vier grote steden, per kwartaal), 85036NED (gemiddelde WOZ koopwoningen), "Gebieden in Nederland <jaar>" (gemeente → provincie), 85140NED en 85592NED (energieverbruik en energietarieven) en de databestanden van de COELO Atlas van de lokale lasten (gemeenten, waterschappen, standaardhuishoudens; het recentste jaar dat online staat).
+- Het controleert de aantallen, zet per tool alleen de benodigde data in het blok en vult ook het blok `at-normen` met `assets/normen.js`.
+- Beste moment: na de nieuwe COELO-atlas (voorjaar) en na de CBS-jaarcijfers verkoopprijzen (februari). Daarna de gebruikelijke stappen (opmaak, zoekindex, SEO) en committen.

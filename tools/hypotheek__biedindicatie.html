@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<link rel="canonical" href="https://adviseurstools.nl/hypotheek/biedindicatie/" data-site>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biedindicatie</title>
+<meta name="description" content="Voorbereiding op een bod: de WOZ-waarde bijgewerkt met de regionale prijsindex (CBS/Kadaster), afgezet tegen de vraagprijs en de gemiddelde verkoopprijs in de gemeente. Toont een bandbreedte met uitleg. Geen biedadvies.">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="basecss">
+:root{
+  --navy:#003057;--navy2:#0b4a7d;--gold:#e5a138;--gold-dk:#b97c14;--gold-lt:#fdf5e7;
+  --bg:#f4f7f9;--white:#fff;--text:#1d2632;--muted:#5f6b7a;--border:#d1dce5;
+  --green:#1a7f4b;--grlt:#e8f6ee;--red:#b42318;--redlt:#fdecea;--orange:#b45309;--orlt:#fef3c7;
+  --shadow:0 2px 14px rgba(0,48,87,.08);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Montserrat,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.55}
+.hdr{background:var(--navy);color:#fff;padding:16px}
+.hdr-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hdr-title{font-size:20px;font-weight:700;color:#fff;line-height:1.25}
+.hdr-sub{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:2px}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.sticky{position:sticky;top:12px}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.ch{background:var(--navy);color:#fff;padding:11px 18px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.ch .chs{font-weight:500;font-size:11.5px;color:rgba(255,255,255,.75)}
+.cb{padding:16px 18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.r3{grid-template-columns:1fr 1fr 1fr}
+.row.r1{grid-template-columns:1fr}
+.sep{grid-column:1/-1;font-size:10.5px;font-weight:700;color:var(--gold-dk);text-transform:uppercase;letter-spacing:.09em;padding-bottom:4px;border-bottom:1px solid var(--border);margin:4px 0 10px}
+.fl{display:flex;flex-direction:column;gap:4px;min-width:0}
+label,.lbl{font-size:12.5px;font-weight:600;color:var(--navy)}
+.hint{font-size:11px;color:var(--muted);line-height:1.4}
+.iw{position:relative}
+.iw .px,.iw .sx{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--muted);pointer-events:none}
+.iw .px{left:10px}.iw .sx{right:10px}
+input,select{width:100%;min-height:40px;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:15px;color:var(--text);background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,48,87,.12)}
+.iw input.eur{padding-left:26px}
+.iw input.pct{padding-right:30px}
+.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer}
+.chk input{width:18px;height:18px;min-height:0;margin:2px 0 0;flex-shrink:0;accent-color:var(--navy)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:none;border-radius:8px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--navy);color:#fff}
+.btn:hover{background:var(--navy2)}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.btn.gold{background:var(--gold);color:var(--navy)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#f0f4f8;border-radius:10px;padding:12px 14px;border-left:4px solid var(--navy)}
+.kpi.g{border-left-color:var(--gold)}.kpi.ok{border-left-color:var(--green)}.kpi.bad{border-left-color:var(--red)}
+.kpi .kl{overflow-wrap:anywhere;hyphens:auto;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.kpi .kv{font-size:21px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:3px;word-break:break-word}
+.kpi .ks{font-size:11px;color:var(--muted);margin-top:2px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+table.t td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+table.t td.n,table.t th.n{text-align:right;white-space:nowrap}
+table.t tr.tot td{font-weight:700;background:#eef3f8;color:var(--navy);border-top:2px solid var(--border)}
+table.t tr.sub td{background:#f8fafb;font-weight:700;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.04em}
+.note{border-radius:0 8px 8px 0;padding:10px 14px;font-size:12.5px;line-height:1.6;margin:10px 0}
+.note.info{background:#eef4fa;border-left:4px solid var(--navy)}
+.note.warn{background:var(--orlt);border-left:4px solid var(--orange)}
+.note.bad{background:var(--redlt);border-left:4px solid var(--red)}
+.note.ok{background:var(--grlt);border-left:4px solid var(--green)}
+.note.gold{background:var(--gold-lt);border-left:4px solid var(--gold)}
+.pill{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+.pill.b1{background:#dbe8f5;color:var(--navy)}.pill.b3{background:var(--orlt);color:var(--orange)}.pill.ov{background:var(--grlt);color:var(--green)}.pill.no{background:var(--redlt);color:var(--red)}
+.bar{display:flex;height:26px;border-radius:6px;overflow:hidden;background:#e3e9ef;margin:4px 0 8px}
+.bar div{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;background:var(--c)}
+details.uitleg{border:1px solid var(--border);border-radius:10px;background:#fff}
+details.uitleg summary{cursor:pointer;padding:12px 16px;font-weight:700;color:var(--navy);font-size:14px}
+details.uitleg .in{padding:0 16px 14px;font-size:13px;line-height:1.65}
+details.uitleg .in h4{margin:12px 0 4px;font-size:13px;color:var(--navy)}
+details.uitleg .in ul{margin:4px 0 8px;padding-left:20px}
+.src{font-size:11.5px;color:var(--muted);word-break:break-word}
+.src a{color:var(--navy2)}
+.disc{background:var(--navy);color:#fff;border-radius:12px;padding:14px 18px;font-size:12.5px;line-height:1.6}
+.disc strong{color:var(--gold)}
+.muted{color:var(--muted)}
+.kopers{display:flex;flex-direction:column;gap:12px}
+.koper{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fbfcfd}
+.koper h4{margin:0 0 8px;font-size:13.5px;color:var(--navy);display:flex;justify-content:space-between;align-items:center}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.sticky{position:static}}
+@media(max-width:560px){.row,.row.r3{grid-template-columns:1fr}.hdr-title{font-size:17px}.badge{margin-left:0}.kpi .kv{font-size:19px}.cb{padding:14px}}
+@media print{.noprint{display:none!important}body{background:#fff}.card{box-shadow:none}}
+table.t td.neg{color:var(--green)}
+#kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+.band{position:relative;height:62px;margin:4px 4px 2px}
+.band .as{position:absolute;left:0;right:0;top:26px;height:4px;background:#e3e9ef;border-radius:2px}
+.band .vlak{position:absolute;top:18px;height:20px;background:var(--gold-lt);border:2px solid var(--gold);border-radius:6px}
+.band .pt{position:absolute;top:14px;width:2px;height:28px;background:var(--navy);transform:translateX(-1px)}
+.band .pt.vp{background:var(--red)}
+.band .bl{position:absolute;top:44px;font-size:11px;font-weight:700;color:var(--navy);white-space:nowrap}
+.band .bl.r{transform:translateX(-100%)}
+@media(max-width:560px){.band .bl{display:none}table.t td,table.t th{padding:6px 6px}}
+.grafiek svg{width:100%;height:auto;display:block}
+.grafiek text{font-family:Montserrat,Arial,sans-serif;font-size:10px;fill:var(--muted)}
+.afm{border:2px solid var(--red);background:var(--redlt);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.6;margin-bottom:14px}
+.afm strong{color:var(--red)}
+</style>
+<script id="at-woningdata">
+/* Woningdata — gegenereerd door scripts/maak-woningdata.py op 2026-11-12. Niet met de hand aanpassen. */
+window.ATWoningdata = {"meta":{"downloaddatum":"2026-11-12","prijzen":{"bron":"CBS StatLine","tabel":"83625NED","titel":"Bestaande koopwoningen; gemiddelde verkoopprijzen, regio","peiljaar":2025,"gewijzigd":"2026-02-17","url":"https://opendata.cbs.nl/#/CBS/nl/dataset/83625NED/table"},"index":{"bron":"CBS/Kadaster","tabel":"85792NED","titel":"Bestaande koopwoningen; verkoopprijzen, prijsindex 2020=100, regio","laatsteKwartaal":"2026-K3","gewijzigd":"2026-10-22","url":"https://opendata.cbs.nl/#/CBS/nl/dataset/85792NED/table"},"woz":{"bron":"CBS StatLine","tabel":"85036NED","titel":"Gemiddelde WOZ-waarde van woningen; eigendom, regio ","peiljaar":2026,"gewijzigd":"2026-11-05","url":"https://opendata.cbs.nl/#/CBS/nl/dataset/85036NED/table"},"gebieden":{"bron":"CBS StatLine","tabel":"86247NED (2026), 86059NED (2025), 85755NED (2024)"},"lasten":{"bron":"COELO, Atlas van de lokale lasten","jaar":2026,"bestanden":["https://www.coelo.nl/images/Gemeentelijke_belastingen_2026.xlsx","https://www.coelo.nl/images/Waterschapsbelastingen_2026.xlsx","https://www.coelo.nl/images/Website_gegevens_standaardhuishoudens_en_bedrijven_2026.xlsx"],"url":"https://coelo.nl/atlas-lokale-lasten-2026/bijlagen-2026-en-databestanden/"},"energie":{"bron":"CBS StatLine","tabel":"85140NED","titel":"Energieverbruik woningen; woningtype, oppervlakte, bouwjaar en bewoning","peiljaar":2025,"gewijzigd":"2026-08-31","url":"https://opendata.cbs.nl/#/CBS/nl/dataset/85140NED/table","tarieven":{"tabel":"85592NED","titel":"Gemiddelde energietarieven voor consumenten","maand":"2026MM10","gewijzigd":"2026-11-10"}}},"provincies":["Drenthe","Flevoland","Fryslân","Gelderland","Groningen","Limburg","Noord-Brabant","Noord-Holland","Overijssel","Utrecht","Zeeland","Zuid-Holland"],"gemeenten":{"kolommen":["code","naam","prov","prijs","prijsVorigJaar","indexRegio","wozKoop"],"rijen":[["0518","'s-Gravenhage",11,465418,447417,"GM0518",541000],["0796","'s-Hertogenbosch",6,506467,478097,"PV30",570000],["1680","Aa en Hunze",0,497875,458471,"PV22",484000],["0358","Aalsmeer",7,636273,575924,"PV27",653000],["0197","Aalten",3,404815,358565,"PV25",424000],["0059","Achtkarspelen",2,386939,336113,"PV21",388000],["0482","Alblasserdam",11,465391,358823,"PV28",468000],["0613","Albrandswaard",11,531165,547608,"PV28",581000],["0361","Alkmaar",7,424065,381336,"PV27",491000],["0141","Almelo",8,337477,313612,"PV23",391000],["0034","Almere",1,493406,460849,"PV24",483000],["0484","Alphen a/d Rijn",11,459675,445481,"PV28",520000],["1723","Alphen-Chaam",6,556205,540949,"PV30",553000],["1959","Altena",6,481068,445893,"PV30",510000],["0060","Ameland",2,452457,391851,"PV21",422000],["0307","Amersfoort",9,551639,510887,"PV26",599000],["0362","Amstelveen",7,681691,649823,"PV27",775000],["0363","Amsterdam",7,630621,617647,"GM0363",746000],["0200","Apeldoorn",3,471143,434524,"PV25",521000],["0202","Arnhem",3,407247,403201,"PV25",501000],["0106","Assen",0,376755,361465,"PV22",393000],["0743","Asten",6,528110,471246,"PV30",550000],["0744","Baarle-Nassau",6,465201,417733,"PV30",507000],["0308","Baarn",9,610602,567286,"PV26",675000],["0489","Barendrecht",11,547450,515747,"PV28",546000],["0203","Barneveld",3,533904,519477,"PV25",606000],["0888","Beek",5,376436,365677,"PV31",406000],["1954","Beekdaelen",5,383775,364234,"PV31",411000],["0889","Beesel",5,358895,319521,"PV31",408000],["1945","Berg en Dal",3,482272,462603,"PV25",511000],["1724","Bergeijk",6,527954,494950,"PV30",566000],["0893","Bergen L",5,449775,397057,"PV31",448000],["0373","Bergen NH",7,737165,694945,"PV27",747000],["0748","Bergen op Zoom",6,398490,360624,"PV30",433000],["1859","Berkelland",3,429910,400993,"PV25",470000],["1721","Bernheze",6,576186,500209,"PV30",595000],["0753","Best",6,553741,517663,"PV30",567000],["0209","Beuningen",3,527279,451834,"PV25",519000],["0375","Beverwijk",7,419001,402710,"PV27",459000],["1728","Bladel",6,511537,468486,"PV30",550000],["0376","Blaricum",7,1105604,993994,"PV27",1154000],["0377","Bloemendaal",7,1023762,1043333,"PV27",1175000],["1901","Bodegraven-Reeuwijk",11,530224,517752,"PV28",601000],["0755","Boekel",6,448168,389372,"PV30",529000],["1681","Borger-Odoorn",0,445770,377859,"PV22",402000],["0147","Borne",8,454281,410964,"PV23",493000],["0654","Borsele",10,397874,363073,"PV29",406000],["0757","Boxtel",6,522253,468999,"PV30",542000],["0758","Breda",6,509387,484925,"PV30",575000],["1876","Bronckhorst",3,539034,494738,"PV25",551000],["0213","Brummen",3,524581,421718,"PV25",528000],["0899","Brunssum",5,290901,268627,"PV31",308000],["0312","Bunnik",9,624328,556082,"PV26",658000],["0313","Bunschoten",9,513085,484325,"PV26",556000],["0214","Buren",3,580256,564869,"PV25",564000],["0502","Capelle aan den IJssel",11,412385,390223,"PV28",480000],["0383","Castricum",7,530985,513673,"PV27",613000],["0109","Coevorden",0,397804,381207,"PV22",398000],["1706","Cranendonck",6,464684,428153,"PV30",490000],["0216","Culemborg",3,458259,463323,"PV25",539000],["0148","Dalfsen",8,528513,480929,"PV23",543000],["1891","Dantumadiel",2,416795,359932,"PV21",427000],["0310","De Bilt",9,729588,701163,"PV26",826000],["1940","De Fryske Marren",2,457160,400366,"PV21",446000],["0736","De Ronde Venen",9,666495,600009,"PV26",666000],["1690","De Wolden",0,478209,464082,"PV22",512000],["0503","Delft",11,453866,409999,"PV28",536000],["0400","Den Helder",7,319893,291964,"PV27",346000],["0762","Deurne",6,492662,423560,"PV30",549000],["0150","Deventer",8,447838,400782,"PV23",489000],["0384","Diemen",7,571777,551601,"PV27",616000],["1980","Dijk en Waard",7,470371,423626,"PV27",503000],["1774","Dinkelland",8,456043,431948,"PV23",499000],["0221","Doesburg",3,456536,406835,"PV25",424000],["0222","Doetinchem",3,424195,383133,"PV25",453000],["0766","Dongen",6,456268,430579,"PV30",474000],["0505","Dordrecht",11,391755,362740,"PV28",444000],["0498","Drechterland",7,533684,465461,"PV27",520000],["1719","Drimmelen",6,508816,427898,"PV30",516000],["0303","Dronten",1,426186,390496,"PV24",465000],["0225","Druten",3,456403,437321,"PV25",490000],["0226","Duiven",3,444252,422481,"PV25",469000],["1711","Echt-Susteren",5,379254,343615,"PV31",414000],["0385","Edam-Volendam",7,490856,463120,"PV27",517000],["0228","Ede",3,523183,461089,"PV25",568000],["0317","Eemnes",9,658208,603677,"PV26",661000],["1979","Eemsdelta",4,319269,291875,"PV20",332000],["0770","Eersel",6,536817,526920,"PV30",609000],["1903","Eijsden-Margraten",5,516779,448726,"PV31",502000],["0772","Eindhoven",6,469870,450380,"PV30",541000],["0230","Elburg",3,472521,450037,"PV25",501000],["0114","Emmen",0,351871,313566,"PV22",350000],["0388","Enkhuizen",7,421979,391470,"PV27",433000],["0153","Enschede",8,373780,345393,"PV23",421000],["0232","Epe",3,548649,472590,"PV25",599000],["0233","Ermelo",3,538251,545808,"PV25",595000],["0777","Etten-Leur",6,488271,416543,"PV30",474000],["0779","Geertruidenberg",6,456394,410139,"PV30",470000],["1771","Geldrop-Mierlo",6,530710,513269,"PV30",550000],["1652","Gemert-Bakel",6,523546,443910,"PV30",535000],["0907","Gennep",5,461925,447992,"PV31",488000],["0784","Gilze en Rijen",6,461024,438198,"PV30",483000],["1924","Goeree-Overflakkee",11,453640,413512,"PV28",475000],["0664","Goes",10,397671,372642,"PV29",440000],["0785","Goirle",6,549970,538147,"PV30",547000],["1942","Gooise Meren",7,721747,677398,"PV27",792000],["0512","Gorinchem",11,446015,425775,"PV28",519000],["0513","Gouda",11,420550,393908,"PV28",474000],["0014","Groningen",4,396626,373411,"PV20",464000],["1729","Gulpen-Wittem",5,435714,373788,"PV31",461000],["0158","Haaksbergen",8,448539,393313,"PV23",479000],["0392","Haarlem",7,576569,548843,"PV27",665000],["0394","Haarlemmermeer",7,591975,555385,"PV27",610000],["1655","Halderberge",6,467811,428065,"PV30",481000],["0160","Hardenberg",8,390363,384458,"PV23",461000],["0243","Harderwijk",3,473911,469214,"PV25",527000],["0523","Hardinxveld-Giessendam",11,445202,365045,"PV28",464000],["0072","Harlingen",2,363299,324498,"PV21",352000],["0244","Hattem",3,523439,495443,"PV25",576000],["0396","Heemskerk",7,521081,470114,"PV27",515000],["0397","Heemstede",7,798428,750318,"PV27",904000],["0246","Heerde",3,520052,499083,"PV25",564000],["0074","Heerenveen",2,418883,374956,"PV21",455000],["0917","Heerlen",5,284279,270045,"PV31",307000],["1658","Heeze-Leende",6,563341,519405,"PV30",619000],["0399","Heiloo",7,609771,590476,"PV27",657000],["0163","Hellendoorn",8,458353,421041,"PV23",482000],["0794","Helmond",6,458882,434832,"PV30",488000],["0531","Hendrik-Ido-Ambacht",11,490111,405424,"PV28",521000],["0164","Hengelo",8,378471,348616,"PV23",418000],["1966","Het Hogeland",4,356956,305478,"PV20",361000],["0252","Heumen",3,558583,530525,"PV25",575000],["0797","Heusden",6,534587,496487,"PV30",552000],["0534","Hillegom",11,500757,473381,"PV28",558000],["0798","Hilvarenbeek",6,534369,539766,"PV30",588000],["0402","Hilversum",7,539765,547970,"PV27",636000],["1963","Hoeksche Waard",11,500231,436897,"PV28",488000],["1735","Hof van Twente",8,432647,434320,"PV23",480000],["1911","Hollands Kroon",7,415671,375871,"PV27",452000],["0118","Hoogeveen",0,365219,347847,"PV22",379000],["0405","Hoorn",7,460312,408895,"PV27",470000],["1507","Horst aan de Maas",5,436096,406190,"PV31",451000],["0321","Houten",9,583825,592703,"PV26",658000],["0406","Huizen",7,616191,584287,"PV27",637000],["0677","Hulst",10,349428,310619,"PV29",370000],["0353","IJsselstein",9,514826,501125,"PV26",588000],["1884","Kaag en Braassem",11,599806,520723,"PV28",618000],["0166","Kampen",8,413115,364694,"PV23",463000],["0678","Kapelle",10,413130,396204,"PV29",449000],["0537","Katwijk",11,529500,494961,"PV28",598000],["0928","Kerkrade",5,270119,262548,"PV31",298000],["1598","Koggenland",7,454904,449375,"PV27",499000],["0542","Krimpen aan den IJssel",11,481993,451093,"PV28",490000],["1931","Krimpenerwaard",11,488261,443022,"PV28",534000],["1659","Laarbeek",6,496740,482649,"PV30",562000],["1982","Land van Cuijk",6,442631,426340,"PV30",486000],["0882","Landgraaf",5,327701,291195,"PV31",343000],["0415","Landsmeer",7,706179,673334,"PV27",752000],["1621","Lansingerland",11,596867,570108,"PV28",626000],["0417","Laren",7,977945,1047685,"PV27",1178000],["0080","Leeuwarden",2,319443,310226,"PV21",366000],["0546","Leiden",11,492047,474092,"PV28",588000],["0547","Leiderdorp",11,532464,493497,"PV28",575000],["1916","Leidschendam-Voorburg",11,501744,474420,"PV28",570000],["0995","Lelystad",1,426903,405965,"PV24",455000],["1640","Leudal",5,428849,398408,"PV31",453000],["0327","Leusden",9,573062,543918,"PV26",611000],["1705","Lingewaard",3,501801,449628,"PV25",511000],["0553","Lisse",11,548653,483779,"PV28",544000],["0262","Lochem",3,587573,547513,"PV25",599000],["0809","Loon op Zand",6,510783,440902,"PV30",502000],["0331","Lopik",9,548830,482627,"PV26",581000],["0168","Losser",8,426440,387725,"PV23",474000],["0263","Maasdriel",3,514719,468035,"PV25",565000],["1641","Maasgouw",5,431950,394358,"PV31",426000],["1991","Maashorst",6,497085,466384,"PV30",553000],["0556","Maassluis",11,439928,392381,"PV28",458000],["0935","Maastricht",5,413671,394938,"PV31",477000],["0420","Medemblik",7,461643,429347,"PV27",509000],["0938","Meerssen",5,473060,392004,"PV31",461000],["1948","Meierijstad",6,529884,496875,"PV30",567000],["0119","Meppel",0,383606,378806,"PV22",429000],["0687","Middelburg",10,393274,376819,"PV29",399000],["1842","Midden-Delfland",11,599737,582103,"PV28",612000],["1731","Midden-Drenthe",0,446129,385893,"PV22",435000],["1952","Midden-Groningen",4,368812,325791,"PV20",381000],["1709","Moerdijk",6,441988,385071,"PV30",456000],["1978","Molenlanden",11,498890,462800,"PV28",535000],["1955","Montferland",3,425653,402650,"PV25",420000],["0335","Montfoort",9,541636,530539,"PV26",595000],["0944","Mook en Middelaar",5,526782,500990,"PV31",577000],["1740","Neder-Betuwe",3,548255,507447,"PV25",502000],["0946","Nederweert",5,494127,441889,"PV31",513000],["0356","Nieuwegein",9,459984,411577,"PV26",497000],["0569","Nieuwkoop",11,605404,530206,"PV28",603000],["0267","Nijkerk",3,536303,531289,"PV25",593000],["0268","Nijmegen",3,453897,424665,"PV25",537000],["1930","Nissewaard",11,389672,370386,"PV28",393000],["1970","Noardeast-Fryslân",2,331748,316349,"PV21",372000],["1695","Noord-Beveland",10,368111,346144,"PV29",368000],["1699","Noordenveld",0,464193,463471,"PV22",496000],["0171","Noordoostpolder",1,383877,343446,"PV24",435000],["0575","Noordwijk",11,626591,593042,"PV28",654000],["0820","Nuenen c.a.",6,631744,567419,"PV30",635000],["0302","Nunspeet",3,571262,492417,"PV25",569000],["0579","Oegstgeest",11,614579,614503,"PV28",734000],["0823","Oirschot",6,585652,501069,"PV30",620000],["0824","Oisterwijk",6,599609,545220,"PV30",645000],["1895","Oldambt",4,327766,296230,"PV20",353000],["0269","Oldebroek",3,478464,456021,"PV25",514000],["0173","Oldenzaal",8,434886,395790,"PV23",467000],["1773","Olst-Wijhe",8,481392,464723,"PV23",527000],["0175","Ommen",8,502151,472998,"PV23",516000],["1586","Oost Gelre",3,406036,380942,"PV25",423000],["0826","Oosterhout",6,441826,437746,"PV30",502000],["0085","Ooststellingwerf",2,423014,362830,"PV21",413000],["0431","Oostzaan",7,671896,549966,"PV27",663000],["0432","Opmeer",7,472308,423085,"PV27",479000],["0086","Opsterland",2,433376,433883,"PV21",446000],["0828","Oss",6,452466,437206,"PV30",503000],["1509","Oude IJsselstreek",3,428625,391680,"PV25",427000],["0437","Ouder-Amstel",7,623392,611886,"PV27",767000],["0589","Oudewater",9,542373,521905,"PV26",554000],["1734","Overbetuwe",3,522733,448063,"PV25",537000],["0590","Papendrecht",11,387172,382950,"PV28",456000],["1894","Peel en Maas",5,449898,419759,"PV31",478000],["0765","Pekela",4,288273,250437,"PV20",294000],["1926","Pijnacker-Nootdorp",11,631787,559333,"PV28",638000],["0439","Purmerend",7,472491,434261,"PV27",516000],["0273","Putten",3,600621,494295,"PV25",664000],["0177","Raalte",8,451037,444263,"PV23",518000],["0703","Reimerswaal",10,359269,358989,"PV29",374000],["0274","Renkum",3,551905,518803,"PV25",585000],["0339","Renswoude",9,592719,528505,"PV26",645000],["1667","Reusel- De Mierden",6,482744,418768,"PV30",536000],["0275","Rheden",3,448868,420762,"PV25",499000],["0340","Rhenen",9,575370,531256,"PV26",597000],["0597","Ridderkerk",11,428160,387672,"PV28",444000],["1742","Rijssen-Holten",8,430244,447791,"PV23",481000],["0603","Rijswijk",11,422771,421900,"PV28",508000],["1669","Roerdalen",5,395565,363119,"PV31",403000],["0957","Roermond",5,373963,377867,"PV31",431000],["1674","Roosendaal",6,389117,364655,"PV30",421000],["0599","Rotterdam",11,414579,402854,"GM0599",484000],["0277","Rozendaal",3,866864,802862,"PV25",876000],["0840","Rucphen",6,509587,464324,"PV30",500000],["0441","Schagen",7,458936,411009,"PV27",482000],["0279","Scherpenzeel",3,491154,469118,"PV25",530000],["0606","Schiedam",11,339590,337918,"PV28",421000],["0088","Schiermonnikoog",2,656107,486250,"PV21",545000],["1676","Schouwen-Duiveland",10,461424,453661,"PV29",494000],["0965","Simpelveld",5,343886,348742,"PV31",366000],["0845","Sint-Michielsgestel",6,590958,576271,"PV30",623000],["1883","Sittard-Geleen",5,338452,314825,"PV31",363000],["0610","Sliedrecht",11,415644,379364,"PV28",441000],["1714","Sluis",10,338820,326961,"PV29",382000],["0090","Smallingerland",2,369352,348051,"PV21",395000],["0342","Soest",9,585095,551182,"PV26",642000],["0847","Someren",6,498059,479149,"PV30",560000],["0848","Son en Breugel",6,605309,588765,"PV30",626000],["0037","Stadskanaal",4,325508,306793,"PV20",362000],["0180","Staphorst",8,464585,413454,"PV23",457000],["0532","Stede Broec",7,439694,397251,"PV27",455000],["0851","Steenbergen",6,425724,387648,"PV30",437000],["1708","Steenwijkerland",8,412194,389884,"PV23",439000],["0971","Stein",5,370121,330142,"PV31",393000],["1904","Stichtse Vecht",9,495712,562854,"PV26",638000],["1900","Súdwest Fryslân",2,382483,354413,"PV21",406000],["0715","Terneuzen",10,297848,279642,"PV29",324000],["0093","Terschelling",2,524480,502620,"PV21",540000],["0448","Texel",7,436633,472434,"PV27",485000],["1525","Teylingen",11,615436,541670,"PV28",604000],["0716","Tholen",10,347269,329359,"PV29",363000],["0281","Tiel",3,419841,385022,"PV25",469000],["0855","Tilburg",6,424838,398630,"PV30",471000],["0183","Tubbergen",8,476568,449691,"PV23",513000],["1700","Twenterand",8,420039,362592,"PV23",443000],["1730","Tynaarlo",0,581613,466557,"PV22",537000],["0737","Tytsjerksteradiel",2,393075,363050,"PV21",392000],["0450","Uitgeest",7,536104,512685,"PV27",560000],["0451","Uithoorn",7,556156,528003,"PV27",574000],["0184","Urk",1,390868,370874,"PV24",420000],["0344","Utrecht",9,549113,519924,"GM0344",671000],["1581","Utrechtse Heuvelrug",9,689760,654710,"PV26",707000],["0981","Vaals",5,339451,322260,"PV31",386000],["0994","Valkenburg aan de Geul",5,443960,420963,"PV31",453000],["0858","Valkenswaard",6,464820,458998,"PV30",532000],["0047","Veendam",4,316312,282322,"PV20",313000],["0345","Veenendaal",9,498308,403296,"PV26",540000],["0717","Veere",10,496742,434698,"PV29",497000],["0861","Veldhoven",6,538756,512413,"PV30",606000],["0453","Velsen",7,524201,475076,"PV27",568000],["0983","Venlo",5,374660,362468,"PV31",418000],["0984","Venray",5,414662,388733,"PV31",457000],["1961","Vijfheerenlanden",9,503864,459244,"PV26",525000],["0622","Vlaardingen",11,365638,339126,"PV28",426000],["0096","Vlieland",2,541519,550461,"PV21",573000],["0718","Vlissingen",10,303236,290591,"PV29",338000],["0986","Voerendaal",5,415942,384797,"PV31",445000],["1992","Voorne aan Zee",11,495909,459967,"PV28",501000],["0626","Voorschoten",11,657899,590143,"PV28",679000],["0285","Voorst",3,564160,531771,"PV25",589000],["0865","Vught",6,671948,597470,"PV30",771000],["1949","Waadhoeke",2,337091,318557,"PV21",335000],["0866","Waalre",6,662285,651659,"PV30",683000],["0867","Waalwijk",6,453184,417622,"PV30",486000],["0627","Waddinxveen",11,513592,472179,"PV28",552000],["0289","Wageningen",3,463177,449599,"PV25",571000],["0629","Wassenaar",11,903569,849805,"PV28",971000],["0852","Waterland",7,509986,580424,"PV27",588000],["0988","Weert",5,437149,391906,"PV31",464000],["1960","West Betuwe",3,521134,507574,"PV25",576000],["0668","West Maas en Waal",3,495002,474219,"PV25",541000],["1969","Westerkwartier",4,413381,380286,"PV20",422000],["1701","Westerveld",0,487354,482454,"PV22",517000],["0293","Westervoort",3,442322,365528,"PV25",430000],["1950","Westerwolde",4,374010,336557,"PV20",383000],["1783","Westland",11,555505,504784,"PV28",585000],["0098","Weststellingwerf",2,424890,398330,"PV21",430000],["0189","Wierden",8,463140,395587,"PV23",506000],["0296","Wijchen",3,496126,484545,"PV25",515000],["1696","Wijdemeren",7,653211,632861,"PV27",695000],["0352","Wijk bij Duurstede",9,481107,504642,"PV26",569000],["0294","Winterswijk",3,376011,346135,"PV25",387000],["0873","Woensdrecht",6,422202,382087,"PV30",445000],["0632","Woerden",9,620770,547132,"PV26",578000],["0880","Wormerland",7,499467,508475,"PV27",565000],["0351","Woudenberg",9,552197,531410,"PV26",622000],["0479","Zaanstad",7,430833,415308,"PV27",493000],["0297","Zaltbommel",3,548623,444749,"PV25",515000],["0473","Zandvoort",7,604626,585647,"PV27",643000],["0050","Zeewolde",1,466599,439272,"PV24",518000],["0355","Zeist",9,663706,592096,"PV26",802000],["0299","Zevenaar",3,410446,375711,"PV25",448000],["0637","Zoetermeer",11,457889,434502,"PV28",499000],["0638","Zoeterwoude",11,569994,494247,"PV28",616000],["1892","Zuidplas",11,561991,510356,"PV28",574000],["0879","Zundert",6,464649,450881,"PV30",539000],["0301","Zutphen",3,444637,391686,"PV25",466000],["1896","Zwartewaterland",8,402361,376182,"PV23",422000],["0642","Zwijndrecht",11,408715,382265,"PV28",450000],["0193","Zwolle",8,450913,450763,"PV23",520000]]},"index":{"regios":{"GM0344":"Utrecht","GM0363":"Amsterdam","GM0518":"'s-Gravenhage","GM0599":"Rotterdam","NL01":"Nederland","PV20":"Groningen","PV21":"Fryslân","PV22":"Drenthe","PV23":"Overijssel","PV24":"Flevoland","PV25":"Gelderland","PV26":"Utrecht","PV27":"Noord-Holland","PV28":"Zuid-Holland","PV29":"Zeeland","PV30":"Noord-Brabant","PV31":"Limburg"},"start":"2014-K1","laatste":"2026-K3","reeks":{"GM0344":[56,57.1,58,58.5,59.9,60.1,62.2,62.7,64.5,65.9,68.3,70.2,72.5,74.1,76.1,78.3,80.2,82.9,85,86.7,89.2,91,92.2,93.3,96.5,99.1,101.5,102.9,106.2,113,120.7,124.1,128.8,132.9,130.8,122.6,119.3,116.6,120.1,123.3,129.7,136.7,142.3,143.6,148.1,150.9,153.4,151.9,152.9,154.2,156.4],"GM0363":[54.5,56,57.2,57.8,59.9,60.5,62.9,64.1,66.4,69.4,71.8,73.4,76.7,78.7,81.8,83.2,85.9,89.3,92.5,93.6,93.8,95.4,96,96.7,98.1,100.5,101.3,100.1,104,108,116.4,117.7,123.4,126.5,126.3,119,116.5,115,119.1,120,122.6,126.9,131.1,130.8,130.4,132.4,134.1,132.9,132.9,133.5,135.4],"GM0518":[60.5,60.3,61.7,62.4,62.1,62.9,64.2,65.5,66.4,67.9,69.5,71.8,73.6,75.1,77.6,80.1,82.4,84.8,87.5,89.9,90.4,92.6,93.2,95.8,96.9,99.1,100.8,103.2,106,112.2,118.2,121.6,125.7,128,130.1,124.7,122.5,121,122.6,123.6,125.6,128.1,134.7,136.4,139.1,140.6,142.5,143.3,145.1,146.9,148.7],"GM0599":[58,59.2,59.3,59.1,60.2,61.1,62.2,62.3,63.3,64.6,66.9,68.8,70.5,73.3,75.9,78,81,83.8,87.9,88.1,90.8,91.4,92.8,93.8,96.6,98.5,101.1,103.8,105.8,111.2,116.7,122.2,125.9,129.4,129.4,127.2,125.6,123.2,123.3,125.7,128,130.3,134.3,137.4,139.3,141.7,143.4,144,145.8,146.2,147.5],"NL01":[66.6,67,67.7,67.9,68.4,69,70.1,70.6,71.5,72.4,74.3,75.2,76.7,78.3,80.4,81.7,83.8,85.5,87.9,89.2,90.7,91.8,93.5,94.8,96.9,98.9,101.1,103.1,106.8,111.6,118.7,123.2,128.2,131.8,132.4,129,126.8,124.7,126.4,128.6,131.6,135.4,140.4,143.3,146,148.7,151.4,152.2,153.6,154.9,156.4],"PV20":[68.6,69.4,69.5,69.7,70.6,71.2,71.4,71.6,72.2,73.2,76.1,76.5,77.1,78,80.5,81.1,82.3,84.1,85.9,86.9,87.9,89,91.7,93.7,96.1,98.7,101.3,103.9,107.8,113.3,121.3,126.8,133.5,136.3,135.9,132.9,130.2,128.5,132.5,135.1,137.4,141.2,147.5,151.1,155.2,157.5,163.6,163.7,166.4,169.9,170.9],"PV21":[71.6,71.8,71.5,71.7,72.3,72.7,73.3,73.9,74.7,74.6,77,77.3,78.2,79.9,81.4,82.3,84.2,85.7,87,89.4,89.9,92.1,94,95.3,96.7,97.9,101.5,103.8,107.2,112.8,121.2,126,131.7,133.9,135.2,131.9,129.2,127.6,129,132.9,134.1,138.4,143.5,147.8,149.5,152.9,154.9,158.3,160,161.1,163.8],"PV22":[73.1,72.7,73.6,72.8,74,73.4,74.5,74.5,74.3,75.3,76.5,77.2,77.9,79.2,80.7,81.6,82.6,84.3,86.4,87.8,90.1,90.7,93.5,94.3,96.5,98.5,101.1,103.9,109.2,113.6,122.5,127.7,132.1,137.1,137.7,134.7,132.9,130.6,131.1,135.2,139,142.5,147.7,152.9,156.6,161.6,162.9,165.7,169.4,170.8,172.2],"PV23":[72.4,72.3,72.5,72.4,72.6,73,73.4,73.7,75,75.4,76.5,77.1,78.2,79.5,81.4,82.4,83.9,85.6,87.5,88.6,90.2,90.6,93.3,94.1,96.6,98.8,101.3,103.3,107.6,112.3,119.1,122.6,127.3,132.8,133.8,131.2,129.9,128.5,129.9,130.6,134.3,138.1,143.7,147.4,150.9,153.8,156.6,158.6,160,160.7,163.6],"PV24":[64.6,64.6,64.9,66,64.7,65.4,66.3,66.7,67.3,67.8,69.6,70.9,72,73.6,75.7,78.2,79.8,82.3,84.6,87.1,88.6,90,92.5,93.1,95.5,98.8,101,104.7,108.4,115.1,122.9,129.1,135.4,139.7,139.3,134.7,132.7,130.6,132.9,136.1,139.5,144.2,148.9,151.6,154.6,156.5,158.5,160.2,160.4,161.5,162.3],"PV25":[70.3,70.6,70.9,70.9,71.5,71.5,72.5,72.7,73.5,73.9,75.6,76.1,77.5,78.7,80.5,82.2,84.3,85.4,87.3,89,90.3,91.5,93,94.3,96.7,98.7,101.1,103.6,107.7,112.9,120.9,126.7,132.8,135.6,137.1,133.4,131.7,129.2,130.8,132.6,136,139.7,145.3,148.6,152,155.7,159.2,160,162.6,164.4,166.2],"PV26":[64.6,65.1,65.9,66.2,67.2,67.3,68.6,69.1,70.3,71.3,73.4,74.7,76.6,78.3,80.4,82.1,83.8,85.5,88,88.7,90.8,91.7,93.4,94.6,97.1,98.7,101.1,103.1,107,111.7,119.8,124,129.2,133.7,133.2,127.8,124.7,121.9,124.3,127.3,131.9,136.6,142.1,145.2,149,151.3,154.7,154.5,156,157,158.2],"PV27":[60.9,61.5,62.9,63.2,63.9,64.9,66.5,67.4,68.5,70.1,72.8,73.7,76,78.1,80.8,81.8,84.8,86.7,89.7,91,92.2,93.5,94.6,95.8,97.2,99.4,101.2,102.2,105.7,110.9,118.7,122.2,127.1,130.8,130.6,125.8,122.7,120.5,122.6,124.4,126.8,131.1,135.6,137,138,140.4,142.3,142.4,142.6,143.7,144.9],"PV28":[64.5,65,65.6,65.8,66.1,66.7,67.7,68.3,69,70,71.6,72.7,74.4,76,78.3,80,82.4,84.6,87.2,88.7,90.3,91.1,93.1,94.8,96.8,98.9,101.2,103.1,106.2,110.8,116.9,121.8,126.1,129.4,130.7,127.8,126.2,123.6,124.8,126.9,129.9,133,137.8,141.1,143.5,146.1,148.9,149.9,151.2,152.7,154.5],"PV29":[76.9,76.8,76.6,76.5,77.1,77.8,76.5,77.2,78.1,78.7,79.6,80.3,79.8,81.1,81.8,83.3,83.1,84.8,86.6,88.2,90.1,91.6,93.1,94.2,96.4,98.2,101,104.3,105.7,113.5,118.9,123.8,127.6,131.7,132.9,130.5,130.5,128.1,129.2,131,132.7,134.5,138.1,140.6,142.4,144.2,147.7,149.9,149.5,150,151.2],"PV30":[70.6,71.1,71.8,71.8,72.2,72.7,73.6,73.9,74.8,75.3,76.6,77.5,78.8,80.2,81.5,83,85.1,86.2,88.3,89.4,90.9,92.3,93.5,94.6,97,99,101,103.1,106.9,110.9,117,121.4,126.7,130.2,131.3,129.3,127.3,125.8,127,129.1,132.2,136.1,141.2,144.6,147.8,150.8,153.2,153.9,156.2,157.3,158.3],"PV31":[71.6,72.1,72.9,72.9,72.7,73.4,74.5,74.2,74.9,76.1,77.5,78.1,78.8,79.8,81,82.2,84.1,85.4,87.7,88.8,90.5,91.9,93,95,97.4,98.7,101,102.8,107.1,110.3,116.4,120.4,125.5,128.4,128,126.4,124.9,124.4,126.1,128.9,131.3,134.9,138.7,141.5,145.2,146.9,149.9,151.3,152.1,154,155.6]},"jaar":{"GM0344":{"2014":57.4,"2015":61.2,"2016":67.2,"2017":75.3,"2018":83.7,"2019":91.4,"2020":100,"2021":116,"2022":128.8,"2023":119.8,"2024":138.1,"2025":151.1},"GM0363":{"2014":56.4,"2015":61.9,"2016":70.2,"2017":80.1,"2018":90.3,"2019":95.5,"2020":100,"2021":111.5,"2022":123.8,"2023":117.6,"2024":127.9,"2025":132.4},"GM0518":{"2014":61.2,"2015":63.7,"2016":68.9,"2017":76.6,"2018":86.2,"2019":93,"2020":100,"2021":114.5,"2022":127.1,"2023":122.4,"2024":131.2,"2025":141.4},"GM0599":{"2014":58.9,"2015":61.5,"2016":65.9,"2017":74.4,"2018":85.2,"2019":92.2,"2020":100,"2021":114,"2022":128,"2023":124.5,"2024":132.5,"2025":142.1},"NL01":{"2014":67.3,"2015":69.5,"2016":73.3,"2017":79.3,"2018":86.6,"2019":92.7,"2020":100,"2021":115.1,"2022":130.4,"2023":126.6,"2024":137.7,"2025":149.5},"PV20":{"2014":69.3,"2015":71.2,"2016":74.5,"2017":79.2,"2018":84.8,"2019":90.6,"2020":100,"2021":117.3,"2022":134.6,"2023":131.6,"2024":144.3,"2025":160},"PV21":{"2014":71.7,"2015":73.1,"2016":75.9,"2017":80.5,"2018":86.6,"2019":92.9,"2020":100,"2021":116.8,"2022":133.2,"2023":129.7,"2024":141,"2025":153.9},"PV22":{"2014":73,"2015":74.1,"2016":75.8,"2017":79.9,"2018":85.3,"2019":92.1,"2020":100,"2021":118.2,"2022":135.4,"2023":132.4,"2024":145.5,"2025":161.7},"PV23":{"2014":72.4,"2015":73.2,"2016":76,"2017":80.4,"2018":86.4,"2019":92.1,"2020":100,"2021":115.4,"2022":131.3,"2023":129.7,"2024":140.9,"2025":155},"PV24":{"2014":65,"2015":65.8,"2016":68.9,"2017":74.9,"2018":83.4,"2019":91,"2020":100,"2021":118.9,"2022":137.3,"2023":133.1,"2024":146,"2025":157.5},"PV25":{"2014":70.7,"2015":72.1,"2016":74.8,"2017":79.7,"2018":86.5,"2019":92.3,"2020":100,"2021":117,"2022":134.7,"2023":131.1,"2024":142.4,"2025":156.7},"PV26":{"2014":65.4,"2015":68,"2016":72.5,"2017":79.3,"2018":86.5,"2019":92.6,"2020":100,"2021":115.6,"2022":131,"2023":124.5,"2024":139,"2025":152.4},"PV27":{"2014":62.1,"2015":65.7,"2016":71.3,"2017":79.2,"2018":88,"2019":94,"2020":100,"2021":114.4,"2022":128.6,"2023":122.5,"2024":132.6,"2025":140.8},"PV28":{"2014":65.2,"2015":67.2,"2016":70.8,"2017":77.1,"2018":85.8,"2019":92.3,"2020":100,"2021":113.9,"2022":128.5,"2023":125.4,"2024":135.5,"2025":147.1},"PV29":{"2014":76.7,"2015":77.2,"2016":79.2,"2017":81.5,"2018":85.7,"2019":92.3,"2020":100,"2021":115.5,"2022":130.7,"2023":129.7,"2024":136.5,"2025":146},"PV30":{"2014":71.3,"2015":73.1,"2016":76.1,"2017":80.9,"2018":87.3,"2019":92.8,"2020":100,"2021":114,"2022":129.4,"2023":127.3,"2024":138.5,"2025":151.4},"PV31":{"2014":72.4,"2015":73.7,"2016":76.6,"2017":80.5,"2018":86.5,"2019":92.6,"2020":100,"2021":113.5,"2022":127,"2023":126.1,"2024":136.6,"2025":148.3}}}};
+</script>
+</head>
+<body>
+<header class="hdr"><div class="hdr-in">
+  <div><div class="hdr-title">Biedindicatie</div>
+  <div class="hdr-sub">WOZ-waarde bijgewerkt met de regionale prijsindex · vraagprijs · gemiddelde in de gemeente · geen biedadvies</div></div>
+  <span class="badge" id="badgeJaar">CBS</span>
+</div></header>
+
+<div class="wrap">
+<div class="afm"><strong>Geen biedadvies.</strong> Deze tool laat zien hoe de vraagprijs zich verhoudt tot openbare cijfers. Hij zegt niet hoeveel u moet of kunt bieden en vervangt geen taxatie of aankoopmakelaar. Wat u biedt, is uw eigen afweging. Bied nooit meer dan u met uw financiering en eigen geld kunt betalen: de hypotheek is maximaal 100% van de getaxeerde marktwaarde.</div>
+<div class="grid">
+<div class="col">
+  <div class="card">
+    <div class="ch">1. Woning</div>
+    <div class="cb">
+      <div class="row">
+        <div class="fl"><label for="gemeente">Gemeente</label><select id="gemeente"></select></div>
+        <div class="fl"><label for="vraag">Vraagprijs</label><div class="iw"><span class="px">€</span><input class="eur" id="vraag" value="475000"></div></div>
+      </div>
+      <div class="row">
+        <div class="fl"><label for="woz">WOZ-waarde van de woning</label><div class="iw"><span class="px">€</span><input class="eur" id="woz" value="430000"></div><span class="hint">Op te zoeken via wozwaardeloket.nl.</span></div>
+        <div class="fl"><label for="wozjaar">WOZ-beschikking (belastingjaar)</label><select id="wozjaar"></select><span class="hint" id="peilHint"></span></div>
+      </div>
+      <div class="row r1">
+        <div class="fl"><label for="regio">Prijsindex</label><select id="regio"></select><span class="hint">Standaard de index van de provincie; voor Amsterdam, Rotterdam, Den Haag en Utrecht die van de gemeente.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch">Prijsontwikkeling <span class="chs" id="chsRegio"></span></div>
+    <div class="cb"><div class="grafiek" id="grafiek"></div><p class="hint" id="grafHint" style="margin:6px 0 0"></p></div>
+  </div>
+</div>
+
+<div class="col sticky">
+  <div class="card">
+    <div class="ch">Indicatie <span class="chs" id="chsGem"></span></div>
+    <div class="cb">
+      <div class="kpis" id="kpis"></div>
+      <div class="lbl" style="margin-top:4px">Bandbreedte van de referentiepunten</div>
+      <div class="band" id="band"></div>
+      <div class="legend" id="bandLeg"></div>
+      <div class="tbl-wrap" style="margin-top:8px"><table class="t" id="tabel"><thead><tr><th>Referentiepunt</th><th class="n">Bedrag</th><th class="n">t.o.v. vraag</th></tr></thead><tbody></tbody></table></div>
+      <div id="meldingen"></div>
+      <div class="btns noprint" style="margin-top:12px"><button class="btn" id="btnPrint" type="button">Rapport afdrukken</button></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="margin-top:18px;display:flex;flex-direction:column;gap:14px">
+<details class="uitleg" open><summary>Hoe lees ik dit?</summary><div class="in">
+  <h4>Geïndexeerde WOZ-waarde</h4>
+  <p>De WOZ-waarde van een belastingjaar hoort bij de waardepeildatum 1 januari van het jaar ervoor (WOZ 2026 = waarde op 1 januari 2025). De tool werkt die waarde bij met de prijsindex bestaande koopwoningen van CBS en Kadaster: WOZ × (index laatste kwartaal ÷ index op de peildatum). De index op de peildatum is het gemiddelde van het vierde kwartaal ervoor en het eerste kwartaal erna. Ter vergelijking ziet u ook de uitkomst met de landelijke index.</p>
+  <h4>Gemiddelde in de gemeente</h4>
+  <p>De gemiddelde verkoopprijs van alle bestaande koopwoningen in de gemeente (CBS), bijgewerkt met dezelfde index. Dit is alleen context: een appartement en een vrijstaande woning zitten in hetzelfde gemiddelde. Het telt daarom niet mee in de bandbreedte.</p>
+  <h4>Bandbreedte</h4>
+  <p>De bandbreedte loopt van het laagste tot het hoogste van drie referentiepunten: de vraagprijs en de WOZ-waarde bijgewerkt met de regionale en met de landelijke index. Het is geen marktwaarde en geen advies over een bod. De werkelijke waarde hangt af van onder meer staat van onderhoud, ligging, energielabel, perceel en de actuele vraag. Alleen een gevalideerde taxatie geeft een marktwaarde waarop een geldverstrekker financiert.</p>
+  <h4>Beperkingen</h4>
+  <ul><li>De WOZ-waarde kan afwijken van de marktwaarde, bijvoorbeeld na een verbouwing of bij een bijzonder object.</li>
+  <li>Een regionale index is een gemiddelde over veel woningen. Lokale markten kunnen sneller of trager bewegen.</li>
+  <li>De index loopt een kwartaal achter op de markt.</li></ul>
+  <p class="src" id="bronnen"></p>
+</div></details>
+<div class="disc"><strong>Geen biedadvies, geen taxatie.</strong> De uitkomst is een indicatie op basis van openbare statistiek en zegt niets over de waarde van een bepaalde woning. Een bod is uw eigen beslissing. Overleg bij twijfel met een aankoopmakelaar en laat de woning taxeren. Houd rekening met een ontbindende voorwaarde voor financiering. Aan de uitkomst kunt u geen rechten ontlenen. De tool slaat niets op en verstuurt niets.</div>
+</div>
+</div>
+
+<script>
+if(!window.ATWoningdata){ document.body.insertAdjacentHTML('afterbegin','<div style="background:#b42318;color:#fff;padding:8px">Woningdata niet geladen.</div>'); }
+/* ---- gedeelde hulpfuncties (NL-notatie, invoer, print) ---- */
+function nlNum(n, d){ d = (d == null) ? 0 : d; if(!isFinite(n)) n = 0;
+  return Number(n).toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function eur(n, d){ d = (d == null) ? 0 : d; var r = Number(n)||0; if(Math.abs(r) < 0.5/Math.pow(10,d)) r = 0;
+  return (r < 0 ? '− ' : '') + '€ ' + nlNum(Math.abs(r), d); }
+function eurc(n){ return eur(n, 2); }
+function pct(n, d){ return nlNum(n, d == null ? 2 : d) + '%'; }
+function parseEUR(s){ if(s == null) return 0; s = String(s).replace(/[\s €]/g,'');
+  if(s === '' || s === '-') return 0; s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function parseDec(s){ if(s == null) return 0; s = String(s).replace(/[\s %]/g,'');
+  if(s === '') return 0; if(s.indexOf(',') >= 0) s = s.replace(/\./g,'').replace(',', '.'); var v = parseFloat(s); return isFinite(v) ? v : 0; }
+function $(id){ return document.getElementById(id); }
+function vE(id){ var el = $(id); return el ? parseEUR(el.value) : 0; }
+function vD(id){ var el = $(id); return el ? parseDec(el.value) : 0; }
+function vC(id){ var el = $(id); return !!(el && el.checked); }
+function vS(id){ var el = $(id); return el ? el.value : ''; }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function floorEur(x){ return Math.floor(x + 1e-7); }
+/* euro-velden: duizendtalscheiding tijdens het typen, cursor blijft op zijn plek */
+function formatEurField(el){
+  var raw = el.value, pos = el.selectionStart == null ? raw.length : el.selectionStart;
+  var before = raw.slice(0, pos).replace(/[^0-9,]/g,'').length;
+  var neg = /^\s*-/.test(raw) && el.dataset.neg === '1';
+  var clean = raw.replace(/[^0-9,]/g,''); var parts = clean.split(',');
+  var ip = parts[0].replace(/^0+(?=\d)/,''); var dp = parts.length > 1 ? ',' + parts.slice(1).join('').slice(0,2) : '';
+  var fm = ip.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  var out = (neg ? '-' : '') + fm + dp; el.value = out;
+  if(document.activeElement === el){ var cnt = 0, i = 0;
+    for(; i < out.length && cnt < before; i++){ if(/[0-9,]/.test(out[i])) cnt++; }
+    try{ el.setSelectionRange(i + (neg && before === 0 ? 1 : 0), i + (neg && before === 0 ? 1 : 0)); }catch(e){} }
+}
+function initEurFields(cb){
+  document.querySelectorAll('input.eur').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    formatEurField(el);
+    el.addEventListener('input', function(){ formatEurField(el); cb(); });
+  });
+  document.querySelectorAll('input.pct,input.num').forEach(function(el){
+    el.setAttribute('inputmode','decimal'); el.setAttribute('autocomplete','off');
+    el.addEventListener('input', cb);
+    el.addEventListener('blur', function(){ if(el.value !== '' && el.classList.contains('pct')){ var d = el.dataset.dec ? +el.dataset.dec : 2; el.value = nlNum(parseDec(el.value), d); } });
+  });
+  document.querySelectorAll('select,input[type=checkbox],input[type=month],input[type=date],input[type=radio]').forEach(function(el){
+    el.addEventListener('change', cb); el.addEventListener('input', cb);
+  });
+}
+function setEur(id, n){ var el = $(id); if(el){ el.value = n === '' ? '' : String(Math.round(n)); formatEurField(el); } }
+/* printen: werkt ook binnen een iframe (nieuw venster); valt terug op window.print */
+function printRapport(titel, inhoudHtml){
+  var css = document.getElementById('basecss') ? document.getElementById('basecss').textContent : '';
+  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>' + esc(titel) + '</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+    '<style>' + css + 'body{background:#fff;padding:18px}.noprint{display:none!important}.card{box-shadow:none;break-inside:avoid;margin-bottom:12px}.kpis{grid-template-columns:repeat(3,1fr)}@page{margin:14mm}</style></head><body>' +
+    '<div class="hdr" style="border-radius:10px;margin-bottom:14px"><div class="hdr-in"><div><div class="hdr-title">' + esc(titel) + '</div><div class="hdr-sub">Afgedrukt op ' + new Date().toLocaleDateString('nl-NL') + ' · indicatief, geen advies</div></div></div></div>' +
+    inhoudHtml + '<script>window.onload=function(){setTimeout(function(){window.print();},350);};<\/script></body></html>';
+  var w = null; try{ w = window.open('', '_blank'); }catch(e){ w = null; }
+  if(w && w.document){ w.document.open(); w.document.write(html); w.document.close(); }
+  else { window.print(); }
+}
+var WD = window.ATWoningdata, M = WD.meta, IX = WD.index;
+var K = WD.gemeenten.kolommen, GEM = WD.gemeenten.rijen.map(function(r){ var o = {}; K.forEach(function(k, i){ o[k] = r[i]; }); return o; });
+var PROVIDX = {}; GEM.forEach(function(g){ if(g.indexRegio.indexOf('PV') === 0) PROVIDX[g.prov] = g.indexRegio; });
+var START = kwParse(IX.start), LAATSTE = kwParse(IX.laatste);
+function kwParse(s){ var m = /^(\d{4})-K(\d)$/.exec(s); return { j: +m[1], k: +m[2] }; }
+function kwNr(j, k){ return (j - START.j) * 4 + (k - START.k); }
+function idx(reg, j, k){ var a = IX.reeks[reg]; var i = kwNr(j, k); return (a && i >= 0 && i < a.length) ? a[i] : null; }
+function idxNu(reg){ var a = IX.reeks[reg]; return a[a.length - 1]; }
+/* index op 1 januari van jaar p: gemiddelde van K4 (p-1) en K1 (p) */
+function idxPeil(reg, p){ var a = idx(reg, p - 1, 4), b = idx(reg, p, 1); return (a && b) ? (a + b) / 2 : null; }
+function regNaam(r){ return r === 'NL01' ? 'Nederland' : r.indexOf('PV') === 0 ? 'provincie ' + IX.regios[r] : IX.regios[r]; }
+function kwNL(s){ var q = kwParse(s); return q.k + 'e kwartaal ' + q.j; }
+
+(function init(){
+  $('gemeente').innerHTML = GEM.map(function(g, i){ return '<option value="' + i + '"' + (g.naam === 'Amersfoort' ? ' selected' : '') + '>' + esc(g.naam) + '</option>'; }).join('');
+  var jaren = [];
+  for(var j = LAATSTE.j + 1; j >= START.j + 2; j--){ if(idxPeil('NL01', j - 1)) jaren.push(j); }
+  var nu = new Date().getFullYear();
+  $('wozjaar').innerHTML = jaren.map(function(j){ return '<option value="' + j + '"' + (j === Math.min(nu, jaren[0]) ? ' selected' : '') + '>' + j + ' (peildatum 1-1-' + (j - 1) + ')</option>'; }).join('');
+  $('badgeJaar').textContent = 'Index t/m ' + IX.laatste.replace('-K', ' K');
+  $('bronnen').innerHTML = bronHtml();
+  $('gemeente').addEventListener('change', function(){ vulRegio(); bereken(); });
+  $('btnPrint').addEventListener('click', printen);
+  initEurFields(bereken);
+  vulRegio(); bereken();
+})();
+function gem(){ return GEM[+vS('gemeente')] || GEM[0]; }
+function vulRegio(){
+  var g = gem(), eigen = g.indexRegio, prov = PROVIDX[g.prov];
+  var opties = [[eigen, IX.regios[eigen] + (eigen.indexOf('GM') === 0 ? ' (gemeente)' : ' (provincie)')]];
+  if(prov !== eigen && IX.reeks[prov]) opties.push([prov, IX.regios[prov] + ' (provincie)']);
+  opties.push(['NL01', 'Nederland']);
+  $('regio').innerHTML = opties.map(function(o){ return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('');
+}
+function bronHtml(){
+  return 'Bronnen: ' + esc(M.index.bron) + ', tabel ' + esc(M.index.tabel) + ' "' + esc(M.index.titel) + '", t/m ' + esc(kwNL(IX.laatste)) +
+    ' (<a href="' + esc(M.index.url) + '" target="_blank" rel="noopener">opendata.cbs.nl</a>) · ' + esc(M.prijzen.bron) + ', tabel ' + esc(M.prijzen.tabel) + ' "' + esc(M.prijzen.titel) + '", peiljaar ' + M.prijzen.peiljaar +
+    ' (<a href="' + esc(M.prijzen.url) + '" target="_blank" rel="noopener">opendata.cbs.nl</a>) · gemiddelde WOZ koopwoningen: ' + esc(M.woz.bron) + ', tabel ' + esc(M.woz.tabel) + ', ' + M.woz.peiljaar + '. Gedownload op ' + datumNL(M.downloaddatum) + '.';
+}
+function datumNL(s){ var d = new Date(s + 'T12:00:00'); return isNaN(d) ? s : d.toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'}); }
+function pctV(a, b){ return b ? (a / b - 1) * 100 : 0; }
+function pctTxt(v){ return (v > 0.05 ? '+' : v < -0.05 ? '−' : '') + nlNum(Math.abs(v), 1) + '%'; }
+
+var LAATST; /* gezet door bereken() */
+function bereken(){
+  var g = gem(), reg = vS('regio') || g.indexRegio, vraag = vE('vraag'), woz = vE('woz'), wj = +vS('wozjaar'), peil = wj - 1;
+  var iP = idxPeil(reg, peil), iN = idxNu(reg), iPnl = idxPeil('NL01', peil), iNnl = idxNu('NL01');
+  var wozR = woz * iN / iP, wozNL = woz * iNnl / iPnl;
+  var jaarIdx = IX.jaar[reg] && IX.jaar[reg][String(M.prijzen.peiljaar)];
+  var gemNu = g.prijs && jaarIdx ? g.prijs * iN / jaarIdx : null;
+  var a = IX.reeks[reg], jr = a.length > 4 ? pctV(a[a.length - 1], a[a.length - 5]) : null;
+  $('peilHint').textContent = 'Index op peildatum ' + nlNum(iP, 1) + ', nu ' + nlNum(iN, 1) + ' (' + regNaam(reg) + ').';
+  $('chsGem').textContent = g.naam;
+  var pts = [{ n: 'WOZ geïndexeerd (' + regNaam(reg) + ')', v: wozR }, { n: 'WOZ geïndexeerd (Nederland)', v: wozNL }];
+  if(vraag > 0) pts.push({ n: 'Vraagprijs', v: vraag, vp: true });
+  var vals = pts.map(function(p){ return p.v; }).filter(function(v){ return v > 0; });
+  var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+  $('kpis').innerHTML = kpi('WOZ bijgewerkt', eur(wozR), 'WOZ ' + wj + ' × ' + nlNum(iN / iP, 3) + ' (' + regNaam(reg) + ')', 'g') +
+    kpi('Vraagprijs t.o.v. WOZ bijgewerkt', vraag > 0 ? pctTxt(pctV(vraag, wozR)) : '–', vraag > 0 ? (vraag >= wozR ? 'vraagprijs ligt hoger' : 'vraagprijs ligt lager') : 'vul de vraagprijs in') +
+    kpi('Bandbreedte', eur(lo) + ' – ' + eur(hi), 'laagste en hoogste referentiepunt') +
+    kpi('Prijsontwikkeling 12 mnd', jr == null ? '–' : pctTxt(jr), regNaam(reg) + ', ' + kwNL(IX.laatste));
+  // band
+  var span = Math.max(1, hi - lo), pad = span * 0.25 + hi * 0.01, mn = lo - pad, mx = hi + pad;
+  function x(v){ return ((v - mn) / (mx - mn) * 100).toFixed(2) + '%'; }
+  var kleur = ['var(--navy)', '#7d8fa3', 'var(--red)'];
+  $('band').innerHTML = '<div class="as"></div><div class="vlak" style="left:' + x(lo) + ';width:' + ((hi - lo) / (mx - mn) * 100).toFixed(2) + '%"></div>' +
+    pts.map(function(p, i){ return '<div class="pt" style="left:' + x(p.v) + ';background:' + kleur[i] + '" title="' + esc(p.n) + ': ' + eur(p.v) + '"></div>'; }).join('') +
+    '<div class="bl" style="left:' + x(lo) + '">' + eur(lo) + '</div><div class="bl r" style="left:' + x(hi) + '">' + eur(hi) + '</div>';
+  $('bandLeg').innerHTML = pts.map(function(p, i){ return '<span style="--c:' + kleur[i] + '">' + esc(p.vp ? 'Vraagprijs' : (i === 0 ? 'WOZ bijgewerkt, regio' : 'WOZ bijgewerkt, Nederland')) + '</span>'; }).join('');
+  var rij = function(n, v, s){ return '<tr><td>' + n + (s ? '<span class="hint" style="display:block">' + s + '</span>' : '') + '</td><td class="n">' + (v ? eur(v) : '–') + '</td><td class="n">' + (v && vraag > 0 ? pctTxt(pctV(v, vraag)) : '–') + '</td></tr>'; };
+  $('tabel').querySelector('tbody').innerHTML =
+    rij('Vraagprijs', vraag, '') +
+    rij('WOZ-waarde ' + wj, woz, 'peildatum 1 januari ' + peil) +
+    rij('WOZ bijgewerkt, ' + esc(regNaam(reg)), wozR, 'index ' + nlNum(iP, 1) + ' → ' + nlNum(iN, 1)) +
+    rij('WOZ bijgewerkt, Nederland', wozNL, 'index ' + nlNum(iPnl, 1) + ' → ' + nlNum(iNnl, 1)) +
+    '<tr class="sub"><td colspan="3">Context (niet in de bandbreedte)</td></tr>' +
+    rij('Gemiddelde verkoopprijs ' + esc(g.naam) + ' ' + M.prijzen.peiljaar, g.prijs, 'alle bestaande koopwoningen') +
+    rij('Idem, bijgewerkt t/m ' + esc(IX.laatste.replace('-K', ' K')), gemNu, '') +
+    rij('Gemiddelde WOZ koopwoning ' + esc(g.naam) + ' ' + M.woz.peiljaar, g.wozKoop, 'CBS ' + esc(M.woz.tabel));
+  var mld = '';
+  if(woz <= 0) mld += '<div class="note warn">Vul de WOZ-waarde in.</div>';
+  if(wj <= LAATSTE.j - 3) mld += '<div class="note warn">Een WOZ-waarde van ' + wj + ' is oud. Hoe langer geleden de peildatum, hoe groter de onzekerheid na indexering.</div>';
+  if(vraag > 0 && woz > 0 && Math.abs(pctV(vraag, wozR)) > 20) mld += '<div class="note gold">De vraagprijs wijkt meer dan 20% af van de bijgewerkte WOZ-waarde. Dat kan door een verbouwing, de staat van de woning of een bijzondere ligging komen. Een taxatie geeft meer zekerheid.</div>';
+  mld += '<div class="note info">Een bod boven de getaxeerde marktwaarde betaalt u met eigen geld; de hypotheek is maximaal 100% van de marktwaarde. Neem een ontbindende voorwaarde voor financiering op als u niet zeker bent van de financiering.</div>';
+  $('meldingen').innerHTML = mld;
+  grafiek(reg, peil);
+  LAATST = { g: g, reg: reg, wj: wj };
+}
+function kpi(l, v, s, c){ return '<div class="kpi' + (c ? ' ' + c : '') + '"><div class="kl">' + l + '</div><div class="kv">' + v + '</div>' + (s ? '<div class="ks">' + esc(s) + '</div>' : '') + '</div>'; }
+function grafiek(reg, peil){
+  var a = IX.reeks[reg], nl = IX.reeks.NL01, W = 560, Hh = 200, l = 34, r = 10, t = 10, b = 24;
+  var alle = a.concat(reg === 'NL01' ? [] : nl), mn = Math.floor(Math.min.apply(null, alle) / 10) * 10, mx = Math.ceil(Math.max.apply(null, alle) / 10) * 10;
+  function X(i){ return l + i / (a.length - 1) * (W - l - r); } function Y(v){ return t + (1 - (v - mn) / (mx - mn)) * (Hh - t - b); }
+  function pad(s){ return s.map(function(v, i){ return (i ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(''); }
+  var g = '';
+  for(var v = mn; v <= mx; v += (mx - mn > 80 ? 20 : 10)){ g += '<line x1="' + l + '" x2="' + (W - r) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" stroke="#e3e9ef"/><text x="' + (l - 4) + '" y="' + (Y(v) + 3).toFixed(1) + '" text-anchor="end">' + v + '</text>'; }
+  for(var j = START.j; j <= LAATSTE.j; j += 2){ var i = kwNr(j, 1); g += '<text x="' + X(i).toFixed(1) + '" y="' + (Hh - 6) + '" text-anchor="middle">' + j + '</text>'; }
+  var ip = kwNr(peil, 1) - 0.5;
+  if(ip >= 0) g += '<line x1="' + X(ip).toFixed(1) + '" x2="' + X(ip).toFixed(1) + '" y1="' + t + '" y2="' + (Hh - b) + '" stroke="#e5a138" stroke-dasharray="4 3" stroke-width="1.5"/><text x="' + (X(ip) > W - 110 ? X(ip) - 4 : X(ip) + 4).toFixed(1) + '" y="' + (t + 10) + '" text-anchor="' + (X(ip) > W - 110 ? 'end' : 'start') + '" style="fill:#b97c14;font-weight:700">peildatum WOZ</text>';
+  if(reg !== 'NL01') g += '<path d="' + pad(nl) + '" fill="none" stroke="#9aa8b6" stroke-width="1.5" stroke-dasharray="3 3"/>';
+  g += '<path d="' + pad(a) + '" fill="none" stroke="#003057" stroke-width="2.2"/><circle cx="' + X(a.length - 1).toFixed(1) + '" cy="' + Y(a[a.length - 1]).toFixed(1) + '" r="3.5" fill="#003057"/>';
+  $('grafiek').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + Hh + '" role="img" aria-label="Prijsindex bestaande koopwoningen ' + esc(regNaam(reg)) + '">' + g + '</svg>';
+  $('chsRegio').textContent = regNaam(reg) + ' · 2020 = 100';
+  $('grafHint').textContent = 'Prijsindex bestaande koopwoningen per kwartaal, ' + regNaam(reg) + (reg !== 'NL01' ? ' (doorgetrokken) en Nederland (gestippeld)' : '') + ', ' + kwNL(IX.start) + ' t/m ' + kwNL(IX.laatste) + '.';
+}
+function printen(){
+  var g = LAATST.g;
+  printRapport('Biedindicatie ' + g.naam, '<div class="afm"><strong>Geen biedadvies.</strong> Indicatie op basis van openbare statistiek. Een bod is een eigen afweging; alleen een taxatie geeft een marktwaarde.</div>' +
+    '<div class="card"><div class="ch">Indicatie</div><div class="cb">' + $('kpis').outerHTML + $('tabel').outerHTML + $('meldingen').outerHTML + '</div></div>' +
+    '<div class="card"><div class="ch">Prijsontwikkeling</div><div class="cb"><div class="grafiek" style="max-width:640px">' + $('grafiek').innerHTML + '</div><p class="hint">' + esc($('grafHint').textContent) + '</p></div></div>' +
+    '<p class="src">' + bronHtml() + '</p><div class="disc"><strong>Geen biedadvies, geen taxatie.</strong> De uitkomst zegt niets over de waarde van een bepaalde woning. Aan de uitkomst kunt u geen rechten ontlenen.</div>');
+}
+</script>
+</body>
+</html>
