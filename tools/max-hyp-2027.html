@@ -1173,7 +1173,9 @@ var LDR = (function () {
     function vrijstellingFactor(delenArr, m, V, restFn){
       var r1 = 0, r3 = 0;
       delenArr.forEach(function(d){
-        var r = restFn ? restFn(d) : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
+        // V is een deel van de HOOFDSOM (methodiek §2: maximum = max. maandlast / last per euro + V): f1/f3 op de hoofdsom,
+        // toegepast op de last van de restschuld (anders is de toets op een later moment ruimer dan het getoonde maximum)
+        var r = d.bedrag;
         if(!(r>0)) return;
         var a3 = d.bedrag>0 ? Math.min(1,(d.box3||0)/d.bedrag) : 0;
         r1 += r*(1-a3); r3 += r*a3;
@@ -1206,7 +1208,7 @@ var LDR = (function () {
         var vf = vrijstellingFactor(delenArr, m, vrijstellingOp(inkObj));
         var lastAftrekbaar=0, lastNietAftrekbaar=0, berekendeLast=0;
         delenArr.forEach(function(d){
-          var rest = restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
+          var rest = (ptMethode === "trhk" && aowMomenten[m]) ? d.bedrag : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); // Trhk/NHG: hele bedrag op het AOW-moment (zoals de hoofdtoets)
           if(rest<=0) return;
           var renteDeel = toetsrenteDeel(d, normrente);
           var iMaand = (renteDeel/100)/12;

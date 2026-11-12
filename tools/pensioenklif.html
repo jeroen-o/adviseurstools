@@ -1723,6 +1723,17 @@ function checkParts(testParts, income, group, globalToets) {
   // (box 3 = vast bedrag); alleen een restant gaat van het box 3-deel af.
   // Rentekolom: de naar bedrag gewogen toetsrente (3 decimalen) voor alle delen; de last per deel tegen de eigen toetsrente.
   // Verplichtingen (bruto maandlast) gebruiken een deel van de ruimte (box 1-tabel als er een box 1-deel is).
+  if (ptMethode() === 'beheer') {
+    // NHG-beheercriteria (V&N D.6), gelijk aan de scenariokaarten (toetsMaxBeheer): beheertabel, huidige (gewogen) rente,
+    // werkelijke last per leningdeel, verplichtingen niet gebruteerd, geen alleenstaanden- of labelbedrag; box 3-deel via de b3_-tabel
+    const LB = beheerLeningInfo(), d = TK.d, basis = (TK.isSolo ? 'alleen_' : 'paar_') + (group === 'aow' ? 'aow' : 'werk');
+    const M1 = income * beheerPct(basis, income, LB.rente) / 12, M3 = income * beheerPct('b3_' + basis, income, LB.rente) / 12;
+    let fB = 0, payB = 0;
+    for (const p of testParts) { const pay = partActualPayment(p, 0), M = p.box === 1 ? M1 : M3; payB += pay; fB += M > 0 ? pay / M : Infinity; }
+    const verlB = d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, Mv = testParts.some(p => p.box === 1) ? M1 : M3;
+    if (verlB > 0) fB += Mv > 0 ? verlB / Mv : Infinity;
+    return { fraction: fB, payment: payB, fits: fB <= 1 + (Mv > 0 ? 0.5 / Mv : 0) };
+  }
   const totaal = testParts.reduce((s, p) => s + p.amount, 0);
   const verh = alleenstaandenBedrag(income, group === 'aow') + (income > 0 ? (TK.labelExtra || 0) : 0); // + energielabelbedrag, ook buiten de toets
   const t1 = testParts.filter(p => p.box === 1).reduce((s, p) => s + p.amount, 0), t3 = totaal - t1;
