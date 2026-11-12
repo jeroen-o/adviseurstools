@@ -1244,13 +1244,20 @@ function beheerMax(o){
   // o.lastPerEuroOp(mnd) (optioneel): werkelijke last bij aanvang per € hoofdsom van de delen die op het AOW-moment na mnd volle maanden
   // nog lopen; een deel dat vóór of op dat moment volledig is afgelost telt dan niet mee (0 = niets meer: dat moment beperkt niets);
   // o.b3bedragOp(mnd) (optioneel): box 3-bedrag van die lopende delen (voor de brutering q1/q3)
+  // Gemengd box 1/box 3 met o.hoofdsom en o.last3PerEuro / o.last3PerEuroOp(mnd) (werkelijke box 3-last per € totale hoofdsom, alleen lopende delen):
+  // het box 3-deel is een VAST bedrag (zoals MAX. HYP. 2027): H = (beschikbaar − last box 3 × q1/q3) / last per € box 1 + box 3-bedrag
   var aOp=function(m){return (m.mnd>0&&o.lastPerEuroOp)?o.lastPerEuroOp(m.mnd):a;};
   var res=mom.map(function(m){var ink=0,alleAow=true,aM=aOp(m),b3m=(m.mnd>0&&o.b3bedragOp)?o.b3bedragOp(m.mnd):(+o.b3bedrag||0);
     o.personen.forEach(function(p){var aow=!!(p.aowD&&m.d>=p.aowD);if(aow){if(p.pens==null||isNaN(p.pens))ontbreekt=true;else ink+=Math.max(0,+p.pens);}else{alleAow=false;ink+=Math.max(0,+p.werk||0);}});
     var basis=(paar?'paar_':'alleen_')+(alleAow?'aow':(o.zonderwerk?'zonderwerk':'werk'));
     var tab=(b3==='ja'?'b3_':'')+basis,q=beheerPct(tab,ink,o.rente),q3=beheerPct('b3_'+basis,ink,o.rente);
     var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=aM>0?beschikbaar/aM:Infinity;
-    if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3
+    var T=+o.hoofdsom||0,B3=+o.b3bedrag||0,l3=(m.mnd>0&&o.last3PerEuroOp)?o.last3PerEuroOp(m.mnd):o.last3PerEuro;
+    if(aM>0&&b3==='deels'&&q3>0&&T>0&&B3>0&&B3<T&&l3!=null&&isFinite(l3)){ // box 3 als vast bedrag
+      if(aM-l3>1e-12)max=Math.max(0,beschikbaar-l3*T*q/q3)/((aM-l3)*T/(T-B3))+B3;
+      else{tab='b3_'+basis;q=q3;maxLast=ink*q/12;beschikbaar=Math.max(0,maxLast-(+o.verpl||0));max=beschikbaar/aM;} // alleen box 3 loopt nog: b3_-tabel
+    }
+    else if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3 (zelfde last per € in box 1 en box 3)
     return {m:m,ink:ink,tab:tab,q:q,maxLast:maxLast,max:Math.max(0,max)};});
   var b=res[0];res.forEach(function(x){if(x.max<b.max)b=x;});
   var eur=function(v){return '€ '+Math.round(v).toLocaleString('nl-NL');},pc=function(v){return (v*100).toFixed(1).replace('.',',')+'%';};
@@ -2165,7 +2172,7 @@ function calculate() {
     // (restschuld op dat moment, annuïtair 30 jaar); geen apart moment op de drempelleeftijd. Per moment per persoon: AOW → inkomen vanaf AOW; ≥ drempel (57/52) → laagste van
     // huidig inkomen en inkomen vanaf AOW; anders huidig inkomen. Tabel volgens art. 3 lid 7 (hoogste toetsinkomen).
     const heeft2 = !!jA;
-    const mk = (r, status, isPens) => ({ income: r.gez, reken: r.reken, type: r.type, isAowTabel: r.isAow, flp: r.flp, monthly: r.bruto, netto: r.netto, loan: r.loan, status, isPens });
+    const mk = (r, status, isPens, r3) => ({ income: r.gez, reken: r.reken, type: r.type, isAowTabel: r.isAow, flp: r.flp, monthly: r.bruto, netto: r.netto, loan: r.loan, loanB3: r3 ? r3.loan : NaN, status, isPens });
     const lftO = aE, lftJ = jA ? aE - ageDiff : null;
     const offs = [{ t: 0, lbl: 'Nu' }];
     const voegToe = (t, lbl, geldt) => { if (t > 1e-9 && geldt) offs.push({ t, lbl }); };
@@ -2178,12 +2185,14 @@ function calculate() {
     offs.forEach(o => {
       const p1 = persoonOp(oA, lftO + o.t), p2 = jA ? persoonOp(jA, lftJ + o.t) : null;
       const r = opRestschuld(toetsMax(p1.inc, p1.aow, p2 ? p2.inc : 0, p2 ? p2.aow : false, heeft2, false, refRate), o.t, refRate);
+      // Box 3 op hetzelfde moment, zoals de scenariokaart (alleenstaandenbedrag, verplichtingen, restschuldfactor; beheer: b3_-tabel)
+      const r3 = opRestschuld(toetsMax(p1.inc, p1.aow, p2 ? p2.inc : 0, p2 ? p2.aow : false, heeft2, true, refRate), o.t, refRate);
       const isPens = p1.aow || p1.pt || !!(p2 && (p2.aow || p2.pt));
       const status = o.t > 0 ? `${o.lbl} (over ${formatYearsMonths(o.t)}${bh ? ', NHG-beheer' : ', restschuld ' + fmtPct(r.rf * 100)})`
         : !isPens ? 'Werkend'
         : (p1.aow && (!p2 || p2.aow)) ? (heeft2 ? 'Beide AOW' : 'Gepensioneerd')
         : (p1.pt || (p2 && p2.pt)) ? 'Pens. in toets (nu)' : 'Gemengd';
-      toetsen.push(mk(r, status, isPens));
+      toetsen.push(mk(r, status, isPens, r3));
     });
     // Bindende toets = laagste max hypotheek
     toetsen.sort((x, y) => x.loan - y.loan);
@@ -2245,6 +2254,7 @@ function calculate() {
       flp: binding.flp,
       monthly: binding.monthly,
       loan: binding.loan,
+      loanB3: Math.min.apply(null, toetsen.map(x => x.loanB3)), // box 3: laagste uitkomst over dezelfde toetsmomenten
       loanSalary, tweetrap,
       tweetrapVariants  // alle 4 varianten (gesorteerd hoog→laag) voor de optimalisatie-sectie
     });
@@ -2268,6 +2278,8 @@ function calculate() {
       td: tdB, rente: renteB, lastPerEuro: tot > 0 ? delen.reduce((s, p) => s + partActualPayment(p, 0), 0) / tot : null,
       lastPerEuroOp: tot > 0 ? (mnd => delen.reduce((s, p) => s + (deelRestFractie(p, mnd) > 0 ? partActualPayment(p, 0) : 0), 0) / tot) : null, // deel afgelost vóór of op de AOW-datum telt niet mee
       b3bedragOp: mnd => delen.reduce((s, p) => s + (p.box === 3 && deelRestFractie(p, mnd) > 0 ? p.amount : 0), 0),
+      hoofdsom: tot, last3PerEuro: tot > 0 ? delen.reduce((s, p) => s + (p.box === 3 ? partActualPayment(p, 0) : 0), 0) / tot : null, // box 3 als vast bedrag
+      last3PerEuroOp: tot > 0 ? (mnd => delen.reduce((s, p) => s + (p.box === 3 && deelRestFractie(p, mnd) > 0 ? partActualPayment(p, 0) : 0), 0) / tot) : null,
       aanname: tot > 0 ? 'Werkelijke leningdelen (vorm, looptijd en rente per deel).' : null,
       verpl: d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, rvpRestJr: tot > 0 ? Math.min.apply(null, delen.map(p => p.fixedYrs || 99)) : inp.refRvp,
       box3: tot > 0 && b3 >= tot ? 'ja' : (b3 > 0 ? 'deels' : 'nee'), b3bedrag: b3,
@@ -2696,15 +2708,7 @@ function renderTable(results, currentAge, pensionAge, refRate, inp) {
     const badge = r.isPens
       ? `<span class="badge badge-pension">${r.status}</span>`
       : `<span class="badge badge-work">${r.status}</span>`;
-    let loanB3;
-    if (ptMethode() === 'beheer') { // box 3-kolom volgens de NHG-beheertabel (b3_), werkelijke lasten, geen labelbedrag
-      const LB = beheerLeningInfo(), basis = String(r.type || '').replace(/^b3_/, ''), d = TK.d;
-      loanB3 = Math.max(0, r.testIncome * beheerPct('b3_' + basis, r.testIncome, LB.rente) / 12 - (d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd)) / LB.a;
-    } else {
-    const flpB3 = getFLP(r.testIncome, r.isPens ? 'box3_aow' : 'box3_werkend', refRate);
-    const mB3 = flpB3 / 100 * r.testIncome / 12;
-    loanB3 = maxLoan(mB3, refRate, 30) + (TK.labelExtra || 0); // + energielabelbedrag (buiten de maandlasttoets)
-    }
+    const loanB3 = r.loanB3; // per toetsmoment als de scenariokaart (toetsMax box 3 + opRestschuld), laagste uitkomst
     const extra = r.tweetrap - r.loan;
     const hasExtra = extra > 1000;
     html += `<tr class="${rowClass}">

@@ -877,13 +877,20 @@ function beheerMax(o){
   // o.lastPerEuroOp(mnd) (optioneel): werkelijke last bij aanvang per € hoofdsom van de delen die op het AOW-moment na mnd volle maanden
   // nog lopen; een deel dat vóór of op dat moment volledig is afgelost telt dan niet mee (0 = niets meer: dat moment beperkt niets);
   // o.b3bedragOp(mnd) (optioneel): box 3-bedrag van die lopende delen (voor de brutering q1/q3)
+  // Gemengd box 1/box 3 met o.hoofdsom en o.last3PerEuro / o.last3PerEuroOp(mnd) (werkelijke box 3-last per € totale hoofdsom, alleen lopende delen):
+  // het box 3-deel is een VAST bedrag (zoals MAX. HYP. 2027): H = (beschikbaar − last box 3 × q1/q3) / last per € box 1 + box 3-bedrag
   var aOp=function(m){return (m.mnd>0&&o.lastPerEuroOp)?o.lastPerEuroOp(m.mnd):a;};
   var res=mom.map(function(m){var ink=0,alleAow=true,aM=aOp(m),b3m=(m.mnd>0&&o.b3bedragOp)?o.b3bedragOp(m.mnd):(+o.b3bedrag||0);
     o.personen.forEach(function(p){var aow=!!(p.aowD&&m.d>=p.aowD);if(aow){if(p.pens==null||isNaN(p.pens))ontbreekt=true;else ink+=Math.max(0,+p.pens);}else{alleAow=false;ink+=Math.max(0,+p.werk||0);}});
     var basis=(paar?'paar_':'alleen_')+(alleAow?'aow':(o.zonderwerk?'zonderwerk':'werk'));
     var tab=(b3==='ja'?'b3_':'')+basis,q=beheerPct(tab,ink,o.rente),q3=beheerPct('b3_'+basis,ink,o.rente);
     var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=aM>0?beschikbaar/aM:Infinity;
-    if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3
+    var T=+o.hoofdsom||0,B3=+o.b3bedrag||0,l3=(m.mnd>0&&o.last3PerEuroOp)?o.last3PerEuroOp(m.mnd):o.last3PerEuro;
+    if(aM>0&&b3==='deels'&&q3>0&&T>0&&B3>0&&B3<T&&l3!=null&&isFinite(l3)){ // box 3 als vast bedrag
+      if(aM-l3>1e-12)max=Math.max(0,beschikbaar-l3*T*q/q3)/((aM-l3)*T/(T-B3))+B3;
+      else{tab='b3_'+basis;q=q3;maxLast=ink*q/12;beschikbaar=Math.max(0,maxLast-(+o.verpl||0));max=beschikbaar/aM;} // alleen box 3 loopt nog: b3_-tabel
+    }
+    else if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3 (zelfde last per € in box 1 en box 3)
     return {m:m,ink:ink,tab:tab,q:q,maxLast:maxLast,max:Math.max(0,max)};});
   var b=res[0];res.forEach(function(x){if(x.max<b.max)b=x;});
   var eur=function(v){return '€ '+Math.round(v).toLocaleString('nl-NL');},pc=function(v){return (v*100).toFixed(1).replace('.',',')+'%';};
@@ -931,7 +938,9 @@ function bereken(){
       lastPerEuro:totD>0?delen.reduce((t,d)=>t+maandlastD(d,0),0)/totD:null,
       // AOW-moment: werkelijke last bij aanvang van de delen die dan nog lopen (deel afgelost vóór of op de AOW-datum telt niet mee)
       lastPerEuroOp:totD>0?(mnd=>delen.reduce((t,d)=>t+(mnd<d.looptijd*12?maandlastD(d,0):0),0)/totD):null,
-      b3bedragOp:mnd=>delen.reduce((t,d)=>t+(d.box===3&&mnd<d.looptijd*12?d.bedrag:0),0),aanname:totD>0?'Werkelijke leningdelen (vorm, looptijd en rente per deel).':null,
+      b3bedragOp:mnd=>delen.reduce((t,d)=>t+(d.box===3&&mnd<d.looptijd*12?d.bedrag:0),0),
+      hoofdsom:totD,last3PerEuro:totD>0?delen.reduce((t,d)=>t+(d.box===3?maandlastD(d,0):0),0)/totD:null, // box 3 als vast bedrag
+      last3PerEuroOp:totD>0?(mnd=>delen.reduce((t,d)=>t+(d.box===3&&mnd<d.looptijd*12?maandlastD(d,0):0),0)/totD):null,aanname:totD>0?'Werkelijke leningdelen (vorm, looptijd en rente per deel).':null,
       verpl:0,rvpRestJr:rvpJr.length?Math.min.apply(null,rvpJr):null,box3:totD>0&&b3D>=totD?'ja':(b3D>0?'deels':'nee'),b3bedrag:b3D,
       meldingen:(totD>0?[]:[leesRentePct()?'Geen leningdelen: gerekend met de ingevulde huidige rente van '+renteB.toFixed(3).replace('.',',')+'%.':'LET OP: geen geldige huidige rente ingevuld; gerekend met '+renteB.toFixed(3).replace('.',',')+'% (AFM-minimumtoetsrente). Vul de huidige rente in.']).concat(['De tijdlijn toetst per maand volgens de NHG-beheercriteria: pensioen telt pas mee binnen 3 jaar vóór de AOW-datum, daarna het inkomen vanaf AOW.'])});
     // Beheertoets op een later moment (maand m): werkelijke last per € restschuld van de leningdelen (anders 50/50), huidige rente;
@@ -942,14 +951,22 @@ function bereken(){
       const a=totR>0?delen.reduce((t,d)=>t+maandlastD(d,m),0)/totR:beheerLast5050(renteB);
       // box 3-aandeel van de restschuld op dat moment: volledig box 3 → b3_-tabel zonder brutering; gemengd → box 3-deel × q1/q3
       const b3R=delen.filter(d=>d.box===3).reduce((t,d)=>t+restSchuld(d,m),0), s3=totR>0?b3R/totR:(totD>0?b3D/totD:0), b3all=s3>=1-1e-9;
-      const toets=(aow,aa,s3x)=>{const ti=aow?aowInk:ink,basis='alleen_'+(aow?'aow':'werk'),tab=(b3all?'b3_':'')+basis,q=beheerPct(tab,ti,renteB),q3=beheerPct('b3_'+basis,ti,renteB),
-        fL=!b3all&&s3x>0&&q3>0?(1-s3x)+s3x*q/q3:1,ml=ti*q/12;return {tab,ml,max:aa>0?Math.max(0,ml)/(aa*fL):Infinity};};
-      let r=toets(dt>=aowDatum,a,s3);
+      // v = {L1,L3,R1,R3}: lasten (alleen lopende delen) en restschuld box 1/box 3 op dat moment. Gemengd: box 3 als VAST bedrag
+      // (zoals beheerMax en MAX. HYP. 2027): max = (maandlast − last box 3 × q1/q3) / last per € box 1 + box 3-schuld
+      const toets=(aow,aa,s3x,v)=>{const ti=aow?aowInk:ink,basis='alleen_'+(aow?'aow':'werk'),tab=(b3all?'b3_':'')+basis,q=beheerPct(tab,ti,renteB),q3=beheerPct('b3_'+basis,ti,renteB),
+        fL=!b3all&&s3x>0&&q3>0?(1-s3x)+s3x*q/q3:1,ml=ti*q/12;
+        if(v&&!b3all&&q3>0&&v.R1>0&&v.R3>0){
+          if(v.L1>1e-9)return {tab,ml,max:Math.max(0,ml-v.L3*q/q3)/(v.L1/v.R1)+v.R3};
+          if(v.L3>0){const ml3=ti*q3/12;return {tab:'b3_'+basis,ml:ml3,max:Math.max(0,ml3)/(v.L3/(v.R1+v.R3))};} // alleen box 3 loopt nog
+          return {tab,ml,max:Infinity};}
+        return {tab,ml,max:aa>0?Math.max(0,ml)/(aa*fL):Infinity};};
+      const vOp=lp=>{const v={L1:0,L3:0,R1:0,R3:0};delen.forEach(d=>{const rs=restSchuld(d,m),l=lp(d)?maandlastD(d,m):0;if(d.box===3){v.R3+=rs;v.L3+=l;}else{v.R1+=rs;v.L1+=l;}});return v;};
+      let r=toets(dt>=aowDatum,a,s3,vOp(()=>true));
       const tot=(aowDatum.getFullYear()-dt.getFullYear())*12+(aowDatum.getMonth()-dt.getMonth())-(aowDatum.getDate()<dt.getDate()?1:0);
       // AOW-moment: werkelijke last (op dat moment) van de delen die op de AOW-datum nog lopen; afgelost vóór of op de AOW-datum telt niet mee
       const loopt=d=>m+tot<d.looptijd*12, aAow=totR>0?delen.reduce((t,d)=>t+(loopt(d)?maandlastD(d,m):0),0)/totR:a;
       const rA=delen.reduce((t,d)=>t+(loopt(d)?restSchuld(d,m):0),0), s3A=rA>0?delen.reduce((t,d)=>t+(d.box===3&&loopt(d)?restSchuld(d,m):0),0)/rA:s3;
-      if(dt<aowDatum&&tot<=ATD.nhg.beheer.regels.pensioen_binnen_maanden&&!aowInkLeeg){const x=toets(true,aAow,s3A);if(x.max<r.max)r=x;}
+      if(dt<aowDatum&&tot<=ATD.nhg.beheer.regels.pensioen_binnen_maanden&&!aowInkLeeg){const x=toets(true,aAow,s3A,vOp(loopt));if(x.max<r.max)r=x;}
       return {mnd:r.ml,norm:/aow$/.test(r.tab)?'AOW':'Huidig',max:Math.round(r.max)};
     };
   }

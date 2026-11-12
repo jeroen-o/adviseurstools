@@ -746,9 +746,9 @@ function bereken(){
   const adj=x=>Math.max(0,x+alimentatie-alimBetaald);
   const mom=[Object.assign(toets(adj(aowBereikt?pensioenInk:inkomen),TBL_NU),{lbl:'bij aanvang'})];
   const rfAow=methode!=='rest'?1:restF(aowM);
-  // lening vóór of op de AOW-datum volledig afgelost (looptijd voorbij): dat moment toetst niets (ook niet bij de Trhk/NHG-methode;
-  // NHG-beheer: werkelijke last bij aanvang, maar een lening die vóór of op de AOW-datum is afgelost telt dan niet mee, ook aflossingsvrij)
-  const aowAfgelost=aowM>=lt&&(methode==='beheer'||vorm!=='af');
+  // lening vóór of op de AOW-datum volledig afgelost (looptijd voorbij, ook aflossingsvrij): dat moment toetst niets, bij elke methode
+  // (zoals MAX. HYP. 2027, restOpMoment; NHG-beheer: werkelijke last bij aanvang, maar een afgeloste lening telt niet mee)
+  const aowAfgelost=aowM>=lt;
   if(aowBinnen&&!aowAfgelost) mom.push(Object.assign(toets(adj(pensioenInk),TBL_AOW,rfAow),{lbl:methode==='beheer'?`AOW-datum (${aowD.toLocaleDateString('nl-NL')}, na ${mAow0} mnd, binnen 3 jaar — NHG-beheercriteria)`:methode==='trhk'?`AOW-datum (${aowD.toLocaleDateString('nl-NL')}, na ${aowM} mnd, Trhk/NHG-methode: hele bedrag)`:`AOW-datum (${aowD.toLocaleDateString('nl-NL')}, na ${aowM} mnd, op de restschuld: restfactor ${rfAow.toFixed(4).replace('.',',')})`}));
   const tNu=mom[0];
   const bindend=mom.reduce((a,b)=>b.maxHyp<a.maxHyp?b:a,mom[0]);
@@ -827,7 +827,7 @@ function bereken(){
     const tNuG=aowNu?TBL_AOW:(norm==='beheer'?(werk?NHG_BEHEER_5B:NHG_BEHEER_5D):FL_T1);
     if((aowNu||geldt)&&pensioenInk===null)return 0;
     let low=toets(adj(aowNu?pensioenInk:inkomen),tNuG).maxHyp;
-    if(geldt){const m=(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())-(a.getDate()<vandaag.getDate()?1:0);if(!(m>=lt&&vorm!=='af'))low=Math.min(low,toets(adj(pensioenInk),TBL_AOW,methode==='trhk'?1:restF(m)).maxHyp);}
+    if(geldt){const m=(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())-(a.getDate()<vandaag.getDate()?1:0);if(m<lt)low=Math.min(low,toets(adj(pensioenInk),TBL_AOW,methode==='trhk'?1:restF(m)).maxHyp);}
     return low;
   }
   try{ptGrafiek(document.getElementById('ptGrafiek'),{berekenMax:grafiekMax,huidigeLeeftijd:leeftijd,gekozen:String(drempel),methode:methode,ontbreekt:norm!=='beheer'&&!aowBereikt&&pensioenInk===null,vanaf:50,tot:ATN_AOW_JR});}catch(e){document.getElementById('ptGrafiek').innerHTML='';}

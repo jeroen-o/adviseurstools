@@ -963,7 +963,8 @@ function bereken(){
     return p.T1>0&&p.L1>0?(besch-L3v)/(p.L1/p.T1)+p.B:Infinity;} // geen box 1-last (bijv. afgelost op het AOW-moment): niet beperkend
   const toetslastStd=(sc,p,aftrek)=>(p.T1>0?p.L1/p.T1*Math.max(0,p.T1-aftrek):0)+p.L3*sc.verh; // aftrek (alleenstaandenbedrag) op het box 1-deel
   cur.p=lastDelen(0);
-  function restDeel(l,m){const H=l.hoofdsom,n=l.looptijd>0?l.looptijd:360,i=l.rente/100/12;if(m>=n&&!(l.aflosvorm==='Aflossingsvrij'||l.aflosvorm==='Spaarhypotheek'||l.aflosvorm==='Beleggings'))return 0;
+  // looptijd voorbij (m ≥ n): deel afgelost, ook aflossingsvrij/spaar/belegging — telt op dat moment niet mee (zoals MAX. HYP. 2027, restOpMoment)
+  function restDeel(l,m){const H=l.hoofdsom,n=l.looptijd>0?l.looptijd:360,i=l.rente/100/12;if(m>=n)return 0;
     if(l.aflosvorm==='Aflossingsvrij'||l.aflosvorm==='Spaarhypotheek'||l.aflosvorm==='Beleggings')return H;if(l.aflosvorm==='Lineair'||i===0)return H*(1-m/n);
     return H*(Math.pow(1+i,n)-Math.pow(1+i,m))/(Math.pow(1+i,n)-1);}
   if(pensA!==null&&aowBinnen){
@@ -1125,11 +1126,11 @@ function bereken(){
     const geldt=!aowNu&&(kk==='aow10'||kk==='aow15'?a<=new Date(vandaag.getFullYear()+(kk==='aow10'?10:15),vandaag.getMonth(),vandaag.getDate()):(kk>0&&lft>=kk));
     if((aowNu||geldt)&&pensA===null)return 0;
     const stN={b1:SY.n1,b3:SY.n3,naam:'Trhk '+NJ+' nietAOW'},btN=BEHEER_TABELLEN[situatieKeuze==='aow'?'werk':situatieKeuze]||BEHEER_TABELLEN.werk;
-    const maxOp=(sc,lpe)=>{const gr=sc.st===STP?SY.alleen.grensAOW:SY.alleen.grens;const al=sc.ink>gr?SY.alleen.bedrag:0;const h=maxStd(sc.exclS-verpl,sc,lpe);return isFinite(h)?h+al:0;};
+    const maxOp=(sc,lpe,inf)=>{const gr=sc.st===STP?SY.alleen.grensAOW:SY.alleen.grens;const al=sc.ink>gr?SY.alleen.bedrag:0;const h=maxStd(sc.exclS-verpl,sc,lpe);return isFinite(h)?h+al:(inf?Infinity:0);};
     const scA=aowNu?scenario(pensA,STP,BTP):scenario(ink0,stN,btN);let low=maxOp(scA,cur.p);
     if(geldt){const m=(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())-(a.getDate()<vandaag.getDate()?1:0);
       const scP=scenario(pensA,STP,BTP);
-      low=Math.min(low,maxOp(scP,lastDelen(m,methode==='trhk')));}
+      low=Math.min(low,maxOp(scP,lastDelen(m,methode==='trhk'),true));} // afgelost op het AOW-moment: niet beperkend
     return low;
   }
   try{ptGrafiek(document.getElementById('ptGrafiek'),{berekenMax:grafiekMax,huidigeLeeftijd:leeftijd,gekozen:String(pensioenDrempel),methode:methode,ontbreekt:methode!=='beheer'&&situatie!=='aow'&&pensInk===null,vanaf:50,tot:ATN_AOW_JR});}catch(e){document.getElementById('ptGrafiek').innerHTML='';}

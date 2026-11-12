@@ -1535,22 +1535,37 @@ var LDR = (function () {
         optie1Html = "<div class='scenariobox' style='margin-top:0;margin-bottom:12px;'><strong>Optie 1 · Extra aflossing (kortlopend leningdeel)</strong><br>Met de huidige leningdelen is er geen haalbare carve-out gevonden die tot AKKOORD leidt.</div>";
       }
 
-      // Optie 2: verlaag de hoofdsom proportioneel
-      function metSchaal(f){
-        return delenState.map(function(d){ return {vorm:d.vorm,bedrag:d.bedrag*f,aftrekbaarTm:d.aftrekbaarTm,box3:(d.box3||0)*f,rentevast:d.rentevast,rente:d.rente,duur:d.duur}; });
+      // Optie 2: verlaag de hoofdsom — zelfde verdeling als het getoonde maximum (maxUitLast): bij gemengd box 1/box 3 blijft het
+      // box 3-bedrag vast en daalt alleen het box 1-deel naar rato; anders alle delen naar rato. Bedrag op hele euro's (som = H),
+      // nooit boven het getoonde maximum en met dat bedrag AKKOORD (zelfde toets als de hoofdtoets).
+      function metSchaal(H){
+        var vast3 = totBox1 > 0 && totBox3 > 0 && H >= totBox3;
+        var basis = vast3 ? totBox1 : (totBox1 + totBox3), f = basis > 0 ? (vast3 ? H - totBox3 : H) / basis : 0;
+        var arr = delenState.map(function(d){
+          var b3 = Math.min(d.bedrag, d.box3||0), b1 = d.bedrag - b3;
+          var nb = vast3 ? b3 + Math.floor(b1*f) : Math.floor(d.bedrag*f);
+          var nb3 = vast3 ? b3 : (d.bedrag > 0 ? Math.min(nb, Math.round(b3*nb/d.bedrag)) : 0);
+          return {vorm:d.vorm,bedrag:nb,aftrekbaarTm:d.aftrekbaarTm,box3:nb3,rentevast:d.rentevast,rente:d.rente,duur:d.duur, _b1:vast3 ? b1 : d.bedrag};
+        });
+        var rest = H - arr.reduce(function(a,d){ return a + d.bedrag; }, 0), gi = -1;
+        arr.forEach(function(d,i){ if(d._b1 > 0 && (gi < 0 || d._b1 > arr[gi]._b1)) gi = i; });
+        if(gi >= 0 && rest > 0){ var vol = arr[gi].box3 >= arr[gi].bedrag && !vast3; arr[gi].bedrag += rest; if(vol) arr[gi].box3 = arr[gi].bedrag; }
+        arr.forEach(function(d){ delete d._b1; });
+        return arr;
       }
-      var loF=0, hiF=1;
+      var loH=0, hiH=hoofdsomTotaal;
       for(var it2=0; it2<40; it2++){
-        var midF = (loF+hiF)/2;
-        if(evaluateScenario(metSchaal(midF)).akkoord){ loF = midF; } else { hiF = midF; }
+        var midH = (loH+hiH)/2;
+        if(evaluateScenario(metSchaal(midH)).akkoord){ loH = midH; } else { hiH = midH; }
       }
-      var fSol = loF;
-      var nieuweHoofdsom = Math.floor((hoofdsomTotaal*fSol)/100)*100;
-      var fExact = nieuweHoofdsom / hoofdsomTotaal;
-      var res2 = evaluateScenario(metSchaal(fExact));
+      var nieuweHoofdsom = Math.min(Math.floor(loH/100)*100, Math.floor(maximaleHypotheek/100)*100);
+      while(nieuweHoofdsom > 0 && !evaluateScenario(metSchaal(nieuweHoofdsom)).akkoord) nieuweHoofdsom -= 100;
+      nieuweHoofdsom = Math.max(0, nieuweHoofdsom);
+      var routeDelen = metSchaal(nieuweHoofdsom);
+      var res2 = evaluateScenario(routeDelen);
       var optie2Html = "<div class='scenariobox' style='margin-top:0;'>" +
         "<strong>Optie 2 · Verlaag de hoofdsom</strong><br>" +
-        "Verlaag de hoofdsom naar " + fmtEUR(nieuweHoofdsom) + " (−" + fmtEUR(hoofdsomTotaal-nieuweHoofdsom) + ") bij gelijkblijvende leningconstructie en verhoudingen. Op het krapste toetsmoment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + ") is de ruimte dan " + fmtEUR(Math.max(0,res2.slechtsteRuimte)) + " → " + (res2.akkoord?"AKKOORD":"NIET AKKOORD") +
+        "Verlaag de hoofdsom naar " + fmtEUR(nieuweHoofdsom) + " (−" + fmtEUR(hoofdsomTotaal-nieuweHoofdsom) + ")" + (totBox1 > 0 && totBox3 > 0 && nieuweHoofdsom >= totBox3 ? " bij gelijkblijvende leningconstructie; het box 3-bedrag (" + fmtEUR(totBox3) + ") blijft gelijk, de box 1-delen dalen naar rato" : " bij gelijkblijvende leningconstructie en verhoudingen") + " (niet hoger dan de maximale hypotheek van " + fmtEUR(maximaleHypotheek) + "). Op het krapste toetsmoment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + ") is de ruimte dan " + fmtEUR(Math.max(0,res2.slechtsteRuimte)) + " → " + (res2.akkoord?"AKKOORD":"NIET AKKOORD") +
         "<div class='btnrow'><button type='button' class='btn accent' id='routeOptie2Btn'>✓ Pas verlaging toe</button></div>" +
         "</div>";
 
@@ -1569,7 +1584,7 @@ var LDR = (function () {
       var btn2 = document.getElementById("routeOptie2Btn");
       if(btn2){
         btn2.addEventListener("click", function(){
-          delenState.forEach(function(d){ d.bedrag = Math.floor((d.bedrag*fExact)/100)*100; });
+          delenState.forEach(function(d,i){ d.bedrag = routeDelen[i].bedrag; d.box3 = routeDelen[i].box3; });
           renderDelen(); bereken();
         });
       }

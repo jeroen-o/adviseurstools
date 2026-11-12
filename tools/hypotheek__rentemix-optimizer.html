@@ -1151,13 +1151,20 @@ function beheerMax(o){
   // o.lastPerEuroOp(mnd) (optioneel): werkelijke last bij aanvang per € hoofdsom van de delen die op het AOW-moment na mnd volle maanden
   // nog lopen; een deel dat vóór of op dat moment volledig is afgelost telt dan niet mee (0 = niets meer: dat moment beperkt niets);
   // o.b3bedragOp(mnd) (optioneel): box 3-bedrag van die lopende delen (voor de brutering q1/q3)
+  // Gemengd box 1/box 3 met o.hoofdsom en o.last3PerEuro / o.last3PerEuroOp(mnd) (werkelijke box 3-last per € totale hoofdsom, alleen lopende delen):
+  // het box 3-deel is een VAST bedrag (zoals MAX. HYP. 2027): H = (beschikbaar − last box 3 × q1/q3) / last per € box 1 + box 3-bedrag
   var aOp=function(m){return (m.mnd>0&&o.lastPerEuroOp)?o.lastPerEuroOp(m.mnd):a;};
   var res=mom.map(function(m){var ink=0,alleAow=true,aM=aOp(m),b3m=(m.mnd>0&&o.b3bedragOp)?o.b3bedragOp(m.mnd):(+o.b3bedrag||0);
     o.personen.forEach(function(p){var aow=!!(p.aowD&&m.d>=p.aowD);if(aow){if(p.pens==null||isNaN(p.pens))ontbreekt=true;else ink+=Math.max(0,+p.pens);}else{alleAow=false;ink+=Math.max(0,+p.werk||0);}});
     var basis=(paar?'paar_':'alleen_')+(alleAow?'aow':(o.zonderwerk?'zonderwerk':'werk'));
     var tab=(b3==='ja'?'b3_':'')+basis,q=beheerPct(tab,ink,o.rente),q3=beheerPct('b3_'+basis,ink,o.rente);
     var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=aM>0?beschikbaar/aM:Infinity;
-    if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3
+    var T=+o.hoofdsom||0,B3=+o.b3bedrag||0,l3=(m.mnd>0&&o.last3PerEuroOp)?o.last3PerEuroOp(m.mnd):o.last3PerEuro;
+    if(aM>0&&b3==='deels'&&q3>0&&T>0&&B3>0&&B3<T&&l3!=null&&isFinite(l3)){ // box 3 als vast bedrag
+      if(aM-l3>1e-12)max=Math.max(0,beschikbaar-l3*T*q/q3)/((aM-l3)*T/(T-B3))+B3;
+      else{tab='b3_'+basis;q=q3;maxLast=ink*q/12;beschikbaar=Math.max(0,maxLast-(+o.verpl||0));max=beschikbaar/aM;} // alleen box 3 loopt nog: b3_-tabel
+    }
+    else if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3 (zelfde last per € in box 1 en box 3)
     return {m:m,ink:ink,tab:tab,q:q,maxLast:maxLast,max:Math.max(0,max)};});
   var b=res[0];res.forEach(function(x){if(x.max<b.max)b=x;});
   var eur=function(v){return '€ '+Math.round(v).toLocaleString('nl-NL');},pc=function(v){return (v*100).toFixed(1).replace('.',',')+'%';};
