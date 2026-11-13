@@ -965,7 +965,10 @@ function bereken(){
         if(v&&!b3all&&q3>0&&v.R1>0&&v.R3>0){
           // past de gebruteerde box 3-last alleen al niet: naar rato onder de box 3-schuld (zoals beheerMax en MAX. HYP. 2027)
           if(v.L1>1e-9){const g3=v.L3*q/q3;return {tab,ml,max:ml<g3?ml*v.R3/g3:(ml-g3)/(v.L1/v.R1)+v.R3};}
-          if(v.L3>0){const ml3=ti*q3/12;return {tab:'b3_'+basis,ml:ml3,max:Math.max(0,ml3)/(v.L3/(v.R1+v.R3))};} // alleen box 3 loopt nog
+          // alleen het VASTE box 3-deel loopt nog (box 1-delen afgelost op dat moment): b3_-tabel, geen brutering (zoals beheerMax en
+          // pensioenklif): past de box 3-last, dan beperkt dit moment niet; anders is de grens het hoogste box 3-bedrag dat past
+          // (maandlast / last per € box 3-schuld; zelfde bedrag als de melding 'verlaag het box 3-deel tot X'), niet naar rato over de hele restschuld
+          if(v.L3>0){const ml3=ti*q3/12;return {tab:'b3_'+basis,ml:ml3,max:v.L3-ml3<=0.5?Infinity:Math.max(0,ml3)/(v.L3/v.R3)};}
           return {tab,ml,max:Infinity};}
         return {tab,ml,max:aa>0?Math.max(0,ml)/(aa*fL):Infinity};};
       const vOp=lp=>{const v={L1:0,L3:0,R1:0,R3:0};delen.forEach(d=>{const rs=restSchuld(d,m),l=lp(d)?maandlastD(d,m):0;if(d.box===3){v.R3+=rs;v.L3+=l;}else{v.R1+=rs;v.L1+=l;}});return v;};
