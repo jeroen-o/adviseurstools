@@ -1294,15 +1294,18 @@ function bereken(){
   }
   function trhkUitkomst(ink, aow, m){
     const q1 = lookupFLpct(aow ? ADV.w : ADV.n, ink, toetsrenteAdv), q3 = lookupFLpct(aow ? ADV.b3w : ADV.b3n, ink, toetsrenteAdv);
-    const pct = volledigBox3 ? q3 : q1;
-    const verh = (volledigBox3 || q3 <= 0) ? 1 : q1/q3;
-    const beschikbaar = ink * pct / 12 - aftrekAdv;
     /* Trhk art. 3: ongeacht vorm en looptijd de last van een annuïteit over 30 jaar op de toetsrente. Aanvang: hele hoofdsom per deel;
        later moment (AOW-datum): werkelijke restschuld per deel, ook als 30-jarige annuïteit op de toetsrente (zoals MAX. HYP. 2027); box 3-delen × q1/q3. */
     /* per deel: (rest)schuld × annuïteit 30 jaar op de toetsrente van dat deel; L1/T1 box 1 (bij volledig box 3: alle delen), L3/B box 3 */
     let L1 = 0, T1 = 0, L3 = 0, rest = 0;
     leningdelen.forEach(d => { const H = d.hoofdsom > 0 ? d.hoofdsom : 0; const r = m > 0 ? (methode === 'trhk' ? (m < Math.round((d.looptijd||30)*12) ? H : 0) : restDeel(d, m)) : H; rest += r; /* Trhk/NHG: hele bedrag; deel dat vóór of op het AOW-moment is afgelost valt weg */
       const x = r * annDeelAdv(d); if (d.box === 3 && !volledigBox3) L3 += x; else { L1 += x; T1 += H; } });
+    /* alleen het box 3-deel loopt nog (box 1-delen afgelost op het AOW-moment): box 3-tabel, geen brutering, studieschuld niet gebruteerd,
+       alle delen naar rato — zoals MAX. HYP. 2027 (vol3); niet langer 'niet beperkend' */
+    const alleenB3 = !volledigBox3 && m > 0 && !(L1 > 0) && L3 > 0;
+    const pct = (volledigBox3 || alleenB3) ? q3 : q1;
+    const verh = (volledigBox3 || alleenB3 || q3 <= 0) ? 1 : q1/q3;
+    const beschikbaar = ink * pct / 12 - (alleenB3 ? dkLast + aflK + duoTerm + lease + ovv : aftrekAdv);
     const toetslast = L1 + L3 * verh + erfpacht + inleg;
     const rf = totaalHoofdsom > 0 ? rest / totaalHoofdsom : 1;
     /* max. hypotheek, box 3-deel als VAST bedrag B (D1): (beschikbaar − erfpacht − box 3-last × q1/q3) / last per € box 1 + B;
@@ -1310,7 +1313,8 @@ function bereken(){
     const M = Math.max(0, beschikbaar - erfpacht), L3v = L3 * verh, B = volledigBox3 ? 0 : hoofdsomB3;
     const lpe1 = T1 > 0 ? L1 / T1 : (m > 0 ? 0 : annTrhkAdv);
     let maxH;
-    if (B > 0 && M < L3v) maxH = L3 > 0 ? M / (L3v / B) : 0;
+    if (alleenB3) maxH = M / (L3 / totaalHoofdsom);
+    else if (B > 0 && M < L3v) maxH = L3 > 0 ? M / (L3v / B) : 0;
     else maxH = lpe1 > 0 ? (M - L3v) / lpe1 + B : Infinity;
     return {q1, q3, pct, verh, aow, ink, beschikbaar, toetslast, rf, ruimte: beschikbaar - toetslast, maxH: Math.max(0, maxH)};
   }
@@ -1405,7 +1409,9 @@ function bereken(){
     const situ = alleAOW ? 'aow' : (zwBh ? 'zonderwerk' : 'werk');
     const k1 = beheerSleutel(paarBh, situ, false), k3 = beheerSleutel(paarBh, situ, true);
     const q1 = beheerPct(k1, ink, toetsrenteBh), q3 = beheerPct(k3, ink, toetsrenteBh);
-    const pct = volledigBox3 ? q3 : q1, verh = (volledigBox3 || q3 <= 0) ? 1 : q1/q3;
+    /* alleen het box 3-deel loopt nog (box 1-delen afgelost op het AOW-moment): box 3-tabel, geen brutering, alle delen naar rato (zoals MAX. HYP. 2027) */
+    const alleenB3 = !volledigBox3 && (m || 0) > 0 && !(lB1w > 0) && lB3w > 0;
+    const pct = (volledigBox3 || alleenB3) ? q3 : q1, verh = (volledigBox3 || alleenB3 || q3 <= 0) ? 1 : q1/q3;
     const beschikbaar = ink * pct / 12 - aftrekBh;
     const lastW = lB1w + lB3w*verh + erfpacht + inleg, lastM = lB1m + lB3m*verh + erfpacht + inleg;
     /* max. hypotheek bij de werkelijke lasten: box 3-deel als VAST bedrag (last × q1/q3), extra ruimte in box 1 tegen de werkelijke last per € box 1;
@@ -1413,10 +1419,11 @@ function bereken(){
     const Mb = Math.max(0, beschikbaar - erfpacht - inleg), gem3 = !volledigBox3 && hoofdsomB3 > 0;
     const lpe = totaalHoofdsom > 0 ? (lB1w + lB3w) / totaalHoofdsom : 0, lpe1 = (totaalHoofdsom - hoofdsomB3) > 0 ? lB1w / (totaalHoofdsom - hoofdsomB3) : 0;
     let maxH;
-    if (!gem3) maxH = lpe > 0 ? Mb / lpe : laterG;
+    if (alleenB3) maxH = Mb / lpe;
+    else if (!gem3) maxH = lpe > 0 ? Mb / lpe : laterG;
     else if (Mb < lB3w * verh) maxH = lB3w > 0 ? Mb / (lB3w * verh / hoofdsomB3) : 0;
     else maxH = lpe1 > 0 ? (Mb - lB3w * verh) / lpe1 + hoofdsomB3 : laterG;
-    return {ink, situ, k1, k3, q1, q3, pct, verh, beschikbaar, lastW, lastM, ruimteW: beschikbaar - lastW, ruimteM: beschikbaar - lastM, maxH: Math.max(0, maxH)};
+    return {ink, situ, k1, k3, q1, q3, pct, verh, alleenB3, beschikbaar, lastW, lastM, ruimteW: beschikbaar - lastW, ruimteM: beschikbaar - lastM, maxH: Math.max(0, maxH)};
   }
   /* momenten: aanvang + AOW-datum binnen 36 maanden (wie al AOW heeft: inkomen vanaf AOW) */
   function bhMomenten(PAx){
@@ -1438,7 +1445,7 @@ function bereken(){
   const bhPens = bepBh !== BH.uit[0], pensInkBh = bepBh.ink, toetsInkomenBh = bepBh.ink;
   const flBox1Bh = bepBh.q1, flBox3Bh = bepBh.q3, flBh = bepBh.pct;
   const maxFLjaarBh = toetsInkomenBh * flBh, maxFLmndBh = maxFLjaarBh / 12;
-  let beheerTabelNaam = beheerNaam(volledigBox3 ? bepBh.k3 : bepBh.k1) + (bhPens ? ' — ' + bepBh.lbl : '');
+  let beheerTabelNaam = beheerNaam((volledigBox3 || bepBh.alleenB3) ? bepBh.k3 : bepBh.k1) + (bhPens ? ' — ' + bepBh.lbl : '');
   let bhBereikTxt = '';
   { const tb = NHG_BEHEER_TAB[bepBh.k1]; if (tb){ const mn = tb.i[0], mx = tb.i[tb.i.length-1];
       if (toetsInkomenBh < mn) bhBereikTxt = `Toetsinkomen ligt onder het laagste inkomen van de beheertabel (${fmt(mn)}): gerekend met de laagste rij.`;
@@ -1459,7 +1466,7 @@ function bereken(){
   renderTopStatus('beheerStatusBox', 'beheerBar', 'beheerBarNote',
     benutBh, ruimteBh, bepBh.lastW, beschikbaarBh, 'NHG beheer-toets (werkelijke lasten)', 'werkelijke beheerlast',
     totaalHoofdsom > 0 && beschikbaarBh > 0 && Math.round(totaalHoofdsom) <= Math.round(bepMaxBh.maxH));
-  document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', `<div class="status ok" style="margin-top:10px"><p><b>Bepalend toetsmoment (NHG-beheercriteria):</b> ${bepBh.lbl} — toetsinkomen ${fmt(bepBh.ink)}, beheertabel ${beheerNaam(volledigBox3 ? bepBh.k3 : bepBh.k1)} (${pctStr(bepBh.pct*100)}), toetsrente ${fmtD2(toetsrenteBh)}%${hoofdsomB3>0&&!volledigBox3?`; box 3-last × ${fmtD2(bepBh.verh)}`:''}. Maximale hypotheek volgens de beheercriteria (werkelijke lasten van de huidige leningdelen): <b>${fmt(Math.round(bepMaxBh.maxH))}</b>${bepMaxBh !== bepBh ? ' (bepalend: ' + bepMaxBh.lbl + ')' : ''}.${bhOnvolledig ? ' <b>Let op:</b> de AOW-datum valt binnen 3 jaar maar het inkomen vanaf AOW ontbreekt — die toets is overgeslagen.' : ''}${wgRvp < 3 ? '<br><small>NHG: gebruik bij een resterende rentevaste periode korter dan 3 jaar de NHG-rente voor 3 jaar vast als die hoger is.</small>' : ''}<br><small>${BEHEER_VERMOGEN}</small></p></div>`);
+  document.getElementById('beheerStatusBox').insertAdjacentHTML('beforeend', `<div class="status ok" style="margin-top:10px"><p><b>Bepalend toetsmoment (NHG-beheercriteria):</b> ${bepBh.lbl} — toetsinkomen ${fmt(bepBh.ink)}, beheertabel ${beheerNaam((volledigBox3 || bepBh.alleenB3) ? bepBh.k3 : bepBh.k1)} (${pctStr(bepBh.pct*100)}), toetsrente ${fmtD2(toetsrenteBh)}%${hoofdsomB3>0&&!volledigBox3?`; box 3-last × ${fmtD2(bepBh.verh)}`:''}. Maximale hypotheek volgens de beheercriteria (werkelijke lasten van de huidige leningdelen): <b>${fmt(Math.round(bepMaxBh.maxH))}</b>${bepMaxBh !== bepBh ? ' (bepalend: ' + bepMaxBh.lbl + ')' : ''}.${bhOnvolledig ? ' <b>Let op:</b> de AOW-datum valt binnen 3 jaar maar het inkomen vanaf AOW ontbreekt — die toets is overgeslagen.' : ''}${wgRvp < 3 ? '<br><small>NHG: gebruik bij een resterende rentevaste periode korter dan 3 jaar de NHG-rente voor 3 jaar vast als die hoger is.</small>' : ''}<br><small>${BEHEER_VERMOGEN}</small></p></div>`);
 
   /* Gewogen RVP < 10 jr: de werkelijke-lasttoets rekent de last op de contractrente, maar de Trhk-toets
      (art. 3) rekent de financieringslast op de toetsrente (annuïtair, 30 jaar). Die is dan strenger: toon wat Trhk toestaat. */

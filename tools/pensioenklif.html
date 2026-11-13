@@ -1172,9 +1172,24 @@ function toetsMaxBeheer(inc1, aow1, inc2, aow2, heeft2, box3) {
   const basis = (heeft2 ? 'paar_' : 'alleen_') + (allAow ? 'aow' : 'werk'), tab = (box3 ? 'b3_' : '') + basis;
   const q = beheerPct(tab, gez, L.rente), q3 = beheerPct('b3_' + basis, gez, L.rente);
   const bruto = gez * q / 12, verl = d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, netto = Math.max(0, bruto - verl);
-  let loan = netto / L.a;
-  if (!box3 && L.b3 > 0 && L.b3 < L.tot && q3 > 0) loan = Math.max(0, loan - L.b3 * (q / q3 - 1));
-  return { type: tab, isAow: allAow, reken: gez, gez, flp: q * 100, bruto, verl, netto, verh: 0, label: 0, loan, beheer: true };
+  const r = { type: tab, isAow: allAow, reken: gez, gez, flp: q * 100, bruto, verl, netto, verh: 0, label: 0, beheer: true, box3: !!box3, basis, q, q3 };
+  return Object.assign(r, beheerLoanOp(r, 0));
+}
+// Maximale hypotheek (beheer) op het toetsmoment na m volle maanden, gelijk aan beheerMax (en MAX. HYP. 2027):
+// werkelijke last bij aanvang van de delen die dan nog lopen (afgelost deel valt weg; niets meer: niet beperkend);
+// gemengd box 1/box 3: het box 3-deel is een VAST bedrag, H = (beschikbaar − last box 3 × q1/q3) / last per € box 1 + box 3-bedrag;
+// loopt alleen het box 3-deel nog: b3_-tabel, verplichtingen niet gebruteerd, beschikbaar / last per € hoofdsom.
+function beheerLoanOp(r, m) {
+  const L = beheerLeningInfo(), T = L.tot;
+  if (!(T > 0)) return { loan: r.netto / L.a };
+  const loopt = p => !(m > 0) || deelRestFractie(p, m) > 0;
+  const aM = L.delen.reduce((s, p) => s + (loopt(p) ? partActualPayment(p, 0) : 0), 0) / T;
+  if (!(aM > 0)) return { loan: Infinity };
+  const B3 = L.b3, l3 = L.delen.reduce((s, p) => s + (p.box === 3 && loopt(p) ? partActualPayment(p, 0) : 0), 0) / T;
+  if (r.box3 || !(B3 > 0 && B3 < T && r.q3 > 0)) return { loan: r.netto / aM };
+  if (aM - l3 > 1e-12) return { loan: Math.max(0, r.netto - l3 * T * r.q / r.q3) / ((aM - l3) * T / (T - B3)) + B3 };
+  const bruto3 = r.gez * r.q3 / 12, netto3 = Math.max(0, bruto3 - r.verl); // alleen box 3 loopt nog: b3_-tabel
+  return { loan: netto3 / aM, type: 'b3_' + r.basis, flp: r.q3 * 100, bruto: bruto3, netto: netto3 };
 }
 function toetsMax(inc1, aow1, inc2, aow2, heeft2, box3, rate) {
   if (ptMethode() === 'beheer') return toetsMaxBeheer(inc1, aow1, inc2, aow2, heeft2, box3);
@@ -1334,6 +1349,7 @@ function restFactor(tJaar, rate) {
 // Geen lening meer op dat moment (alles afgelost): dat moment beperkt niets (loan = ∞).
 function opRestschuld(r, tJaar, rate) {
   const rf = restFactor(tJaar, rate);
+  if (r.beheer) return Object.assign({}, r, { rf }, beheerLoanOp(r, maandenTotMoment(tJaar))); // beheer: box 3 als vast bedrag (zoals beheerMax)
   if (rf >= 1) return Object.assign({ rf: 1 }, r);
   if (!(rf > 1e-9)) return Object.assign({}, r, { rf: 0, loan: Infinity });
   return Object.assign({}, r, { rf, loan: (r.loan - r.verh - r.label) / rf + r.verh + r.label });
@@ -1778,7 +1794,7 @@ function checkParts(testParts, income, group, globalToets) {
     const M1 = income * beheerPct(basis, income, LB.rente) / 12, M3 = income * beheerPct('b3_' + basis, income, LB.rente) / 12;
     let fB = 0, payB = 0;
     for (const p of testParts) { const pay = partActualPayment(p, 0) * (p.f == null ? 1 : p.f), M = p.box === 1 ? M1 : M3; payB += pay; if (pay > 0) fB += M > 0 ? pay / M : Infinity; } // p.f = 0: deel afgelost op het AOW-moment
-    const verlB = d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, Mv = testParts.some(p => p.box === 1) ? M1 : M3;
+    const verlB = d.studieMnd + d.kredietMnd + d.erfMnd + d.overigMnd, Mv = testParts.some(p => p.box === 1 && (p.f == null || p.f > 0)) ? M1 : M3; // alleen box 3 loopt nog: b3_-tabel
     if (verlB > 0) fB += Mv > 0 ? verlB / Mv : Infinity;
     return { fraction: fB, payment: payB, fits: fB <= 1 + (Mv > 0 ? 0.5 / Mv : 0) };
   }
