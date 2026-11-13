@@ -1006,7 +1006,8 @@ function berekenCore(inp){
     const rate=lastVol/hoofdsom;
     const lastBij=H=>alleenB3?(H>=B3tot?lastNom:lastNom*Math.max(0,H)/B3tot):gemengd?(H>=B3tot?lastVast+(H-B3tot)*lastSchaal/B1tot:lastVast*Math.max(0,H)/B3tot):H*rate;
     const lastT=lastBij(Math.max(0,hoofdsom-Vm));        // toetslast zonder het V-deel (V eerst van box 1, restant van box 3)
-    const opInk=()=>alleenB3?Infinity:gemengd?Math.max(0,maxM-lastVast)/(lastSchaal/B1tot)+B3tot:maxM/rate;
+    // gemengd en de box 3-last past alleen niet: V dekt de hele box 1-hoofdsom en een deel van box 3 → inverse van lastBij onder het box 3-bedrag
+    const opInk=()=>alleenB3?Infinity:gemengd?(maxM<lastVast?Math.max(0,maxM)*B3tot/lastVast:(maxM-lastVast)/(lastSchaal/B1tot)+B3tot):maxM/rate;
     return {m,ink,q1,q3,qT,vol3,brut,last:lastT,lastVol,V:Vm,maxM,ruimte:maxM-lastT,rate,lastBij,opInk,alleenB3,lastB3:lastNom,pt,onvolledig,aowNu,aowTab,alleen,vL,bhK};
   });
 

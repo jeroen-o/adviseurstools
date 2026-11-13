@@ -1006,7 +1006,8 @@ function bereken(){
     const tot=h1+b3;if(!(tot>0))return null;
     const verh=!r.vol3&&r.q3>0?r.q1/r.q3:1;
     if(r.vol3||!(b3>0)||!(h1>0)||!(l1>0)){const lpe=(l1+l3*verh)/tot;return lpe>0?Math.round(Math.max(0,r.mnd)/lpe):0;}
-    return Math.round(Math.max(0,r.mnd-l3*verh)/(l1/h1)+b3);
+    if(r.mnd<l3*verh)return Math.round(Math.max(0,r.mnd)*b3/(l3*verh)); // gebruteerde box 3-last past alleen al niet (zie opInkMoment)
+    return Math.round((r.mnd-l3*verh)/(l1/h1)+b3);
   };
   for(let m=0;m<=360;m++){
     const dt=new Date(start.getFullYear(),start.getMonth()+m,1);
@@ -1074,7 +1075,10 @@ function bereken(){
     if(x.mndN>0&&B3>0&&H1>0&&!(l1>0)&&l3>0){b3Info[x.mndN]={L3:l3,ml:r.mnd};return Infinity;}
     // geen (rest)schuld meer op een later moment (alle delen afgelost): dat moment beperkt het maximum niet
     if(r.vol3||!(B3>0)||!(H1>0)||!(l1>0)){const lpe=(l1+l3*verh)/totB;return lpe>0?Math.round(Math.max(0,r.mnd)/lpe):(x.mndN>0?Infinity:0);}
-    return Math.round(Math.max(0,r.mnd-l3*verh)/(l1/H1)+B3);
+    // past de gebruteerde box 3-last alleen al niet: het alleenstaandenbedrag dekt dan de hele box 1-hoofdsom en een deel van box 3
+    // (last = (H − V) × box 3-last / box 3-bedrag), zelfde lezing als de toets en MAX. HYP. 2027
+    if(r.mnd<l3*verh)return Math.round(Math.max(0,r.mnd)*B3/(l3*verh));
+    return Math.round((r.mnd-l3*verh)/(l1/H1)+B3);
   };
   const momenten=momDef.map(x=>{const s3=b3Moment(x.mndN),r=mndOp(x.isAOW,x.pen,kol0,s3);const rf=restF(x.mndN);
     const fL=factorLast(s3,r),al=alleenOp(r),opInk=opInkMoment(x,r,s3,rf,fL);
@@ -1106,7 +1110,8 @@ function bereken(){
     const sD=delen.map(x=>rijSchuld(x,pm,d.isAOW)),S=sD.reduce((t,v)=>t+v,0);d.vgl=Math.round(S);if(!(S>0))return;
     let b3=0,l1=0,l3=0;delen.forEach((x,i)=>{if(!(sD[i]>0))return;const l=sD[i]/af(trD0[i]/12,NT);if(x.box===3){b3+=sD[i];l3+=l;}else l1+=l;});
     const r=mndOp(d.isAOW,d.pen,kol0,b3/S),verh=!r.vol3&&r.q3>0?r.q1/r.q3:1,L0=l1+l3*verh,V=alleenOp(r).bedrag;
-    const gem=!(r.vol3||!(B3>0)||!(H1>0)||!(l1>0)),vLast=V>0?(gem?l1*Math.min(V,H1)/H1:L0*Math.min(V,totB)/totB):0;
+    // gemengd: het alleenstaandenbedrag gaat eerst van de box 1-hoofdsom af, een restant van het (vaste) box 3-deel (op de hoofdsom, zoals de toetsmomenten)
+    const gem=!(r.vol3||!(B3>0)||!(H1>0)||!(l1>0)),vLast=V>0?(gem?l1*Math.min(V,H1)/H1+l3*verh*Math.min(B3,Math.max(0,V-H1))/B3:L0*Math.min(V,totB)/totB):0;
     if(L0>0){const mx=S*(Math.max(0,r.mnd)+vLast)/L0;d.maxH30=Math.round(mx);d.margeX=mx-S;}});
   const aowIdx=data.findIndex(d=>d.isAOW);
   const penIdx=data.findIndex(d=>d.pen);

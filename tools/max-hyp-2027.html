@@ -1215,7 +1215,7 @@ var LDR = (function () {
         var toetsinkomen = inkObj.bedrag;
         var tb = bepaalTabellen(inkObj, datumOpMoment);
         var vf = vrijstellingFactor(delenArr, m, vrijstellingOp(inkObj));
-        var lastAftrekbaar=0, lastNietAftrekbaar=0, berekendeLast=0;
+        var lastAftrekbaar=0, lastNietAftrekbaar=0, berekendeLast=0, aftrekZonderV=0;
         delenArr.forEach(function(d){
           var rest = restOpMoment(d, m); // Trhk/NHG: hele bedrag op het AOW-moment (zoals de hoofdtoets); beheer: lening bij aanvang
           if(rest<=0) return;
@@ -1226,13 +1226,14 @@ var LDR = (function () {
           var aftrekGeldigNu = m < d.aftrekbaarTm;
           var box3Aandeel = d.bedrag>0 ? Math.min(1,(d.box3||0)/d.bedrag) : 0;
           var l1 = maandlastVol*(1-box3Aandeel)*vf.f1, l3 = maandlastVol*box3Aandeel*vf.f3;
-          if(aftrekGeldigNu) lastAftrekbaar += l1; else lastNietAftrekbaar += l1;
+          if(aftrekGeldigNu){ lastAftrekbaar += l1; aftrekZonderV += maandlastVol*(1-box3Aandeel); } else lastNietAftrekbaar += l1;
           lastNietAftrekbaar += l3;
         });
         var pctA = interpolatePercentage(tb.tables, tb.tabA, toetsinkomen, bIdx);
         var pctN = interpolatePercentage(tb.tables, tb.tabN, toetsinkomen, bIdx);
-        // Geen aftrekbare last (volledig box 3 / renteaftrek voorbij): tabel 3/4, verplichtingen volledig van die ruimte af
-        var vol3 = !(lastAftrekbaar > 0.005);
+        // Geen aftrekbare last (volledig box 3 / renteaftrek voorbij): tabel 3/4, verplichtingen volledig van die ruimte af.
+        // Bepaald op de lening zelf (vóór het vrijgestelde bedrag): dekt V de box 1-hoofdsom, dan blijft het een box 1-lening (tabel 1/2)
+        var vol3 = !(aftrekZonderV > 0.005);
         var verhouding = vol3 ? 1 : (pctN>0 ? (pctA/pctN) : 1);
         var lastGebruteerd = lastAftrekbaar + lastNietAftrekbaar*verhouding;
         var maxMaandlast = toetsinkomen*((vol3 ? pctN : pctA)/100)/12 - verplichtingenLast(verpl, bIdx, !vol3);
@@ -1250,7 +1251,10 @@ var LDR = (function () {
       if(!(tot > 0.005)) return null;
       var hTot = totBox1 + totBox3;
       if(vol3 || !(totBox3 > 0) || !(totBox1 > 0) || !(schaal > 0.005)) return Math.max(0, maxMaandlast) / (tot / hTot);
-      return Math.max(0, maxMaandlast - vast) / (schaal / totBox1) + totBox3;
+      // Past de (gebruteerde) box 3-last alleen niet: dan dekt het vrijgestelde bedrag de hele box 1-hoofdsom en een deel van box 3
+      // (last = (H − V) × box 3-last / box 3-bedrag) → H − V = maandlast × box 3-bedrag / box 3-last (zelfde lezing als de toets)
+      if(maxMaandlast < vast) return Math.max(0, maxMaandlast) * totBox3 / vast;
+      return (maxMaandlast - vast) / (schaal / totBox1) + totBox3;
     }
     // Toets van de momenten waarop alleen het (vaste) box 3-deel nog loopt, bij kandidaat-maximum Hc (zelfde lezing als de
     // maandlasttoets: last box 3 × f3, f3 = 1 − V3/box 3 met V3 = V − box 1-hoofdsom, min. 0). Geeft {bepalend, knel}:
@@ -1308,8 +1312,10 @@ var LDR = (function () {
 
       var pctAftrek = interpolatePercentage(tb.tables, tb.tabA, toetsinkomen, bandIdx);
       var pctNietAftrek = interpolatePercentage(tb.tables, tb.tabN, toetsinkomen, bandIdx);
-      // Geen aftrekbare last (volledig box 3 / renteaftrek voorbij): tabel 3/4, verplichtingen volledig van die ruimte af
-      var vol3 = !(lastAftrekbaar > 0.005);
+      // Geen aftrekbare last (volledig box 3 / renteaftrek voorbij): tabel 3/4, verplichtingen volledig van die ruimte af.
+      // Bepaald op de lening zelf, vóór het vrijgestelde bedrag (spl.sA): dekt V de box 1-hoofdsom, dan blijft het een box 1-lening
+      // met tabel 1/2 — anders hangt de tabel (en het maximum) af van de ingevoerde hoofdsom en is de toets niet monotoon.
+      var vol3 = !(spl.sA > 0.005);
       var verhouding = vol3 ? 1 : (pctNietAftrek>0 ? (pctAftrek/pctNietAftrek) : 1);
       var lastGebruteerd = lastAftrekbaar + lastNietAftrekbaar*verhouding;
       var verplLast = verplichtingenLast(verpl, bandIdx, !vol3);
@@ -1349,8 +1355,9 @@ var LDR = (function () {
     })();
     var bepalend = null, alleenB3Rows = [];
     rows.forEach(function(r){
-      // Geen restschuld meer op dit moment (alle delen afgelost of volledig vrijgesteld): dit moment beperkt het maximum niet
-      if(r.m > 0 && !(r.lastGebruteerd > 0.005)) return;
+      // Geen restschuld meer op dit moment (alle delen afgelost): dit moment beperkt het maximum niet. Bepaald zonder het
+      // vrijgestelde bedrag (spl), zodat het maximum niet afhangt van de ingevoerde hoofdsom
+      if(r.m > 0 && !(r.spl.sA + r.spl.sN + r.spl.vN > 0.005)) return;
       // Gemengd box 1/box 3 (D1) en op dit (latere) moment loopt alleen het box 3-deel nog (box 1-delen afgelost): de toets hangt
       // alleen af van de VASTE box 3-last, niet van de hoofdsom → apart beoordelen (geen maximum naar rato)
       if(r.m > 0 && totBox1 > 0 && totBox3 > 0 && !(r.spl.sA + r.spl.sN > 0.005) && r.spl.vN > 0.005){ alleenB3Rows.push(r); return; }
