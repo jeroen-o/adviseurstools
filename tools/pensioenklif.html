@@ -1178,6 +1178,7 @@ function toetsMaxBeheer(inc1, aow1, inc2, aow2, heeft2, box3) {
 // Maximale hypotheek (beheer) op het toetsmoment na m volle maanden, gelijk aan beheerMax (en MAX. HYP. 2027):
 // werkelijke last bij aanvang van de delen die dan nog lopen (afgelost deel valt weg; niets meer: niet beperkend);
 // gemengd box 1/box 3: het box 3-deel is een VAST bedrag, H = (beschikbaar − last box 3 × q1/q3) / last per € box 1 + box 3-bedrag;
+// past de gebruteerde box 3-last alleen al niet: H = beschikbaar × box 3-bedrag / gebruteerde box 3-last (naar rato, onder het box 3-bedrag);
 // loopt alleen het (vaste) box 3-deel nog: b3_-tabel, verplichtingen niet gebruteerd; de toets hangt dan niet van de hoofdsom af:
 // past de box 3-last, dan beperkt dit moment niets (∞); past die niet, dan helpt geen box 1-hoofdsom: maximum 0 met b3Knel
 // (maximaal box 3-bedrag X dat wel past) — zelfde regel als MAX. HYP. 2027.
@@ -1189,7 +1190,8 @@ function beheerLoanOp(r, m) {
   if (!(aM > 0)) return { loan: Infinity };
   const B3 = L.b3, l3 = L.delen.reduce((s, p) => s + (p.box === 3 && loopt(p) ? partActualPayment(p, 0) : 0), 0) / T;
   if (r.box3 || !(B3 > 0 && B3 < T && r.q3 > 0)) return { loan: r.netto / aM };
-  if (aM - l3 > 1e-12) return { loan: Math.max(0, r.netto - l3 * T * r.q / r.q3) / ((aM - l3) * T / (T - B3)) + B3 };
+  // past de gebruteerde box 3-last alleen al niet: maximum naar rato onder het box 3-bedrag (zoals beheerMax en MAX. HYP. 2027)
+  if (aM - l3 > 1e-12) { const g3 = l3 * T * r.q / r.q3; return { loan: r.netto < g3 ? r.netto * B3 / g3 : (r.netto - g3) / ((aM - l3) * T / (T - B3)) + B3, b3Rato: r.netto < g3 }; }
   const bruto3 = r.gez * r.q3 / 12, netto3 = Math.max(0, bruto3 - r.verl), last3 = aM * T; // alleen box 3 loopt nog: b3_-tabel
   const past = last3 - (bruto3 - r.verl) <= 0.5; // zelfde marge als de balk (checkParts)
   return { loan: past ? Infinity : 0, b3Past: past, type: 'b3_' + r.basis, flp: r.q3 * 100, bruto: bruto3, netto: netto3,
@@ -1271,15 +1273,17 @@ function beheerMax(o){
     var basis=(paar?'paar_':'alleen_')+(alleAow?'aow':(o.zonderwerk?'zonderwerk':'werk'));
     var tab=(b3==='ja'?'b3_':'')+basis,q=beheerPct(tab,ink,o.rente),q3=beheerPct('b3_'+basis,ink,o.rente);
     var maxLast=ink*q/12,beschikbaar=Math.max(0,maxLast-(+o.verpl||0)),max=aM>0?beschikbaar/aM:Infinity;
-    var T=+o.hoofdsom||0,B3=+o.b3bedrag||0,l3=(m.mnd>0&&o.last3PerEuroOp)?o.last3PerEuroOp(m.mnd):o.last3PerEuro;
+    var rato=false,T=+o.hoofdsom||0,B3=+o.b3bedrag||0,l3=(m.mnd>0&&o.last3PerEuroOp)?o.last3PerEuroOp(m.mnd):o.last3PerEuro;
     if(aM>0&&b3==='deels'&&q3>0&&T>0&&B3>0&&B3<T&&l3!=null&&isFinite(l3)){ // box 3 als vast bedrag
-      if(aM-l3>1e-12)max=Math.max(0,beschikbaar-l3*T*q/q3)/((aM-l3)*T/(T-B3))+B3;
+      // past de gebruteerde box 3-last (l3 × hoofdsom × q1/q3) alleen al niet, dan is er met dit box 3-deel geen maximum ≥ box 3-bedrag:
+      // maximum naar rato onder het box 3-bedrag = beschikbaar × box 3-bedrag / gebruteerde box 3-last (zoals MAX. HYP. 2027 en box 1 & 3)
+      if(aM-l3>1e-12){var g3=l3*T*q/q3;rato=beschikbaar<g3;max=rato?beschikbaar*B3/g3:(beschikbaar-g3)/((aM-l3)*T/(T-B3))+B3;}
       else{tab='b3_'+basis;q=q3;maxLast=ink*q/12;beschikbaar=Math.max(0,maxLast-(+o.verpl||0)); // alleen het vaste box 3-deel loopt nog: b3_-tabel
         if(aM*T-(maxLast-(+o.verpl||0))<=0.5)max=Infinity; // past: dit moment beperkt het maximum niet
         else{max=0;knel={m:m,X:Math.floor(beschikbaar/(aM*T/B3)),last:aM*T,ml:beschikbaar,B:B3};}} // past niet: geen box 1-hoofdsom helpt
     }
-    else if(aM>0&&b3==='deels'&&b3m>0&&q3>0)max=max-b3m*(q/q3-1); // box 3-deel gebruteerd met q1/q3 (zelfde last per € in box 1 en box 3)
-    var uit={m:m,ink:ink,tab:tab,q:q,maxLast:maxLast,max:Math.max(0,max)};if(knel&&(!b3Knel||knel.X<b3Knel.X))b3Knel=knel;knel=null;return uit;});
+    else if(aM>0&&b3==='deels'&&b3m>0&&q3>0){var g3b=b3m*aM*q/q3;rato=beschikbaar<g3b;max=rato?beschikbaar*b3m/g3b:max-b3m*(q/q3-1);} // box 3-deel gebruteerd met q1/q3 (zelfde last per € in box 1 en box 3); past dat niet: naar rato
+    var uit={m:m,ink:ink,tab:tab,q:q,maxLast:maxLast,max:Math.max(0,max),rato:rato};if(knel&&(!b3Knel||knel.X<b3Knel.X))b3Knel=knel;knel=null;return uit;});
   var b=res[0];res.forEach(function(x){if(x.max<b.max)b=x;});
   var eur=function(v){return '€ '+Math.round(v).toLocaleString('nl-NL');},pc=function(v){return (v*100).toFixed(1).replace('.',',')+'%';};
   var meld=(o.meldingen||[]).slice();
@@ -1287,7 +1291,7 @@ function beheerMax(o){
   if(o.rvpRestJr!=null&&o.rvpRestJr<3)meld.push('NHG: gebruik dan de NHG-rente voor 3 jaar vast als die hoger is (gerekend met de ingevulde rente).');
   meld.push(BEHEER_VERMOGEN);
   var tekst='NHG-beheercriteria (V&N D.6): beheertabel, werkelijk inkomen en werkelijke lasten, toetsrente '+(+o.rente).toFixed(3).replace('.',',')+'% (huidige rente). Toetsmomenten: '+
-    res.map(function(x){return x.m.lbl+' '+eur(x.ink)+' (tabel '+x.tab+' '+pc(x.q)+') → '+(isFinite(x.max)?(b3Knel&&b3Knel.m===x.m?'box 3-deel past niet':eur(x.max)):'niet beperkend (lening dan afgelost of vast box 3-deel past)');}).join('; ')+'. Bepalend toetsmoment: '+b.m.lbl+'.'+(ontbreekt?' LET OP: inkomen vanaf AOW ontbreekt.':'');
+    res.map(function(x){return x.m.lbl+' '+eur(x.ink)+' (tabel '+x.tab+' '+pc(x.q)+') → '+(isFinite(x.max)?(b3Knel&&b3Knel.m===x.m?'box 3-deel past niet':eur(x.max)+(x.rato?' (gebruteerde box 3-last past niet: naar rato onder het box 3-bedrag)':'')):'niet beperkend (lening dan afgelost of vast box 3-deel past)');}).join('; ')+'. Bepalend toetsmoment: '+b.m.lbl+'.'+(ontbreekt?' LET OP: inkomen vanaf AOW ontbreekt.':'');
   return {max:ontbreekt?0:b.max,bepalend:b,momenten:res,ontbreekt:ontbreekt,lastPerEuro:a,tekst:tekst,meldingen:meld,b3Knel:b3Knel};
 }
 // Uitkomstblok voor de beheertoets (eigen opmaak, past in elke tool)
@@ -1522,7 +1526,7 @@ function calcScenario(label, sublabel, inc1, aow1, inc2, aow2, heeft2, refRate, 
     verlagingenMnd: b1.verl, verlagingenMnd_b3: b3.verl, verhoging: b1.verh, labelExtra: b1.label,
     max_b1: b1.loan,
     max_b3: b3.loan,
-    b3Knel: b1.b3Knel || null, b3Past: !!b1.b3Past,
+    b3Knel: b1.b3Knel || null, b3Past: !!b1.b3Past, b3Rato: !!b1.b3Rato,
   };
 }
 
@@ -1613,7 +1617,7 @@ function renderScenarios(applicants, refRate, verlagingenMnd, verhoging) {
           <div class="scenario-row">
             <span class="tag-b1">Box 1</span>
             <strong>${formatMaxB1(s.max_b1, s)}</strong>
-          </div>${s.b3Knel ? `<div class="scenario-row" style="font-size:11px;color:#b42318;">vast box 3-deel past niet: maximaal ${formatEuro(s.b3Knel.X)} in box 3</div>` : ''}
+          </div>${s.b3Knel ? `<div class="scenario-row" style="font-size:11px;color:#b42318;">vast box 3-deel past niet: maximaal ${formatEuro(s.b3Knel.X)} in box 3</div>` : ''}${s.b3Rato ? `<div class="scenario-row" style="font-size:11px;color:#b42318;">gebruteerde box 3-last past niet: maximum naar rato onder het box 3-bedrag</div>` : ''}
           <div class="scenario-row">
             <span class="tag-b3">Box 3</span>
             <strong>${formatEuro(s.max_b3)}</strong>
@@ -1737,7 +1741,7 @@ function calcMaxAtMoment(scenario, applicants, rate, term = 30) {
     monthly1: b1.bruto, monthly3: b3.bruto,
     maxLoan1: b1.loan,
     maxLoan3: b3.loan,
-    b3Knel: b1.b3Knel || null, b3Past: !!b1.b3Past,
+    b3Knel: b1.b3Knel || null, b3Past: !!b1.b3Past, b3Rato: !!b1.b3Rato,
     triggerApplicant: scenario === 'first' ? first : (scenario === 'second' ? second : null),
   };
 }
@@ -1764,7 +1768,7 @@ function renderMomentsTable(applicants) {
       <td><strong>${s.label}</strong><br><span style="font-size:11px;color:var(--text-light);">${s.desc}</span></td>
       <td><span class="badge ${r.pensionedCount === 0 ? 'badge-work' : 'badge-pension'}">${mix}</span></td>
       <td class="numeric">${formatEuro(r.totalIncome)}</td>
-      <td class="numeric"><strong style="color:var(--box1);">${formatMaxB1(r.maxLoan1, r)}</strong><br><span style="font-size:10px;color:var(--text-light);">FLP ${r.flp1.toFixed(1).replace('.', ',')}%${r.b3Knel ? ' · vast box 3-deel past niet (max. ' + formatEuro(r.b3Knel.X) + ')' : ''}</span></td>
+      <td class="numeric"><strong style="color:var(--box1);">${formatMaxB1(r.maxLoan1, r)}</strong><br><span style="font-size:10px;color:var(--text-light);">FLP ${r.flp1.toFixed(1).replace('.', ',')}%${r.b3Knel ? ' · vast box 3-deel past niet (max. ' + formatEuro(r.b3Knel.X) + ')' : ''}${r.b3Rato ? ' · box 3-last past niet: naar rato' : ''}</span></td>
       <td class="numeric"><strong style="color:var(--box3);">${formatEuro(r.maxLoan3)}</strong><br><span style="font-size:10px;color:var(--text-light);">FLP ${r.flp3.toFixed(1).replace('.', ',')}%</span></td>
     </tr>`;
   });
