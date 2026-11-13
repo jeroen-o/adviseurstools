@@ -763,7 +763,7 @@ var LDR = (function () {
       '<tr><td style="padding:3px 8px">nu</td><td style="padding:3px 8px;text-align:right">' + eur(nu) + '</td><td></td><td></td></tr>' + stappen.map(rij).join('') + '</table></div>' +
       '<span style="font-size:12px">Indicatief, op de huidige hoofdsom; bespreek of de klant deze stijging kan en wil dragen (AFM, Leidraad Hypotheekadvisering 2026, § 5).</span>');
   }
-  return { maxNietVerantwoord: maxNietVerantwoord, naAow: naAow, renteStress: renteStress, maandlast: maandlast };
+  return { maxNietVerantwoord: maxNietVerantwoord, naAow: naAow, renteStress: renteStress, maandlast: maandlast, box: box };
 })();
 /* ---------- helpers ---------- */
 const $=id=>document.getElementById(id);
@@ -903,7 +903,7 @@ function grafiekMaxB13(inp,lft,keuze){
     const g=gv?new Date(new Date(gv).getTime()+delta).toISOString().slice(0,10):null,aow=g?aowDatumUit(g):$(pf+"_aow").value;
     return Object.assign({},p,{aowM:maandenTussen(td,aow),aowMom:aowMoment(td,aow),bhM:aowBhM(td,aow),lft:leeftijdOpTd(td,g),geldt:geldtB13(td,aow,g,kk)});});
   const M=berekenCore(Object.assign({},inp,{pers,drempel:kk}));
-  return (!M||M.onvolledig)?0:M.maxHyp;
+  return (!M||M.onvolledig||M.b3Knel)?0:M.maxHyp;
 }
 /* ---------- kernberekening (herbruikbaar met alternatieve delen) ---------- */
 function berekenCore(inp){
@@ -1000,15 +1000,28 @@ function berekenCore(inp){
     // D1: gemengd box 1/box 3 → het box 3-deel is een VAST bedrag; extra leenruimte valt in box 1 (naar rato over de box 1-delen).
     // lastBij(H): toetslast (zonder V) bij hoofdsom H; opInk(): hoofdsom waarbij die last gelijk is aan maxM.
     const gemengd=!vol3&&B3tot>0&&B1tot>0&&lastSchaal>0.005;
+    // Later moment waarop alleen het (vaste) box 3-deel nog loopt (box 1-delen afgelost): de toetslast hangt niet van de hoofdsom af
+    // (D1). V gaat eerst van de box 1-hoofdsom af; alleen een restant verlaagt de box 3-last. Geen maximum naar rato: zie alleenB3 hieronder.
+    const alleenB3=m>1&&B3tot>0&&B1tot>0&&!(lastSchaal>0.005)&&lastNom>0.005;
     const rate=lastVol/hoofdsom;
-    const lastBij=H=>gemengd?(H>=B3tot?lastVast+(H-B3tot)*lastSchaal/B1tot:lastVast*Math.max(0,H)/B3tot):H*rate;
+    const lastBij=H=>alleenB3?(H>=B3tot?lastNom:lastNom*Math.max(0,H)/B3tot):gemengd?(H>=B3tot?lastVast+(H-B3tot)*lastSchaal/B1tot:lastVast*Math.max(0,H)/B3tot):H*rate;
     const lastT=lastBij(Math.max(0,hoofdsom-Vm));        // toetslast zonder het V-deel (V eerst van box 1, restant van box 3)
-    const opInk=()=>gemengd?Math.max(0,maxM-lastVast)/(lastSchaal/B1tot)+B3tot:maxM/rate;
-    return {m,ink,q1,q3,qT,vol3,brut,last:lastT,lastVol,V:Vm,maxM,ruimte:maxM-lastT,rate,lastBij,opInk,pt,onvolledig,aowNu,aowTab,alleen,vL,bhK};
+    const opInk=()=>alleenB3?Infinity:gemengd?Math.max(0,maxM-lastVast)/(lastSchaal/B1tot)+B3tot:maxM/rate;
+    return {m,ink,q1,q3,qT,vol3,brut,last:lastT,lastVol,V:Vm,maxM,ruimte:maxM-lastT,rate,lastBij,opInk,alleenB3,lastB3:lastNom,pt,onvolledig,aowNu,aowTab,alleen,vL,bhK};
   });
 
   let baseMax=Infinity,bindIdx=0;
-  rows.forEach((r,i)=>{if(r.rate>0){const c=r.opInk()+r.V;if(c<baseMax){baseMax=c;bindIdx=i;}}});
+  rows.forEach((r,i)=>{if(r.rate>0&&!r.alleenB3){const c=r.opInk()+r.V;if(c<baseMax){baseMax=c;bindIdx=i;}}});
+  // Momenten met alleen het vaste box 3-deel: past de box 3-last (bij dit maximum, zelfde lezing als de toets) binnen de ruimte, dan
+  // beperken ze het maximum niet. Past die niet, dan helpt geen box 1-hoofdsom: maximum niet haalbaar met dit box 3-deel (b3Knel,
+  // met het maximale box 3-bedrag X dat wel past). Alleen als V bij een kleinere box 1-hoofdsom genoeg van box 3 afhaalt, geldt die.
+  let b3Knel=null;
+  rows.forEach((r,i)=>{if(!r.alleenB3)return;
+    if(r.lastBij(Math.max(0,baseMax-r.V))-r.maxM<=0.5)return;
+    const nodig=B3tot*(1-Math.max(0,r.maxM)/r.lastB3),hLim=B3tot+r.V-nodig;
+    if(r.V>=nodig&&hLim>=B3tot){if(hLim<baseMax){baseMax=hLim;bindIdx=i;}return;}
+    const X=Math.max(0,Math.floor(Math.max(0,r.maxM)/(r.lastB3/B3tot)));
+    if(!b3Knel||X<b3Knel.X)b3Knel={m:r.m,X,last:r.lastB3,ml:r.maxM};});
   if(!isFinite(baseMax))baseMax=0;
   let extraLening=0,extraDuur=0;
   const bindM=rows[bindIdx].m;
@@ -1025,7 +1038,7 @@ function berekenCore(inp){
   const alleRuimteOk=rows.every(r=>r.ruimte>=-0.5);
   const akkoord=alleRuimteOk&&(!maxOnderpand||hoofdsom<=maxOnderpand+0.5);
   return {delen,hoofdsom,toetsrente,kol,normrente:inp.normrente,norminkomen,alimJaar,
-    extraBedrag:extraV,annT,rows,Vbind:rows[bindIdx].V,bindIdx,baseMax,extraLening,extraDuur,
+    extraBedrag:extraV,annT,rows,Vbind:rows[bindIdx].V,bindIdx,baseMax,b3Knel,B3tot,B1tot,extraLening,extraDuur,
     verhAlleen:rows[0].alleen,verplNom,verplLast0:rows[0].vL,alleenAan:inp.alleenAan,maxInkomen,maxInkomenIncl,mw:inp.mw,ebv:inp.ebv,maxOnderpand,maxHyp,
     methode:inp.methode,akkoord,alleRuimteOk,tekortRow:rows.find(r=>r.ruimte<-0.5),drempel:inp.drempel,
     ptRows:rows.filter(r=>r.pt),onvolledig:rows.some(r=>r.onvolledig)};
@@ -1107,6 +1120,14 @@ function applyOmzetting(){
 function applyVerlaging(){
   if(!VERLAGING)return;
   const {trs}=leesDelen();
+  if(VERLAGING.delen){ // D1: box 3 vast (of verlaagd tot het bedrag dat past), box 1-delen naar rato
+    trs.forEach((tr,i)=>{const d=VERLAGING.delen[i];if(!d)return;
+      tr.querySelector(".d-bedrag").value="€ "+d.bedrag.toLocaleString("nl-NL");
+      tr.querySelector(".d-box3").value=d.box3?"€ "+d.box3.toLocaleString("nl-NL"):"";});
+    bereken();
+    if($("resultaat").scrollIntoView)$("resultaat").scrollIntoView({behavior:"smooth"});
+    return;
+  }
   const f=VERLAGING.factor;
   trs.forEach(tr=>{
     const b=parseEur(tr.querySelector(".d-bedrag").value);
@@ -1140,11 +1161,27 @@ function routeNaarAkkoord(inp,M){
       '<button class="btn btn-opl" id="btnOmzet">✓ Pas deze constructie toe</button></div>');
   }
 
-  if(M.baseMax<M.hoofdsom-0.5){
-    const naar=Math.floor(Math.min(M.baseMax,M.maxOnderpand||Infinity));
-    VERLAGING={factor:naar/M.hoofdsom,naar};
+  // D1-verdeling: box 3 = vast bedrag X3, box 1-delen × f1 (hele euro's)
+  const mkD=(X3,f1)=>inp.delen.map(d=>{const b3=Math.min(d.bedrag,d.box3||0),b1=d.bedrag-b3,nb3=M.B3tot>0?Math.floor(b3*X3/M.B3tot):0,nb1=Math.floor(b1*f1);return Object.assign({},d,{bedrag:nb3+nb1,box3:nb3});});
+  const akkD=dl=>{const Mx=berekenCore(Object.assign({},inp,{delen:dl.filter(d=>d.bedrag>0)}));return !!(Mx&&Mx.akkoord);};
+  const zoekF1=X3=>{if(akkD(mkD(X3,1)))return 1;let lo=0,hi=1;for(let k=0;k<40;k++){const mid=(lo+hi)/2;if(akkD(mkD(X3,mid)))lo=mid;else hi=mid;}return lo;};
+  if(M.b3Knel){
+    // Het box 3-deel is de beperking: verlaag box 3 tot het maximale bedrag dat past (op € 100 omlaag), daarna zo nodig box 1 naar rato
+    const X3=Math.floor(M.b3Knel.X/100)*100,f1=zoekF1(X3),dl=mkD(X3,f1),H=dl.reduce((a,d)=>a+d.bedrag,0);
+    VERLAGING={delen:dl,naar:H};
+    opties.push('<div class="opl"><div class="opl-kop">Optie '+(opties.length+1)+' · Verlaag het box 3-deel</div>'+
+      '<p>Het box 3-deel ('+fmt0(M.B3tot)+') past '+momentLbl(M.b3Knel.m).toLowerCase()+' niet; een lagere box 1-hoofdsom lost dat niet op. Verlaag het box 3-deel naar <b>'+fmt0(X3)+'</b>'+(f1<1?' en de box 1-delen naar rato naar '+fmt0(H-X3):'; de box 1-delen blijven gelijk')+': hoofdsom '+fmt0(H)+' → '+(akkD(dl)?'AKKOORD':'NIET AKKOORD')+'.</p>'+
+      '<button class="btn btn-opl" id="btnVerlaag">✓ Pas verlaging toe</button></div>');
+  }else if(M.baseMax<M.hoofdsom-0.5){
+    let naar=Math.floor(Math.min(M.baseMax,M.maxOnderpand||Infinity));
+    const vast3=M.B1tot>0&&M.B3tot>0&&naar>=M.B3tot;
+    // gemengd (D1): box 3 blijft gelijk, de box 1-delen dalen naar rato; anders alle delen naar rato. Hoogste bedrag ≤ maximum dat AKKOORD geeft.
+    const mkH=H=>vast3?mkD(M.B3tot,Math.max(0,(H-M.B3tot)/M.B1tot)):inp.delen.map(d=>Object.assign({},d,{bedrag:Math.floor(d.bedrag*H/M.hoofdsom),box3:Math.floor((d.box3||0)*H/M.hoofdsom)}));
+    if(!akkD(mkH(naar))){let lo=vast3?M.B3tot:0,hi=naar;for(let k=0;k<40;k++){const mid=(lo+hi)/2;if(akkD(mkH(mid)))lo=mid;else hi=mid;}naar=Math.floor(lo);}
+    const dl=mkH(naar);
+    VERLAGING={delen:dl,naar};
     opties.push('<div class="opl"><div class="opl-kop">Optie '+(opties.length+1)+' · Verlaag de hoofdsom</div>'+
-      '<p>Verlaag de hoofdsom naar <b>'+fmt0(naar)+'</b> (−'+fmt0(M.hoofdsom-naar)+') bij gelijkblijvende leningconstructie en verhoudingen. Op het krapste toetsmoment ('+momentLbl(M.rows[M.bindIdx].m).toLowerCase()+') is de ruimte dan € 0.</p>'+
+      '<p>Verlaag de hoofdsom naar <b>'+fmt0(naar)+'</b> (−'+fmt0(M.hoofdsom-naar)+') bij gelijkblijvende leningconstructie'+(vast3?'; het box 3-bedrag ('+fmt0(M.B3tot)+') blijft gelijk, de box 1-delen dalen naar rato':' en verhoudingen')+'. Op het krapste toetsmoment ('+momentLbl(M.rows[M.bindIdx].m).toLowerCase()+') is de ruimte dan € 0.</p>'+
       '<button class="btn btn-opl" id="btnVerlaag">✓ Pas verlaging toe</button></div>');
   }
 
@@ -1173,6 +1210,15 @@ function box3Vergelijk(inp,M){
     '. Zonder enige aftrekbare rente geldt de woonquote voor niet-aftrekbare rente (tabel 3/4) en gaan de verplichtingen volledig (niet gebruteerd) van die ruimte af; bij een gemengde lening wordt het box 3-deel gebruteerd (woonquote box 1 / box 3). Ook een aflossingsvrij box 3-deel wordt volgens de GHF als 30-jaars annuïteit getoetst.</div>';
 }
 /* Leidraad Hypotheekadvisering (AFM 2026): maximaal ≠ verantwoord (niet bij NHG-beheer), lening na AOW (vroegste AOW-datum), rentestress */
+/* Box 3-deel past niet op een (later) moment waarop alleen box 3 nog loopt: melding met het maximale box 3-bedrag dat wel past */
+function b3KnelMelding(M){
+  if(!M.b3Knel)return '';
+  const k=M.b3Knel;
+  return LDR.box('let','Het box 3-deel past '+momentLbl(k.m).toLowerCase()+' niet; verlaag het box 3-deel tot '+fmt0(k.X)+'.',
+    'Op dat moment zijn de box 1-delen afgelost en loopt alleen het box 3-deel ('+fmt0(M.B3tot)+') nog. De toetslast daarvan ('+fmt0(k.last)+' per maand) is hoger dan de toegestane maandlast ('+fmt0(Math.max(0,k.ml))+'). '+
+    'Het box 3-deel is een vast bedrag (box 1-delen schalen), dus geen enkele box 1-hoofdsom lost dit op: het maximum is met dit box 3-deel niet haalbaar. '+
+    'Maximaal box 3-bedrag dat op dat moment past: '+fmt0(k.X)+'. Op de overige toetsmomenten is maximaal '+fmt0(M.maxHyp)+' mogelijk.');
+}
 function ldrMeldingen(inp,M){
   const td=$("toetsdatum").value;
   const kand=inp.pers.map((p,i)=>({p,aow:$((i?"p":"c")+"_aow").value})).filter(x=>x.aow&&!isNaN(new Date(x.aow))).sort((a,b)=>new Date(a.aow)-new Date(b.aow));
@@ -1224,8 +1270,9 @@ function bereken(){
     '<tr><td>Maximaal op basis van inkomen</td><td class="r" style="font-weight:700">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie'+(M.Vbind>0?' · '+fmt0(M.maxInkomen-M.Vbind)+' op inkomen + '+fmt0(M.Vbind)+' buiten de toetsing ('+[M.extraBedrag>0?'energielabel '+fmt0(M.extraBedrag):null,M.rows[M.bindIdx].alleen>0?'alleenstaande '+fmt0(M.rows[M.bindIdx].alleen):null].filter(Boolean).join(', ')+')':'')+'</td></tr>'+
     (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r" style="font-weight:700">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden, rente '+fmtP3(M.toetsrente)+' → samen '+fmt0(M.maxInkomenIncl)+' (niet opgenomen in de maximale hypotheek: alleen als dit deel vóór het bepalende moment is afgelost)</td></tr>':'')+
     '<tr><td>Maximaal op basis van marktwaarde</td><td class="r" style="font-weight:700">'+(M.maxOnderpand?fmt0(M.maxOnderpand):'—')+'</td><td>'+(M.mw?(M.ebv>0?'100% + EBV (max 106%) van ':'100% van ')+fmt0(M.mw):'geen marktwaarde ingevuld')+'</td></tr>'+
-    '<tr style="background:#f8fafc"><td style="font-weight:800;color:var(--primary)">Maximale hypotheek</td><td class="r" style="font-weight:800;color:var(--primary);font-size:17px">'+fmt0(M.maxHyp)+'</td><td>'+basis+'</td></tr>'+
+    '<tr style="background:#f8fafc"><td style="font-weight:800;color:var(--primary)">Maximale hypotheek</td><td class="r" style="font-weight:800;color:var(--primary);font-size:17px">'+(M.b3Knel?'niet haalbaar':fmt0(M.maxHyp))+'</td><td>'+(M.b3Knel?'met dit box 3-deel (zie de melding)':basis)+'</td></tr>'+
    '</tbody></table></div>'+
+   b3KnelMelding(M)+
    ldrMeldingen(inp,M)+
    melding+ptMelding(M)+
    box3Vergelijk(inp,M)+
@@ -1299,7 +1346,7 @@ function print_(){
     '<tr><td>Maximaal op basis van inkomen</td><td class="r">'+fmt0(M.maxInkomen)+'</td><td>bij deze leningconstructie</td></tr>'+
     (M.extraLening>1?'<tr><td>Indicatieve extra lening</td><td class="r">'+fmt0(M.extraLening)+'</td><td>annuïtair gedurende '+M.extraDuur+' maanden → samen '+fmt0(M.maxInkomenIncl)+' (niet in de maximale hypotheek)</td></tr>':'')+
     '<tr><td>Maximaal op basis van marktwaarde</td><td class="r">'+(M.maxOnderpand?fmt0(M.maxOnderpand):'—')+'</td><td>'+(M.mw?(M.ebv>0?'100% + EBV (max 106%) van ':'100% van ')+fmt0(M.mw):'')+'</td></tr>'+
-    '<tr class="tot"><td><b>Maximale hypotheek</b></td><td class="r"><b>'+fmt0(M.maxHyp)+'</b></td><td>'+basis+'</td></tr></tbody></table>'+ldrMeldingen(inp,M);
+    '<tr class="tot"><td><b>Maximale hypotheek</b></td><td class="r"><b>'+(M.b3Knel?'niet haalbaar':fmt0(M.maxHyp))+'</b></td><td>'+(M.b3Knel?'met dit box 3-deel':basis)+'</td></tr></tbody></table>'+b3KnelMelding(M)+ldrMeldingen(inp,M);
 
   /* --- conclusie --- */
   let conclusie;
@@ -1332,6 +1379,8 @@ function print_(){
     if(O&&O.stappen.length){
       const st=O.stappen[0];
       uitleg+='<p><b>Route naar akkoord:</b> door '+(st.heel?'de looptijd van leningdeel '+(st.van+1)+' in te korten tot '+st.duurN+' maanden':fmt0(st.X)+' van leningdeel '+(st.van+1)+' om te zetten in een apart annuïtair leningdeel van '+st.duurN+' maanden')+' is dit deel volledig afgelost vóór het tekortmoment. De toetsing is dan wél akkoord bij een gelijkblijvende hoofdsom van '+fmt0(M.hoofdsom)+'.</p>';
+    }else if(M.b3Knel){
+      uitleg+='<p><b>Route naar akkoord:</b> het box 3-deel past '+momentLbl(M.b3Knel.m).toLowerCase()+' niet; verlaag het box 3-deel tot '+fmt0(M.b3Knel.X)+'.</p>';
     }else if(M.baseMax<M.hoofdsom){
       uitleg+='<p><b>Route naar akkoord:</b> verlaag de hoofdsom tot '+fmt0(Math.floor(Math.min(M.baseMax,M.maxOnderpand||Infinity)))+' bij gelijkblijvende leningconstructie.</p>';
     }

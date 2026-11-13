@@ -720,7 +720,7 @@ var LDR = (function () {
       '<tr><td style="padding:3px 8px">nu</td><td style="padding:3px 8px;text-align:right">' + eur(nu) + '</td><td></td><td></td></tr>' + stappen.map(rij).join('') + '</table></div>' +
       '<span style="font-size:12px">Indicatief, op de huidige hoofdsom; bespreek of de klant deze stijging kan en wil dragen (AFM, Leidraad Hypotheekadvisering 2026, § 5).</span>');
   }
-  return { maxNietVerantwoord: maxNietVerantwoord, naAow: naAow, renteStress: renteStress, maandlast: maandlast };
+  return { maxNietVerantwoord: maxNietVerantwoord, naAow: naAow, renteStress: renteStress, maandlast: maandlast, box: box };
 })();
 // ─── TABELLEN ──────────────────────────────────────────────────────────────
 // Tabellen uit normen.json (Trhk bijlage 1 en NHG-beheer bijlage 5) in de vorm {inkomen: [fractie per rentekolom]};
@@ -959,13 +959,14 @@ function bereken(){
   // maximale hypotheek (excl. alleenstaandenbedrag) bij de beschikbare maandlast: (besch − box 3-last × q1/q3) / last per € box 1 + box 3-bedrag;
   // past zelfs het box 3-deel niet, dan het bedrag dat geheel als (gebruteerd) box 3-deel past
   function maxStd(besch,sc,p){besch=Math.max(0,besch);const L3v=p.L3*sc.verh;
-    if(sc.alleenB3)return p.L3>0?besch/(p.L3/(p.T1+p.B)):Infinity; // alleen box 3 loopt nog: box 3-tabel, alle delen naar rato (zoals MAX. HYP. 2027)
+    if(sc.alleenB3)return Infinity; // alleen het vaste box 3-deel loopt nog: apart beoordeeld (b3Toets), geen maximum naar rato
     if(p.B>0&&besch<L3v)return p.L3>0?besch/(L3v/p.B):0;
     return p.T1>0&&p.L1>0?(besch-L3v)/(p.L1/p.T1)+p.B:Infinity;} // geen box 1-last (bijv. afgelost op het AOW-moment): niet beperkend
   // Toetsmoment waarop alleen het box 3-deel nog loopt (box 1-delen afgelost): getoetst met de box 3-tabel (q3), geen brutering,
   // verplichtingen niet gebruteerd — zoals MAX. HYP. 2027 (vol3); niet langer 'niet beperkend'
   function zetB3(sc){if(!allB3S&&!(sc.p.L1>0)&&sc.p.L3>0){sc.wqS=sc.q3;sc.exclS=sc.ink/12*sc.q3;sc.verh=1;sc.alleenB3=true;}return sc;}
-  const toetslastStd=(sc,p,aftrek)=>(p.T1>0?p.L1/p.T1*Math.max(0,p.T1-aftrek):0)+p.L3*sc.verh; // aftrek (alleenstaandenbedrag) op het box 1-deel
+  // aftrek (alleenstaandenbedrag) eerst op de box 1-hoofdsom; een restant gaat van het (vaste) box 3-deel af
+  const toetslastStd=(sc,p,aftrek)=>(p.T1>0?p.L1/p.T1*Math.max(0,p.T1-aftrek):0)+p.L3*sc.verh*(p.B>0?1-Math.min(p.B,Math.max(0,aftrek-p.T1))/p.B:1);
   cur.p=lastDelen(0);
   // looptijd voorbij (m ≥ n): deel afgelost, ook aflossingsvrij/spaar/belegging — telt op dat moment niet mee (zoals MAX. HYP. 2027, restOpMoment)
   function restDeel(l,m){const H=l.hoofdsom,n=l.looptijd>0?l.looptijd:360,i=l.rente/100/12;if(m>=n)return 0;
@@ -978,7 +979,18 @@ function bereken(){
   }
   // laagste uitkomst per toets: standaard op max. hypotheek (incl. alleenstaandenbedrag van dat moment), beheer op de ruimte
   const stdMaxOp=sc=>{const g=(sc.st===STP||situatie==='aow')?SY.alleen.grensAOW:SY.alleen.grens;const a=sc.ink>g?SY.alleen.bedrag:0;return maxStd(sc.exclS-verpl,sc,sc.p)+a;};
-  const sS=momenten.reduce((a,b)=>stdMaxOp(b)<stdMaxOp(a)?b:a,cur), sB=momenten.reduce((a,b)=>(b.exclB-toetslastStd(b,b.p,0))<(a.exclB-toetslastStd(a,a.p,0))?b:a,cur);
+  let sS=momenten.reduce((a,b)=>stdMaxOp(b)<stdMaxOp(a)?b:a,cur), sB=momenten.reduce((a,b)=>(b.exclB-toetslastStd(b,b.p,0))<(a.exclB-toetslastStd(a,a.p,0))?b:a,cur);
+  // Moment waarop alleen het VASTE box 3-deel nog loopt (box 1-delen afgelost, D1): de toets hangt dan niet van de hoofdsom af.
+  // Past de box 3-last (na het deel van het alleenstaandenbedrag dat op box 3 valt: eerst van de box 1-hoofdsom) binnen de ruimte,
+  // dan beperkt het moment het maximum niet. Past die niet, dan helpt geen box 1-hoofdsom: maximum niet haalbaar met dit box 3-deel
+  // (b3Knel: maximaal box 3-bedrag X dat wel past). Zelfde regel als MAX. HYP. 2027.
+  let b3Knel=null,b3Max=null;
+  momenten.filter(sc=>sc.alleenB3).forEach(sc=>{const p=sc.p,besch=Math.max(0,sc.exclS-verpl),g=(sc.st===STP||situatie==='aow')?SY.alleen.grensAOW:SY.alleen.grens,a=sc.ink>g?SY.alleen.bedrag:0;
+    const Hc=b3Max!==null?b3Max:stdMaxOp(sS),T1h=Math.max(0,Hc-p.B),f3=1-Math.min(p.B,Math.max(0,a-T1h))/p.B;
+    if(p.L3*f3-besch<=0.005)return;
+    const nodig=p.B*(1-besch/p.L3),hLim=p.B+a-nodig;
+    if(a>=nodig&&hLim>=p.B){if(hLim<Hc){b3Max=hLim;sS=sc;}return;}
+    const X=Math.floor(besch/(p.L3/p.B));if(!b3Knel||X<b3Knel.X)b3Knel={sc,X,last:p.L3,ml:besch,B:p.B};});
   // NHG-beheercriteria (V&N D.6): werkelijke lasten (maandbedrag per leningdeel), huidige rente, beheertabel;
   // pensioen alleen als de AOW binnen 36 maanden ingaat (D.6.3.4); box 3-last × q1/q3; verplichtingen werkelijk.
   const mAowB=(!aowBereikt&&aowDatum&&aowDatum>vandaag)?((aowDatum.getFullYear()-vandaag.getFullYear())*12+(aowDatum.getMonth()-vandaag.getMonth())+(aowDatum.getDate()>vandaag.getDate()?1:0)):999;
@@ -991,8 +1003,9 @@ function bereken(){
     const mDelen=mDelenAlle.filter(x=>!(m>0&&m>=(x.l.looptijd>0?x.l.looptijd:360)));
     // alleen box 3 loopt nog (box 1-delen afgelost op het AOW-moment): box 3-tabel, geen brutering, alle delen naar rato (zoals MAX. HYP. 2027)
     const alleenB3=!allB3&&mDelen.length>0&&mDelen.every(x=>x.l.box3==='JA');
-    if(alleenB3){const last=mDelen.reduce((t,x)=>t+x.m,0),mm=ink*q3/12-verpl;
-      return {lbl,ink,situ,bt,pct:q3,verh:1,last,mm,ruimte:mm-last,maxH:last>0?Math.max(0,mm)/(last/totHS):Infinity,tabNaam:bt.b3naam};}
+    // alleen het VASTE box 3-deel loopt nog: past de last, dan niet beperkend (maxH = ∞); past die niet, dan geen maximum (b3Knel)
+    if(alleenB3){const last=mDelen.reduce((t,x)=>t+x.m,0),mm=ink*q3/12-verpl,B3h=mDelen.reduce((t,x)=>t+x.l.hoofdsom,0),past=last-mm<=0.005;
+      return {lbl,ink,situ,bt,pct:q3,verh:1,last,mm,ruimte:mm-last,maxH:past?Infinity:NaN,alleenB3:true,b3X:past?null:Math.floor(Math.max(0,mm)/(last/B3h)),B3h,tabNaam:bt.b3naam};}
     const verh=(allB3||q3<=0)?1:q1/q3,pct=allB3?q3:q1;const last=mDelen.reduce((t,x)=>t+x.m*((x.l.box3==='JA'&&!allB3)?verh:1),0);
     const mm=ink*pct/12-verpl;
     // max. hypotheek: box 3-deel als VAST bedrag (werkelijke last × q1/q3), extra ruimte in box 1 tegen de werkelijke last per € box 1;
@@ -1005,6 +1018,13 @@ function bereken(){
   const bhList=bhMom(ink0,pensA,situatie,mAowB);
   const bhB=bhList.reduce((a,b)=>b.ruimte<a.ruimte?b:a,bhList[0]);
   const bhMaxB=Math.min(...bhList.map(x=>x.maxH));
+  const bhKnel=bhList.filter(x=>x.alleenB3&&x.b3X!==null).reduce((a,x)=>!a||x.b3X<a.b3X?x:a,null);
+  // melding als het vaste box 3-deel op een moment met alleen box 3 niet past (standaard of beheer)
+  const b3KnelMelding=()=>{const k=methode==='beheer'?(bhKnel?{lbl:bhKnel.lbl,X:bhKnel.b3X,last:bhKnel.last,ml:bhKnel.mm,B:bhKnel.B3h}:null):(b3Knel?{lbl:b3Knel.sc.lbl,X:b3Knel.X,last:b3Knel.last,ml:b3Knel.ml,B:b3Knel.B}:null);
+    if(!k)return '';
+    return LDR.box('let','Het box 3-deel past op de '+k.lbl.replace(/ \(.*$/,'')+' niet; verlaag het box 3-deel tot '+fmtE(k.X)+'.',
+      'Op dat moment zijn de box 1-delen afgelost en loopt alleen het box 3-deel ('+fmtE(Math.round(k.B))+') nog. De toetslast daarvan ('+fmtE(Math.round(k.last))+' per maand) is hoger dan de toegestane maandlast ('+fmtE(Math.round(Math.max(0,k.ml)))+'). '+
+      'Het box 3-deel is een vast bedrag (box 1-delen schalen), dus geen enkele box 1-hoofdsom lost dit op: het maximum is met dit box 3-deel niet haalbaar. Maximaal box 3-bedrag dat op dat moment past: '+fmtE(k.X)+'.');};
   const bhOnv=mAowB<=ATN_BEH_MND&&pensA===null;
   const wqStd=sS.wqS, wqBeh=bhB.pct;
   const exclStd=sS.exclS, exclBeh=bhB.ink/12*bhB.pct;
@@ -1020,13 +1040,13 @@ function bereken(){
   // Toetslast standaard: per deel (30-jarige annuïteit op de toetsrente van het deel), het alleenstaandenbedrag in mindering op het box 1-deel
   const mbdStd=totHS>0?toetslastStd(sS,sS.p,alleen):mbd; // toetslast op het bepalende moment
   // Max. hypotheek standaard bij de huidige leningmix (box 3-deel als vast bedrag), plus alleenstaandenbedrag
-  const maxHypStd=maxStd(mflStd,sS,sS.p)+alleen;
+  let maxHypStd=b3Knel?NaN:(b3Max!==null?b3Max:maxStd(mflStd,sS,sS.p)+alleen);
   const ruimteStd=mflStd-mbdStd;
   const ruimteBeh=bhB.ruimte;
 
   // Uitslag: gebaseerd op standaard CHF-criterium. Vergelijking op hele euro's (zoals getoond):
   // een hypotheek gelijk aan het getoonde maximum is positief.
-  const posStd=Math.round(maxHypStd)>=Math.round(totHS);
+  const posStd=!b3Knel&&Math.round(maxHypStd)>=Math.round(totHS);
   // positief: ruimte ≥ − € 0,005, of een hoofdsom niet hoger dan het getoonde (afgeronde) maximum (bij een korte looptijd is de werkelijke
   // last per € hoog: een halve euro hoofdsom is dan meer dan een halve cent last)
   const posBeh=Math.round(ruimteBeh*100)>=0||(totHS>0&&Math.round(totHS)<=Math.round(bhMaxB));
@@ -1036,7 +1056,7 @@ function bereken(){
   if(methode==='beheer'){
     klasse=bhOnv?'':(posBeh?'mogelijk':'negatief');icoon=bhOnv?'⚠':(posBeh?'🟡':'❌');
     uitslag=bhOnv?'Onvolledig — vul inkomen vanaf AOW in':(posBeh?'Misschien Mogelijk (NHG-beheercriteria)':'NEGATIEF (NHG-beheercriteria)');
-    detail='NHG-beheercriteria (V&N D.6), bepalend toetsmoment: '+bhB.lbl+' — beheertabel '+bhB.tabNaam+' ('+bhB.bt.label+'), toetsinkomen '+fmtE(Math.round(bhB.ink))+', werkelijke lasten '+fmt(bhB.last)+' per maand. Ruimte beheer: '+fmt(ruimteBeh)+'. Maximale hypotheek volgens de beheercriteria (werkelijke lasten van de huidige leningdelen): '+fmt(Math.round(bhMaxB)).replace(',00','')+'. Geen alleenstaandenbedrag. '+BEHEER_VERMOGEN.replace(/&amp;/g,'&')+(bhOnv?' De AOW-datum valt binnen 3 jaar, maar het inkomen vanaf AOW ontbreekt.':'');
+    detail='NHG-beheercriteria (V&N D.6), bepalend toetsmoment: '+bhB.lbl+' — beheertabel '+bhB.tabNaam+' ('+bhB.bt.label+'), toetsinkomen '+fmtE(Math.round(bhB.ink))+', werkelijke lasten '+fmt(bhB.last)+' per maand. Ruimte beheer: '+fmt(ruimteBeh)+'. Maximale hypotheek volgens de beheercriteria (werkelijke lasten van de huidige leningdelen): '+(bhKnel?'niet haalbaar met dit box 3-deel':fmt(Math.round(bhMaxB)).replace(',00',''))+'. Geen alleenstaandenbedrag. '+BEHEER_VERMOGEN.replace(/&amp;/g,'&')+(bhOnv?' De AOW-datum valt binnen 3 jaar, maar het inkomen vanaf AOW ontbreekt.':'');
   } else if(pensOnvolledig){
     klasse='';
     icoon='⚠';
@@ -1078,7 +1098,7 @@ function bereken(){
   set('r-mbd',fmt(mbd));
   set('r-alleen',alleen>0?'+ '+fmt(alleen).replace(',00','')+' (buiten de maandlast)':'n.v.t. (toetsinkomen niet hoger dan '+fmtE(alleenGrens)+')');
   set('r-mbd-std',fmt(mbdStd));
-  set('r-maxhyp-std',isFinite(maxHypStd)?fmt(Math.round(maxHypStd)).replace(',00',''):'—');
+  set('r-maxhyp-std',b3Knel?'niet haalbaar met dit box 3-deel':(isFinite(maxHypStd)?fmt(Math.round(maxHypStd)).replace(',00',''):'—'));
 
   const elStd=document.getElementById('r-ruimte-std');
   elStd.textContent=fmt(posStd?Math.max(0,ruimteStd):ruimteStd);
@@ -1090,7 +1110,7 @@ function bereken(){
 
   // AFM Leidraad Hypotheekadvisering 2026: maximaal ≠ verantwoord (niet bij NHG-beheercriteria), lening na AOW (einddatum = langste leningdeel), rentestress per leningdeel
   {
-    let h=methode==='beheer'?'':LDR.maxNietVerantwoord();
+    let h=b3KnelMelding()+(methode==='beheer'?'':LDR.maxNietVerantwoord());
     const lptMax=Math.max(0,...geldig.map(l=>l.looptijd>0?l.looptijd:360));
     if(aowDatum&&lptMax>0)h+=LDR.naAow({aowDatum:aowDatum,toetsdatum:vandaag,looptijdMaanden:lptMax},{pensioenGetoetst:aowBereikt||(methode==='beheer'?mAowB<=ATN_BEH_MND:aowBinnen),link:'https://adviseurstools.nl/pensioenklif/'});
     h+=LDR.renteStress(geldig.map(l=>({bedrag:l.hoofdsom,rente:l.rente,rvpMaanden:(l.rvp!=null&&l.rvp!=='')?Math.round(+l.rvp*12):120,looptijdMaanden:l.looptijd>0?l.looptijd:360,
@@ -1139,7 +1159,10 @@ function bereken(){
     if(geldt){const m=(a.getFullYear()-vandaag.getFullYear())*12+(a.getMonth()-vandaag.getMonth())-(a.getDate()<vandaag.getDate()?1:0);
       const scP=scenario(pensA,STP,BTP);
       scP.p=lastDelen(m,methode==='trhk'); zetB3(scP);
-      low=Math.min(low,maxOp(scP,scP.p,true));} // alles afgelost op het AOW-moment: niet beperkend; alleen box 3: box 3-tabel
+      if(scP.alleenB3){ // alleen het vaste box 3-deel loopt nog: past het niet, dan geen maximum (zelfde regel als hierboven)
+        const p=scP.p,besch=Math.max(0,scP.exclS-verpl),al=scP.ink>SY.alleen.grensAOW?SY.alleen.bedrag:0,f3=1-Math.min(p.B,Math.max(0,al-Math.max(0,low-p.B)))/p.B;
+        if(p.L3*f3-besch>0.005){const nodig=p.B*(1-besch/p.L3),hLim=p.B+al-nodig;if(al>=nodig&&hLim>=p.B)low=Math.min(low,hLim);else return 0;}
+      }else low=Math.min(low,maxOp(scP,scP.p,true));} // alles afgelost op het AOW-moment: niet beperkend
     return low;
   }
   try{ptGrafiek(document.getElementById('ptGrafiek'),{berekenMax:grafiekMax,huidigeLeeftijd:leeftijd,gekozen:String(pensioenDrempel),methode:methode,ontbreekt:methode!=='beheer'&&situatie!=='aow'&&pensInk===null,vanaf:50,tot:ATN_AOW_JR});}catch(e){document.getElementById('ptGrafiek').innerHTML='';}
