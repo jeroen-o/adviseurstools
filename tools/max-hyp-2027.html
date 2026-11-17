@@ -88,7 +88,10 @@ table.delen select{background-position:right 4px center; background-size:12px; p
   body{background:#fff; color:#000;}
   .hero{background:#fff !important; color:#000 !important; border:1px solid #000; box-shadow:none;}
   .hero h1{color:#000 !important;} .hero p{color:#222 !important;}
-  .card{box-shadow:none; border:1px solid #999; break-inside:avoid;}
+  .card{box-shadow:none; border:1px solid #999; break-inside:auto;}
+  #ptGrafiekCard, #lsGrafiekCard, .sumcard, .scenariobox, svg, tr{break-inside:avoid;}
+  div[style*="overflow-x"]{overflow:visible !important;} table.result, #delenBody{font-size:10px !important;} table.result th, table.result td{padding:4px 5px !important;}
+  #delenBody input, #delenBody select{width:auto !important; max-width:72px; font-size:10px !important; padding:3px 4px !important;}
   .ibtn{display:none !important;} .ipanel[hidden]{display:none !important;}
   table.result th{background:#eee !important; color:#000 !important;}
   table.result tr[style*="font-weight:800"] td{background:#fff !important;}
@@ -2099,7 +2102,19 @@ var LDR = (function () {
     var styles = "";
     document.querySelectorAll("style").forEach(function(s){ styles += s.outerHTML; });
     w.document.open();
-    w.document.write("<!doctype html><html lang=\"nl\"><head><meta charset=\"utf-8\"><title>" + document.title + "</title>" + styles + "</head><body>" + document.body.innerHTML + "</body></html>");
+    // Kopie van de pagina zonder scripts (anders rekent het printvenster opnieuw met de standaardinvoer)
+    // en met de ingevulde waarden vastgelegd als attributen.
+    var kloon = document.body.cloneNode(true);
+    var orig = document.body.querySelectorAll("input, select, textarea"), kopie = kloon.querySelectorAll("input, select, textarea");
+    for(var ki = 0; ki < orig.length && ki < kopie.length; ki++){
+      var o = orig[ki], k = kopie[ki];
+      if(o.tagName === "SELECT"){ Array.prototype.forEach.call(k.options, function(op, oi){ if(oi === o.selectedIndex) op.setAttribute("selected", "selected"); else op.removeAttribute("selected"); }); }
+      else if(o.tagName === "TEXTAREA"){ k.textContent = o.value; }
+      else if(o.type === "checkbox" || o.type === "radio"){ if(o.checked) k.setAttribute("checked", "checked"); else k.removeAttribute("checked"); }
+      else if(o.type !== "file"){ k.setAttribute("value", o.value); }
+    }
+    Array.prototype.forEach.call(kloon.querySelectorAll("script"), function(sc){ sc.parentNode.removeChild(sc); });
+    w.document.write("<!doctype html><html lang=\"nl\"><head><meta charset=\"utf-8\"><title>" + document.title + "</title>" + styles + "</head><body>" + kloon.innerHTML + "</body></html>");
     w.document.close();
     w.addEventListener("load", function(){ w.focus(); w.print(); });
     setTimeout(function(){ w.focus(); w.print(); }, 400);
