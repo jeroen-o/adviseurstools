@@ -1034,7 +1034,7 @@ var LDR = (function () {
     return jaren;
   }
   // Pensioentoets-drempel: '57'/'52' = leeftijd op de toetsdatum; 'aow10'/'aow15' = AOW-datum binnen 10/15 jaar na de toetsdatum
-  var PT_HINT = {"beheer": "NHG-beheercriteria (V&N D.6): beheertabel (Bijlage 5), werkelijk inkomen en werkelijke lasten per leningdeel tegen de huidige rente (geen 5%-minimum, geen herrekening naar 30-jaars annuïteit); geen energielabel-, verduurzamings- of alleenstaandenbedrag; verplichtingen niet gebruteerd. Pensioen telt alleen mee als het binnen 3 jaar ingaat (D.6.3). Alleen voor een bestaande lening met NHG (bijv. ontslag hoofdelijke aansprakelijkheid of overname bij scheiding).", "trhk": "Trhk/NHG-methode (standaard): de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&N C.7.1 en C.7.4.2). Aflossen vóór de AOW-datum verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee."};
+  var PT_HINT = {"beheer": "NHG-beheercriteria (V&N D.6): beheertabel (Bijlage 5), werkelijk inkomen en werkelijke lasten per leningdeel tegen de huidige rente (geen 5%-minimum, geen herrekening naar 30-jaars annuïteit); geen energielabel-, verduurzamings- of alleenstaandenbedrag; verplichtingen niet gebruteerd. Pensioen telt alleen mee als het binnen 3 jaar ingaat (D.6.3). Alleen voor een bestaande lening met NHG (bijv. ontslag hoofdelijke aansprakelijkheid of overname bij scheiding).", "trhk": "Trhk/NHG-methode (standaard): de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&N C.7.1 en C.7.4.2). Dat geldt ook op de andere toetsmomenten, zoals de prepensioendatum. Aflossen vóór zo'n moment verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee."};
   // Rekenmethode lezen; de vervallen restschuldmethode ('rest', oud dossier of lege keuze) wordt Trhk/NHG
   function ptMethodeNorm(id){ var e = document.getElementById(id); if(e && e.value !== "trhk" && e.value !== "beheer") e.value = "trhk"; return e && e.value === "beheer" ? "beheer" : "trhk"; }
   function drempelGeldt(keuze, geb, aowDatum, toetsdatum){
@@ -1279,11 +1279,13 @@ var LDR = (function () {
     momenten = Array.from(new Set(momenten)).sort(function(a,b){return a-b;});
     if(momenten.length===0) momenten=[0];
 
-    // Restschuld van een deel op toetsmoment m. Op het AOW-moment bij de Trhk/NHG-methode het hele bedrag en bij de
-    // NHG-beheercriteria de lening bij aanvang (werkelijke last bij aanvang); een deel dat vóór of op dat moment volledig is
-    // afgelost (looptijd voorbij), telt dan niet mee.
+    // Toetsbedrag van een deel op toetsmoment m. Acceptatie (Trhk/NHG): op ELK toetsmoment (aanvang, prepensioen, einde
+    // renteaftrek, einde van een deel, AOW) het hele bedrag (Trhk art. 3 lid 2 "ongeacht de vorm"); een deel dat vóór of op dat
+    // moment volledig is afgelost (looptijd voorbij), telt niet mee. NHG-beheercriteria: op het AOW-moment de lening bij aanvang
+    // (werkelijke last bij aanvang), op de andere momenten de restschuld (ongewijzigd).
     function restOpMoment(d, m){
-      if(aowMomenten[m] && (ptMethode === "trhk" || BEHEER_MODUS)) return m < d.duur ? d.bedrag : 0;
+      if(!BEHEER_MODUS) return m < d.duur ? d.bedrag : 0;
+      if(aowMomenten[m]) return m < d.duur ? d.bedrag : 0;
       return restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
     }
     // Maand voor de werkelijke last (beheer): op het AOW-moment de last bij aanvang (resterende looptijd = hele looptijd)
@@ -1400,7 +1402,7 @@ var LDR = (function () {
         var vf = vrijstellingFactor(delenArr, m, vrijstellingOp(inkObj));
         var lastAftrekbaar=0, lastNietAftrekbaar=0, berekendeLast=0, aftrekZonderV=0;
         delenArr.forEach(function(d){
-          var rest = restOpMoment(d, m); // Trhk/NHG: hele bedrag op het AOW-moment (zoals de hoofdtoets); beheer: lening bij aanvang
+          var rest = restOpMoment(d, m); // Trhk/NHG: hele bedrag op elk toetsmoment (zoals de hoofdtoets); beheer: AOW-moment lening bij aanvang, anders restschuld
           if(rest<=0) return;
           var renteDeel = toetsrenteDeel(d, normrente);
           var iMaand = (renteDeel/100)/12;
@@ -1474,8 +1476,8 @@ var LDR = (function () {
       var berekendeLast = 0;
       var spl = {sA:0, sN:0, vN:0}; // toetslast zonder vrijstelling: box 1-hoofdsom (aftrekbaar/niet) en vast box 3-deel
       delenState.forEach(function(d){
-        // Trhk/NHG-methode: op het AOW-moment de annuïteit op het hele bedrag (een deel dat dan al is afgelost, valt weg);
-        // NHG-beheer: op het AOW-moment de werkelijke last bij aanvang; Trhk/NHG: het hele bedrag van de lopende delen
+        // Trhk/NHG-methode: op elk toetsmoment (ook prepensioen) de annuïteit op het hele bedrag (een deel dat dan al is afgelost, valt weg);
+        // NHG-beheer: op het AOW-moment de werkelijke last bij aanvang, op de andere momenten de restschuld
         var rest = restOpMoment(d, m);
         if(rest <= 0) return;
         var renteDeel = toetsrenteDeel(d, normrente);
@@ -1635,7 +1637,8 @@ var LDR = (function () {
       var vf = vrijstellingFactor(delenState, m, vrijstellingOp(inkObj));
       var berekendeLast = 0;
       delenState.forEach(function(d){
-        var rest = restschuld(d.bedrag, d.rente, d.duur, d.vorm, m);
+        // acceptatie: hele bedrag op elk moment (zoals de hoofdtoets); beheer ongewijzigd (restschuld)
+        var rest = BEHEER_MODUS ? restschuld(d.bedrag, d.rente, d.duur, d.vorm, m) : restOpMoment(d, m);
         if(rest<=0) return;
         var renteDeel = toetsrenteDeel(d, normrente);
         var iMaand = (renteDeel/100)/12;

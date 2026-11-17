@@ -423,7 +423,7 @@ tr.tekort td{background:var(--redlt)!important}
       <option value="aow15">15 jaar vóór AOW-datum</option>
       <option value="0">Niet toetsen</option>
     </select><span class="hint" id="ptBeheerPT" style="display:none;margin-top:4px"></span></label>
-    <label class="f">Rekenmethode<select id="ptMethode" onchange="ptMeldUpd()"><option value="trhk" selected>Acceptatie – Trhk/NHG (hele bedrag)</option><option value="beheer">NHG-beheercriteria (bestaande NHG-lening)</option></select><span class="hint" id="ptMeld" style="display:block;margin-top:4px">Trhk/NHG: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&amp;N C.7.1 en C.7.4.2). Aflossen vóór de AOW-datum verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.</span></label>
+    <label class="f">Rekenmethode<select id="ptMethode" onchange="ptMeldUpd()"><option value="trhk" selected>Acceptatie – Trhk/NHG (hele bedrag)</option><option value="beheer">NHG-beheercriteria (bestaande NHG-lening)</option></select><span class="hint" id="ptMeld" style="display:block;margin-top:4px">Trhk/NHG: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&amp;N C.7.1 en C.7.4.2). Dat geldt ook op de andere toetsmomenten, zoals de prepensioendatum. Aflossen vóór een toetsmoment verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.</span></label>
   </div>
   <div class="grid" style="grid-template-columns:1fr 1fr" id="personen">
     <div class="persoon">
@@ -562,7 +562,7 @@ tr.tekort td{background:var(--redlt)!important}
   <ul>
    <li>Het pensioenscenario is meestal het <b>krapste toetsmoment</b>. De klassieke oplossing: zet een deel om in een <b>kortlopend annuïtair leningdeel dat vóór de AOW-datum volledig is afgelost</b> — precies wat de "route naar akkoord" automatisch uitrekent. Je benut zo de ruime maandlasten vóór pensionering zonder het AOW-moment te belasten.</li>
    <li><b>Volledig pensioeninkomen aantonen</b> — vul AOW plus álle aanvullende pensioenen in; elk euro pensioeninkomen verhoogt de toegestane maandlast op het AOW-moment direct.</li>
-   <li>Voldoet een aanvrager aan de gekozen pensioentoetsdrempel (vanaf 57 of 52 jaar, of AOW-datum binnen 10 of 15 jaar), dan wordt naast de toets bij aanvang ook op zijn AOW-datum getoetst op het inkomen vanaf AOW, over het <b>hele bedrag</b> (Trhk art. 3 lid 2; NHG V&amp;N C.7.1 en C.7.4.2). Aflossen vóór de AOW-datum verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.</li>
+   <li>Voldoet een aanvrager aan de gekozen pensioentoetsdrempel (vanaf 57 of 52 jaar, of AOW-datum binnen 10 of 15 jaar), dan wordt naast de toets bij aanvang ook op zijn AOW-datum getoetst op het inkomen vanaf AOW, over het <b>hele bedrag</b> (Trhk art. 3 lid 2; NHG V&amp;N C.7.1 en C.7.4.2). Dat geldt ook op de andere toetsmomenten, zoals de prepensioendatum. Aflossen vóór een toetsmoment verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.</li>
   </ul>
 
   <h4>Einde renteaftrek binnen 10 jaar (30-jaarstermijn / bijleenregeling)</h4>
@@ -887,7 +887,7 @@ function leesInput(){
 }
 
 function ptMethodeKeuze(){const e=document.getElementById('ptMethode');const v=e?e.value:'trhk';if(e&&v!=='trhk'&&v!=='beheer')e.value='trhk'; /* vervallen 'rest' (oud dossier) → 'trhk' */ return v==='beheer'?'beheer':'trhk';}
-function ptMeldUpd(){const m=ptMethodeKeuze(),e=document.getElementById('ptMeld');if(e)e.innerHTML=m==='beheer'?BEHEER_HINT:'Trhk/NHG: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&amp;N C.7.1 en C.7.4.2). Aflossen vóór de AOW-datum verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.';
+function ptMeldUpd(){const m=ptMethodeKeuze(),e=document.getElementById('ptMeld');if(e)e.innerHTML=m==='beheer'?BEHEER_HINT:'Trhk/NHG: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&amp;N C.7.1 en C.7.4.2). Dat geldt ook op de andere toetsmomenten, zoals de prepensioendatum. Aflossen vóór een toetsmoment verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.';
   const s=document.getElementById('pdr');if(s){s.disabled=m==='beheer';s.style.opacity=m==='beheer'?'.5':'';}
   const t=document.getElementById('ptBeheerPT');if(t){t.textContent=m==='beheer'?BEHEER_PT_TEKST:'';t.style.display=m==='beheer'?'block':'none';}}
 /* Pensioentoets geldt: nog geen AOW en aan de drempel voldaan op de toetsdatum (leeftijd ≥ 57/52, of AOW-datum binnen 10/15 jaar) */
@@ -979,8 +979,9 @@ function berekenCore(inp){
     delen.forEach(d=>{
       if(m>Math.min(d.duur,360))return;
       const fB3=d.bedrag>0?Math.min(d.box3,d.bedrag)/d.bedrag:0;
-      // later moment: restschuld (als 30-jarige annuïteit op de toetsrente); Trhk/NHG-methode: op het AOW-moment het hele bedrag
-      const dl=(m>1&&!bh&&!(inp.methode==="trhk"&&aowMomenten.has(m)))?d.last*restDeel(d,m-1)/d.bedrag:d.last; // beheer: werkelijke lasten blijven gelijk
+      // Trhk/NHG: op elk toetsmoment (aanvang, prepensioen, einde renteaftrek, AOW) het hele bedrag als 30-jarige annuïteit op de
+      // toetsrente (Trhk art. 3 lid 2); een deel dat vóór het moment volledig is afgelost, valt hierboven weg. Beheer: werkelijke lasten blijven gelijk
+      const dl=d.last;
       const lB1=dl*(1-fB3),lB3=dl*fB3;
       if(m<=d.aftm)lastAftrek+=lB1;
       last+=(m>d.aftm?lB1*brut:lB1)+lB3*brut;
@@ -1295,7 +1296,7 @@ function ptTekst0(M){
   if(!M.drempel)return 'Pensioentoets: niet getoetst (uitgeschakeld).';
   if(M.rows[0]&&M.rows[0].aowNu&&!M.ptRows.length)return 'Pensioentoets ('+dl+'): AOW-leeftijd bereikt — getoetst op inkomen vanaf AOW (toetsinkomen '+fmt0(M.rows[0].ink)+').';
   if(!M.ptRows.length)return 'Pensioentoets ('+dl+'): niet van toepassing.';
-  return 'Pensioentoets ('+dl+'): van toepassing — bij aanvang op het werkinkomen (volle bedrag) en op de AOW-datum op het inkomen vanaf AOW, '+'over het hele bedrag. Trhk/NHG: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&N C.7.1 en C.7.4.2). Aflossen vóór de AOW-datum verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.';
+  return 'Pensioentoets ('+dl+'): van toepassing — bij aanvang op het werkinkomen (volle bedrag) en op de AOW-datum op het inkomen vanaf AOW, '+'over het hele bedrag. Trhk/NHG: de annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen vanaf de AOW-datum (Trhk art. 3 lid 2; NHG V&N C.7.1 en C.7.4.2). Dat geldt ook op de andere toetsmomenten, zoals de prepensioendatum. Aflossen vóór een toetsmoment verlaagt die toetslast niet; alleen een deel dat dan volledig is afgelost, telt niet mee.';
 }
 function ptMelding(M){
   return (M.onvolledig?'<div class="melding err">Vul inkomen vanaf AOW (AOW + pensioen) in: de pensioentoets of AOW-datum is van toepassing, maar het inkomen vanaf AOW ontbreekt. Er wordt niet met het huidige inkomen gerekend (ontbrekend inkomen telt als € 0).</div>':'')+
