@@ -45,6 +45,11 @@ body{
 }
 .hero h1{margin:0 0 4px; font-size:20px; font-weight:700; line-height:1.25; color:#fff;}
 .hero p{margin:0; font-size:12.5px; color:rgba(255,255,255,.75); max-width:720px; line-height:1.5;}
+.heroknoppen{display:flex; flex-direction:column; align-items:flex-end; gap:8px;}
+@media (max-width:560px){ .heroknoppen{flex-direction:row; align-items:center; flex-wrap:wrap;} }
+.btn-nieuw{background:#fff; color:var(--navy); border:none; border-radius:20px; padding:7px 16px; font-weight:700; font-size:12.5px; cursor:pointer; font-family:inherit; white-space:nowrap;}
+.btn-nieuw:hover{background:var(--gold-lt);}
+.btn-nieuw.bevestig{background:#b42318; color:#fff;}
 .hero .jaarsel select{
   background-color:var(--gold); color:var(--navy); border:none; border-radius:20px; padding:6px 30px 6px 14px; min-height:0;
   font-weight:700; font-size:12px; text-transform:none;
@@ -84,7 +89,7 @@ table.delen select{background-position:right 4px center; background-size:12px; p
 }
 .btn-print:hover{background:#d8922a;}
 @media print{
-  .brandbar, .tabs, .btn-print, .btnrow, #delenBody button, .hero .jaarsel, #routeCard{display:none !important;}
+  .brandbar, .tabs, .btn-print, .btnrow, #delenBody button, .hero .jaarsel, .btn-nieuw, #routeCard{display:none !important;}
   body{background:#fff; color:#000;}
   .hero{background:#fff !important; color:#000 !important; border:1px solid #000; box-shadow:none;}
   .hero h1{color:#000 !important;} .hero p{color:#222 !important;}
@@ -115,6 +120,7 @@ table.delen input, table.delen select{padding:6px 7px; font-size:13px; min-heigh
 .btn.accent:hover{background:#d8922a;}
 .btn.outline{background:#fff; border:1.5px solid var(--navy); color:var(--navy);}
 .btn.outline:hover{background:#eef4fa;}
+.btn.outline.bevestig{background:#b42318; border-color:#b42318; color:#fff;}
 .btn.danger{background:none; color:var(--red); border:none; font-size:1rem; cursor:pointer; padding:4px 8px;}
 .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
 .summary4{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;}
@@ -298,11 +304,14 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
         <h1 id="heroTitle">Maximale hypotheek 2026 en 2027</h1>
         <p>Maximale hypotheek en maandlasttoets volgens de Gedragscode Hypothecaire Financieringen / TRHK, op basis van de Nibud-financieringslastnormen — inclusief meerdere leningdelen, einde renteaftrek per deel, box 3-delen, AOW-scenario en energielabel-verruiming.</p>
       </div>
+      <div class="heroknoppen">
+      <button type="button" class="btn-nieuw" id="nieuweBerekeningTop">&#8634; Nieuwe berekening</button>
       <div class="jaarsel">
         <select id="jaar">
           <option value="2027" selected>Normjaar 2027</option>
           <option value="2026">Normjaar 2026</option>
         </select>
+      </div>
       </div>
     </div>
 
@@ -2152,12 +2161,33 @@ var LDR = (function () {
     if(vals.woonquoteNorm === "beheer") document.getElementById("ptMethode").value = "beheer"; // oud dossier: aparte beheerkeuze
   }
 
-  document.getElementById("nieuweBerekeningBtn").addEventListener("click", function(){
-    if(!confirm("Weet je zeker dat je een nieuwe berekening wilt starten? Alle huidige invoer gaat verloren.")) return;
-    pasFieldsToe(DEFAULT_FIELDS);
-    delenState = JSON.parse(JSON.stringify(DEFAULT_DELEN));
+  // Nieuwe berekening: leeg formulier (instellingen zoals normjaar, normrente en pensioentoets blijven standaard).
+  // Bevestiging met een tweede klik in plaats van confirm(): dialoogvensters kunnen in een embed (bijv. Google Sites) geblokkeerd zijn.
+  var LEEG_FIELDS = JSON.parse(JSON.stringify(DEFAULT_FIELDS));
+  ["c_geboortedatum","c_inkomen","c_pensioen","p_geboortedatum","p_inkomen","p_pensioen","marktwaarde",
+   "fo_koopsom","fo_verbouwing","fo_overigeKosten","vl_c_geboortedatum","vl_c_inkomen","vl_c_pensioen","vl_p_geboortedatum","vl_p_inkomen","vl_p_pensioen"
+  ].forEach(function(id){ LEEG_FIELDS[id] = ""; });
+  function nieuweBerekening(){
+    pasFieldsToe(LEEG_FIELDS);
+    ["c_leeftijdBadge","p_leeftijdBadge","vl_c_leeftijdBadge","vl_p_leeftijdBadge"].forEach(function(id){ var e = document.getElementById(id); if(e) e.textContent = "—"; });
+    delenState = [{vorm:"annuitair", bedrag:0, aftrekbaarTm:360, box3:0, rentevast:120, rente:4.00, duur:360}];
     renderDelen();
+    ["partnerAanwezig","vl_partnerAanwezig","jaar","ptMethode","pensioenDrempel","label","vl_label"].forEach(function(id){ var e = document.getElementById(id); if(e) e.dispatchEvent(new Event("change")); });
     bereken();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  ["nieuweBerekeningBtn","nieuweBerekeningTop"].forEach(function(id){
+    var knop = document.getElementById(id); if(!knop) return;
+    var tekst = knop.innerHTML, timer = null;
+    knop.addEventListener("click", function(){
+      if(!knop.classList.contains("bevestig")){
+        knop.classList.add("bevestig"); knop.textContent = "Klik nogmaals: alle invoer wissen";
+        timer = setTimeout(function(){ knop.classList.remove("bevestig"); knop.innerHTML = tekst; }, 4000);
+        return;
+      }
+      clearTimeout(timer); knop.classList.remove("bevestig"); knop.innerHTML = tekst;
+      nieuweBerekening();
+    });
   });
 
   // In-memory i.p.v. localStorage: deze tool kan embed staan (bijv. Google Sites-iframe),
