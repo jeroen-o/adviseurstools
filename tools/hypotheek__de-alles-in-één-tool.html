@@ -1420,7 +1420,7 @@ if (ltvOver) risicos.push({ type: 'bad', text: `LTV van ${pct(ltv,1)}: de gewens
 if (benutting > 100) risicos.push({ type: 'bad', text: `Gewenste hypotheek overschrijdt de maximale leenruimte` });
 if (benutting > 95) risicos.push({ type: 'warn', text: `Maximaal lenen: uitgebreid stilstaan bij uitgavenpatroon vereist (AFM Leidraad)` });
 if (state.kinderwens === 'ja') risicos.push({ type: 'warn', text: `Kinderwens: doorrekenen effect op inkomen en woonlasten bij eventuele teruggang in arbeid` });
-if (beheerB) risicos.push({ type: beheerB.bepalend.m.mnd > 0 ? 'warn' : 'ok', text: beheerB.tekst });
+if (beheerB) risicos.push({ type: beheerB.bepalend.m.lbl !== 'nu' ? 'warn' : 'ok', text: beheerB.tekst }); // AOW-moment bepalend (ook een AOW-datum binnen de eerste maand: mnd 0)
 else if (ptGeldt) risicos.push({ type: pensioentoetsBepalend ? 'warn' : 'ok', text: ptTekst });
 if (state.pensioen10j === 'ja') risicos.push({ type: 'warn', text: `Pensioen binnen 10 jaar: toets of hypotheek betaalbaar blijft op pensioenniveau (Trhk-verplichting)` });
 if (stijgingMaandlast > 200) risicos.push({ type: 'warn', text: `Renteschok +2%: maandlast stijgt met ${euro(stijgingMaandlast)}/mnd bij herziening` });
@@ -1448,7 +1448,7 @@ Object.assign(R, { toetsinkomen: bb.ink, toetsrente: rente, tabelType: bb.tab, f
 maxHypLTI_basis: bb.maxLast / beheerB.lastPerEuro, totaalVerplichtingenMaand: verplB, bruteringFactor: 1, duoGebruteerd: duoMaandlast, kredietGebruteerd: kredietMaandlast * ATL.krediet_maandlast_pct_limiet / 100,
 brutoBeschikbaarMaand: bb.maxLast, nettoBeschikbaarMaand: Math.max(0, bb.maxLast - verplB), maxHypLTI_naVerplichtingen: beheerB.max, maxHypLTI_finaal: beheerB.max,
 inkomenAO: bb.ink * 0.70, maxHypAO: Math.max(0, bb.ink * 0.70 * beheerPct(bb.tab, bb.ink * 0.70, rente * 100) / 12 - verplB) / beheerB.lastPerEuro,
-pensioentoetsBepalend: bb.m.mnd > 0 });
+pensioentoetsBepalend: bb.m.lbl !== 'nu' });
 }
 return R;
 }

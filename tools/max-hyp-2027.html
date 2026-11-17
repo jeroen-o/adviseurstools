@@ -1049,6 +1049,12 @@ var LDR = (function () {
   function volleMaanden(d0, d1){
     return (d1.getFullYear()-d0.getFullYear())*12 + (d1.getMonth()-d0.getMonth()) - (d1.getDate() < d0.getDate() ? 1 : 0);
   }
+  // Toetsmoment (in volle maanden) voor een AOW- of prepensioendatum: ligt de datum ná de toetsdatum maar binnen de eerste maand,
+  // dan is het toch een toetsmoment (maand 1, op het hele bedrag/de lening bij aanvang); anders zou het moment wegvallen (0 = de toetsdatum zelf)
+  function momentMaanden(d0, d1){
+    var m = volleMaanden(d0, d1);
+    return (m < 1 && d1 > d0) ? 1 : m;
+  }
   function leeftijdOp(geboortedatum, peildatum){
     var jaren = peildatum.getFullYear() - geboortedatum.getFullYear();
     var m = peildatum.getMonth() - geboortedatum.getMonth();
@@ -1289,11 +1295,11 @@ var LDR = (function () {
     function zetMomentDatum(m, d){ if(!momentDatumMap[m] || d > momentDatumMap[m]) momentDatumMap[m] = d; }
     [client, partner].forEach(function(p){
       if(p && p.aow){
-        var mAow = volleMaanden(toetsdatum, p.aow);
+        var mAow = momentMaanden(toetsdatum, p.aow);
         if(mAow > 0 && pensioentoetsGeldtOp(p, toetsdatum)){ momenten.push(mAow); aowMomenten[mAow] = true; zetMomentDatum(mAow, p.aow); }
       }
       if(p && p.prepDatum){
-        var mPrep = volleMaanden(toetsdatum, p.prepDatum);
+        var mPrep = momentMaanden(toetsdatum, p.prepDatum);
         if(mPrep > 0 && mPrep <= horizonMnd){ momenten.push(mPrep); zetMomentDatum(mPrep, p.prepDatum); }
       }
     });
@@ -1592,7 +1598,7 @@ var LDR = (function () {
       function schuif(p){ if(!p) return null; var g = p.geb ? new Date(p.geb.getTime()+delta) : null; return {geb:g, aow:g?defaultAowDatum(g):null, inkomen:p.inkomen, pensioen:p.pensioen}; }
       var ps = [schuif(client)].concat(partner ? [schuif(partner)] : []);
       var mom = [0], gDat = {};
-      ps.forEach(function(p){ if(p.aow && (BEHEER_MODUS ? beheerPensioenGeldt(p, toetsdatum) : drempelGeldt(keuze, p.geb, p.aow, toetsdatum))){ var m = volleMaanden(toetsdatum, p.aow); if(m>0 && m<=maxDuur){ mom.push(m); if(!gDat[m] || p.aow > gDat[m]) gDat[m] = p.aow; } } });
+      ps.forEach(function(p){ if(p.aow && (BEHEER_MODUS ? beheerPensioenGeldt(p, toetsdatum) : drempelGeldt(keuze, p.geb, p.aow, toetsdatum))){ var m = momentMaanden(toetsdatum, p.aow); if(m>0 && m<=maxDuur){ mom.push(m); if(!gDat[m] || p.aow > gDat[m]) gDat[m] = p.aow; } } });
       var laagste = null, gB3 = [];
       mom.forEach(function(m){
         var datum = gDat[m] || addMonths(toetsdatum, m), personen = [], totaal = 0;
@@ -1742,7 +1748,7 @@ var LDR = (function () {
     var ldrAowP = [client, partner].filter(function(p){ return p && p.aow; }).sort(function(a,b){ return a.aow - b.aow; })[0];
     var ldrHtml = (BEHEER_MODUS ? "" : LDR.maxNietVerantwoord()) +
       (ldrAowP ? LDR.naAow({aowDatum: ldrAowP.aow, toetsdatum: toetsdatum, looptijdMaanden: maxDuur || 360},
-        {pensioenGetoetst: toetsdatum >= ldrAowP.aow || (pensioentoetsGeldtOp(ldrAowP, toetsdatum) && volleMaanden(toetsdatum, ldrAowP.aow) <= maxDuur), link: "https://adviseurstools.nl/pensioenklif/"}) : "") +
+        {pensioenGetoetst: toetsdatum >= ldrAowP.aow || (pensioentoetsGeldtOp(ldrAowP, toetsdatum) && momentMaanden(toetsdatum, ldrAowP.aow) <= maxDuur), link: "https://adviseurstools.nl/pensioenklif/"}) : "") +
       LDR.renteStress(delenState.map(function(d){ return {bedrag:d.bedrag, rente:d.rente, rvpMaanden:d.rentevast, looptijdMaanden:d.duur, vorm:d.vorm}; }), {maxMaandlast: maxMaandlastAanvang});
     document.getElementById("scenarioBox").innerHTML =
       "<div style='margin-bottom:8px;'>" + hoofdsomStatus + extraTekstResultaat + ldrHtml + "</div>" + scenarioHtml;
@@ -1765,7 +1771,7 @@ var LDR = (function () {
         var lsAow = [];
         [client, partner].forEach(function(p, idx){
           if(!(p && p.aow)) return;
-          var mA = volleMaanden(toetsdatum, p.aow);
+          var mA = momentMaanden(toetsdatum, p.aow);
           if(!(mA > 0 && mA < maxDuur)) return;
           lsM.push(mA);
           lsAow.push({m:mA, lbl: partner ? (idx===0 ? "AOW-leeftijd 1e aanvrager" : "AOW-leeftijd 2e aanvrager") : "AOW-leeftijd aanvrager", kort: partner ? (idx===0 ? "AOW 1e" : "AOW 2e") : "AOW", lft: lsAowLft(p.geb, p.aow),
@@ -2041,7 +2047,7 @@ var LDR = (function () {
     var vlMomenten = [{m:0, datum:toetsdatum, personen: vlPersonen.map(function(p){ return {ink:p.inkomen, aow:p.aowBereikt}; })}];
     vlPersonen.forEach(function(q){
       if(!q.pensioentoetsGeldt || !q.aowDatum) return;
-      var m = volleMaanden(toetsdatum, q.aowDatum);
+      var m = momentMaanden(toetsdatum, q.aowDatum);
       if(m <= 0) return;
       if(vlBeheer && m >= (parseInt(document.getElementById("vl_looptijd").value,10) || 360)) return; // beheer: lening dan afgelost (zoals hoofdscherm)
       vlMomenten.push({m:m, datum:q.aowDatum, personen: vlPersonen.map(function(p){
@@ -2139,7 +2145,7 @@ var LDR = (function () {
       (function(){
         var q = [client, partner].filter(function(p){ return p && p.aowDatum; }).sort(function(a,b){ return a.aowDatum - b.aowDatum; })[0];
         return (vlBeheer ? "" : LDR.maxNietVerantwoord()) + (q ? LDR.naAow({aowDatum: q.aowDatum, toetsdatum: toetsdatum, looptijdMaanden: looptijd},
-          {pensioenGetoetst: q.aowBereikt || (q.pensioentoetsGeldt && volleMaanden(toetsdatum, q.aowDatum) <= looptijd), link: "https://adviseurstools.nl/pensioenklif/"}) : "");
+          {pensioenGetoetst: q.aowBereikt || (q.pensioentoetsGeldt && momentMaanden(toetsdatum, q.aowDatum) <= looptijd), link: "https://adviseurstools.nl/pensioenklif/"}) : "");
       })();
 
     // Grafiek werkelijke restschuld vs bedrag waarmee Trhk/NHG toetst: één annuïtair leningdeel ter grootte van de maximale hypotheek 2027
@@ -2158,7 +2164,7 @@ var LDR = (function () {
         var aowVL = [];
         [client, partner].forEach(function(p, idx){
           if(!(p && p.aowDatum)) return;
-          var mA = volleMaanden(toetsdatum, p.aowDatum);
+          var mA = momentMaanden(toetsdatum, p.aowDatum);
           if(!(mA > 0 && mA < looptijd)) return;
           mm.push(mA);
           var gebEl = document.getElementById("vl_" + (idx===0 ? "c" : "p") + "_geboortedatum").value;
