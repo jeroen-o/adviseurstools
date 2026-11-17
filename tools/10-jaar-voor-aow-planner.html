@@ -1118,7 +1118,9 @@ function bereken(){
     const r=mndOp(d.isAOW,d.pen,kol0,b3/S),verh=!r.vol3&&r.q3>0?r.q1/r.q3:1,L0=l1+l3*verh,V=alleenOp(r).bedrag;
     // gemengd: het alleenstaandenbedrag gaat eerst van de box 1-hoofdsom af, een restant van het (vaste) box 3-deel (op de hoofdsom, zoals de toetsmomenten)
     const gem=!(r.vol3||!(B3>0)||!(H1>0)||!(l1>0)),vLast=V>0?(gem?l1*Math.min(V,H1)/H1+l3*verh*Math.min(B3,Math.max(0,V-H1))/B3:L0*Math.min(V,totB)/totB):0;
-    if(L0>0){const mx=S*(Math.max(0,r.mnd)+vLast)/L0;d.maxH30=Math.round(mx);d.margeX=mx-S;}});
+    // gemengd en de gebruteerde box 3-last past op deze maand alleen al niet: geen box 1-hoofdsom mogelijk, maximum naar rato onder de
+    // box 3-schuld = vrijgesteld bedrag + maandlast × box 3-schuld / gebruteerde box 3-last (zoals de toetsmomenten en MAX. HYP. 2027)
+    if(L0>0){const mx=(gem&&r.mnd<l3*verh)?V+Math.max(0,r.mnd)*b3/(l3*verh):S*(Math.max(0,r.mnd)+vLast)/L0;d.maxH30=Math.round(mx);d.margeX=mx-S;}});
   const aowIdx=data.findIndex(d=>d.isAOW);
   const penIdx=data.findIndex(d=>d.pen);
   document.getElementById('k1').textContent=b3Knel?'niet haalbaar':E(bep.max);
