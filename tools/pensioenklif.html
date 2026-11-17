@@ -457,7 +457,7 @@
    * opt: {inkomen, rente (huidige gewogen rente, %), aanvragers (1|2), aow (alle aanvragers AOW),
    *       zonderWerk, box3Aandeel (0..1), verplichtingenMnd (werkelijk, niet gebruteerd),
    *       lastPerEuro (werkelijke maandlast per € 1 hoofdsom; leeg = 50% aflossingsvrij + 50% annuïtair 30 jaar)}
-   * Pensioen telt alleen als de AOW binnen 36 maanden ligt: reken dan ook met het inkomen vanaf AOW en aow:true
+   * Pensioen telt alleen als de AOW binnen 36 maanden ligt (beheerAowBinnen): reken dan ook met het inkomen vanaf AOW en aow:true
    * en neem de laagste uitkomst. Geen vrijgestelde bedragen; vermogenscorrectie (D.6.5) niet inbegrepen.
    */
   function maxHypotheekBeheer(o) {
@@ -471,6 +471,27 @@
     var beschikbaar = Math.max(0, maxLast - (o.verplichtingenMnd || 0));
     return { tabel: sit, toetsrente: tr, kolom: L.rentekolommen.labels[kolom(tr)], woonquote: q, woonquoteBox3: q3,
       maxMaandlast: maxLast, lastPerEuro: lpe, aanname5050: !o.lastPerEuro, totaal: beschikbaar / (lpe * factorLast) };
+  }
+
+  /**
+   * NHG-beheer, 36-maandentelling (V&N D.6.3.4: pensioen/AOW telt alleen als de consument de AOW-leeftijd "binnen 3 jaar" bereikt).
+   * beheerMaanden: kalendermaanden van de toetsdatum tot de AOW-datum; een begonnen maand telt als hele maand
+   * (zelfde dag van de maand = precies 36 → telt; 36 maanden + 1 dag = 37 → telt niet). Alleen de datum telt, niet het tijdstip.
+   * beheerAowBinnen: true als de AOW-datum ná de toetsdatum ligt en uiterlijk 36 kalendermaanden later (= beheerMaanden ≤ 36);
+   * met looptijdMaanden valt een AOW-moment op of na het einde van de looptijd weg.
+   */
+  function dagVan(d) {
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) { var p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+    d = d instanceof Date ? d : new Date(d); return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  function beheerMaanden(toetsdatum, aowDatum) {
+    var a = dagVan(toetsdatum), b = dagVan(aowDatum); if (!a || !b) return null;
+    return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()) + (b.getDate() > a.getDate() ? 1 : 0);
+  }
+  function beheerAowBinnen(aowDatum, toetsdatum, looptijdMaanden) {
+    var a = dagVan(toetsdatum), b = dagVan(aowDatum); if (!a || !b || b <= a) return false;
+    if (looptijdMaanden != null && b >= new Date(a.getFullYear(), a.getMonth() + looptijdMaanden, a.getDate())) return false;
+    return beheerMaanden(a, b) <= D.nhg.beheer.regels.pensioen_binnen_maanden;
   }
 
   // ── AOW ──
@@ -508,7 +529,7 @@
     data: D, versie: D.versie, normjaar: normjaar, kolom: kolom, kolomLabel: function (tr) { return L.rentekolommen.labels[kolom(tr)]; },
     woonquote: woonquote, beheerquote: beheerquote, toetsrente: toetsrente, annuiteitFactor: annuiteitFactor,
     studieschuldFactor: studieschuldFactor, alleenstaandenbedrag: alleenstaandenbedrag, labelAankoop: labelAankoop,
-    energiebesparend: energiebesparend, nhg: nhg, maxHypotheek: maxHypotheek, maxHypotheekBeheer: maxHypotheekBeheer, aowDatum: aowDatum,
+    energiebesparend: energiebesparend, nhg: nhg, maxHypotheek: maxHypotheek, maxHypotheekBeheer: maxHypotheekBeheer, beheerMaanden: beheerMaanden, beheerAowBinnen: beheerAowBinnen, aowDatum: aowDatum,
     box1Belasting: box1Belasting, aftrekTarief: aftrekTarief, eigenwoningforfait: eigenwoningforfait,
     overdrachtsbelasting: overdrachtsbelasting, fiscaal: fisc
   };
@@ -1257,9 +1278,8 @@ var BEHEER_VERMOGEN='Is de last te hoog, dan staat NHG toe vermogen of opgebouwd
 function beheerMax(o){
   var td=o.td||new Date(),paar=(o.paar!=null)?!!o.paar:o.personen.length>1;
   var mndT=function(a,b){return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())-(b.getDate()<a.getDate()?1:0);};
-  var grens=new Date(td.getFullYear(),td.getMonth()+ATD.nhg.beheer.regels.pensioen_binnen_maanden,td.getDate());
   var mom=[{d:td,mnd:0,lbl:'nu'}];
-  o.personen.forEach(function(p,i){if(p.aowD&&p.aowD>td&&p.aowD<=grens)mom.push({d:p.aowD,mnd:mndT(td,p.aowD),lbl:'AOW-datum '+(paar?'aanvrager '+(i+1):'aanvrager')+' ('+p.aowD.toLocaleDateString('nl-NL')+')'});});
+  o.personen.forEach(function(p,i){if(ATNormen.beheerAowBinnen(p.aowD,td))mom.push({d:p.aowD,mnd:mndT(td,p.aowD),lbl:'AOW-datum '+(paar?'aanvrager '+(i+1):'aanvrager')+' ('+p.aowD.toLocaleDateString('nl-NL')+')'});});
   mom.sort(function(x,y){return x.d-y.d;});
   for(var k=mom.length-1;k>0;k--)if(+mom[k].d===+mom[k-1].d){mom[k-1].lbl+=' / '+mom[k].lbl;mom.splice(k,1);}
   var a=o.lastPerEuro||beheerLast5050(o.rente),ontbreekt=false,b3=o.box3||'nee',knel=null,b3Knel=null;
@@ -2211,9 +2231,14 @@ function calculate() {
     const offs = [{ t: 0, lbl: 'Nu' }];
     const voegToe = (t, lbl, geldt) => { if (t > 1e-9 && geldt) offs.push({ t, lbl }); };
     // Beheer (NHG D.6.3.4): pensioen telt alleen als de AOW binnen 36 maanden na dat moment ingaat
+    // Huidige leeftijd (echte geboortedatum): telling op datum via ATNormen.beheerAowBinnen (kalendermaanden, begonnen maand telt mee,
+    // zoals de beheeruitkomst); andere leeftijden in de tabel/grafiek: verschil in jaren (hele maanden) ≤ 36 maanden
     const bh = ptMethode() === 'beheer';
-    voegToe(oA.aowAge - lftO, heeft2 ? '1e AOW' : 'AOW', bh ? (oA.aowAge - lftO) <= 3 + 1e-9 : oudstePT);
-    if (jA) voegToe(jA.aowAge - lftJ, '2e AOW', bh ? (jA.aowAge - lftJ) <= 3 + 1e-9 : jongstePT);
+    const bhBinnen = (app, l) => (app.birthDate && !app.verschoven && Math.abs(l - app.age) < 1e-6)
+      ? ATNormen.beheerAowBinnen((g => new Date(g.getFullYear() + app.aowYears, g.getMonth() + app.aowMonths, g.getDate()))(new Date(app.birthDate + 'T00:00:00')), new Date())
+      : (app.aowAge - l) <= ATD.nhg.beheer.regels.pensioen_binnen_maanden / 12 + 1e-9;
+    voegToe(oA.aowAge - lftO, heeft2 ? '1e AOW' : 'AOW', bh ? bhBinnen(oA, lftO) : oudstePT);
+    if (jA) voegToe(jA.aowAge - lftJ, '2e AOW', bh ? bhBinnen(jA, lftJ) : jongstePT);
     offs.sort((x, y) => x.t - y.t);
     for (let i = offs.length - 1; i > 0; i--) if (Math.abs(offs[i].t - offs[i - 1].t) < 1 / 24) { offs[i - 1].lbl += ' / ' + offs[i].lbl; offs.splice(i, 1); }
     offs.forEach(o => {

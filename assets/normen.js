@@ -101,7 +101,7 @@
    * opt: {inkomen, rente (huidige gewogen rente, %), aanvragers (1|2), aow (alle aanvragers AOW),
    *       zonderWerk, box3Aandeel (0..1), verplichtingenMnd (werkelijk, niet gebruteerd),
    *       lastPerEuro (werkelijke maandlast per € 1 hoofdsom; leeg = 50% aflossingsvrij + 50% annuïtair 30 jaar)}
-   * Pensioen telt alleen als de AOW binnen 36 maanden ligt: reken dan ook met het inkomen vanaf AOW en aow:true
+   * Pensioen telt alleen als de AOW binnen 36 maanden ligt (beheerAowBinnen): reken dan ook met het inkomen vanaf AOW en aow:true
    * en neem de laagste uitkomst. Geen vrijgestelde bedragen; vermogenscorrectie (D.6.5) niet inbegrepen.
    */
   function maxHypotheekBeheer(o) {
@@ -115,6 +115,27 @@
     var beschikbaar = Math.max(0, maxLast - (o.verplichtingenMnd || 0));
     return { tabel: sit, toetsrente: tr, kolom: L.rentekolommen.labels[kolom(tr)], woonquote: q, woonquoteBox3: q3,
       maxMaandlast: maxLast, lastPerEuro: lpe, aanname5050: !o.lastPerEuro, totaal: beschikbaar / (lpe * factorLast) };
+  }
+
+  /**
+   * NHG-beheer, 36-maandentelling (V&N D.6.3.4: pensioen/AOW telt alleen als de consument de AOW-leeftijd "binnen 3 jaar" bereikt).
+   * beheerMaanden: kalendermaanden van de toetsdatum tot de AOW-datum; een begonnen maand telt als hele maand
+   * (zelfde dag van de maand = precies 36 → telt; 36 maanden + 1 dag = 37 → telt niet). Alleen de datum telt, niet het tijdstip.
+   * beheerAowBinnen: true als de AOW-datum ná de toetsdatum ligt en uiterlijk 36 kalendermaanden later (= beheerMaanden ≤ 36);
+   * met looptijdMaanden valt een AOW-moment op of na het einde van de looptijd weg.
+   */
+  function dagVan(d) {
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) { var p = d.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+    d = d instanceof Date ? d : new Date(d); return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+  function beheerMaanden(toetsdatum, aowDatum) {
+    var a = dagVan(toetsdatum), b = dagVan(aowDatum); if (!a || !b) return null;
+    return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()) + (b.getDate() > a.getDate() ? 1 : 0);
+  }
+  function beheerAowBinnen(aowDatum, toetsdatum, looptijdMaanden) {
+    var a = dagVan(toetsdatum), b = dagVan(aowDatum); if (!a || !b || b <= a) return false;
+    if (looptijdMaanden != null && b >= new Date(a.getFullYear(), a.getMonth() + looptijdMaanden, a.getDate())) return false;
+    return beheerMaanden(a, b) <= D.nhg.beheer.regels.pensioen_binnen_maanden;
   }
 
   // ── AOW ──
@@ -152,7 +173,7 @@
     data: D, versie: D.versie, normjaar: normjaar, kolom: kolom, kolomLabel: function (tr) { return L.rentekolommen.labels[kolom(tr)]; },
     woonquote: woonquote, beheerquote: beheerquote, toetsrente: toetsrente, annuiteitFactor: annuiteitFactor,
     studieschuldFactor: studieschuldFactor, alleenstaandenbedrag: alleenstaandenbedrag, labelAankoop: labelAankoop,
-    energiebesparend: energiebesparend, nhg: nhg, maxHypotheek: maxHypotheek, maxHypotheekBeheer: maxHypotheekBeheer, aowDatum: aowDatum,
+    energiebesparend: energiebesparend, nhg: nhg, maxHypotheek: maxHypotheek, maxHypotheekBeheer: maxHypotheekBeheer, beheerMaanden: beheerMaanden, beheerAowBinnen: beheerAowBinnen, aowDatum: aowDatum,
     box1Belasting: box1Belasting, aftrekTarief: aftrekTarief, eigenwoningforfait: eigenwoningforfait,
     overdrachtsbelasting: overdrachtsbelasting, fiscaal: fisc
   };
