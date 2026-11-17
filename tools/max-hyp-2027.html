@@ -784,6 +784,12 @@ function ptGrafiek(el, o) {
  * o.aow: [{m, lbl, lft, getoetst, rest, heel, lastRest, lastHeel}], o.gekozen: 'rest'|'trhk', o.lftNu: leeftijd bij aanvang (optioneel)
  * o.box3: true als er een box 3-deel is (alleen voor de tekst). Inline SVG, NL-notatie.
  */
+function lsAowLft(geb, aow) {
+  if (!geb || !aow) return null;
+  var mnd = (aow.getFullYear() - geb.getFullYear()) * 12 + (aow.getMonth() - geb.getMonth()) - (aow.getDate() < geb.getDate() ? 1 : 0);
+  var j = Math.floor(mnd / 12), r = mnd % 12;
+  return j + ' jaar' + (r ? ' en ' + r + ' mnd' : '');
+}
 function lsGrafiek(el, o) {
   if (!el) return;
   el._lsArgs = o; el._lsSmal = (el.clientWidth || 720) < 520; el._lsGetekendVerborgen = !el.offsetParent;
@@ -818,23 +824,38 @@ function lsGrafiek(el, o) {
     var dik = (k === 'heel' ? o.gekozen === 'trhk' : o.gekozen === 'rest') ? 3.5 : 2.2;
     s += '<polyline points="' + P.map(function (p) { return x(p.m) + ',' + y(p[k]); }).join(' ') + '" fill="none" stroke="' + KL[k] + '" stroke-width="' + dik + '" stroke-linejoin="round"/>';
   });
+  var lblRijen = [], vVakken = [];
   (o.aow || []).forEach(function (a, i) {
-    var xa = x(a.m), volg = (o.aow || [])[i + 1], links = xa > W - 160 || (volg && x(volg.m) - xa < 150 && xa - L > 150);
+    var xa = x(a.m), volg = (o.aow || [])[i + 1];
     var halo = ' stroke="#fff" stroke-width="3" stroke-linejoin="round" paint-order="stroke"';
-    var anker = links ? ' text-anchor="end"' : '', dx = links ? -6 : 6;
-    // AOW-label onderin (vrij vlak onder de lijnen); alleen bovenin als de restschuld daar al laag ligt
-    var lblY = y(a.rest) > T + ph - 44 ? T + 12 + i * 14 : T + ph - 6 - i * 14;
-    var lblTxt = a.lbl + (a.lft != null ? ' (' + a.lft + ' jr)' : '');
-    // smal scherm met meerdere AOW-lijnen: kort label gecentreerd op de eigen lijn, in verspringende rijen
-    if (smal && (o.aow || []).length > 1) { anker = ' text-anchor="middle"'; dx = 0; lblTxt = a.lbl.replace('AOW aanvrager', 'AOW aanvr.'); lblY = T + ph - 6 - i * 15; }
+    var lblTxt = a.lbl + (a.lft != null ? ': ' + a.lft : '');
+    if (smal && (o.aow || []).length > 1) lblTxt = (a.kort || 'AOW') + (a.lft != null ? ' ' + a.lft.replace(' jaar en ', 'j ').replace(' jaar', 'j') : '');
+    // AOW-label: rechts van de lijn als het past, anders links, anders gecentreerd; rij zo kiezen dat labels elkaar niet raken
+    var tw = lblTxt.length * 6.1 + 4, lx, la, x0, x1;
+    var kruist = volg && x(volg.m) > xa && x(volg.m) < xa + 6 + tw;
+    if (xa + 6 + tw <= W - R && !(kruist && xa - 6 - tw >= L)) { lx = xa + 6; la = ''; x0 = lx; x1 = lx + tw; }
+    else if (xa - 6 - tw >= L) { lx = xa - 6; la = ' text-anchor="end"'; x0 = lx - tw; x1 = lx; }
+    else { lx = Math.min(W - R - tw / 2, Math.max(L + tw / 2, xa)); la = ' text-anchor="middle"'; x0 = lx - tw / 2; x1 = lx + tw / 2; }
+    var rij = 0;
+    while (lblRijen[rij] && lblRijen[rij].some(function (iv) { return x0 < iv[1] + 4 && iv[0] < x1 + 4; })) rij++;
+    (lblRijen[rij] = lblRijen[rij] || []).push([x0, x1]);
+    var onderin = y(a.rest) <= T + ph - 44 - rij * 15;
+    var lblY = onderin ? T + ph - 6 - rij * 15 : T + 12 + rij * 15;
     s += '<line x1="' + xa + '" x2="' + xa + '" y1="' + T + '" y2="' + (T + ph) + '" stroke="#b42318" stroke-dasharray="4 3"/>' +
-      '<text x="' + (xa + dx) + '" y="' + lblY + '" font-size="11" fill="#b42318"' + anker + halo + '>' + lblTxt + '</text>' +
+      '<text x="' + lx + '" y="' + lblY + '" font-size="11" fill="#b42318"' + la + halo + '>' + lblTxt + '</text>' +
       '<circle cx="' + xa + '" cy="' + y(a.heel) + '" r="4" fill="' + KL.heel + '"><title>Trhk/NHG op ' + a.lbl + ': ' + eur(a.heel) + '</title></circle>' +
       '<circle cx="' + xa + '" cy="' + y(a.rest) + '" r="4" fill="' + KL.rest + '"><title>Restschuld op ' + a.lbl + ': ' + eur(a.rest) + '</title></circle>';
     if (a.heel - a.rest > 0.5 && !(smal && (o.aow || []).length > 1)) {
       // verschil tussen de punten als daar ruimte is, anders net onder het restschuldpunt
       var gat = y(a.rest) - y(a.heel), vy = gat >= 36 ? (y(a.heel) + y(a.rest)) / 2 + 4 : y(a.rest) + 18;
-      s += '<text x="' + (xa + dx) + '" y="' + vy + '" font-size="11" font-weight="700" fill="#003057"' + anker + halo + '>verschil ' + eur(a.heel - a.rest) + '</text>';
+      var vTxt = 'verschil ' + eur(a.heel - a.rest), vtw = vTxt.length * 6.6 + 4, vx, va, v0, v1;
+      var vKruist = volg && x(volg.m) > xa && x(volg.m) < xa + 6 + vtw;
+      if (xa + 6 + vtw <= W - R && !(vKruist && xa - 6 - vtw >= L)) { vx = xa + 6; va = ''; v0 = vx; v1 = vx + vtw; }
+      else { vx = xa - 6; va = ' text-anchor="end"'; v0 = vx - vtw; v1 = vx; }
+      // niet over een eerder verschil-label heen: dan een regel lager
+      while (vVakken.some(function (r) { return v0 < r[1] + 4 && r[0] < v1 + 4 && Math.abs(vy - r[2]) < 14; })) vy += 15;
+      vVakken.push([v0, v1, vy]);
+      s += '<text x="' + vx + '" y="' + vy + '" font-size="11" font-weight="700" fill="#003057"' + va + halo + '>' + vTxt + '</text>';
     }
   });
   P.forEach(function (p) {
@@ -852,7 +873,7 @@ function lsGrafiek(el, o) {
   } else {
     box = o.aow.map(function (a) {
       var jr = Math.floor(a.m / 12), mnd = a.m % 12;
-      var t = '<strong>' + a.lbl + (a.lft != null ? ' (' + a.lft + ' jaar' : ' (') + (a.lft != null ? ', ' : '') + 'over ' + jr + ' jaar' + (mnd ? ' en ' + mnd + ' mnd' : '') + ')</strong>: de restschuldmethode toetst ' + eur(a.rest) + ' (toetslast ' + eur(a.lastRest) + ' p/m), de Trhk/NHG-methode ' + eur(a.heel) + ' (toetslast ' + eur(a.lastHeel) + ' p/m). ';
+      var t = '<strong>' + a.lbl + (a.lft != null ? ': ' + a.lft : '') + ' (AOW-datum over ' + jr + ' jaar' + (mnd ? ' en ' + mnd + ' mnd' : '') + ')</strong>: de restschuldmethode toetst ' + eur(a.rest) + ' (toetslast ' + eur(a.lastRest) + ' p/m), de Trhk/NHG-methode ' + eur(a.heel) + ' (toetslast ' + eur(a.lastHeel) + ' p/m). ';
       t += a.heel - a.rest > 0.5 ? 'Verschil: <strong>' + eur(a.heel - a.rest) + '</strong> schuld, ' + eur(a.lastHeel - a.lastRest) + ' toetslast per maand.' : 'Geen verschil: er is tot dan niets afgelost.';
       if (!a.getoetst) t += ' <em>Bij de huidige invoer valt dit moment niet onder de pensioentoets (drempel niet gehaald), dus beide methodes geven nu hetzelfde maximum.</em>';
       return t;
@@ -1498,7 +1519,9 @@ var LDR = (function () {
     });
 
     var slechtsteRuimte = Math.min.apply(null, rows.map(function(r){return r.ruimte;}));
-    var akkoord = slechtsteRuimte >= -0.5;
+    // Hoofdsom boven het onderpandmaximum (Trhk art. 4: 100% van de marktwaarde, met EBV tot 106%) is NIET AKKOORD, ook als de inkomenstoets past
+    var ltvOver = ltvMax > 0 && totBedrag > ltvMax + 0.5;
+    var akkoord = slechtsteRuimte >= -0.5 && !ltvOver;
 
     // -- maximale hypotheek o.b.v. inkomen (kolom op de gewogen toetsrente; toetslast per deel: 30 jr annuïteit tegen de toetsrente van dat deel) --
     var inkAanvang = toetsinkomenOp(toetsdatum);
@@ -1686,7 +1709,9 @@ var LDR = (function () {
 
     var hoofdsomStatus = akkoord
       ? "✔ De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " is AKKOORD over alle getoetste momenten."
-      : "✘ De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " is NIET AKKOORD. Op het krapste moment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + ") ontstaat een tekort van " + fmtEUR(Math.abs(krapsteMoment.ruimte)) + " ten opzichte van de toegestane maandlast.";
+      : (ltvOver && slechtsteRuimte >= -0.5
+        ? "✘ De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " is NIET AKKOORD: hoger dan het maximum op basis van marktwaarde (incl. EBV) van " + fmtEUR(ltvMax) + ". De inkomenstoets past wel op alle getoetste momenten."
+        : "✘ De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " is NIET AKKOORD. Op het krapste moment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + ") ontstaat een tekort van " + fmtEUR(Math.abs(krapsteMoment.ruimte)) + " ten opzichte van de toegestane maandlast." + (ltvOver ? " Bovendien is de hoofdsom hoger dan het maximum op basis van marktwaarde (incl. EBV) van " + fmtEUR(ltvMax) + "." : ""));
 
     var scenarioHtml = "<strong>Scenario-vergelijking — zelfde constructie geheel in box 3:</strong> " +
       "maximaal op basis van inkomen " + fmtEUR(box3MaxHyp) + " (" + (box3MaxHyp<maxOpBasisInkomen?"−"+fmtEUR(maxOpBasisInkomen-box3MaxHyp):"+"+fmtEUR(box3MaxHyp-maxOpBasisInkomen)) + " t.o.v. de huidige constructie) · " +
@@ -1722,7 +1747,7 @@ var LDR = (function () {
           var mA = volleMaanden(toetsdatum, p.aow);
           if(!(mA > 0 && mA < maxDuur)) return;
           lsM.push(mA);
-          lsAow.push({m:mA, lbl: partner ? (idx===0 ? "AOW aanvrager" : "AOW partner") : "AOW-datum", lft: p.geb ? leeftijdOp(p.geb, p.aow) : null,
+          lsAow.push({m:mA, lbl: partner ? (idx===0 ? "AOW-leeftijd 1e aanvrager" : "AOW-leeftijd 2e aanvrager") : "AOW-leeftijd aanvrager", kort: partner ? (idx===0 ? "AOW 1e" : "AOW 2e") : "AOW", lft: lsAowLft(p.geb, p.aow),
             getoetst: !!aowMomenten[mA], rest: lsRest(mA), heel: lsHeel(mA), lastRest: lsLast(mA, false), lastHeel: lsLast(mA, true)});
         });
         lsM = Array.from(new Set(lsM.filter(function(m){ return m >= 0 && m <= maxDuur; }))).sort(function(a,b){ return a-b; });
@@ -1743,7 +1768,9 @@ var LDR = (function () {
     } else {
       routeCard.style.display = "block";
       var duurKort = Math.max(1, krapsteMoment.m);
-      var html = "<p class='hint' style='margin:0 0 12px;'>De hoofdsom van " + fmtEUR(hoofdsomTotaal) + " geeft een tekort van " + fmtEUR(Math.abs(krapsteMoment.ruimte)) + " op het krapste toetsmoment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + "). Twee indicatieve routes naar een AKKOORD-uitkomst:</p>";
+      var html = "<p class='hint' style='margin:0 0 12px;'>De hoofdsom van " + fmtEUR(hoofdsomTotaal) + (ltvOver && slechtsteRuimte >= -0.5
+        ? " is hoger dan het maximum op basis van marktwaarde (incl. EBV) van " + fmtEUR(ltvMax) + "; de inkomenstoets past wel. Alleen een lagere hoofdsom leidt tot AKKOORD:</p>"
+        : " geeft een tekort van " + fmtEUR(Math.abs(krapsteMoment.ruimte)) + " op het krapste toetsmoment (" + (krapsteMoment.m===0?"bij aanvang":"na "+krapsteMoment.m+" maanden") + ")" + (ltvOver ? " en is hoger dan het maximum op basis van marktwaarde (incl. EBV) van " + fmtEUR(ltvMax) : "") + ". Twee indicatieve routes naar een AKKOORD-uitkomst:</p>");
 
       // Optie 1: carve-out — kies grootste niet-aflossingsvrije deel als bron
       var bronIdx = -1, bronBedrag = -1;
@@ -1751,7 +1778,7 @@ var LDR = (function () {
         if(d.vorm !== "aflossingsvrij" && d.bedrag > bronBedrag){ bronBedrag = d.bedrag; bronIdx = i; }
       });
       var optie1Html = "";
-      if(bronIdx >= 0){
+      if(bronIdx >= 0 && !ltvOver){ // boven het onderpandmaximum helpt een andere constructie met dezelfde hoofdsom niet
         var bron = delenState[bronIdx];
         function metCarve(X){
           var arr = delenState.map(function(d){ return {vorm:d.vorm,bedrag:d.bedrag,aftrekbaarTm:d.aftrekbaarTm,box3:d.box3,rentevast:d.rentevast,rente:d.rente,duur:d.duur}; });
@@ -1776,7 +1803,7 @@ var LDR = (function () {
         }
       }
       if(!optie1Html){
-        optie1Html = "<div class='scenariobox' style='margin-top:0;margin-bottom:12px;'><strong>Optie 1 · Extra aflossing (kortlopend leningdeel)</strong><br>Met de huidige leningdelen is er geen haalbare carve-out gevonden die tot AKKOORD leidt.</div>";
+        optie1Html = ltvOver ? "<div class='scenariobox' style='margin-top:0;margin-bottom:12px;'><strong>Optie 1 · Extra aflossing (kortlopend leningdeel)</strong><br>Niet van toepassing: de hoofdsom blijft dan " + fmtEUR(hoofdsomTotaal) + " en daarmee hoger dan het maximum op basis van marktwaarde (incl. EBV) van " + fmtEUR(ltvMax) + ".</div>" : "<div class='scenariobox' style='margin-top:0;margin-bottom:12px;'><strong>Optie 1 · Extra aflossing (kortlopend leningdeel)</strong><br>Met de huidige leningdelen is er geen haalbare carve-out gevonden die tot AKKOORD leidt.</div>";
       }
 
       // Optie 2: verlaag de hoofdsom — zelfde verdeling als het getoonde maximum (maxUitLast): bij gemengd box 1/box 3 blijft het
@@ -2096,7 +2123,7 @@ var LDR = (function () {
           if(!(mA > 0 && mA < looptijd)) return;
           mm.push(mA);
           var gebEl = document.getElementById("vl_" + (idx===0 ? "c" : "p") + "_geboortedatum").value;
-          aowVL.push({m:mA, lbl: partner ? (idx===0 ? "AOW aanvrager" : "AOW partner") : "AOW-datum", lft: gebEl ? leeftijdOp(new Date(gebEl+"T00:00:00"), p.aowDatum) : null,
+          aowVL.push({m:mA, lbl: partner ? (idx===0 ? "AOW-leeftijd 1e aanvrager" : "AOW-leeftijd 2e aanvrager") : "AOW-leeftijd aanvrager", kort: partner ? (idx===0 ? "AOW 1e" : "AOW 2e") : "AOW", lft: gebEl ? lsAowLft(new Date(gebEl+"T00:00:00"), p.aowDatum) : null,
             getoetst: !!p.pensioentoetsGeldt, rest: restVL(mA), heel: heelVL(mA), lastRest: lastVL(restVL(mA)), lastHeel: lastVL(heelVL(mA))});
         });
         mm = Array.from(new Set(mm.filter(function(m){ return m >= 0 && m <= looptijd; }))).sort(function(a,b){ return a-b; });
