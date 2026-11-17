@@ -2193,5 +2193,42 @@ var LDR = (function () {
   bereken();
 })();
 </script>
+<script>
+/* Invulvelden uitlijnen: binnen elke rij van een .grid krijgen de labels dezelfde hoogte,
+ * zodat de invoervelden op één lijn staan, ook als een label over twee regels loopt. */
+(function(){
+  function lijnUit(){
+    document.querySelectorAll('.grid').forEach(function(g){
+      var rijen = {};
+      Array.prototype.forEach.call(g.children, function(f){
+        if(!f.classList || !f.classList.contains('field')) return;
+        var lb = f.querySelector(':scope > label'), inp = f.querySelector(':scope > input, :scope > select');
+        if(!lb || !inp) return;
+        lb.style.minHeight = ''; lb.style.display = '';
+        if(!f.offsetParent) return;
+        (rijen[Math.round(f.getBoundingClientRect().top)] = rijen[Math.round(f.getBoundingClientRect().top)] || []).push({lb:lb, inp:inp});
+      });
+      Object.keys(rijen).forEach(function(k){
+        var r = rijen[k]; if(r.length < 2) return;
+        r.forEach(function(x){ x.top = x.inp.getBoundingClientRect().top; });
+        var maxTop = Math.max.apply(null, r.map(function(x){ return x.top; }));
+        r.forEach(function(x){
+          var d = maxTop - x.top; if(d < 0.5) return;
+          var l = x.lb; l.style.display = 'flex'; l.style.flexWrap = 'wrap'; l.style.alignItems = 'flex-end'; l.style.columnGap = '4px';
+          l.style.minHeight = (l.getBoundingClientRect().height + d) + 'px';
+        });
+      });
+    });
+  }
+  var wacht = 0;
+  function plan(){ cancelAnimationFrame(wacht); wacht = requestAnimationFrame(lijnUit); }
+  window.addEventListener('resize', plan);
+  window.addEventListener('load', plan);
+  document.addEventListener('DOMContentLoaded', plan);
+  document.addEventListener('click', function(){ setTimeout(plan, 0); });
+  document.addEventListener('change', function(){ setTimeout(plan, 0); });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(plan);
+})();
+</script>
 </body>
 </html>
