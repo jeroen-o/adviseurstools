@@ -1393,7 +1393,9 @@ const eigenaarslasten = woz * 0.013335;
 
 // Risico-signalen
 const risicos = [];
-if (ltv > ATL.max_ltv_pct) risicos.push({ type: 'bad', text: `LTV van ${pct(ltv,1)} overschrijdt het maximum van ${ATL.max_ltv_pct}% (of ${ATL.max_ltv_ebv_pct}% bij EBV)` });
+// Trhk art. 4: toets tegen het onderpandmaximum zelf (100% van de marktwaarde, met EBV tot 106%), niet tegen 100%
+const ltvOver = woningWaarde > 0 && gewenstToets > maxHypLTV_EBV + 0.5;
+if (ltvOver) risicos.push({ type: 'bad', text: `LTV van ${pct(ltv,1)}: de gewenste hypotheek overschrijdt het onderpandmaximum van ${euro(maxHypLTV_EBV)} (${ATL.max_ltv_pct}% van de marktwaarde${maxHypLTV_EBV > maxHypLTV ? ' + EBV, max. ' + ATL.max_ltv_ebv_pct + '%' : ''})` });
 if (benutting > 100) risicos.push({ type: 'bad', text: `Gewenste hypotheek overschrijdt de maximale leenruimte` });
 if (benutting > 95) risicos.push({ type: 'warn', text: `Maximaal lenen: uitgebreid stilstaan bij uitgavenpatroon vereist (AFM Leidraad)` });
 if (state.kinderwens === 'ja') risicos.push({ type: 'warn', text: `Kinderwens: doorrekenen effect op inkomen en woonlasten bij eventuele teruggang in arbeid` });
@@ -1402,7 +1404,7 @@ else if (ptGeldt) risicos.push({ type: pensioentoetsBepalend ? 'warn' : 'ok', te
 if (state.pensioen10j === 'ja') risicos.push({ type: 'warn', text: `Pensioen binnen 10 jaar: toets of hypotheek betaalbaar blijft op pensioenniveau (Trhk-verplichting)` });
 if (stijgingMaandlast > 200) risicos.push({ type: 'warn', text: `Renteschok +2%: maandlast stijgt met ${euro(stijgingMaandlast)}/mnd bij herziening` });
 if (state.aoverzekering === 'nee') risicos.push({ type: 'warn', text: `Geen AO-verzekering: adviseer doorrekening arbeidsongeschiktheidsscenario` });
-if (ltv < 101 && benutting <= 100) risicos.push({ type: 'ok', text: `LTV ${pct(ltv,1)} — binnen toegestane norm van 100%` });
+if (!ltvOver && benutting <= 100) risicos.push({ type: 'ok', text: `LTV ${pct(ltv,1)} — binnen het onderpandmaximum (${maxHypLTV_EBV > maxHypLTV ? ATL.max_ltv_pct + '% + EBV, max. ' + ATL.max_ltv_ebv_pct + '%' : ATL.max_ltv_pct + '% van de marktwaarde'})` });
 if (nhgCheck === 'ja') risicos.push({ type: 'ok', text: `NHG mogelijk: woningwaarde en hypotheekbedrag binnen NHG-grens ${normJaar()} (${euro(nhgGrens)})` });
 
 const R = {
@@ -1843,7 +1845,7 @@ ${r.alleenstaandeOpslag > 0 ? `<tr><td class="plus">+ Alleenstaandenbedrag (Trhk
 ${r.labelOpslag > 0 ? `<tr><td class="plus">+ Energielabel-opslag bij aankoop (label ${state.label})</td><td class="td-right plus">+${euro(r.labelOpslag)}</td></tr>` : ''}
 ${r.ebvOpslag > 0 ? `<tr><td class="plus">+ EBV-opslag verduurzaming (label ${state.label})</td><td class="td-right plus">+${euro(r.ebvOpslag)}</td></tr>` : ''}
 <tr class="total-row"><td>${r.beheer ? 'Maximale hypotheek NHG-beheercriteria' : 'Maximale hypotheek LTI (na alle correcties)'}</td><td class="td-right">${euro(Math.floor(r.maxHypLTI_finaal))}</td></tr>
-<tr><td>Maximale hypotheek LTV (${euro(state.woningWaarde || r.maxHyp)} × 100%)</td><td class="td-right">${euro(r.maxHypLTV)}</td></tr>
+<tr><td>Maximale hypotheek LTV (${euro(state.woningWaarde || r.maxHyp)} × 100%${r.maxHypLTV_EBV > r.maxHypLTV ? ' + EBV ' + euro(r.maxHypLTV_EBV - r.maxHypLTV) : ''})</td><td class="td-right">${euro(r.maxHypLTV_EBV != null ? r.maxHypLTV_EBV : r.maxHypLTV)}</td></tr>
 <tr class="total-row"><td>✅ Definitief maximum (laagste van LTI / LTV)</td><td class="td-right">${euro(r.maxHyp)}</td></tr>
 </table>
 </div>
