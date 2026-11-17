@@ -54,6 +54,11 @@ body{
   margin:0 0 14px; font-size:15px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:8px;
 }
 .card h2::before{content:""; width:4px; height:16px; background:var(--gold); border-radius:2px; display:inline-block;}
+.ibtn{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;line-height:1;padding:0}
+.ibtn[aria-expanded="true"]{background:var(--navy);color:#fff}
+.ipanel{background:#f8fafc;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:8px;padding:12px 14px;margin:0 0 12px;font-size:12.5px;line-height:1.55;color:var(--text)}
+.ipanel h3{font-size:13px;margin:10px 0 4px;color:var(--navy)} .ipanel h3:first-child{margin-top:0} .ipanel p,.ipanel ul{margin:0 0 6px} .ipanel ul{padding-left:18px}
+.lsbox{font-size:12.5px;line-height:1.5;margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--gold-lt);border:1px solid #f0d9ae}
 .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 16px;}
 .grid.c2{grid-template-columns:repeat(2,1fr);}
 .grid.c3{grid-template-columns:repeat(3,1fr);}
@@ -84,6 +89,7 @@ table.delen select{background-position:right 4px center; background-size:12px; p
   .hero{background:#fff !important; color:#000 !important; border:1px solid #000; box-shadow:none;}
   .hero h1{color:#000 !important;} .hero p{color:#222 !important;}
   .card{box-shadow:none; border:1px solid #999; break-inside:avoid;}
+  .ibtn{display:none !important;} .ipanel[hidden]{display:none !important;}
   table.result th{background:#eee !important; color:#000 !important;}
   table.result tr[style*="font-weight:800"] td{background:#fff !important;}
 }
@@ -458,6 +464,48 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
 
     <div class="card" id="ptGrafiekCard"><div id="ptGrafiek"></div></div>
 
+    <div class="card" id="lsGrafiekCard">
+      <h2>Restschuldmethode of Trhk/NHG: verloop over de looptijd <button type="button" class="ibtn" id="lsInfoBtn" aria-expanded="false" aria-controls="lsInfo" aria-label="Uitleg: verschil restschuldmethode en Trhk/NHG-methode">i</button></h2>
+      <div class="ipanel" id="lsInfo" hidden>
+        <h3>Waarom een pensioentoets?</h3>
+        <p>Loopt de hypotheek door na de AOW-datum en voldoet de aanvrager aan de gekozen drempel (vanaf 57 of 52 jaar, of AOW-datum binnen 10 of 15 jaar), dan moet de lening niet alleen passen bij het huidige inkomen, maar ook bij het inkomen vanaf de AOW-datum (AOW + pensioen), met de financieringslasttabel voor AOW-gerechtigden. De laagste uitkomst bepaalt het maximum. Over <em>welk bedrag</em> je op dat moment toetst, verschillen de twee methodes.</p>
+        <h3>Restschuldmethode</h3>
+        <ul>
+          <li>Op de AOW-datum wordt de schuld getoetst die dan nog openstaat, nadat er volgens het aflossingsschema is afgelost (annuïtair of lineair). Een aflossingsvrij deel telt volledig mee.</li>
+          <li>Die restschuld wordt omgerekend naar een toetslast: een annuïteit over 30 jaar tegen de toetsrente van elk leningdeel.</li>
+          <li>Hoe meer er vóór de AOW-datum wordt afgelost, hoe lager de te toetsen schuld en hoe meer ruimte. Een kortere looptijd of meer annuïtair/lineair geeft dus een hoger maximum.</li>
+          <li>Een deel van de geldverstrekkers hanteert deze methode bij acceptatie van een aanvraag zonder NHG; check hun acceptatiebeleid.</li>
+        </ul>
+        <h3>Trhk/NHG-methode (hele bedrag)</h3>
+        <ul>
+          <li>Volgens de Tijdelijke regeling hypothecair krediet (art. 3 lid 2) en de NHG-normen (V&amp;N C.7.4.2) moet de annuïteit over 30 jaar op het <em>hele leningbedrag</em> ook passen bij het inkomen na de AOW-datum, alsof er tot dan niets is afgelost.</li>
+          <li>Alleen een leningdeel dat vóór of op de AOW-datum volledig is afgelost (looptijd voorbij), telt niet meer mee.</li>
+          <li>Aflossen vóór de AOW-datum levert bij deze methode dus geen extra ruimte op. De uitkomst is gelijk aan of lager dan die van de restschuldmethode.</li>
+          <li>NHG en veel geldverstrekkers toetsen zo. Voor een aanvraag met NHG geldt deze methode altijd.</li>
+        </ul>
+        <h3>Wat laat de grafiek zien?</h3>
+        <ul>
+          <li><strong>Blauwe lijn:</strong> het bedrag dat de Trhk/NHG-methode toetst. Dat is de hoofdsom zolang de leningdelen lopen; de lijn zakt alleen als een deel aan het eind van de looptijd is.</li>
+          <li><strong>Gouden lijn:</strong> de restschuld volgens het aflossingsschema, het bedrag dat de restschuldmethode toetst.</li>
+          <li><strong>Gearceerd vlak:</strong> het verschil tussen beide. Op de rode AOW-lijn lees je af hoeveel schuld elke methode op dat moment toetst; hoe groter het verschil daar, hoe meer de keuze voor de methode uitmaakt voor het maximum.</li>
+          <li>Onder de grafiek staan per AOW-datum de getoetste schuld en de bijbehorende toetslast per maand voor beide methodes.</li>
+        </ul>
+        <h3>Wanneer is er geen of weinig verschil?</h3>
+        <ul>
+          <li>Bij een volledig aflossingsvrije lening: de restschuld is dan gelijk aan de hoofdsom.</li>
+          <li>Als de AOW-datum kort na aanvang ligt: er is dan nog weinig afgelost.</li>
+          <li>Als de pensioentoets niet geldt (drempel niet gehaald of AOW-datum buiten de looptijd): dan toetsen beide methodes alleen bij aanvang en is het maximum gelijk.</li>
+        </ul>
+        <h3>Let op</h3>
+        <ul>
+          <li>De toetslast onder de grafiek is vóór brutering van een eventueel box 3-deel; in de toets zelf wordt een box 3-last nog gebruteerd. Het maximum bovenaan volgt de gekozen rekenmethode; wissel bij <em>Rekenmethode</em> om het effect op het maximum te zien.</li>
+          <li>Welke methode geldt, bepaalt de geldverstrekker. Weet je het niet zeker, reken dan met de strengste (Trhk/NHG).</li>
+          <li>Ook als de lening op het pensioeninkomen past, is het maximum niet altijd verantwoord: kijk ook naar de werkelijke woonlasten na pensionering (AFM, Leidraad Hypotheekadvisering 2026).</li>
+        </ul>
+      </div>
+      <div id="lsGrafiek"></div>
+    </div>
+
     <div class="card" id="routeCard" style="display:none;">
       <h2>Route naar akkoord</h2>
       <div id="routeBody"></div>
@@ -713,6 +761,89 @@ function ptGrafiek(el, o) {
   el.innerHTML = '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Maximale hypotheek per leeftijd bij aanvraag</div>' +
     '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Met de huidige invoer; pensioentoets met ' + (o.methode === 'beheer' ? 'de NHG-beheercriteria (beheertabel, werkelijke lasten; pensioen telt alleen mee als het binnen 3 jaar ingaat).' : o.methode === 'trhk' ? 'de Trhk/NHG-methode (annuïteit over 30 jaar op het hele bedrag moet ook passen bij het inkomen na de AOW-datum).' : 'de restschuldmethode (toets op de AOW-datum, restschuld na aflossen tot dan).') + '</div>' + s + leg + tab;
 }
+
+/* ── Restschuldmethode vs Trhk/NHG over de looptijd (Adviseurstools.nl) ───────────────
+ * o.punten: [{m, rest, heel}] (maanden vanaf aanvang; rest = restschuld volgens schema, heel = hele bedrag zolang het deel loopt)
+ * o.aow: [{m, lbl, lft, getoetst, rest, heel, lastRest, lastHeel}], o.gekozen: 'rest'|'trhk', o.lftNu: leeftijd bij aanvang (optioneel)
+ * o.box3: true als er een box 3-deel is (alleen voor de tekst). Inline SVG, NL-notatie.
+ */
+function lsGrafiek(el, o) {
+  if (!el) return;
+  el._lsArgs = o; el._lsSmal = (el.clientWidth || 720) < 520;
+  var P = o.punten || [];
+  var eur = function (v) { return '€ ' + Math.round(v).toLocaleString('nl-NL'); };
+  var max = 0; P.forEach(function (p) { if (p.heel > max) max = p.heel; if (p.rest > max) max = p.rest; });
+  if (!(max > 0) || P.length < 2) { el.innerHTML = '<p class="hint">Vul de leningdelen in om de grafiek te tonen.</p>'; return; }
+  var mMax = P[P.length - 1].m || 1;
+  var stap = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / stap) * stap;
+  if (top / stap <= 3) { stap = stap / 2; top = Math.ceil(max / stap) * stap; }
+  var bw = el.clientWidth || 720, smal = bw < 520;
+  var W = smal ? Math.max(340, bw) : 720, H = smal ? 280 : 300, L = 74, R = 14, T = 16, B = 40, pw = W - L - R, ph = H - T - B;
+  var x = function (m) { return L + m / mMax * pw; }, y = function (v) { return T + ph - v / top * ph; };
+  var KL = { heel: '#003057', rest: '#e5a138' };
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Getoetste schuld per jaar: restschuldmethode en Trhk/NHG-methode" style="width:100%;height:auto;display:block;font-family:inherit">';
+  for (var g = 0; g <= top + 1e-6; g += stap) {
+    s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="#e3e9ef"/>' +
+      '<text x="' + (L - 6) + '" y="' + (y(g) + 4) + '" text-anchor="end" font-size="11" fill="#5f6b7a">' + eur(g) + '</text>';
+  }
+  var jrMax = Math.ceil(mMax / 12), tik = jrMax > 20 ? (smal ? 10 : 5) : jrMax > 8 ? (smal ? 5 : 2) : 1;
+  for (var j = 0; j <= jrMax; j += tik) {
+    var mx = Math.min(j * 12, mMax);
+    s += '<text x="' + x(mx) + '" y="' + (H - B + 15) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">' + j + '</text>';
+    if (o.lftNu != null) s += '<text x="' + x(mx) + '" y="' + (H - B + 27) + '" text-anchor="middle" font-size="9.5" fill="#94a0ad">' + (o.lftNu + j) + ' jr</text>';
+  }
+  s += '<text x="' + (L + pw / 2) + '" y="' + (H - 2) + '" text-anchor="middle" font-size="11" fill="#5f6b7a">Jaren na aanvang' + (o.lftNu != null ? ' (leeftijd aanvrager)' : '') + '</text>';
+  // vlak tussen beide lijnen
+  var boven = P.map(function (p) { return x(p.m) + ',' + y(p.heel); }), onder = P.slice().reverse().map(function (p) { return x(p.m) + ',' + y(p.rest); });
+  s += '<polygon points="' + boven.concat(onder).join(' ') + '" fill="#e5a138" fill-opacity="0.16" stroke="none"/>';
+  ['heel', 'rest'].forEach(function (k) {
+    var dik = (k === 'heel' ? o.gekozen === 'trhk' : o.gekozen === 'rest') ? 3.5 : 2.2;
+    s += '<polyline points="' + P.map(function (p) { return x(p.m) + ',' + y(p[k]); }).join(' ') + '" fill="none" stroke="' + KL[k] + '" stroke-width="' + dik + '" stroke-linejoin="round"/>';
+  });
+  (o.aow || []).forEach(function (a, i) {
+    var xa = x(a.m);
+    s += '<line x1="' + xa + '" x2="' + xa + '" y1="' + T + '" y2="' + (T + ph) + '" stroke="#b42318" stroke-dasharray="4 3"/>' +
+      '<text x="' + (xa + (xa > W - 160 ? -4 : 4)) + '" y="' + (T + 11 + i * 13) + '" font-size="11" fill="#b42318"' + (xa > W - 160 ? ' text-anchor="end"' : '') + '>' + a.lbl + (a.lft != null ? ' (' + a.lft + ' jr)' : '') + '</text>' +
+      '<circle cx="' + xa + '" cy="' + y(a.heel) + '" r="4" fill="' + KL.heel + '"><title>Trhk/NHG op ' + a.lbl + ': ' + eur(a.heel) + '</title></circle>' +
+      '<circle cx="' + xa + '" cy="' + y(a.rest) + '" r="4" fill="' + KL.rest + '"><title>Restschuld op ' + a.lbl + ': ' + eur(a.rest) + '</title></circle>';
+    if (a.heel - a.rest > top * 0.06) s += '<text x="' + (xa + (xa > W - 160 ? -6 : 6)) + '" y="' + ((y(a.heel) + y(a.rest)) / 2 + 4) + '" font-size="11" font-weight="700" fill="#003057"' + (xa > W - 160 ? ' text-anchor="end"' : '') + '>verschil ' + eur(a.heel - a.rest) + '</text>';
+  });
+  P.forEach(function (p) {
+    if (p.m % 12) return;
+    s += '<rect x="' + (x(p.m) - 4) + '" y="' + T + '" width="8" height="' + ph + '" fill="transparent"><title>Jaar ' + (p.m / 12) + (o.lftNu != null ? ' (' + (o.lftNu + p.m / 12) + ' jr)' : '') + ' · Trhk/NHG ' + eur(p.heel) + ' · restschuld ' + eur(p.rest) + ' · verschil ' + eur(p.heel - p.rest) + '</title></rect>';
+  });
+  s += '</svg>';
+  var lijn = function (k, lbl) { var gk = (k === 'heel' ? o.gekozen === 'trhk' : o.gekozen === 'rest'); return '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="26" height="8"><line x1="0" x2="26" y1="4" y2="4" stroke="' + KL[k] + '" stroke-width="' + (gk ? 3.5 : 2.2) + '"/></svg>' + lbl + (gk ? ' <b>(gekozen)</b>' : '') + '</span>'; };
+  var leg = '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px;font-size:12px">' + lijn('heel', 'Trhk/NHG: hele bedrag') + lijn('rest', 'Restschuldmethode: restschuld volgens schema') +
+    '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="26" height="10"><rect width="26" height="10" fill="#e5a138" fill-opacity="0.16"/></svg>Verschil</span>' +
+    '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="26" height="8"><line x1="0" x2="26" y1="4" y2="4" stroke="#b42318" stroke-dasharray="4 3"/></svg>AOW-datum</span></div>';
+  var box;
+  if (!(o.aow && o.aow.length)) {
+    box = 'De lening is volledig afgelost vóór de AOW-datum' + (o.geenGeb ? ' (of de geboortedatum ontbreekt)' : '') + ': op de AOW-datum toetsen beide methodes niets, dus de keuze maakt voor het maximum geen verschil.';
+  } else {
+    box = o.aow.map(function (a) {
+      var jr = Math.floor(a.m / 12), mnd = a.m % 12;
+      var t = '<strong>' + a.lbl + (a.lft != null ? ' (' + a.lft + ' jaar' : ' (') + (a.lft != null ? ', ' : '') + 'over ' + jr + ' jaar' + (mnd ? ' en ' + mnd + ' mnd' : '') + ')</strong>: de restschuldmethode toetst ' + eur(a.rest) + ' (toetslast ' + eur(a.lastRest) + ' p/m), de Trhk/NHG-methode ' + eur(a.heel) + ' (toetslast ' + eur(a.lastHeel) + ' p/m). ';
+      t += a.heel - a.rest > 0.5 ? 'Verschil: <strong>' + eur(a.heel - a.rest) + '</strong> schuld, ' + eur(a.lastHeel - a.lastRest) + ' toetslast per maand.' : 'Geen verschil: er is tot dan niets afgelost.';
+      if (!a.getoetst) t += ' <em>Bij de huidige invoer valt dit moment niet onder de pensioentoets (drempel niet gehaald), dus beide methodes geven nu hetzelfde maximum.</em>';
+      return t;
+    }).join('<br>');
+    if (o.box3) box += '<br><span class="hint">Toetslast vóór brutering van het box 3-deel.</span>';
+  }
+  var rijen = P.filter(function (p) { return p.m % 12 === 0; });
+  var tab = '<details style="margin-top:8px;font-size:12px"><summary style="cursor:pointer">Bedragen per jaar</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:3px 8px">Jaar</th>' + (o.lftNu != null ? '<th style="text-align:right;padding:3px 8px">Leeftijd</th>' : '') + '<th style="text-align:right;padding:3px 8px">Trhk/NHG</th><th style="text-align:right;padding:3px 8px">Restschuld</th><th style="text-align:right;padding:3px 8px">Verschil</th></tr>' +
+    rijen.map(function (p) { return '<tr><td style="padding:3px 8px">' + (p.m / 12) + '</td>' + (o.lftNu != null ? '<td style="padding:3px 8px;text-align:right">' + (o.lftNu + p.m / 12) + '</td>' : '') + '<td style="padding:3px 8px;text-align:right">' + eur(p.heel) + '</td><td style="padding:3px 8px;text-align:right">' + eur(p.rest) + '</td><td style="padding:3px 8px;text-align:right">' + eur(p.heel - p.rest) + '</td></tr>'; }).join('') + '</table></div></details>';
+  el.innerHTML = '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">Getoetste schuld per jaar met de huidige leningdelen. Bij de pensioentoets toetst de restschuldmethode de gouden lijn op de AOW-datum, de Trhk/NHG-methode de blauwe lijn.</div>' + s + leg + '<div class="lsbox">' + box + '</div>' + tab;
+}
+window.addEventListener('resize', function () {
+  var el = document.getElementById('lsGrafiek');
+  if (el && el._lsArgs && ((el.clientWidth || 720) < 520) !== el._lsSmal) { try { lsGrafiek(el, el._lsArgs); } catch (e) {} }
+});
+document.addEventListener('click', function (e) {
+  var b = e.target && e.target.closest ? e.target.closest('#lsInfoBtn') : null; if (!b) return;
+  var p = document.getElementById('lsInfo'), open = b.getAttribute('aria-expanded') !== 'true';
+  b.setAttribute('aria-expanded', open ? 'true' : 'false'); p.hidden = !open;
+});
 </script>
 <script>
 (function(){
@@ -1538,6 +1669,35 @@ var LDR = (function () {
       var aowLft = client && client.geb && client.aow ? Math.floor((client.aow - client.geb)/31557600000) : 67;
       ptGrafiek(document.getElementById("ptGrafiek"), { berekenMax: grafiekMax, huidigeLeeftijd: client && client.geb ? leeftijdOp(client.geb, toetsdatum) : null, gekozen: BEHEER_MODUS ? "beheer" : pensioenKeuze, methode: ptMethode, ontbreekt: (client && client.pensioen===null) || (partner && partner.pensioen===null), vanaf: 50, tot: Math.max(67, aowLft) });
     }catch(e){ document.getElementById("ptGrafiek").innerHTML = ""; }
+    try{
+      var lsCard = document.getElementById("lsGrafiekCard");
+      if(BEHEER_MODUS || !delenState.length || !(maxDuur > 0)){ lsCard.style.display = "none"; }
+      else {
+        lsCard.style.display = "";
+        var lsRest = function(m){ return delenState.reduce(function(a,d){ return a + restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); }, 0); };
+        var lsHeel = function(m){ return delenState.reduce(function(a,d){ return a + (m < d.duur ? d.bedrag : 0); }, 0); };
+        var lsLast = function(m, heel){ return delenState.reduce(function(a,d){ var r = heel ? (m < d.duur ? d.bedrag : 0) : restschuld(d.bedrag, d.rente, d.duur, d.vorm, m); return a + (r > 0 ? r / annuiteitFactor((toetsrenteDeel(d, normrente)/100)/12, TOETS_MND) : 0); }, 0); };
+        var lsM = [];
+        for(var lm = 0; lm <= maxDuur; lm += 12) lsM.push(lm);
+        lsM.push(maxDuur);
+        delenState.forEach(function(d){ if(d.duur > 0){ lsM.push(d.duur); if(d.duur > 1) lsM.push(d.duur - 1); } });
+        var lsAow = [];
+        [client, partner].forEach(function(p, idx){
+          if(!(p && p.aow)) return;
+          var mA = volleMaanden(toetsdatum, p.aow);
+          if(!(mA > 0 && mA < maxDuur)) return;
+          lsM.push(mA);
+          lsAow.push({m:mA, lbl: partner ? (idx===0 ? "AOW aanvrager" : "AOW partner") : "AOW-datum", lft: p.geb ? leeftijdOp(p.geb, p.aow) : null,
+            getoetst: !!aowMomenten[mA], rest: lsRest(mA), heel: lsHeel(mA), lastRest: lsLast(mA, false), lastHeel: lsLast(mA, true)});
+        });
+        lsM = Array.from(new Set(lsM.filter(function(m){ return m >= 0 && m <= maxDuur; }))).sort(function(a,b){ return a-b; });
+        lsGrafiek(document.getElementById("lsGrafiek"), {
+          punten: lsM.map(function(m){ return {m:m, rest:lsRest(m), heel:lsHeel(m)}; }),
+          aow: lsAow, gekozen: ptMethode, lftNu: client && client.geb ? leeftijdOp(client.geb, toetsdatum) : null,
+          geenGeb: !(client && client.geb), box3: totBox3 > 0
+        });
+      }
+    }catch(e){ document.getElementById("lsGrafiek").innerHTML = ""; }
 
     // ---------- Route naar akkoord ----------
     var routeCard = document.getElementById("routeCard");
