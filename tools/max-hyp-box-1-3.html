@@ -165,6 +165,7 @@ input.eur{font-variant-numeric:tabular-nums}
   border-radius:8px;padding:9px 12px;display:none}
 .dossier-hint.zicht{display:block}
 .dossier-hint.fout{color:var(--err);background:var(--errbg)}
+.dossier-hint.let{color:#7a3d06;background:var(--gold-lt);border-left:4px solid var(--gold)}
 @media(max-width:560px){
   .actiebalk{flex-direction:column;align-items:stretch}
   .actie-links{flex-direction:column}
@@ -1446,12 +1447,26 @@ const VELDEN=["toetsdatum","normrente","c_naam","c_geb","c_aow","c_ink","c_pens"
   "v_studie","v_krediet","v_alimentatie","v_erfpacht","v_overig"];
 const VINKJES=["partnerAan","alleenstaand","verbouwing"];
 
-function toonHint(tekst,fout){
+function toonHint(tekst,fout,blijf){
   const el=$("dossierHint");
   el.textContent=tekst;
-  el.className="dossier-hint zicht"+(fout?" fout":"");
+  el.className="dossier-hint zicht"+(fout===true?" fout":fout?" "+fout:"");
   clearTimeout(toonHint._t);
-  toonHint._t=setTimeout(()=>{el.className="dossier-hint";},6000);
+  if(!blijf)toonHint._t=setTimeout(()=>{el.className="dossier-hint";},6000);
+}
+/* Pensioentoets-drempel: een dossier zonder markering drempelVersie (opgeslagen vóór de nieuwe standaard Trhk/NHG)
+   opent op "10 jaar vóór AOW", ongeacht de opgeslagen drempel. Met markering blijft de bewust gekozen drempel staan. */
+const DREMPEL_VERSIE=2;
+function drempelMigratie(dossier,velden){
+  if(dossier&&Number(dossier.drempelVersie)>=DREMPEL_VERSIE)return "";
+  const oud=[];
+  velden.forEach(x=>{const el=$(x.id);if(!el||el.value==="aow10")return;
+    oud.push({naam:x.naam,label:(el.selectedIndex>=0&&el.value!=="")?el.options[el.selectedIndex].text:"geen geldige keuze"});
+    el.value="aow10";});
+  if(!oud.length)return "";
+  const uniek=oud.every(o=>o.label===oud[0].label);
+  const van=uniek?"\u201c"+oud[0].label+"\u201d":oud.map(o=>"\u201c"+o.label+"\u201d ("+o.naam+")").join(" en ");
+  return "Pensioentoets-drempel aangepast van "+van+" naar 10 jaar vóór AOW (nieuwe standaard Trhk/NHG). Sla het dossier opnieuw op om dit vast te leggen.";
 }
 function dossierNaam(ext){
   const n=[$("c_naam").value.trim(),$("partnerAan").checked?$("p_naam").value.trim():""].filter(Boolean).join(", ");
@@ -1476,7 +1491,7 @@ function nieuweBerekening(){
   toonHint("Nieuwe berekening gestart — alle velden zijn leeg.");
 }
 function dossierOpslaan(){
-  const data={versie:1,soort:"ghf-toetsing-2026",opgeslagen:new Date().toISOString(),velden:{},vinkjes:{},delen:[]};
+  const data={versie:1,drempelVersie:DREMPEL_VERSIE,soort:"ghf-toetsing-2026",opgeslagen:new Date().toISOString(),velden:{},vinkjes:{},delen:[]};
   VELDEN.forEach(id=>{const el=$(id);if(el)data.velden[id]=el.value;});
   VINKJES.forEach(id=>{const el=$(id);if(el)data.vinkjes[id]=el.checked;});
   document.querySelectorAll("#delenBody tr").forEach(tr=>data.delen.push({
@@ -1501,12 +1516,13 @@ function dossierLaden(tekst){
     if(el&&Object.prototype.hasOwnProperty.call(data.velden,id))el.value=data.velden[id];});
   VINKJES.forEach(id=>{const el=$(id);
     if(el&&data.vinkjes&&Object.prototype.hasOwnProperty.call(data.vinkjes,id))el.checked=!!data.vinkjes[id];});
+  const drempelMelding=drempelMigratie(data,[{id:"pdr",naam:"Pensioentoets"}]);
   $("delenBody").innerHTML="";
   (Array.isArray(data.delen)&&data.delen.length?data.delen:[null]).forEach(d=>deelRij(d||undefined));
   document.querySelectorAll("input.eur").forEach(fmtEurInput);
   syncAlleen();toonLeeftijden();bereken();
   const wanneer=data.opgeslagen?new Date(data.opgeslagen).toLocaleDateString("nl-NL"):"";
-  toonHint("Dossier geopend"+(wanneer?" (opgeslagen op "+wanneer+")":"")+".");
+  toonHint("Dossier geopend"+(wanneer?" (opgeslagen op "+wanneer+")":"")+"."+(drempelMelding?" "+drempelMelding:""),drempelMelding?"let":false,!!drempelMelding);
 }
 $("nieuwBtn").addEventListener("click",nieuweBerekening);
 $("opslaanBtn").addEventListener("click",dossierOpslaan);

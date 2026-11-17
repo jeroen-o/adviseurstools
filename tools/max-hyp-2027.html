@@ -88,7 +88,7 @@ table.delen select{background-position:right 4px center; background-size:12px; p
 }
 .btn-print:hover{background:#d8922a;}
 @media print{
-  .brandbar, .tabs, .btn-print, .btnrow, #delenBody button, .hero .jaarsel, .btn-nieuw, #routeCard{display:none !important;}
+  .brandbar, .tabs, .btn-print, .btnrow, #dossierMelding, #delenBody button, .hero .jaarsel, .btn-nieuw, #routeCard{display:none !important;}
   body{background:#fff; color:#000;}
   .hero{background:#fff !important; color:#000 !important; border:1px solid #000; box-shadow:none;}
   .hero h1{color:#000 !important;} .hero p{color:#222 !important;}
@@ -525,6 +525,7 @@ table.result tr[style*="font-weight:800"] td{background:var(--gold-lt); color:va
       <button type="button" class="btn outline" id="dossierOpenenBtn">Dossier openen</button>
       <button type="button" class="btn outline" id="dossierVerwijderenBtn">Dossier verwijderen</button>
     </div>
+    <div class="note" id="dossierMelding" role="status" style="display:none;margin:0 0 10px"></div>
     <button type="button" class="btn-print" id="printBtn">Toetsrapport afdrukken</button>
 
     <div class="note">
@@ -2295,6 +2296,26 @@ var LDR = (function () {
     dossierMemory = d;
     try{ window.localStorage.setItem(DOSSIER_KEY, JSON.stringify(d)); return true; }catch(e){ return false; }
   }
+  // Pensioentoets-drempel: een dossier zonder markering drempelVersie (opgeslagen vóór de nieuwe standaard Trhk/NHG)
+  // opent op "10 jaar vóór AOW", ongeacht de opgeslagen drempel. Met markering blijft de bewust gekozen drempel staan.
+  var DREMPEL_VERSIE = 2;
+  function drempelMigratie(dossier, velden){
+    if(dossier && Number(dossier.drempelVersie) >= DREMPEL_VERSIE) return "";
+    var oud = [];
+    velden.forEach(function(x){
+      var el = document.getElementById(x.id); if(!el || el.value === "aow10") return;
+      oud.push({naam:x.naam, label:(el.selectedIndex >= 0 && el.value !== "") ? el.options[el.selectedIndex].text : "geen geldige keuze"});
+      el.value = "aow10";
+    });
+    if(!oud.length) return "";
+    var uniek = oud.every(function(o){ return o.label === oud[0].label; });
+    var van = uniek ? "\u201c" + oud[0].label + "\u201d" : oud.map(function(o){ return "\u201c" + o.label + "\u201d (" + o.naam + ")"; }).join(" en ");
+    return "Pensioentoets-drempel aangepast van " + van + " naar 10 jaar vóór AOW (nieuwe standaard Trhk/NHG). Sla het dossier opnieuw op om dit vast te leggen.";
+  }
+  function toonDossierMelding(tekst){
+    var m = document.getElementById("dossierMelding"); if(!m) return;
+    m.textContent = tekst || ""; m.style.display = tekst ? "" : "none";
+  }
   function dossierWis(){
     dossierMemory = null;
     try{ window.localStorage.removeItem(DOSSIER_KEY); }catch(e){}
@@ -2309,7 +2330,8 @@ var LDR = (function () {
       if(!el) return;
       vals[id] = (el.type === "checkbox") ? el.checked : el.value;
     });
-    var blijvend = dossierSchrijf({fields:vals, delenState:delenState, opgeslagenOp:new Date().toISOString()});
+    var blijvend = dossierSchrijf({fields:vals, delenState:delenState, opgeslagenOp:new Date().toISOString(), drempelVersie:DREMPEL_VERSIE});
+    toonDossierMelding("");
     alert(blijvend
       ? "Dossier opgeslagen in deze browser op dit apparaat. Het blijft bewaard na sluiten of verversen, tot je het verwijdert of de browsergegevens wist. Het staat niet versleuteld op dit apparaat."
       : "Opslaan in de browser is niet gelukt (bijv. privévenster). Het dossier blijft alleen bewaard zolang deze pagina open staat.");
@@ -2321,6 +2343,7 @@ var LDR = (function () {
       if(!dossier){ alert("Er is geen opgeslagen dossier in deze browser."); return; }
       if(!confirm("Dossier van " + fmtDatumNL(new Date(dossier.opgeslagenOp)) + " openen? De huidige invoer wordt vervangen.")) return;
       pasFieldsToe(dossier.fields || {});
+      toonDossierMelding(drempelMigratie(dossier, [{id:"pensioenDrempel", naam:"Maximale hypotheek"}, {id:"vl_pensioenDrempel", naam:"Snelle vergelijking"}]));
       if(Array.isArray(dossier.delenState) && dossier.delenState.length){ delenState = dossier.delenState; }
       renderDelen();
       ["partnerAanwezig","vl_partnerAanwezig","jaar","ptMethode","pensioenDrempel","label","vl_label","c_geboortedatum","p_geboortedatum","vl_c_geboortedatum","vl_p_geboortedatum"].forEach(function(id){ var e = document.getElementById(id); if(e) e.dispatchEvent(new Event("change")); });
