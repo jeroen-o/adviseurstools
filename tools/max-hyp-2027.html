@@ -889,17 +889,27 @@ function lsGrafiek(el, o) {
   } else {
     box = o.aow.map(function (a) {
       var jr = Math.floor(a.m / 12), mnd = a.m % 12;
-      var t = '<strong>' + a.lbl + (a.lft != null ? ': ' + a.lft : '') + ' (AOW-datum over ' + jr + ' jaar' + (mnd ? ' en ' + mnd + ' mnd' : '') + ')</strong>: Trhk/NHG toetst ' + eur(a.heel) + ' (toetslast ' + eur(a.lastHeel) + ' p/m). ';
-      t += a.heel - a.rest > 0.5 ? 'De werkelijke restschuld is dan ' + eur(a.rest) + ': er is ' + eur(a.heel - a.rest) + ' afgelost, maar dat verlaagt de toetslast niet.' : 'Er is tot dan niets afgelost (werkelijke restschuld ' + eur(a.rest) + ').';
-      if (!a.getoetst) t += ' <em>Bij de huidige invoer valt dit moment niet onder de pensioentoets (drempel niet gehaald); het maximum wordt dan alleen bij aanvang getoetst.</em>';
-      return t;
-    }).join('<br>');
+      var kop = '<strong>' + a.lbl + (a.lft != null ? ': ' + a.lft : '') + '</strong> (AOW-datum over ' + jr + ' jaar' + (mnd ? ' en ' + mnd + ' mnd' : '') + ') ';
+      var badge = a.getoetst
+        ? '<span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#fdecea;color:#b42318">WORDT GETOETST</span>'
+        : '<span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700;background:#eef0f3;color:#475467">NIET GETOETST · INFORMATIEF</span>';
+      var afg = a.heel - a.rest > 0.5;
+      var t = kop + badge + '<br>';
+      if (a.getoetst) {
+        t += 'Op deze datum toetst Trhk/NHG het <strong>hele bedrag van ' + eur(a.heel) + '</strong> (toetslast ' + eur(a.lastHeel) + ' p/m) tegen het inkomen na AOW. ';
+        t += afg ? 'De werkelijke restschuld is dan ' + eur(a.rest) + '; de ' + eur(a.heel - a.rest) + ' die tot dan is afgelost, geeft geen extra ruimte.' : 'Tot dan is niets afgelost (werkelijke restschuld ' + eur(a.rest) + ').';
+      } else {
+        t += 'Deze AOW-datum valt buiten de gekozen drempel van de pensioentoets. <strong>Het inkomen na AOW beperkt het maximum nu niet</strong>; het maximum wordt alleen bij aanvang getoetst. ';
+        t += '<span class="hint">Ter informatie, als dit moment wel getoetst zou worden: Trhk/NHG rekent dan met het hele bedrag van ' + eur(a.heel) + ' (toetslast ' + eur(a.lastHeel) + ' p/m)' + (afg ? ', ook al is de werkelijke restschuld dan ' + eur(a.rest) + ' (' + eur(a.heel - a.rest) + ' afgelost)' : '') + '. Beoordeel de betaalbaarheid na AOW apart.</span>';
+      }
+      return '<div style="margin:0 0 8px">' + t + '</div>';
+    }).join('');
     if (o.box3) box += '<br><span class="hint">Toetslast vóór brutering van het box 3-deel.</span>';
   }
   var rijen = P.filter(function (p) { return p.m % 12 === 0; });
   var tab = '<details style="margin-top:8px;font-size:12px"><summary style="cursor:pointer">Bedragen per jaar</summary><div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:12px"><tr><th style="text-align:left;padding:3px 8px">Jaar</th>' + (o.lftNu != null ? '<th style="text-align:right;padding:3px 8px">Leeftijd</th>' : '') + '<th style="text-align:right;padding:3px 8px">Trhk/NHG toetst</th><th style="text-align:right;padding:3px 8px">Werkelijke restschuld</th><th style="text-align:right;padding:3px 8px">Afgelost</th></tr>' +
     rijen.map(function (p) { return '<tr><td style="padding:3px 8px">' + (p.m / 12) + '</td>' + (o.lftNu != null ? '<td style="padding:3px 8px;text-align:right">' + (o.lftNu + p.m / 12) + '</td>' : '') + '<td style="padding:3px 8px;text-align:right">' + eur(p.heel) + '</td><td style="padding:3px 8px;text-align:right">' + eur(p.rest) + '</td><td style="padding:3px 8px;text-align:right">' + eur(p.heel - p.rest) + '</td></tr>'; }).join('') + '</table></div></details>';
-  el.innerHTML = '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">' + (o.intro || 'Schuld per jaar met de huidige leningdelen.') + ' Op de AOW-datum toetst Trhk/NHG het hele bedrag (blauwe lijn) als annuïteit over 30 jaar. De gouden lijn is de werkelijke restschuld: geen toetsmethode, maar wel de reden dat Trhk/NHG strenger is dan een toets op de restschuld. Wat al is afgelost, geeft geen extra ruimte.</div>' + s + leg + '<div class="lsbox">' + box + '</div>' + tab;
+  el.innerHTML = '<div style="font-size:12px;color:#5f6b7a;margin-bottom:6px">' + (o.intro || 'Schuld per jaar met de huidige leningdelen.') + ' Valt een AOW-datum binnen de drempel van de pensioentoets, dan toetst Trhk/NHG op die datum het hele bedrag (blauwe lijn) als annuïteit over 30 jaar; daarbuiten is de grafiek alleen informatief. De gouden lijn is de werkelijke restschuld: geen toetsmethode, maar wel de reden dat Trhk/NHG strenger is dan een toets op de restschuld. Wat al is afgelost, geeft geen extra ruimte.</div>' + s + leg + '<div class="lsbox">' + box + '</div>' + tab;
 }
 function lsHerteken() {
   ['lsGrafiek', 'vlLsGrafiek'].forEach(function (id) {
